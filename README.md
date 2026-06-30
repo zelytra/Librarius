@@ -73,3 +73,9 @@ avec un dashboard « Librarius — Vue d'ensemble » provisionné automatiquemen
 `main` (prod) ← `develop` (intégration) ← `feature/*`. Correctifs : `hotfix/*`.
 Chaque PR doit passer la CI (lint, typecheck, tests, build) avant merge. Détails
 d'architecture et de roadmap dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Déploiement
+
+Images Docker (api JVM + web nginx) construites et poussées vers GHCR par
+`release.yml`, stack de production via `infra/compose.prod.yml`. Guide complet :
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
