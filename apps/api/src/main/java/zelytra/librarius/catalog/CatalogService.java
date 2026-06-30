@@ -15,8 +15,9 @@ import java.util.function.Function;
 
 /**
  * Agrège les fournisseurs de catalogue : pour une nature donnée, interroge tous
- * les fournisseurs (ex. Open Library + Google Books pour les livres), fusionne
- * et dédoublonne. Les résultats sont mis en cache pour ménager les API externes.
+ * les fournisseurs enregistrés (Open Library pour les livres, AniList pour les
+ * mangas), fusionne et dédoublonne. Les résultats sont mis en cache pour ménager
+ * les API externes.
  */
 @ApplicationScoped
 public class CatalogService {

@@ -19,7 +19,7 @@ La maquette de référence (Claude Design) définit une UI mobile-first « papie
 | DB | PostgreSQL + Hibernate Panache + Flyway | Migrations versionnées, scoping user au niveau repository |
 | Auth | Keycloak (OIDC) | N'implémente pas soi-même register/reset/refresh ; SSO Grafana partagé |
 | Client API | orval (OpenAPI → hooks typés) | Types front/back synchronisés, gate CI sur le diff |
-| Catalogue livres | Open Library + Google Books | Graphe works↔editions↔ISBN↔cover |
+| Catalogue livres | Open Library (sans clé) | Recherche titre/auteur, couvertures, ISBN |
 | Catalogue mangas | AniList + Jikan + MangaDex | Meilleures données manga gratuites |
 | Monorepo | pnpm (web) + Maven (api) | Coexistence sans friction, séparés en CI par path filters |
 
