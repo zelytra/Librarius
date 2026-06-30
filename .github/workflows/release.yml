@@ -1,11 +1,8 @@
 name: release
 
-# Construit les images Docker (api JVM + web nginx). Sur les PR : build seul
-# (validation des Dockerfiles). Sur main / tags : build + push vers GHCR.
+# Valide la construction des images Docker (api JVM + web nginx) sur les PR.
+# Le build + push + déploiement sur main est géré par cd.yml.
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
   pull_request:
     paths:
       - 'apps/api/**'
