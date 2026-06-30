@@ -5,7 +5,8 @@ import { SettingsPage } from './features/settings/SettingsPage';
 import { CollectionPage } from './features/collection/CollectionPage';
 import { DetailPage } from './features/detail/DetailPage';
 import { DiscoverPage } from './features/discover/DiscoverPage';
-import { Placeholder } from './features/Placeholder';
+import { WishlistPage } from './features/wishlist/WishlistPage';
+import { StatsPage } from './features/stats/StatsPage';
 
 function App() {
   return (
@@ -14,8 +15,8 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="collection" element={<CollectionPage />} />
         <Route path="discover" element={<DiscoverPage />} />
-        <Route path="wishlist" element={<Placeholder titleKey="wishlist.title" />} />
-        <Route path="stats" element={<Placeholder titleKey="stats.title" />} />
+        <Route path="wishlist" element={<WishlistPage />} />
+        <Route path="stats" element={<StatsPage />} />
         <Route path="detail/:id" element={<DetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<HomePage />} />
