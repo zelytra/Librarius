@@ -34,3 +34,13 @@ test('la collection liste les livres et bascule vers la mangathèque', () => {
   fireEvent.click(screen.getByText('Mangathèque'));
   expect(screen.getAllByText('One Piece').length).toBeGreaterThan(0);
 });
+
+test('la liste de souhaits affiche le total estimé', () => {
+  renderAt('/wishlist');
+  expect(screen.getByText(/titres · estimé/)).toBeInTheDocument();
+});
+
+test('les statistiques affichent l\'objectif annuel', () => {
+  renderAt('/stats');
+  expect(screen.getByText('Objectif 2026')).toBeInTheDocument();
+});
