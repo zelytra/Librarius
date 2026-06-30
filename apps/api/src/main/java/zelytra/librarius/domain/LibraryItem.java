@@ -34,6 +34,10 @@ public class LibraryItem {
     @Column(nullable = false, length = 16)
     public LibraryStatus status = LibraryStatus.OWNED;
 
+    @ManyToOne
+    @JoinColumn(name = "rank_category_id")
+    public RankCategory rankCategory;
+
     public Integer rating;
 
     @Column(name = "acquired_at")

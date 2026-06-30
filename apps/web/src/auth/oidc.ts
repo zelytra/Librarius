@@ -7,8 +7,8 @@ import type { AuthProviderProps } from 'react-oidc-context';
  * Surchargeable via les variables VITE_OIDC_*.
  */
 export const oidcConfig: AuthProviderProps = {
-  authority: import.meta.env.VITE_OIDC_AUTHORITY ?? 'http://localhost:8081/realms/librarius',
-  client_id: import.meta.env.VITE_OIDC_CLIENT_ID ?? 'librarius-web',
+  authority: import.meta.env.VITE_OIDC_AUTHORITY || 'http://localhost:8081/realms/librarius',
+  client_id: import.meta.env.VITE_OIDC_CLIENT_ID || 'librarius-web',
   redirect_uri: window.location.origin,
   post_logout_redirect_uri: window.location.origin,
   scope: 'openid profile email',

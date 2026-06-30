@@ -82,11 +82,33 @@ public final class ApiDtos {
     }
 
     public record LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
-            BookView book) {
+            String rankCode, BookView book) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.acquiredAt,
-                    BookView.of(it.edition));
+                    it.rankCategory != null ? it.rankCategory.code : null, BookView.of(it.edition));
         }
+    }
+
+    public record CategoryDto(UUID id, String code, String label, String color, boolean builtin) {
+        public static CategoryDto of(zelytra.librarius.domain.RankCategory c) {
+            return new CategoryDto(c.id, c.code, c.label, c.color, c.builtin);
+        }
+    }
+
+    public record CategoryCreateDto(@NotBlank String label, String color) {
+    }
+
+    public record RankAssignDto(java.util.UUID categoryId) {
+    }
+
+    public record ProgressDto(Integer currentPage, Integer percent, LibraryStatus status) {
+    }
+
+    public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
+            Integer goalTarget, long goalCurrent, java.util.List<GenreCount> byGenre) {
+    }
+
+    public record GenreCount(String genre, long count) {
     }
 
     public record WishlistCreateDto(

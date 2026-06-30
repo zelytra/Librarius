@@ -1,35 +1,59 @@
-## Frontend PWA de Ma Bibliothèque (Librarius).
+## Ma Bibliothèque (Librarius) — stack complète sur Kubernetes.
+## Hôte unique : librarius.zelytra.fr (web), /api + /q → api, /auth → keycloak.
 
-image:
-  repository: ghcr.io/zelytra/librarius-web
-  # Surchargé par la CD avec le SHA du commit (image immuable).
-  tag: "0.1.0"
-  pullPolicy: IfNotPresent
+domain: librarius.zelytra.fr
 
-# Secret de pull GHCR (créé par la CD à partir du GITHUB_TOKEN).
 imagePullSecrets:
   - name: ghcr-pull
 
-replicas: 1
-
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 192Mi
-
-rolling:
-  maxSurge: "25%"
-  maxUnavailable: "25%"
-
-service:
-  port: 80
-
 ingress:
   enabled: true
-  host: book.zelytra.fr
   className: traefik
   clusterIssuer: letsencrypt-prod
-  tlsSecretName: book-zelytra-fr-tls
+  tlsSecretName: librarius-zelytra-fr-tls
+
+# ── Frontend (PWA) ────────────────────────────────────────────────────────────
+web:
+  image:
+    repository: ghcr.io/zelytra/librarius-web
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 192Mi }
+
+# ── API (Quarkus) ─────────────────────────────────────────────────────────────
+api:
+  enabled: true
+  image:
+    repository: ghcr.io/zelytra/librarius-api
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests: { cpu: 150m, memory: 256Mi }
+    limits: { cpu: "1", memory: 768Mi }
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  user: librarius
+  password: librarius
+  database: librarius
+  storage: 2Gi
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+# ── Keycloak (auth) ───────────────────────────────────────────────────────────
+keycloak:
+  enabled: true
+  image: quay.io/keycloak/keycloak:25.0.6
+  admin: admin
+  adminPassword: admin
+  database: keycloak
+  resources:
+    requests: { cpu: 100m, memory: 384Mi }
+    limits: { cpu: "1", memory: 768Mi }

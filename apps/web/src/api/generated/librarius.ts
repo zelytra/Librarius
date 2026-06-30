@@ -34,6 +34,25 @@ export interface CatalogResult {
   providerRef?: string;
 }
 
+export interface CategoryCreateDto {
+  /** @pattern \S */
+  label: string;
+  color?: string;
+}
+
+export interface CategoryDto {
+  id?: Uuid;
+  code?: string;
+  label?: string;
+  color?: string;
+  builtin?: boolean;
+}
+
+export interface GenreCount {
+  genre?: string;
+  count?: number;
+}
+
 export interface GoalDto {
   id?: Uuid;
   year?: number;
@@ -57,6 +76,13 @@ export interface GoalUpsertDto {
   unit?: GoalUnit;
 }
 
+export interface ImportResult {
+  source?: string;
+  imported?: number;
+  skipped?: number;
+  total?: number;
+}
+
 export type Kind = typeof Kind[keyof typeof Kind];
 
 
@@ -78,6 +104,7 @@ export interface LibraryItemDto {
   status?: string;
   rating?: number;
   acquiredAt?: LocalDate;
+  rankCode?: string;
   book?: BookView;
 }
 
@@ -117,6 +144,32 @@ export interface MeDto {
   email?: string;
   displayName?: string;
   locale?: string;
+}
+
+export interface ProgressDto {
+  currentPage?: number;
+  percent?: number;
+  status?: LibraryStatus;
+}
+
+export interface RankAssignDto {
+  categoryId?: Uuid;
+}
+
+export interface ScrapeRequest {
+  /** @pattern \S */
+  handle: string;
+}
+
+export interface StatsDto {
+  read?: number;
+  reading?: number;
+  toRead?: number;
+  pagesRead?: number;
+  seriesCount?: number;
+  goalTarget?: number;
+  goalCurrent?: number;
+  byGenre?: GenreCount[];
 }
 
 /**
@@ -282,6 +335,109 @@ export const getApiCatalogUpcoming = async (params?: GetApiCatalogUpcomingParams
 
 
 
+export type getApiCategoriesResponse200 = {
+  data: CategoryDto[]
+  status: 200
+}
+
+export type getApiCategoriesResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getApiCategoriesResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type getApiCategoriesResponseSuccess = (getApiCategoriesResponse200) & {
+  headers: Headers;
+};
+export type getApiCategoriesResponseError = (getApiCategoriesResponse401 | getApiCategoriesResponse403) & {
+  headers: Headers;
+};
+
+export type getApiCategoriesResponse = (getApiCategoriesResponseSuccess | getApiCategoriesResponseError)
+
+export const getGetApiCategoriesUrl = () => {
+
+
+  
+
+  return `/api/categories`
+}
+
+export const getApiCategories = async ( options?: RequestInit): Promise<getApiCategoriesResponse> => {
+  
+  const res = await fetch(getGetApiCategoriesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: getApiCategoriesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getApiCategoriesResponse
+}
+
+
+
+export type postApiCategoriesResponse200 = {
+  data: CategoryDto
+  status: 200
+}
+
+export type postApiCategoriesResponse401 = {
+  data: void
+  status: 401
+}
+
+export type postApiCategoriesResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type postApiCategoriesResponseSuccess = (postApiCategoriesResponse200) & {
+  headers: Headers;
+};
+export type postApiCategoriesResponseError = (postApiCategoriesResponse401 | postApiCategoriesResponse403) & {
+  headers: Headers;
+};
+
+export type postApiCategoriesResponse = (postApiCategoriesResponseSuccess | postApiCategoriesResponseError)
+
+export const getPostApiCategoriesUrl = () => {
+
+
+  
+
+  return `/api/categories`
+}
+
+export const postApiCategories = async (categoryCreateDto: CategoryCreateDto, options?: RequestInit): Promise<postApiCategoriesResponse> => {
+  
+  const res = await fetch(getPostApiCategoriesUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      categoryCreateDto,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiCategoriesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiCategoriesResponse
+}
+
+
+
 export type getApiGoalsResponse200 = {
   data: GoalDto[]
   status: 200
@@ -421,6 +577,111 @@ export const getApiHello = async ( options?: RequestInit): Promise<getApiHelloRe
   
   const data: getApiHelloResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as getApiHelloResponse
+}
+
+
+
+export type postApiImportCsvResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type postApiImportCsvResponse401 = {
+  data: void
+  status: 401
+}
+
+export type postApiImportCsvResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type postApiImportCsvResponseSuccess = (postApiImportCsvResponse200) & {
+  headers: Headers;
+};
+export type postApiImportCsvResponseError = (postApiImportCsvResponse401 | postApiImportCsvResponse403) & {
+  headers: Headers;
+};
+
+export type postApiImportCsvResponse = (postApiImportCsvResponseSuccess | postApiImportCsvResponseError)
+
+export const getPostApiImportCsvUrl = () => {
+
+
+  
+
+  return `/api/import/csv`
+}
+
+export const postApiImportCsv = async (postApiImportCsvBody: string, options?: RequestInit): Promise<postApiImportCsvResponse> => {
+  
+  const res = await fetch(getPostApiImportCsvUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', ...options?.headers },
+    body: 
+      postApiImportCsvBody,
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiImportCsvResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiImportCsvResponse
+}
+
+
+
+export type postApiImportSourceResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type postApiImportSourceResponse401 = {
+  data: void
+  status: 401
+}
+
+export type postApiImportSourceResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type postApiImportSourceResponseSuccess = (postApiImportSourceResponse200) & {
+  headers: Headers;
+};
+export type postApiImportSourceResponseError = (postApiImportSourceResponse401 | postApiImportSourceResponse403) & {
+  headers: Headers;
+};
+
+export type postApiImportSourceResponse = (postApiImportSourceResponseSuccess | postApiImportSourceResponseError)
+
+export const getPostApiImportSourceUrl = (source: string,) => {
+
+
+  
+
+  return `/api/import/${source}`
+}
+
+export const postApiImportSource = async (source: string,
+    scrapeRequest: ScrapeRequest, options?: RequestInit): Promise<postApiImportSourceResponse> => {
+  
+  const res = await fetch(getPostApiImportSourceUrl(source),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      scrapeRequest,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiImportSourceResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiImportSourceResponse
 }
 
 
@@ -586,6 +847,112 @@ export const deleteApiLibraryId = async (id: Uuid, options?: RequestInit): Promi
 
 
 
+export type putApiLibraryIdProgressResponse200 = {
+  data: void
+  status: 200
+}
+
+export type putApiLibraryIdProgressResponse401 = {
+  data: void
+  status: 401
+}
+
+export type putApiLibraryIdProgressResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type putApiLibraryIdProgressResponseSuccess = (putApiLibraryIdProgressResponse200) & {
+  headers: Headers;
+};
+export type putApiLibraryIdProgressResponseError = (putApiLibraryIdProgressResponse401 | putApiLibraryIdProgressResponse403) & {
+  headers: Headers;
+};
+
+export type putApiLibraryIdProgressResponse = (putApiLibraryIdProgressResponseSuccess | putApiLibraryIdProgressResponseError)
+
+export const getPutApiLibraryIdProgressUrl = (id: Uuid,) => {
+
+
+  
+
+  return `/api/library/${id}/progress`
+}
+
+export const putApiLibraryIdProgress = async (id: Uuid,
+    progressDto: ProgressDto, options?: RequestInit): Promise<putApiLibraryIdProgressResponse> => {
+  
+  const res = await fetch(getPutApiLibraryIdProgressUrl(id),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      progressDto,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: putApiLibraryIdProgressResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as putApiLibraryIdProgressResponse
+}
+
+
+
+export type putApiLibraryIdRankResponse200 = {
+  data: void
+  status: 200
+}
+
+export type putApiLibraryIdRankResponse401 = {
+  data: void
+  status: 401
+}
+
+export type putApiLibraryIdRankResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type putApiLibraryIdRankResponseSuccess = (putApiLibraryIdRankResponse200) & {
+  headers: Headers;
+};
+export type putApiLibraryIdRankResponseError = (putApiLibraryIdRankResponse401 | putApiLibraryIdRankResponse403) & {
+  headers: Headers;
+};
+
+export type putApiLibraryIdRankResponse = (putApiLibraryIdRankResponseSuccess | putApiLibraryIdRankResponseError)
+
+export const getPutApiLibraryIdRankUrl = (id: Uuid,) => {
+
+
+  
+
+  return `/api/library/${id}/rank`
+}
+
+export const putApiLibraryIdRank = async (id: Uuid,
+    rankAssignDto: RankAssignDto, options?: RequestInit): Promise<putApiLibraryIdRankResponse> => {
+  
+  const res = await fetch(getPutApiLibraryIdRankUrl(id),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      rankAssignDto,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: putApiLibraryIdRankResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as putApiLibraryIdRankResponse
+}
+
+
+
 export type getApiMeResponse200 = {
   data: MeDto
   status: 200
@@ -633,6 +1000,57 @@ export const getApiMe = async ( options?: RequestInit): Promise<getApiMeResponse
   
   const data: getApiMeResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as getApiMeResponse
+}
+
+
+
+export type getApiStatsResponse200 = {
+  data: StatsDto
+  status: 200
+}
+
+export type getApiStatsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getApiStatsResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type getApiStatsResponseSuccess = (getApiStatsResponse200) & {
+  headers: Headers;
+};
+export type getApiStatsResponseError = (getApiStatsResponse401 | getApiStatsResponse403) & {
+  headers: Headers;
+};
+
+export type getApiStatsResponse = (getApiStatsResponseSuccess | getApiStatsResponseError)
+
+export const getGetApiStatsUrl = () => {
+
+
+  
+
+  return `/api/stats`
+}
+
+export const getApiStats = async ( options?: RequestInit): Promise<getApiStatsResponse> => {
+  
+  const res = await fetch(getGetApiStatsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: getApiStatsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getApiStatsResponse
 }
 
 
