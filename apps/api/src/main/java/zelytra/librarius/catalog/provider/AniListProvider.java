@@ -33,15 +33,17 @@ public class AniListProvider implements CatalogProvider {
 
     @Override
     public List<CatalogResult> search(String query, int limit) {
+        // isAdult: false filtre le contenu explicite côté serveur (filtre NSFW).
         String gql = "query ($q: String, $n: Int) { Page(perPage: $n) { media("
-                + "type: MANGA, search: $q, sort: SEARCH_MATCH) { " + FIELDS + " } } }";
+                + "type: MANGA, search: $q, sort: SEARCH_MATCH, isAdult: false) { " + FIELDS + " } } }";
         return run(gql, Map.of("q", query, "n", limit));
     }
 
     @Override
     public List<CatalogResult> upcoming(int limit) {
         String gql = "query ($n: Int) { Page(perPage: $n) { media("
-                + "type: MANGA, status: NOT_YET_RELEASED, sort: START_DATE) { " + FIELDS + " } } }";
+                + "type: MANGA, status: NOT_YET_RELEASED, sort: START_DATE, isAdult: false) { "
+                + FIELDS + " } } }";
         return run(gql, Map.of("n", limit));
     }
 
