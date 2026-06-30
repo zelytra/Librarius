@@ -57,6 +57,13 @@ export interface GoalUpsertDto {
   unit?: GoalUnit;
 }
 
+export interface ImportResult {
+  source?: string;
+  imported?: number;
+  skipped?: number;
+  total?: number;
+}
+
 export type Kind = typeof Kind[keyof typeof Kind];
 
 
@@ -117,6 +124,11 @@ export interface MeDto {
   email?: string;
   displayName?: string;
   locale?: string;
+}
+
+export interface ScrapeRequest {
+  /** @pattern \S */
+  handle: string;
 }
 
 /**
@@ -421,6 +433,111 @@ export const getApiHello = async ( options?: RequestInit): Promise<getApiHelloRe
   
   const data: getApiHelloResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as getApiHelloResponse
+}
+
+
+
+export type postApiImportCsvResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type postApiImportCsvResponse401 = {
+  data: void
+  status: 401
+}
+
+export type postApiImportCsvResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type postApiImportCsvResponseSuccess = (postApiImportCsvResponse200) & {
+  headers: Headers;
+};
+export type postApiImportCsvResponseError = (postApiImportCsvResponse401 | postApiImportCsvResponse403) & {
+  headers: Headers;
+};
+
+export type postApiImportCsvResponse = (postApiImportCsvResponseSuccess | postApiImportCsvResponseError)
+
+export const getPostApiImportCsvUrl = () => {
+
+
+  
+
+  return `/api/import/csv`
+}
+
+export const postApiImportCsv = async (postApiImportCsvBody: string, options?: RequestInit): Promise<postApiImportCsvResponse> => {
+  
+  const res = await fetch(getPostApiImportCsvUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', ...options?.headers },
+    body: 
+      postApiImportCsvBody,
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiImportCsvResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiImportCsvResponse
+}
+
+
+
+export type postApiImportSourceResponse200 = {
+  data: ImportResult
+  status: 200
+}
+
+export type postApiImportSourceResponse401 = {
+  data: void
+  status: 401
+}
+
+export type postApiImportSourceResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type postApiImportSourceResponseSuccess = (postApiImportSourceResponse200) & {
+  headers: Headers;
+};
+export type postApiImportSourceResponseError = (postApiImportSourceResponse401 | postApiImportSourceResponse403) & {
+  headers: Headers;
+};
+
+export type postApiImportSourceResponse = (postApiImportSourceResponseSuccess | postApiImportSourceResponseError)
+
+export const getPostApiImportSourceUrl = (source: string,) => {
+
+
+  
+
+  return `/api/import/${source}`
+}
+
+export const postApiImportSource = async (source: string,
+    scrapeRequest: ScrapeRequest, options?: RequestInit): Promise<postApiImportSourceResponse> => {
+  
+  const res = await fetch(getPostApiImportSourceUrl(source),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      scrapeRequest,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiImportSourceResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiImportSourceResponse
 }
 
 

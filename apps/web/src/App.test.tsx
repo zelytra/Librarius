@@ -1,17 +1,21 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from 'react-oidc-context';
 import { expect, test } from 'vitest';
 import App from './App';
 import { ThemeProvider } from './shared/theme/ThemeProvider';
+import { oidcConfig } from './auth/oidc';
 import './i18n';
 
 function renderAt(path: string) {
   return render(
-    <ThemeProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
-    </ThemeProvider>,
+    <AuthProvider {...oidcConfig}>
+      <ThemeProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </ThemeProvider>
+    </AuthProvider>,
   );
 }
 
