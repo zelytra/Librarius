@@ -42,8 +42,8 @@ docs/         # ARCHITECTURE.md
 # 1. Dépendances front
 pnpm install
 
-# 2. Base de données
-pnpm infra:up           # docker compose up postgres
+# 2. Base de données + Keycloak (auth)
+pnpm infra:up           # postgres + keycloak (realm « librarius » sur :8081)
 
 # 3. Backend (port 8080)
 pnpm api:dev            # cd apps/api && ./mvnw quarkus:dev
@@ -52,7 +52,9 @@ pnpm api:dev            # cd apps/api && ./mvnw quarkus:dev
 pnpm web:dev
 ```
 
-Ouvrez http://localhost:5173 — l'écran d'amorçage confirme la connexion à l'API.
+Ouvrez http://localhost:5173. Pour la recherche catalogue (écran **Découvrir**),
+connectez-vous via Keycloak avec un utilisateur de test : **alice / alice** ou
+**bob / bob**. La console d'admin Keycloak est sur http://localhost:8081 (admin / admin).
 
 ## Scripts utiles
 

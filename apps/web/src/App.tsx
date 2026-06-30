@@ -4,6 +4,7 @@ import { HomePage } from './features/home/HomePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { CollectionPage } from './features/collection/CollectionPage';
 import { DetailPage } from './features/detail/DetailPage';
+import { DiscoverPage } from './features/discover/DiscoverPage';
 import { Placeholder } from './features/Placeholder';
 
 function App() {
@@ -12,7 +13,7 @@ function App() {
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="collection" element={<CollectionPage />} />
-        <Route path="discover" element={<Placeholder titleKey="discover.title" />} />
+        <Route path="discover" element={<DiscoverPage />} />
         <Route path="wishlist" element={<Placeholder titleKey="wishlist.title" />} />
         <Route path="stats" element={<Placeholder titleKey="stats.title" />} />
         <Route path="detail/:id" element={<DetailPage />} />
