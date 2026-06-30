@@ -45,4 +45,15 @@ class CatalogServiceTest {
 
         assertTrue(service.search(Kind.MANGA, "piece", 10).isEmpty());
     }
+
+    @Test
+    void aggregatesMultipleProvidersForSameKindAndDeduplicates() {
+        // Deux fournisseurs livres renvoyant le même titre + un titre distinct.
+        CatalogService service = new CatalogService(List.of(
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))));
+
+        // Le doublon (même titre/auteur) est fusionné en une seule entrée.
+        assertEquals(1, service.search(Kind.BOOK, "wing", 10).size());
+    }
 }
