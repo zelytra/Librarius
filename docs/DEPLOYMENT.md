@@ -52,6 +52,33 @@ docker build -f apps/web/Dockerfile \
   -t ghcr.io/zelytra/librarius-web:latest .
 ```
 
+## Kubernetes (Helm) — book.zelytra.fr
+
+La PWA est déployée sur le cluster k3s via la chart Helm `helm/librarius` (v0.1.0).
+
+- **Déclencheur** : push sur `main` → workflow `cd.yml` :
+  1. build + push des images vers GHCR (`librarius-api`, `librarius-web`, tags `latest` / `0.1.0` / `<sha>`),
+  2. création du secret de pull `ghcr-pull` (depuis le `GITHUB_TOKEN`),
+  3. `helm upgrade --install librarius ./helm/librarius --set image.tag=<sha>`.
+- **Ingress** : `book.zelytra.fr` via **Traefik**, TLS automatique par **cert-manager**
+  (`cluster-issuer: letsencrypt-prod`, secret `book-zelytra-fr-tls`).
+- **Secret CI requis** : `KUBECONFIG` (configuré dans les secrets Actions du repo).
+
+Déploiement manuel équivalent :
+
+```bash
+helm upgrade --install librarius ./helm/librarius --namespace default --set image.tag=<sha>
+```
+
+### Prérequis / limites de la v0.1.0
+
+- **DNS** : `book.zelytra.fr` doit pointer (A/CNAME) vers le cluster, sinon
+  cert-manager ne peut pas émettre le certificat (challenge HTTP-01).
+- **Périmètre** : seule la **PWA** (frontend) est déployée. Tous les écrans
+  fonctionnent (données locales) ; la **connexion + recherche live** nécessitent
+  de déployer aussi `api` + PostgreSQL + Keycloak (avec un OIDC cohérent avec le
+  domaine public) — itération suivante.
+
 ## Pistes ultérieures
 
 - Image **native** (GraalVM) pour l'API (démarrage/empreinte réduits) — à activer

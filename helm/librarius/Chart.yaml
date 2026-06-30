@@ -1,0 +1,7 @@
+apiVersion: v2
+name: librarius
+description: Ma Bibliothèque (Librarius) — PWA frontend déployée sur book.zelytra.fr
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/zelytra/Librarius
