@@ -10,6 +10,70 @@ servers:
 - url: http://0.0.0.0:8080
   description: Auto generated value
 paths:
+  /api/catalog/search:
+    get:
+      tags:
+      - Catalog Resource
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: limit
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/catalog/upcoming:
+    get:
+      tags:
+      - Catalog Resource
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: limit
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /api/goals:
     get:
       tags:
@@ -237,6 +301,34 @@ components:
         synopsis:
           type: string
         genres:
+          type: string
+    CatalogResult:
+      type: object
+      properties:
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        year:
+          format: int32
+          type: integer
+        coverUrl:
+          type: string
+        synopsis:
+          type: string
+        isbn13:
+          type: string
+        publisher:
+          type: string
+        language:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        provider:
+          type: string
+        providerRef:
           type: string
     GoalDto:
       type: object

@@ -19,6 +19,21 @@ export interface BookView {
   genres?: string;
 }
 
+export interface CatalogResult {
+  kind?: string;
+  title?: string;
+  authors?: string;
+  year?: number;
+  coverUrl?: string;
+  synopsis?: string;
+  isbn13?: string;
+  publisher?: string;
+  language?: string;
+  releaseDate?: LocalDate;
+  provider?: string;
+  providerRef?: string;
+}
+
 export interface GoalDto {
   id?: Uuid;
   year?: number;
@@ -134,11 +149,138 @@ export interface WishlistItemDto {
   book?: BookView;
 }
 
+export type GetApiCatalogSearchParams = {
+kind?: Kind;
+limit?: number;
+q?: string;
+};
+
+export type GetApiCatalogUpcomingParams = {
+kind?: Kind;
+limit?: number;
+};
+
 export type GetApiHello200 = {[key: string]: unknown};
 
 export type GetApiLibraryParams = {
 status?: LibraryStatus;
 };
+
+export type getApiCatalogSearchResponse200 = {
+  data: CatalogResult[]
+  status: 200
+}
+
+export type getApiCatalogSearchResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getApiCatalogSearchResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type getApiCatalogSearchResponseSuccess = (getApiCatalogSearchResponse200) & {
+  headers: Headers;
+};
+export type getApiCatalogSearchResponseError = (getApiCatalogSearchResponse401 | getApiCatalogSearchResponse403) & {
+  headers: Headers;
+};
+
+export type getApiCatalogSearchResponse = (getApiCatalogSearchResponseSuccess | getApiCatalogSearchResponseError)
+
+export const getGetApiCatalogSearchUrl = (params?: GetApiCatalogSearchParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/search?${stringifiedParams}` : `/api/catalog/search`
+}
+
+export const getApiCatalogSearch = async (params?: GetApiCatalogSearchParams, options?: RequestInit): Promise<getApiCatalogSearchResponse> => {
+  
+  const res = await fetch(getGetApiCatalogSearchUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: getApiCatalogSearchResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getApiCatalogSearchResponse
+}
+
+
+
+export type getApiCatalogUpcomingResponse200 = {
+  data: CatalogResult[]
+  status: 200
+}
+
+export type getApiCatalogUpcomingResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getApiCatalogUpcomingResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type getApiCatalogUpcomingResponseSuccess = (getApiCatalogUpcomingResponse200) & {
+  headers: Headers;
+};
+export type getApiCatalogUpcomingResponseError = (getApiCatalogUpcomingResponse401 | getApiCatalogUpcomingResponse403) & {
+  headers: Headers;
+};
+
+export type getApiCatalogUpcomingResponse = (getApiCatalogUpcomingResponseSuccess | getApiCatalogUpcomingResponseError)
+
+export const getGetApiCatalogUpcomingUrl = (params?: GetApiCatalogUpcomingParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/upcoming?${stringifiedParams}` : `/api/catalog/upcoming`
+}
+
+export const getApiCatalogUpcoming = async (params?: GetApiCatalogUpcomingParams, options?: RequestInit): Promise<getApiCatalogUpcomingResponse> => {
+  
+  const res = await fetch(getGetApiCatalogUpcomingUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: getApiCatalogUpcomingResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getApiCatalogUpcomingResponse
+}
+
+
 
 export type getApiGoalsResponse200 = {
   data: GoalDto[]
