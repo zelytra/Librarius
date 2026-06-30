@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "librarius.fullname" . }}-nginx
+  labels:
+    {{- include "librarius.labels" . | nindent 4 }}
+data:
+  # Configuration nginx pour Kubernetes : SPA seule (le proxy /api de l'image
+  # est remplacé ici car aucun service api n'est déployé en 0.1.0). Le routage
+  # vers l'API se fera via l'Ingress quand le backend sera déployé.
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location = /healthz {
+            add_header Content-Type text/plain;
+            return 200 'ok';
+        }
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }

@@ -1,0 +1,21 @@
+# Image JVM de l'API Librarius (build auto-contenu via le wrapper Maven).
+# Contexte de build attendu : apps/api
+FROM eclipse-temurin:21-jdk AS build
+# Le wrapper Maven (only-script) télécharge Maven via curl.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src/ src/
+RUN ./mvnw -B -ntp -DskipTests clean package
+
+FROM eclipse-temurin:21-jre
+WORKDIR /work
+COPY --from=build /app/target/quarkus-app/lib/ /work/lib/
+COPY --from=build /app/target/quarkus-app/*.jar /work/
+COPY --from=build /app/target/quarkus-app/app/ /work/app/
+COPY --from=build /app/target/quarkus-app/quarkus/ /work/quarkus/
+EXPOSE 8080
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0"
+ENTRYPOINT ["java", "-jar", "/work/quarkus-run.jar"]

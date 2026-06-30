@@ -1,0 +1,75 @@
+# Stack de production de Ma Bibliothèque (Librarius), à base des images GHCR
+# construites par .github/workflows/release.yml.
+#
+# ⚠️ OIDC / Keycloak : en production, l'« issuer » des jetons doit être identique
+# entre le navigateur (qui se connecte) et l'API (qui valide). Définissez un nom
+# d'hôte public stable pour Keycloak (KC_HOSTNAME) et utilisez la même URL
+# publique pour OIDC_AUTH_SERVER_URL et VITE_OIDC_AUTHORITY (build du web).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-librarius}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-librarius}
+      POSTGRES_DB: ${POSTGRES_DB:-librarius}
+    volumes:
+      - librarius-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    command: ['start', '--import-realm', '--http-port=8081', '--hostname-strict=false']
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME: ${KC_HOSTNAME:-http://localhost:8081}
+      KC_HTTP_ENABLED: 'true'
+    ports:
+      - '8081:8081'
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/zelytra/librarius-api:latest
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-librarius}
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-librarius}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-librarius}
+      OIDC_AUTH_SERVER_URL: ${OIDC_AUTH_SERVER_URL:-http://localhost:8081/realms/librarius}
+    depends_on:
+      - postgres
+      - keycloak
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/zelytra/librarius-web:latest
+    depends_on:
+      - api
+    ports:
+      - '${WEB_PORT:-8088}:80'
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    command: ['--config.file=/etc/prometheus/prometheus.yml']
+    volumes:
+      - ./prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD:-admin}
+    ports:
+      - '${GRAFANA_PORT:-3000}:3000'
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  librarius-pgdata:

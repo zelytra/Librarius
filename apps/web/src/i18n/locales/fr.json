@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Ma Bibliothèque",
+    "tagline": "Votre bibliothèque personnelle de livres et mangas."
+  },
+  "nav": {
+    "home": "Accueil",
+    "collection": "Collection",
+    "discover": "Découvrir",
+    "wishlist": "Souhaits",
+    "stats": "Stats"
+  },
+  "common": {
+    "seeAll": "Tout voir",
+    "back": "Retour",
+    "loading": "Chargement…",
+    "comingSoon": "Bientôt disponible",
+    "books": "Bibliothèque",
+    "mangas": "Mangathèque"
+  },
+  "home": {
+    "greeting": "Bonsoir",
+    "resumeReading": "Reprendre la lecture",
+    "upcoming": "Prochaines sorties",
+    "recentlyBought": "Derniers achats",
+    "recentlyRead": "Derniers lus"
+  },
+  "collection": {
+    "title": "Ma collection",
+    "sortBy": "Trier",
+    "list": "Liste",
+    "series": "Séries"
+  },
+  "discover": {
+    "title": "Découvrir",
+    "searchPlaceholder": "Rechercher un titre, un auteur…",
+    "popularGenres": "Genres populaires",
+    "recommended": "Recommandé pour vous"
+  },
+  "wishlist": {
+    "title": "Liste de souhaits"
+  },
+  "stats": {
+    "title": "Statistiques"
+  },
+  "detail": {
+    "summary": "Résumé",
+    "ranking": "Classement",
+    "pages": "pages",
+    "series": "série",
+    "released": "sorti"
+  },
+  "settings": {
+    "title": "Réglages",
+    "dashboard": "Tableau de bord",
+    "appearance": "Apparence",
+    "notifications": "Notifications",
+    "version": "Ma Bibliothèque · version {{version}}",
+    "themes": {
+      "creme": "Crème",
+      "sauge": "Sauge",
+      "rose": "Rose",
+      "nuit": "Nuit"
+    }
+  }
+}

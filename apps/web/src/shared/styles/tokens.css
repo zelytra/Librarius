@@ -1,0 +1,74 @@
+/* ── Jetons de design (thèmes) ────────────────────────────────────────────────
+   Esthétique « papier » de la maquette : serif Newsreader pour les titres,
+   DM Sans pour le texte, accent vert sauge. Quatre thèmes commutables via
+   l'attribut data-theme sur <html>. */
+
+:root,
+[data-theme='creme'] {
+  --bg: #f3ede3;
+  --surface: #fbf8f3;
+  --surface-2: #f6f0e6;
+  --ink: #3a342c;
+  --ink-soft: #6a6253;
+  --muted: #a89c8c;
+  --faint: #b3a89a;
+  --accent: #9aab92;
+  --accent-deep: #7d8f73;
+  --accent-soft: #e6ece0;
+  --line: #efe7da;
+  --chip: #ece3d5;
+  --rose: #b0857f;
+  --rose-soft: #f3e6e3;
+  --gold: #d9b94e;
+  --silver: #b3b7bf;
+  --bronze: #c08a5a;
+  --shadow: 0 6px 18px -10px rgba(74, 64, 52, 0.25);
+  --shadow-strong: 0 18px 36px -14px rgba(74, 64, 52, 0.55);
+}
+
+[data-theme='sauge'] {
+  --bg: #dfe6da;
+  --surface: #eef2ea;
+  --surface-2: #e6ede1;
+  --ink: #2f3a2c;
+  --ink-soft: #51604b;
+  --muted: #8295806;
+  --faint: #9aa897;
+  --accent: #7d8f73;
+  --accent-deep: #5f7355;
+  --accent-soft: #d8e2d2;
+  --line: #d3ddcc;
+  --chip: #d3ddcc;
+}
+
+[data-theme='rose'] {
+  --bg: #f1e2df;
+  --surface: #fbf1ef;
+  --surface-2: #f5e6e3;
+  --ink: #4a3a37;
+  --ink-soft: #6f5a56;
+  --muted: #b29a95;
+  --faint: #c2aaa4;
+  --accent: #c98f87;
+  --accent-deep: #b0857f;
+  --accent-soft: #f3e0dc;
+  --line: #ecd8d3;
+  --chip: #ecd8d3;
+}
+
+[data-theme='nuit'] {
+  --bg: #2c2823;
+  --surface: #3a352f;
+  --surface-2: #443f38;
+  --ink: #f3ede3;
+  --ink-soft: #d6cdbf;
+  --muted: #a99e8d;
+  --faint: #8a8073;
+  --accent: #9aab92;
+  --accent-deep: #b6c4ad;
+  --accent-soft: #424a3c;
+  --line: #4a443c;
+  --chip: #443f38;
+  --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
+  --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.7);
+}

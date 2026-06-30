@@ -1,0 +1,31 @@
+# ── Node / pnpm ───────────────────────────────────────────────────────────────
+node_modules/
+dist/
+dev-dist/
+coverage/
+*.local
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+
+# ── Java / Maven / Quarkus ────────────────────────────────────────────────────
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+.DS_Store
+Thumbs.db
+
+# ── Env / secrets ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example

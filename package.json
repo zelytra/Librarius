@@ -1,0 +1,25 @@
+{
+  "name": "librarius",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ma Bibliothèque — gestion de bibliothèque personnelle (livres & mangas).",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^6.0.5"
+    }
+  },
+  "scripts": {
+    "web:dev": "pnpm --filter @librarius/web dev",
+    "web:build": "pnpm --filter @librarius/web build",
+    "web:test": "pnpm --filter @librarius/web test",
+    "web:lint": "pnpm --filter @librarius/web lint",
+    "api:dev": "cd apps/api && ./mvnw quarkus:dev",
+    "api:test": "cd apps/api && ./mvnw -B test",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
+  }
+}

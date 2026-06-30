@@ -1,0 +1,35 @@
+## Frontend PWA de Ma Bibliothèque (Librarius).
+
+image:
+  repository: ghcr.io/zelytra/librarius-web
+  # Surchargé par la CD avec le SHA du commit (image immuable).
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+# Secret de pull GHCR (créé par la CD à partir du GITHUB_TOKEN).
+imagePullSecrets:
+  - name: ghcr-pull
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 192Mi
+
+rolling:
+  maxSurge: "25%"
+  maxUnavailable: "25%"
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  host: book.zelytra.fr
+  className: traefik
+  clusterIssuer: letsencrypt-prod
+  tlsSecretName: book-zelytra-fr-tls

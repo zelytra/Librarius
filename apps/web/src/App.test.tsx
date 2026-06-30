@@ -1,0 +1,52 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { expect, test } from 'vitest';
+import App from './App';
+import { ThemeProvider } from './shared/theme/ThemeProvider';
+import './i18n';
+
+function renderAt(path: string) {
+  return render(
+    <ThemeProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
+    </ThemeProvider>,
+  );
+}
+
+test('affiche la navigation traduite en français', () => {
+  renderAt('/');
+  expect(screen.getByText('Accueil')).toBeInTheDocument();
+  expect(screen.getByText('Collection')).toBeInTheDocument();
+  expect(screen.getByText('Découvrir')).toBeInTheDocument();
+});
+
+test('le commutateur de thème applique le thème sur <html>', () => {
+  renderAt('/settings');
+  fireEvent.click(screen.getByText('Nuit'));
+  expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
+});
+
+test('la collection liste les livres et bascule vers la mangathèque', () => {
+  renderAt('/collection');
+  expect(screen.getByText('Fourth Wing')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Mangathèque'));
+  expect(screen.getAllByText('One Piece').length).toBeGreaterThan(0);
+});
+
+test('la liste de souhaits affiche le total estimé', () => {
+  renderAt('/wishlist');
+  expect(screen.getByText(/titres · estimé/)).toBeInTheDocument();
+});
+
+test('les statistiques affichent l\'objectif annuel', () => {
+  renderAt('/stats');
+  expect(screen.getByText('Objectif 2026')).toBeInTheDocument();
+});
+
+test('l\'accueil affiche les sections du tableau de bord', () => {
+  renderAt('/');
+  expect(screen.getByText('Reprendre la lecture')).toBeInTheDocument();
+  expect(screen.getByText('Votre pile 2026')).toBeInTheDocument();
+});
