@@ -76,6 +76,12 @@
       <artifactId>quarkus-oidc</artifactId>
     </dependency>
 
+    <!-- Documentation OpenAPI (sert /q/openapi + Swagger UI en dev) -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>io.quarkus</groupId>
