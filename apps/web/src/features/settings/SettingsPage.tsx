@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
+import { ImportSection } from './ImportSection';
 
 const APP_VERSION = '1.0';
 
@@ -33,6 +34,9 @@ export function SettingsPage() {
         </button>
         <h2 style={{ fontSize: 25 }}>{t('settings.title')}</h2>
       </div>
+
+      {/* Import de bibliothèque externe. */}
+      <ImportSection />
 
       {/* Apparence : commutateur de thème (fonctionnel). */}
       <h3 style={{ fontSize: 16, margin: '0 0 14px' }}>{t('settings.appearance')}</h3>
