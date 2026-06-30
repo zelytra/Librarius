@@ -1,0 +1,116 @@
+{{- if .Values.keycloak.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-keycloak-realm
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+data:
+  librarius-realm.json: |
+    {
+      "realm": "librarius",
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": true,
+      "loginWithEmailAllowed": true,
+      "displayName": "Ma Bibliothèque",
+      "roles": { "realm": [{ "name": "user" }] },
+      "defaultRoles": ["user"],
+      "users": [
+        {
+          "username": "alice", "enabled": true, "emailVerified": true,
+          "email": "alice@biblio.app", "firstName": "Alice", "lastName": "Lectrice",
+          "credentials": [{ "type": "password", "value": "alice", "temporary": false }],
+          "realmRoles": ["user"]
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "librarius-web", "name": "Librarius PWA", "enabled": true,
+          "publicClient": true, "standardFlowEnabled": true, "directAccessGrantsEnabled": true,
+          "redirectUris": ["https://{{ .Values.domain }}/*"],
+          "webOrigins": ["+"],
+          "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "+" }
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-keycloak
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "keycloak") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "librarius.selector" (dict "ctx" . "component" "keycloak") | nindent 8 }}
+    spec:
+      containers:
+        - name: keycloak
+          image: {{ .Values.keycloak.image }}
+          args: ["start", "--import-realm"]
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: {{ .Values.keycloak.admin | quote }}
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: {{ .Values.keycloak.adminPassword | quote }}
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HTTP_PORT
+              value: "8081"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: "/auth"
+            - name: KC_HOSTNAME
+              value: "https://{{ .Values.domain }}"
+            - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: "xforwarded"
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://{{ .Release.Name }}-postgres:5432/{{ .Values.keycloak.database }}"
+            - name: KC_DB_USERNAME
+              value: {{ .Values.postgres.user | quote }}
+            - name: KC_DB_PASSWORD
+              value: {{ .Values.postgres.password | quote }}
+          ports:
+            - containerPort: 8081
+            - containerPort: 9000
+          volumeMounts:
+            - name: realm
+              mountPath: /opt/keycloak/data/import
+          readinessProbe:
+            httpGet: { port: 9000, path: /health/ready }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 30
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+      volumes:
+        - name: realm
+          configMap:
+            name: {{ .Release.Name }}-keycloak-realm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-keycloak
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+  selector:
+    {{- include "librarius.selector" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+{{- end }}

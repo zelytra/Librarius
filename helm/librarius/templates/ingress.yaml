@@ -2,26 +2,47 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "librarius.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
-    {{- include "librarius.labels" . | nindent 4 }}
+    {{- include "librarius.labels" (dict "ctx" . "component" "ingress") | nindent 4 }}
   annotations:
     cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer | quote }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host | quote }}
+        - {{ .Values.domain | quote }}
       secretName: {{ .Values.ingress.tlsSecretName }}
   rules:
-    - host: {{ .Values.ingress.host | quote }}
+    - host: {{ .Values.domain | quote }}
       http:
         paths:
+          {{- if .Values.keycloak.enabled }}
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-keycloak
+                port: { number: 8081 }
+          {{- end }}
+          {{- if .Values.api.enabled }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-api
+                port: { number: 8080 }
+          - path: /q
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-api
+                port: { number: 8080 }
+          {{- end }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "librarius.fullname" . }}
-                port:
-                  number: {{ .Values.service.port }}
+                name: {{ .Release.Name }}-web
+                port: { number: 80 }
 {{- end }}

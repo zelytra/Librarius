@@ -52,32 +52,29 @@ docker build -f apps/web/Dockerfile \
   -t ghcr.io/zelytra/librarius-web:latest .
 ```
 
-## Kubernetes (Helm) — book.zelytra.fr
+## Kubernetes (Helm) — librarius.zelytra.fr
 
-La PWA est déployée sur le cluster k3s via la chart Helm `helm/librarius` (v0.1.0).
+La **stack complète** est déployée sur le cluster k3s via la chart `helm/librarius`
+(v0.2.0) : **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) et **Keycloak**.
 
-- **Déclencheur** : push sur `main` → workflow `cd.yml` :
-  1. build + push des images vers GHCR (`librarius-api`, `librarius-web`, tags `latest` / `0.1.0` / `<sha>`),
-  2. création du secret de pull `ghcr-pull` (depuis le `GITHUB_TOKEN`),
-  3. `helm upgrade --install librarius ./helm/librarius --set image.tag=<sha>`.
-- **Ingress** : `book.zelytra.fr` via **Traefik**, TLS automatique par **cert-manager**
-  (`cluster-issuer: letsencrypt-prod`, secret `book-zelytra-fr-tls`).
-- **Secret CI requis** : `KUBECONFIG` (configuré dans les secrets Actions du repo).
+- **Hôte unique** `librarius.zelytra.fr` (Traefik + cert-manager `letsencrypt-prod`,
+  secret `librarius-zelytra-fr-tls`). Routage par chemin :
+  `/auth` → Keycloak, `/api` + `/q` → api, `/` → web.
+- **OIDC e2e** : issuer = `https://librarius.zelytra.fr/auth/realms/librarius`.
+  Le web embarque cette autorité au build (`VITE_OIDC_AUTHORITY`) ; l'api valide en
+  interne (discovery/JWKS via le service Keycloak, backchannel dynamique).
+- **Déclencheur** : push `main` → `cd.yml` : build+push images GHCR (web buildé avec
+  l'autorité OIDC), secret `ghcr-pull`, `helm upgrade --install` avec les tags `<sha>`.
+- **PostgreSQL** : une instance, deux bases (`librarius` + `keycloak`), PVC `local-path`.
 
-Déploiement manuel équivalent :
+### ⚠️ Prérequis DNS (action requise)
 
-```bash
-helm upgrade --install librarius ./helm/librarius --namespace default --set image.tag=<sha>
-```
+`librarius.zelytra.fr` doit pointer (A) vers l'IP publique du cluster (`92.170.11.63`).
+Tant que ce n'est pas le cas, l'ingress n'est pas joignable et cert-manager ne peut
+pas émettre le certificat. Comme Keycloak est servi en **chemin** (`/auth`), **un seul**
+enregistrement DNS suffit pour toute la stack.
 
-### Prérequis / limites de la v0.1.0
-
-- **DNS** : `book.zelytra.fr` doit pointer (A/CNAME) vers le cluster, sinon
-  cert-manager ne peut pas émettre le certificat (challenge HTTP-01).
-- **Périmètre** : seule la **PWA** (frontend) est déployée. Tous les écrans
-  fonctionnent (données locales) ; la **connexion + recherche live** nécessitent
-  de déployer aussi `api` + PostgreSQL + Keycloak (avec un OIDC cohérent avec le
-  domaine public) — itération suivante.
+Identifiants de test (realm importé) : **alice / alice** (l'inscription est ouverte).
 
 ## Pistes ultérieures
 

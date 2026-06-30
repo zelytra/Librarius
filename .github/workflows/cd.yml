@@ -37,9 +37,11 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           push: true
+          # Le web embarque l'autorité OIDC publique au build (ignoré par l'api).
+          build-args: |
+            VITE_OIDC_AUTHORITY=https://librarius.zelytra.fr/auth/realms/librarius
           tags: |
             ghcr.io/zelytra/librarius-${{ matrix.name }}:latest
-            ghcr.io/zelytra/librarius-${{ matrix.name }}:0.1.0
             ghcr.io/zelytra/librarius-${{ matrix.name }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -78,10 +80,12 @@ jobs:
         run: |
           helm upgrade --install librarius ./helm/librarius \
             --namespace default \
-            --set image.tag=${{ github.sha }} \
-            --wait --timeout 3m
+            --set web.image.tag=${{ github.sha }} \
+            --set api.image.tag=${{ github.sha }} \
+            --wait --timeout 8m
 
       - name: Verify rollout
         run: |
-          kubectl -n default rollout status deployment/librarius --timeout=120s
-          kubectl -n default get pods,ingress -l app=librarius
+          kubectl -n default rollout status deployment/librarius-web --timeout=180s
+          kubectl -n default rollout status deployment/librarius-api --timeout=240s
+          kubectl -n default get pods,ingress -l release=librarius
