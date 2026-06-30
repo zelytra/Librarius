@@ -44,3 +44,9 @@ test('les statistiques affichent l\'objectif annuel', () => {
   renderAt('/stats');
   expect(screen.getByText('Objectif 2026')).toBeInTheDocument();
 });
+
+test('l\'accueil affiche les sections du tableau de bord', () => {
+  renderAt('/');
+  expect(screen.getByText('Reprendre la lecture')).toBeInTheDocument();
+  expect(screen.getByText('Votre pile 2026')).toBeInTheDocument();
+});
