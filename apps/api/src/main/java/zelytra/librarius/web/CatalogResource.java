@@ -1,5 +1,6 @@
 package zelytra.librarius.web;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
@@ -23,6 +24,9 @@ public class CatalogResource {
     @Inject
     CatalogService catalog;
 
+    @Inject
+    MeterRegistry meters;
+
     @GET
     @Path("/search")
     public List<CatalogResult> search(@QueryParam("q") String query,
@@ -32,6 +36,8 @@ public class CatalogResource {
             return List.of();
         }
         Kind target = kind != null ? kind : Kind.BOOK;
+        // Métrique métier : nombre de recherches catalogue par nature.
+        meters.counter("librarius.catalog.search", "kind", target.name()).increment();
         return catalog.search(target, query.trim(), Math.clamp(limit, 1, 40));
     }
 

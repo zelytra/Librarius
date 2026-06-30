@@ -65,11 +65,13 @@ Workflows GitHub Actions (path-filtered) :
 
 Chaque PR doit être verte avant merge.
 
-## Monitoring *(PR #9)*
+## Monitoring ✅
 
-`quarkus-micrometer-registry-prometheus` → `/q/metrics` (JVM, HTTP, Hibernate, HikariCP)
-+ métriques métier (`catalog_search_total`, `library_item_added_total`, …). Grafana
-provisionné as-code (datasource Prometheus, dashboards JVM/HTTP/Business), SSO via Keycloak.
+`quarkus-micrometer-registry-prometheus` → `/q/metrics` (JVM, HTTP, system) + métrique
+métier `librarius_catalog_search_total{kind}`. Prometheus (`:9090`) scrape l'API ;
+Grafana (`:3000`) est provisionné as-code (datasource Prometheus + dashboard
+« Librarius — Vue d'ensemble » : débit/latence HTTP, mémoire JVM, recherches catalogue).
+En dev, Prometheus scrape l'hôte (`host.docker.internal:8080`) ; en prod, le conteneur API.
 
 ## Roadmap des PR
 

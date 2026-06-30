@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: librarius-api
+    metrics_path: /q/metrics
+    static_configs:
+      # En dev, l'API tourne sur l'hôte (quarkus:dev). En prod, remplacer par
+      # le nom du service conteneur (ex. api:8080).
+      - targets: ['host.docker.internal:8080']
