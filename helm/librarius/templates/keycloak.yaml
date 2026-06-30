@@ -67,7 +67,7 @@ spec:
             - name: KC_HTTP_RELATIVE_PATH
               value: "/auth"
             - name: KC_HOSTNAME
-              value: "https://{{ .Values.domain }}"
+              value: "https://{{ .Values.domain }}/auth"
             - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
               value: "true"
             - name: KC_PROXY_HEADERS
@@ -89,7 +89,7 @@ spec:
             - name: realm
               mountPath: /opt/keycloak/data/import
           readinessProbe:
-            httpGet: { port: 9000, path: /health/ready }
+            httpGet: { port: 8081, path: /auth/realms/librarius }
             initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 30
