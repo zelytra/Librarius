@@ -3,14 +3,18 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import App from './App';
 
 beforeEach(() => {
+  // Le client orval (fetch) lit la réponse via res.text() puis JSON.parse.
   vi.stubGlobal(
     'fetch',
     vi.fn(() =>
       Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({ app: 'Librarius API', message: 'Bonjour', timestamp: '2026-01-01' }),
-      } as Response),
+        status: 200,
+        headers: new Headers(),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({ app: 'Librarius API', message: 'Bonjour', timestamp: '2026-01-01' }),
+          ),
+      } as unknown as Response),
     ),
   );
 });

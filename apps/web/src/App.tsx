@@ -1,26 +1,24 @@
 import { useEffect, useState } from 'react';
-
-interface HelloResponse {
-  app: string;
-  message: string;
-  timestamp: string;
-}
+import { getApiHello } from './api/generated/librarius';
 
 /**
- * Écran d'amorçage minimal : vérifie la connexion à l'API.
- * Les vrais écrans (Accueil, Collection, etc.) arrivent dans les PR suivantes.
+ * Écran d'amorçage minimal : vérifie la connexion à l'API via le client typé
+ * généré depuis l'OpenAPI. Les vrais écrans arrivent dans les PR suivantes.
  */
 function App() {
-  const [hello, setHello] = useState<HelloResponse | null>(null);
+  const [appName, setAppName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/hello')
+    getApiHello()
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<HelloResponse>;
+        if (res.status === 200) {
+          const payload = res.data as Record<string, unknown>;
+          setAppName(String(payload.app ?? 'API'));
+        } else {
+          setError(`HTTP ${res.status}`);
+        }
       })
-      .then(setHello)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Erreur inconnue'));
   }, []);
 
@@ -28,13 +26,9 @@ function App() {
     <main className="app-shell">
       <h1>Ma Bibliothèque</h1>
       <p className="tagline">Votre bibliothèque personnelle de livres et mangas.</p>
-      {hello && (
-        <p className="api-status api-status--ok">
-          API connectée : {hello.app} — {hello.message}
-        </p>
-      )}
+      {appName && <p className="api-status api-status--ok">API connectée : {appName}</p>}
       {error && <p className="api-status api-status--err">API injoignable ({error})</p>}
-      {!hello && !error && <p className="api-status">Connexion à l'API…</p>}
+      {!appName && !error && <p className="api-status">Connexion à l'API…</p>}
     </main>
   );
 }
