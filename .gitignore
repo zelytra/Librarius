@@ -6,6 +6,7 @@ coverage/
 *.local
 .vite/
 .eslintcache
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
