@@ -74,6 +74,46 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /api/categories:
+    get:
+      tags:
+      - Category Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    post:
+      tags:
+      - Category Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreateDto"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /api/goals:
     get:
       tags:
@@ -244,6 +284,54 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /api/library/{id}/progress:
+    put:
+      tags:
+      - Library Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressDto"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/rank:
+    put:
+      tags:
+      - Library Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankAssignDto"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /api/me:
     get:
       tags:
@@ -255,6 +343,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MeDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/stats:
+    get:
+      tags:
+      - Stats Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsDto"
         "401":
           description: Not Authorized
         "403":
@@ -380,6 +485,37 @@ components:
           type: string
         providerRef:
           type: string
+    CategoryCreateDto:
+      required:
+      - label
+      type: object
+      properties:
+        label:
+          pattern: \S
+          type: string
+        color:
+          type: string
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        code:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+        builtin:
+          type: boolean
+    GenreCount:
+      type: object
+      properties:
+        genre:
+          type: string
+        count:
+          format: int64
+          type: integer
     GoalDto:
       type: object
       properties:
@@ -455,6 +591,8 @@ components:
           type: integer
         acquiredAt:
           $ref: "#/components/schemas/LocalDate"
+        rankCode:
+          type: string
         book:
           $ref: "#/components/schemas/BookView"
     LibraryStatus:
@@ -518,6 +656,22 @@ components:
           type: string
         locale:
           type: string
+    ProgressDto:
+      type: object
+      properties:
+        currentPage:
+          format: int32
+          type: integer
+        percent:
+          format: int32
+          type: integer
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+    RankAssignDto:
+      type: object
+      properties:
+        categoryId:
+          $ref: "#/components/schemas/UUID"
     ScrapeRequest:
       required:
       - handle
@@ -526,6 +680,34 @@ components:
         handle:
           pattern: \S
           type: string
+    StatsDto:
+      type: object
+      properties:
+        read:
+          format: int64
+          type: integer
+        reading:
+          format: int64
+          type: integer
+        toRead:
+          format: int64
+          type: integer
+        pagesRead:
+          format: int64
+          type: integer
+        seriesCount:
+          format: int64
+          type: integer
+        goalTarget:
+          format: int32
+          type: integer
+        goalCurrent:
+          format: int64
+          type: integer
+        byGenre:
+          type: array
+          items:
+            $ref: "#/components/schemas/GenreCount"
     UUID:
       format: uuid
       pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
