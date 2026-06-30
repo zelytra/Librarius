@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-web-nginx
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+        location = /healthz { add_header Content-Type text/plain; return 200 'ok'; }
+        location / { try_files $uri $uri/ /index.html; }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 8 }}
+      annotations:
+        checksum/config: {{ tpl (toString .Values.web.image.tag) . | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          readinessProbe:
+            httpGet: { port: 80, path: /healthz }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ .Release.Name }}-web-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-web
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 4 }}
