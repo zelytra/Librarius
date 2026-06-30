@@ -27,3 +27,10 @@ test('le commutateur de thème applique le thème sur <html>', () => {
   fireEvent.click(screen.getByText('Nuit'));
   expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
 });
+
+test('la collection liste les livres et bascule vers la mangathèque', () => {
+  renderAt('/collection');
+  expect(screen.getByText('Fourth Wing')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Mangathèque'));
+  expect(screen.getAllByText('One Piece').length).toBeGreaterThan(0);
+});
