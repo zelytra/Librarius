@@ -1,0 +1,29 @@
+name: api
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/api.yml'
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/api.yml'
+
+jobs:
+  build:
+    name: build · test (JVM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build & test
+        working-directory: apps/api
+        run: ./mvnw -B -ntp verify

@@ -1,0 +1,46 @@
+name: web
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/web.yml'
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/web.yml'
+
+jobs:
+  build:
+    name: lint · typecheck · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter @librarius/web lint
+
+      - name: Test
+        run: pnpm --filter @librarius/web test
+
+      - name: Build
+        run: pnpm --filter @librarius/web build

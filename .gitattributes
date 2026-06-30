@@ -1,0 +1,17 @@
+# Normalise les fins de ligne en LF dans le dépôt (impératif pour un monorepo
+# développé sous Windows : évite de corrompre mvnw, scripts shell et lockfiles).
+* text=auto eol=lf
+
+# Scripts spécifiques Windows : CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaires : jamais de normalisation
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.jar binary

@@ -1,0 +1,23 @@
+# Stack de développement local de Ma Bibliothèque (Librarius).
+# PR #1 : uniquement PostgreSQL. Keycloak / Prometheus / Grafana seront ajoutés
+# dans les PR backend-auth (#2) et monitoring (#9).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: librarius-postgres
+    environment:
+      POSTGRES_USER: librarius
+      POSTGRES_PASSWORD: librarius
+      POSTGRES_DB: librarius
+    ports:
+      - '5432:5432'
+    volumes:
+      - librarius-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U librarius -d librarius']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  librarius-pgdata:
