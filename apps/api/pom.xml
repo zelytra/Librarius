@@ -82,6 +82,12 @@
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
 
+    <!-- Monitoring (métriques Prometheus via Micrometer) -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
+
     <!-- Catalogue externe (clients REST + cache) -->
     <dependency>
       <groupId>io.quarkus</groupId>
