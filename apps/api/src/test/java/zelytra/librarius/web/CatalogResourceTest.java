@@ -33,12 +33,12 @@ class CatalogResourceTest {
         Mockito.when(catalog.search(Kind.BOOK, "wing", 20)).thenReturn(List.of(
                 new CatalogResult("BOOK", "Fourth Wing", "Rebecca Yarros", 2023,
                         "https://cover", "synopsis", "9781234567890", "Piatkus", "fr", null,
-                        "googlebooks", "ref-1")));
+                        "openlibrary", "ref-1")));
 
         given().auth().oauth2(keycloak.getAccessToken("alice"))
                 .when().get("/api/catalog/search?q=wing&kind=BOOK")
                 .then().statusCode(200)
                 .body("[0].title", is("Fourth Wing"))
-                .body("[0].provider", is("googlebooks"));
+                .body("[0].provider", is("openlibrary"));
     }
 }
