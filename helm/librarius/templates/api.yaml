@@ -7,6 +7,9 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
 spec:
   replicas: {{ .Values.api.replicas }}
+  # Recreate : remplace en place sans pod « surge » (nœud contraint en CPU).
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "librarius.selector" (dict "ctx" . "component" "api") | nindent 6 }}
