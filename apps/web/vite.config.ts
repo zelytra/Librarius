@@ -9,6 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        // Ne pas servir la SPA (index.html) pour ces routes serveur : sinon le
+        // service worker intercepte la redirection OIDC vers Keycloak (/auth) et
+        // les appels API (/api, /q), et l'utilisateur « revient » sur le front.
+        navigateFallbackDenylist: [/^\/auth/, /^\/api/, /^\/q/],
+      },
       manifest: {
         name: 'Ma Bibliothèque',
         short_name: 'Bibliothèque',
