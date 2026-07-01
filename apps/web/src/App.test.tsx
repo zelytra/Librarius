@@ -32,21 +32,19 @@ test('le commutateur de thème applique le thème sur <html>', () => {
   expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
 });
 
-test('la collection liste les livres et bascule vers la mangathèque', () => {
+test('la collection invite à se connecter si non authentifié', async () => {
   renderAt('/collection');
-  expect(screen.getByText('Fourth Wing')).toBeInTheDocument();
-  fireEvent.click(screen.getByText('Mangathèque'));
-  expect(screen.getAllByText('One Piece').length).toBeGreaterThan(0);
+  expect(await screen.findByText(/Connecte-toi pour voir ta collection/)).toBeInTheDocument();
 });
 
-test('la liste de souhaits affiche le total estimé', () => {
+test('les souhaits invitent à se connecter si non authentifié', async () => {
   renderAt('/wishlist');
-  expect(screen.getByText(/titres · estimé/)).toBeInTheDocument();
+  expect(await screen.findByText(/Connecte-toi pour voir tes souhaits/)).toBeInTheDocument();
 });
 
-test('les statistiques affichent l\'objectif annuel', () => {
+test('les statistiques invitent à se connecter si non authentifié', async () => {
   renderAt('/stats');
-  expect(screen.getByText('Objectif 2026')).toBeInTheDocument();
+  expect(await screen.findByText(/Connecte-toi pour voir tes statistiques/)).toBeInTheDocument();
 });
 
 test('l\'accueil affiche les sections du tableau de bord', () => {
