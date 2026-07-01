@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Chip, Segmented } from '../../shared/ui/primitives';
@@ -29,7 +30,7 @@ const SORTS: { id: SortBy; label: string }[] = [
   { id: 'genre', label: 'Genre' },
 ];
 
-function CoverTile({ item, onDelete, width }: { item: LibraryItemDto; onDelete: () => void; width?: number }) {
+function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void; width?: number }) {
   const b = item.book!;
   const title = b.title ?? '—';
   const color = colorFor(title);
@@ -37,7 +38,9 @@ function CoverTile({ item, onDelete, width }: { item: LibraryItemDto; onDelete: 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width }}>
       <div
+        onClick={onOpen}
         style={{
+          cursor: 'pointer',
           position: 'relative',
           width: width ?? '100%',
           aspectRatio: width ? undefined : '0.68',
@@ -67,7 +70,10 @@ function CoverTile({ item, onDelete, width }: { item: LibraryItemDto; onDelete: 
           </span>
         )}
         <button
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
           aria-label="Retirer"
           style={{ position: 'absolute', bottom: 6, right: 6, width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
@@ -83,7 +89,9 @@ function CoverTile({ item, onDelete, width }: { item: LibraryItemDto; onDelete: 
 
 function CollectionContent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { opts } = useApiAuth();
+  const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const [items, setItems] = useState<LibraryItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [collType, setCollType] = useState<Kind>('BOOK');
@@ -195,7 +203,7 @@ function CollectionContent() {
       {!loading && !grouped && filtered.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px 12px' }}>
           {filtered.map((it) => (
-            <CoverTile key={it.id} item={it} onDelete={() => void remove(it.id!)} />
+            <CoverTile key={it.id} item={it} onOpen={() => open(it)} onDelete={() => void remove(it.id!)} />
           ))}
         </div>
       )}
@@ -215,7 +223,7 @@ function CollectionContent() {
               </div>
               <div className="scroll-x" style={{ display: 'flex', gap: 11, overflowX: 'auto', padding: '2px 16px 4px' }}>
                 {list.map((it) => (
-                  <CoverTile key={it.id} item={it} onDelete={() => void remove(it.id!)} width={84} />
+                  <CoverTile key={it.id} item={it} onOpen={() => open(it)} onDelete={() => void remove(it.id!)} width={84} />
                 ))}
               </div>
             </div>
