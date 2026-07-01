@@ -23,6 +23,9 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicas }}
+  # Recreate : pas de pod « surge » (le nœud partagé est contraint en CPU).
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 6 }}
