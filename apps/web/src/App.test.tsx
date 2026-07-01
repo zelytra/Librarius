@@ -47,8 +47,8 @@ test('les statistiques invitent à se connecter si non authentifié', async () =
   expect(await screen.findByText(/Connecte-toi pour voir tes statistiques/)).toBeInTheDocument();
 });
 
-test('l\'accueil affiche les sections du tableau de bord', () => {
+test('l\'accueil affiche l\'en-tête et invite à se connecter', async () => {
   renderAt('/');
-  expect(screen.getByText('Reprendre la lecture')).toBeInTheDocument();
-  expect(screen.getByText('Votre pile 2026')).toBeInTheDocument();
+  expect(screen.getByText('Bonsoir')).toBeInTheDocument();
+  expect(await screen.findByText(/Connecte-toi pour retrouver ta bibliothèque/)).toBeInTheDocument();
 });
