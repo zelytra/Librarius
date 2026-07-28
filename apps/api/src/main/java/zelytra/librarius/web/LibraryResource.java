@@ -27,8 +27,10 @@ import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
+import zelytra.librarius.library.EditionService;
 import zelytra.librarius.library.ReadingProgressService;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.web.ApiDtos.EditionSwitchDto;
 import zelytra.librarius.web.ApiDtos.LibraryCreateDto;
 import zelytra.librarius.web.ApiDtos.LibraryItemDto;
 import zelytra.librarius.web.ApiDtos.LibraryPageDto;
@@ -37,6 +39,7 @@ import zelytra.librarius.web.ApiDtos.RankAssignDto;
 import zelytra.librarius.web.ApiDtos.ReviewDto;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** The user's personal collection (owned books and mangas). */
@@ -63,6 +66,9 @@ public class LibraryResource {
 
     @Inject
     ReadingProgressService progress;
+
+    @Inject
+    EditionService editions;
 
     /**
      * One page of the collection, filtered and sorted by the database.
@@ -210,6 +216,42 @@ public class LibraryResource {
     /** An empty text area means "no review", not a row holding an empty string. */
     private static String blankToNull(String text) {
         return text == null || text.isBlank() ? null : text.trim();
+    }
+
+    /**
+     * Points the item at another edition of the same work — "this is the edition I own".
+     *
+     * <p>Only the materialisation changes: what the row records about the reader is left
+     * alone, and the reading position follows the rules of {@link EditionService}. Owning
+     * the same edition twice is what {@code UNIQUE(user_id, edition_id)} forbids, so a
+     * switch onto an edition already in the collection is refused with a **409** and a
+     * message rather than with a constraint violation.
+     */
+    @PUT
+    @Path("/{id}/edition")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setEdition(@PathParam("id") UUID id, @Valid EditionSwitchDto dto) {
+        EditionService.SwitchOutcome outcome =
+                editions.switchEdition(currentUser.id(), id, dto != null ? dto.editionId() : null);
+        if (outcome.ok()) {
+            return Response.ok(LibraryItemDto.of(outcome.item())).build();
+        }
+        return switch (outcome.refusal()) {
+            case UNKNOWN_ITEM -> Response.status(Response.Status.NOT_FOUND).build();
+            case NOT_AN_EDITION_OF_THIS_WORK -> error(Response.Status.BAD_REQUEST,
+                    "Cette édition n'appartient pas à la même œuvre.");
+            case ALREADY_OWNED -> error(Response.Status.CONFLICT,
+                    "Cette édition est déjà dans ta collection.");
+        };
+    }
+
+    /**
+     * A refusal the user gets to read. French like the import errors, the interface being
+     * French; the front end shows it as it comes rather than mapping every status itself.
+     */
+    private static Response error(Response.Status status, String message) {
+        return Response.status(status).entity(Map.of("message", message)).build();
     }
 
     @DELETE

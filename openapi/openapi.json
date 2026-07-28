@@ -8,6 +8,9 @@
           "editionId" : {
             "$ref" : "#/components/schemas/UUID"
           },
+          "workId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
           "kind" : {
             "type" : "string"
           },
@@ -124,6 +127,48 @@
           },
           "builtin" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "EditionDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "isbn13" : {
+            "type" : "string"
+          },
+          "publisher" : {
+            "type" : "string"
+          },
+          "language" : {
+            "type" : "string"
+          },
+          "pageCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "format" : {
+            "type" : "string"
+          },
+          "releaseDate" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "coverUrl" : {
+            "type" : "string"
+          },
+          "owned" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "EditionSwitchDto" : {
+        "type" : "object",
+        "required" : [ "editionId" ],
+        "properties" : {
+          "editionId" : {
+            "$ref" : "#/components/schemas/UUID"
           }
         }
       },
@@ -1307,6 +1352,52 @@
         } ]
       }
     },
+    "/api/library/{id}/edition" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EditionSwitchDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Edition",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/library/{id}/progress" : {
       "put" : {
         "parameters" : [ {
@@ -1885,6 +1976,44 @@
         },
         "summary" : "Acquire",
         "tags" : [ "Wishlist Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/works/{id}/editions" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EditionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "List",
+        "tags" : [ "Work Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]

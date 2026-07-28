@@ -39,9 +39,17 @@ public final class ApiDtos {
         }
     }
 
-    /** Denormalized "book" view (work + edition) returned to the front end. */
+    /**
+     * Denormalized "book" view (work + edition) returned to the front end.
+     *
+     * @param editionId the materialisation the user owns — publisher, ISBN, page count
+     * @param workId    the work behind it, which several editions may share. What
+     *                  {@code /api/works/{id}/editions} takes, so a screen holding a book
+     *                  can ask for the other editions of the same title
+     */
     public record BookView(
             UUID editionId,
+            UUID workId,
             String kind,
             String title,
             String authors,
@@ -59,10 +67,41 @@ public final class ApiDtos {
             Work w = e.work;
             // genresText, not the normalised genres: reading the association here would
             // cost one query per item of a page of the collection.
-            return new BookView(e.id, w.kind.name(), w.title, w.authors, w.seriesTitle,
+            return new BookView(e.id, w.id, w.kind.name(), w.title, w.authors, w.seriesTitle,
                     w.volumeNumber, e.coverUrl, e.pageCount, e.publisher, e.language, e.isbn13,
                     w.originalYear, w.synopsis, w.genresText);
         }
+    }
+
+    /**
+     * One edition of a work, as the "other editions" section of the detail screen shows it.
+     *
+     * <p>Catalog data, and shared as such: it says what exists, never who owns it. The one
+     * user-scoped field is {@code owned}, and it describes the caller's own collection.
+     *
+     * @param owned whether the caller already has this very edition — a switch onto it is
+     *              what {@code UNIQUE(user_id, edition_id)} forbids, so the section marks it
+     *              rather than offering an action the server would refuse
+     */
+    public record EditionDto(UUID id, String isbn13, String publisher, String language,
+            Integer pageCount, String format, LocalDate releaseDate, String coverUrl,
+            boolean owned) {
+        public static EditionDto of(Edition e, boolean owned) {
+            return new EditionDto(e.id, e.isbn13, e.publisher, e.language, e.pageCount, e.format,
+                    e.releaseDate, e.coverUrl, owned);
+        }
+    }
+
+    /**
+     * Which edition of the work the user actually owns.
+     *
+     * <p>Moves the ownership row onto another materialisation of the same work; everything
+     * the row carries about the reader — status, rating, review, rank, dates — describes the
+     * reader and not the object, and is left untouched. See
+     * {@link zelytra.librarius.library.EditionService} for what happens to the reading
+     * position, the one field a change of edition does not leave alone.
+     */
+    public record EditionSwitchDto(@NotNull UUID editionId) {
     }
 
     /** Manual entry of a book (before the external catalog is integrated). */
