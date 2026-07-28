@@ -32,7 +32,7 @@ import zelytra.librarius.web.ApiDtos.RankAssignDto;
 import java.util.List;
 import java.util.UUID;
 
-/** Collection personnelle de l'utilisateur (livres et mangas possédés). */
+/** The user's personal collection (owned books and mangas). */
 @Path("/api/library")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
@@ -80,7 +80,7 @@ public class LibraryResource {
         return Response.status(Response.Status.CREATED).entity(LibraryItemDto.of(item)).build();
     }
 
-    /** Attribue (ou retire si categoryId null) un rang à un titre possédé. */
+    /** Assigns a rank to an owned title (or clears it when categoryId is null). */
     @PUT
     @Path("/{id}/rank")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class LibraryResource {
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
-    /** Met à jour la progression de lecture (et le statut) d'un titre. */
+    /** Updates the reading progress (and the status) of a title. */
     @PUT
     @Path("/{id}/progress")
     @Consumes(MediaType.APPLICATION_JSON)

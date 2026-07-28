@@ -10,7 +10,7 @@ import zelytra.librarius.domain.Kind;
 
 import java.util.List;
 
-/** Fournisseur de catalogue livre adossé à Open Library (sans clé API). */
+/** Book catalog provider backed by Open Library (no API key needed). */
 @ApplicationScoped
 public class OpenLibraryProvider implements CatalogProvider {
 
@@ -35,7 +35,7 @@ public class OpenLibraryProvider implements CatalogProvider {
             }
             return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
         } catch (Exception e) {
-            Log.warnf("Recherche Open Library échouée : %s", e.getMessage());
+            Log.warnf("Open Library search failed: %s", e.getMessage());
             return List.of();
         }
     }

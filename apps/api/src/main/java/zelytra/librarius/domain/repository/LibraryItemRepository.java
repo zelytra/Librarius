@@ -20,7 +20,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         return list("userId = ?1 and status = ?2 order by createdAt desc", userId, status);
     }
 
-    /** Recherche scoping-safe : ne renvoie l'item que s'il appartient à l'utilisateur. */
+    /** Scoping-safe lookup: returns the item only if it belongs to the user. */
     public Optional<LibraryItem> findOwned(String userId, UUID id) {
         return find("id = ?1 and userId = ?2", id, userId).firstResultOptional();
     }

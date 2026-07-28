@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Édition concrète d'une œuvre (1 œuvre → N éditions). */
+/** Concrete edition of a work (1 work -> N editions). */
 @Entity
 @Table(name = "edition")
 public class Edition {

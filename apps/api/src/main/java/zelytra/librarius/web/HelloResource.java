@@ -9,8 +9,8 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Endpoint de fumée minimal, présent pour vérifier que le squelette Quarkus
- * démarre et répond. Sera remplacé par les ressources métier dans les PR suivantes.
+ * Minimal smoke endpoint, kept to check that the Quarkus skeleton starts and
+ * answers. Will be replaced by the business resources in the following PRs.
  */
 @Path("/api/hello")
 public class HelloResource {

@@ -8,7 +8,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Teste le routage et l'agrégation, sans CDI ni réseau (fournisseurs factices). */
+/** Tests routing and aggregation, without CDI or network (fake providers). */
 class CatalogServiceTest {
 
     private static CatalogResult result(String kind, String title) {
@@ -48,12 +48,12 @@ class CatalogServiceTest {
 
     @Test
     void aggregatesMultipleProvidersForSameKindAndDeduplicates() {
-        // Deux fournisseurs livres renvoyant le même titre + un titre distinct.
+        // Two book providers returning the same title.
         CatalogService service = new CatalogService(List.of(
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))));
 
-        // Le doublon (même titre/auteur) est fusionné en une seule entrée.
+        // The duplicate (same title/author) is merged into a single entry.
         assertEquals(1, service.search(Kind.BOOK, "wing", 10).size());
     }
 }

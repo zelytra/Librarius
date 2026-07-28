@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Souhait d'acquisition (porte priorité et prix estimé). */
+/** Acquisition wish (carries priority and estimated price). */
 @Entity
 @Table(name = "wishlist_item")
 public class WishlistItem {

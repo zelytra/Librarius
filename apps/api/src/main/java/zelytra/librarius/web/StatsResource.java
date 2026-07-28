@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Statistiques de lecture agrégées de l'utilisateur. */
+/** The user's aggregated reading statistics. */
 @Path("/api/stats")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)

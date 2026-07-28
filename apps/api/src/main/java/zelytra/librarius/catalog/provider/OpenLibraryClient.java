@@ -10,7 +10,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.List;
 
-/** Client REST de l'API de recherche Open Library (livres, sans clé). */
+/** REST client for the Open Library search API (books, no API key needed). */
 @RegisterRestClient(configKey = "openlibrary")
 public interface OpenLibraryClient {
 

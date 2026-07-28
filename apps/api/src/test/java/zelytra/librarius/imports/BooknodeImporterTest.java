@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Parsing Booknode testé sur une fixture HTML (sans réseau). */
+/** Booknode parsing tested against an HTML fixture (without network access). */
 class BooknodeImporterTest {
 
     private Document fixture() throws Exception {

@@ -8,11 +8,11 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Objectifs de lecture annuels.
+ * Yearly reading goals.
  *
- * <p>Cette ressource n'était couverte par aucun test et n'est exposée par aucun écran :
- * la création d'un objectif échouait en base sans que rien ne le signale (l'entité était
- * persistée avant que {@code target_count}, colonne NOT NULL, ne soit renseignée).
+ * <p>This resource had no test coverage and is not exposed by any screen: creating a goal
+ * failed in the database with nothing reporting it (the entity was persisted before
+ * {@code target_count}, a NOT NULL column, had been set).
  */
 @QuarkusTest
 class GoalApiTest {
@@ -47,7 +47,7 @@ class GoalApiTest {
                 .body("find { it.year == 2981 }.targetCount", is(24));
     }
 
-    /** Un second appel sur la même année met à jour au lieu de créer un doublon. */
+    /** A second call on the same year updates instead of creating a duplicate. */
     @Test
     void updatesExistingGoalInPlace() {
         given().auth().oauth2(token()).contentType("application/json")
@@ -69,7 +69,7 @@ class GoalApiTest {
                 .body("find { it.year == 2982 }.targetCount", is(45));
     }
 
-    /** L'unité est facultative et retombe sur BOOKS. */
+    /** The unit is optional and falls back to BOOKS. */
     @Test
     void defaultsUnitToBooks() {
         given().auth().oauth2(token()).contentType("application/json")

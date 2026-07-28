@@ -8,8 +8,8 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 
 /**
- * Utilisateur applicatif. L'identifiant est le « sub » du jeton Keycloak ;
- * aucun mot de passe n'est stocké (auth déléguée à Keycloak).
+ * Application user. The identifier is the Keycloak token "sub";
+ * no password is stored (authentication is delegated to Keycloak).
  */
 @Entity
 @Table(name = "app_user")

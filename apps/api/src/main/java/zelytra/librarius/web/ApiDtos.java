@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/** Objets de transfert (DTO) de l'API REST, regroupés pour rester compacts. */
+/** REST API transfer objects (DTOs), grouped together to stay compact. */
 public final class ApiDtos {
 
     private ApiDtos() {
@@ -31,7 +31,7 @@ public final class ApiDtos {
         }
     }
 
-    /** Vue « livre » dénormalisée (œuvre + édition) renvoyée au front. */
+    /** Denormalized "book" view (work + edition) returned to the front end. */
     public record BookView(
             UUID editionId,
             String kind,
@@ -55,7 +55,7 @@ public final class ApiDtos {
         }
     }
 
-    /** Saisie manuelle d'un ouvrage (avant l'intégration du catalogue externe). */
+    /** Manual entry of a book (before the external catalog is integrated). */
     public record ManualBookDto(
             @NotNull Kind kind,
             @NotBlank String title,

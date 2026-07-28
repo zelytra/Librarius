@@ -8,7 +8,7 @@ import jakarta.persistence.Table;
 
 import java.util.UUID;
 
-/** Catégorie de classement : Or/Argent/Bronze (built-in) ou catégorie custom. */
+/** Ranking category: Gold/Silver/Bronze (built-in) or a custom category. */
 @Entity
 @Table(name = "rank_category")
 public class RankCategory {
@@ -17,7 +17,7 @@ public class RankCategory {
     @GeneratedValue
     public UUID id;
 
-    /** {@code null} pour les catégories prédéfinies partagées. */
+    /** {@code null} for the shared built-in categories. */
     @Column(name = "user_id", length = 255)
     public String userId;
 

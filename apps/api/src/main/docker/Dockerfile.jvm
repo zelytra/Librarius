@@ -1,7 +1,7 @@
-# Image JVM de l'API Librarius (build auto-contenu via le wrapper Maven).
-# Contexte de build attendu : apps/api
+# JVM image of the Librarius API (self-contained build through the Maven wrapper).
+# Expected build context: apps/api
 FROM eclipse-temurin:21-jdk AS build
-# Le wrapper Maven (only-script) télécharge Maven via curl.
+# The Maven wrapper (only-script) downloads Maven through curl.
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app

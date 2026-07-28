@@ -2,12 +2,12 @@ package zelytra.librarius.imports;
 
 import java.util.List;
 
-/** Source d'import (un site externe). */
+/** Import source (an external site). */
 public interface LibraryImporter {
 
-    /** Identifiant de la source, ex. "booknode", "babelio". */
+    /** Source identifier, e.g. "booknode", "babelio". */
     String source();
 
-    /** Récupère la bibliothèque publique de l'utilisateur {@code handle} (pseudo). */
+    /** Fetches the public library of the user identified by {@code handle}. */
     List<ImportedBook> fetch(String handle);
 }

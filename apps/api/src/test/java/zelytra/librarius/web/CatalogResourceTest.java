@@ -14,7 +14,7 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
-/** Vérifie l'endpoint de recherche (auth + forme) avec un CatalogService mocké. */
+/** Checks the search endpoint (auth and payload shape) with a mocked CatalogService. */
 @QuarkusTest
 class CatalogResourceTest {
 

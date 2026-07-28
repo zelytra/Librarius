@@ -1,6 +1,6 @@
 package zelytra.librarius.domain;
 
-/** État d'un titre possédé. */
+/** State of an owned title. */
 public enum LibraryStatus {
     OWNED,
     READING,
