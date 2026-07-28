@@ -230,7 +230,7 @@ production opens.*
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
 | Reading goals | ✅ Set in Settings, gauged on Home and summarised on Stats (#50) |
-| Custom categories | `POST /api/categories` works, the UI only shows Gold/Silver/Bronze |
+| Custom categories | ✅ `/categories` creates, renames and deletes them; the Collection's shelf row is built from the user's categories and no longer names the three built-ins ([#51](https://github.com/zelytra/Librarius/issues/51)). Missing: reordering (`sort_order` is always 100), a colour picker, and **the Detail screen**, which still filters the categories down to `['or', 'argent', 'bronze']` (`DetailPage.tsx`) and reads their colours from its own table, so a custom category cannot be assigned to a title from there |
 | Notifications | Nothing (no preferences, no push, no email) |
 | Series / volumes | ✅ `/series/:id` and the Series view of the collection. Missing: a `wished` flag on a volume (the marker is session-local), volume covers, and ordering the series by most recently added — none of the three exists in the API payloads |
 | Export / account deletion | Nothing — **blocking for a public product (GDPR)** |
@@ -255,11 +255,11 @@ production opens.*
 
 | Indicator | Value |
 |---|---|
-| Java classes (main) | 66 |
-| Java tests | 23 files |
-| Front-end files (src) | 55 |
-| Front-end tests | 11 files, 116 tests |
-| Flyway migrations | 7 |
-| REST endpoints exposed | 30 (11 resources) |
+| Java classes (main) | 68 |
+| Java tests | 27 files |
+| Front-end files (src) | 79 |
+| Front-end tests | 11 files, 131 tests |
+| Flyway migrations | 8 |
+| REST endpoints exposed | 32 (11 resources) |
 | Locales | 1 (fr) |
 | CI workflows | 5 |

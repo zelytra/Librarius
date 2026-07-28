@@ -70,9 +70,12 @@ Personal dashboard.
 
 The full inventory, with a **Books / Manga** toggle.
 
-- ✅ Cover grid, rank badge, quick removal.
+- ✅ Cover grid, rank badge — in the colour of the category the title is filed under —,
+  quick removal.
 - ✅ Sorting: date added, title, author, genre, rating. Filter by rank, and "my favourites"
-  (rated 4 or more).
+  (rated 4 or more). The rank chips are **the categories the user has**, built-ins and their
+  own alike, so a category created on the management screen becomes a shelf here; the row
+  ends on the way into that screen (#51).
 - ✅ **Series view**: one row per series with its cover, `12 / 105 volumes` and a progress
   bar, an *Incomplète* badge on a run with volumes left to buy, ordering by progress or
   title, and a way into the series screen. The kind switch and the search carry across the
@@ -165,8 +168,11 @@ something as read — an existing collection carries no reading dates.
   asks the user to type their own username, and offers the export first. The Keycloak login
   goes with the data; if it cannot, nothing is erased and the screen says so.
 - 🔜 Notification preferences.
-- 🔜 Custom category management (the API already exists).
 - 🔜 Legal notice, terms of service, privacy policy.
+
+Category management lives on its own screen (§ 4.9) rather than here: it is reached from
+the Collection, where the categories are used, and not from a settings list nobody visits
+while looking at their shelves.
 
 ### 4.8 Series ✅ / 🔜
 
@@ -193,6 +199,24 @@ collection.
   so the marker is session-local for now.
 - 🔜 Volume covers and titles: the grid shows numbers, since `/api/series/{id}` only names
   the volumes present in the shared catalog.
+
+### 4.9 Categories ✅ / 🔜
+
+`/categories`, reached from the shelf row of the Collection — where the user is standing
+when they realise they want another shelf.
+
+- ✅ The list of the categories the user has: the three built-ins first, flagged *Intégrée*
+  and offering no action, then their own.
+- ✅ Creating one by name, renaming one, deleting one.
+- ✅ Deleting asks for a confirmation that **says what it costs**: the titles filed under the
+  category stay in the collection and lose only their rank. That is not something to
+  discover after the fact.
+- ✅ A name already used is reported ("Tu as déjà une catégorie de ce nom.") instead of
+  failing silently.
+- 🔜 Reordering the categories: `sort_order` exists in the schema, every custom one is
+  created at 100 and the list falls back to alphabetical order.
+- 🔜 Picking a colour. A custom category gets a neutral one; the built-ins keep the gold,
+  silver and bronze of V1.
 
 ## 5. Key journeys
 
@@ -226,8 +250,12 @@ year 🔜.
    percentage are two views of one position: the server derives whichever one the client
    left out, so no two screens can show different figures. `started_at` and `finished_at`
    are what the annual goal and the reading timeline are counted from.
-3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`) and cannot be
-   deleted. A user may create their own categories.
+3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`): shared by every
+   account, they can be neither renamed nor deleted. A user creates as many categories of
+   their own as they like; they are **private** — invisible and unassignable to anyone else
+   — and their names are unique per user, so two accounts may both have a "Coup de cœur".
+   **Deleting a category never deletes a title**: the titles filed under it stay in the
+   collection, unranked.
 4. A title carries **at most one rank**.
 5. A release date is never shown without the **market** it belongs to (FR/JP/EN) — the
    generic catalog trends (`/api/catalog/upcoming`) are the provider's, often JP/EN, and are
