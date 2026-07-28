@@ -9,9 +9,13 @@ découverte catalogue, statistiques. PWA React + API Quarkus + PostgreSQL + Keyc
 
 ## Langue
 
-Réponses, commits, PR, issues et documentation **en français**.
-Code, identifiants, noms de fichiers, commentaires de code **en anglais** — sauf le
-code existant dont les commentaires sont en français : **suis la convention du fichier**.
+Réponses, commits, PR et documentation **en français** ; issues et milestones **en anglais**.
+
+**Tout le code est en anglais**, commentaires et javadoc compris — y compris là où
+l'existant est encore en français : convertis ce que tu touches.
+
+**L'application reste en français** : `fr` est la seule locale, les textes utilisateur
+sont rédigés en français dans `i18n/locales/fr.json`.
 
 ## Commandes
 
