@@ -1,7 +1,7 @@
 # REST API — Librarius
 
 Base path: `/api`. Every resource is `@Authenticated` (Keycloak JWT in
-`Authorization: Bearer …`) **except `/api/hello`**, a demo endpoint to be removed.
+`Authorization: Bearer …`).
 Reference contract: `openapi/openapi.yaml` (generated at build time).
 
 > ⚠️ Any change to a resource or a DTO requires regenerating the schema **and** the TS
@@ -30,7 +30,6 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
-| GET | `/api/hello` | 🔴 Unauthenticated demo — **to be removed** |
 
 Outside `/api`: `/q/health`, `/q/metrics` (Prometheus), `/q/swagger-ui`.
 

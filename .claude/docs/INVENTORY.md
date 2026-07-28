@@ -63,13 +63,17 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    `StatsResource`. Tracking "volumes owned / total" properly is impossible.
 8. **`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats (a book tagged
    "Fantasy, Aventure" counts as a genre distinct from "Fantasy").
-9. **Statistics computed in memory**: `StatsResource` loads the user's *entire* library and
-   then aggregates in Java. Fine at 100 titles, not at 5,000.
+9. ~~**Statistics computed in memory**~~ ✅ **Resolved on 2026-07-28**
+   ([#40](https://github.com/zelytra/Librarius/issues/40)): three aggregate queries in
+   `LibraryItemRepository` replace the in-memory fold, and the query count no longer
+   depends on the size of the collection. One behaviour change: genres with equal counts
+   are now ordered alphabetically rather than by insertion order, the old tie-break
+   following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
 11. **Tables planned but never created**: `series`, `catalog_cache`, `dashboard_layout`,
     `notification_pref`, `upcoming_release`, `library_item_rank` (the rank is a column, not
     a table — an acceptable simplification, worth documenting).
-12. **`HelloResource` is unauthenticated** — a demo endpoint to delete.
+12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
 
 ### Defects fixed since the audit ✅
 

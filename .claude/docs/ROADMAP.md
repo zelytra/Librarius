@@ -48,8 +48,8 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#30](https://github.com/zelytra/Librarius/issues/30) | Move server state to TanStack Query | — |
-| [#31](https://github.com/zelytra/Librarius/issues/31) | Orval mutator: token injection and refresh | #30 |
+| [#30](https://github.com/zelytra/Librarius/issues/30) | ✅ Move server state to TanStack Query | — |
+| [#31](https://github.com/zelytra/Librarius/issues/31) | ✅ Orval mutator: token injection and refresh | #30 |
 | [#32](https://github.com/zelytra/Librarius/issues/32) | Extract inline styles into CSS Modules | — |
 | [#33](https://github.com/zelytra/Librarius/issues/33) | Shared loading, error and empty states | #30 |
 | [#34](https://github.com/zelytra/Librarius/issues/34) | Factor out the cover palette and delete mockData.ts | #32 |
@@ -58,8 +58,8 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 | [#37](https://github.com/zelytra/Librarius/issues/37) | Playwright end-to-end suite on the critical journeys | #36 |
 | [#38](https://github.com/zelytra/Librarius/issues/38) | Server-side pagination and filtering for library and wishlist | — |
 | [#39](https://github.com/zelytra/Librarius/issues/39) | ✅ Per-user data isolation tests | — |
-| [#40](https://github.com/zelytra/Librarius/issues/40) | Compute statistics in SQL | — |
-| [#41](https://github.com/zelytra/Librarius/issues/41) | Remove HelloResource | — |
+| [#40](https://github.com/zelytra/Librarius/issues/40) | ✅ Compute statistics in SQL | — |
+| [#41](https://github.com/zelytra/Librarius/issues/41) | ✅ Remove HelloResource | — |
 | [#42](https://github.com/zelytra/Librarius/issues/42) | Real dark theme driven by tokens | #32 |
 
 ---
