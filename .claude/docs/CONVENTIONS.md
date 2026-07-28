@@ -41,6 +41,13 @@ git config user.name "zelytra"
 git config user.email "contact@zelytra.fr"
 ```
 
+**Aucune mention d'outillage.** Pas de trailer `Co-Authored-By`, pas de « Generated
+with … », aucune signature d'assistant dans les messages de commit, les descriptions de
+PR, les issues, le code ou la documentation du projet. Seule exception : les fichiers
+destinés au maintien des agents — `CLAUDE.md` et `.claude/`. Y renvoyer par leur chemin
+depuis une issue ou une PR reste normal : c'est une référence de fichier, pas une
+attribution.
+
 ### Messages de commit
 
 Conventional commits, sujet en français, impératif, ≤ 72 caractères :
