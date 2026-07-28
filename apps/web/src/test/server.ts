@@ -58,6 +58,8 @@ export const defaultHandlers = [
       unit: body.unit ?? 'BOOKS',
     });
   }),
+  http.put(`${BASE}/categories/:id`, () => HttpResponse.json({ id: 'cat', code: 'perso' })),
+  http.delete(`${BASE}/categories/:id`, () => new HttpResponse(null, { status: 204 })),
   http.put(`${BASE}/library/:id/rank`, () => HttpResponse.json({ id: 'item-1' })),
   http.put(`${BASE}/library/:id/progress`, () => new HttpResponse(null, { status: 204 })),
   http.put(`${BASE}/library/:id/review`, () => HttpResponse.json({ id: 'item-1' })),

@@ -36,6 +36,26 @@
   padding: 2px var(--screen-pad-x) 6px;
 }
 
+/* Not a filter: the way to the screen where the shelves themselves are edited. Set apart
+   from the chips by a rule, so it does not read as one more shelf. */
+.manageShelves {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-12-5);
+  font-weight: 600;
+  color: var(--accent-deep);
+  padding: 0 2px 0 10px;
+  margin-left: 2px;
+  border-left: 1px solid var(--line);
+  white-space: nowrap;
+}
+
 .countRow {
   display: flex;
   align-items: center;

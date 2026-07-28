@@ -203,6 +203,18 @@ export function upcomingRelease(overrides: Partial<UpcomingReleaseDto> = {}): Up
   };
 }
 
+/** One of the user's own categories, as `/api/categories` returns it after the built-ins. */
+export function customCategory(overrides: Partial<CategoryDto> = {}): CategoryDto {
+  return {
+    id: 'cat-dore',
+    code: 'dore',
+    label: 'Doré',
+    color: '#9a8fa6',
+    builtin: false,
+    ...overrides,
+  };
+}
+
 export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
   return {
     read: 12,
