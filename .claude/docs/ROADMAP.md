@@ -18,6 +18,19 @@ GitHub** ; les issues portent le détail et les critères d'acceptation.
 4. **v0.6** dépend de v0.3 (client API propre) mais pas de v0.4.
 5. **v1.0** ferme les exigences d'un produit public.
 
+## Par où commencer
+
+Un agent qui reprend le projet et n'a pas d'instruction plus précise prend, dans cet ordre :
+
+1. **[#58](https://github.com/zelytra/Librarius/issues/58)** — secrets en clair dans un
+   dépôt public : c'est le seul point qui expose une production en fonctionnement.
+2. **[#30](https://github.com/zelytra/Librarius/issues/30)** — l'état serveur conditionne
+   presque tout le travail front qui suit.
+3. **[#32](https://github.com/zelytra/Librarius/issues/32)** — les styles inline bloquent
+   le thème sombre, l'accessibilité et toute réutilisation.
+4. **[#39](https://github.com/zelytra/Librarius/issues/39)** — l'isolation des données
+   n'est vérifiée par aucun test alors que le service est ouvert.
+
 ---
 
 ## v0.3 — Fondations & qualité
@@ -29,21 +42,21 @@ visible, mais toutes les suivantes en dépendent.
 style de mise en forme inline durable, couverture front sur les 7 écrans, isolation
 des données couverte par des tests.
 
-| # | Issue | Dépend de |
+| Issue | Sujet | Dépend de |
 |---|---|---|
-| 1 | Migrer l'état serveur vers TanStack Query (orval `react-query`) | — |
-| 2 | Mutator orval : injection du jeton et rafraîchissement automatique | 1 |
-| 3 | Sortir les styles inline vers des CSS Modules adossés aux tokens | — |
-| 4 | Composants partagés `Loading` / `ErrorState` / `EmptyState` + `ErrorBoundary` | 1 |
-| 5 | Factoriser `colorFor`/`PALETTE`, supprimer `mockData.ts` | 3 |
-| 6 | Externaliser tous les textes en dur vers i18n | — |
-| 7 | Couvrir les 7 écrans par des tests Vitest (avec MSW) | 1, 4 |
-| 8 | Suite e2e Playwright sur les parcours P1–P5 | 7 |
-| 9 | Pagination et filtres serveur sur `/api/library` et `/api/wishlist` | — |
-| 10 | Tests d'isolation des données (`alice` vs `bob`) sur toutes les ressources | — |
-| 11 | Calculer les statistiques en SQL au lieu de la mémoire | — |
-| 12 | Supprimer `HelloResource` | — |
-| 13 | Thème sombre réel, piloté par les tokens | 3 |
+| [#30](https://github.com/zelytra/Librarius/issues/30) | Migrer l'état serveur vers TanStack Query (orval `react-query`) | — |
+| [#31](https://github.com/zelytra/Librarius/issues/31) | Mutator orval : injection du jeton et rafraîchissement automatique | #30 |
+| [#32](https://github.com/zelytra/Librarius/issues/32) | Sortir les styles inline vers des CSS Modules adossés aux tokens | — |
+| [#33](https://github.com/zelytra/Librarius/issues/33) | Composants partagés `Loading` / `ErrorState` / `EmptyState` + `ErrorBoundary` | #30 |
+| [#34](https://github.com/zelytra/Librarius/issues/34) | Factoriser `colorFor`/`PALETTE`, supprimer `mockData.ts` | #32 |
+| [#35](https://github.com/zelytra/Librarius/issues/35) | Externaliser tous les textes en dur vers i18n | — |
+| [#36](https://github.com/zelytra/Librarius/issues/36) | Couvrir les 7 écrans par des tests Vitest (avec MSW) | #30, #33 |
+| [#37](https://github.com/zelytra/Librarius/issues/37) | Suite e2e Playwright sur les parcours P1–P5 | #36 |
+| [#38](https://github.com/zelytra/Librarius/issues/38) | Pagination et filtres serveur sur `/api/library` et `/api/wishlist` | — |
+| [#39](https://github.com/zelytra/Librarius/issues/39) | Tests d'isolation des données (`alice` vs `bob`) sur toutes les ressources | — |
+| [#40](https://github.com/zelytra/Librarius/issues/40) | Calculer les statistiques en SQL au lieu de la mémoire | — |
+| [#41](https://github.com/zelytra/Librarius/issues/41) | Supprimer `HelloResource` | — |
+| [#42](https://github.com/zelytra/Librarius/issues/42) | Thème sombre réel, piloté par les tokens | #32 |
 
 ---
 
@@ -56,23 +69,23 @@ séries, tomes, progression, éditions.
 suivre une série et recevoir ses sorties ; un lecteur de romans peut suivre sa
 progression page à page et son objectif annuel.
 
-| # | Issue | Dépend de |
+| Issue | Sujet | Dépend de |
 |---|---|---|
-| 14 | Migration V3 : tables `series` et `series_follow`, rattachement des `work` | — |
-| 15 | API `/api/series` : fiche, tomes, suivi | 14 |
-| 16 | Écran Série : grille des tomes, possédés / lus / manquants | 15 |
-| 17 | Vue « Séries » dans la Collection avec progression `x / y` | 15 |
-| 18 | Saisie de progression de lecture (page, %, dates) dans le Détail | — |
-| 19 | Notation personnelle et commentaire privé | — |
-| 20 | Éditions alternatives d'une œuvre dans le Détail | — |
-| 21 | Objectif annuel : écran de réglage + jauge sur l'Accueil | — |
-| 22 | Gestion des catégories personnalisées (UI + `PUT`/`DELETE` API) | — |
-| 23 | Souhaits enrichis : modification, budget total, conversion en collection | — |
-| 24 | Recherche avancée dans Découvrir (auteur, année) + ajout manuel guidé | — |
-| 25 | Accueil personnalisable : réordonner et masquer les sections | — |
-| 26 | Statistiques temporelles : lectures par mois, rythme, projection | 11 |
-| 27 | Migration V4 : genres normalisés (`genre`, `work_genre`) | — |
-| 28 | Prochaines sorties personnalisées + table `upcoming_release` curée | 14, 15 |
+| [#43](https://github.com/zelytra/Librarius/issues/43) | Migration V3 : tables `series` et `series_follow`, rattachement des `work` | — |
+| [#44](https://github.com/zelytra/Librarius/issues/44) | API `/api/series` : fiche, tomes, suivi | #43 |
+| [#45](https://github.com/zelytra/Librarius/issues/45) | Écran Série : grille des tomes, possédés / lus / manquants | #44 |
+| [#46](https://github.com/zelytra/Librarius/issues/46) | Vue « Séries » dans la Collection avec progression `x / y` | #44 |
+| [#47](https://github.com/zelytra/Librarius/issues/47) | Saisie de progression de lecture (page, %, dates) dans le Détail | — |
+| [#48](https://github.com/zelytra/Librarius/issues/48) | Notation personnelle et commentaire privé | — |
+| [#49](https://github.com/zelytra/Librarius/issues/49) | Éditions alternatives d'une œuvre dans le Détail | — |
+| [#50](https://github.com/zelytra/Librarius/issues/50) | Objectif annuel : écran de réglage + jauge sur l'Accueil | — |
+| [#51](https://github.com/zelytra/Librarius/issues/51) | Gestion des catégories personnalisées (UI + `PUT`/`DELETE` API) | — |
+| [#52](https://github.com/zelytra/Librarius/issues/52) | Souhaits enrichis : modification, budget total, conversion en collection | — |
+| [#53](https://github.com/zelytra/Librarius/issues/53) | Recherche avancée dans Découvrir (auteur, année) + ajout manuel guidé | — |
+| [#54](https://github.com/zelytra/Librarius/issues/54) | Accueil personnalisable : réordonner et masquer les sections | — |
+| [#55](https://github.com/zelytra/Librarius/issues/55) | Statistiques temporelles : lectures par mois, rythme, projection | #40 |
+| [#56](https://github.com/zelytra/Librarius/issues/56) | Migration V4 : genres normalisés (`genre`, `work_genre`) | — |
+| [#57](https://github.com/zelytra/Librarius/issues/57) | Prochaines sorties personnalisées + table `upcoming_release` curée | #43, #44 |
 
 ---
 
@@ -84,17 +97,17 @@ silencieuse. Peut avancer en parallèle de v0.4.
 **Critère de sortie** : aucun secret dans le dépôt, restauration de sauvegarde testée,
 alerte reçue en cas d'incident, déploiement sans coupure.
 
-| # | Issue | Dépend de |
+| Issue | Sujet | Dépend de |
 |---|---|---|
-| 29 | Sortir les secrets de `values.yaml` vers des Secrets Kubernetes | — |
-| 30 | Sauvegarde PostgreSQL automatisée **et restauration testée** | — |
-| 31 | Alertes Prometheus / Grafana (API down, erreurs 5xx, disque, certificat) | — |
-| 32 | Rate limiting sur `/api/catalog/*` | — |
-| 33 | Restreindre Swagger UI et les endpoints `/q` en production | — |
-| 34 | Versionnement sémantique des images + procédure de rollback | — |
-| 35 | Déploiement sans coupure (`RollingUpdate` + sondes) | — |
-| 36 | Cache catalogue persistant (`catalog_cache`) | — |
-| 37 | Durcir la CI : Dependabot, audit de dépendances, analyse statique | — |
+| [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Sortir les secrets de `values.yaml` vers des Secrets Kubernetes | — |
+| [#59](https://github.com/zelytra/Librarius/issues/59) | 🔴 Sauvegarde PostgreSQL automatisée **et restauration testée** | — |
+| [#60](https://github.com/zelytra/Librarius/issues/60) | Alertes Prometheus / Grafana (API down, erreurs 5xx, disque, certificat) | — |
+| [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting sur `/api/catalog/*` | — |
+| [#62](https://github.com/zelytra/Librarius/issues/62) | Restreindre Swagger UI et les endpoints `/q` en production | — |
+| [#63](https://github.com/zelytra/Librarius/issues/63) | Versionnement sémantique des images + procédure de rollback | — |
+| [#64](https://github.com/zelytra/Librarius/issues/64) | Déploiement sans coupure (`RollingUpdate` + sondes) | — |
+| [#65](https://github.com/zelytra/Librarius/issues/65) | Cache catalogue persistant (`catalog_cache`) | — |
+| [#66](https://github.com/zelytra/Librarius/issues/66) | Durcir la CI : Dependabot, audit de dépendances, analyse statique | — |
 
 ---
 
@@ -106,13 +119,13 @@ produit, plus les notifications push.
 **Critère de sortie** : APK Android installable produite par la CI, scan ISBN
 fonctionnel, notification de sortie reçue.
 
-| # | Issue | Dépend de |
+| Issue | Sujet | Dépend de |
 |---|---|---|
-| 38 | Bootstrap Capacitor : `apps/mobile` réutilisant le build web | v0.3 #1, #2 |
-| 39 | Scan de code-barres ISBN (caméra) → fiche catalogue | 38, 24 |
-| 40 | Notifications push : sorties des séries suivies, souhaits disponibles | 28, 38 |
-| 41 | Pipeline de build Android (APK signée, artefact CI) | 38 |
-| 42 | Build iOS et procédure de publication | 38, 41 |
+| [#67](https://github.com/zelytra/Librarius/issues/67) | Bootstrap Capacitor : `apps/mobile` réutilisant le build web | #30, #31 |
+| [#68](https://github.com/zelytra/Librarius/issues/68) | Scan de code-barres ISBN (caméra) → fiche catalogue | #67, #53 |
+| [#69](https://github.com/zelytra/Librarius/issues/69) | Notifications push : sorties des séries suivies, souhaits disponibles | #57, #67 |
+| [#70](https://github.com/zelytra/Librarius/issues/70) | Pipeline de build Android (APK signée, artefact CI) | #67 |
+| [#71](https://github.com/zelytra/Librarius/issues/71) | Build iOS et procédure de publication | #67, #70 |
 
 ---
 
@@ -124,18 +137,18 @@ nouveaux, langues, accessibilité, performance.
 **Critère de sortie** : un inconnu peut créer un compte, comprendre l'app, exporter ou
 supprimer ses données, en français ou en anglais, avec un score Lighthouse ≥ 90.
 
-| # | Issue | Dépend de |
+| Issue | Sujet | Dépend de |
 |---|---|---|
-| 43 | Export de sa bibliothèque (CSV + JSON) — *RGPD* | — |
-| 44 | Suppression de compte et de toutes ses données — *RGPD* | — |
-| 45 | CGU, politique de confidentialité, mentions légales | 43, 44 |
-| 46 | Profil utilisateur : nom affiché, langue, fuseau (`PATCH /api/me`) | — |
-| 47 | Onboarding première connexion (import ou premiers titres) | — |
-| 48 | Locale anglaise complète | v0.3 #6 |
-| 49 | Accessibilité WCAG 2.1 AA | v0.3 #3, #13 |
-| 50 | Performance : budget de bundle, Lighthouse ≥ 90, images optimisées | — |
-| 51 | Page publique de présentation (hors authentification) | — |
-| 52 | Documentation utilisateur (aide en ligne, FAQ) | — |
+| [#72](https://github.com/zelytra/Librarius/issues/72) | 🔴 Export de sa bibliothèque (CSV + JSON) — *RGPD* | — |
+| [#73](https://github.com/zelytra/Librarius/issues/73) | 🔴 Suppression de compte et de toutes ses données — *RGPD* | — |
+| [#74](https://github.com/zelytra/Librarius/issues/74) | CGU, politique de confidentialité, mentions légales | #72, #73 |
+| [#75](https://github.com/zelytra/Librarius/issues/75) | Profil utilisateur : nom affiché, langue, fuseau (`PATCH /api/me`) | — |
+| [#76](https://github.com/zelytra/Librarius/issues/76) | Onboarding première connexion (import ou premiers titres) | — |
+| [#77](https://github.com/zelytra/Librarius/issues/77) | Locale anglaise complète | #35 |
+| [#78](https://github.com/zelytra/Librarius/issues/78) | Accessibilité WCAG 2.1 AA | #32, #42 |
+| [#79](https://github.com/zelytra/Librarius/issues/79) | Performance : budget de bundle, Lighthouse ≥ 90, images optimisées | — |
+| [#80](https://github.com/zelytra/Librarius/issues/80) | Page publique de présentation (hors authentification) | — |
+| [#81](https://github.com/zelytra/Librarius/issues/81) | Documentation utilisateur (aide en ligne, FAQ) | — |
 
 ---
 
