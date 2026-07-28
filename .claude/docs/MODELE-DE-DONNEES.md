@@ -5,7 +5,7 @@ Hibernate est en `validate` — le schéma Flyway **est** le modèle.
 
 ## 1. Schéma actuel (V1 + V2)
 
-```
+```text
 app_user ──┬─< library_item >── edition >── work
            ├─< wishlist_item >──┘
            ├─< reading_goal

@@ -11,7 +11,7 @@
 
 ## 2. Git flow
 
-```
+```text
 main      ──●────────────────●──────────►  production (déploiement automatique)
              ↖ merge          ↖ merge
 develop   ──●──●──●──●──●──●──●──────────►  intégration
@@ -44,7 +44,7 @@ git config user.email "contact@zelytra.fr"
 
 Conventional commits, sujet en français, impératif, ≤ 72 caractères :
 
-```
+```text
 feat(web): jauge d'objectif annuel sur l'accueil
 
 L'API /api/goals existait déjà mais n'était exposée dans aucun écran.
@@ -91,6 +91,12 @@ Si l'API a changé :
 
 ```bash
 cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
+```
+
+Si de la documentation a changé (workflow `docs` : markdownlint + liens internes) :
+
+```bash
+npx markdownlint-cli2@0.23.2
 ```
 
 **Changement d'UI** : le vérifier dans un vrai navigateur (`pnpm web:dev`), pas

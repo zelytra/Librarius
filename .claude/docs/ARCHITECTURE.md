@@ -5,7 +5,7 @@
 
 ## 1. Vue d'ensemble
 
-```
+```text
 Navigateur (PWA React 19)
    │  OIDC Authorization Code + PKCE (react-oidc-context)
    ├──────────────► Keycloak  (realm librarius)
@@ -25,7 +25,7 @@ Le front et l'API sont donc *same-origin* : aucun préflight CORS en prod.
 
 ### Organisation
 
-```
+```text
 src/
   api/generated/librarius.ts   # client orval — GÉNÉRÉ, ne pas éditer
   app/AppShell.tsx             # layout + <Outlet/>, BottomNav.tsx
@@ -71,7 +71,7 @@ src/
 
 ### Organisation
 
-```
+```text
 zelytra/librarius/
   domain/               # entités Panache + enums (Kind, LibraryStatus, WishPriority, GoalUnit)
     repository/         # PanacheRepositoryBase, toutes les requêtes scopées user
@@ -113,7 +113,7 @@ zelytra/librarius/
 
 ## 4. Contrat front ↔ back
 
-```
+```text
 apps/api (annotations JAX-RS)
    └─ mvnw package → apps/web/openapi/openapi.{json,yaml}   (généré au build)
         └─ pnpm gen:api (orval) → apps/web/src/api/generated/librarius.ts
