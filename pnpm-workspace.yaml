@@ -1,3 +1,5 @@
+# apps/api is a Maven project with no package.json: pnpm skips it on its own.
+# The `packages/*` glob is here for shared libraries; it currently matches nothing.
 packages:
-  - 'apps/web'
+  - 'apps/*'
   - 'packages/*'

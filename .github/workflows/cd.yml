@@ -86,7 +86,7 @@ jobs:
 
       - name: Helm upgrade --install
         run: |
-          helm upgrade --install librarius ./helm/librarius \
+          helm upgrade --install librarius ./infra/helm/librarius \
             --namespace default \
             --set web.image.tag=${{ github.sha }} \
             --set api.image.tag=${{ github.sha }} \
