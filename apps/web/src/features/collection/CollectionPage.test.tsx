@@ -68,6 +68,22 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Titre sans rang')).not.toBeInTheDocument();
   });
 
+  /** "My favourites" is the rating filter at four, applied by the server like the rest. */
+  test('narrows the shelf down to the favourites', async () => {
+    libraryReturns([
+      libraryItem({ id: 'adore', rating: 5, book: { kind: 'BOOK', title: 'Titre adoré' } }),
+      libraryItem({ id: 'ordinaire', rating: 2, book: { kind: 'BOOK', title: 'Titre ordinaire' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Titre ordinaire')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('Mes coups de cœur'));
+
+    expect(await screen.findByText('Titre adoré')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Titre ordinaire')).not.toBeInTheDocument());
+  });
+
   test('removing a title drops it from the list', async () => {
     // The list is re-read from the server after the mutation, so the handler has to
     // actually apply the deletion — the screen no longer patches its own state.

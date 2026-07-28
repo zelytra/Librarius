@@ -49,6 +49,8 @@
     "greeting": "Bonsoir",
     "resumeReading": "Reprendre la lecture",
     "resumeCount": "{{reading}} en cours",
+    "progressBadge": "{{percent}} %",
+    "progressLabel": "Progression : {{percent}} %",
     "upcoming": "Prochaines sorties",
     "upcomingNote": "Dates indicatives (édition d'origine).",
     "recentlyBought": "Derniers achats",
@@ -84,13 +86,15 @@
       "added": "Ajout",
       "title": "Titre",
       "author": "Auteur",
-      "genre": "Genre"
+      "genre": "Genre",
+      "rating": "Note"
     },
     "ranks": {
       "all": "Tous",
       "gold": "Or",
       "silver": "Argent",
-      "bronze": "Bronze"
+      "bronze": "Bronze",
+      "favorites": "Mes coups de cœur"
     },
     "empty": {
       "title": "Aucun titre ici.",
@@ -213,7 +217,27 @@
     "startReading": "Commencer la lecture",
     "reading": "Lecture en cours",
     "markAsRead": "Marquer comme lu",
-    "read": "✓ Lu"
+    "read": "✓ Lu",
+    "progress": {
+      "title": "Ma progression",
+      "page": "Page",
+      "percent": "Pourcentage",
+      "percentUnit": "%",
+      "outOf": "/ {{total}}",
+      "summary": "{{percent}} % · page {{page}} sur {{total}}",
+      "summaryPercent": "{{percent}} % lus",
+      "summaryEmpty": "Pas encore commencé.",
+      "startedAt": "Commencée le",
+      "finishedAt": "Terminée le",
+      "save": "Enregistrer ma progression"
+    },
+    "review": {
+      "title": "Ma note",
+      "star": "Noter {{rating}} sur 5",
+      "clear": "Retirer ma note",
+      "placeholder": "Ce que j'en ai pensé…",
+      "private": "Note et avis strictement privés : personne d'autre ne les voit."
+    }
   },
   "settings": {
     "title": "Réglages",

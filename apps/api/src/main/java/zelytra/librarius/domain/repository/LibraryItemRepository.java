@@ -43,6 +43,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                         select li from LibraryItem li
                           join fetch li.edition e
                           join fetch e.work w
+                          left join fetch li.progress
                         where li.userId = :userId
                           and w.series.id = :seriesId
                         order by w.volumeNumber asc nulls last, li.id asc
@@ -60,15 +61,17 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     /**
      * Everything that narrows the collection down, all fields optional but the user.
      *
-     * @param userId owner of the items, the only mandatory criterion
-     * @param kind   restrict to books or to mangas
-     * @param status restrict to a reading status
-     * @param rank   code of the rank category the item is filed under
-     * @param genre  code of a genre the work carries, as {@code /api/genres} returns it
-     * @param search free text matched against the title, the authors and the series
+     * @param userId    owner of the items, the only mandatory criterion
+     * @param kind      restrict to books or to mangas
+     * @param status    restrict to a reading status
+     * @param rank      code of the rank category the item is filed under
+     * @param genre     code of a genre the work carries, as {@code /api/genres} returns it
+     * @param minRating keep only the titles rated at least that much — the "my favourites"
+     *                  shelf is this filter at 4. Unrated titles never match
+     * @param search    free text matched against the title, the authors and the series
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
-            String genre, String search) {
+            String genre, Integer minRating, String search) {
     }
 
     /** Orderings offered on the collection, exposed as the {@code sort} query parameter. */
@@ -79,7 +82,12 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         AUTHOR("lower(coalesce(w.authors, '')) asc, lower(w.title) asc, li.id asc"),
         // Still the free-text value: a work now carries several genres, so there is no such
         // thing as "its" genre to order on. The shelf keeps the ordering it had.
-        GENRE("lower(coalesce(w.genresText, '')) asc, lower(w.title) asc, li.id asc");
+        GENRE("lower(coalesce(w.genresText, '')) asc, lower(w.title) asc, li.id asc"),
+        /**
+         * Best rated first. Unrated titles come last rather than first: they are the ones
+         * the user has not judged, not the ones they judged worst.
+         */
+        RATING("li.rating desc nulls last, lower(w.title) asc, li.id asc");
 
         private final String clause;
 
@@ -125,7 +133,11 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         String where = whereClause(filter, params);
         TypedQuery<LibraryItem> query = getEntityManager().createQuery(
                 "select li from LibraryItem li join fetch li.edition e join fetch e.work w"
-                        + " left join fetch li.rankCategory rc where " + where
+                        + " left join fetch li.rankCategory rc"
+                        // Fetched, not lazily read one row at a time: every card on the
+                        // home carousel shows where the reader is, so a page of the
+                        // collection would otherwise cost one extra select per title.
+                        + " left join fetch li.progress p where " + where
                         + " order by " + sort.clause,
                 LibraryItem.class);
         params.forEach(query::setParameter);
@@ -163,6 +175,10 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             // silently matching nothing. A wording that folds to nothing stays unmatchable.
             String code = GenreNormalizer.code(filter.genre());
             params.put("genre", code != null ? code : filter.genre().trim());
+        }
+        if (filter.minRating() != null) {
+            clauses.add("li.rating >= :minRating");
+            params.put("minRating", filter.minRating());
         }
         if (filter.search() != null && !filter.search().isBlank()) {
             clauses.add("""

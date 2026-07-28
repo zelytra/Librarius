@@ -15,11 +15,12 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
 | GET | `/api/catalog/search?q=&kind=&limit=` | External catalog search. `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
-| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
+| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
-| PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) |
+| PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
+| PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
@@ -53,11 +54,14 @@ ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
               Integer originalYear, String synopsis, String genres)
 
 LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
-LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
-               String rankCode, BookView book)
+LibraryItemDto(UUID id, String status, Integer rating, String review, LocalDate acquiredAt,
+               String rankCode, ProgressView progress, BookView book)
 LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
-ProgressDto(Integer currentPage, Integer percent, LibraryStatus status)
+ProgressView(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt)
+ProgressDto(Integer currentPage, Integer percent, LibraryStatus status,
+            LocalDate startedAt, LocalDate finishedAt)
+ReviewDto(Integer rating, String review)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
@@ -87,6 +91,43 @@ GenreCount(String code, String genre, long count)
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}`.
+
+## Reading progress
+
+`PUT /api/library/{id}/progress` replaces the whole position — it is a PUT, not a patch, so
+a field left out is cleared. A client that only flips the status therefore hands the
+position back untouched, which is what the detail screen does.
+
+**Page and percentage are two views of the same thing.** Only one needs sending: when the
+edition carries a `page_count`, the server derives the other and stores both. Page 120 of a
+300-page book is 40 % on every screen, in the collection listing and in the detail
+endpoint alike, because nobody but the server ever computes it. An edition with no page
+count keeps whichever side was supplied and leaves the other null — an unknown total makes
+the ratio meaningless, not zero.
+
+**The status transitions fill in what the user should not have to type:**
+
+| Transition | Effect |
+|---|---|
+| → `READING` | `started_at` set to today **when it is empty** |
+| → `READ` | `percent` 100, `current_page` set to the page count when known, `finished_at` set to today unless one was supplied |
+
+A date sent explicitly always wins: marking a book read on the day it was actually finished
+is a normal thing to want.
+
+`ProgressView` rides on `LibraryItemDto`, so a client never needs a second request to draw
+a progress bar — the "resume reading" carousel on Home reads it off the paginated
+collection.
+
+## Rating and review
+
+`PUT /api/library/{id}/review` takes a rating from 1 to 5 and free text, and replaces both:
+sending a null rating removes it. A blank review is stored as nothing rather than as an
+empty string.
+
+Both are **strictly private**. They live on the caller's own `library_item`, are returned to
+nobody else, and are never aggregated into a shared score — there is no public average and
+no plan for one. Another user's identifier answers 404 like an unknown one.
 
 ## Series
 
@@ -158,11 +199,12 @@ downloading the collection.
 |---|---|---|---|
 | `page` | `0` | both | Zero-based. Clamped to 0; a page past the end is empty with the right `total` |
 | `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
-| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`. Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
+| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`, `rating` (best first, unrated last). Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
 | `status` | — | collection | `OWNED` \| `READING` \| `READ` |
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
+| `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |
 | `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
 | `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
 

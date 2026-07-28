@@ -22,14 +22,22 @@ import { SERIES_SORTS, filterSeries, type SeriesSort } from '../series/series';
 import styles from './CollectionPage.module.css';
 
 type Kind = 'BOOK' | 'MANGA';
-type RankFilter = 'all' | 'or' | 'argent' | 'bronze';
+/**
+ * The shelf filter is one chip row, and `favorites` is the odd one out: it narrows on the
+ * personal rating rather than on a rank category. It sits here all the same — the user
+ * reads the row as "which shelf am I looking at", not as "which column is filtered".
+ */
+type ShelfFilter = 'all' | 'or' | 'argent' | 'bronze' | 'favorites';
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
-type SortBy = 'added' | 'title' | 'author' | 'genre';
+type SortBy = 'added' | 'title' | 'author' | 'genre' | 'rating';
 /** The two ways of reading the collection: title by title, or run by run. */
 type View = 'flat' | 'series';
 
 /** Number of titles fetched per request — one shelf worth of covers. */
 const PAGE_SIZE = 24;
+
+/** Rating from which a title counts as a favourite. */
+const FAVORITE_RATING = 4;
 
 /** Delay before a keystroke turns into a request. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -40,6 +48,7 @@ const SORTS: { id: SortBy; labelKey: string }[] = [
   { id: 'title', labelKey: 'collection.sorts.title' },
   { id: 'author', labelKey: 'collection.sorts.author' },
   { id: 'genre', labelKey: 'collection.sorts.genre' },
+  { id: 'rating', labelKey: 'collection.sorts.rating' },
 ];
 
 function CoverTile({ item, onDelete, onOpen }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void }) {
@@ -84,7 +93,7 @@ function CollectionContent() {
   const queryClient = useQueryClient();
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const [collType, setCollType] = useState<Kind>('BOOK');
-  const [rankFilter, setRankFilter] = useState<RankFilter>('all');
+  const [shelfFilter, setShelfFilter] = useState<ShelfFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('added');
   const [seriesSort, setSeriesSort] = useState<SeriesSort>('progress');
   const [searchInput, setSearchInput] = useState('');
@@ -106,7 +115,8 @@ function CollectionContent() {
     size: PAGE_SIZE,
     sort: sortBy,
     kind: collType,
-    rank: rankFilter === 'all' ? undefined : rankFilter,
+    rank: shelfFilter === 'all' || shelfFilter === 'favorites' ? undefined : shelfFilter,
+    minRating: shelfFilter === 'favorites' ? FAVORITE_RATING : undefined,
     q: search || undefined,
   };
 
@@ -169,8 +179,9 @@ function CollectionContent() {
   const showError = series ? seriesFailed : isError;
   const isEmpty = !showLoading && !showError && (series ? shelf.length === 0 : items.length === 0);
 
-  const cats: { id: RankFilter; name: string; dot?: string }[] = [
+  const cats: { id: ShelfFilter; name: string; dot?: string }[] = [
     { id: 'all', name: t('collection.ranks.all') },
+    { id: 'favorites', name: t('collection.ranks.favorites') },
     { id: 'or', name: t('collection.ranks.gold'), dot: RANK_COLORS.or },
     { id: 'argent', name: t('collection.ranks.silver'), dot: RANK_COLORS.argent },
     { id: 'bronze', name: t('collection.ranks.bronze'), dot: RANK_COLORS.bronze },
@@ -200,12 +211,13 @@ function CollectionContent() {
         />
       </div>
 
-      {/* A rank belongs to a title, not to a run: the chips would filter nothing in the
-          Series view. They keep their state so switching back restores the filter. */}
+      {/* A rank and a rating both belong to a title, not to a run: these chips would
+          filter nothing in the Series view. They keep their state so switching back
+          restores the shelf the user was on. */}
       {!series && (
         <div className={`scroll-x ${styles.chipRow}`}>
           {cats.map((c) => (
-            <Chip key={c.id} selected={rankFilter === c.id} dotColor={c.dot} onClick={() => setRankFilter(c.id)}>
+            <Chip key={c.id} selected={shelfFilter === c.id} dotColor={c.dot} onClick={() => setShelfFilter(c.id)}>
               {c.name}
             </Chip>
           ))}

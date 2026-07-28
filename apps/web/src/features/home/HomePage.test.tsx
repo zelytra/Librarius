@@ -29,6 +29,20 @@ describe('HomePage', () => {
     expect(screen.getByText('1 en cours')).toBeInTheDocument();
   });
 
+  /**
+   * The point of the carousel is picking a book back up: without the position it was a
+   * shelf of titles the user had opened, and no hint of how far in they were.
+   */
+  test('shows how far into each book being read the user is', async () => {
+    libraryReturns([
+      libraryItem({ id: 'en-cours', status: 'READING', progress: { currentPage: 120, percent: 40 } }),
+    ]);
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('40 %')).toBeInTheDocument();
+    expect(screen.getByLabelText('Progression : 40 %')).toBeInTheDocument();
+  });
+
   test('hides the resume section when nothing is being read', async () => {
     libraryReturns([libraryItem({ status: 'READ' })]);
     renderWithProviders(<HomePage />);

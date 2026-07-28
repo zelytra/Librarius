@@ -23,7 +23,10 @@
   cursor: pointer;
 }
 
+/* Positioned like the tile: the shelf takes overlays too — the reading progress
+   drawn on the covers of the "resume reading" carousel. */
 .shelfArt {
+  position: relative;
   border-radius: var(--radius-cover);
   border-left: 3px solid var(--cover-spine);
   box-shadow: var(--shadow-cover);

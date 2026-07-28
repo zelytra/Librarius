@@ -116,6 +116,10 @@ export const Kind = {
 export interface LibraryCreateDto {
   book: ManualBookDto;
   status?: LibraryStatus;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
   rating?: number;
   acquiredAt?: LocalDate;
 }
@@ -124,8 +128,10 @@ export interface LibraryItemDto {
   id?: Uuid;
   status?: string;
   rating?: number;
+  review?: string;
   acquiredAt?: LocalDate;
   rankCode?: string;
+  progress?: ProgressView;
   book?: BookView;
 }
 
@@ -175,13 +181,37 @@ export interface MeDto {
 }
 
 export interface ProgressDto {
+  /** @minimum 0 */
   currentPage?: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
   percent?: number;
   status?: LibraryStatus;
+  startedAt?: LocalDate;
+  finishedAt?: LocalDate;
+}
+
+export interface ProgressView {
+  currentPage?: number;
+  percent?: number;
+  startedAt?: LocalDate;
+  finishedAt?: LocalDate;
 }
 
 export interface RankAssignDto {
   categoryId?: Uuid;
+}
+
+export interface ReviewDto {
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating?: number;
+  /** @maxLength 5000 */
+  review?: string;
 }
 
 export interface ScrapeRequest {
@@ -325,6 +355,7 @@ limit?: number;
 export type GetApiLibraryParams = {
 genre?: string;
 kind?: Kind;
+minRating?: number;
 page?: number;
 q?: string;
 rank?: string;
@@ -1499,6 +1530,71 @@ export const usePutApiLibraryIdRank = <TError = void,
       > => {
 
       const mutationOptions = getPutApiLibraryIdRankMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set Review
+ */
+export const putApiLibraryIdReview = (
+    id: Uuid,
+    reviewDto: ReviewDto,
+ ) => {
+      
+      
+      return apiClient<unknown>(
+      {url: `/api/library/${id}/review`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: reviewDto
+    },
+      );
+    }
+  
+
+
+export const getPutApiLibraryIdReviewMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdReview>>, TError,{id: Uuid;data: ReviewDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdReview>>, TError,{id: Uuid;data: ReviewDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdReview'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdReview>>, {id: Uuid;data: ReviewDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdReview(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdReviewMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdReview>>>
+    export type PutApiLibraryIdReviewMutationBody = ReviewDto
+    export type PutApiLibraryIdReviewMutationError = void
+
+    /**
+ * @summary Set Review
+ */
+export const usePutApiLibraryIdReview = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdReview>>, TError,{id: Uuid;data: ReviewDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdReview>>,
+        TError,
+        {id: Uuid;data: ReviewDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPutApiLibraryIdReviewMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

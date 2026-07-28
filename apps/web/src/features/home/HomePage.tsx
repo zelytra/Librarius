@@ -67,6 +67,40 @@ function Dashboard() {
     />
   );
 
+  /**
+   * Same cover, with where the reader stands drawn on it. "Resume reading" without that
+   * was a shelf of titles the user had opened and no hint of how far in they were.
+   */
+  const readingCover = (it: LibraryItemDto) => {
+    const percent = it.progress?.percent;
+    return (
+      <Cover
+        key={it.id}
+        title={it.book?.title ?? '—'}
+        imageUrl={it.book?.coverUrl}
+        caption={it.book?.authors}
+        onClick={() => open(it)}
+      >
+        {percent != null && (
+          <>
+            <span className={styles.progressBadge}>
+              {t('home.progressBadge', { percent })}
+            </span>
+            <span
+              className={styles.progressTrack}
+              role="progressbar"
+              aria-label={t('home.progressLabel', { percent })}
+              aria-valuenow={percent}
+            >
+              {/* The fill is the value itself: its width can only be inline. */}
+              <span className={styles.progressFill} style={{ width: `${percent}%` }} />
+            </span>
+          </>
+        )}
+      </Cover>
+    );
+  };
+
   return (
     <div className={styles.sections}>
       {reading.length > 0 && (
@@ -75,7 +109,7 @@ function Dashboard() {
             title={t('home.resumeReading')}
             action={t('home.resumeCount', { reading: reading.length })}
           />
-          <div className={`scroll-x ${styles.shelf}`}>{reading.map(cover)}</div>
+          <div className={`scroll-x ${styles.shelf}`}>{reading.map(readingCover)}</div>
         </section>
       )}
 

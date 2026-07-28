@@ -23,18 +23,18 @@ import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
-import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
-import zelytra.librarius.domain.repository.ReadingProgressRepository;
+import zelytra.librarius.library.ReadingProgressService;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.LibraryCreateDto;
 import zelytra.librarius.web.ApiDtos.LibraryItemDto;
 import zelytra.librarius.web.ApiDtos.LibraryPageDto;
 import zelytra.librarius.web.ApiDtos.ProgressDto;
 import zelytra.librarius.web.ApiDtos.RankAssignDto;
+import zelytra.librarius.web.ApiDtos.ReviewDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +44,10 @@ import java.util.UUID;
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
 public class LibraryResource {
+
+    /** Bounds of a personal rating, mirrored by {@code ReviewDto}. */
+    private static final int MIN_RATING = 1;
+    private static final int MAX_RATING = 5;
 
     @Inject
     CurrentUser currentUser;
@@ -58,20 +62,22 @@ public class LibraryResource {
     RankCategoryRepository categories;
 
     @Inject
-    ReadingProgressRepository progresses;
+    ReadingProgressService progress;
 
     /**
      * One page of the collection, filtered and sorted by the database.
      *
-     * @param page   zero-based page index, clamped to 0 at the lowest
-     * @param size   items per page, clamped to {@value PageRequest#MAX_SIZE}
-     * @param sort   {@code added} (default), {@code title}, {@code author} or {@code genre}
-     * @param kind   {@code BOOK} or {@code MANGA}, no filtering when absent
-     * @param status {@code OWNED}, {@code READING} or {@code READ}
-     * @param rank   code of a rank category ({@code or}, {@code argent}, {@code bronze} or
-     *               a custom one)
-     * @param genre  code of a genre, as {@code /api/genres} returns it
-     * @param q      free text matched against the title, the authors and the series
+     * @param page      zero-based page index, clamped to 0 at the lowest
+     * @param size      items per page, clamped to {@value PageRequest#MAX_SIZE}
+     * @param sort      {@code added} (default), {@code title}, {@code author},
+     *                  {@code genre} or {@code rating}
+     * @param kind      {@code BOOK} or {@code MANGA}, no filtering when absent
+     * @param status    {@code OWNED}, {@code READING} or {@code READ}
+     * @param rank      code of a rank category ({@code or}, {@code argent}, {@code bronze}
+     *                  or a custom one)
+     * @param genre     code of a genre, as {@code /api/genres} returns it
+     * @param minRating keeps the titles rated at least that much — 4 is "my favourites"
+     * @param q         free text matched against the title, the authors and the series
      */
     @GET
     public LibraryPageDto list(
@@ -82,12 +88,17 @@ public class LibraryResource {
             @QueryParam("status") LibraryStatus status,
             @QueryParam("rank") String rank,
             @QueryParam("genre") String genre,
+            @QueryParam("minRating") Integer minRating,
             @QueryParam("q") String q) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
+        if (minRating != null && (minRating < MIN_RATING || minRating > MAX_RATING)) {
+            throw new BadRequestException("minRating must be between 1 and 5");
+        }
         PageRequest window = PageRequest.of(page, size);
-        LibraryFilter filter = new LibraryFilter(currentUser.id(), kind, status, rank, genre, q);
+        LibraryFilter filter =
+                new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =
@@ -153,28 +164,52 @@ public class LibraryResource {
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
-    /** Updates the reading progress (and the status) of a title. */
+    /**
+     * Updates the reading progress (and the status) of a title.
+     *
+     * <p>The transition rules and the page / percentage conversion belong to
+     * {@link ReadingProgressService}; the resource only resolves the item, which is where
+     * the ownership check lives.
+     */
     @PUT
     @Path("/{id}/progress")
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response setProgress(@PathParam("id") UUID id, ProgressDto dto) {
+    public Response setProgress(@PathParam("id") UUID id, @Valid ProgressDto dto) {
         LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
         if (item == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        if (dto.status() != null) {
-            item.status = dto.status();
-        }
-        ReadingProgress progress = progresses.findByItem(id).orElseGet(() -> {
-            ReadingProgress p = new ReadingProgress();
-            p.libraryItem = item;
-            progresses.persist(p);
-            return p;
-        });
-        progress.currentPage = dto.currentPage();
-        progress.percent = dto.percent();
+        // An empty body clears the progress, the same way a null field does.
+        progress.apply(item, dto != null ? dto : new ProgressDto(null, null, null, null, null));
         return Response.noContent().build();
+    }
+
+    /**
+     * Records what the user thought of a title: a rating out of five and free-text notes.
+     *
+     * <p>Both are private. They sit on the caller's own item, so they are returned to
+     * nobody else and are never folded into a shared score — an identifier belonging to
+     * someone else answers 404, exactly like an unknown one.
+     */
+    @PUT
+    @Path("/{id}/review")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setReview(@PathParam("id") UUID id, @Valid ReviewDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        ReviewDto update = dto != null ? dto : new ReviewDto(null, null);
+        item.rating = update.rating();
+        item.review = blankToNull(update.review());
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /** An empty text area means "no review", not a row holding an empty string. */
+    private static String blankToNull(String text) {
+        return text == null || text.isBlank() ? null : text.trim();
     }
 
     @DELETE

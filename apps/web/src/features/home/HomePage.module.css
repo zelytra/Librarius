@@ -47,6 +47,39 @@
   padding: 2px var(--screen-pad-x) 6px;
 }
 
+/* ── Reading progress on a shelf cover ────────────────────────────────────────
+   Drawn on the cover rather than under it: the shelf is a row of covers and
+   adding a line below each of them would push the counters off the first
+   screen. The track sits on the bottom edge, the figure in the top corner. */
+
+.progressBadge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: var(--fs-9);
+  font-weight: 700;
+  color: var(--overlay-ink);
+  background: var(--overlay-strong);
+  padding: 2px 6px;
+  border-radius: var(--radius-badge);
+}
+
+.progressTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  display: block;
+  background: var(--overlay);
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
 /* ── Mini counters ────────────────────────────────────────────────────────── */
 
 .miniRow {
