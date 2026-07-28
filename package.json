@@ -5,7 +5,7 @@
   "description": "Ma Bibliothèque — gestion de bibliothèque personnelle (livres & mangas).",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "pnpm": {
     "overrides": {

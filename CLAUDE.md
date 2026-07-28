@@ -25,7 +25,7 @@ Two things stay in French:
 ## Commands
 
 ```bash
-pnpm install            # frontend dependencies (pnpm 9, Node 20)
+pnpm install            # frontend dependencies (pnpm 9, Node 24)
 pnpm infra:up           # postgres :5432 · keycloak :8081 · prometheus :9090 · grafana :3000
 pnpm api:dev            # Quarkus API :8080 (mvnw quarkus:dev)
 pnpm web:dev            # Vite PWA :5173 (proxies /api → 8080)

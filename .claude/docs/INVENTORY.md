@@ -23,7 +23,7 @@ the public URL from outside — see debt #15.
 
 | Area | State |
 |---|---|
-| Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 20 / pnpm 9.15.9 / JDK 21 |
+| Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
 | Persistence | PostgreSQL + Panache + Flyway (2 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)) |
