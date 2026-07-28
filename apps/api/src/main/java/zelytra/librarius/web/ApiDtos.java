@@ -18,6 +18,7 @@ import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.Work;
+import zelytra.librarius.domain.repository.LibraryItemRepository.GenreTotal;
 import zelytra.librarius.domain.repository.WishlistItemRepository.PriorityBudget;
 
 import java.math.BigDecimal;
@@ -54,9 +55,11 @@ public final class ApiDtos {
             String genres) {
         public static BookView of(Edition e) {
             Work w = e.work;
+            // genresText, not the normalised genres: reading the association here would
+            // cost one query per item of a page of the collection.
             return new BookView(e.id, w.kind.name(), w.title, w.authors, w.seriesTitle,
                     w.volumeNumber, e.coverUrl, e.pageCount, e.publisher, e.language, e.isbn13,
-                    w.originalYear, w.synopsis, w.genres);
+                    w.originalYear, w.synopsis, w.genresText);
         }
     }
 
@@ -140,7 +143,17 @@ public final class ApiDtos {
             Integer goalTarget, long goalCurrent, java.util.List<GenreCount> byGenre) {
     }
 
-    public record GenreCount(String genre, long count) {
+    /**
+     * A genre and how many of the caller's titles carry it.
+     *
+     * @param code  identity of the genre, and what {@code /api/library?genre=} takes
+     * @param genre the label to show — the field keeps its name so that the deployed front
+     *              end, which reads it, goes on working
+     */
+    public record GenreCount(String code, String genre, long count) {
+        public static GenreCount of(GenreTotal total) {
+            return new GenreCount(total.code(), total.label(), total.count());
+        }
     }
 
     /**

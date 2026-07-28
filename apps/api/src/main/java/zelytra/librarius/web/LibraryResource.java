@@ -70,6 +70,7 @@ public class LibraryResource {
      * @param status {@code OWNED}, {@code READING} or {@code READ}
      * @param rank   code of a rank category ({@code or}, {@code argent}, {@code bronze} or
      *               a custom one)
+     * @param genre  code of a genre, as {@code /api/genres} returns it
      * @param q      free text matched against the title, the authors and the series
      */
     @GET
@@ -80,12 +81,13 @@ public class LibraryResource {
             @QueryParam("kind") Kind kind,
             @QueryParam("status") LibraryStatus status,
             @QueryParam("rank") String rank,
+            @QueryParam("genre") String genre,
             @QueryParam("q") String q) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
         PageRequest window = PageRequest.of(page, size);
-        LibraryFilter filter = new LibraryFilter(currentUser.id(), kind, status, rank, q);
+        LibraryFilter filter = new LibraryFilter(currentUser.id(), kind, status, rank, genre, q);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =

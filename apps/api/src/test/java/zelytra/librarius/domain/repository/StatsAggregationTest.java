@@ -16,6 +16,7 @@ import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.LibraryItemRepository.GenreTotal;
 import zelytra.librarius.domain.repository.LibraryItemRepository.StatusTotals;
+import zelytra.librarius.genre.GenreService;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,6 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * dataset that exercises the awkward cases: editions with no page count, series titles
  * differing only by case, blank series and blank genres, and more genres than the
  * breakdown shows.
+ *
+ * <p>The genre breakdown is the one aggregation that no longer matches that loop: it groups
+ * on the normalised genres rather than on the free-text value, so it is asserted on absolute
+ * values here and covered in full by {@link GenreBackfillTest} and
+ * {@code zelytra.librarius.web.GenreApiTest}.
  */
 @QuarkusTest
 class StatsAggregationTest {
@@ -46,6 +52,9 @@ class StatsAggregationTest {
 
     @Inject
     LibraryItemRepository library;
+
+    @Inject
+    GenreService genres;
 
     @Inject
     EntityManager em;
@@ -67,7 +76,6 @@ class StatsAggregationTest {
         assertEquals(expected.toRead(), totals.toRead(), "to-read count");
         assertEquals(expected.pagesRead(), totals.pagesRead(), "pages read");
         assertEquals(expected.seriesCount(), library.countDistinctSeries(userId), "series count");
-        assertEquals(expected.byGenre(), library.topGenres(userId, TOP_GENRES), "genre breakdown");
     }
 
     /**
@@ -85,19 +93,24 @@ class StatsAggregationTest {
         assertEquals(List.of(), library.topGenres(userId, TOP_GENRES));
     }
 
-    /** Absolute values, so the test still fails if the reference fold were itself broken. */
+    /**
+     * Absolute values, so the test still fails if the reference fold were itself broken.
+     *
+     * <p>"Polar" comes back as {@code policier}: the dataset spells the genres the way a
+     * provider would, and the breakdown answers with the canonical code and label.
+     */
     @Test
     void breakdownKeepsTheSixMostFrequentGenresMostFrequentFirst() {
         String userId = seed(representativeDataset());
 
         assertEquals(
                 List.of(
-                        new GenreTotal("Fantasy", 7),
-                        new GenreTotal("Science-fiction", 6),
-                        new GenreTotal("Polar", 5),
-                        new GenreTotal("Romance", 4),
-                        new GenreTotal("Historique", 3),
-                        new GenreTotal("Horreur", 2)),
+                        new GenreTotal("fantasy", "Fantasy", 7),
+                        new GenreTotal("science-fiction", "Science-fiction", 6),
+                        new GenreTotal("policier", "Policier", 5),
+                        new GenreTotal("romance", "Romance", 4),
+                        new GenreTotal("historique", "Historique", 3),
+                        new GenreTotal("horreur", "Horreur", 2)),
                 library.topGenres(userId, TOP_GENRES));
     }
 
@@ -148,12 +161,14 @@ class StatsAggregationTest {
     // ── Reference implementation ──────────────────────────────────────────────
 
     private record InMemoryStats(long read, long reading, long toRead, long pagesRead,
-            long seriesCount, List<GenreTotal> byGenre) {
+            long seriesCount) {
     }
 
     /**
      * The fold {@code StatsResource} used to run, kept here as the reference the SQL
-     * aggregations are compared against.
+     * aggregations are compared against. The genre breakdown is left out: it deliberately no
+     * longer agrees with the old fold, which counted "Fantasy, Aventure" as a genre of its
+     * own.
      */
     private InMemoryStats inMemoryStats(String userId) {
         List<LibraryItem> items = library.listByUser(userId);
@@ -163,7 +178,6 @@ class StatsAggregationTest {
         long toRead = 0;
         long pagesRead = 0;
         Set<String> series = new HashSet<>();
-        Map<String, Long> genres = new LinkedHashMap<>();
 
         for (LibraryItem item : items) {
             switch (item.status) {
@@ -181,19 +195,9 @@ class StatsAggregationTest {
             if (seriesTitle != null && !seriesTitle.isBlank()) {
                 series.add(seriesTitle.toLowerCase());
             }
-            String genre = item.edition.work.genres;
-            if (genre != null && !genre.isBlank()) {
-                genres.merge(genre, 1L, Long::sum);
-            }
         }
 
-        List<GenreTotal> byGenre = genres.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .limit(TOP_GENRES)
-                .map(entry -> new GenreTotal(entry.getKey(), entry.getValue()))
-                .toList();
-
-        return new InMemoryStats(read, reading, toRead, pagesRead, series.size(), byGenre);
+        return new InMemoryStats(read, reading, toRead, pagesRead, series.size());
     }
 
     // ── Dataset ───────────────────────────────────────────────────────────────
@@ -265,7 +269,10 @@ class StatsAggregationTest {
                 work.kind = Kind.BOOK;
                 work.title = "Stats " + UUID.randomUUID();
                 work.seriesTitle = title.seriesTitle();
-                work.genres = title.genres();
+                // Same path as a real entry: the raw wording is kept, and the normalised
+                // genres are what the breakdown groups on.
+                work.genresText = title.genres();
+                work.genres = genres.resolve(title.genres());
                 em.persist(work);
 
                 Edition edition = new Edition();

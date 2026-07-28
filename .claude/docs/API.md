@@ -15,7 +15,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
 | GET | `/api/catalog/search?q=&kind=&limit=` | External catalog search. `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
-| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
+| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
@@ -29,6 +29,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/series/{id}/missing` | Holes in the owned run (`SeriesMissingDto`) |
 | PUT | `/api/series/{id}/follow` | Starts following the series — 204, idempotent |
 | DELETE | `/api/series/{id}/follow` | Stops following the series — 204, idempotent |
+| GET | `/api/genres` | Genres present in the caller's collection, most frequent first (`GenreCount`) — see [Genres](#genres) |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
 | POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) |
 | GET | `/api/goals` | Reading goals |
@@ -80,7 +81,7 @@ SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
          Integer goalTarget, long goalCurrent, List<GenreCount> byGenre)
-GenreCount(String genre, long count)
+GenreCount(String code, String genre, long count)
 ```
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
@@ -111,6 +112,27 @@ and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded with
 are appended after the numbered ones with a null `volumeNumber`; they count towards
 `ownedCount` but are never reported as missing.
 
+## Genres
+
+A genre is a row of the shared catalog, identified by a **code** — `science-fiction`,
+`shonen`, `jeunesse` — and carrying a label only for display. The code is what
+`/api/library?genre=` filters on and what `GenreCount.code` returns; how a free-text wording
+becomes one is described in [DATA-MODEL](DATA-MODEL.md) § 1.
+
+`GET /api/genres` lists the genres of the **caller's own** collection with their counts,
+most frequent first: it is what a filter is built from. Listing the whole `genre` table
+would offer genres the user owns nothing of, and would say what other people collect.
+`GET /api/stats` returns the same figures capped at the six the breakdown shows.
+
+An item is counted once per genre it carries, so the counts add up to more than the size of
+the collection. That is the point: a title tagged "Fantasy, Aventure" counts towards both,
+where it used to form a third genre of its own
+([#56](https://github.com/zelytra/Librarius/issues/56)).
+
+`BookView.genres` still returns the raw wording, and no per-title list of codes is exposed:
+reading them while rendering a page of the collection would cost one query per item. The
+column goes away, and the codes take its place, once the front end reads them.
+
 ## Wishlist
 
 **Ordering.** `WishPriority` carries an explicit `rank` (`PRIORITY` 0, `SOON` 1, `SOMEDAY`
@@ -140,6 +162,7 @@ downloading the collection.
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
 | `status` | — | collection | `OWNED` \| `READING` \| `READ` |
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
+| `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
 | `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
 

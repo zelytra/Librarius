@@ -60,7 +60,8 @@ class DataIsolationTest {
     void everyScopedResourceRejectsAnonymousAccess() {
         for (String path : new String[] {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
-                "/api/goals", "/api/stats", "/api/series", "/api/catalog/search?q=test" }) {
+                "/api/goals", "/api/stats", "/api/series", "/api/genres",
+                "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
         }
@@ -371,6 +372,40 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .body("followed", is(false))
                 .body("ownedCount", is(1));
+    }
+
+    // ── Genres ────────────────────────────────────────────────────────────────
+
+    /**
+     * A genre row is shared catalog data, but the list is not a catalog browser: it holds
+     * the genres of the caller's own titles. A genre only Alice collects must therefore be
+     * absent from Bob's list, and filtering on it must not reach her collection.
+     */
+    @Test
+    void genresOfAnotherUserAreNeitherListedNorReachable() {
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "Isolation - genre",
+                                    "authors": "Isolation Test",
+                                    "genres": "Isolation Genre Alice" },
+                          "status": "OWNED" }
+                        """)
+                .when().post("/api/library").then().statusCode(201);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/genres")
+                .then().statusCode(200)
+                .body("code", hasItem("isolation-genre-alice"));
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/genres")
+                .then().statusCode(200)
+                .body("code", not(hasItem("isolation-genre-alice")));
+
+        given().auth().oauth2(token("bob")).queryParam("genre", "isolation-genre-alice")
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("total", is(0));
     }
 
     // ── Statistics ────────────────────────────────────────────────────────────

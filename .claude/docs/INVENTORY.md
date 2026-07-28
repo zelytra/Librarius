@@ -76,8 +76,13 @@ backups and alert rules now exist but neither has been proven on the cluster).
    Left behind: `work.series_title` still duplicates `series.title` until the front end
    reads the identifier (#45, #46), and `StatsResource.seriesCount` still counts distinct
    lower-cased titles rather than joining `series`.
-8. **`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats (a book tagged
-   "Fantasy, Aventure" counts as a genre distinct from "Fantasy").
+8. ~~**`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats~~
+   ✅ **Resolved on 2026-07-28** ([#56](https://github.com/zelytra/Librarius/issues/56)):
+   `V6__normalized_genres.sql` adds `genre`, `genre_alias` and `work_genre`, backfilled by
+   splitting and folding the existing free-text values; the breakdown groups on the codes
+   and `/api/library?genre=` filters on them. Left behind: `work.genres` still carries the
+   raw wording for the front end, which shows it and does not yet offer the filter, and
+   `sort=genre` still orders on that raw value.
 9. ~~**Statistics computed in memory**~~ ✅ **Resolved on 2026-07-28**
    ([#40](https://github.com/zelytra/Librarius/issues/40)): three aggregate queries in
    `LibraryItemRepository` replace the in-memory fold, and the query count no longer

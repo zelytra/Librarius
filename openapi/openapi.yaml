@@ -90,6 +90,8 @@ components:
     GenreCount:
       type: object
       properties:
+        code:
+          type: string
         genre:
           type: string
         count:
@@ -501,6 +503,7 @@ components:
   securitySchemes:
     SecurityScheme:
       type: openIdConnect
+      openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
       description: Authentication
 paths:
   /api/catalog/search:
@@ -612,6 +615,26 @@ paths:
       summary: Create
       tags:
       - Category Resource
+      security:
+      - SecurityScheme: []
+  /api/genres:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GenreCount"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Genre Resource
       security:
       - SecurityScheme: []
   /api/goals:
@@ -726,6 +749,10 @@ paths:
   /api/library:
     get:
       parameters:
+      - name: genre
+        in: query
+        schema:
+          type: string
       - name: kind
         in: query
         schema:

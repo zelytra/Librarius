@@ -7,10 +7,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /** Catalog work: a novel, or a single manga volume. */
@@ -50,8 +54,29 @@ public class Work {
     @Column(columnDefinition = "text")
     public String synopsis;
 
-    @Column(length = 512)
-    public String genres;
+    /**
+     * Free-text genres as the provider or the manual form wrote them, e.g.
+     * {@code "Fantasy, Aventure"}.
+     *
+     * <p>Denormalised label list of {@link #genres}, kept for the clients that still read it
+     * through {@code BookView}. Dropped once the front end goes through the genre codes —
+     * see V6.
+     */
+    @Column(name = "genres", length = 512)
+    public String genresText;
+
+    /**
+     * The normalised genres of the work — what the statistics group on and what the
+     * collection filters by.
+     *
+     * <p>Lazy, and deliberately never read by {@code BookView}: touching it while rendering
+     * a page of the collection would cost one query per item.
+     */
+    @ManyToMany
+    @JoinTable(name = "work_genre",
+            joinColumns = @JoinColumn(name = "work_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    public Set<Genre> genres = new LinkedHashSet<>();
 
     @Column(name = "original_year")
     public Integer originalYear;
