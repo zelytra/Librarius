@@ -124,6 +124,40 @@ class EditionApiTest {
                 .body("owned", not(hasItem(false)));
     }
 
+    /**
+     * The work is shared by everyone owning the title, so a second entry may **complete** it
+     * and never contradict it: a thinner entry cannot wipe a synopsis, and a field nobody had
+     * supplied is picked up from whoever finally does.
+     */
+    @Test
+    void aSecondEntryCompletesTheWorkWithoutOverwritingIt() {
+        String title = "Éditions - complétion";
+        String first = given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
+                                    "publisher": "Pocket", "synopsis": "Le résumé complet.",
+                                    "genres": "Fantasy" },
+                          "status": "OWNED" }
+                        """.formatted(title, AUTHOR))
+                .when().post("/api/library").then().statusCode(201).extract().path("id");
+
+        String second = given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
+                                    "publisher": "Gallimard", "synopsis": "Un pitch bâclé.",
+                                    "originalYear": 1998 },
+                          "status": "OWNED" }
+                        """.formatted(title, AUTHOR))
+                .when().post("/api/library").then().statusCode(201).extract().path("id");
+
+        assertEquals(bookField("alice", first, "workId"), bookField("alice", second, "workId"));
+        item("alice", second).then()
+                .body("book.synopsis", is("Le résumé complet."))
+                .body("book.genres", is("Fantasy"))
+                // …and the year the first entry never supplied is now on the shared work.
+                .body("book.originalYear", is(1998));
+    }
+
     /** A title nobody has entered twice knows a single edition: nothing to compare. */
     @Test
     void aWorkKnownInOneEditionListsThatOneAlone() {

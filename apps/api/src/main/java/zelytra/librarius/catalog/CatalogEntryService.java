@@ -104,7 +104,10 @@ public class CatalogEntryService {
         }
         if (work.genresText == null && dto.genres() != null) {
             work.genresText = dto.genres();
-            work.genres = genres.resolve(dto.genres());
+            // Filled in place rather than replaced: the collection of a managed entity is a
+            // Hibernate wrapper, and swapping it out is a good way to lose the diff it
+            // tracks. It is empty anyway — a work with no wording carries no genre.
+            work.genres.addAll(genres.resolve(dto.genres()));
         }
         if (work.series == null) {
             work.series = resolveSeries(dto.kind(), dto.seriesTitle());
