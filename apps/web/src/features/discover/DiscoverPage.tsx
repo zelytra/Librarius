@@ -16,7 +16,12 @@ import {
 
 /** The provider is reachable but refused: show the status, it is actionable. */
 function searchFailureMessage(error: unknown): string {
-  if (error instanceof ApiError) return `Erreur ${error.status}`;
+  if (error instanceof ApiError) {
+    // 429: the caller used up their share of the shared provider quota. Saying "error
+    // 429" would be useless — what matters is that waiting fixes it.
+    if (error.status === 429) return 'Trop de recherches d’affilée. Réessaie dans une minute.';
+    return `Erreur ${error.status}`;
+  }
   return 'Recherche indisponible pour le moment.';
 }
 import { Icon } from '../../shared/ui/Icon';
