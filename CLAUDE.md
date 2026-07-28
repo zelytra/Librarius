@@ -92,7 +92,7 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 | Env | URL | Notes |
 |---|---|---|
 | Local | http://localhost:5173 | test accounts `alice/alice`, `bob/bob` |
-| Staging | https://librarius.zelytra.fr | k3s, single ingress; `/auth` → Keycloak, `/api` + `/q` → api |
+| Staging | https://librarius.zelytra.fr | k3s, single ingress; `/auth` → Keycloak, `/api` → api, `/` → web. `/q` is **not** routed |
 | Production | — | does not exist yet; to be opened at the v1.0 milestone |
 
 ⚠️ `librarius.zelytra.fr` is a **staging** environment, not production: an outage during

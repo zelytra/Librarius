@@ -147,23 +147,28 @@ production opens.*
     deploys no Prometheus**, there is no kube-state-metrics and no Alertmanager, so on the
     cluster nobody is still being told anything.
     [#60](https://github.com/zelytra/Librarius/issues/60) stays open.
-16. **Zero-downtime rollout shipped, never exercised.** Both deployments now roll
+16. ~~**Zero-downtime rollout shipped, never exercised.**~~ ✅ **Exercised on 2026-07-28**
+    ([#64](https://github.com/zelytra/Librarius/issues/64)). Both deployments roll
     (`maxSurge: 1`, `maxUnavailable: 0`) on requests cut to measured usage, with a
-    `startupProbe`, `preStop` pauses and disruption budgets. The `Recreate` outage it
-    replaces was measured at 11s (web) and 31s (api); the figure *after* the change does
-    not exist, because no deployment has run with these settings. Take it on the next
-    merge with `infra/downtime-probe.sh`.
-    [#64](https://github.com/zelytra/Librarius/issues/64) stays open until then.
+    `startupProbe`, `preStop` pauses and disruption budgets. A forced restart of `web` and
+    `api` together completed in **21 s**, `kubectl` reporting `1 old replicas are pending
+    termination` — the replacement was serving before the outgoing pod left. An external
+    probe polling `/` and `/api/me` every ~3 s over the whole window recorded **124
+    samples, 124× `200` and 124× `401`, no 5xx and no connection error**. The `Recreate`
+    outage it replaces measured 11 s (web) and 31 s (api).
 17. **Rollback never exercised.** A `vX.Y.Z` tag now publishes `X.Y.Z` / `X.Y` / `X`
     images, aligns the chart and generates the changelog (`release.yml`), and the
     `helm rollback` procedure is written down in `docs/DEPLOYMENT.md` — but it has never
     been run against the cluster, so the procedure is documented, not proven. See
     [#63](https://github.com/zelytra/Librarius/issues/63).
-18. 🔴 **Continuous deployment has been broken since 1 July 2026**: `cd.yml` fails on
-    rejected Kubernetes credentials (401 on the first `kubectl`). Images are still built
-    and pushed to GHCR, but nothing is deployed any more. Discovered on 2026-07-28 by
-    triggering a release — **no alert existed to report it**, a direct illustration of debt
-    #15. See [#85](https://github.com/zelytra/Librarius/issues/85).
+18. ~~🔴 **Continuous deployment has been broken since 1 July 2026**~~ ✅ **Fixed on
+    2026-07-28** ([#85](https://github.com/zelytra/Librarius/issues/85)): `cd.yml` failed on
+    rejected Kubernetes credentials (401 on the first `kubectl`); moving every Librarius
+    resource into its own `librarius` namespace settled it. **Eight consecutive green
+    deployments** since. The workflow now opens an issue by itself when a deployment fails,
+    and serialises runs (`concurrency: cd`).
+    What this episode says about debt #15 stands: the breakage lasted four weeks and was
+    found by triggering a release, not by an alert.
 
 ## Functional gaps vs the vision 📋
 
