@@ -1,0 +1,97 @@
+# Stack exercised by the Playwright suite: PostgreSQL, Keycloak, the API and the web
+# app, wired the way `infra/compose.prod.yml` wires them — the browser reaches the API
+# through the nginx of the web image, which is where a misrouted ingress would show up.
+#
+# Two deliberate differences with the production stack:
+#
+#   - the API and the web images are built from the working tree, never pulled from
+#     GHCR: a pull request has to be validated against its own code;
+#   - the external catalogs (Open Library, AniList) are replaced by `catalog-stub`, so
+#     the search journey does not depend on the availability, the rate limits or the
+#     changing contents of two public APIs.
+#
+# The ports are fixed on purpose: the web image bakes `localhost:8081` in as its OIDC
+# authority, and the Keycloak realm only allows `localhost:5173` and `localhost:4173` as
+# redirect URIs. The web app is published on **4173** so the suite can run while a
+# `pnpm web:dev` holds 5173.
+name: librarius-e2e
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: librarius
+      POSTGRES_PASSWORD: librarius
+      POSTGRES_DB: librarius
+    volumes:
+      - librarius-e2e-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U librarius -d librarius']
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    command: ['start-dev', '--import-realm', '--http-port=8081']
+    # Same settings as the development stack: in `start-dev` Keycloak derives its issuer
+    # from the request, so a token obtained through the published port carries
+    # `http://localhost:8081/realms/librarius` — the URL the browser knows.
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - '8081:8081'
+    volumes:
+      - ../infra/keycloak:/opt/keycloak/data/import:ro
+
+  # Stands in for Open Library (GET /search.json) and AniList (POST /).
+  catalog-stub:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./stack/catalog-stub.conf:/etc/nginx/conf.d/default.conf:ro
+
+  api:
+    image: librarius-api:e2e
+    build:
+      context: ../apps/api
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/librarius
+      QUARKUS_DATASOURCE_USERNAME: librarius
+      QUARKUS_DATASOURCE_PASSWORD: librarius
+      # Keycloak is reachable as `keycloak:8081` from here but issues its tokens for
+      # `localhost:8081`, the browser-side URL. Discovery would hand the API a JWKS URL
+      # it cannot resolve, so the endpoints are given relatively and the expected issuer
+      # is stated explicitly.
+      OIDC_AUTH_SERVER_URL: http://keycloak:8081/realms/librarius
+      QUARKUS_OIDC_DISCOVERY_ENABLED: 'false'
+      QUARKUS_OIDC_JWKS_PATH: protocol/openid-connect/certs
+      QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8081/realms/librarius
+      QUARKUS_REST_CLIENT_OPENLIBRARY_URL: http://catalog-stub
+      QUARKUS_REST_CLIENT_ANILIST_URL: http://catalog-stub
+      # `quarkus.http.cors.origins` is pinned to the Vite dev server in
+      # application.properties. Browsers attach an `Origin` header to same-origin POSTs
+      # too, and the CORS filter answers 403 to any origin outside that list — the web
+      # app is served from 4173 here, so it has to be declared.
+      QUARKUS_HTTP_CORS_ORIGINS: http://localhost:4173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      catalog-stub:
+        condition: service_started
+
+  web:
+    image: librarius-web:e2e
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '4173:80'
+    depends_on:
+      - api
+
+volumes:
+  librarius-e2e-pgdata:

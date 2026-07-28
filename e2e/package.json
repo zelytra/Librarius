@@ -1,0 +1,20 @@
+{
+  "name": "@librarius/e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "End-to-end suite (Playwright) covering the key journeys against the full stack.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "typecheck": "tsc --noEmit",
+    "report": "playwright show-report",
+    "stack:build": "docker compose -f docker-compose.e2e.yml build",
+    "stack:up": "docker compose -f docker-compose.e2e.yml up -d",
+    "stack:down": "docker compose -f docker-compose.e2e.yml down -v"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@types/node": "^22.10.2",
+    "typescript": "~5.7.2"
+  }
+}

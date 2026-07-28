@@ -25,6 +25,8 @@
     "web:lint": "pnpm --filter @librarius/web lint",
     "api:dev": "cd apps/api && ./mvnw quarkus:dev",
     "api:test": "cd apps/api && ./mvnw -B test",
+    "e2e:install": "cd e2e && pnpm install --ignore-workspace --frozen-lockfile",
+    "e2e": "cd e2e && pnpm test",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down"
   }
