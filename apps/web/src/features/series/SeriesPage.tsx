@@ -184,9 +184,11 @@ function SeriesContent({ id }: { id: string }) {
         <div className={styles.progress}>
           <div className={styles.progressHead}>
             <span className={styles.progressValue}>
-              {total > 0 ? t('series.volumesOfTotal', { owned, total }) : t('series.volumesOwned', { owned })}
+              {total > 0
+                ? t('series.volumesOfTotal', { owned, total })
+                : t('series.volumesOwned', { count: owned })}
             </span>
-            <span className={styles.progressRead}>{t('series.readCount', { read })}</span>
+            <span className={styles.progressRead}>{t('series.readCount', { count: read })}</span>
           </div>
           <div className={styles.track}>
             {/* The width is the progress itself. */}

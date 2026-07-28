@@ -45,7 +45,8 @@ describe('SeriesPage', () => {
     expect(await screen.findByRole('heading', { name: 'Vinland Saga' })).toBeInTheDocument();
     expect(screen.getByText('Série en cours')).toBeInTheDocument();
     expect(screen.getByText('3 / 5 tomes')).toBeInTheDocument();
-    expect(screen.getByText('1 lus')).toBeInTheDocument();
+    // French counts 0 and 1 as singular, which i18next resolves from the locale.
+    expect(screen.getByText('1 lu')).toBeInTheDocument();
     expect(screen.getByText('Thorfinn poursuit sa vengeance.')).toBeInTheDocument();
   });
 
@@ -167,7 +168,7 @@ describe('SeriesPage', () => {
     renderSeries();
 
     expect(await screen.findByText('Aucun tome connu pour cette série.')).toBeInTheDocument();
-    expect(screen.getByText('0 tomes')).toBeInTheDocument();
+    expect(screen.getByText('0 tome')).toBeInTheDocument();
   });
 
   /** 404 is also the answer for a series the user neither owns nor follows. */

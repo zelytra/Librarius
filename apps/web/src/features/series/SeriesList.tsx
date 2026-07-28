@@ -46,7 +46,7 @@ export function SeriesList({ series }: { series: SeriesSummaryDto[] }) {
               <div className={styles.count}>
                 {total > 0
                   ? t('series.volumesOfTotal', { owned, total })
-                  : t('series.volumesOwned', { owned })}
+                  : t('series.volumesOwned', { count: owned })}
               </div>
               {total > 0 && (
                 <div className={styles.track}>

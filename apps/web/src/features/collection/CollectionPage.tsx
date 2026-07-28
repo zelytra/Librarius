@@ -215,7 +215,7 @@ function CollectionContent() {
       <div className={styles.countRow}>
         <span className={styles.count}>
           {series
-            ? t('collection.seriesTotal', { total: shelf.length })
+            ? t('collection.seriesTotal', { count: shelf.length })
             : t('collection.total', { total })}
         </span>
         <div className={styles.viewSwitch}>
