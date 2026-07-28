@@ -151,6 +151,8 @@ function SeriesContent({ id }: { id: string }) {
   }
 
   function openVolume(volume: SeriesVolumeDto) {
+    // A failure belongs to the volume it happened on, not to the next one picked.
+    setAddError(null);
     // An owned volume already has its screen; the rest opens the action panel.
     if (volume.libraryItemId) navigate(`/detail/${volume.libraryItemId}`);
     else setSelected(volume);
@@ -265,7 +267,10 @@ function SeriesContent({ id }: { id: string }) {
                   : (selected.title ?? t('series.unnumbered'))}
               </span>
               <button
-                onClick={() => setSelected(null)}
+                onClick={() => {
+                  setSelected(null);
+                  setAddError(null);
+                }}
                 aria-label={t('series.closeActions')}
                 className={styles.closeButton}
               >
