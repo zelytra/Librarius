@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "librarius.labels" (dict "ctx" . "component" "postgres") | nindent 4 }}
 data:
-  # Crée la base de Keycloak en plus de celle de l'API (au premier démarrage).
+  # Creates the Keycloak database next to the API one (on first startup).
   10-keycloak-db.sql: |
     SELECT 'CREATE DATABASE {{ .Values.keycloak.database }}'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.keycloak.database }}')\gexec
@@ -50,7 +50,10 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.postgres.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgres.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.postgres.secretName" . }}
+                  key: {{ .Values.postgres.secretKey }}
             - name: POSTGRES_DB
               value: {{ .Values.postgres.database | quote }}
             - name: PGDATA

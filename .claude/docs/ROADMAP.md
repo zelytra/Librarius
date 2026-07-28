@@ -24,9 +24,9 @@ An agent picking the project up with no more precise instruction takes, in this 
 
 1. **[#85](https://github.com/zelytra/Librarius/issues/85)** — continuous deployment has
    been broken since 1 July: nothing ships any more, whatever else gets done.
-2. **[#58](https://github.com/zelytra/Librarius/issues/58)** — plaintext secrets in a public
-   repository: even though `librarius.zelytra.fr` is only staging, the instance is reachable
-   from the Internet and those credentials are usable as-is.
+2. **[#58](https://github.com/zelytra/Librarius/issues/58)** — the chart no longer carries
+   any credential, but the exposed passwords are still valid: **rotating them on the
+   cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`.
 3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — server state gates almost all
    the front-end work that follows.
 4. **[#32](https://github.com/zelytra/Librarius/issues/32)** — inline styles block dark mode,
@@ -104,7 +104,7 @@ alert received when something breaks, deployment without downtime.
 | Issue | Topic | Depends on |
 |---|---|---|
 | [#85](https://github.com/zelytra/Librarius/issues/85) | 🔴 CD deployment fails: Kubernetes credentials rejected | — |
-| [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets | — |
+| [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets — chart done, rotation pending on the cluster | — |
 | [#59](https://github.com/zelytra/Librarius/issues/59) | 🔴 Automated PostgreSQL backups with a tested restore procedure | — |
 | [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting | — |
 | [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting on catalog endpoints | — |
