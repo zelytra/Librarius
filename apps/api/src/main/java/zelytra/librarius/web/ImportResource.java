@@ -13,7 +13,7 @@ import zelytra.librarius.imports.ImportService;
 import zelytra.librarius.imports.ImportService.ImportResult;
 import zelytra.librarius.security.CurrentUser;
 
-/** Import de la bibliothèque depuis une source externe (scraping) ou un fichier. */
+/** Library import from an external source (scraping) or from a file. */
 @Path("/api/import")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)

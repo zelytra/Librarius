@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/** Orchestration de l'import : scraping ou CSV → création des titres possédés. */
+/** Import orchestration: scraping or CSV -> creation of the owned titles. */
 @ApplicationScoped
 public class ImportService {
 
@@ -35,7 +35,7 @@ public class ImportService {
     @Inject
     MeterRegistry meters;
 
-    /** Résultat d'un import. */
+    /** Outcome of an import. */
     public record ImportResult(String source, int imported, int skipped, int total) {
     }
 
@@ -89,7 +89,7 @@ public class ImportService {
                 .toLowerCase(Locale.FRENCH).trim();
     }
 
-    /** Parser CSV tolérant : reconnaît des colonnes titre/auteur/statut (FR & EN). */
+    /** Lenient CSV parser: recognizes title/author/status columns (FR and EN headers). */
     static List<ImportedBook> parseCsv(String csv) {
         List<ImportedBook> books = new ArrayList<>();
         if (csv == null || csv.isBlank()) {

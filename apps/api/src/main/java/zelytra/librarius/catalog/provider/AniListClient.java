@@ -11,7 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.util.List;
 import java.util.Map;
 
-/** Client REST de l'API GraphQL AniList (mangas). */
+/** REST client for the AniList GraphQL API (mangas). */
 @RegisterRestClient(configKey = "anilist")
 @Path("/")
 public interface AniListClient {

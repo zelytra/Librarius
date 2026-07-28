@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-/** Fournisseur de catalogue manga adossé à AniList (GraphQL). */
+/** Manga catalog provider backed by AniList (GraphQL). */
 @ApplicationScoped
 public class AniListProvider implements CatalogProvider {
 
@@ -33,7 +33,7 @@ public class AniListProvider implements CatalogProvider {
 
     @Override
     public List<CatalogResult> search(String query, int limit) {
-        // isAdult: false filtre le contenu explicite côté serveur (filtre NSFW).
+        // isAdult: false filters out explicit content server-side (NSFW filter).
         String gql = "query ($q: String, $n: Int) { Page(perPage: $n) { media("
                 + "type: MANGA, search: $q, sort: SEARCH_MATCH, isAdult: false) { " + FIELDS + " } } }";
         return run(gql, Map.of("q", query, "n", limit));
@@ -56,7 +56,7 @@ public class AniListProvider implements CatalogProvider {
             }
             return res.data().page().media().stream().map(this::toResult).toList();
         } catch (Exception e) {
-            Log.warnf("Recherche AniList échouée : %s", e.getMessage());
+            Log.warnf("AniList search failed: %s", e.getMessage());
             return List.of();
         }
     }

@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.MeDto;
 
-/** Profil de l'utilisateur authentifié (provisionné à la volée si nécessaire). */
+/** Profile of the authenticated user (provisioned on the fly when needed). */
 @Path("/api/me")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)

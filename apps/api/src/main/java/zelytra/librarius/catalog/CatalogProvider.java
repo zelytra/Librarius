@@ -4,15 +4,15 @@ import zelytra.librarius.domain.Kind;
 
 import java.util.List;
 
-/** Fournisseur de catalogue pour une nature d'œuvre donnée (livre ou manga). */
+/** Catalog provider for a given kind of work (book or manga). */
 public interface CatalogProvider {
 
-    /** Nature couverte par ce fournisseur. */
+    /** Kind covered by this provider. */
     Kind kind();
 
-    /** Recherche par titre / auteur. */
+    /** Search by title / author. */
     List<CatalogResult> search(String query, int limit);
 
-    /** Prochaines sorties connues (best-effort selon les données du fournisseur). */
+    /** Known upcoming releases (best-effort, depending on the provider's data). */
     List<CatalogResult> upcoming(int limit);
 }

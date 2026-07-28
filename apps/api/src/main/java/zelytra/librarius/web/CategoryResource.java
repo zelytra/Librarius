@@ -20,7 +20,7 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 
-/** Catégories de classement : built-ins (Or/Argent/Bronze) + catégories custom. */
+/** Ranking categories: built-ins (Gold/Silver/Bronze) plus custom categories. */
 @Path("/api/categories")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)

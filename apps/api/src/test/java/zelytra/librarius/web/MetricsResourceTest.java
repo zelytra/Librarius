@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
-/** Vérifie que les métriques Prometheus sont exposées sur /q/metrics. */
+/** Checks that the Prometheus metrics are exposed on /q/metrics. */
 @QuarkusTest
 class MetricsResourceTest {
 

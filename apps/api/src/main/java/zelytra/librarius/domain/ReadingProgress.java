@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/** Progression de lecture d'un titre possédé (1-1 avec library_item). */
+/** Reading progress of an owned title (1-1 with library_item). */
 @Entity
 @Table(name = "reading_progress")
 public class ReadingProgress {

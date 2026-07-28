@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Importe la bibliothèque publique d'un membre Booknode. La vue « biblio-table »
- * est rendue côté serveur : on parse chaque entrée (titre, auteur, couverture,
- * étagère) avec Jsoup.
+ * Imports the public library of a Booknode member. The "biblio-table" view is
+ * rendered server-side, so each entry (title, author, cover, shelf) is parsed
+ * with Jsoup.
  */
 @ApplicationScoped
 public class BooknodeImporter implements LibraryImporter {
@@ -34,13 +34,13 @@ public class BooknodeImporter implements LibraryImporter {
             Document doc = Jsoup.connect(url).userAgent(UA).timeout(15000).get();
             return parse(doc);
         } catch (Exception e) {
-            Log.warnf("Import Booknode échoué pour %s : %s", handle, e.getMessage());
+            Log.warnf("Booknode import failed for %s: %s", handle, e.getMessage());
             throw new ImportException("Impossible de lire la bibliothèque Booknode de « " + handle
                     + " ». Vérifie le pseudo et que le profil est public.");
         }
     }
 
-    /** Parsing pur (testé sur fixture, sans réseau). */
+    /** Pure parsing (tested against a fixture, without network access). */
     List<ImportedBook> parse(Document doc) {
         List<ImportedBook> books = new ArrayList<>();
         for (Element nameEl : doc.select(".book-name")) {
@@ -88,7 +88,7 @@ public class BooknodeImporter implements LibraryImporter {
         if (s.contains("train de lire") || s.contains("en cours")) {
             return LibraryStatus.READING;
         }
-        // « Lu » mais pas « à lire » / « relire ».
+        // Matches the French shelf "lu" (read) but not "à lire" / "relire".
         if (s.contains("lu") && !s.contains("à lire") && !s.contains("relire")) {
             return LibraryStatus.READ;
         }

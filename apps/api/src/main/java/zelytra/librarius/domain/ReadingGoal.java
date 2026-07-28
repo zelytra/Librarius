@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 
 import java.util.UUID;
 
-/** Objectif de lecture annuel. */
+/** Yearly reading goal. */
 @Entity
 @Table(name = "reading_goal")
 public class ReadingGoal {

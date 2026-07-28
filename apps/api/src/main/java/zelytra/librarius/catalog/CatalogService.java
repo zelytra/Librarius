@@ -14,10 +14,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Agrège les fournisseurs de catalogue : pour une nature donnée, interroge tous
- * les fournisseurs enregistrés (Open Library pour les livres, AniList pour les
- * mangas), fusionne et dédoublonne. Les résultats sont mis en cache pour ménager
- * les API externes.
+ * Aggregates the catalog providers: for a given kind, queries every registered
+ * provider (Open Library for books, AniList for mangas), then merges and
+ * deduplicates the results. Results are cached to spare the external APIs.
  */
 @ApplicationScoped
 public class CatalogService {
@@ -29,7 +28,7 @@ public class CatalogService {
         this(providers.stream().toList());
     }
 
-    /** Constructeur testable (sans CDI). */
+    /** Test-friendly constructor (without CDI). */
     CatalogService(List<CatalogProvider> providers) {
         for (CatalogProvider provider : providers) {
             byKind.computeIfAbsent(provider.kind(), k -> new ArrayList<>()).add(provider);

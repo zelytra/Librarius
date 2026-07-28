@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Parsing CSV tolérant (en-têtes FR/EN, séparateur , ou ;). */
+/** Lenient CSV parsing (FR/EN headers, "," or ";" separator). */
 class ImportCsvTest {
 
     @Test

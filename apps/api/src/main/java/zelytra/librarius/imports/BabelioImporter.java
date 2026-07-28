@@ -5,9 +5,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 /**
- * Babelio ne propose pas d'API et la bibliothèque d'un membre n'est pas
- * accessible publiquement sans connexion : le scraping anonyme par pseudo n'est
- * donc pas fiable. On expose la source pour l'orienter vers l'import par fichier.
+ * Babelio offers no API and a member's library is not publicly reachable without
+ * being logged in: anonymous scraping by handle is therefore unreliable. The source
+ * is still exposed so that users can be pointed to the file import instead.
  */
 @ApplicationScoped
 public class BabelioImporter implements LibraryImporter {

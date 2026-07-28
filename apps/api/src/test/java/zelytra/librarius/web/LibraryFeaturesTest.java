@@ -9,7 +9,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
-/** Catégories, attribution de rang, progression et statistiques. */
+/** Categories, rank assignment, reading progress and statistics. */
 @QuarkusTest
 class LibraryFeaturesTest {
 
@@ -31,7 +31,7 @@ class LibraryFeaturesTest {
     void assignRankAndReadStatsAndProgress() {
         String token = token();
 
-        // Crée un titre en cours de lecture.
+        // Create a title currently being read.
         String itemId = given().auth().oauth2(token).contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "Iron Flame", "authors": "Rebecca Yarros" },
@@ -40,24 +40,24 @@ class LibraryFeaturesTest {
                 .when().post("/api/library")
                 .then().statusCode(201).extract().path("id");
 
-        // Récupère l'id de la catégorie built-in « or ».
+        // Fetch the id of the built-in "or" (gold) category.
         String orId = given().auth().oauth2(token).when().get("/api/categories")
                 .then().statusCode(200)
                 .extract().path("find { it.code == 'or' }.id");
 
-        // Attribue le rang Or.
+        // Assign the gold rank.
         given().auth().oauth2(token).contentType("application/json")
                 .body("{ \"categoryId\": \"" + orId + "\" }")
                 .when().put("/api/library/" + itemId + "/rank")
                 .then().statusCode(200).body("rankCode", is("or"));
 
-        // Met à jour la progression.
+        // Update the reading progress.
         given().auth().oauth2(token).contentType("application/json")
                 .body("{ \"currentPage\": 120, \"percent\": 35, \"status\": \"READING\" }")
                 .when().put("/api/library/" + itemId + "/progress")
                 .then().statusCode(204);
 
-        // Les stats comptent au moins ce titre en cours.
+        // The stats count at least this in-progress title.
         given().auth().oauth2(token).when().get("/api/stats")
                 .then().statusCode(200)
                 .body("reading", greaterThanOrEqualTo(1));

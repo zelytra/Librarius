@@ -9,9 +9,9 @@ import zelytra.librarius.domain.repository.WorkRepository;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
 /**
- * Crée une œuvre + édition à partir d'une saisie manuelle. Sert de point d'entrée
- * unique pour la collection et la liste de souhaits tant que le catalogue externe
- * (PR #4) n'est pas branché ; il fournira alors d'autres fabriques d'éditions.
+ * Creates a work and its edition from a manual entry. Acts as the single entry point
+ * for the library and the wishlist as long as the external catalog (PR #4) is not
+ * wired in; it will then provide other edition factories.
  */
 @ApplicationScoped
 public class CatalogEntryService {
