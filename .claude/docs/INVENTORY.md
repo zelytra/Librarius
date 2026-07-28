@@ -102,8 +102,11 @@ production opens.*
 15. **No alerting.** Grafana displays, nobody gets told.
 16. **`Recreate` strategy** (node CPU constraint) → downtime on every deployment. Accepted
     in staging.
-17. **`<sha>` image tags** pushed over `latest`: no semantic versioning and no easy way to
-    roll back.
+17. **Rollback never exercised.** A `vX.Y.Z` tag now publishes `X.Y.Z` / `X.Y` / `X`
+    images, aligns the chart and generates the changelog (`release.yml`), and the
+    `helm rollback` procedure is written down in `docs/DEPLOYMENT.md` — but it has never
+    been run against the cluster, so the procedure is documented, not proven. See
+    [#63](https://github.com/zelytra/Librarius/issues/63).
 18. 🔴 **Continuous deployment has been broken since 1 July 2026**: `cd.yml` fails on
     rejected Kubernetes credentials (401 on the first `kubectl`). Images are still built
     and pushed to GHCR, but nothing is deployed any more. Discovered on 2026-07-28 by
