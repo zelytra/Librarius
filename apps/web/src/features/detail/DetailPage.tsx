@@ -5,10 +5,11 @@ import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
 import { RANK_COLORS } from '../collection/mockData';
 import {
+  getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
   useGetApiCategories,
-  useGetApiLibrary,
+  useGetApiLibraryId,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
 
@@ -25,18 +26,16 @@ function DetailContent({ id }: { id: string }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Arriving from Collection or Home, the library is already in cache: this resolves
-  // without a request, which is why the item no longer has to be handed over through
-  // the router state. `select` narrows the cache entry down to the title on screen, so
-  // the view also reflects any change made elsewhere.
-  const { data: item = null, isPending: loading } = useGetApiLibrary(undefined, {
-    query: {
-      select: (items) => items.find((x) => x.id === id) ?? null,
-    },
-  });
+  // One request for one title. The collection is paginated, so the item is no longer
+  // guaranteed to be in a cached page — and a deep link never had it. Its own cache
+  // entry also means the screen keeps working when the user reloads on this URL.
+  const { data: item = null, isPending: loading } = useGetApiLibraryId(id);
   const { data: cats = [] } = useGetApiCategories();
 
   const invalidateLibrary = () => {
+    // The item has its own cache entry, whose key is not a prefix of the collection's:
+    // invalidating the list alone would leave this very screen showing a stale rank.
+    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryIdQueryKey(id) });
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
   };

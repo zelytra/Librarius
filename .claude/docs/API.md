@@ -15,12 +15,13 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
 | GET | `/api/catalog/search?q=&kind=&limit=` | External catalog search. `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
-| GET | `/api/library?status=` | Owned titles, optional `OWNED\|READING\|READ` filter |
+| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
+| GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
-| GET | `/api/wishlist` | Wishlist |
+| GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | DELETE | `/api/wishlist/{id}` | Removes a wish |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
@@ -48,12 +49,14 @@ ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
 LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
 LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
                String rankCode, BookView book)
+LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
 ProgressDto(Integer currentPage, Integer percent, LibraryStatus status)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
 WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note, BookView book)
+WishlistPageDto(List<WishlistItemDto> items, int page, int size, long total)
 
 CategoryDto(UUID id, String code, String label, String color, boolean builtin)
 CategoryCreateDto(String label, String color)
@@ -68,6 +71,33 @@ GenreCount(String genre, long count)
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}`.
+
+## Pagination
+
+`GET /api/library` and `GET /api/wishlist` return an envelope, never a bare array:
+
+```json
+{ "items": [ … ], "page": 0, "size": 50, "total": 412 }
+```
+
+`total` is the number of items matching the filter, all pages taken together — that is what
+lets a client display a count, and decide whether there is more to fetch, without
+downloading the collection.
+
+| Parameter | Default | Applies to | Notes |
+|---|---|---|---|
+| `page` | `0` | both | Zero-based. Clamped to 0; a page past the end is empty with the right `total` |
+| `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
+| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`. Wishlist: `priority`, `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
+| `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
+| `status` | — | collection | `OWNED` \| `READING` \| `READ` |
+| `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
+| `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
+| `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
+
+Every ordering ends on the identifier, so an item never swaps pages between two requests.
+Filters combine with an `and`, and all of them narrow a set already scoped to
+`CurrentUser.id()`.
 
 ## Conventions
 
@@ -84,7 +114,7 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 
 | # | Gap | Target milestone |
 |---|---|---|
-| A1 | No **pagination** on `/api/library` and `/api/wishlist` | Foundations |
+| A1 | ✅ Pagination on `/api/library` and `/api/wishlist` (#38) | Foundations |
 | A2 | No `PATCH /api/me` (display name, language) | Public product |
 | A3 | No `GET /api/export` (CSV/JSON) and no `DELETE /api/me` — **GDPR requirements** | Public product |
 | A4 | No `/api/series` resource (details, volumes, follow) | Core product |
@@ -92,6 +122,6 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 | A6 | No `PUT /api/wishlist/{id}` (edit priority/price/note) | Core product |
 | A7 | No one-call conversion from wish to collection | Core product |
 | A8 | No `/api/dashboard/layout` | Core product |
-| A9 | No server-side search/filter on the collection | Foundations |
+| A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | No time-based statistics (`/api/stats/timeline`) | Core product |

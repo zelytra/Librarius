@@ -2,11 +2,26 @@ import type {
   CatalogResult,
   CategoryDto,
   LibraryItemDto,
+  LibraryPageDto,
   StatsDto,
   WishlistItemDto,
+  WishlistPageDto,
 } from '../api/generated/librarius';
 
 /** Test data sets, shaped like the real API responses. */
+
+/**
+ * Envelope returned by the paged endpoints. `total` defaults to the number of items
+ * handed over, which is what a single-page answer looks like; pass it explicitly to
+ * simulate a collection larger than the page.
+ */
+export function libraryPage(items: LibraryItemDto[], total = items.length): LibraryPageDto {
+  return { items, page: 0, size: 50, total };
+}
+
+export function wishlistPage(items: WishlistItemDto[], total = items.length): WishlistPageDto {
+  return { items, page: 0, size: 50, total };
+}
 
 export function libraryItem(overrides: Partial<LibraryItemDto> = {}): LibraryItemDto {
   return {

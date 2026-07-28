@@ -4,9 +4,12 @@ import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -17,15 +20,19 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import zelytra.librarius.catalog.CatalogEntryService;
 import zelytra.librarius.domain.Edition;
+import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
+import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
+import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
 import zelytra.librarius.domain.repository.ReadingProgressRepository;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.LibraryCreateDto;
 import zelytra.librarius.web.ApiDtos.LibraryItemDto;
+import zelytra.librarius.web.ApiDtos.LibraryPageDto;
 import zelytra.librarius.web.ApiDtos.ProgressDto;
 import zelytra.librarius.web.ApiDtos.RankAssignDto;
 
@@ -53,13 +60,55 @@ public class LibraryResource {
     @Inject
     ReadingProgressRepository progresses;
 
+    /**
+     * One page of the collection, filtered and sorted by the database.
+     *
+     * @param page   zero-based page index, clamped to 0 at the lowest
+     * @param size   items per page, clamped to {@value PageRequest#MAX_SIZE}
+     * @param sort   {@code added} (default), {@code title}, {@code author} or {@code genre}
+     * @param kind   {@code BOOK} or {@code MANGA}, no filtering when absent
+     * @param status {@code OWNED}, {@code READING} or {@code READ}
+     * @param rank   code of a rank category ({@code or}, {@code argent}, {@code bronze} or
+     *               a custom one)
+     * @param q      free text matched against the title, the authors and the series
+     */
     @GET
-    public List<LibraryItemDto> list(@QueryParam("status") LibraryStatus status) {
-        String userId = currentUser.id();
-        List<LibraryItem> found = status != null
-                ? items.listByUserAndStatus(userId, status)
-                : items.listByUser(userId);
-        return found.stream().map(LibraryItemDto::of).toList();
+    public LibraryPageDto list(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("" + PageRequest.DEFAULT_SIZE) int size,
+            @QueryParam("sort") String sort,
+            @QueryParam("kind") Kind kind,
+            @QueryParam("status") LibraryStatus status,
+            @QueryParam("rank") String rank,
+            @QueryParam("q") String q) {
+
+        LibrarySort ordering = LibrarySort.parse(sort)
+                .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
+        PageRequest window = PageRequest.of(page, size);
+        LibraryFilter filter = new LibraryFilter(currentUser.id(), kind, status, rank, q);
+
+        long total = items.countMatching(filter);
+        List<LibraryItemDto> slice =
+                items.listMatching(filter, ordering, window.offset(), window.size())
+                        .stream().map(LibraryItemDto::of).toList();
+        return new LibraryPageDto(slice, window.page(), window.size(), total);
+    }
+
+    /**
+     * A single owned title. Lets a client deep-link to a detail screen without paging
+     * through the whole collection to find the item.
+     *
+     * <p>An identifier belonging to someone else answers 404 like an unknown one: a 403
+     * would confirm that the item exists.
+     *
+     * @throws NotFoundException when the item does not exist, or is not the caller's
+     */
+    @GET
+    @Path("/{id}")
+    public LibraryItemDto get(@PathParam("id") UUID id) {
+        return items.findOwned(currentUser.id(), id)
+                .map(LibraryItemDto::of)
+                .orElseThrow(NotFoundException::new);
     }
 
     @POST

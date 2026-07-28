@@ -128,6 +128,13 @@ export interface LibraryItemDto {
   book?: BookView;
 }
 
+export interface LibraryPageDto {
+  items?: LibraryItemDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
 
 
@@ -222,6 +229,13 @@ export interface WishlistItemDto {
   book?: BookView;
 }
 
+export interface WishlistPageDto {
+  items?: WishlistItemDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export type GetApiCatalogSearchParams = {
 kind?: Kind;
 limit?: number;
@@ -234,7 +248,22 @@ limit?: number;
 };
 
 export type GetApiLibraryParams = {
+kind?: Kind;
+page?: number;
+q?: string;
+rank?: string;
+size?: number;
+sort?: string;
 status?: LibraryStatus;
+};
+
+export type GetApiWishlistParams = {
+kind?: Kind;
+page?: number;
+priority?: WishPriority;
+q?: string;
+size?: number;
+sort?: string;
 };
 
 export const getApiCatalogSearch = (
@@ -822,7 +851,7 @@ export const getApiLibrary = (
  ) => {
       
       
-      return apiClient<LibraryItemDto[]>(
+      return apiClient<LibraryPageDto>(
       {url: `/api/library`, method: 'GET',
         params
     },
@@ -962,6 +991,92 @@ const {mutation: mutationOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     
+export const getApiLibraryId = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<LibraryItemDto>(
+      {url: `/api/library/${id}`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiLibraryIdQueryKey = (id?: Uuid,) => {
+    return [
+    `/api/library/${id}`
+    ] as const;
+    }
+
+    
+export const getGetApiLibraryIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiLibraryIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLibraryId>>> = () => getApiLibraryId(id, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiLibraryIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiLibraryId>>>
+export type GetApiLibraryIdQueryError = void
+
+
+export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLibraryId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLibraryId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiLibraryId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiLibraryId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiLibraryIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 export const deleteApiLibraryId = (
     id: Uuid,
  ) => {
@@ -1309,12 +1424,13 @@ export function useGetApiStats<TData = Awaited<ReturnType<typeof getApiStats>>, 
 
 
 export const getApiWishlist = (
-    
+    params?: GetApiWishlistParams,
  ) => {
       
       
-      return apiClient<WishlistItemDto[]>(
-      {url: `/api/wishlist`, method: 'GET'
+      return apiClient<WishlistPageDto>(
+      {url: `/api/wishlist`, method: 'GET',
+        params
     },
       );
     }
@@ -1322,23 +1438,23 @@ export const getApiWishlist = (
 
 
 
-export const getGetApiWishlistQueryKey = () => {
+export const getGetApiWishlistQueryKey = (params?: GetApiWishlistParams,) => {
     return [
-    `/api/wishlist`
+    `/api/wishlist`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetApiWishlistQueryOptions = <TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
+export const getGetApiWishlistQueryOptions = <TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiWishlistQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWishlistQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWishlist>>> = () => getApiWishlist();
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWishlist>>> = () => getApiWishlist(params, );
 
       
 
@@ -1352,7 +1468,7 @@ export type GetApiWishlistQueryError = void
 
 
 export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>> & Pick<
+ params: undefined |  GetApiWishlistParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiWishlist>>,
           TError,
@@ -1362,7 +1478,7 @@ export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishli
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>> & Pick<
+ params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiWishlist>>,
           TError,
@@ -1372,16 +1488,16 @@ export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishli
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
+ params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
+ params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetApiWishlistQueryOptions(options)
+  const queryOptions = getGetApiWishlistQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

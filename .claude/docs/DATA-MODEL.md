@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2)
+## 1. Current schema (V1 + V2 + V3)
 
 ```text
 app_user ──┬─< library_item >── edition >── work
@@ -19,15 +19,21 @@ app_user ──┬─< library_item >── edition >── work
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
 | `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`) | No credential stored |
-| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `volume_number`, `synopsis`, `genres`, `original_year` | — |
+| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `volume_number`, `synopsis`, `genres`, `original_year` | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3) |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
-| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` |
+| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
-| `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)` |
+| `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
 | `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a).
+
+`V3__pagination_indexes.sql` adds no column: it only backs the server-side pagination of
+`/api/library` and `/api/wishlist` with the indexes their default ordering (newest first,
+per user) and their `kind` / `title` / `author` / `genre` orderings need. The free-text
+search deliberately has no trigram index — it runs on a set already narrowed down to one
+user's items; installing `pg_trgm` would need privileges the API role may not have.
 
 ### Cascades
 
@@ -51,7 +57,7 @@ their data — handy for GDPR account deletion.
 
 ## 3. Planned changes
 
-### V3 — Series (milestone "Core product")
+### V4 — Series (milestone "Core product")
 
 ```sql
 CREATE TABLE series (
@@ -82,7 +88,7 @@ Data migration: create one `series` per distinct `work.series_title` (per `kind`
 the `work` rows, **keep `series_title`** read-only for one release so the front end does not
 break, then drop it in V4.
 
-### V4 — Normalised genres & history
+### V5 — Normalised genres & history
 
 ```sql
 CREATE TABLE genre (id UUID PRIMARY KEY, code VARCHAR(64) UNIQUE NOT NULL, label VARCHAR(64) NOT NULL);
@@ -99,13 +105,13 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V5 — Personalisation & notifications
+### V6 — Personalisation & notifications
 
 `dashboard_layout (user_id PK, sections JSONB)`,
 `notification_pref (user_id PK, prefs JSONB)`,
 `upcoming_release (id, series_id, volume_number, release_date, region, publisher, source)`.
 
-### V6 — Persistent catalog cache
+### V7 — Persistent catalog cache
 
 `catalog_cache (provider, query_hash, payload JSONB, fetched_at, PRIMARY KEY (provider, query_hash))`.
 

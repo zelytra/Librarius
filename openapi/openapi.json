@@ -324,6 +324,46 @@
       "get" : {
         "tags" : [ "Library Resource" ],
         "parameters" : [ {
+          "name" : "kind",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "rank",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : 50,
+            "type" : "integer"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "status",
           "in" : "query",
           "schema" : {
@@ -336,10 +376,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/LibraryItemDto"
-                  }
+                  "$ref" : "#/components/schemas/LibraryPageDto"
                 }
               }
             }
@@ -383,6 +420,38 @@
       }
     },
     "/api/library/{id}" : {
+      "get" : {
+        "tags" : [ "Library Resource" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LibraryItemDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
         "tags" : [ "Library Resource" ],
         "parameters" : [ {
@@ -536,16 +605,54 @@
     "/api/wishlist" : {
       "get" : {
         "tags" : [ "Wishlist Resource" ],
+        "parameters" : [ {
+          "name" : "kind",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "name" : "priority",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/WishPriority"
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : 50,
+            "type" : "integer"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/WishlistItemDto"
-                  }
+                  "$ref" : "#/components/schemas/WishlistPageDto"
                 }
               }
             }
@@ -859,6 +966,29 @@
           }
         }
       },
+      "LibraryPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LibraryItemDto"
+            }
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        }
+      },
       "LibraryStatus" : {
         "enum" : [ "OWNED", "READING", "READ" ],
         "type" : "string"
@@ -1057,6 +1187,29 @@
           },
           "book" : {
             "$ref" : "#/components/schemas/BookView"
+          }
+        }
+      },
+      "WishlistPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WishlistItemDto"
+            }
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         }
       }

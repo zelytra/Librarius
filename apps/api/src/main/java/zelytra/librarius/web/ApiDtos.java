@@ -89,6 +89,28 @@ public final class ApiDtos {
         }
     }
 
+    /**
+     * One page of the collection.
+     *
+     * <p>Envelope rather than a bare array: without {@code total} the client cannot tell
+     * whether there is more to fetch, nor display a count without downloading everything —
+     * which is exactly what the pagination is there to avoid. {@code page} and {@code size}
+     * are echoed back because the server clamps them.
+     *
+     * @param items the slice itself, at most {@code size} entries
+     * @param page  zero-based index of the returned page
+     * @param size  effective page size, after clamping
+     * @param total number of items matching the filter, all pages taken together
+     */
+    public record LibraryPageDto(java.util.List<LibraryItemDto> items, int page, int size,
+            long total) {
+    }
+
+    /** One page of the wishlist. Same envelope as {@link LibraryPageDto}. */
+    public record WishlistPageDto(java.util.List<WishlistItemDto> items, int page, int size,
+            long total) {
+    }
+
     public record CategoryDto(UUID id, String code, String label, String color, boolean builtin) {
         public static CategoryDto of(zelytra.librarius.domain.RankCategory c) {
             return new CategoryDto(c.id, c.code, c.label, c.color, c.builtin);
