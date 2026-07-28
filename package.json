@@ -10,10 +10,16 @@
   "pnpm": {
     "overrides": {
       "vite": "^6.0.5"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-qwww-vcr4-c8h2"
+      ]
     }
   },
   "scripts": {
     "web:dev": "pnpm --filter @librarius/web dev",
+    "web:audit": "pnpm audit --prod --audit-level high",
     "web:build": "pnpm --filter @librarius/web build",
     "web:test": "pnpm --filter @librarius/web test",
     "web:lint": "pnpm --filter @librarius/web lint",

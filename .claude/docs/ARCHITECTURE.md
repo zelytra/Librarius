@@ -144,6 +144,15 @@ regeneration.
 | Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
 | Exposed surface | Swagger UI enabled on the deployed environment (`always-include=true`) — to be restricted before opening to the public |
 | Rate limiting | None |
+| Static analysis | CodeQL on `javascript-typescript` and `java-kotlin`, weekly and on every pull request (`codeql.yml`) |
+| Dependency vulnerabilities | `pnpm audit --prod --audit-level high` blocks the pull request (`audit.yml`); Maven is covered by Dependabot alerts only — no keyless CI gate exists (see below) |
+| Supply chain | Every GitHub Action pinned by commit SHA, version in a trailing comment; Dependabot bumps SHA and comment together |
+
+The Maven side has no CI gate: OWASP dependency-check now needs an NVD API key, and the
+keyless alternatives (Sonatype OSS Index anonymous, GitHub's dependency-review) either
+throttle per runner IP or need the dependency graph enabled on the repository. Enabling
+**Dependency graph** and **Dependabot security updates** in the repository settings is the
+missing piece; the gate can then be revisited.
 
 ## 6. Deployment
 

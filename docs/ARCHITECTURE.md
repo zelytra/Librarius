@@ -72,6 +72,14 @@ GitHub Actions workflows (path-filtered):
 - **openapi-sync** *(PR #3)*: regenerates the client, fails on a diff
 - **release** *(PR #10)*: builds and pushes Docker images to GHCR (nginx web, JVM api;
   native optional)
+- **codeql**: static analysis of the TypeScript and Java sources, weekly and on every
+  pull request
+- **audit**: `pnpm audit` on the runtime dependency tree, fails on a high or critical
+  advisory
+
+Actions are pinned by commit SHA (the tag is kept in a trailing comment): a moved tag must
+not be able to change what runs. Dependency updates come from Dependabot, grouped and
+weekly — see `.github/dependabot.yml`.
 
 Every pull request must be green before it is merged.
 

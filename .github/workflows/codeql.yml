@@ -1,0 +1,74 @@
+name: codeql
+
+# Static analysis of the two codebases. Findings land in the repository's
+# "Security > Code scanning" tab; on a pull request they are reported inline.
+#
+# No path filter: a query pack update can surface a finding in code that the
+# pull request never touched, which is exactly the point of the weekly run.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Monday 05:11 UTC — after the Dependabot pull requests of the same morning.
+    - cron: '11 5 * * 1'
+
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required to upload the SARIF results to the code scanning API.
+      security-events: write
+      # CodeQL reads the workflow runs of the default branch to diff findings.
+      actions: read
+    strategy:
+      # A broken analysis on one language should not hide the other.
+      fail-fast: false
+      matrix:
+        include:
+          # TypeScript is analysed by the javascript-typescript pack; it needs no
+          # build, the extractor reads the sources.
+          - language: javascript-typescript
+            build-mode: none
+          # Java is extracted while it compiles, hence the explicit Maven build
+          # between init and analyze.
+          - language: java-kotlin
+            build-mode: manual
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@4187e74d05793876e9989daffde9c3e66b4acd07 # v3.37.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # Tests are skipped on purpose: the extractor only needs the compilation,
+      # and api.yml already runs the test suite.
+      - name: Build the API
+        if: matrix.language == 'java-kotlin'
+        working-directory: apps/api
+        run: ./mvnw -B -ntp -DskipTests package
+
+      - name: Analyse
+        uses: github/codeql-action/analyze@4187e74d05793876e9989daffde9c3e66b4acd07 # v3.37.3
+        with:
+          category: /language:${{ matrix.language }}
