@@ -1,6 +1,6 @@
 # Inventory — repository audit
 
-> Audit carried out on **2026-07-28** against `develop` (`af55df2`). It describes the code
+> Audit carried out on **2026-07-28** against `af55df2`. It describes the code
 > **as it is**, not as it ought to be. To be revised at the end of every milestone.
 
 ## Overview
@@ -30,7 +30,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 | Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard |
-| CI/CD | 5 path-filtered workflows; push to `main` → build GHCR images + `helm upgrade` |
+| CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
 
 ## Technical debt identified 🔧
 
@@ -63,13 +63,17 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    `StatsResource`. Tracking "volumes owned / total" properly is impossible.
 8. **`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats (a book tagged
    "Fantasy, Aventure" counts as a genre distinct from "Fantasy").
-9. **Statistics computed in memory**: `StatsResource` loads the user's *entire* library and
-   then aggregates in Java. Fine at 100 titles, not at 5,000.
+9. ~~**Statistics computed in memory**~~ ✅ **Resolved on 2026-07-28**
+   ([#40](https://github.com/zelytra/Librarius/issues/40)): three aggregate queries in
+   `LibraryItemRepository` replace the in-memory fold, and the query count no longer
+   depends on the size of the collection. One behaviour change: genres with equal counts
+   are now ordered alphabetically rather than by insertion order, the old tie-break
+   following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
 11. **Tables planned but never created**: `series`, `catalog_cache`, `dashboard_layout`,
     `notification_pref`, `upcoming_release`, `library_item_rank` (the rank is a column, not
     a table — an acceptable simplification, worth documenting).
-12. **`HelloResource` is unauthenticated** — a demo endpoint to delete.
+12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
 
 ### Defects fixed since the audit ✅
 
@@ -87,10 +91,12 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 *Criticality assessed for a staging environment; every line below becomes blocking when
 production opens.*
 
-13. **Plaintext secrets in `infra/helm/librarius/values.yaml`**: `postgres.password:
-    librarius`, `keycloak.adminPassword: admin`, committed to a **public repository**.
-    Still serious even in staging: the instance is reachable from the Internet, so those
-    credentials are usable as-is by anyone.
+13. **Database and Keycloak credentials exposed in the git history**
+    (`infra/helm/librarius/values.yaml`, a **public repository**). The chart now reads
+    them from Kubernetes Secrets, ships no default value, and a `gitleaks` job blocks any
+    comeback — but the old values remain readable in the history and the instance is
+    reachable from the Internet: the exposure only closes once they are **rotated on the
+    cluster**. Procedure in `docs/DEPLOYMENT.md`.
 14. **No PostgreSQL backup.** `local-path` PVC on a single node. Tolerable as long as the
     staging data is disposable — to be handled before hosting any real data.
 15. **No alerting.** Grafana displays, nobody gets told.
@@ -122,7 +128,7 @@ production opens.*
 
 ## Security — items to address
 
-- Committed secrets (see debt #13).
+- Credentials exposed in the history, awaiting rotation (see debt #13).
 - `quarkus.http.cors.origins=http://localhost:5173` hardcoded: check the configuration of
   the deployed environment (the web app is served by the same host, so same-origin — to be
   confirmed).

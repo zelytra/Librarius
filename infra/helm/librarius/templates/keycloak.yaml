@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
 data:
+  # Imported on the first Keycloak startup only. No user is seeded here: a
+  # credential written in this chart would be a credential published in a public
+  # repository. Self-registration is open, accounts are created through the UI.
   librarius-realm.json: |
     {
       "realm": "librarius",
@@ -16,14 +19,6 @@ data:
       "displayName": "Ma Bibliothèque",
       "roles": { "realm": [{ "name": "user" }] },
       "defaultRoles": ["user"],
-      "users": [
-        {
-          "username": "alice", "enabled": true, "emailVerified": true,
-          "email": "alice@biblio.app", "firstName": "Alice", "lastName": "Lectrice",
-          "credentials": [{ "type": "password", "value": "alice", "temporary": false }],
-          "realmRoles": ["user"]
-        }
-      ],
       "clients": [
         {
           "clientId": "librarius-web", "name": "Librarius PWA", "enabled": true,
@@ -59,7 +54,10 @@ spec:
             - name: KEYCLOAK_ADMIN
               value: {{ .Values.keycloak.admin | quote }}
             - name: KEYCLOAK_ADMIN_PASSWORD
-              value: {{ .Values.keycloak.adminPassword | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.keycloak.secretName" . }}
+                  key: {{ .Values.keycloak.secretKey }}
             - name: KC_HTTP_ENABLED
               value: "true"
             - name: KC_HTTP_PORT
@@ -81,7 +79,10 @@ spec:
             - name: KC_DB_USERNAME
               value: {{ .Values.postgres.user | quote }}
             - name: KC_DB_PASSWORD
-              value: {{ .Values.postgres.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.postgres.secretName" . }}
+                  key: {{ .Values.postgres.secretKey }}
           ports:
             - containerPort: 8081
             - containerPort: 9000

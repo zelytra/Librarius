@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { wishlistItem } from '../../test/fixtures';
-import { wishlistReturns } from '../../test/server';
+import { http, HttpResponse, server, wishlistReturns } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -40,7 +40,16 @@ describe('WishlistPage', () => {
   });
 
   test('removing a wish drops it from the list', async () => {
-    wishlistReturns([wishlistItem()]);
+    // The list is re-read after the mutation, so the handler applies the deletion.
+    let items = [wishlistItem()];
+    server.use(
+      http.get('*/api/wishlist', () =>
+        HttpResponse.json({ items, page: 0, size: 50, total: items.length })),
+      http.delete('*/api/wishlist/:id', ({ params }) => {
+        items = items.filter((it) => it.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderWithProviders(<WishlistPage />);
 
     await screen.findByText('Vinland Saga');

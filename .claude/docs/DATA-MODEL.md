@@ -118,7 +118,7 @@ CREATE TABLE reading_session (
 ## 4. Rules for writing migrations
 
 1. Naming `V<n>__snake_case_description.sql`, strictly increasing numbering.
-2. **Never modify a migration already merged into `develop`** — Flyway fails on a diverging
+2. **Never modify a migration already merged into `main`** — Flyway fails on a diverging
    checksum. Fix it with a new migration instead.
 3. The data migration goes in the same migration file as the structural change.
 4. Add the column as **nullable**, backfill it, then constrain it — in three steps if the

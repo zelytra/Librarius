@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Button, Chip, Segmented } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  deleteApiLibraryId,
   getApiLibrary,
+  getGetApiLibraryQueryKey,
+  getGetApiStatsQueryKey,
+  useDeleteApiLibraryId,
+  type GetApiLibraryParams,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
 import { RANK_COLORS, RANK_ICONS } from './mockData';
@@ -104,12 +107,8 @@ function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; on
 function CollectionContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { opts } = useApiAuth();
+  const queryClient = useQueryClient();
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-
-  // The shelf is a window onto the server-side result set: filtering, sorting and
-  // slicing all happen in the database, so a 5000-title collection costs no more to
-  // display than a 50-title one.
   const [collType, setCollType] = useState<Kind>('BOOK');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('ajout');
@@ -117,60 +116,57 @@ function CollectionContent() {
   const [search, setSearch] = useState('');
   const [grouped, setGrouped] = useState(false);
 
-  const [items, setItems] = useState<LibraryItemDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  /** Changing a criterion starts over: the pages already loaded belong to another query. */
-  function narrow(apply: () => void) {
-    apply();
-    setPage(0);
-  }
-
   // One request per pause in the typing rather than one per keystroke.
   useEffect(() => {
-    const handle = setTimeout(() => narrow(() => setSearch(searchInput.trim())), SEARCH_DEBOUNCE_MS);
+    const handle = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(handle);
   }, [searchInput]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void (async () => {
-      const res = await getApiLibrary(
-        {
-          page,
-          size: PAGE_SIZE,
-          sort: SORT_PARAM[sortBy],
-          kind: collType,
-          rank: rankFilter === 'all' ? undefined : rankFilter,
-          q: search || undefined,
-        },
-        opts,
-      );
-      if (cancelled) return;
-      if (res.status === 200) {
-        const loaded = res.data.items ?? [];
-        // Page 0 replaces the shelf, the next ones extend it.
-        setItems((cur) => (page === 0 ? loaded : [...cur, ...loaded]));
-        setTotal(res.data.total ?? 0);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // `opts` gets a fresh identity on every render while the token stays the same;
-    // listing it here would re-fetch endlessly.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, collType, rankFilter, sortBy, search]);
+  // The shelf is a window onto the server-side result set: filtering, sorting and
+  // slicing all happen in the database, so a 5000-title collection costs no more to
+  // display than a 50-title one. Each combination of criteria is its own cache entry,
+  // which is what makes going back to a filter instantaneous.
+  const criteria: GetApiLibraryParams = {
+    size: PAGE_SIZE,
+    sort: SORT_PARAM[sortBy],
+    kind: collType,
+    rank: rankFilter === 'all' ? undefined : rankFilter,
+    q: search || undefined,
+  };
 
-  async function remove(id: string) {
-    await deleteApiLibraryId(id, opts);
-    setItems((cur) => cur.filter((it) => it.id !== id));
-    setTotal((n) => Math.max(n - 1, 0));
-  }
+  const {
+    data,
+    isPending: loading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    // Marked so an infinite result never lands under the key of a plain page query,
+    // while staying under the `/api/library` prefix the mutations invalidate.
+    queryKey: [...getGetApiLibraryQueryKey(criteria), 'infinite'],
+    queryFn: ({ pageParam }) => getApiLibrary({ ...criteria, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
+      return loaded < (last.total ?? 0) ? (last.page ?? 0) + 1 : undefined;
+    },
+  });
+
+  const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
+  // Every page carries the same total; the first one is enough.
+  const total = data?.pages[0]?.total ?? 0;
+
+  const { mutate: removeItem } = useDeleteApiLibraryId({
+    mutation: {
+      onSuccess: () => {
+        // Removing a title also changes the counters and the home carousels.
+        void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+      },
+    },
+  });
+
+  const remove = (id: string) => removeItem({ id });
 
   // Grouping applies to what has been loaded so far; the button below extends it.
   const groups = useMemo(() => {
@@ -182,8 +178,6 @@ function CollectionContent() {
     });
     return [...map.entries()];
   }, [items]);
-
-  const hasMore = items.length < total;
 
   const cats: { id: RankFilter; name: string; dot?: string }[] = [
     { id: 'all', name: 'Tous' },
@@ -197,7 +191,7 @@ function CollectionContent() {
       <div style={{ marginBottom: 18 }}>
         <Segmented<Kind>
           value={collType}
-          onChange={(v) => narrow(() => setCollType(v))}
+          onChange={setCollType}
           options={[
             { id: 'BOOK', label: t('common.books') },
             { id: 'MANGA', label: t('common.mangas') },
@@ -218,7 +212,7 @@ function CollectionContent() {
 
       <div className="scroll-x" style={{ display: 'flex', gap: 9, overflowX: 'auto', margin: '0 -22px 16px', padding: '2px 22px 6px' }}>
         {cats.map((c) => (
-          <Chip key={c.id} selected={rankFilter === c.id} dotColor={c.dot} onClick={() => narrow(() => setRankFilter(c.id))}>
+          <Chip key={c.id} selected={rankFilter === c.id} dotColor={c.dot} onClick={() => setRankFilter(c.id)}>
             {c.name}
           </Chip>
         ))}
@@ -241,11 +235,11 @@ function CollectionContent() {
       <div className="scroll-x" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 -22px 18px', padding: '0 22px 2px', overflowX: 'auto' }}>
         <span style={{ fontSize: 12, color: 'var(--faint)', fontWeight: 600, flex: '0 0 auto' }}>{t('collection.sortBy')}</span>
         {SORTS.map((s) => (
-          <Chip key={s.id} selected={sortBy === s.id} onClick={() => narrow(() => setSortBy(s.id))}>{s.label}</Chip>
+          <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>{s.label}</Chip>
         ))}
       </div>
 
-      {loading && items.length === 0 && <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>}
+      {loading && <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>}
 
       {!loading && items.length === 0 && (
         <div style={{ textAlign: 'center', padding: '50px 24px', color: 'var(--faint)' }}>
@@ -287,10 +281,12 @@ function CollectionContent() {
         </div>
       )}
 
-      {hasMore && (
+      {hasNextPage && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <Button variant="secondary" disabled={loading} onClick={() => setPage((p) => p + 1)}>
-            {loading ? t('common.loading') : t('collection.loadMore', { loaded: items.length, total })}
+          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
+            {isFetchingNextPage
+              ? t('common.loading')
+              : t('collection.loadMore', { loaded: items.length, total })}
           </Button>
         </div>
       )}

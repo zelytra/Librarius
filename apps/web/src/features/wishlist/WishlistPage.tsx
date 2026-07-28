@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  deleteApiWishlistId,
   getApiWishlist,
-  type WishlistItemDto,
+  getGetApiWishlistQueryKey,
+  useDeleteApiWishlistId,
 } from '../../api/generated/librarius';
 
 /** Number of wishes fetched per request. */
@@ -28,47 +28,44 @@ function colorFor(seed: string): string {
 
 function WishlistContent() {
   const { t } = useTranslation();
-  const { opts } = useApiAuth();
-  const [items, setItems] = useState<WishlistItemDto[]>([]);
-  const [count, setCount] = useState(0);
-  const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  // The server pages the wishlist; the screen accumulates the pages it has asked for.
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void (async () => {
-      const res = await getApiWishlist({ page, size: PAGE_SIZE }, opts);
-      if (cancelled) return;
-      if (res.status === 200) {
-        const loaded = res.data.items ?? [];
-        setItems((cur) => (page === 0 ? loaded : [...cur, ...loaded]));
-        setCount(res.data.total ?? 0);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // `opts` gets a fresh identity on every render while the token stays the same.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  // The server pages the wishlist; the screen asks for the next page on demand.
+  const {
+    data,
+    isPending: loading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    // Marked so an infinite result never lands under the key of a plain page query,
+    // while staying under the `/api/wishlist` prefix the mutations invalidate.
+    queryKey: [...getGetApiWishlistQueryKey({ size: PAGE_SIZE }), 'infinite'],
+    queryFn: ({ pageParam }) => getApiWishlist({ size: PAGE_SIZE, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
+      return loaded < (last.total ?? 0) ? (last.page ?? 0) + 1 : undefined;
+    },
+  });
 
-  async function remove(id: string) {
-    await deleteApiWishlistId(id, opts);
-    setItems((cur) => cur.filter((it) => it.id !== id));
-    setCount((n) => Math.max(n - 1, 0));
-  }
+  const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
+  const count = data?.pages[0]?.total ?? 0;
+
+  const { mutate: removeItem } = useDeleteApiWishlistId({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() }),
+    },
+  });
+
+  const remove = (id: string) => removeItem({ id });
 
   // Budget of what has been loaded. A total over the whole wishlist belongs to
   // /api/stats, which aggregates in SQL — see issue #38.
   const budget = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
-  const hasMore = items.length < count;
 
-  if (loading && items.length === 0) {
-    return <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>;
-  }
+  if (loading) return <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>;
 
   if (items.length === 0) {
     return (
@@ -111,10 +108,12 @@ function WishlistContent() {
         })}
       </div>
 
-      {hasMore && (
+      {hasNextPage && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <Button variant="secondary" disabled={loading} onClick={() => setPage((p) => p + 1)}>
-            {loading ? t('common.loading') : t('collection.loadMore', { loaded: items.length, total: count })}
+          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
+            {isFetchingNextPage
+              ? t('common.loading')
+              : t('collection.loadMore', { loaded: items.length, total: count })}
           </Button>
         </div>
       )}

@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  getApiCatalogUpcoming,
-  getApiLibrary,
-  getApiStats,
-  type CatalogResult,
+  useGetApiCatalogUpcoming,
+  useGetApiLibrary,
+  useGetApiStats,
   type LibraryItemDto,
-  type StatsDto,
 } from '../../api/generated/librarius';
 
 const PALETTE = ['#bccab2', '#cabdd6', '#ddb9b3', '#b6c6d6', '#dccfae', '#aec8c0', '#d8b6a6', '#bcc9d8'];
@@ -40,34 +36,20 @@ const READ_SHELF_SIZE = 8;
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { opts } = useApiAuth();
-  const [reading, setReading] = useState<LibraryItemDto[]>([]);
-  const [read, setRead] = useState<LibraryItemDto[]>([]);
-  const [stats, setStats] = useState<StatsDto | null>(null);
-  const [upcoming, setUpcoming] = useState<CatalogResult[]>([]);
-
-  // Two scoped requests rather than the whole collection: the dashboard only ever
-  // shows a shelf of each, and the server already knows how to filter by status.
-  useEffect(() => {
-    void (async () => {
-      const [inProgress, finished, st, up] = await Promise.all([
-        getApiLibrary({ status: 'READING', size: READING_SHELF_SIZE }, opts),
-        getApiLibrary({ status: 'READ', size: READ_SHELF_SIZE }, opts),
-        getApiStats(opts),
-        getApiCatalogUpcoming({ kind: 'MANGA', limit: 5 }, opts),
-      ]);
-      if (inProgress.status === 200) setReading(inProgress.data.items ?? []);
-      if (finished.status === 200) setRead(finished.data.items ?? []);
-      if (st.status === 200) setStats(st.data);
-      if (up.status === 200) setUpcoming(up.data);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The queries run in parallel and are cached independently: coming back to Home after
+  // browsing no longer refetches anything. Each shelf asks the server for its own status
+  // rather than downloading the collection to filter it here.
+  const { data: inProgress } = useGetApiLibrary({ status: 'READING', size: READING_SHELF_SIZE });
+  const { data: finished } = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
+  const { data: stats } = useGetApiStats();
+  const { data: upcoming = [] } = useGetApiCatalogUpcoming({ kind: 'MANGA', limit: 5 });
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
+  const reading = inProgress?.items ?? [];
+  const read = finished?.items ?? [];
 
   // Emptiness comes from the counters, not from a shelf: a library made only of
-  // owned-but-unread titles fills neither of the two shelves above.
+  // owned-but-unread titles fills neither of the two above.
   const libraryEmpty =
     stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
 

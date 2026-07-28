@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useApiAuth } from '../../shared/api';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
 import { RANK_COLORS } from '../collection/mockData';
 import {
-  getApiCategories,
-  getApiLibraryId,
-  putApiLibraryIdProgress,
-  putApiLibraryIdRank,
-  type CategoryDto,
-  type LibraryItemDto,
+  getGetApiLibraryIdQueryKey,
+  getGetApiLibraryQueryKey,
+  getGetApiStatsQueryKey,
+  useGetApiCategories,
+  useGetApiLibraryId,
+  usePutApiLibraryIdProgress,
+  usePutApiLibraryIdRank,
+
 } from '../../api/generated/librarius';
 
 const PALETTE = ['#bccab2', '#cabdd6', '#ddb9b3', '#b6c6d6', '#dccfae', '#aec8c0'];
@@ -22,42 +23,36 @@ function colorFor(seed: string): string {
 }
 
 function DetailContent({ id }: { id: string }) {
-  const { opts } = useApiAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  const passed = (location.state as { item?: LibraryItemDto } | null)?.item;
-  const [item, setItem] = useState<LibraryItemDto | null>(passed ?? null);
-  const [cats, setCats] = useState<CategoryDto[]>([]);
-  const [loading, setLoading] = useState(!passed);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!passed) {
-      // Deep link, or a reload: fetch the single item rather than paging through the
-      // collection to find it.
-      void (async () => {
-        try {
-          const r = await getApiLibraryId(id, opts);
-          if (r.status === 200) setItem(r.data);
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-    void (async () => {
-      const r = await getApiCategories(opts);
-      if (r.status === 200) setCats(r.data);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // One request for one title. The collection is paginated, so the item is no longer
+  // guaranteed to be in a cached page — and a deep link never had it. Its own cache
+  // entry also means the screen keeps working when the user reloads on this URL.
+  const { data: item = null, isPending: loading } = useGetApiLibraryId(id);
+  const { data: cats = [] } = useGetApiCategories();
 
-  async function assignRank(categoryId?: string, code?: string) {
-    const r = await putApiLibraryIdRank(id, { categoryId }, opts);
-    if (r.status === 200) setItem((it) => (it ? { ...it, rankCode: code } : it));
+  const invalidateLibrary = () => {
+    // The item has its own cache entry, whose key is not a prefix of the collection's:
+    // invalidating the list alone would leave this very screen showing a stale rank.
+    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryIdQueryKey(id) });
+    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+  };
+
+  const { mutate: mutateRank } = usePutApiLibraryIdRank({
+    mutation: { onSuccess: invalidateLibrary },
+  });
+  const { mutate: mutateProgress } = usePutApiLibraryIdProgress({
+    mutation: { onSuccess: invalidateLibrary },
+  });
+
+  function assignRank(categoryId?: string) {
+    mutateRank({ id, data: { categoryId } });
   }
 
-  async function setStatus(status: 'READING' | 'READ') {
-    await putApiLibraryIdProgress(id, { status, percent: status === 'READ' ? 100 : undefined }, opts);
-    setItem((it) => (it ? { ...it, status } : it));
+  function setStatus(status: 'READING' | 'READ') {
+    mutateProgress({ id, data: { status, percent: status === 'READ' ? 100 : undefined } });
   }
 
   if (loading) return <p style={{ padding: '40px 22px', color: 'var(--muted)' }}>Chargement…</p>;
@@ -118,7 +113,7 @@ function DetailContent({ id }: { id: string }) {
             const on = item.rankCode === r.code;
             const rc = RANK_COLORS[r.code as 'or' | 'argent' | 'bronze'];
             return (
-              <button key={r.id} onClick={() => void assignRank(on ? undefined : r.id, on ? undefined : r.code)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: 10, borderRadius: 12, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', color: 'var(--ink-soft)', border: on ? `1.5px solid ${rc}` : '1.5px solid var(--line)', background: on ? `${rc}22` : 'var(--surface)' }}>
+              <button key={r.id} onClick={() => assignRank(on ? undefined : r.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: 10, borderRadius: 12, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', color: 'var(--ink-soft)', border: on ? `1.5px solid ${rc}` : '1.5px solid var(--line)', background: on ? `${rc}22` : 'var(--surface)' }}>
                 <span style={{ width: 11, height: 11, borderRadius: '50%', background: rc }} />
                 {r.label}
               </button>
@@ -128,12 +123,12 @@ function DetailContent({ id }: { id: string }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {item.status !== 'READ' && (
-            <Button variant="primary" style={{ padding: 15 }} onClick={() => void setStatus('READING')}>
+            <Button variant="primary" style={{ padding: 15 }} onClick={() => setStatus('READING')}>
               <Icon name="auto_stories" size={20} fill color="#fff" />
               {item.status === 'READING' ? 'Lecture en cours' : 'Commencer la lecture'}
             </Button>
           )}
-          <Button variant="secondary" style={{ padding: 14 }} onClick={() => void setStatus('READ')}>
+          <Button variant="secondary" style={{ padding: 14 }} onClick={() => setStatus('READ')}>
             {item.status === 'READ' ? '✓ Lu' : 'Marquer comme lu'}
           </Button>
         </div>

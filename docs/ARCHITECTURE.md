@@ -63,14 +63,23 @@ and de-duplicates by ISBN13, then by fuzzy title+author. Persistent cache
 
 ## CI/CD & git flow
 
-Branches: `main` (release) ← `develop` (integration) ← `feature/*`; plus `release/*` and
-`hotfix/*`. GitHub Actions workflows (path-filtered):
+Branches: `main` ← `feature/*`. There is no `develop` branch — pull requests target
+`main`, merging deploys to staging, and production is deployed by tagging.
+GitHub Actions workflows (path-filtered):
 
 - **web**: pnpm `--frozen-lockfile` → eslint → `tsc` → vitest → `vite build`
 - **api**: JDK 21 + Maven cache → `./mvnw -B verify`
 - **openapi-sync** *(PR #3)*: regenerates the client, fails on a diff
 - **release** *(PR #10)*: builds and pushes Docker images to GHCR (nginx web, JVM api;
   native optional)
+- **codeql**: static analysis of the TypeScript and Java sources, weekly and on every
+  pull request
+- **audit**: `pnpm audit` on the runtime dependency tree, fails on a high or critical
+  advisory
+
+Actions are pinned by commit SHA (the tag is kept in a trailing comment): a moved tag must
+not be able to change what runs. Dependency updates come from Dependabot, grouped and
+weekly — see `.github/dependabot.yml`.
 
 Every pull request must be green before it is merged.
 

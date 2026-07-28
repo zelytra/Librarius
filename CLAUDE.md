@@ -63,16 +63,16 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 
 ## Git flow — non-negotiable
 
-`main` (release) ← `develop` (integration) ← `feature/*`. Urgent fixes: `hotfix/*`.
+`main` ← `feature/*`. **There is no `develop` branch.**
 
-- **Never commit directly** on `main` or `develop`.
-- One branch per change, cut from an up-to-date `develop`.
+- **Never commit directly** on `main`.
+- One branch per change, cut from an up-to-date `main`.
 - Conventional commits **in English**: `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
 - Commit identity: `zelytra` / `contact@zelytra.fr`.
-- Every change goes through a pull request against `develop`, then `develop` → `main` to
-  ship. Merge commits are refused: squash or rebase only.
-- **Never merge on a red CI.** `cd.yml` deploys automatically on a push to `main`, to
-  **staging** (no production environment is open to date).
+- Every change goes through a pull request against `main`. Merge commits are refused:
+  squash or rebase only.
+- **Never merge on a red CI.** Merging into `main` deploys to **staging**; production
+  will be deployed by tagging `main`, and does not exist yet ([#103](https://github.com/zelytra/Librarius/issues/103)).
 
 ## Code rules
 

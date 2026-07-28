@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
-import { libraryItem } from '../../test/fixtures';
+import { BUILTIN_CATEGORIES, libraryItem } from '../../test/fixtures';
 import { http, HttpResponse, libraryItemReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -14,6 +14,22 @@ const ITEM = libraryItem({ id: 'item-1' });
 
 function renderDetail(id = 'item-1') {
   return renderWithProviders(<DetailPage />, { route: `/detail/${id}`, path: '/detail/:id' });
+}
+
+/**
+ * Serves `/api/library/{id}` from a single mutable item, so a test can check that the
+ * screen re-reads it after a mutation instead of patching its own state.
+ */
+function servesMutableItem() {
+  let item = { ...ITEM };
+  server.use(http.get('*/api/library/:id', ({ params }) =>
+    params.id === ITEM.id ? HttpResponse.json(item) : new HttpResponse(null, { status: 404 })));
+  return {
+    current: () => item,
+    set: (next: typeof ITEM) => {
+      item = next;
+    },
+  };
 }
 
 describe('DetailPage', () => {
@@ -40,18 +56,31 @@ describe('DetailPage', () => {
   });
 
   test('assigning a rank is reflected immediately', async () => {
-    libraryItemReturns(ITEM);
-    server.use(http.put('*/api/library/:id/rank', () => HttpResponse.json({ id: 'item-1', rankCode: 'or' })));
+    // The screen re-reads the item after the mutation instead of patching its own
+    // state, so the handler has to record the new rank.
+    const item = servesMutableItem();
+    server.use(http.put('*/api/library/:id/rank', async ({ request }) => {
+      const body = (await request.json()) as { categoryId?: string };
+      const category = BUILTIN_CATEGORIES.find((c) => c.id === body.categoryId);
+      item.set({ ...item.current(), rankCode: category?.code });
+      return HttpResponse.json(item.current());
+    }));
     renderDetail();
 
     await userEvent.click(await screen.findByText('Or'));
 
     // The button switches to the selected state: the accent border is applied.
-    expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' });
+    await waitFor(() =>
+      expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' }));
   });
 
   test('marking as read toggles the label', async () => {
-    libraryItemReturns(ITEM);
+    const item = servesMutableItem();
+    server.use(http.put('*/api/library/:id/progress', async ({ request }) => {
+      const body = (await request.json()) as { status?: string };
+      item.set({ ...item.current(), status: body.status });
+      return new HttpResponse(null, { status: 204 });
+    }));
     renderDetail();
 
     await userEvent.click(await screen.findByText('Marquer comme lu'));
@@ -59,12 +88,25 @@ describe('DetailPage', () => {
     expect(await screen.findByText('✓ Lu')).toBeInTheDocument();
   });
 
-  /** An unknown identifier answers 404, as does an identifier belonging to someone else. */
+  /** An unknown identifier answers 404, as does one belonging to another user. */
   test('signals a title that cannot be found', async () => {
     libraryItemReturns(ITEM);
     renderDetail('inconnu');
 
     expect(await screen.findByText('Titre introuvable.')).toBeInTheDocument();
+  });
+
+  /** The paginated collection is never downloaded to display one title. */
+  test('fetches the single title rather than the collection', async () => {
+    const urls: string[] = [];
+    server.use(http.get('*/api/library/:id', ({ request }) => {
+      urls.push(request.url);
+      return HttpResponse.json(ITEM);
+    }));
+    renderDetail();
+
+    await screen.findByRole('heading', { name: 'Le Nom du vent' });
+    expect(urls.some((url) => url.endsWith('/api/library/item-1'))).toBe(true);
   });
 
   test('prompts for sign-in when there is no session', async () => {

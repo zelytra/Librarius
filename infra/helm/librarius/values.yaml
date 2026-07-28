@@ -1,5 +1,6 @@
-## Ma Bibliothèque (Librarius) — stack complète sur Kubernetes.
-## Hôte unique : librarius.zelytra.fr (web), /api + /q → api, /auth → keycloak.
+## My Library (Librarius) — full stack on Kubernetes.
+## Single host: librarius.zelytra.fr (web), /api + /q → api, /auth → keycloak.
+## Credentials never live here, they come from Kubernetes Secrets (docs/DEPLOYMENT.md).
 
 domain: librarius.zelytra.fr
 
@@ -40,8 +41,12 @@ postgres:
   enabled: true
   image: postgres:16-alpine
   user: librarius
-  password: librarius
   database: librarius
+  # Password: read from an existing Kubernetes Secret, never from this file.
+  # The chart ships no default and refuses to render while existingSecret is
+  # empty. Creating the Secret is a manual step, see docs/DEPLOYMENT.md.
+  existingSecret: ""
+  secretKey: postgres-password
   storage: 2Gi
   resources:
     requests: { cpu: 50m, memory: 128Mi }
@@ -52,7 +57,9 @@ keycloak:
   enabled: true
   image: quay.io/keycloak/keycloak:25.0.6
   admin: admin
-  adminPassword: admin
+  # Admin console password: same rule as postgres above, Secret only.
+  existingSecret: ""
+  secretKey: admin-password
   database: keycloak
   resources:
     requests: { cpu: 100m, memory: 384Mi }
