@@ -86,6 +86,12 @@ l'ouverture de la production.*
     Assumé en qualification.
 17. **Tags d'images `<sha>`** poussés sur `latest` : pas de versionnement sémantique ni
     de possibilité de rollback simple.
+18. 🔴 **Le déploiement continu est cassé depuis le 1er juillet 2026** : `cd.yml` échoue
+    sur un rejet des credentials Kubernetes (401 au premier `kubectl`). Les images sont
+    bien construites et poussées sur GHCR, mais plus rien n'est déployé. Découvert le
+    2026-07-28 en déclenchant une livraison — **aucune alerte n'existait pour le
+    signaler**, illustration directe de la dette #15. Voir
+    [#85](https://github.com/zelytra/Librarius/issues/85).
 
 ## Écarts fonctionnels vs vision 📋
 
