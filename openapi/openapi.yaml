@@ -1,591 +1,5 @@
 ---
-openapi: 3.0.3
-info:
-  title: Librarius API
-  description: API de Ma Bibliothèque (Librarius)
-  version: 1.0.0
-servers:
-- url: http://localhost:8080
-  description: Auto generated value
-- url: http://0.0.0.0:8080
-  description: Auto generated value
-paths:
-  /api/catalog/search:
-    get:
-      tags:
-      - Catalog Resource
-      parameters:
-      - name: kind
-        in: query
-        schema:
-          $ref: "#/components/schemas/Kind"
-      - name: limit
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: q
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CatalogResult"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/catalog/upcoming:
-    get:
-      tags:
-      - Catalog Resource
-      parameters:
-      - name: kind
-        in: query
-        schema:
-          $ref: "#/components/schemas/Kind"
-      - name: limit
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CatalogResult"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/categories:
-    get:
-      tags:
-      - Category Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CategoryDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    post:
-      tags:
-      - Category Resource
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CategoryCreateDto"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CategoryDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/goals:
-    get:
-      tags:
-      - Goal Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GoalDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/goals/{year}:
-    put:
-      tags:
-      - Goal Resource
-      parameters:
-      - name: year
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GoalUpsertDto"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GoalDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/import/csv:
-    post:
-      tags:
-      - Import Resource
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportResult"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/import/{source}:
-    post:
-      tags:
-      - Import Resource
-      parameters:
-      - name: source
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ScrapeRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportResult"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/library:
-    get:
-      tags:
-      - Library Resource
-      parameters:
-      - name: kind
-        in: query
-        schema:
-          $ref: "#/components/schemas/Kind"
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: q
-        in: query
-        schema:
-          type: string
-      - name: rank
-        in: query
-        schema:
-          type: string
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 50
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: string
-      - name: status
-        in: query
-        schema:
-          $ref: "#/components/schemas/LibraryStatus"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LibraryPageDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    post:
-      tags:
-      - Library Resource
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LibraryCreateDto"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/library/{id}:
-    get:
-      tags:
-      - Library Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LibraryItemDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    delete:
-      tags:
-      - Library Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/library/{id}/progress:
-    put:
-      tags:
-      - Library Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProgressDto"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/library/{id}/rank:
-    put:
-      tags:
-      - Library Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RankAssignDto"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/me:
-    get:
-      tags:
-      - Me Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/series:
-    get:
-      tags:
-      - Series Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SeriesSummaryDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/series/{id}:
-    get:
-      tags:
-      - Series Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeriesDetailDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/series/{id}/follow:
-    put:
-      tags:
-      - Series Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    delete:
-      tags:
-      - Series Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/series/{id}/missing:
-    get:
-      tags:
-      - Series Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeriesMissingDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/stats:
-    get:
-      tags:
-      - Stats Resource
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StatsDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/wishlist:
-    get:
-      tags:
-      - Wishlist Resource
-      parameters:
-      - name: kind
-        in: query
-        schema:
-          $ref: "#/components/schemas/Kind"
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: priority
-        in: query
-        schema:
-          $ref: "#/components/schemas/WishPriority"
-      - name: q
-        in: query
-        schema:
-          type: string
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 50
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WishlistPageDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    post:
-      tags:
-      - Wishlist Resource
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/WishlistCreateDto"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /api/wishlist/{id}:
-    delete:
-      tags:
-      - Wishlist Resource
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
+openapi: 3.1.0
 components:
   schemas:
     BookView:
@@ -602,13 +16,13 @@ components:
         seriesTitle:
           type: string
         volumeNumber:
-          format: int32
           type: integer
+          format: int32
         coverUrl:
           type: string
         pageCount:
-          format: int32
           type: integer
+          format: int32
         publisher:
           type: string
         language:
@@ -616,8 +30,8 @@ components:
         isbn13:
           type: string
         originalYear:
-          format: int32
           type: integer
+          format: int32
         synopsis:
           type: string
         genres:
@@ -632,8 +46,8 @@ components:
         authors:
           type: string
         year:
-          format: int32
           type: integer
+          format: int32
         coverUrl:
           type: string
         synopsis:
@@ -651,13 +65,13 @@ components:
         providerRef:
           type: string
     CategoryCreateDto:
+      type: object
       required:
       - label
-      type: object
       properties:
         label:
-          pattern: \S
           type: string
+          pattern: \S
         color:
           type: string
     CategoryDto:
@@ -679,36 +93,36 @@ components:
         genre:
           type: string
         count:
-          format: int64
           type: integer
+          format: int64
     GoalDto:
       type: object
       properties:
         id:
           $ref: "#/components/schemas/UUID"
         year:
-          format: int32
           type: integer
+          format: int32
         targetCount:
-          format: int32
           type: integer
+          format: int32
         unit:
           type: string
     GoalUnit:
+      type: string
       enum:
       - BOOKS
       - VOLUMES
       - PAGES
-      type: string
     GoalUpsertDto:
+      type: object
       required:
       - targetCount
-      type: object
       properties:
         targetCount:
+          type: integer
           format: int32
           minimum: 1
-          type: integer
         unit:
           $ref: "#/components/schemas/GoalUnit"
     ImportResult:
@@ -717,31 +131,31 @@ components:
         source:
           type: string
         imported:
-          format: int32
           type: integer
+          format: int32
         skipped:
-          format: int32
           type: integer
+          format: int32
         total:
-          format: int32
           type: integer
+          format: int32
     Kind:
+      type: string
       enum:
       - BOOK
       - MANGA
-      type: string
     LibraryCreateDto:
+      type: object
       required:
       - book
-      type: object
       properties:
         book:
           $ref: "#/components/schemas/ManualBookDto"
         status:
           $ref: "#/components/schemas/LibraryStatus"
         rating:
-          format: int32
           type: integer
+          format: int32
         acquiredAt:
           $ref: "#/components/schemas/LocalDate"
     LibraryItemDto:
@@ -752,8 +166,8 @@ components:
         status:
           type: string
         rating:
-          format: int32
           type: integer
+          format: int32
         acquiredAt:
           $ref: "#/components/schemas/LocalDate"
         rankCode:
@@ -768,42 +182,43 @@ components:
           items:
             $ref: "#/components/schemas/LibraryItemDto"
         page:
-          format: int32
           type: integer
+          format: int32
         size:
+          type: integer
           format: int32
-          type: integer
         total:
-          format: int64
           type: integer
+          format: int64
     LibraryStatus:
+      type: string
       enum:
       - OWNED
       - READING
       - READ
-      type: string
     LocalDate:
-      format: date
       type: string
-      example: 2022-03-10
+      format: date
+      examples:
+      - 2022-03-10
     ManualBookDto:
+      type: object
       required:
       - kind
       - title
-      type: object
       properties:
         kind:
           $ref: "#/components/schemas/Kind"
         title:
-          pattern: \S
           type: string
+          pattern: \S
         authors:
           type: string
         seriesTitle:
           type: string
         volumeNumber:
-          format: int32
           type: integer
+          format: int32
         isbn13:
           type: string
         publisher:
@@ -811,8 +226,8 @@ components:
         language:
           type: string
         pageCount:
-          format: int32
           type: integer
+          format: int32
         coverUrl:
           type: string
         format:
@@ -820,8 +235,8 @@ components:
         releaseDate:
           $ref: "#/components/schemas/LocalDate"
         originalYear:
-          format: int32
           type: integer
+          format: int32
         synopsis:
           type: string
         genres:
@@ -841,11 +256,11 @@ components:
       type: object
       properties:
         currentPage:
-          format: int32
           type: integer
+          format: int32
         percent:
-          format: int32
           type: integer
+          format: int32
         status:
           $ref: "#/components/schemas/LibraryStatus"
     RankAssignDto:
@@ -854,13 +269,13 @@ components:
         categoryId:
           $ref: "#/components/schemas/UUID"
     ScrapeRequest:
+      type: object
       required:
       - handle
-      type: object
       properties:
         handle:
-          pattern: \S
           type: string
+          pattern: \S
     SeriesDetailDto:
       type: object
       properties:
@@ -877,16 +292,16 @@ components:
         synopsis:
           type: string
         totalVolumes:
-          format: int32
           type: integer
+          format: int32
         status:
           type: string
         ownedCount:
-          format: int64
           type: integer
+          format: int64
         readCount:
-          format: int64
           type: integer
+          format: int64
         followed:
           type: boolean
         volumes:
@@ -903,8 +318,8 @@ components:
         volumes:
           type: array
           items:
-            format: int32
             type: integer
+            format: int32
     SeriesSummaryDto:
       type: object
       properties:
@@ -917,24 +332,24 @@ components:
         coverUrl:
           type: string
         totalVolumes:
-          format: int32
           type: integer
+          format: int32
         status:
           type: string
         ownedCount:
-          format: int64
           type: integer
+          format: int64
         readCount:
-          format: int64
           type: integer
+          format: int64
         followed:
           type: boolean
     SeriesVolumeDto:
       type: object
       properties:
         volumeNumber:
-          format: int32
           type: integer
+          format: int32
         title:
           type: string
         workId:
@@ -953,44 +368,44 @@ components:
       type: object
       properties:
         read:
-          format: int64
           type: integer
+          format: int64
         reading:
-          format: int64
           type: integer
+          format: int64
         toRead:
-          format: int64
           type: integer
+          format: int64
         pagesRead:
-          format: int64
           type: integer
+          format: int64
         seriesCount:
-          format: int64
           type: integer
+          format: int64
         goalTarget:
+          type: integer
           format: int32
-          type: integer
         goalCurrent:
-          format: int64
           type: integer
+          format: int64
         byGenre:
           type: array
           items:
             $ref: "#/components/schemas/GenreCount"
     UUID:
+      type: string
       format: uuid
       pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-      type: string
     WishPriority:
+      type: string
       enum:
       - PRIORITY
       - SOON
       - SOMEDAY
-      type: string
     WishlistCreateDto:
+      type: object
       required:
       - book
-      type: object
       properties:
         book:
           $ref: "#/components/schemas/ManualBookDto"
@@ -1021,16 +436,672 @@ components:
           items:
             $ref: "#/components/schemas/WishlistItemDto"
         page:
-          format: int32
           type: integer
+          format: int32
         size:
+          type: integer
           format: int32
-          type: integer
         total:
-          format: int64
           type: integer
+          format: int64
   securitySchemes:
     SecurityScheme:
       type: openIdConnect
-      description: Authentication
       openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
+      description: Authentication
+paths:
+  /api/catalog/search:
+    get:
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search
+      tags:
+      - Catalog Resource
+      security:
+      - SecurityScheme: []
+  /api/catalog/upcoming:
+    get:
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Upcoming
+      tags:
+      - Catalog Resource
+      security:
+      - SecurityScheme: []
+  /api/categories:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Category Resource
+      security:
+      - SecurityScheme: []
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create
+      tags:
+      - Category Resource
+      security:
+      - SecurityScheme: []
+  /api/goals:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GoalDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Goal Resource
+      security:
+      - SecurityScheme: []
+  /api/goals/{year}:
+    put:
+      parameters:
+      - name: year
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalUpsertDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoalDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Upsert
+      tags:
+      - Goal Resource
+      security:
+      - SecurityScheme: []
+  /api/import/csv:
+    post:
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Csv
+      tags:
+      - Import Resource
+      security:
+      - SecurityScheme: []
+  /api/import/{source}:
+    post:
+      parameters:
+      - name: source
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScrapeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Scrape
+      tags:
+      - Import Resource
+      security:
+      - SecurityScheme: []
+  /api/library:
+    get:
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: rank
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          $ref: "#/components/schemas/LibraryStatus"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryPageDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Add
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryItemDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/progress:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Set Progress
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/rank:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankAssignDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Set Rank
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/me:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Me
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+  /api/series:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeriesSummaryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+  /api/series/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesDetailDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+  /api/series/{id}/follow:
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Unfollow
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Follow
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+  /api/series/{id}/missing:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesMissingDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Missing
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+  /api/stats:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Stats
+      tags:
+      - Stats Resource
+      security:
+      - SecurityScheme: []
+  /api/wishlist:
+    get:
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: priority
+        in: query
+        schema:
+          $ref: "#/components/schemas/WishPriority"
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: sort
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishlistPageDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Wishlist Resource
+      security:
+      - SecurityScheme: []
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WishlistCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Add
+      tags:
+      - Wishlist Resource
+      security:
+      - SecurityScheme: []
+  /api/wishlist/{id}:
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
+      tags:
+      - Wishlist Resource
+      security:
+      - SecurityScheme: []
+info:
+  title: Librarius API
+  version: 1.0.0
+  description: API de Ma Bibliothèque (Librarius)
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value
