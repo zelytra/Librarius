@@ -14,16 +14,43 @@
     "seeAll": "Tout voir",
     "back": "Retour",
     "loading": "Chargement…",
+    "working": "…",
     "comingSoon": "Bientôt disponible",
     "books": "Bibliothèque",
-    "mangas": "Mangathèque"
+    "mangas": "Mangathèque",
+    "search": "Rechercher",
+    "remove": "Retirer",
+    "errorWithStatus": "Erreur {{status}}"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "defaultPrompt": "Connecte-toi pour accéder à cette section.",
+    "prompts": {
+      "home": "Connecte-toi pour retrouver ta bibliothèque et tes lectures.",
+      "collection": "Connecte-toi pour voir ta collection.",
+      "discover": "Connecte-toi pour rechercher et enrichir ta bibliothèque.",
+      "wishlist": "Connecte-toi pour voir tes souhaits.",
+      "stats": "Connecte-toi pour voir tes statistiques.",
+      "detail": "Connecte-toi pour voir ce titre."
+    }
   },
   "home": {
     "greeting": "Bonsoir",
     "resumeReading": "Reprendre la lecture",
+    "resumeCount": "{{reading}} en cours",
     "upcoming": "Prochaines sorties",
+    "upcomingNote": "Dates indicatives (édition d'origine).",
     "recentlyBought": "Derniers achats",
-    "recentlyRead": "Derniers lus"
+    "recentlyRead": "Derniers lus",
+    "counters": {
+      "read": "lus",
+      "reading": "en cours",
+      "toRead": "à lire"
+    },
+    "empty": {
+      "title": "Ta bibliothèque est vide.",
+      "description": "Ajoute tes premiers titres depuis l'onglet Découvrir."
+    }
   },
   "collection": {
     "title": "Ma collection",
@@ -31,26 +58,93 @@
     "list": "Liste",
     "series": "Séries",
     "searchPlaceholder": "Rechercher dans ma collection…",
-    "loadMore": "Voir plus ({{loaded}} / {{total}})"
+    "loadMore": "Voir plus ({{loaded}} / {{total}})",
+    "total": "{{total}} titres",
+    "volumes": "{{volumes}} tomes",
+    "volumeShort": "T.{{number}}",
+    "tag": {
+      "book": "LIVRE",
+      "manga": "MANGA"
+    },
+    "sorts": {
+      "added": "Ajout",
+      "title": "Titre",
+      "author": "Auteur",
+      "genre": "Genre"
+    },
+    "ranks": {
+      "all": "Tous",
+      "gold": "Or",
+      "silver": "Argent",
+      "bronze": "Bronze"
+    },
+    "empty": {
+      "title": "Aucun titre ici.",
+      "description": "Ajoute des livres depuis l'onglet Découvrir."
+    }
   },
   "discover": {
     "title": "Découvrir",
     "searchPlaceholder": "Rechercher un titre, un auteur…",
     "popularGenres": "Genres populaires",
-    "recommended": "Recommandé pour vous"
+    "recommended": "Recommandé pour vous",
+    "start": "Lancez une recherche pour trouver des titres à ajouter.",
+    "addToLibrary": "Collection",
+    "addToWishlist": "Souhaits",
+    "addedToLibrary": "✓ Ajouté à la collection",
+    "addedToWishlist": "✓ Ajouté aux souhaits",
+    "errors": {
+      "unavailable": "Recherche indisponible pour le moment.",
+      "rateLimited": "Trop de recherches d’affilée. Réessaie dans une minute.",
+      "addFailed": "Ajout impossible pour le moment."
+    }
   },
   "wishlist": {
-    "title": "Liste de souhaits"
+    "title": "Liste de souhaits",
+    "summary": "{{total}} titres · estimé {{budget}} €",
+    "price": "{{price}} €",
+    "priority": {
+      "PRIORITY": "Priorité",
+      "SOON": "Bientôt",
+      "SOMEDAY": "Un jour"
+    },
+    "empty": {
+      "title": "Ta liste de souhaits est vide.",
+      "description": "Ajoute des titres depuis l'onglet Découvrir."
+    }
   },
   "stats": {
-    "title": "Statistiques"
+    "title": "Statistiques",
+    "goalTitle": "Objectif {{year}}",
+    "goalProgress": "/ {{target}}",
+    "goalRemaining": "Plus que {{remaining}} titre(s) pour atteindre ton objectif.",
+    "goalUnset": "Définis un objectif de lecture annuel dans tes réglages.",
+    "cards": {
+      "read": "Livres lus",
+      "pages": "Pages lues",
+      "series": "Séries suivies",
+      "reading": "En cours"
+    },
+    "favoriteGenres": "Genres favoris",
+    "noGenres": "Pas encore de données — ajoute des titres à ta collection.",
+    "unavailable": "Statistiques indisponibles."
   },
   "detail": {
     "summary": "Résumé",
     "ranking": "Classement",
     "pages": "pages",
     "series": "série",
-    "released": "sorti"
+    "released": "sorti",
+    "standalone": "Standalone",
+    "kind": {
+      "book": "Roman",
+      "manga": "Manga"
+    },
+    "notFound": "Titre introuvable.",
+    "startReading": "Commencer la lecture",
+    "reading": "Lecture en cours",
+    "markAsRead": "Marquer comme lu",
+    "read": "✓ Lu"
   },
   "settings": {
     "title": "Réglages",
@@ -64,6 +158,24 @@
       "sauge": "Sauge",
       "rose": "Rose",
       "nuit": "Nuit"
+    },
+    "import": {
+      "title": "Importer ma bibliothèque",
+      "description": "Depuis Booknode (par pseudo) ou via un fichier CSV exporté (Babelio, Goodreads…).",
+      "signIn": "Se connecter pour importer",
+      "submit": "Importer",
+      "csv": "Importer un fichier CSV",
+      "sources": {
+        "booknode": "Booknode",
+        "babelio": "Babelio"
+      },
+      "handlePlaceholder": {
+        "booknode": "Pseudo Booknode",
+        "babelio": "Pseudo Babelio"
+      },
+      "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
+      "unavailable": "Import indisponible pour le moment.",
+      "unreadableFile": "Fichier illisible."
     }
   }
 }

@@ -21,10 +21,11 @@ import styles from './WishlistPage.module.css';
 /** Number of wishes fetched per request. */
 const PAGE_SIZE = 50;
 
-const PRIO: Record<string, { label: string; className: string }> = {
-  PRIORITY: { label: 'Priorité', className: styles.priorityUrgent },
-  SOON: { label: 'Bientôt', className: styles.prioritySoon },
-  SOMEDAY: { label: 'Un jour', className: styles.prioritySomeday },
+/** Badge colours; the label itself is keyed on the same priority. */
+const PRIO: Record<string, string> = {
+  PRIORITY: styles.priorityUrgent,
+  SOON: styles.prioritySoon,
+  SOMEDAY: styles.prioritySomeday,
 };
 
 function WishlistContent() {
@@ -71,7 +72,7 @@ function WishlistContent() {
   if (items.length === 0) {
     return (
       <EmptyState icon="favorite" iconSize={40} className={styles.empty}>
-        Ta liste de souhaits est vide. Ajoute des titres depuis <strong>Découvrir</strong>.
+        {t('wishlist.empty.title')} {t('wishlist.empty.description')}
       </EmptyState>
     );
   }
@@ -79,11 +80,11 @@ function WishlistContent() {
   return (
     <>
       <p className={styles.summary}>
-        {count} titres · estimé {budget.toFixed(2).replace('.', ',')} €
+        {t('wishlist.summary', { total: count, budget: budget.toFixed(2).replace('.', ',') })}
       </p>
       <div className={styles.list}>
         {items.map((w) => {
-          const p = PRIO[w.priority ?? 'SOON'] ?? PRIO.SOON;
+          const priority = w.priority && PRIO[w.priority] ? w.priority : 'SOON';
           const title = w.book?.title ?? '—';
           return (
             <div key={w.id} className={styles.row}>
@@ -99,13 +100,17 @@ function WishlistContent() {
               <div className={styles.body}>
                 <div className={styles.bookTitle}>{title}</div>
                 <div className={styles.authors}>{w.book?.authors}</div>
-                <span className={`${styles.priority} ${p.className}`}>{p.label}</span>
+                <span className={`${styles.priority} ${PRIO[priority]}`}>
+                  {t(`wishlist.priority.${priority}`)}
+                </span>
               </div>
               <div className={styles.aside}>
                 {w.estimatedPrice != null && (
-                  <div className={styles.price}>{w.estimatedPrice.toFixed(2).replace('.', ',')} €</div>
+                  <div className={styles.price}>
+                    {t('wishlist.price', { price: w.estimatedPrice.toFixed(2).replace('.', ',') })}
+                  </div>
                 )}
-                <button onClick={() => void remove(w.id!)} aria-label="Retirer" className={styles.removeButton}>
+                <button onClick={() => void remove(w.id!)} aria-label={t('common.remove')} className={styles.removeButton}>
                   <Icon name="delete" size={22} color="var(--faint)" />
                 </button>
               </div>
@@ -132,7 +137,7 @@ export function WishlistPage() {
   return (
     <Screen>
       <ScreenTitle className={styles.title}>{t('wishlist.title')}</ScreenTitle>
-      <LoginGate prompt="Connecte-toi pour voir tes souhaits.">
+      <LoginGate prompt={t('auth.prompts.wishlist')}>
         <WishlistContent />
       </LoginGate>
     </Screen>

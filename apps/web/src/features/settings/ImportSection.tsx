@@ -1,4 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
@@ -15,12 +17,12 @@ import styles from './ImportSection.module.css';
 
 type Source = 'booknode' | 'babelio';
 
-function resultMessage(r: ImportResult): string {
-  return `${r.imported ?? 0} titre(s) importé(s) · ${r.skipped ?? 0} déjà présent(s).`;
+function resultMessage(t: TFunction, r: ImportResult): string {
+  return t('settings.import.result', { imported: r.imported ?? 0, skipped: r.skipped ?? 0 });
 }
 
 /** The API reports import problems through the message of a 400 response. */
-function failureMessage(error: unknown, fallback: string): string {
+function failureMessage(t: TFunction, error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
     try {
       const parsed = JSON.parse(String(error.body)) as { message?: string };
@@ -28,12 +30,13 @@ function failureMessage(error: unknown, fallback: string): string {
     } catch {
       // Not a JSON payload: fall through to the status.
     }
-    return `Erreur ${error.status}`;
+    return t('common.errorWithStatus', { status: error.status });
   }
   return fallback;
 }
 
 export function ImportSection() {
+  const { t } = useTranslation();
   const auth = useApiAuth();
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -62,10 +65,10 @@ export function ImportSection() {
     reset();
     try {
       const result = await importFromSource({ source, data: { handle: handle.trim() } });
-      setMessage(resultMessage(result));
+      setMessage(resultMessage(t, result));
       refreshLibrary();
     } catch (e) {
-      setError(failureMessage(e, 'Import indisponible pour le moment.'));
+      setError(failureMessage(t, e, t('settings.import.unavailable')));
     }
   }
 
@@ -76,10 +79,10 @@ export function ImportSection() {
     try {
       const text = await file.text();
       const result = await importCsv({ data: text });
-      setMessage(resultMessage(result));
+      setMessage(resultMessage(t, result));
       refreshLibrary();
     } catch (err) {
-      setError(failureMessage(err, 'Fichier illisible.'));
+      setError(failureMessage(t, err, t('settings.import.unreadableFile')));
     } finally {
       if (fileInput.current) fileInput.current.value = '';
     }
@@ -87,15 +90,13 @@ export function ImportSection() {
 
   return (
     <>
-      <h3 className={styles.title}>Importer ma bibliothèque</h3>
-      <p className={styles.intro}>
-        Depuis Booknode (par pseudo) ou via un fichier CSV exporté (Babelio, Goodreads…).
-      </p>
+      <h3 className={styles.title}>{t('settings.import.title')}</h3>
+      <p className={styles.intro}>{t('settings.import.description')}</p>
 
       {!auth.authed ? (
         <Button variant="secondary" onClick={auth.login}>
           <Icon name="login" size={18} color="var(--ink-soft)" />
-          Se connecter pour importer
+          {t('settings.import.signIn')}
         </Button>
       ) : (
         <div className={styles.form}>
@@ -106,25 +107,26 @@ export function ImportSection() {
               reset();
             }}
             options={[
-              { id: 'booknode', label: 'Booknode' },
-              { id: 'babelio', label: 'Babelio' },
+              { id: 'booknode', label: t('settings.import.sources.booknode') },
+              { id: 'babelio', label: t('settings.import.sources.babelio') },
             ]}
           />
           <div className={styles.handleRow}>
             <input
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
-              placeholder={source === 'booknode' ? 'Pseudo Booknode' : 'Pseudo Babelio'}
+              placeholder={t(`settings.import.handlePlaceholder.${source}`)}
+              aria-label={t(`settings.import.handlePlaceholder.${source}`)}
               className={styles.handleInput}
             />
             <Button variant="primary" size="compact" onClick={() => void runScrape()} disabled={busy}>
-              {busy ? '…' : 'Importer'}
+              {t(busy ? 'common.working' : 'settings.import.submit')}
             </Button>
           </div>
 
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
-            Importer un fichier CSV
+            {t('settings.import.csv')}
           </button>
           <input
             ref={fileInput}

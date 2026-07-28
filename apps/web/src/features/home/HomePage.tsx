@@ -17,6 +17,7 @@ const READING_SHELF_SIZE = 12;
 const READ_SHELF_SIZE = 8;
 
 function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // The queries run in parallel and are cached independently: coming back to Home after
   // browsing no longer refetches anything. Each shelf asks the server for its own status
@@ -36,9 +37,9 @@ function Dashboard() {
     stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
 
   const mini = [
-    { value: String(stats?.read ?? 0), label: 'lus', tone: styles.miniSage },
-    { value: String(stats?.reading ?? 0), label: 'en cours', tone: styles.miniRose },
-    { value: String(stats?.toRead ?? 0), label: 'à lire', tone: styles.miniSand },
+    { value: String(stats?.read ?? 0), label: t('home.counters.read'), tone: styles.miniSage },
+    { value: String(stats?.reading ?? 0), label: t('home.counters.reading'), tone: styles.miniRose },
+    { value: String(stats?.toRead ?? 0), label: t('home.counters.toRead'), tone: styles.miniSand },
   ];
 
   const cover = (it: LibraryItemDto) => (
@@ -55,7 +56,10 @@ function Dashboard() {
     <div className={styles.sections}>
       {reading.length > 0 && (
         <section>
-          <SectionHeader title="Reprendre la lecture" action={`${reading.length} en cours`} />
+          <SectionHeader
+            title={t('home.resumeReading')}
+            action={t('home.resumeCount', { reading: reading.length })}
+          />
           <div className={`scroll-x ${styles.shelf}`}>{reading.map(cover)}</div>
         </section>
       )}
@@ -73,7 +77,7 @@ function Dashboard() {
 
       {upcoming.length > 0 && (
         <section>
-          <SectionHeader title="Prochaines sorties" />
+          <SectionHeader title={t('home.upcoming')} />
           <div className={styles.upcomingList}>
             {upcoming.map((u, i) => (
               <div key={`${u.providerRef ?? i}`} className={styles.upcomingRow}>
@@ -94,21 +98,20 @@ function Dashboard() {
               </div>
             ))}
           </div>
-          <p className={styles.footnote}>Dates indicatives (édition d'origine).</p>
+          <p className={styles.footnote}>{t('home.upcomingNote')}</p>
         </section>
       )}
 
       {read.length > 0 && (
         <section>
-          <SectionHeader title="Derniers lus" />
+          <SectionHeader title={t('home.recentlyRead')} />
           <div className={`scroll-x ${styles.shelf}`}>{read.map(cover)}</div>
         </section>
       )}
 
       {libraryEmpty && (
         <EmptyState icon="auto_stories" className={styles.empty}>
-          Ta bibliothèque est vide. Va sur <strong>Découvrir</strong> pour ajouter tes premiers
-          titres.
+          {t('home.empty.title')} {t('home.empty.description')}
         </EmptyState>
       )}
     </div>
@@ -135,7 +138,7 @@ export function HomePage() {
           <Icon name="settings" size={22} color="var(--on-accent)" />
         </button>
       </div>
-      <LoginGate prompt="Connecte-toi pour retrouver ta bibliothèque et tes lectures.">
+      <LoginGate prompt={t('auth.prompts.home')}>
         <Dashboard />
       </LoginGate>
     </Screen>

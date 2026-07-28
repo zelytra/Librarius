@@ -9,10 +9,11 @@ import styles from './StatsPage.module.css';
 const GENRE_BARS = [styles.bar1, styles.bar2, styles.bar3, styles.bar4];
 
 function StatsContent() {
+  const { t } = useTranslation();
   const { data: stats, isPending: loading } = useGetApiStats();
 
-  if (loading) return <StatusText>Chargement…</StatusText>;
-  if (!stats) return <StatusText tone="error">Statistiques indisponibles.</StatusText>;
+  if (loading) return <StatusText>{t('common.loading')}</StatusText>;
+  if (!stats) return <StatusText tone="error">{t('stats.unavailable')}</StatusText>;
 
   const read = stats.read ?? 0;
   const reading = stats.reading ?? 0;
@@ -25,10 +26,10 @@ function StatsContent() {
   const remaining = target > 0 ? Math.max(0, target - goalCurrent) : 0;
 
   const bigStats = [
-    { value: String(read), label: 'Livres lus', icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
-    { value: pagesRead.toLocaleString('fr-FR'), label: 'Pages lues', icon: 'auto_stories', ic: 'var(--tint-rose-ink)', tone: styles.tileRose },
-    { value: String(seriesCount), label: 'Séries suivies', icon: 'collections_bookmark', ic: 'var(--tint-violet-ink)', tone: styles.tileViolet },
-    { value: String(reading), label: 'En cours', icon: 'local_fire_department', ic: 'var(--tint-clay-ink)', tone: styles.tileClay },
+    { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
+    { value: pagesRead.toLocaleString('fr-FR'), label: t('stats.cards.pages'), icon: 'auto_stories', ic: 'var(--tint-rose-ink)', tone: styles.tileRose },
+    { value: String(seriesCount), label: t('stats.cards.series'), icon: 'collections_bookmark', ic: 'var(--tint-violet-ink)', tone: styles.tileViolet },
+    { value: String(reading), label: t('stats.cards.reading'), icon: 'local_fire_department', ic: 'var(--tint-clay-ink)', tone: styles.tileClay },
   ];
 
   const maxGenre = Math.max(1, ...byGenre.map((g) => g.count ?? 0));
@@ -43,13 +44,13 @@ function StatsContent() {
         >
           <div className={styles.gaugeCore}>
             <span className={styles.gaugeValue}>{goalCurrent}</span>
-            <span className={styles.gaugeTarget}>/ {target || '—'}</span>
+            <span className={styles.gaugeTarget}>{t('stats.goalProgress', { target: target || '—' })}</span>
           </div>
         </div>
         <div className={styles.goalBody}>
-          <div className={styles.goalTitle}>Objectif {new Date().getFullYear()}</div>
+          <div className={styles.goalTitle}>{t('stats.goalTitle', { year: new Date().getFullYear() })}</div>
           <div className={styles.goalHint}>
-            {target > 0 ? `Plus que ${remaining} titre(s) pour atteindre ton objectif.` : 'Définis un objectif de lecture annuel dans tes réglages.'}
+            {target > 0 ? t('stats.goalRemaining', { remaining }) : t('stats.goalUnset')}
           </div>
         </div>
       </div>
@@ -65,9 +66,9 @@ function StatsContent() {
       </div>
 
       <div className={styles.panel}>
-        <div className={styles.panelTitle}>Genres favoris</div>
+        <div className={styles.panelTitle}>{t('stats.favoriteGenres')}</div>
         {byGenre.length === 0 ? (
-          <p className={styles.panelEmpty}>Pas encore de données — ajoute des titres à ta collection.</p>
+          <p className={styles.panelEmpty}>{t('stats.noGenres')}</p>
         ) : (
           <div className={styles.genres}>
             {byGenre.map((g, i) => (
@@ -97,7 +98,7 @@ export function StatsPage() {
   return (
     <Screen>
       <ScreenTitle className={styles.title}>{t('stats.title')}</ScreenTitle>
-      <LoginGate prompt="Connecte-toi pour voir tes statistiques.">
+      <LoginGate prompt={t('auth.prompts.stats')}>
         <StatsContent />
       </LoginGate>
     </Screen>

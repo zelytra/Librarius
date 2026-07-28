@@ -11,7 +11,8 @@ export const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    throw new Error('useTheme doit être utilisé dans un ThemeProvider');
+    // Developer-facing, hence English and outside i18n: the user never sees it.
+    throw new Error('useTheme must be used inside a ThemeProvider');
   }
   return ctx;
 }

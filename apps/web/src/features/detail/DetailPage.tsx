@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
 import { Icon } from '../../shared/ui/Icon';
@@ -26,6 +27,7 @@ const WASH_TO = '00';
 const RANK_TINT = '22';
 
 function DetailContent({ id }: { id: string }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -58,12 +60,12 @@ function DetailContent({ id }: { id: string }) {
     mutateProgress({ id, data: { status, percent: status === 'READ' ? 100 : undefined } });
   }
 
-  if (loading) return <p className={styles.loading}>Chargement…</p>;
+  if (loading) return <p className={styles.loading}>{t('common.loading')}</p>;
   if (!item) {
     return (
       <div className={styles.notFound}>
-        <p>Titre introuvable.</p>
-        <Button variant="secondary" onClick={() => navigate(-1)}>Retour</Button>
+        <p>{t('detail.notFound')}</p>
+        <Button variant="secondary" onClick={() => navigate(-1)}>{t('common.back')}</Button>
       </div>
     );
   }
@@ -82,7 +84,7 @@ function DetailContent({ id }: { id: string }) {
       />
       <div className={styles.body}>
         <div className={styles.backRow}>
-          <button onClick={() => navigate(-1)} aria-label="Retour" className={styles.backButton}>
+          <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--overlay-ink)" />
           </button>
         </div>
@@ -95,24 +97,24 @@ function DetailContent({ id }: { id: string }) {
           <h2 className={styles.title}>{title}</h2>
           <div className={styles.authors}>{b.authors}</div>
           <div className={styles.genres}>
-            {b.genres || (b.kind === 'MANGA' ? 'Manga' : 'Roman')}
+            {b.genres || t(b.kind === 'MANGA' ? 'detail.kind.manga' : 'detail.kind.book')}
           </div>
         </div>
 
         <div className={styles.stats}>
-          <Stat value={b.pageCount != null ? String(b.pageCount) : '—'} label="pages" />
-          <Stat value={b.seriesTitle || 'Standalone'} label="série" grow />
-          <Stat value={b.originalYear != null ? String(b.originalYear) : '—'} label="sorti" last />
+          <Stat value={b.pageCount != null ? String(b.pageCount) : '—'} label={t('detail.pages')} />
+          <Stat value={b.seriesTitle || t('detail.standalone')} label={t('detail.series')} grow />
+          <Stat value={b.originalYear != null ? String(b.originalYear) : '—'} label={t('detail.released')} last />
         </div>
 
         {b.synopsis && (
           <>
-            <h3 className={styles.sectionTitle}>Résumé</h3>
+            <h3 className={styles.sectionTitle}>{t('detail.summary')}</h3>
             <p className={styles.synopsis}>{b.synopsis}</p>
           </>
         )}
 
-        <h3 className={styles.rankTitle}>Classement</h3>
+        <h3 className={styles.rankTitle}>{t('detail.ranking')}</h3>
         <div className={styles.rankRow}>
           {ranks.map((r) => {
             const on = item.rankCode === r.code;
@@ -136,11 +138,11 @@ function DetailContent({ id }: { id: string }) {
           {item.status !== 'READ' && (
             <Button variant="primary" size="lg" onClick={() => setStatus('READING')}>
               <Icon name="auto_stories" size={20} fill color="var(--on-accent)" />
-              {item.status === 'READING' ? 'Lecture en cours' : 'Commencer la lecture'}
+              {t(item.status === 'READING' ? 'detail.reading' : 'detail.startReading')}
             </Button>
           )}
           <Button variant="secondary" size="block" onClick={() => setStatus('READ')}>
-            {item.status === 'READ' ? '✓ Lu' : 'Marquer comme lu'}
+            {t(item.status === 'READ' ? 'detail.read' : 'detail.markAsRead')}
           </Button>
         </div>
       </div>
@@ -162,9 +164,10 @@ function Stat({ value, label, grow, last }: { value: string; label: string; grow
 }
 
 export function DetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   return (
-    <LoginGate prompt="Connecte-toi pour voir ce titre.">
+    <LoginGate prompt={t('auth.prompts.detail')}>
       <DetailContent id={id} />
     </LoginGate>
   );

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
 import { ApiError } from '../../shared/apiClient';
@@ -14,20 +15,21 @@ import {
   type ManualBookDto,
 } from '../../api/generated/librarius';
 
-/** The provider is reachable but refused: show the status, it is actionable. */
-function searchFailureMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    // 429: the caller used up their share of the shared provider quota. Saying "error
-    // 429" would be useless — what matters is that waiting fixes it.
-    if (error.status === 429) return 'Trop de recherches d’affilée. Réessaie dans une minute.';
-    return `Erreur ${error.status}`;
-  }
-  return 'Recherche indisponible pour le moment.';
-}
 import { Icon } from '../../shared/ui/Icon';
 import { Screen, ScreenTitle, Segmented, StatusText } from '../../shared/ui/primitives';
 import { BookCover } from '../../shared/ui/BookCover';
 import styles from './DiscoverPage.module.css';
+
+/** The provider is reachable but refused: show the status, it is actionable. */
+function searchFailureMessage(t: TFunction, error: unknown): string {
+  if (error instanceof ApiError) {
+    // 429: the caller used up their share of the shared provider quota. Saying "error
+    // 429" would be useless — what matters is that waiting fixes it.
+    if (error.status === 429) return t('discover.errors.rateLimited');
+    return t('common.errorWithStatus', { status: error.status });
+  }
+  return t('discover.errors.unavailable');
+}
 
 type Kind = 'BOOK' | 'MANGA';
 
@@ -70,7 +72,7 @@ function DiscoverContent() {
     query: { enabled: submitted != null },
   });
 
-  const error = addError ?? (searchError ? searchFailureMessage(searchError) : null);
+  const error = addError ?? (searchError ? searchFailureMessage(t, searchError) : null);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -95,7 +97,7 @@ function DiscoverContent() {
       void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
       void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
     } catch {
-      setAddError('Ajout impossible pour le moment.');
+      setAddError(t('discover.errors.addFailed'));
     }
   }
 
@@ -118,9 +120,10 @@ function DiscoverContent() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('discover.searchPlaceholder')}
+          aria-label={t('discover.searchPlaceholder')}
           className={styles.searchInput}
         />
-        <button type="submit" aria-label="Rechercher" className={styles.submit}>
+        <button type="submit" aria-label={t('common.search')} className={styles.submit}>
           <Icon name="arrow_forward" size={20} color="var(--accent-deep)" />
         </button>
       </form>
@@ -128,7 +131,7 @@ function DiscoverContent() {
       {loading && <StatusText>{t('common.loading')}</StatusText>}
       {error && <StatusText tone="error">{error}</StatusText>}
       {!loading && !error && results.length === 0 && (
-        <StatusText tone="faint">Lancez une recherche pour trouver des titres à ajouter.</StatusText>
+        <StatusText tone="faint">{t('discover.start')}</StatusText>
       )}
 
       <div className={styles.results}>
@@ -150,7 +153,7 @@ function DiscoverContent() {
                 <div className={styles.resultMeta}>{[r.authors, r.year].filter(Boolean).join(' · ')}</div>
                 {state ? (
                   <div className={styles.added}>
-                    {state === 'library' ? '✓ Ajouté à la collection' : '✓ Ajouté aux souhaits'}
+                    {t(state === 'library' ? 'discover.addedToLibrary' : 'discover.addedToWishlist')}
                   </div>
                 ) : (
                   <div className={styles.actions}>
@@ -158,13 +161,15 @@ function DiscoverContent() {
                       onClick={() => void add(r, key, 'library')}
                       className={`${styles.action} ${styles.actionPrimary}`}
                     >
-                      <Icon name="add" size={16} color="var(--on-accent)" /> Collection
+                      <Icon name="add" size={16} color="var(--on-accent)" />
+                      {t('discover.addToLibrary')}
                     </button>
                     <button
                       onClick={() => void add(r, key, 'wishlist')}
                       className={`${styles.action} ${styles.actionGhost}`}
                     >
-                      <Icon name="favorite" size={16} color="var(--rose)" /> Souhaits
+                      <Icon name="favorite" size={16} color="var(--rose)" />
+                      {t('discover.addToWishlist')}
                     </button>
                   </div>
                 )}
@@ -182,7 +187,7 @@ export function DiscoverPage() {
   return (
     <Screen>
       <ScreenTitle className={styles.title}>{t('discover.title')}</ScreenTitle>
-      <LoginGate prompt="Connecte-toi pour rechercher et enrichir ta bibliothèque.">
+      <LoginGate prompt={t('auth.prompts.discover')}>
         <DiscoverContent />
       </LoginGate>
     </Screen>
