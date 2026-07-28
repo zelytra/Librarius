@@ -4,10 +4,19 @@
 
 | Élément | Langue |
 |---|---|
-| Réponses, commits, PR, issues, documentation | **Français** |
-| Code, identifiants, noms de fichiers, branches | **Anglais** |
-| Commentaires de code | Suivre le fichier — l'existant est majoritairement en français |
-| Textes affichés à l'utilisateur | Via i18n, jamais en dur |
+| **Tout le code** : identifiants, commentaires, javadoc, noms de tests, messages de log, noms de fichiers et de branches | **Anglais** |
+| **Issues, milestones, labels** | **Anglais** |
+| Commits, pull requests, documentation du projet, échanges | **Français** |
+| Textes affichés à l'utilisateur | **Français**, via i18n — jamais en dur |
+
+Le code est intégralement en anglais, commentaires compris : ne pas suivre la langue du
+fichier voisin s'il est encore en français, l'écrire en anglais et convertir ce qu'on
+touche au passage.
+
+**L'application, elle, reste en français** : `fr` est la seule locale, et les textes
+utilisateur sont rédigés en français dans `i18n/locales/fr.json`. L'anglais viendra avec
+[#77](https://github.com/zelytra/Librarius/issues/77) ; d'ici là, aucune traduction de
+l'interface.
 
 ## 2. Git flow
 
