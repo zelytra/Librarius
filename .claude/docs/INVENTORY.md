@@ -41,8 +41,8 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    per shared component, all backed by `shared/styles/tokens.css`, which gained a type
    scale, radii, shadows, screen padding and the decorative tints. No hex colour, font or
    font size is hardcoded under `features/` any more; `style={{…}}` is left only where the
-   value is computed at render time. A real dark theme is now a matter of overriding tokens
-   ([#42](https://github.com/zelytra/Librarius/issues/42)).
+   value is computed at render time. The dark theme followed
+   ([#42](https://github.com/zelytra/Librarius/issues/42), below).
 2. **No shared server state.** Every page redoes its own `fetch` inside a `useEffect` with
    `// eslint-disable-next-line react-hooks/exhaustive-deps`, with no cache, no
    invalidation, no retry. Opening Detail from Home reloads the whole library
@@ -88,6 +88,14 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 
 ### Defects fixed since the audit ✅
 
+- **Dark theme unreadable, no system preference**
+  ([#42](https://github.com/zelytra/Librarius/issues/42), 2026-07-28): the palette blocks
+  described the light themes only, so `nuit` inherited pale tints and invisible shadows.
+  The dark palette now redeclares the whole set, the secondary text tokens were retuned to
+  clear 4.5:1 on every palette, a **Système** theme follows `prefers-color-scheme`, and a
+  boot script in `index.html` applies the palette before the first paint. Two carry-overs
+  from #32 went with it: the Collection rank medal was clipped by its cover, and Detail's
+  back button sat on a fixed white panel.
 - **Data isolation untested** ([#39](https://github.com/zelytra/Librarius/issues/39),
   2026-07-28): every user-scoped resource is now exercised with two accounts, including
   the fact that someone else's identifier must answer 404 and not 403.

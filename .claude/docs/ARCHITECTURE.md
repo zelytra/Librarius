@@ -65,7 +65,13 @@ src/
 - **Query keys**: use the generated helpers (`getGetApiLibraryQueryKey()`), never a
   hand-written string, so a change of route does not silently break invalidation.
 - **Theme**: CSS variables (`--ink`, `--surface`, `--accent`, `--line`, `--muted`,
-  `--faint`) defined in `tokens.css` and switched by `ThemeProvider`.
+  `--faint`) defined in `tokens.css` and switched by `ThemeProvider`. `data-theme` on
+  `<html>` always carries a resolved palette — `creme`, `sauge`, `rose` or `nuit`; the
+  `systeme` preference is resolved against `prefers-color-scheme`. A token consumed on a
+  themed surface belongs in a palette block, `nuit` included: one declared only in the
+  light base falls through to a light value on a dark background. The boot script in
+  `index.html` applies the palette before the first paint and must stay in step with
+  `shared/theme/themes.ts`.
 - **Styling**: one `.module.css` per screen and per shared component, always through the
   tokens — type scale (`--fs-*`), radii (`--radius-*`), shadows (`--shadow-*`), decorative
   tints (`--tint-*`), screen padding (`--screen-pad-*`). `style={{…}}` is reserved for

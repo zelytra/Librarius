@@ -29,14 +29,14 @@ An agent picking the project up with no more precise instruction takes, in this 
    cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`.
 3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — server state gates almost all
    the front-end work that follows.
-4. **[#42](https://github.com/zelytra/Librarius/issues/42)** — the styling now runs entirely
-   on tokens, so a real dark theme is within reach.
 
 Already handled: [#36](https://github.com/zelytra/Librarius/issues/36) (front-end coverage)
 and [#39](https://github.com/zelytra/Librarius/issues/39) (data isolation), which now acts as
 a safety net for the rest of the work, plus
 [#32](https://github.com/zelytra/Librarius/issues/32) and
-[#34](https://github.com/zelytra/Librarius/issues/34) (CSS Modules and the shared palette).
+[#34](https://github.com/zelytra/Librarius/issues/34) (CSS Modules and the shared palette),
+and [#42](https://github.com/zelytra/Librarius/issues/42) (the dark theme and the System
+preference).
 
 ---
 
@@ -62,7 +62,7 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 | [#39](https://github.com/zelytra/Librarius/issues/39) | ✅ Per-user data isolation tests | — |
 | [#40](https://github.com/zelytra/Librarius/issues/40) | ✅ Compute statistics in SQL | — |
 | [#41](https://github.com/zelytra/Librarius/issues/41) | ✅ Remove HelloResource | — |
-| [#42](https://github.com/zelytra/Librarius/issues/42) | Real dark theme driven by tokens | #32 |
+| [#42](https://github.com/zelytra/Librarius/issues/42) | ✅ Real dark theme driven by tokens | #32 |
 
 ---
 
