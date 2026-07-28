@@ -43,12 +43,15 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
   const target = stats?.goalTarget ?? 0;
   const current = stats?.goalCurrent ?? 0;
   const unit = toUnit(stats?.goalUnit);
-  const unitLabel = t(`goal.units.${unit}`);
+  // The unit agrees with the number it qualifies, which is not the same one on every line:
+  // "8 / 30 livres", but "encore 1 livre".
+  const units = (count: number) => t(`goal.units.${unit}`, { count });
 
   if (target <= 0) {
     const previous = lastGoalBefore(goals, year);
     const previousUnit = toUnit(previous?.unit);
     const previousTarget = previous?.targetCount ?? 0;
+    const previousUnits = t(`goal.units.${previousUnit}`, { count: previousTarget });
 
     // A goal is set per year and the year turns over on its own: the one the user had is
     // still there, one row further down, and re-typing it is the only thing standing
@@ -61,7 +64,7 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
         description={t('goal.rollover.description', {
           year: previous.year,
           target: previousTarget,
-          unit: t(`goal.units.${previousUnit}`),
+          unit: previousUnits,
         })}
         action={
           <div className={styles.emptyActions}>
@@ -73,7 +76,7 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
             >
               {t(carryingOver ? 'common.working' : 'goal.rollover.action', {
                 target: previousTarget,
-                unit: t(`goal.units.${previousUnit}`),
+                unit: previousUnits,
               })}
             </Button>
             <Button variant="ghost" onClick={() => navigate('/settings')}>
@@ -106,8 +109,8 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
         percent={pace.percent}
         value={current}
         targetLabel={t('goal.outOf', { target })}
-        unitLabel={unitLabel}
-        label={t('goal.gaugeLabel', { current, target, unit: unitLabel, year })}
+        unitLabel={units(target)}
+        label={t('goal.gaugeLabel', { current, target, unit: units(target), year })}
       />
       <div className={styles.body}>
         <div className={styles.head}>
@@ -121,12 +124,12 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
         ) : (
           <>
             <p className={styles.line}>
-              {t('goal.remaining', { remaining: pace.remaining, unit: unitLabel })}
+              {t('goal.remaining', { remaining: pace.remaining, unit: units(pace.remaining) })}
             </p>
             <p className={styles.pace}>
               {t(perMonth ? 'goal.pace.perMonth' : 'goal.pace.perDay', {
                 value: formatPace(value),
-                unit: unitLabel,
+                unit: units(value),
               })}
             </p>
           </>

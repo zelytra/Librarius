@@ -121,6 +121,18 @@ describe('HomePage', () => {
     expect(gauge).toHaveAttribute('aria-valuemax', '100');
   });
 
+  /**
+   * The unit agrees with the number in front of it. Rounding the pace up made "1" a common
+   * figure, and "1 livres" is the kind of wording a reader notices before anything else.
+   */
+  test('says one title in the singular', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 29, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/^Encore 1 livre avant la fin/)).toBeInTheDocument();
+  });
+
   /** An empty state, not a ring stuck at zero: the two look the same and only one helps. */
   test('invites the user to set a goal rather than gauging nothing', async () => {
     server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ goalTarget: undefined }))));

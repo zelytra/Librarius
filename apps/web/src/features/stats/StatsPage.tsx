@@ -31,7 +31,8 @@ function StatsContent() {
   const byGenre = stats.byGenre ?? [];
   const target = stats.goalTarget ?? 0;
   const year = new Date().getFullYear();
-  const unitLabel = t(`goal.units.${toUnit(stats.goalUnit)}`);
+  // The unit agrees with the number it qualifies: "20 pages", but "encore 1 page".
+  const units = (count: number) => t(`goal.units.${toUnit(stats.goalUnit)}`, { count });
   const pace = goalPace(goalCurrent, target, new Date());
 
   const bigStats = [
@@ -53,8 +54,8 @@ function StatsContent() {
             percent={pace.percent}
             value={goalCurrent}
             targetLabel={t('goal.outOf', { target })}
-            unitLabel={unitLabel}
-            label={t('goal.gaugeLabel', { current: goalCurrent, target, unit: unitLabel, year })}
+            unitLabel={units(target)}
+            label={t('goal.gaugeLabel', { current: goalCurrent, target, unit: units(target), year })}
           />
         )}
         <div className={styles.goalBody}>
@@ -66,7 +67,7 @@ function StatsContent() {
             {target > 0 && pace.reached && t('goal.reached')}
             {target > 0 &&
               !pace.reached &&
-              t('goal.remaining', { remaining: pace.remaining, unit: unitLabel })}
+              t('goal.remaining', { remaining: pace.remaining, unit: units(pace.remaining) })}
           </div>
           <button className={styles.goalLink} onClick={() => navigate('/settings')}>
             {t(target > 0 ? 'goal.edit' : 'goal.empty.action')}

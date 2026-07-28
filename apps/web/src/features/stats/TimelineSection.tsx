@@ -272,7 +272,7 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
             target={goalTarget}
             caption={t('stats.timeline.cumulativeLabel', {
               target: goalTarget,
-              unit: t(`goal.units.${goalUnit}`),
+              unit: t(`goal.units.${goalUnit}`, { count: goalTarget }),
             })}
           />
           <p className={styles.legend}>{t('stats.timeline.cumulativeLegend')}</p>

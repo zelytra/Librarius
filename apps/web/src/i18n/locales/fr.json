@@ -77,9 +77,12 @@
     "behind": "En retard",
     "edit": "Modifier l'objectif",
     "units": {
-      "BOOKS": "livres",
-      "VOLUMES": "tomes",
-      "PAGES": "pages"
+      "BOOKS_one": "livre",
+      "BOOKS_other": "livres",
+      "VOLUMES_one": "tome",
+      "VOLUMES_other": "tomes",
+      "PAGES_one": "page",
+      "PAGES_other": "pages"
     },
     "pace": {
       "perMonth": "Soit {{value}} {{unit}} par mois pour tenir le rythme.",

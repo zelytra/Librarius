@@ -75,7 +75,8 @@ export function GoalSection() {
               setUnit(next);
               setSaved(false);
             }}
-            options={UNITS.map((id) => ({ id, label: t(`goal.units.${id}`) }))}
+            // The picker names the unit rather than a quantity of it, so it reads plural.
+            options={UNITS.map((id) => ({ id, label: t(`goal.units.${id}`, { count: 2 }) }))}
           />
           <div className={styles.row}>
             <input
@@ -103,7 +104,10 @@ export function GoalSection() {
 
           {saved && !isPending && (
             <p className={styles.success}>
-              {t('goal.settings.saved', { target: parsed, unit: t(`goal.units.${unit}`) })}
+              {t('goal.settings.saved', {
+                target: parsed,
+                unit: t(`goal.units.${unit}`, { count: parsed }),
+              })}
             </p>
           )}
           {isError && <p className={styles.failure}>{t('goal.settings.failed')}</p>}
