@@ -1,0 +1,54 @@
+# Fire drill: the alerting stack the Helm chart deploys, run on a laptop, with a
+# fake API in front of it. Driven by fire-drill.sh — do not start it by hand,
+# the configuration files below are rendered from the chart by that script.
+#
+# Service names are not free: Prometheus scrapes `librarius-api:8080` and posts
+# to `librarius-alertmanager:9093` because that is what the chart renders, so the
+# containers answer to the names the real Service objects have.
+name: librarius-alerting-drill
+
+services:
+  # Stands in for the Quarkus API. Serves /q/metrics with a 5xx share and a
+  # latency distribution chosen to cross both thresholds; stopping it is what
+  # takes `up` to zero.
+  librarius-api:
+    image: python:3.12-alpine
+    command: ['python', '/srv/drill.py', 'target']
+    volumes:
+      - ./drill.py:/srv/drill.py:ro
+
+  # The image and the arguments the chart runs, reading the configuration the
+  # chart renders.
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    command:
+      - --config.file=/etc/prometheus/config/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.listen-address=:9090
+    volumes:
+      - ${DRILL_WORK:?fire-drill.sh sets this}/config:/etc/prometheus/config:ro
+      - ${DRILL_WORK:?fire-drill.sh sets this}/rules:/etc/prometheus/rules:ro
+    ports:
+      - '${DRILL_PROMETHEUS_PORT:-9091}:9090'
+    depends_on:
+      - librarius-api
+
+  librarius-alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/config/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.listen-address=:9093
+    volumes:
+      - ${DRILL_WORK:?fire-drill.sh sets this}/alertmanager:/etc/alertmanager/config:ro
+      # The webhook URL comes from a mounted file here exactly as it comes from a
+      # mounted Secret on the cluster: the drill exercises that indirection too,
+      # not just the routing.
+      - ${DRILL_WORK:?fire-drill.sh sets this}/secrets:/etc/alertmanager/secrets:ro
+
+  # Where the notifications land. Prints one JSON payload per line.
+  sink:
+    image: python:3.12-alpine
+    command: ['python', '/srv/drill.py', 'sink']
+    volumes:
+      - ./drill.py:/srv/drill.py:ro
