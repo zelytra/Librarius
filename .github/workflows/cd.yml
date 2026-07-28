@@ -75,6 +75,35 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Both packages are public, so the kubelet pulls them with no credential at
+      # all and a pod scheduled long after this run still pulls (#136). That
+      # property is load-bearing and invisible from the repository: if a package is
+      # ever flipped back to private, every pod fails with ImagePullBackOff, minutes
+      # after this run has ended, and the error names authentication rather than
+      # visibility. Ask the registry anonymously — the same way the kubelet will —
+      # before the cluster is touched at all.
+      - name: Check the images are anonymously pullable
+        run: |
+          accept='application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json'
+          for repo in zelytra/librarius-web zelytra/librarius-api; do
+            token=$(curl -fsS "https://ghcr.io/token?scope=repository:${repo}:pull&service=ghcr.io" | jq -r '.token // empty')
+            # Without this, an empty token would come back as a 403 below and be
+            # reported as "the package is private", which it would not be.
+            if [ -z "$token" ]; then
+              echo "::error::ghcr.io handed out no pull token for ${repo}; the registry, not the package, is what is wrong."
+              exit 1
+            fi
+            status=$(curl -sS -o /dev/null -w '%{http_code}' \
+              -H "Authorization: Bearer ${token}" -H "Accept: ${accept}" \
+              "https://ghcr.io/v2/${repo}/manifests/${GITHUB_SHA}")
+            if [ "$status" != 200 ]; then
+              echo "::error::ghcr.io/${repo}:${GITHUB_SHA} is not anonymously pullable (HTTP ${status})."
+              echo "::error::The package is private, or that tag was never pushed. The chart carries no pull secret on purpose — docs/DEPLOYMENT.md § 'Pulling the images'."
+              exit 1
+            fi
+            echo "ghcr.io/${repo}:${GITHUB_SHA} — anonymous pull OK"
+          done
+
       - name: Install Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
@@ -89,20 +118,11 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
-      # Helm would create the namespace itself, but the pull secret has to exist before
-      # any pod is scheduled, so it is created first.
+      # Helm would create the namespace itself; creating it up front keeps the
+      # kubectl steps below addressable on a cluster that has never run this chart.
       - name: Ensure the namespace exists
         run: |
           kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Create GHCR pull secret
-        run: |
-          kubectl create secret docker-registry ghcr-pull \
-            --namespace "$NAMESPACE" \
-            --docker-server=ghcr.io \
-            --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \
-            --dry-run=client -o yaml | kubectl apply -f -
 
       # The two Secrets below are created by hand on the cluster and never by the
       # CI: no credential transits through this repository. Procedure in
@@ -123,6 +143,17 @@ jobs:
           kubectl -n "$NAMESPACE" rollout status deployment/librarius-web --timeout=180s
           kubectl -n "$NAMESPACE" rollout status deployment/librarius-api --timeout=240s
           kubectl -n "$NAMESPACE" get pods,ingress -l release=librarius
+
+      # A failed `--wait` says "timed out waiting for the condition" and nothing
+      # else, which is why #125 read as a broken release for nine minutes when the
+      # pod was merely unschedulable. The pod state and the namespace events name
+      # the actual cause — FailedScheduling, Failed to pull, CrashLoopBackOff.
+      - name: Report what the cluster says
+        if: failure()
+        run: |
+          kubectl -n "$NAMESPACE" get pods -l release=librarius -o wide || true
+          kubectl -n "$NAMESPACE" describe pods -l release=librarius | sed -n '/^Events:/,$p' || true
+          kubectl -n "$NAMESPACE" get events --sort-by=.lastTimestamp | tail -40 || true
 
   # A silent CD failure went unnoticed for 27 days (issue #85): images kept being
   # published while nothing was deployed. Any failure now opens an issue.
