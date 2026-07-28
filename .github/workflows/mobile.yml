@@ -1,0 +1,62 @@
+name: mobile
+
+# The native shell holds no application code, so what can break is its link to the web
+# bundle: `webDir`, the workspace dependency, the Capacitor configuration. Building the
+# web app and syncing it exercises exactly that link — `cap sync` fails when the bundle
+# is missing — and needs neither the Android SDK nor an emulator. The signed APK is
+# #70's job.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/web/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.nvmrc'
+      - '.github/workflows/mobile.yml'
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/web/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.nvmrc'
+      - '.github/workflows/mobile.yml'
+
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: typecheck · sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      # Node 20, as everywhere else. @capacitor/cli 8 would need Node 22, hence the
+      # 7.x pin in apps/mobile/package.json — see .claude/docs/MOBILE.md § 4.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm --filter @librarius/mobile typecheck
+
+      # Builds @librarius/web first — it is a workspace dependency — then copies its
+      # dist into the native projects.
+      - name: Build the web bundle and sync it
+        run: pnpm mobile:build
