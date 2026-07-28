@@ -196,20 +196,24 @@ it, so what is audited is the shell — boot, theme, fonts, first paint, the sig
 prompt. That is the part every visitor pays for, and it is the only part measurable
 reproducibly; the signed-in screens need the whole stack and belong to the e2e suite.
 
-| Category | Threshold | Observed |
+| Category | Threshold | Observed on CI |
 |---|---|---|
 | accessibility | ≥ 0.95 | 1.00 on every run |
 | best practices | ≥ 0.90 | 1.00 on every run |
-| performance | ≥ 0.50 | 0.45 – 0.90, same build |
+| performance | ≥ 0.50 | 0.64 / 0.98 / 0.98 on Home, one run |
 
 The first two carry no timing, so they cannot flap. **Performance can and does**: the
 page blocks its first paint on a third-party stylesheet (Google Fonts), whose latency
-belongs to somebody else, and the score swings by more than 0.3 between two runs of the
-same build. So the threshold is a **floor**, roughly 20% under the lowest score CI has
-produced: low enough never to go red on the weather, high enough to fail a build that
-ships a genuinely heavy regression. It is raised to the **0.9** the v1.0 milestone
-requires by the change that takes the fonts off the critical path — a check that goes
-red at random teaches people to ignore red checks, which is worse than not having it.
+belongs to somebody else, and the cold run pays for the connection. So the threshold is
+a **floor**, roughly 20% under the lowest score CI has produced: low enough never to go
+red on the weather, high enough to fail a build that ships a genuinely heavy regression.
+It is raised to the **0.9** the v1.0 milestone requires by the change that takes the
+fonts off the critical path — a check that goes red at random teaches people to ignore
+red checks, which is worse than not having it.
+
+That change is also the biggest performance item outstanding: a first load is **747 kB**,
+of which **602 kB are the three Google fonts** — 407 kB for the full Material Symbols
+set alone — against 136 kB of script. The bundle is not what makes this app heavy.
 
 If the API changed:
 
