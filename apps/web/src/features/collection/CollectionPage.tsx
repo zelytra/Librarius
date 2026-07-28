@@ -5,15 +5,8 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { RANK_COLORS, RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
-import {
-  Button,
-  Chip,
-  EmptyState,
-  Screen,
-  ScreenTitle,
-  Segmented,
-  StatusText,
-} from '../../shared/ui/primitives';
+import { Button, Chip, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import {
   getApiLibrary,
@@ -27,7 +20,8 @@ import styles from './CollectionPage.module.css';
 
 type Kind = 'BOOK' | 'MANGA';
 type RankFilter = 'all' | 'or' | 'argent' | 'bronze';
-type SortBy = 'ajout' | 'titre' | 'auteur' | 'genre';
+/** Ordering values understood by `GET /api/library`; sent through as they are. */
+type SortBy = 'added' | 'title' | 'author' | 'genre';
 
 /** Number of titles fetched per request — one shelf worth of covers. */
 const PAGE_SIZE = 24;
@@ -38,25 +32,21 @@ const SEARCH_DEBOUNCE_MS = 300;
 /** Width of a cover inside a series shelf, where the grid no longer applies. */
 const SERIES_COVER_WIDTH = 84;
 
-/** Server-side ordering behind each sort chip. */
-const SORT_PARAM: Record<SortBy, string> = {
-  ajout: 'added',
-  titre: 'title',
-  auteur: 'author',
-  genre: 'genre',
-};
-
-const SORTS: { id: SortBy; label: string }[] = [
-  { id: 'ajout', label: 'Ajout' },
-  { id: 'titre', label: 'Titre' },
-  { id: 'auteur', label: 'Auteur' },
-  { id: 'genre', label: 'Genre' },
+/** Sort chips, in display order, each with the key of its label. */
+const SORTS: { id: SortBy; labelKey: string }[] = [
+  { id: 'added', labelKey: 'collection.sorts.added' },
+  { id: 'title', labelKey: 'collection.sorts.title' },
+  { id: 'author', labelKey: 'collection.sorts.author' },
+  { id: 'genre', labelKey: 'collection.sorts.genre' },
 ];
 
 function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void; width?: number }) {
+  const { t } = useTranslation();
   const b = item.book!;
   const rank = isRankCode(item.rankCode) ? item.rankCode : null;
-  const tag = b.volumeNumber ? `T.${b.volumeNumber}` : b.kind === 'MANGA' ? 'MANGA' : 'LIVRE';
+  const tag = b.volumeNumber
+    ? t('collection.volumeShort', { number: b.volumeNumber })
+    : t(b.kind === 'MANGA' ? 'collection.tag.manga' : 'collection.tag.book');
   return (
     <Cover
       variant="tile"
@@ -78,7 +68,7 @@ function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; on
           e.stopPropagation();
           onDelete();
         }}
-        aria-label="Retirer"
+        aria-label={t('common.remove')}
         className={styles.removeButton}
       >
         <Icon name="delete" size={14} color="var(--rose)" />
@@ -94,7 +84,7 @@ function CollectionContent() {
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const [collType, setCollType] = useState<Kind>('BOOK');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
-  const [sortBy, setSortBy] = useState<SortBy>('ajout');
+  const [sortBy, setSortBy] = useState<SortBy>('added');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [grouped, setGrouped] = useState(false);
@@ -111,7 +101,7 @@ function CollectionContent() {
   // which is what makes going back to a filter instantaneous.
   const criteria: GetApiLibraryParams = {
     size: PAGE_SIZE,
-    sort: SORT_PARAM[sortBy],
+    sort: sortBy,
     kind: collType,
     rank: rankFilter === 'all' ? undefined : rankFilter,
     q: search || undefined,
@@ -120,6 +110,8 @@ function CollectionContent() {
   const {
     data,
     isPending: loading,
+    isError,
+    refetch,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -163,10 +155,10 @@ function CollectionContent() {
   }, [items]);
 
   const cats: { id: RankFilter; name: string; dot?: string }[] = [
-    { id: 'all', name: 'Tous' },
-    { id: 'or', name: 'Or', dot: RANK_COLORS.or },
-    { id: 'argent', name: 'Argent', dot: RANK_COLORS.argent },
-    { id: 'bronze', name: 'Bronze', dot: RANK_COLORS.bronze },
+    { id: 'all', name: t('collection.ranks.all') },
+    { id: 'or', name: t('collection.ranks.gold'), dot: RANK_COLORS.or },
+    { id: 'argent', name: t('collection.ranks.silver'), dot: RANK_COLORS.argent },
+    { id: 'bronze', name: t('collection.ranks.bronze'), dot: RANK_COLORS.bronze },
   ];
 
   return (
@@ -202,7 +194,7 @@ function CollectionContent() {
       </div>
 
       <div className={styles.countRow}>
-        <span className={styles.count}>{total} titres</span>
+        <span className={styles.count}>{t('collection.total', { total })}</span>
         <div className={styles.viewSwitch}>
           <Segmented<'flat' | 'grouped'>
             value={grouped ? 'grouped' : 'flat'}
@@ -218,16 +210,26 @@ function CollectionContent() {
       <div className={`scroll-x ${styles.sortRow}`}>
         <span className={styles.sortLabel}>{t('collection.sortBy')}</span>
         {SORTS.map((s) => (
-          <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>{s.label}</Chip>
+          <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>{t(s.labelKey)}</Chip>
         ))}
       </div>
 
-      {loading && <StatusText>{t('common.loading')}</StatusText>}
+      {loading && <Loading />}
 
-      {!loading && items.length === 0 && (
-        <EmptyState icon="bookmark_add" className={styles.empty}>
-          Aucun titre ici. Ajoute des livres depuis l'onglet <strong>Découvrir</strong>.
-        </EmptyState>
+      {isError && <ErrorState message={t('collection.error')} onRetry={() => void refetch()} />}
+
+      {!loading && !isError && items.length === 0 && (
+        <EmptyState
+          icon="bookmark_add"
+          className={styles.empty}
+          title={t('collection.empty.title')}
+          description={t('collection.empty.description')}
+          action={
+            <Button variant="secondary" onClick={() => navigate('/discover')}>
+              {t('collection.empty.action')}
+            </Button>
+          }
+        />
       )}
 
       {!grouped && items.length > 0 && (
@@ -248,7 +250,7 @@ function CollectionContent() {
                   <div className={styles.groupAuthors}>{list[0]?.book?.authors}</div>
                 </div>
                 <span className={styles.groupBadge}>
-                  {list.length > 1 ? `${list.length} tomes` : (list[0]?.book?.genres ?? '')}
+                  {list.length > 1 ? t('collection.volumes', { volumes: list.length }) : (list[0]?.book?.genres ?? '')}
                 </span>
               </div>
               <div className={`scroll-x ${styles.groupShelf}`}>
@@ -285,7 +287,7 @@ export function CollectionPage() {
   return (
     <Screen>
       <ScreenTitle className={styles.title}>{t('collection.title')}</ScreenTitle>
-      <LoginGate prompt="Connecte-toi pour voir ta collection.">
+      <LoginGate prompt={t('auth.prompts.collection')}>
         <CollectionContent />
       </LoginGate>
     </Screen>
