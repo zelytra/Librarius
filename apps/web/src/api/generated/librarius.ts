@@ -22,6 +22,11 @@ import type {
 } from '@tanstack/react-query';
 
 import { apiClient } from '../../shared/apiClient';
+/**
+ * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
+ */
+export type Uuid = string;
+
 export interface BookView {
   editionId?: Uuid;
   workId?: Uuid;
@@ -39,6 +44,8 @@ export interface BookView {
   synopsis?: string;
   genres?: string;
 }
+
+export type LocalDate = string;
 
 export interface CatalogResult {
   kind?: string;
@@ -101,7 +108,6 @@ export interface GoalDto {
 export type GoalUnit = typeof GoalUnit[keyof typeof GoalUnit];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GoalUnit = {
   BOOKS: 'BOOKS',
   VOLUMES: 'VOLUMES',
@@ -124,52 +130,10 @@ export interface ImportResult {
 export type Kind = typeof Kind[keyof typeof Kind];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Kind = {
   BOOK: 'BOOK',
   MANGA: 'MANGA',
 } as const;
-
-export interface LibraryCreateDto {
-  book: ManualBookDto;
-  status?: LibraryStatus;
-  /**
-   * @minimum 1
-   * @maximum 5
-   */
-  rating?: number;
-  acquiredAt?: LocalDate;
-}
-
-export interface LibraryItemDto {
-  id?: Uuid;
-  status?: string;
-  rating?: number;
-  review?: string;
-  acquiredAt?: LocalDate;
-  rankCode?: string;
-  progress?: ProgressView;
-  book?: BookView;
-}
-
-export interface LibraryPageDto {
-  items?: LibraryItemDto[];
-  page?: number;
-  size?: number;
-  total?: number;
-}
-
-export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LibraryStatus = {
-  OWNED: 'OWNED',
-  READING: 'READING',
-  READ: 'READ',
-} as const;
-
-export type LocalDate = string;
 
 export interface ManualBookDto {
   kind: Kind;
@@ -190,6 +154,51 @@ export interface ManualBookDto {
   genres?: string;
 }
 
+export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
+
+
+export const LibraryStatus = {
+  OWNED: 'OWNED',
+  READING: 'READING',
+  READ: 'READ',
+} as const;
+
+export interface LibraryCreateDto {
+  book: ManualBookDto;
+  status?: LibraryStatus;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating?: number;
+  acquiredAt?: LocalDate;
+}
+
+export interface ProgressView {
+  currentPage?: number;
+  percent?: number;
+  startedAt?: LocalDate;
+  finishedAt?: LocalDate;
+}
+
+export interface LibraryItemDto {
+  id?: Uuid;
+  status?: string;
+  rating?: number;
+  review?: string;
+  acquiredAt?: LocalDate;
+  rankCode?: string;
+  progress?: ProgressView;
+  book?: BookView;
+}
+
+export interface LibraryPageDto {
+  items?: LibraryItemDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export interface MeDto {
   id?: string;
   email?: string;
@@ -201,18 +210,11 @@ export interface ProgressDto {
   /** @minimum 0 */
   currentPage?: number;
   /**
-   * @minimum 0
-   * @maximum 100
-   */
+     * @minimum 0
+     * @maximum 100
+     */
   percent?: number;
   status?: LibraryStatus;
-  startedAt?: LocalDate;
-  finishedAt?: LocalDate;
-}
-
-export interface ProgressView {
-  currentPage?: number;
-  percent?: number;
   startedAt?: LocalDate;
   finishedAt?: LocalDate;
 }
@@ -223,9 +225,9 @@ export interface RankAssignDto {
 
 export interface ReviewDto {
   /**
-   * @minimum 1
-   * @maximum 5
-   */
+     * @minimum 1
+     * @maximum 5
+     */
   rating?: number;
   /** @maxLength 5000 */
   review?: string;
@@ -234,6 +236,17 @@ export interface ReviewDto {
 export interface ScrapeRequest {
   /** @pattern \S */
   handle: string;
+}
+
+export interface SeriesVolumeDto {
+  volumeNumber?: number;
+  title?: string;
+  workId?: Uuid;
+  libraryItemId?: Uuid;
+  owned?: boolean;
+  read?: boolean;
+  missing?: boolean;
+  upcoming?: boolean;
 }
 
 export interface SeriesDetailDto {
@@ -269,17 +282,6 @@ export interface SeriesSummaryDto {
   followed?: boolean;
 }
 
-export interface SeriesVolumeDto {
-  volumeNumber?: number;
-  title?: string;
-  workId?: Uuid;
-  libraryItemId?: Uuid;
-  owned?: boolean;
-  read?: boolean;
-  missing?: boolean;
-  upcoming?: boolean;
-}
-
 export interface StatsDto {
   read?: number;
   reading?: number;
@@ -291,15 +293,9 @@ export interface StatsDto {
   byGenre?: GenreCount[];
 }
 
-/**
- * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
- */
-export type Uuid = string;
-
 export type WishPriority = typeof WishPriority[keyof typeof WishPriority];
 
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const WishPriority = {
   PRIORITY: 'PRIORITY',
   SOON: 'SOON',
@@ -312,17 +308,17 @@ export interface WishlistAcquireDto {
   acquiredAt?: LocalDate;
 }
 
-export interface WishlistBudgetDto {
-  total?: number;
-  pricedCount?: number;
-  byPriority?: WishlistBudgetLineDto[];
-}
-
 export interface WishlistBudgetLineDto {
   priority?: string;
   count?: number;
   pricedCount?: number;
   total?: number;
+}
+
+export interface WishlistBudgetDto {
+  total?: number;
+  pricedCount?: number;
+  byPriority?: WishlistBudgetLineDto[];
 }
 
 export interface WishlistCreateDto {
@@ -395,31 +391,61 @@ size?: number;
 sort?: string;
 };
 
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
+
+export const getGetApiCatalogSearchUrl = (params?: GetApiCatalogSearchParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/search?${stringifiedParams}` : `/api/catalog/search`
+}
+
 /**
  * @summary Search
  */
-export const getApiCatalogSearch = (
-    params?: GetApiCatalogSearchParams,
- ) => {
-      
-      
-      return apiClient<CatalogResult[]>(
-      {url: `/api/catalog/search`, method: 'GET',
-        params
-    },
-      );
-    }
-  
+export const getApiCatalogSearch = async (params?: GetApiCatalogSearchParams, options?: RequestInit): Promise<CatalogResult[]> => {
+
+  return apiClient<CatalogResult[]>(getGetApiCatalogSearchUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
 export const getGetApiCatalogSearchQueryKey = (params?: GetApiCatalogSearchParams,) => {
     return [
-    `/api/catalog/search`, ...(params ? [params]: [])
+    `/api/catalog/search`, ...(params ? [params] : [])
     ] as const;
     }
 
-    
+
 export const getGetApiCatalogSearchQueryOptions = <TData = Awaited<ReturnType<typeof getApiCatalogSearch>>, TError = void>(params?: GetApiCatalogSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogSearch>>, TError, TData>>, }
 ) => {
 
@@ -427,13 +453,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiCatalogSearchQueryKey(params);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCatalogSearch>>> = () => getApiCatalogSearch(params, );
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogSearch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -472,47 +498,62 @@ export function useGetApiCatalogSearch<TData = Awaited<ReturnType<typeof getApiC
 
 export function useGetApiCatalogSearch<TData = Awaited<ReturnType<typeof getApiCatalogSearch>>, TError = void>(
  params?: GetApiCatalogSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogSearch>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiCatalogSearchQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiCatalogUpcomingUrl = (params?: GetApiCatalogUpcomingParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/upcoming?${stringifiedParams}` : `/api/catalog/upcoming`
+}
+
 /**
  * @summary Upcoming
  */
-export const getApiCatalogUpcoming = (
-    params?: GetApiCatalogUpcomingParams,
- ) => {
-      
-      
-      return apiClient<CatalogResult[]>(
-      {url: `/api/catalog/upcoming`, method: 'GET',
-        params
-    },
-      );
-    }
-  
+export const getApiCatalogUpcoming = async (params?: GetApiCatalogUpcomingParams, options?: RequestInit): Promise<CatalogResult[]> => {
+
+  return apiClient<CatalogResult[]>(getGetApiCatalogUpcomingUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
 export const getGetApiCatalogUpcomingQueryKey = (params?: GetApiCatalogUpcomingParams,) => {
     return [
-    `/api/catalog/upcoming`, ...(params ? [params]: [])
+    `/api/catalog/upcoming`, ...(params ? [params] : [])
     ] as const;
     }
 
-    
+
 export const getGetApiCatalogUpcomingQueryOptions = <TData = Awaited<ReturnType<typeof getApiCatalogUpcoming>>, TError = void>(params?: GetApiCatalogUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogUpcoming>>, TError, TData>>, }
 ) => {
 
@@ -520,13 +561,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiCatalogUpcomingQueryKey(params);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCatalogUpcoming>>> = () => getApiCatalogUpcoming(params, );
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogUpcoming>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -565,36 +606,45 @@ export function useGetApiCatalogUpcoming<TData = Awaited<ReturnType<typeof getAp
 
 export function useGetApiCatalogUpcoming<TData = Awaited<ReturnType<typeof getApiCatalogUpcoming>>, TError = void>(
  params?: GetApiCatalogUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogUpcoming>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiCatalogUpcomingQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiCategoriesUrl = () => {
+
+
+
+
+  return `/api/categories`
+}
+
 /**
  * @summary List
  */
-export const getApiCategories = (
-    
- ) => {
-      
-      
-      return apiClient<CategoryDto[]>(
-      {url: `/api/categories`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiCategories = async ( options?: RequestInit): Promise<CategoryDto[]> => {
+
+  return apiClient<CategoryDto[]>(getGetApiCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -604,7 +654,7 @@ export const getGetApiCategoriesQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getApiCategories>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCategories>>, TError, TData>>, }
 ) => {
 
@@ -612,13 +662,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiCategoriesQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCategories>>> = () => getApiCategories();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCategories>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -657,38 +707,46 @@ export function useGetApiCategories<TData = Awaited<ReturnType<typeof getApiCate
 
 export function useGetApiCategories<TData = Awaited<ReturnType<typeof getApiCategories>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCategories>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiCategoriesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getPostApiCategoriesUrl = () => {
+
+
+
+
+  return `/api/categories`
+}
+
 /**
  * @summary Create
  */
-export const postApiCategories = (
-    categoryCreateDto: CategoryCreateDto,
- ) => {
-      
-      
-      return apiClient<CategoryDto>(
-      {url: `/api/categories`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: categoryCreateDto
-    },
-      );
-    }
-  
+export const postApiCategories = async (categoryCreateDto: CategoryCreateDto, options?: RequestInit): Promise<CategoryDto> => {
+
+  return apiClient<CategoryDto>(getPostApiCategoriesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(categoryCreateDto)
+  }
+);}
+
+
+
 
 
 export const getPostApiCategoriesMutationOptions = <TError = void,
@@ -702,7 +760,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiCategories>>, {data: CategoryCreateDto}> = (props) => {
@@ -711,7 +769,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiCategories(data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -731,26 +791,32 @@ export const usePostApiCategories = <TError = void,
         {data: CategoryCreateDto},
         TContext
       > => {
-
-      const mutationOptions = getPostApiCategoriesMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiCategoriesMutationOptions(options), queryClient);
     }
-    
+
+export const getGetApiGenresUrl = () => {
+
+
+
+
+  return `/api/genres`
+}
+
 /**
  * @summary List
  */
-export const getApiGenres = (
-    
- ) => {
-      
-      
-      return apiClient<GenreCount[]>(
-      {url: `/api/genres`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiGenres = async ( options?: RequestInit): Promise<GenreCount[]> => {
+
+  return apiClient<GenreCount[]>(getGetApiGenresUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -760,7 +826,7 @@ export const getGetApiGenresQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiGenresQueryOptions = <TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>>, }
 ) => {
 
@@ -768,13 +834,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiGenresQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiGenres>>> = () => getApiGenres();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -813,36 +879,45 @@ export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>
 
 export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiGenresQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiGoalsUrl = () => {
+
+
+
+
+  return `/api/goals`
+}
+
 /**
  * @summary List
  */
-export const getApiGoals = (
-    
- ) => {
-      
-      
-      return apiClient<GoalDto[]>(
-      {url: `/api/goals`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiGoals = async ( options?: RequestInit): Promise<GoalDto[]> => {
+
+  return apiClient<GoalDto[]>(getGetApiGoalsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -852,7 +927,7 @@ export const getGetApiGoalsQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiGoalsQueryOptions = <TData = Awaited<ReturnType<typeof getApiGoals>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGoals>>, TError, TData>>, }
 ) => {
 
@@ -860,13 +935,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiGoalsQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiGoals>>> = () => getApiGoals();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiGoals>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -905,39 +980,47 @@ export function useGetApiGoals<TData = Awaited<ReturnType<typeof getApiGoals>>, 
 
 export function useGetApiGoals<TData = Awaited<ReturnType<typeof getApiGoals>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGoals>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiGoalsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getPutApiGoalsYearUrl = (year: number,) => {
+
+
+
+
+  return `/api/goals/${year}`
+}
+
 /**
  * @summary Upsert
  */
-export const putApiGoalsYear = (
-    year: number,
-    goalUpsertDto: GoalUpsertDto,
- ) => {
-      
-      
-      return apiClient<GoalDto>(
-      {url: `/api/goals/${year}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: goalUpsertDto
-    },
-      );
-    }
-  
+export const putApiGoalsYear = async (year: number,
+    goalUpsertDto: GoalUpsertDto, options?: RequestInit): Promise<GoalDto> => {
+
+  return apiClient<GoalDto>(getPutApiGoalsYearUrl(year),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(goalUpsertDto)
+  }
+);}
+
+
+
 
 
 export const getPutApiGoalsYearMutationOptions = <TError = void,
@@ -951,7 +1034,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiGoalsYear>>, {year: number;data: GoalUpsertDto}> = (props) => {
@@ -960,7 +1043,9 @@ const {mutation: mutationOptions} = options ?
           return  putApiGoalsYear(year,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -980,28 +1065,33 @@ export const usePutApiGoalsYear = <TError = void,
         {year: number;data: GoalUpsertDto},
         TContext
       > => {
-
-      const mutationOptions = getPutApiGoalsYearMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiGoalsYearMutationOptions(options), queryClient);
     }
-    
+
+export const getPostApiImportCsvUrl = () => {
+
+
+
+
+  return `/api/import/csv`
+}
+
 /**
  * @summary Csv
  */
-export const postApiImportCsv = (
-    postApiImportCsvBody: string,
- ) => {
-      
-      
-      return apiClient<ImportResult>(
-      {url: `/api/import/csv`, method: 'POST',
-      headers: {'Content-Type': 'text/plain', },
-      data: postApiImportCsvBody
-    },
-      );
-    }
-  
+export const postApiImportCsv = async (postApiImportCsvBody: string, options?: RequestInit): Promise<ImportResult> => {
+
+  return apiClient<ImportResult>(getPostApiImportCsvUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', ...options?.headers },
+    body: postApiImportCsvBody
+  }
+);}
+
+
+
 
 
 export const getPostApiImportCsvMutationOptions = <TError = void,
@@ -1015,7 +1105,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportCsv>>, {data: string}> = (props) => {
@@ -1024,7 +1114,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiImportCsv(data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1044,29 +1136,34 @@ export const usePostApiImportCsv = <TError = void,
         {data: string},
         TContext
       > => {
-
-      const mutationOptions = getPostApiImportCsvMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiImportCsvMutationOptions(options), queryClient);
     }
-    
+
+export const getPostApiImportSourceUrl = (source: string,) => {
+
+
+
+
+  return `/api/import/${source}`
+}
+
 /**
  * @summary Scrape
  */
-export const postApiImportSource = (
-    source: string,
-    scrapeRequest: ScrapeRequest,
- ) => {
-      
-      
-      return apiClient<ImportResult>(
-      {url: `/api/import/${source}`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: scrapeRequest
-    },
-      );
-    }
-  
+export const postApiImportSource = async (source: string,
+    scrapeRequest: ScrapeRequest, options?: RequestInit): Promise<ImportResult> => {
+
+  return apiClient<ImportResult>(getPostApiImportSourceUrl(source),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scrapeRequest)
+  }
+);}
+
+
+
 
 
 export const getPostApiImportSourceMutationOptions = <TError = void,
@@ -1080,7 +1177,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportSource>>, {source: string;data: ScrapeRequest}> = (props) => {
@@ -1089,7 +1186,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiImportSource(source,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1109,37 +1208,49 @@ export const usePostApiImportSource = <TError = void,
         {source: string;data: ScrapeRequest},
         TContext
       > => {
-
-      const mutationOptions = getPostApiImportSourceMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiImportSourceMutationOptions(options), queryClient);
     }
-    
+
+export const getGetApiLibraryUrl = (params?: GetApiLibraryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/library?${stringifiedParams}` : `/api/library`
+}
+
 /**
  * @summary List
  */
-export const getApiLibrary = (
-    params?: GetApiLibraryParams,
- ) => {
-      
-      
-      return apiClient<LibraryPageDto>(
-      {url: `/api/library`, method: 'GET',
-        params
-    },
-      );
-    }
-  
+export const getApiLibrary = async (params?: GetApiLibraryParams, options?: RequestInit): Promise<LibraryPageDto> => {
+
+  return apiClient<LibraryPageDto>(getGetApiLibraryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
 export const getGetApiLibraryQueryKey = (params?: GetApiLibraryParams,) => {
     return [
-    `/api/library`, ...(params ? [params]: [])
+    `/api/library`, ...(params ? [params] : [])
     ] as const;
     }
 
-    
+
 export const getGetApiLibraryQueryOptions = <TData = Awaited<ReturnType<typeof getApiLibrary>>, TError = void>(params?: GetApiLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibrary>>, TError, TData>>, }
 ) => {
 
@@ -1147,13 +1258,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiLibraryQueryKey(params);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLibrary>>> = () => getApiLibrary(params, );
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiLibrary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -1192,38 +1303,46 @@ export function useGetApiLibrary<TData = Awaited<ReturnType<typeof getApiLibrary
 
 export function useGetApiLibrary<TData = Awaited<ReturnType<typeof getApiLibrary>>, TError = void>(
  params?: GetApiLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibrary>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiLibraryQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getPostApiLibraryUrl = () => {
+
+
+
+
+  return `/api/library`
+}
+
 /**
  * @summary Add
  */
-export const postApiLibrary = (
-    libraryCreateDto: LibraryCreateDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/library`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: libraryCreateDto
-    },
-      );
-    }
-  
+export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiLibraryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(libraryCreateDto)
+  }
+);}
+
+
+
 
 
 export const getPostApiLibraryMutationOptions = <TError = void,
@@ -1237,7 +1356,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiLibrary>>, {data: LibraryCreateDto}> = (props) => {
@@ -1246,7 +1365,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiLibrary(data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1266,36 +1387,42 @@ export const usePostApiLibrary = <TError = void,
         {data: LibraryCreateDto},
         TContext
       > => {
-
-      const mutationOptions = getPostApiLibraryMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiLibraryMutationOptions(options), queryClient);
     }
-    
+
+export const getGetApiLibraryIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}`
+}
+
 /**
  * @summary Get
  */
-export const getApiLibraryId = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<LibraryItemDto>(
-      {url: `/api/library/${id}`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiLibraryId = async (id: Uuid, options?: RequestInit): Promise<LibraryItemDto> => {
+
+  return apiClient<LibraryItemDto>(getGetApiLibraryIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
 
 
 
-export const getGetApiLibraryIdQueryKey = (id?: Uuid,) => {
+
+
+export const getGetApiLibraryIdQueryKey = (id: Uuid,) => {
     return [
     `/api/library/${id}`
     ] as const;
     }
 
-    
+
 export const getGetApiLibraryIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>>, }
 ) => {
 
@@ -1303,15 +1430,15 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiLibraryIdQueryKey(id);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLibraryId>>> = () => getApiLibraryId(id, );
 
-      
 
-      
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetApiLibraryIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiLibraryId>>>
@@ -1348,36 +1475,46 @@ export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibra
 
 export function useGetApiLibraryId<TData = Awaited<ReturnType<typeof getApiLibraryId>>, TError = void>(
  id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiLibraryId>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiLibraryIdQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getDeleteApiLibraryIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}`
+}
+
 /**
  * @summary Delete
  */
-export const deleteApiLibraryId = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/library/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
+export const deleteApiLibraryId = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiLibraryIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
 
 
 export const getDeleteApiLibraryIdMutationOptions = <TError = void,
@@ -1391,7 +1528,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiLibraryId>>, {id: Uuid}> = (props) => {
@@ -1400,13 +1537,15 @@ const {mutation: mutationOptions} = options ?
           return  deleteApiLibraryId(id,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type DeleteApiLibraryIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiLibraryId>>>
-    
+
     export type DeleteApiLibraryIdMutationError = void
 
     /**
@@ -1420,12 +1559,17 @@ export const useDeleteApiLibraryId = <TError = void,
         {id: Uuid},
         TContext
       > => {
-
-      const mutationOptions = getDeleteApiLibraryIdMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getDeleteApiLibraryIdMutationOptions(options), queryClient);
     }
-    
+
+export const getPutApiLibraryIdProgressUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/progress`
+}
+
 /**
  * @summary Set Edition
  */
@@ -1494,20 +1638,20 @@ export const usePutApiLibraryIdEdition = <TError = void,
 /**
  * @summary Set Progress
  */
-export const putApiLibraryIdProgress = (
-    id: Uuid,
-    progressDto: ProgressDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/library/${id}/progress`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: progressDto
-    },
-      );
-    }
-  
+export const putApiLibraryIdProgress = async (id: Uuid,
+    progressDto: ProgressDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdProgressUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(progressDto)
+  }
+);}
+
+
+
 
 
 export const getPutApiLibraryIdProgressMutationOptions = <TError = void,
@@ -1521,7 +1665,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdProgress>>, {id: Uuid;data: ProgressDto}> = (props) => {
@@ -1530,7 +1674,9 @@ const {mutation: mutationOptions} = options ?
           return  putApiLibraryIdProgress(id,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1550,29 +1696,34 @@ export const usePutApiLibraryIdProgress = <TError = void,
         {id: Uuid;data: ProgressDto},
         TContext
       > => {
-
-      const mutationOptions = getPutApiLibraryIdProgressMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiLibraryIdProgressMutationOptions(options), queryClient);
     }
-    
+
+export const getPutApiLibraryIdRankUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/rank`
+}
+
 /**
  * @summary Set Rank
  */
-export const putApiLibraryIdRank = (
-    id: Uuid,
-    rankAssignDto: RankAssignDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/library/${id}/rank`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: rankAssignDto
-    },
-      );
-    }
-  
+export const putApiLibraryIdRank = async (id: Uuid,
+    rankAssignDto: RankAssignDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdRankUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(rankAssignDto)
+  }
+);}
+
+
+
 
 
 export const getPutApiLibraryIdRankMutationOptions = <TError = void,
@@ -1586,7 +1737,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdRank>>, {id: Uuid;data: RankAssignDto}> = (props) => {
@@ -1595,7 +1746,9 @@ const {mutation: mutationOptions} = options ?
           return  putApiLibraryIdRank(id,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1615,29 +1768,34 @@ export const usePutApiLibraryIdRank = <TError = void,
         {id: Uuid;data: RankAssignDto},
         TContext
       > => {
-
-      const mutationOptions = getPutApiLibraryIdRankMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiLibraryIdRankMutationOptions(options), queryClient);
     }
-    
+
+export const getPutApiLibraryIdReviewUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/review`
+}
+
 /**
  * @summary Set Review
  */
-export const putApiLibraryIdReview = (
-    id: Uuid,
-    reviewDto: ReviewDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/library/${id}/review`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: reviewDto
-    },
-      );
-    }
-  
+export const putApiLibraryIdReview = async (id: Uuid,
+    reviewDto: ReviewDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdReviewUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reviewDto)
+  }
+);}
+
+
+
 
 
 export const getPutApiLibraryIdReviewMutationOptions = <TError = void,
@@ -1651,7 +1809,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdReview>>, {id: Uuid;data: ReviewDto}> = (props) => {
@@ -1660,7 +1818,9 @@ const {mutation: mutationOptions} = options ?
           return  putApiLibraryIdReview(id,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -1680,26 +1840,32 @@ export const usePutApiLibraryIdReview = <TError = void,
         {id: Uuid;data: ReviewDto},
         TContext
       > => {
-
-      const mutationOptions = getPutApiLibraryIdReviewMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiLibraryIdReviewMutationOptions(options), queryClient);
     }
-    
+
+export const getGetApiMeUrl = () => {
+
+
+
+
+  return `/api/me`
+}
+
 /**
  * @summary Me
  */
-export const getApiMe = (
-    
- ) => {
-      
-      
-      return apiClient<MeDto>(
-      {url: `/api/me`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiMe = async ( options?: RequestInit): Promise<MeDto> => {
+
+  return apiClient<MeDto>(getGetApiMeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -1709,7 +1875,7 @@ export const getGetApiMeQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiMeQueryOptions = <TData = Awaited<ReturnType<typeof getApiMe>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMe>>, TError, TData>>, }
 ) => {
 
@@ -1717,13 +1883,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiMeQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMe>>> = () => getApiMe();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -1762,36 +1928,45 @@ export function useGetApiMe<TData = Awaited<ReturnType<typeof getApiMe>>, TError
 
 export function useGetApiMe<TData = Awaited<ReturnType<typeof getApiMe>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMe>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiMeQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiSeriesUrl = () => {
+
+
+
+
+  return `/api/series`
+}
+
 /**
  * @summary List
  */
-export const getApiSeries = (
-    
- ) => {
-      
-      
-      return apiClient<SeriesSummaryDto[]>(
-      {url: `/api/series`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiSeries = async ( options?: RequestInit): Promise<SeriesSummaryDto[]> => {
+
+  return apiClient<SeriesSummaryDto[]>(getGetApiSeriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -1801,7 +1976,7 @@ export const getGetApiSeriesQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiSeriesQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>>, }
 ) => {
 
@@ -1809,13 +1984,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeries>>> = () => getApiSeries();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -1854,46 +2029,55 @@ export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>
 
 export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiSeriesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiSeriesIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}`
+}
+
 /**
  * @summary Get
  */
-export const getApiSeriesId = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<SeriesDetailDto>(
-      {url: `/api/series/${id}`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiSeriesId = async (id: Uuid, options?: RequestInit): Promise<SeriesDetailDto> => {
+
+  return apiClient<SeriesDetailDto>(getGetApiSeriesIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
 
 
 
-export const getGetApiSeriesIdQueryKey = (id?: Uuid,) => {
+
+
+export const getGetApiSeriesIdQueryKey = (id: Uuid,) => {
     return [
     `/api/series/${id}`
     ] as const;
     }
 
-    
+
 export const getGetApiSeriesIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>>, }
 ) => {
 
@@ -1901,15 +2085,15 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdQueryKey(id);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesId>>> = () => getApiSeriesId(id, );
 
-      
 
-      
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetApiSeriesIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesId>>>
@@ -1946,36 +2130,46 @@ export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeries
 
 export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(
  id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiSeriesIdQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getDeleteApiSeriesIdFollowUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/follow`
+}
+
 /**
  * @summary Unfollow
  */
-export const deleteApiSeriesIdFollow = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/series/${id}/follow`, method: 'DELETE'
-    },
-      );
-    }
-  
+export const deleteApiSeriesIdFollow = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiSeriesIdFollowUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
 
 
 export const getDeleteApiSeriesIdFollowMutationOptions = <TError = void,
@@ -1989,7 +2183,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>, {id: Uuid}> = (props) => {
@@ -1998,13 +2192,15 @@ const {mutation: mutationOptions} = options ?
           return  deleteApiSeriesIdFollow(id,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type DeleteApiSeriesIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>>
-    
+
     export type DeleteApiSeriesIdFollowMutationError = void
 
     /**
@@ -2018,26 +2214,33 @@ export const useDeleteApiSeriesIdFollow = <TError = void,
         {id: Uuid},
         TContext
       > => {
-
-      const mutationOptions = getDeleteApiSeriesIdFollowMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getDeleteApiSeriesIdFollowMutationOptions(options), queryClient);
     }
-    
+
+export const getPutApiSeriesIdFollowUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/follow`
+}
+
 /**
  * @summary Follow
  */
-export const putApiSeriesIdFollow = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/series/${id}/follow`, method: 'PUT'
-    },
-      );
-    }
-  
+export const putApiSeriesIdFollow = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiSeriesIdFollowUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
 
 
 export const getPutApiSeriesIdFollowMutationOptions = <TError = void,
@@ -2051,7 +2254,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiSeriesIdFollow>>, {id: Uuid}> = (props) => {
@@ -2060,13 +2263,15 @@ const {mutation: mutationOptions} = options ?
           return  putApiSeriesIdFollow(id,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type PutApiSeriesIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof putApiSeriesIdFollow>>>
-    
+
     export type PutApiSeriesIdFollowMutationError = void
 
     /**
@@ -2080,36 +2285,42 @@ export const usePutApiSeriesIdFollow = <TError = void,
         {id: Uuid},
         TContext
       > => {
-
-      const mutationOptions = getPutApiSeriesIdFollowMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiSeriesIdFollowMutationOptions(options), queryClient);
     }
-    
+
+export const getGetApiSeriesIdMissingUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/missing`
+}
+
 /**
  * @summary Missing
  */
-export const getApiSeriesIdMissing = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<SeriesMissingDto>(
-      {url: `/api/series/${id}/missing`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiSeriesIdMissing = async (id: Uuid, options?: RequestInit): Promise<SeriesMissingDto> => {
+
+  return apiClient<SeriesMissingDto>(getGetApiSeriesIdMissingUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
 
 
 
-export const getGetApiSeriesIdMissingQueryKey = (id?: Uuid,) => {
+
+
+export const getGetApiSeriesIdMissingQueryKey = (id: Uuid,) => {
     return [
     `/api/series/${id}/missing`
     ] as const;
     }
 
-    
+
 export const getGetApiSeriesIdMissingQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>>, }
 ) => {
 
@@ -2117,15 +2328,15 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdMissingQueryKey(id);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesIdMissing>>> = () => getApiSeriesIdMissing(id, );
 
-      
 
-      
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetApiSeriesIdMissingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesIdMissing>>>
@@ -2162,36 +2373,45 @@ export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getAp
 
 export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(
  id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiSeriesIdMissingQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiStatsUrl = () => {
+
+
+
+
+  return `/api/stats`
+}
+
 /**
  * @summary Stats
  */
-export const getApiStats = (
-    
- ) => {
-      
-      
-      return apiClient<StatsDto>(
-      {url: `/api/stats`, method: 'GET'
-    },
-      );
-    }
-  
+export const getApiStats = async ( options?: RequestInit): Promise<StatsDto> => {
+
+  return apiClient<StatsDto>(getGetApiStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
@@ -2201,7 +2421,7 @@ export const getGetApiStatsQueryKey = () => {
     ] as const;
     }
 
-    
+
 export const getGetApiStatsQueryOptions = <TData = Awaited<ReturnType<typeof getApiStats>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStats>>, TError, TData>>, }
 ) => {
 
@@ -2209,13 +2429,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiStatsQueryKey();
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiStats>>> = () => getApiStats();
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -2254,47 +2474,62 @@ export function useGetApiStats<TData = Awaited<ReturnType<typeof getApiStats>>, 
 
 export function useGetApiStats<TData = Awaited<ReturnType<typeof getApiStats>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStats>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiStatsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getGetApiWishlistUrl = (params?: GetApiWishlistParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/wishlist?${stringifiedParams}` : `/api/wishlist`
+}
+
 /**
  * @summary List
  */
-export const getApiWishlist = (
-    params?: GetApiWishlistParams,
- ) => {
-      
-      
-      return apiClient<WishlistPageDto>(
-      {url: `/api/wishlist`, method: 'GET',
-        params
-    },
-      );
-    }
-  
+export const getApiWishlist = async (params?: GetApiWishlistParams, options?: RequestInit): Promise<WishlistPageDto> => {
+
+  return apiClient<WishlistPageDto>(getGetApiWishlistUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 
 
 export const getGetApiWishlistQueryKey = (params?: GetApiWishlistParams,) => {
     return [
-    `/api/wishlist`, ...(params ? [params]: [])
+    `/api/wishlist`, ...(params ? [params] : [])
     ] as const;
     }
 
-    
+
 export const getGetApiWishlistQueryOptions = <TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
 ) => {
 
@@ -2302,13 +2537,13 @@ const {query: queryOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetApiWishlistQueryKey(params);
 
-  
+
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWishlist>>> = () => getApiWishlist(params, );
 
-      
 
-      
+
+
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -2347,38 +2582,46 @@ export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishli
 
 export function useGetApiWishlist<TData = Awaited<ReturnType<typeof getApiWishlist>>, TError = void>(
  params?: GetApiWishlistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWishlist>>, TError, TData>>, }
- , queryClient?: QueryClient 
+ , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiWishlistQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
 
 
 
 
+
+
+export const getPostApiWishlistUrl = () => {
+
+
+
+
+  return `/api/wishlist`
+}
+
 /**
  * @summary Add
  */
-export const postApiWishlist = (
-    wishlistCreateDto: WishlistCreateDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/wishlist`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: wishlistCreateDto
-    },
-      );
-    }
-  
+export const postApiWishlist = async (wishlistCreateDto: WishlistCreateDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiWishlistUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wishlistCreateDto)
+  }
+);}
+
+
+
 
 
 export const getPostApiWishlistMutationOptions = <TError = void,
@@ -2392,7 +2635,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiWishlist>>, {data: WishlistCreateDto}> = (props) => {
@@ -2401,7 +2644,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiWishlist(data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -2421,29 +2666,34 @@ export const usePostApiWishlist = <TError = void,
         {data: WishlistCreateDto},
         TContext
       > => {
-
-      const mutationOptions = getPostApiWishlistMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiWishlistMutationOptions(options), queryClient);
     }
-    
+
+export const getPutApiWishlistIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/wishlist/${id}`
+}
+
 /**
  * @summary Update
  */
-export const putApiWishlistId = (
-    id: Uuid,
-    wishlistUpdateDto: WishlistUpdateDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/wishlist/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: wishlistUpdateDto
-    },
-      );
-    }
-  
+export const putApiWishlistId = async (id: Uuid,
+    wishlistUpdateDto: WishlistUpdateDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiWishlistIdUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wishlistUpdateDto)
+  }
+);}
+
+
+
 
 
 export const getPutApiWishlistIdMutationOptions = <TError = void,
@@ -2457,7 +2707,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiWishlistId>>, {id: Uuid;data: WishlistUpdateDto}> = (props) => {
@@ -2466,7 +2716,9 @@ const {mutation: mutationOptions} = options ?
           return  putApiWishlistId(id,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -2486,26 +2738,33 @@ export const usePutApiWishlistId = <TError = void,
         {id: Uuid;data: WishlistUpdateDto},
         TContext
       > => {
-
-      const mutationOptions = getPutApiWishlistIdMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPutApiWishlistIdMutationOptions(options), queryClient);
     }
-    
+
+export const getDeleteApiWishlistIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/wishlist/${id}`
+}
+
 /**
  * @summary Delete
  */
-export const deleteApiWishlistId = (
-    id: Uuid,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/wishlist/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
+export const deleteApiWishlistId = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiWishlistIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
 
 
 export const getDeleteApiWishlistIdMutationOptions = <TError = void,
@@ -2519,7 +2778,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiWishlistId>>, {id: Uuid}> = (props) => {
@@ -2528,13 +2787,15 @@ const {mutation: mutationOptions} = options ?
           return  deleteApiWishlistId(id,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type DeleteApiWishlistIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiWishlistId>>>
-    
+
     export type DeleteApiWishlistIdMutationError = void
 
     /**
@@ -2548,29 +2809,34 @@ export const useDeleteApiWishlistId = <TError = void,
         {id: Uuid},
         TContext
       > => {
-
-      const mutationOptions = getDeleteApiWishlistIdMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getDeleteApiWishlistIdMutationOptions(options), queryClient);
     }
-    
+
+export const getPostApiWishlistIdAcquireUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/wishlist/${id}/acquire`
+}
+
 /**
  * @summary Acquire
  */
-export const postApiWishlistIdAcquire = (
-    id: Uuid,
-    wishlistAcquireDto: WishlistAcquireDto,
- ) => {
-      
-      
-      return apiClient<unknown>(
-      {url: `/api/wishlist/${id}/acquire`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: wishlistAcquireDto
-    },
-      );
-    }
-  
+export const postApiWishlistIdAcquire = async (id: Uuid,
+    wishlistAcquireDto: WishlistAcquireDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiWishlistIdAcquireUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wishlistAcquireDto)
+  }
+);}
+
+
+
 
 
 export const getPostApiWishlistIdAcquireMutationOptions = <TError = void,
@@ -2584,7 +2850,7 @@ const {mutation: mutationOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }};
 
-      
+
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>, {id: Uuid;data: WishlistAcquireDto}> = (props) => {
@@ -2593,7 +2859,9 @@ const {mutation: mutationOptions} = options ?
           return  postApiWishlistIdAcquire(id,data,)
         }
 
-        
+
+
+
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -2613,10 +2881,7 @@ export const usePostApiWishlistIdAcquire = <TError = void,
         {id: Uuid;data: WishlistAcquireDto},
         TContext
       > => {
-
-      const mutationOptions = getPostApiWishlistIdAcquireMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
+      return useMutation(getPostApiWishlistIdAcquireMutationOptions(options), queryClient);
     }
     
 /**
