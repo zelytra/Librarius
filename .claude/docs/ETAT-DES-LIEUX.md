@@ -87,7 +87,7 @@ de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) 
 *Criticité évaluée pour une qualification ; toutes ces lignes deviennent bloquantes à
 l'ouverture de la production.*
 
-13. **Secrets en clair dans `helm/librarius/values.yaml`** : `postgres.password:
+13. **Secrets en clair dans `infra/helm/librarius/values.yaml`** : `postgres.password:
     librarius`, `keycloak.adminPassword: admin`, versionnés dans un **dépôt public**.
     Reste sérieux même en qualification : l'instance est joignable depuis Internet, donc
     ces identifiants sont exploitables tels quels par n'importe qui.

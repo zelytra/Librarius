@@ -4,7 +4,7 @@ import { defineConfig } from 'orval';
 // Quarkus API. Regenerate with `pnpm --filter @librarius/web gen:api`.
 export default defineConfig({
   librarius: {
-    input: './openapi/openapi.json',
+    input: '../../openapi/openapi.json',
     output: {
       mode: 'single',
       target: './src/api/generated/librarius.ts',

@@ -54,7 +54,7 @@ docker build -f apps/web/Dockerfile \
 
 ## Kubernetes (Helm) — librarius.zelytra.fr
 
-La **stack complète** est déployée sur le cluster k3s via la chart `helm/librarius`
+La **stack complète** est déployée sur le cluster k3s via la chart `infra/helm/librarius`
 (v0.2.0) : **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) et **Keycloak**.
 
 - **Hôte unique** `librarius.zelytra.fr` (Traefik + cert-manager `letsencrypt-prod`,

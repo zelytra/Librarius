@@ -7,14 +7,14 @@ on:
     branches: [main, develop]
     paths:
       - 'apps/api/**'
-      - 'apps/web/openapi/**'
+      - 'openapi/**'
       - 'apps/web/orval.config.ts'
       - 'apps/web/src/api/**'
       - '.github/workflows/openapi-sync.yml'
   pull_request:
     paths:
       - 'apps/api/**'
-      - 'apps/web/openapi/**'
+      - 'openapi/**'
       - 'apps/web/orval.config.ts'
       - 'apps/web/src/api/**'
       - '.github/workflows/openapi-sync.yml'
@@ -59,7 +59,7 @@ jobs:
 
       - name: Fail on drift
         run: |
-          if ! git diff --exit-code -- apps/web/openapi apps/web/src/api/generated; then
+          if ! git diff --exit-code -- openapi apps/web/src/api/generated; then
             echo "::error::The OpenAPI schema or the TypeScript client is stale. Run 'pnpm --filter @librarius/web gen:api' after building the API, then commit the result."
             exit 1
           fi

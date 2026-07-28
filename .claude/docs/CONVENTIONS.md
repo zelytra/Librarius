@@ -13,6 +13,17 @@ Le code est intégralement en anglais, commentaires compris : ne pas suivre la l
 fichier voisin s'il est encore en français, l'écrire en anglais et convertir ce qu'on
 touche au passage.
 
+Deux exceptions, volontaires :
+
+- **Les migrations Flyway déjà livrées** (`V1__init.sql`, `V2__progress_and_ranks.sql`)
+  gardent leurs commentaires français. Flyway calcule le checksum sur **le contenu
+  entier du fichier, commentaires compris** : les retoucher ferait échouer la validation
+  au démarrage sur toute base où la migration est déjà appliquée. Les migrations à venir
+  sont écrites en anglais.
+- **Les messages rendus à l'utilisateur** (`ImportException`, libellés `Or`/`Argent`/
+  `Bronze`) restent en français, puisque l'interface l'est. Les messages de log, eux,
+  sont en anglais.
+
 **L'application, elle, reste en français** : `fr` est la seule locale, et les textes
 utilisateur sont rédigés en français dans `i18n/locales/fr.json`. L'anglais viendra avec
 [#77](https://github.com/zelytra/Librarius/issues/77) ; d'ici là, aucune traduction de
