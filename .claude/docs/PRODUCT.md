@@ -112,10 +112,12 @@ Search across the external catalog (Open Library for books, AniList for manga).
 
 - ✅ List with priority (Priority / Soon / Someday), estimated price, note, removal.
 - ✅ Ordered from the most urgent to the least, and not alphabetically (#114).
-- ✅ **Editing** a wish: priority, estimated price, note (API — screen still to come, #52).
-- ✅ **Total budget** and budget per priority (API — screen still to come, #52).
-- ✅ **Conversion to ownership** in one gesture (wish → collection, status `OWNED`) — API,
-  the "I bought it" button still to come (#52).
+- ✅ Grouped by priority, each bucket carrying its own count and subtotal (#52).
+- ✅ **Editing** a wish inline: priority, estimated price, note (#52).
+- ✅ **Total budget** in the header and budget per priority in the bucket headers — read
+  from the server, so they cover the whole wishlist and not the loaded page (#52).
+- ✅ **Conversion to ownership** in one gesture: "Je l'ai acheté" moves the wish into the
+  collection as `OWNED`, dated the day of the purchase (#52).
 - 🔜 A "one of your wishes is out soon" alert (cross-referenced with upcoming releases).
 
 ### 4.6 Statistics ✅ / 🔜

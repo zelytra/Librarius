@@ -172,18 +172,34 @@
   "wishlist": {
     "title": "Liste de souhaits",
     "summary": "{{total}} titres · estimé {{budget}} €",
+    "groupTotal": "{{titles}} titre(s) · {{budget}} €",
     "price": "{{price}} €",
+    "acquire": "Je l'ai acheté",
     "priority": {
       "PRIORITY": "Priorité",
       "SOON": "Bientôt",
       "SOMEDAY": "Un jour"
+    },
+    "edit": {
+      "action": "Modifier",
+      "price": "Prix estimé",
+      "pricePlaceholder": "Prix estimé (€)",
+      "note": "Note",
+      "notePlaceholder": "Édition, format, où l'acheter…",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
     },
     "empty": {
       "title": "Ta liste de souhaits est vide.",
       "description": "Ajoute des titres depuis l'onglet Découvrir.",
       "action": "Découvrir des titres"
     },
-    "error": "Impossible de charger tes souhaits."
+    "error": "Impossible de charger tes souhaits.",
+    "errors": {
+      "editFailed": "Modification impossible pour le moment.",
+      "removeFailed": "Suppression impossible pour le moment.",
+      "acquireFailed": "Impossible de déplacer ce titre vers ta collection."
+    }
   },
   "stats": {
     "title": "Statistiques",

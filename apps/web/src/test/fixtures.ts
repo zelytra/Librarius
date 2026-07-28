@@ -7,6 +7,7 @@ import type {
   SeriesSummaryDto,
   SeriesVolumeDto,
   StatsDto,
+  WishlistBudgetDto,
   WishlistItemDto,
   WishlistPageDto,
 } from '../api/generated/librarius';
@@ -23,7 +24,38 @@ export function libraryPage(items: LibraryItemDto[], total = items.length): Libr
 }
 
 export function wishlistPage(items: WishlistItemDto[], total = items.length): WishlistPageDto {
-  return { items, page: 0, size: 50, total };
+  return { items, page: 0, size: 50, total, budget: wishlistBudget(items) };
+}
+
+/** Priority buckets, most urgent first, in the order the API reports them. */
+const PRIORITIES = ['PRIORITY', 'SOON', 'SOMEDAY'];
+
+/**
+ * The budget the API attaches to a wishlist page. Computed the same way it is
+ * server-side — over the whole filtered set, and skipping the priorities no wish carries
+ * — so a screen reading the envelope sees in a test what it sees in production.
+ */
+export function wishlistBudget(items: WishlistItemDto[]): WishlistBudgetDto {
+  const sum = (group: WishlistItemDto[]) =>
+    group.reduce((total, it) => total + (it.estimatedPrice ?? 0), 0);
+  const priced = (group: WishlistItemDto[]) =>
+    group.filter((it) => it.estimatedPrice != null).length;
+
+  return {
+    total: sum(items),
+    pricedCount: priced(items),
+    byPriority: PRIORITIES.map((priority) => ({
+      priority,
+      group: items.filter((it) => (it.priority ?? 'SOON') === priority),
+    }))
+      .filter(({ group }) => group.length > 0)
+      .map(({ priority, group }) => ({
+        priority,
+        count: group.length,
+        pricedCount: priced(group),
+        total: sum(group),
+      })),
+  };
 }
 
 export function libraryItem(overrides: Partial<LibraryItemDto> = {}): LibraryItemDto {

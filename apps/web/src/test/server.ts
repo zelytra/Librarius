@@ -1,6 +1,12 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { BUILTIN_CATEGORIES, libraryPage, stats, wishlistPage } from './fixtures';
+import {
+  BUILTIN_CATEGORIES,
+  libraryPage,
+  stats,
+  wishlistBudget,
+  wishlistPage,
+} from './fixtures';
 import type {
   BookView,
   LibraryItemDto,
@@ -42,6 +48,9 @@ export const defaultHandlers = [
   http.put(`${BASE}/library/:id/rank`, () => HttpResponse.json({ id: 'item-1' })),
   http.put(`${BASE}/library/:id/progress`, () => new HttpResponse(null, { status: 204 })),
   http.put(`${BASE}/library/:id/review`, () => HttpResponse.json({ id: 'item-1' })),
+  http.put(`${BASE}/wishlist/:id`, () => HttpResponse.json({ id: 'wish-1' })),
+  http.post(`${BASE}/wishlist/:id/acquire`, () =>
+    HttpResponse.json({ id: 'item-1' }, { status: 201 })),
   http.delete(`${BASE}/library/:id`, () => new HttpResponse(null, { status: 204 })),
   http.delete(`${BASE}/wishlist/:id`, () => new HttpResponse(null, { status: 204 })),
 ];
@@ -143,6 +152,8 @@ export function wishlistReturns(items: WishlistItemDto[]) {
       page,
       size,
       total: matching.length,
+      // Like `total`, the budget covers the filtered set and not the page.
+      budget: wishlistBudget(matching),
     });
   }));
 }
