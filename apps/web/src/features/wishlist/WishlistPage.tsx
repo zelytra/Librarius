@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
+import { Button } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
 import { useApiAuth } from '../../shared/api';
 import {
@@ -8,6 +9,9 @@ import {
   getApiWishlist,
   type WishlistItemDto,
 } from '../../api/generated/librarius';
+
+/** Number of wishes fetched per request. */
+const PAGE_SIZE = 50;
 
 const PRIO: Record<string, { label: string; color: string; bg: string }> = {
   PRIORITY: { label: 'Priorité', color: '#b0857f', bg: '#f4e4e1' },
@@ -23,33 +27,48 @@ function colorFor(seed: string): string {
 }
 
 function WishlistContent() {
+  const { t } = useTranslation();
   const { opts } = useApiAuth();
   const [items, setItems] = useState<WishlistItemDto[]>([]);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getApiWishlist(opts);
-      if (res.status === 200) setItems(res.data);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // The server pages the wishlist; the screen accumulates the pages it has asked for.
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let cancelled = false;
+    setLoading(true);
+    void (async () => {
+      const res = await getApiWishlist({ page, size: PAGE_SIZE }, opts);
+      if (cancelled) return;
+      if (res.status === 200) {
+        const loaded = res.data.items ?? [];
+        setItems((cur) => (page === 0 ? loaded : [...cur, ...loaded]));
+        setCount(res.data.total ?? 0);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // `opts` gets a fresh identity on every render while the token stays the same.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   async function remove(id: string) {
     await deleteApiWishlistId(id, opts);
     setItems((cur) => cur.filter((it) => it.id !== id));
+    setCount((n) => Math.max(n - 1, 0));
   }
 
-  const total = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
+  // Budget of what has been loaded. A total over the whole wishlist belongs to
+  // /api/stats, which aggregates in SQL — see issue #38.
+  const budget = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
+  const hasMore = items.length < count;
 
-  if (loading) return <p style={{ color: 'var(--muted)', fontSize: 13 }}>Chargement…</p>;
+  if (loading && items.length === 0) {
+    return <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>;
+  }
 
   if (items.length === 0) {
     return (
@@ -65,7 +84,7 @@ function WishlistContent() {
   return (
     <>
       <p style={{ margin: '0 0 22px', fontSize: 13, color: 'var(--muted)' }}>
-        {items.length} titres · estimé {total.toFixed(2).replace('.', ',')} €
+        {count} titres · estimé {budget.toFixed(2).replace('.', ',')} €
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {items.map((w) => {
@@ -91,6 +110,14 @@ function WishlistContent() {
           );
         })}
       </div>
+
+      {hasMore && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+          <Button variant="secondary" disabled={loading} onClick={() => setPage((p) => p + 1)}>
+            {loading ? t('common.loading') : t('collection.loadMore', { loaded: items.length, total: count })}
+          </Button>
+        </div>
+      )}
     </>
   );
 }

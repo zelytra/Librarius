@@ -108,6 +108,13 @@ export interface LibraryItemDto {
   book?: BookView;
 }
 
+export interface LibraryPageDto {
+  items?: LibraryItemDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
 
 
@@ -202,6 +209,13 @@ export interface WishlistItemDto {
   book?: BookView;
 }
 
+export interface WishlistPageDto {
+  items?: WishlistItemDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export type GetApiCatalogSearchParams = {
 kind?: Kind;
 limit?: number;
@@ -214,7 +228,22 @@ limit?: number;
 };
 
 export type GetApiLibraryParams = {
+kind?: Kind;
+page?: number;
+q?: string;
+rank?: string;
+size?: number;
+sort?: string;
 status?: LibraryStatus;
+};
+
+export type GetApiWishlistParams = {
+kind?: Kind;
+page?: number;
+priority?: WishPriority;
+q?: string;
+size?: number;
+sort?: string;
 };
 
 export type getApiCatalogSearchResponse200 = {
@@ -646,7 +675,7 @@ export const postApiImportSource = async (source: string,
 
 
 export type getApiLibraryResponse200 = {
-  data: LibraryItemDto[]
+  data: LibraryPageDto
   status: 200
 }
 
@@ -751,6 +780,57 @@ export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options
   
   const data: postApiLibraryResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as postApiLibraryResponse
+}
+
+
+
+export type getApiLibraryIdResponse200 = {
+  data: LibraryItemDto
+  status: 200
+}
+
+export type getApiLibraryIdResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getApiLibraryIdResponse403 = {
+  data: void
+  status: 403
+}
+    
+export type getApiLibraryIdResponseSuccess = (getApiLibraryIdResponse200) & {
+  headers: Headers;
+};
+export type getApiLibraryIdResponseError = (getApiLibraryIdResponse401 | getApiLibraryIdResponse403) & {
+  headers: Headers;
+};
+
+export type getApiLibraryIdResponse = (getApiLibraryIdResponseSuccess | getApiLibraryIdResponseError)
+
+export const getGetApiLibraryIdUrl = (id: Uuid,) => {
+
+
+  
+
+  return `/api/library/${id}`
+}
+
+export const getApiLibraryId = async (id: Uuid, options?: RequestInit): Promise<getApiLibraryIdResponse> => {
+  
+  const res = await fetch(getGetApiLibraryIdUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: getApiLibraryIdResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getApiLibraryIdResponse
 }
 
 
@@ -1015,7 +1095,7 @@ export const getApiStats = async ( options?: RequestInit): Promise<getApiStatsRe
 
 
 export type getApiWishlistResponse200 = {
-  data: WishlistItemDto[]
+  data: WishlistPageDto
   status: 200
 }
 
@@ -1038,17 +1118,24 @@ export type getApiWishlistResponseError = (getApiWishlistResponse401 | getApiWis
 
 export type getApiWishlistResponse = (getApiWishlistResponseSuccess | getApiWishlistResponseError)
 
-export const getGetApiWishlistUrl = () => {
+export const getGetApiWishlistUrl = (params?: GetApiWishlistParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/wishlist`
+  return stringifiedParams.length > 0 ? `/api/wishlist?${stringifiedParams}` : `/api/wishlist`
 }
 
-export const getApiWishlist = async ( options?: RequestInit): Promise<getApiWishlistResponse> => {
+export const getApiWishlist = async (params?: GetApiWishlistParams, options?: RequestInit): Promise<getApiWishlistResponse> => {
   
-  const res = await fetch(getGetApiWishlistUrl(),
+  const res = await fetch(getGetApiWishlistUrl(params),
   {      
     ...options,
     method: 'GET'

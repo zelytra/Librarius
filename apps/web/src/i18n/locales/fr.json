@@ -29,7 +29,9 @@
     "title": "Ma collection",
     "sortBy": "Trier",
     "list": "Liste",
-    "series": "Séries"
+    "series": "Séries",
+    "searchPlaceholder": "Rechercher dans ma collection…",
+    "loadMore": "Voir plus ({{loaded}} / {{total}})"
   },
   "discover": {
     "title": "Découvrir",

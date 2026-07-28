@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { libraryItem } from '../../test/fixtures';
-import { http, HttpResponse, server } from '../../test/server';
+import { http, HttpResponse, libraryItemReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -11,10 +11,6 @@ vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 const { DetailPage } = await import('./DetailPage');
 
 const ITEM = libraryItem({ id: 'item-1' });
-
-function libraryReturns(items: unknown[]) {
-  server.use(http.get('*/api/library', () => HttpResponse.json(items)));
-}
 
 function renderDetail(id = 'item-1') {
   return renderWithProviders(<DetailPage />, { route: `/detail/${id}`, path: '/detail/:id' });
@@ -24,7 +20,7 @@ describe('DetailPage', () => {
   beforeEach(resetAuth);
 
   test('renders the title details', async () => {
-    libraryReturns([ITEM]);
+    libraryItemReturns(ITEM);
     renderDetail();
 
     // The title shows up twice: in the header, and on the fallback cover.
@@ -35,7 +31,7 @@ describe('DetailPage', () => {
   });
 
   test('offers the three ranks', async () => {
-    libraryReturns([ITEM]);
+    libraryItemReturns(ITEM);
     renderDetail();
 
     expect(await screen.findByText('Or')).toBeInTheDocument();
@@ -44,7 +40,7 @@ describe('DetailPage', () => {
   });
 
   test('assigning a rank is reflected immediately', async () => {
-    libraryReturns([ITEM]);
+    libraryItemReturns(ITEM);
     server.use(http.put('*/api/library/:id/rank', () => HttpResponse.json({ id: 'item-1', rankCode: 'or' })));
     renderDetail();
 
@@ -55,7 +51,7 @@ describe('DetailPage', () => {
   });
 
   test('marking as read toggles the label', async () => {
-    libraryReturns([ITEM]);
+    libraryItemReturns(ITEM);
     renderDetail();
 
     await userEvent.click(await screen.findByText('Marquer comme lu'));
@@ -63,8 +59,9 @@ describe('DetailPage', () => {
     expect(await screen.findByText('✓ Lu')).toBeInTheDocument();
   });
 
+  /** An unknown identifier answers 404, as does an identifier belonging to someone else. */
   test('signals a title that cannot be found', async () => {
-    libraryReturns([]);
+    libraryItemReturns(ITEM);
     renderDetail('inconnu');
 
     expect(await screen.findByText('Titre introuvable.')).toBeInTheDocument();

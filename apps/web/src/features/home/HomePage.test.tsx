@@ -2,16 +2,12 @@ import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { catalogResult, libraryItem, stats } from '../../test/fixtures';
-import { http, HttpResponse, server } from '../../test/server';
+import { http, HttpResponse, libraryReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
 const { HomePage } = await import('./HomePage');
-
-function libraryReturns(items: unknown[]) {
-  server.use(http.get('*/api/library', () => HttpResponse.json(items)));
-}
 
 describe('HomePage', () => {
   beforeEach(resetAuth);
@@ -52,11 +48,43 @@ describe('HomePage', () => {
     expect(screen.getByText(/Dates indicatives/)).toBeInTheDocument();
   });
 
+  /**
+   * Emptiness is read off the counters, not off a shelf: a library made only of
+   * owned-but-unread titles fills neither of the two shelves.
+   */
   test('points to Discover when the library is empty', async () => {
     libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText(/Ta bibliothèque est vide/)).toBeInTheDocument();
+  });
+
+  test('does not offer to add titles to a library made only of unread ones', async () => {
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 7 }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('à lire');
+    expect(screen.queryByText(/Ta bibliothèque est vide/)).not.toBeInTheDocument();
+  });
+
+  /** Each shelf asks the server for its own status rather than for everything. */
+  test('fetches only the shelves it displays', async () => {
+    const statuses: (string | null)[] = [];
+    server.use(http.get('*/api/library', ({ request }) => {
+      statuses.push(new URL(request.url).searchParams.get('status'));
+      return HttpResponse.json({ items: [], page: 0, size: 12, total: 0 });
+    }));
+
+    renderWithProviders(<HomePage />);
+    await screen.findByText('lus');
+
+    expect(statuses).toContain('READING');
+    expect(statuses).toContain('READ');
+    expect(statuses).not.toContain(null);
   });
 
   test('prompts for sign-in when there is no session', async () => {

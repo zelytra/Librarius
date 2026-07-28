@@ -34,21 +34,30 @@ function Cover({ item, onClick, w = 104 }: { item: LibraryItemDto; onClick: () =
   );
 }
 
+/** Shelves shown on the dashboard, and how many covers each of them holds. */
+const READING_SHELF_SIZE = 12;
+const READ_SHELF_SIZE = 8;
+
 function Dashboard() {
   const navigate = useNavigate();
   const { opts } = useApiAuth();
-  const [items, setItems] = useState<LibraryItemDto[]>([]);
+  const [reading, setReading] = useState<LibraryItemDto[]>([]);
+  const [read, setRead] = useState<LibraryItemDto[]>([]);
   const [stats, setStats] = useState<StatsDto | null>(null);
   const [upcoming, setUpcoming] = useState<CatalogResult[]>([]);
 
+  // Two scoped requests rather than the whole collection: the dashboard only ever
+  // shows a shelf of each, and the server already knows how to filter by status.
   useEffect(() => {
     void (async () => {
-      const [lib, st, up] = await Promise.all([
-        getApiLibrary(undefined, opts),
+      const [inProgress, finished, st, up] = await Promise.all([
+        getApiLibrary({ status: 'READING', size: READING_SHELF_SIZE }, opts),
+        getApiLibrary({ status: 'READ', size: READ_SHELF_SIZE }, opts),
         getApiStats(opts),
         getApiCatalogUpcoming({ kind: 'MANGA', limit: 5 }, opts),
       ]);
-      if (lib.status === 200) setItems(lib.data);
+      if (inProgress.status === 200) setReading(inProgress.data.items ?? []);
+      if (finished.status === 200) setRead(finished.data.items ?? []);
       if (st.status === 200) setStats(st.data);
       if (up.status === 200) setUpcoming(up.data);
     })();
@@ -56,8 +65,11 @@ function Dashboard() {
   }, []);
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-  const reading = items.filter((it) => it.status === 'READING');
-  const read = items.filter((it) => it.status === 'READ').slice(0, 8);
+
+  // Emptiness comes from the counters, not from a shelf: a library made only of
+  // owned-but-unread titles fills neither of the two shelves above.
+  const libraryEmpty =
+    stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
 
   const mini = [
     { value: String(stats?.read ?? 0), label: 'lus', bg: '#e6ece0' },
@@ -115,7 +127,7 @@ function Dashboard() {
         </section>
       )}
 
-      {items.length === 0 && (
+      {libraryEmpty && (
         <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--faint)' }}>
           <Icon name="auto_stories" size={42} />
           <p style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 12 }}>

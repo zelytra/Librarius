@@ -7,7 +7,7 @@ import { Button } from '../../shared/ui/primitives';
 import { RANK_COLORS } from '../collection/mockData';
 import {
   getApiCategories,
-  getApiLibrary,
+  getApiLibraryId,
   putApiLibraryIdProgress,
   putApiLibraryIdRank,
   type CategoryDto,
@@ -32,10 +32,12 @@ function DetailContent({ id }: { id: string }) {
 
   useEffect(() => {
     if (!passed) {
+      // Deep link, or a reload: fetch the single item rather than paging through the
+      // collection to find it.
       void (async () => {
         try {
-          const r = await getApiLibrary(undefined, opts);
-          if (r.status === 200) setItem(r.data.find((x) => x.id === id) ?? null);
+          const r = await getApiLibraryId(id, opts);
+          if (r.status === 200) setItem(r.data);
         } finally {
           setLoading(false);
         }
