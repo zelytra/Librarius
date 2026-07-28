@@ -49,8 +49,10 @@ de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) 
 4. **i18n incomplète.** Un seul fichier (`fr.json`, 66 lignes) alors que la moitié des
    libellés sont en dur dans le JSX (« Reprendre la lecture », « Classement »,
    « Marquer comme lu », « Titre introuvable »…). Aucune autre langue.
-5. **Tests quasi inexistants.** Un seul fichier de test front (`App.test.tsx`) pour
-   8 écrans. Aucun test d'intégration, aucun e2e.
+5. ~~**Tests quasi inexistants.**~~ ✅ **Résorbé le 2026-07-28** ([#36](https://github.com/zelytra/Librarius/issues/36)) :
+   41 tests répartis sur 7 fichiers couvrent les six écrans applicatifs via MSW — rendu
+   nominal, état vide, état d'erreur, session absente et interactions principales.
+   Reste à faire : l'e2e Playwright ([#37](https://github.com/zelytra/Librarius/issues/37)).
 6. **`mockData.ts` toujours importé** par `CollectionPage` et `DetailPage` pour
    `RANK_COLORS`/`RANK_ICONS` — reliquat de la phase maquette à extraire proprement.
 
@@ -68,6 +70,17 @@ de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) 
     `dashboard_layout`, `notification_pref`, `upcoming_release`, `library_item_rank`
     (le rang est une colonne, pas une table — simplification acceptable à documenter).
 12. **`HelloResource` non authentifiée** — endpoint de démo à supprimer.
+
+### Défauts corrigés depuis l'audit ✅
+
+- **Isolation des données non testée** ([#39](https://github.com/zelytra/Librarius/issues/39),
+  2026-07-28) : chaque ressource scopée est désormais éprouvée avec deux comptes, y
+  compris le fait qu'un identifiant d'autrui réponde 404 et non 403.
+- **Création d'objectif de lecture cassée** ([#88](https://github.com/zelytra/Librarius/issues/88),
+  2026-07-28) : `GoalResource.upsert` persistait l'entité avant de renseigner
+  `target_count`, colonne NOT NULL — `PUT /api/goals/{year}` renvoyait 500 sur une année
+  vierge. Jamais détecté faute de test et faute d'écran exposant la fonctionnalité.
+  Révélé par les tests d'isolation.
 
 ### Exploitation
 
@@ -128,9 +141,9 @@ l'ouverture de la production.*
 | Indicateur | Valeur |
 |---|---|
 | Classes Java (main) | 46 |
-| Tests Java | 8 fichiers |
+| Tests Java | 10 fichiers |
 | Fichiers front (src) | 30 |
-| Tests front | 1 fichier |
+| Tests front | 7 fichiers, 41 tests |
 | Migrations Flyway | 2 |
 | Endpoints REST exposés | 19 (9 ressources) |
 | Locales | 1 (fr) |
