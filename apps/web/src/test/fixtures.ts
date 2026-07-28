@@ -8,6 +8,7 @@ import type {
   SeriesSummaryDto,
   SeriesVolumeDto,
   StatsDto,
+  TimelineDto,
   WishlistBudgetDto,
   WishlistItemDto,
   WishlistPageDto,
@@ -192,9 +193,31 @@ export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
     goalUnit: undefined,
     goalCurrent: 12,
     byGenre: [
-      { genre: 'Fantasy', count: 8 },
-      { genre: 'Science-fiction', count: 4 },
+      { code: 'fantasy', genre: 'Fantasy', count: 8 },
+      { code: 'science-fiction', genre: 'Science-fiction', count: 4 },
     ],
+    ...overrides,
+  };
+}
+
+/** An empty reading history: what a brand new account's timeline looks like. */
+export function timeline(overrides: Partial<TimelineDto> = {}): TimelineDto {
+  const year = new Date().getFullYear();
+  return {
+    from: `${year}-01-01`,
+    to: `${year}-12-31`,
+    granularity: 'MONTH',
+    points: [],
+    books: 0,
+    pages: 0,
+    pagesPerDay: 0,
+    daysPerBook: undefined,
+    bestPeriod: undefined,
+    bestPeriodBooks: 0,
+    byAuthor: [],
+    byPublisher: [],
+    byLanguage: [],
+    byRank: [],
     ...overrides,
   };
 }

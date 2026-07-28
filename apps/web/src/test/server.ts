@@ -4,6 +4,7 @@ import {
   BUILTIN_CATEGORIES,
   libraryPage,
   stats,
+  timeline,
   wishlistBudget,
   wishlistPage,
 } from './fixtures';
@@ -36,6 +37,7 @@ export const defaultHandlers = [
   http.delete(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
+  http.get(`${BASE}/stats/timeline`, () => HttpResponse.json(timeline())),
   http.get(`${BASE}/goals`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/search`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/upcoming`, () => HttpResponse.json([])),

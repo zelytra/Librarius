@@ -107,6 +107,9 @@ zelytra/librarius/
                         # CatalogCache + CatalogCacheStore (Caffeine → PostgreSQL)
     provider/           # OpenLibraryProvider/Client, AniListProvider/Client
   imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService
+  series/SeriesService  # a series seen through one user's collection
+  stats/StatsService    # counters, annual goal and reading timeline
+  wishlist/             # WishlistService — the writes spanning two tables
   security/CurrentUser  # resolves the Keycloak "sub" → AppUser (JIT creation)
 ```
 

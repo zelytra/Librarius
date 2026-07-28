@@ -287,7 +287,37 @@
     },
     "favoriteGenres": "Genres favoris",
     "noGenres": "Pas encore de données — ajoute des titres à ta collection.",
-    "unavailable": "Statistiques indisponibles."
+    "unavailable": "Statistiques indisponibles.",
+    "timeline": {
+      "title": "Lectures par mois",
+      "chartLabel": {
+        "books": "Titres terminés chaque mois en {{year}}",
+        "pages": "Pages lues chaque mois en {{year}}"
+      },
+      "total": "{{books}} titres et {{pages}} pages terminés en {{year}}.",
+      "empty": "Aucune lecture terminée en {{year}}. Marque un titre comme lu pour démarrer l'historique.",
+      "unavailable": "Historique de lecture indisponible.",
+      "metrics": {
+        "books": "Titres",
+        "pages": "Pages"
+      },
+      "paceTitle": "Rythme de lecture",
+      "pagesPerDay": "pages par jour",
+      "daysPerBook": "jours par titre",
+      "bestMonth": "meilleur mois ({{books}})",
+      "noFigure": "—",
+      "cumulativeTitle": "Cumul et objectif",
+      "cumulativeLabel": "Cumul de l'année comparé à l'objectif de {{target}} {{unit}}",
+      "cumulativeLegend": "La courbe est ton cumul, la ligne pointillée le rythme régulier qui atteint l'objectif au 31 décembre.",
+      "breakdownTitle": "Ce que tu as lu",
+      "noBreakdown": "Pas encore de données sur cette période.",
+      "breakdowns": {
+        "byAuthor": "Auteurs",
+        "byPublisher": "Éditeurs",
+        "byLanguage": "Langues",
+        "byRank": "Rangs"
+      }
+    }
   },
   "detail": {
     "summary": "Résumé",

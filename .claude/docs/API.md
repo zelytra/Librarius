@@ -40,6 +40,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/goals` | Reading goals |
 | PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
+| GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 
@@ -99,6 +100,13 @@ SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
          Integer goalTarget, String goalUnit, long goalCurrent, List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
+
+TimelineDto(LocalDate from, LocalDate to, String granularity, List<TimelinePointDto> points,
+            long books, long pages, double pagesPerDay, Double daysPerBook,
+            String bestPeriod, long bestPeriodBooks,
+            List<BreakdownCountDto> byAuthor, byPublisher, byLanguage, byRank)
+TimelinePointDto(String period, long books, long pages)
+BreakdownCountDto(String label, long count)
 ```
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
@@ -284,6 +292,37 @@ date: the application does not know when it was read. It counts in the all-time 
 not towards the year's goal, which is the honest answer and keeps an import from spiking the
 day it ran.
 
+## Timeline
+
+`GET /api/stats/timeline` reads the same `finished_at` the goal is counted from, over a
+window the caller chooses.
+
+| Parameter | Default | Notes |
+|---|---|---|
+| `from` | 1 January of the current year | ISO `yyyy-MM-dd`; an unparseable value is a **400** |
+| `to` | 31 December of the current year | Inclusive. A window ending before it starts is a **400** |
+| `granularity` | `month` | `month` \| `year`, case-insensitive; anything else is a **400** |
+
+**Only the buckets holding something come back.** A month with no reading is an absent
+point, not a zero: the answer then follows the data rather than the range asked for, and a
+client charting a full year pads the gaps itself. `points[].period` is `2026-03` at month
+granularity and `2026` at year granularity.
+
+The derived figures ride along rather than living behind endpoints of their own, so a
+screen can never show a pace that contradicts the buckets above it: `pagesPerDay` divides
+the pages by the **elapsed** part of the window (a year in progress is not twelve months of
+reading), `daysPerBook` averages `finished_at - started_at` over the titles carrying both
+dates and is `null` when none does, and `bestPeriod` is the bucket with the most titles.
+
+`byAuthor`, `byPublisher`, `byLanguage` and `byRank` rank the six most represented labels
+of the window, ties broken alphabetically — same shape as the all-time `byGenre` of
+`/api/stats`. The rank breakdown only covers the titles filed under one.
+
+Every aggregation is a `group by` in the database. The endpoint costs six queries whatever
+the length of the reading history behind it, which is what
+[#40](https://github.com/zelytra/Librarius/issues/40) bought and what
+`ReadingTimelineTest` keeps.
+
 ## Wishlist
 
 **Ordering.** `WishPriority` carries an explicit `rank` (`PRIORITY` 0, `SOON` 1, `SOMEDAY`
@@ -354,5 +393,5 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A8 | No `/api/dashboard/layout` | Core product |
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
-| A11 | No time-based statistics (`/api/stats/timeline`) | Core product |
+| A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
 | A12 | No **provider enrichment** of the editions of a work: the list holds what users entered. `work` carries no `provider_ref`, so no provider can be asked "the other editions of *this* work" | Core product |

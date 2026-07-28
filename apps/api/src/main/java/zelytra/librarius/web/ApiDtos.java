@@ -21,6 +21,8 @@ import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.LibraryItemRepository.GenreTotal;
+import zelytra.librarius.domain.repository.ReadingProgressRepository.LabelTotal;
+import zelytra.librarius.domain.repository.ReadingProgressRepository.PeriodTotal;
 import zelytra.librarius.domain.repository.WishlistItemRepository.PriorityBudget;
 
 import java.math.BigDecimal;
@@ -261,6 +263,51 @@ public final class ApiDtos {
         public static GenreCount of(GenreTotal total) {
             return new GenreCount(total.code(), total.label(), total.count());
         }
+    }
+
+    /**
+     * What the user finished during one bucket of the timeline.
+     *
+     * @param period {@code 2026-03} at month granularity, {@code 2026} at year granularity
+     */
+    public record TimelinePointDto(String period, long books, long pages) {
+        public static TimelinePointDto of(PeriodTotal total) {
+            String period = total.month() == null
+                    ? String.valueOf(total.year())
+                    : "%04d-%02d".formatted(total.year(), total.month());
+            return new TimelinePointDto(period, total.books(), total.pages());
+        }
+    }
+
+    /** One line of a breakdown: a label and the titles finished carrying it. */
+    public record BreakdownCountDto(String label, long count) {
+        public static BreakdownCountDto of(LabelTotal total) {
+            return new BreakdownCountDto(total.label(), total.count());
+        }
+    }
+
+    /**
+     * Reading over time, built on the day each title was finished.
+     *
+     * <p>Only the buckets the user read something in are listed: a month with no reading is
+     * an absent point rather than a zero, so the payload follows the data and not the range
+     * asked for. A client charting a full year pads the gaps itself.
+     *
+     * @param books        titles finished over the whole window
+     * @param pages        their pages, editions with no page count contributing nothing
+     * @param pagesPerDay  reading pace over the elapsed part of the window
+     * @param daysPerBook  average number of days between starting and finishing a title,
+     *                     {@code null} when no title in the window carries both dates
+     * @param bestPeriod   the bucket with the most titles, {@code null} on an empty window
+     * @param byAuthor     the most read authors, most read first; same for the three others
+     */
+    public record TimelineDto(LocalDate from, LocalDate to, String granularity,
+            java.util.List<TimelinePointDto> points, long books, long pages, double pagesPerDay,
+            Double daysPerBook, String bestPeriod, long bestPeriodBooks,
+            java.util.List<BreakdownCountDto> byAuthor,
+            java.util.List<BreakdownCountDto> byPublisher,
+            java.util.List<BreakdownCountDto> byLanguage,
+            java.util.List<BreakdownCountDto> byRank) {
     }
 
     /**

@@ -139,10 +139,14 @@ Search across the external catalog (Open Library for books, AniList for manga).
 
 - ✅ Read / in progress / to read, pages read, number of series, breakdown by genre (top 6).
 - ✅ **Annual goal**: gauge, what is left, pace required.
-- 🔜 **Trend over time**: books read per month, per year.
-- 🔜 Reading pace (pages/day), average time to finish a book.
-- 🔜 Breakdown by author, publisher, language, rank.
+- ✅ **Trend over time**: titles and pages finished per month, running total against the goal.
+- ✅ Reading pace (pages/day), average time to finish a title, best month.
+- ✅ Breakdown by author, publisher, language, rank.
 - 🔜 A shareable year in review.
+
+Everything over time is counted from the day a title was **finished**
+(`reading_progress.finished_at`), so the history starts the day the user first marks
+something as read — an existing collection carries no reading dates.
 
 ### 4.7 Settings ✅ / 🔜
 

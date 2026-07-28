@@ -7,6 +7,7 @@ import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import { goalPace, toUnit } from '../../shared/goal';
 import { useGetApiStats } from '../../api/generated/librarius';
+import { TimelineSection } from './TimelineSection';
 import styles from './StatsPage.module.css';
 
 /** Bar colours, cycled through in order. */
@@ -107,6 +108,10 @@ function StatsContent() {
           </div>
         )}
       </div>
+
+      {/* Reading over time: the counters above say where the user stands, these say
+          whether they are reading more than they used to. */}
+      <TimelineSection stats={stats} />
     </>
   );
 }
