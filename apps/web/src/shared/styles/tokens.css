@@ -1,80 +1,172 @@
 /* ── Design tokens (themes) ───────────────────────────────────────────────────
    The mockup's "paper" look: Newsreader serif for headings, DM Sans for body
-   copy, sage green accent. Four themes, switched through the data-theme
+   copy, sage green accent. Four palettes, switched through the data-theme
    attribute on <html>.
 
-   Only the palette below is theme-dependent. Typography, radii, shadows and
-   the fixed decorative tints are declared once at the end of this file. */
+   `data-theme` always carries a resolved palette id — `creme`, `sauge`, `rose`
+   or `nuit`. The "system" preference is not a palette: it is resolved against
+   `prefers-color-scheme` before the first paint by the boot script in
+   index.html, and again by the ThemeProvider when the preference changes.
+
+   Everything a screen can consume on a themed surface is declared in the
+   palette blocks below, `nuit` included: a token declared only in the light
+   base would silently fall through to a light value on a dark background.
+   The fixed block at the end holds what genuinely does not follow the theme —
+   typography, layout, radii, and the pastel blocks the app draws its generated
+   covers with, which stay light whatever the surface around them. */
+
+/* ── Light palettes ───────────────────────────────────────────────────────────
+   `creme` doubles as the base: `sauge` and `rose` only override what differs,
+   and inherit the tints, overlays and shadows from here. */
 
 :root,
 [data-theme='creme'] {
   --bg: #f3ede3;
   --surface: #fbf8f3;
   --surface-2: #f6f0e6;
-  --ink: #3a342c;
-  --ink-soft: #6a6253;
-  --muted: #a89c8c;
-  --faint: #b3a89a;
+  --ink: #332e26;
+  --ink-soft: #574e40;
+  --muted: #6b6359;
+  --faint: #706961;
   --accent: #9aab92;
-  --accent-deep: #7d8f73;
+  --accent-deep: #5f6c57;
   --accent-soft: #e6ece0;
-  --line: #efe7da;
+  --line: #e4dbcb;
   --chip: #ece3d5;
-  --rose: #b0857f;
+  --rose: #83635f;
   --rose-soft: #f3e6e3;
   --gold: #d9b94e;
   --silver: #b3b7bf;
   --bronze: #c08a5a;
+
   --shadow: 0 6px 18px -10px rgba(74, 64, 52, 0.25);
   --shadow-strong: 0 18px 36px -14px rgba(74, 64, 52, 0.55);
+  --shadow-cover: 0 8px 18px -8px rgba(74, 64, 52, 0.4);
+  --shadow-cover-sm: 0 7px 16px -8px rgba(74, 64, 52, 0.4);
+  --shadow-thumb: 0 3px 8px -3px rgba(0, 0, 0, 0.25);
+  --shadow-badge: 0 2px 6px rgba(74, 64, 52, 0.3);
+  --shadow-segment: 0 3px 8px -4px rgba(74, 64, 52, 0.35);
+  --shadow-accent: 0 8px 18px -8px rgba(122, 143, 115, 0.7);
+  --shadow-accent-sm: 0 4px 12px -3px rgba(122, 143, 115, 0.5);
+  --shadow-frame: 0 30px 80px -20px rgba(74, 64, 52, 0.35);
+
+  /* Translucent panels floating over something the palette does not own — the
+     Detail wash for --overlay, a generated cover for --overlay-strong. Both
+     follow the theme: a fixed white pill turns into a torch on a dark page, and
+     the icons drawn on it (--overlay-ink, --rose) do follow the theme, so a
+     panel that did not would end up pale on pale. */
+  --overlay: rgba(255, 255, 255, 0.72);
+  --overlay-strong: rgba(255, 255, 255, 0.85);
+  /* Strength of that wash, which is painted in the cover's own pastel colour.
+     At full strength on a dark page the top of the screen would come out
+     lighter than the text laid on it. */
+  --wash-opacity: 1;
+
+  /* ── Decorative tints ───────────────────────────────────────────────────────
+     The pastel blocks of the mockup (mini counters, stat tiles, priority
+     badges). Each carries its own ink, and both sides flip together on a dark
+     surface: a pale block with pale text would be the one thing a dark theme
+     cannot recover from. */
+  --tint-sage: #e6ece0;
+  --tint-sage-ink: #57684e;
+  --tint-rose: var(--rose-soft);
+  --tint-rose-ink: #7f605b;
+  --tint-blush: #f4e4e1;
+  --tint-sand: #efe9e0;
+  --tint-clay: #f1ebe0;
+  --tint-clay-ink: #845f3d;
+  --tint-violet: #ece6f0;
+  --tint-violet-ink: #6a5f7b;
+  --tint-violet-muted: var(--tint-violet-ink);
 }
 
 [data-theme='sauge'] {
   --bg: #dfe6da;
   --surface: #eef2ea;
   --surface-2: #e6ede1;
-  --ink: #2f3a2c;
-  --ink-soft: #51604b;
-  --muted: #8295806;
-  --faint: #9aa897;
-  --accent: #7d8f73;
-  --accent-deep: #5f7355;
+  --ink: #252e22;
+  --ink-soft: #465340;
+  --muted: #556154;
+  --faint: #5e675d;
+  --accent: #8fa385;
+  --accent-deep: #55664c;
   --accent-soft: #d8e2d2;
-  --line: #d3ddcc;
+  --line: #cbd7c4;
   --chip: #d3ddcc;
+  --rose: #7c5d59;
 }
 
 [data-theme='rose'] {
   --bg: #f1e2df;
   --surface: #fbf1ef;
   --surface-2: #f5e6e3;
-  --ink: #4a3a37;
-  --ink-soft: #6f5a56;
-  --muted: #b29a95;
-  --faint: #c2aaa4;
+  --ink: #3b2d2a;
+  --ink-soft: #5d4a46;
+  --muted: #6b5c59;
+  --faint: #70625f;
   --accent: #c98f87;
-  --accent-deep: #b0857f;
+  --accent-deep: #7c5d59;
   --accent-soft: #f3e0dc;
-  --line: #ecd8d3;
+  --line: #e6d0cb;
   --chip: #ecd8d3;
+  --rose: #7d5e5a;
 }
 
+/* ── Dark palette ─────────────────────────────────────────────────────────────
+   Redeclares the whole set, tints and shadows included: the warm brown shadows
+   above are invisible on a dark surface, and the pastel tints would swallow
+   their own labels. */
+
 [data-theme='nuit'] {
-  --bg: #2c2823;
-  --surface: #3a352f;
-  --surface-2: #443f38;
+  --bg: #211e1a;
+  --surface: #2c2823;
+  --surface-2: #38332c;
   --ink: #f3ede3;
-  --ink-soft: #d6cdbf;
-  --muted: #a99e8d;
-  --faint: #8a8073;
+  --ink-soft: #ddd4c6;
+  --muted: #b3a794;
+  --faint: #a19685;
   --accent: #9aab92;
   --accent-deep: #b6c4ad;
-  --accent-soft: #424a3c;
-  --line: #4a443c;
-  --chip: #443f38;
-  --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
-  --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.7);
+  --accent-soft: #3a4335;
+  --line: #443d34;
+  --chip: #3a352e;
+  --rose: #dda29b;
+  --rose-soft: #3d312e;
+  --gold: #d9b94e;
+  --silver: #b3b7bf;
+  --bronze: #c08a5a;
+
+  --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.65);
+  --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.8);
+  --shadow-cover: 0 8px 18px -8px rgba(0, 0, 0, 0.7);
+  --shadow-cover-sm: 0 7px 16px -8px rgba(0, 0, 0, 0.7);
+  --shadow-thumb: 0 3px 8px -3px rgba(0, 0, 0, 0.6);
+  --shadow-badge: 0 2px 6px rgba(0, 0, 0, 0.6);
+  --shadow-segment: 0 3px 8px -4px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 8px 18px -8px rgba(0, 0, 0, 0.75);
+  --shadow-accent-sm: 0 4px 12px -3px rgba(0, 0, 0, 0.6);
+  --shadow-frame: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+
+  --overlay: rgba(24, 21, 18, 0.72);
+  --overlay-strong: rgba(24, 21, 18, 0.85);
+  --wash-opacity: 0.28;
+
+  --tint-sage: #333c30;
+  --tint-sage-ink: #a8bd9c;
+  --tint-rose: #3d312e;
+  --tint-rose-ink: #dda29b;
+  --tint-blush: #402f2d;
+  --tint-sand: #38332c;
+  --tint-clay: #3b342b;
+  --tint-clay-ink: #d6a271;
+  --tint-violet: #363043;
+  --tint-violet-ink: #c1b2d1;
+  --tint-violet-muted: var(--tint-violet-ink);
 }
+
+/* ── Theme-independent ────────────────────────────────────────────────────────
+   Nothing below is redeclared by a palette, so its position in the file does
+   not matter. */
 
 :root {
   /* ── Typography ───────────────────────────────────────────────────────────
@@ -135,53 +227,34 @@
   --radius-chip: 30px;
   --radius-round: 50%;
 
-  /* ── Shadows ────────────────────────────────────────────────────────────── */
-  --shadow-cover: 0 8px 18px -8px rgba(74, 64, 52, 0.4);
-  --shadow-cover-sm: 0 7px 16px -8px rgba(74, 64, 52, 0.4);
-  --shadow-thumb: 0 3px 8px -3px rgba(0, 0, 0, 0.25);
-  --shadow-badge: 0 2px 6px rgba(74, 64, 52, 0.3);
-  --shadow-segment: 0 3px 8px -4px rgba(74, 64, 52, 0.35);
-  --shadow-accent: 0 8px 18px -8px rgba(122, 143, 115, 0.7);
-  --shadow-accent-sm: 0 4px 12px -3px rgba(122, 143, 115, 0.5);
-  --shadow-frame: 0 30px 80px -20px rgba(74, 64, 52, 0.35);
+  /* Hairline drawn on a theme swatch, whose colour is the palette it stands
+     for rather than the palette in use. */
   --shadow-swatch: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
 
   /* ── Covers ───────────────────────────────────────────────────────────────
-     A generated cover is a fixed pastel block, so what is printed on it does
-     not follow the theme either. */
+     A generated cover is a fixed pastel block (see coverPalette.ts), so what is
+     printed on it does not follow the theme either — it is dark ink on a pale
+     block on every palette. */
   --cover-ink: #352f28;
-  --cover-tag: rgba(58, 52, 44, 0.5);
+  --cover-tag: rgba(53, 47, 40, 0.85);
   --cover-spine: rgba(0, 0, 0, 0.07);
   --cover-spine-strong: rgba(0, 0, 0, 0.08);
 
-  /* ── Overlays ─────────────────────────────────────────────────────────────
-     Translucent white panels laid over a cover or a coloured header. */
-  --overlay: rgba(255, 255, 255, 0.7);
-  --overlay-strong: rgba(255, 255, 255, 0.85);
-  --overlay-ink: #3a342c;
+  /* Ink of the translucent panel, which follows the theme through --ink: white
+     panel with dark ink on a light palette, dark panel with pale ink on a dark
+     one. */
+  --overlay-ink: var(--ink);
 
-  /* Text and icons drawn on an accent-coloured surface. */
-  --on-accent: #fff;
+  /* Text and icons drawn on an accent-coloured surface. A deep ink rather than
+     white: the accent is a pastel, and so are the surfaces this lands on that
+     no palette owns — the rank medals and the avatar gradient below. White
+     text on any of them sits around 2:1. */
+  --on-accent: #1b2416;
 
-  /* ── Decorative tints ─────────────────────────────────────────────────────
-     The pastel blocks of the mockup (mini counters, stat tiles, priority
-     badges). Deliberately theme-independent: they carry their own ink, so a
-     dark-theme pass only has to override this block. */
-  --tint-sage: #e6ece0;
-  --tint-sage-ink: #7d8f73;
-  /* The rose and clay tints already exist in the palette above: alias them
-     rather than repeating the values. */
-  --tint-rose: var(--rose-soft);
-  --tint-rose-ink: var(--rose);
-  --tint-blush: #f4e4e1;
-  --tint-sand: #efe9e0;
-  --tint-clay: #f1ebe0;
-  --tint-clay-ink: var(--bronze);
-  --tint-violet: #ece6f0;
-  --tint-violet-ink: #8c7da0;
-  --tint-violet-muted: #9a8fa6;
-
-  /* ── Gradients ────────────────────────────────────────────────────────── */
+  /* ── Gradients ──────────────────────────────────────────────────────────────
+     Pastel fills, deliberately theme-independent: they are the colour accents
+     of the app, and read as well against a dark surface as against a light one.
+     The genre bars run in a track painted with --chip, which does follow. */
   --gradient-avatar: linear-gradient(135deg, #c9b8d4, #9aab92);
   --gradient-genre-1: linear-gradient(90deg, #9aab92, #bccab2);
   --gradient-genre-2: linear-gradient(90deg, #b0857f, #ddb9b3);

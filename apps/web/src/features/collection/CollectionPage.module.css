@@ -81,10 +81,12 @@
 
 /* ── Overlays drawn on a cover ────────────────────────────────────────────── */
 
+/* Inside the cover, not straddling its corner: the cover clips its overflow, so
+   a medal hung outside came out sliced along two edges. */
 .rankBadge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 6px;
+  right: 6px;
   width: 24px;
   height: 24px;
   border-radius: var(--radius-round);

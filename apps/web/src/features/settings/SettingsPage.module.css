@@ -48,8 +48,10 @@
   box-shadow: var(--shadow-swatch);
 }
 
+/* The ring is the only thing marking the selected theme, so it is drawn in the
+   deep accent: the pastel one does not reach 3:1 against the swatches. */
 .swatchActive {
-  border-color: var(--accent);
+  border-color: var(--accent-deep);
 }
 
 .themeLabel {
