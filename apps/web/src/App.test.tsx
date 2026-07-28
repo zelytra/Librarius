@@ -30,9 +30,10 @@ test('renders the translated navigation', () => {
   expect(screen.getByText('Découvrir')).toBeInTheDocument();
 });
 
-test('the theme switcher applies the theme on <html>', () => {
+// Settings is code split, so the click has to wait for its chunk to resolve.
+test('the theme switcher applies the theme on <html>', async () => {
   renderAt('/settings');
-  fireEvent.click(screen.getByText('Nuit'));
+  fireEvent.click(await screen.findByText('Nuit'));
   expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
 });
 
