@@ -2,9 +2,9 @@ import { WebStorageStateStore } from 'oidc-client-ts';
 import type { AuthProviderProps } from 'react-oidc-context';
 
 /**
- * Configuration OIDC (Authorization Code + PKCE) contre Keycloak.
- * En dev, le Keycloak du docker-compose (port 8081, realm « librarius »).
- * Surchargeable via les variables VITE_OIDC_*.
+ * OIDC configuration (Authorization Code + PKCE) against Keycloak.
+ * In dev, the Keycloak from docker-compose (port 8081, realm "librarius").
+ * Can be overridden through the VITE_OIDC_* variables.
  */
 export const oidcConfig: AuthProviderProps = {
   authority: import.meta.env.VITE_OIDC_AUTHORITY || 'http://localhost:8081/realms/librarius',
@@ -13,7 +13,7 @@ export const oidcConfig: AuthProviderProps = {
   post_logout_redirect_uri: window.location.origin,
   scope: 'openid profile email',
   userStore: new WebStorageStateStore({ store: window.localStorage }),
-  // Nettoie les paramètres de callback de l'URL après connexion.
+  // Strips the callback parameters from the URL after sign-in.
   onSigninCallback: () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   },

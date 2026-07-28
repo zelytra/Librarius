@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 
-// La barre du bas est masquée sur les écrans « plein écran » (détail, réglages).
+// The bottom bar is hidden on "full screen" screens (detail, settings).
 const HIDDEN_NAV_PREFIXES = ['/detail', '/settings'];
 
 export function AppShell() {

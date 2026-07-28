@@ -25,24 +25,24 @@ async function search(term = 'fourth wing') {
 describe('DiscoverPage', () => {
   beforeEach(resetAuth);
 
-  test('invite à lancer une recherche au premier affichage', async () => {
+  test('invites the user to start a search on first render', async () => {
     renderWithProviders(<DiscoverPage />);
 
     expect(await screen.findByText(/Lancez une recherche/)).toBeInTheDocument();
   });
 
-  test('affiche les résultats du catalogue', async () => {
+  test('renders the catalog results', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);
 
     await search();
 
-    // Le titre est rendu deux fois : dans la fiche, et sur la couverture de repli.
+    // The title is rendered twice: in the card, and on the fallback cover.
     expect((await screen.findAllByText('Fourth Wing')).length).toBeGreaterThan(0);
     expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
   });
 
-  test('ajoute un résultat à la collection', async () => {
+  test('adds a result to the collection', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);
 
@@ -52,7 +52,7 @@ describe('DiscoverPage', () => {
     expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
   });
 
-  test('ajoute un résultat aux souhaits', async () => {
+  test('adds a result to the wishlist', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);
 
@@ -62,7 +62,7 @@ describe('DiscoverPage', () => {
     expect(await screen.findByText('✓ Ajouté aux souhaits')).toBeInTheDocument();
   });
 
-  test('signale une recherche en échec', async () => {
+  test('signals a failed search', async () => {
     searchReturns([], 500);
     renderWithProviders(<DiscoverPage />);
 
@@ -71,7 +71,7 @@ describe('DiscoverPage', () => {
     expect(await screen.findByText(/Erreur 500/)).toBeInTheDocument();
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<DiscoverPage />);
 

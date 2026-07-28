@@ -1,6 +1,6 @@
 import { useAuth } from 'react-oidc-context';
 
-/** Accès pratique à l'état d'auth + aux options fetch (jeton) pour l'API. */
+/** Convenient access to the auth state plus the fetch options (token) for the API. */
 export function useApiAuth() {
   const auth = useAuth();
   const token = auth.user?.access_token;

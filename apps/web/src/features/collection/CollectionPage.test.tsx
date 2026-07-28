@@ -20,18 +20,18 @@ function libraryReturns(items: unknown[]) {
 describe('CollectionPage', () => {
   beforeEach(resetAuth);
 
-  test('affiche les titres de la collection', async () => {
+  test('renders the collection titles', async () => {
     libraryReturns([ROMAN]);
     renderWithProviders(<CollectionPage />);
 
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
   });
 
-  test('ne montre que la nature sélectionnée et bascule sur la mangathèque', async () => {
+  test('shows only the selected kind and switches to the manga shelf', async () => {
     libraryReturns([ROMAN, MANGA]);
     renderWithProviders(<CollectionPage />);
 
-    // Vue « Bibliothèque » par défaut : le manga est masqué.
+    // Default "Bibliothèque" view: the manga is hidden.
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
     expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument();
 
@@ -41,14 +41,14 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
   });
 
-  test('compte les titres affichés', async () => {
+  test('counts the displayed titles', async () => {
     libraryReturns([ROMAN, libraryItem({ id: 'roman-2', book: { kind: 'BOOK', title: 'La Peur du sage' } })]);
     renderWithProviders(<CollectionPage />);
 
     expect(await screen.findByText('2 titres')).toBeInTheDocument();
   });
 
-  test('filtre par rang', async () => {
+  test('filters by rank', async () => {
     libraryReturns([
       libraryItem({ id: 'or-1', rankCode: 'or', book: { kind: 'BOOK', title: 'Titre doré' } }),
       libraryItem({ id: 'sans', book: { kind: 'BOOK', title: 'Titre sans rang' } }),
@@ -63,7 +63,7 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Titre sans rang')).not.toBeInTheDocument();
   });
 
-  test('retirer un titre le fait disparaître de la liste', async () => {
+  test('removing a title drops it from the list', async () => {
     libraryReturns([ROMAN]);
     renderWithProviders(<CollectionPage />);
 
@@ -73,7 +73,7 @@ describe('CollectionPage', () => {
     await waitFor(() => expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument());
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<CollectionPage />);
 

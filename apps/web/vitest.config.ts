@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-// Configuration de test séparée pour éviter de charger le plugin PWA pendant les tests.
+// Separate test configuration, to avoid loading the PWA plugin during the tests.
 export default defineConfig({
   plugins: [react()],
   test: {

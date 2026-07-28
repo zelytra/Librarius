@@ -16,7 +16,7 @@ function libraryReturns(items: unknown[]) {
 describe('HomePage', () => {
   beforeEach(resetAuth);
 
-  test('affiche les compteurs de la bibliothèque', async () => {
+  test('renders the library counters', async () => {
     server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ read: 12, reading: 2, toRead: 34 }))));
     renderWithProviders(<HomePage />);
 
@@ -25,7 +25,7 @@ describe('HomePage', () => {
     expect(screen.getByText('à lire')).toBeInTheDocument();
   });
 
-  test('propose de reprendre les lectures en cours', async () => {
+  test('offers to resume the books being read', async () => {
     libraryReturns([libraryItem({ id: 'en-cours', status: 'READING' })]);
     renderWithProviders(<HomePage />);
 
@@ -33,7 +33,7 @@ describe('HomePage', () => {
     expect(screen.getByText('1 en cours')).toBeInTheDocument();
   });
 
-  test('masque la section de reprise sans lecture en cours', async () => {
+  test('hides the resume section when nothing is being read', async () => {
     libraryReturns([libraryItem({ status: 'READ' })]);
     renderWithProviders(<HomePage />);
 
@@ -41,7 +41,7 @@ describe('HomePage', () => {
     expect(screen.queryByText('Reprendre la lecture')).not.toBeInTheDocument();
   });
 
-  test('annonce les prochaines sorties comme indicatives', async () => {
+  test('announces upcoming releases as indicative', async () => {
     server.use(
       http.get('*/api/catalog/upcoming', () =>
         HttpResponse.json([catalogResult({ title: 'Berserk 43', releaseDate: '2026-09-01' })])),
@@ -52,14 +52,14 @@ describe('HomePage', () => {
     expect(screen.getByText(/Dates indicatives/)).toBeInTheDocument();
   });
 
-  test('renvoie vers Découvrir quand la bibliothèque est vide', async () => {
+  test('points to Discover when the library is empty', async () => {
     libraryReturns([]);
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText(/Ta bibliothèque est vide/)).toBeInTheDocument();
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<HomePage />);
 

@@ -3,7 +3,7 @@ import { useApiAuth } from './api';
 import { Button } from './ui/primitives';
 import { Icon } from './ui/Icon';
 
-/** Affiche le contenu si l'utilisateur est connecté, sinon une invite de connexion. */
+/** Renders the content when the user is signed in, otherwise a sign-in prompt. */
 export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: string }) {
   const { authed, loading, login } = useApiAuth();
 

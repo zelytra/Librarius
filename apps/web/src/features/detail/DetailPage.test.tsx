@@ -23,18 +23,18 @@ function renderDetail(id = 'item-1') {
 describe('DetailPage', () => {
   beforeEach(resetAuth);
 
-  test('affiche la fiche du titre', async () => {
+  test('renders the title details', async () => {
     libraryReturns([ITEM]);
     renderDetail();
 
-    // Le titre apparaît deux fois : en en-tête, et sur la couverture de repli.
+    // The title shows up twice: in the header, and on the fallback cover.
     expect(await screen.findByRole('heading', { name: 'Le Nom du vent' })).toBeInTheDocument();
     expect(screen.getByText('Patrick Rothfuss')).toBeInTheDocument();
     expect(screen.getByText('720')).toBeInTheDocument();
     expect(screen.getByText('Chronique du tueur de roi')).toBeInTheDocument();
   });
 
-  test('propose les trois rangs', async () => {
+  test('offers the three ranks', async () => {
     libraryReturns([ITEM]);
     renderDetail();
 
@@ -43,18 +43,18 @@ describe('DetailPage', () => {
     expect(screen.getByText('Bronze')).toBeInTheDocument();
   });
 
-  test('attribuer un rang le reflète immédiatement', async () => {
+  test('assigning a rank is reflected immediately', async () => {
     libraryReturns([ITEM]);
     server.use(http.put('*/api/library/:id/rank', () => HttpResponse.json({ id: 'item-1', rankCode: 'or' })));
     renderDetail();
 
     await userEvent.click(await screen.findByText('Or'));
 
-    // Le bouton passe à l'état sélectionné : la bordure d'accent est appliquée.
+    // The button switches to the selected state: the accent border is applied.
     expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' });
   });
 
-  test('marquer comme lu bascule le libellé', async () => {
+  test('marking as read toggles the label', async () => {
     libraryReturns([ITEM]);
     renderDetail();
 
@@ -63,14 +63,14 @@ describe('DetailPage', () => {
     expect(await screen.findByText('✓ Lu')).toBeInTheDocument();
   });
 
-  test('signale un titre introuvable', async () => {
+  test('signals a title that cannot be found', async () => {
     libraryReturns([]);
     renderDetail('inconnu');
 
     expect(await screen.findByText('Titre introuvable.')).toBeInTheDocument();
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderDetail();
 

@@ -20,11 +20,11 @@ function statsReturns(payload: StatsDto | null, status = 200) {
 describe('StatsPage', () => {
   beforeEach(resetAuth);
 
-  test('affiche les compteurs de lecture', async () => {
+  test('renders the reading counters', async () => {
     statsReturns(stats());
     renderWithProviders(<StatsPage />);
 
-    // « 12 » figure aussi dans la jauge d'objectif : on vérifie la carte, pas la page.
+    // "12" also appears in the goal gauge: assert on the card, not on the whole page.
     const readCard = (await screen.findByText('Livres lus')).parentElement;
     expect(readCard).toHaveTextContent('12');
 
@@ -33,7 +33,7 @@ describe('StatsPage', () => {
     expect(screen.getByText('En cours').parentElement).toHaveTextContent('2');
   });
 
-  test('classe les genres favoris', async () => {
+  test('ranks the favorite genres', async () => {
     statsReturns(stats());
     renderWithProviders(<StatsPage />);
 
@@ -41,28 +41,28 @@ describe('StatsPage', () => {
     expect(screen.getByText('Science-fiction')).toBeInTheDocument();
   });
 
-  test('renvoie vers les réglages quand aucun objectif n’est défini', async () => {
+  test('points to the settings when no goal is set', async () => {
     statsReturns(stats({ goalTarget: undefined }));
     renderWithProviders(<StatsPage />);
 
     expect(await screen.findByText(/Définis un objectif de lecture annuel/)).toBeInTheDocument();
   });
 
-  test('affiche le reste à lire quand un objectif est défini', async () => {
+  test('renders how many titles remain when a goal is set', async () => {
     statsReturns(stats({ goalTarget: 20, goalCurrent: 12 }));
     renderWithProviders(<StatsPage />);
 
     expect(await screen.findByText(/Plus que 8 titre\(s\)/)).toBeInTheDocument();
   });
 
-  test('signale une indisponibilité plutôt qu’un écran vide', async () => {
+  test('signals an outage rather than showing an empty screen', async () => {
     statsReturns(null, 500);
     renderWithProviders(<StatsPage />);
 
     expect(await screen.findByText('Statistiques indisponibles.')).toBeInTheDocument();
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<StatsPage />);
 
