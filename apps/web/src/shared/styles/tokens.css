@@ -1,7 +1,10 @@
-/* ── Jetons de design (thèmes) ────────────────────────────────────────────────
-   Esthétique « papier » de la maquette : serif Newsreader pour les titres,
-   DM Sans pour le texte, accent vert sauge. Quatre thèmes commutables via
-   l'attribut data-theme sur <html>. */
+/* ── Design tokens (themes) ───────────────────────────────────────────────────
+   The mockup's "paper" look: Newsreader serif for headings, DM Sans for body
+   copy, sage green accent. Four themes, switched through the data-theme
+   attribute on <html>.
+
+   Only the palette below is theme-dependent. Typography, radii, shadows and
+   the fixed decorative tints are declared once at the end of this file. */
 
 :root,
 [data-theme='creme'] {
@@ -71,4 +74,117 @@
   --chip: #443f38;
   --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
   --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.7);
+}
+
+:root {
+  /* ── Typography ───────────────────────────────────────────────────────────
+     The type scale mirrors the mockup one for one, half-pixel sizes included,
+     so that moving the screens to CSS Modules changes nothing on screen.
+     Collapsing it into a shorter scale is a design decision, not a refactor:
+     it is left for whoever owns the visual language. */
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-icon: 'Material Symbols Rounded';
+
+  --fs-8: 8px;
+  --fs-9: 9px;
+  --fs-10: 10px;
+  --fs-10-5: 10.5px;
+  --fs-11: 11px;
+  --fs-11-5: 11.5px;
+  --fs-12: 12px;
+  --fs-12-5: 12.5px;
+  --fs-13: 13px;
+  --fs-13-5: 13.5px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-15-5: 15.5px;
+  --fs-16: 16px;
+  --fs-17: 17px;
+  --fs-18: 18px;
+  --fs-19: 19px;
+  --fs-22: 22px;
+  --fs-24: 24px;
+  --fs-25: 25px;
+  --fs-26: 26px;
+  --fs-27: 27px;
+
+  /* ── Screen layout ──────────────────────────────────────────────────────── */
+  --screen-pad-x: 22px;
+  --screen-pad-top: 14px;
+  --screen-pad-bottom: 40px;
+  /* Horizontal shelves bleed past the screen padding to reach the edge. */
+  --screen-bleed-x: -22px;
+  --app-max-width: 440px;
+  --app-max-height: 900px;
+
+  /* ── Radii ────────────────────────────────────────────────────────────────
+     Named after what they round, not after their value. */
+  --radius-bar: 6px;
+  --radius-thumb: 8px;
+  --radius-tile: 9px;
+  --radius-cover: 10px;
+  --radius-segment: 11px;
+  --radius-control: 12px;
+  --radius-field: 14px;
+  --radius-button: 15px;
+  --radius-card: 16px;
+  --radius-panel: 18px;
+  --radius-panel-lg: 20px;
+  --radius-badge: 20px;
+  --radius-chip: 30px;
+  --radius-round: 50%;
+
+  /* ── Shadows ────────────────────────────────────────────────────────────── */
+  --shadow-cover: 0 8px 18px -8px rgba(74, 64, 52, 0.4);
+  --shadow-cover-sm: 0 7px 16px -8px rgba(74, 64, 52, 0.4);
+  --shadow-thumb: 0 3px 8px -3px rgba(0, 0, 0, 0.25);
+  --shadow-badge: 0 2px 6px rgba(74, 64, 52, 0.3);
+  --shadow-segment: 0 3px 8px -4px rgba(74, 64, 52, 0.35);
+  --shadow-accent: 0 8px 18px -8px rgba(122, 143, 115, 0.7);
+  --shadow-accent-sm: 0 4px 12px -3px rgba(122, 143, 115, 0.5);
+  --shadow-frame: 0 30px 80px -20px rgba(74, 64, 52, 0.35);
+  --shadow-swatch: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* ── Covers ───────────────────────────────────────────────────────────────
+     A generated cover is a fixed pastel block, so what is printed on it does
+     not follow the theme either. */
+  --cover-ink: #352f28;
+  --cover-tag: rgba(58, 52, 44, 0.5);
+  --cover-spine: rgba(0, 0, 0, 0.07);
+  --cover-spine-strong: rgba(0, 0, 0, 0.08);
+
+  /* ── Overlays ─────────────────────────────────────────────────────────────
+     Translucent white panels laid over a cover or a coloured header. */
+  --overlay: rgba(255, 255, 255, 0.7);
+  --overlay-strong: rgba(255, 255, 255, 0.85);
+  --overlay-ink: #3a342c;
+
+  /* Text and icons drawn on an accent-coloured surface. */
+  --on-accent: #fff;
+
+  /* ── Decorative tints ─────────────────────────────────────────────────────
+     The pastel blocks of the mockup (mini counters, stat tiles, priority
+     badges). Deliberately theme-independent: they carry their own ink, so a
+     dark-theme pass only has to override this block. */
+  --tint-sage: #e6ece0;
+  --tint-sage-ink: #7d8f73;
+  /* The rose and clay tints already exist in the palette above: alias them
+     rather than repeating the values. */
+  --tint-rose: var(--rose-soft);
+  --tint-rose-ink: var(--rose);
+  --tint-blush: #f4e4e1;
+  --tint-sand: #efe9e0;
+  --tint-clay: #f1ebe0;
+  --tint-clay-ink: var(--bronze);
+  --tint-violet: #ece6f0;
+  --tint-violet-ink: #8c7da0;
+  --tint-violet-muted: #9a8fa6;
+
+  /* ── Gradients ────────────────────────────────────────────────────────── */
+  --gradient-avatar: linear-gradient(135deg, #c9b8d4, #9aab92);
+  --gradient-genre-1: linear-gradient(90deg, #9aab92, #bccab2);
+  --gradient-genre-2: linear-gradient(90deg, #b0857f, #ddb9b3);
+  --gradient-genre-3: linear-gradient(90deg, #8c7da0, #cabdd6);
+  --gradient-genre-4: linear-gradient(90deg, #c08a5a, #dccfae);
 }

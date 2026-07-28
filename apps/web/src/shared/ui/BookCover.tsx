@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import styles from './BookCover.module.css';
 
 interface BookCoverProps {
   color: string;
@@ -14,8 +15,9 @@ interface BookCoverProps {
 }
 
 /**
- * Book / manga cover. When no image is available, renders a stylized colored "spine"
- * (tag on top, title at the bottom) faithful to the mockup.
+ * Book / manga cover for a catalogue result, whose colour is supplied by the
+ * caller. Titles already in the library use `<Cover>`, which derives its colour
+ * from the title itself.
  */
 export function BookCover({
   color,
@@ -31,46 +33,22 @@ export function BookCover({
   return (
     <div
       onClick={onClick}
+      className={[styles.cover, onClick && styles.clickable, imageUrl && styles.withImage]
+        .filter(Boolean)
+        .join(' ')}
       style={{
+        // Size, radius and background are set by the caller for each usage.
         width,
         height,
         borderRadius: radius,
         background: imageUrl ? `center / cover no-repeat url(${imageUrl})` : color,
-        borderLeft: '3px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 8px 18px -8px rgba(74,64,52,0.4)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: imageUrl ? 0 : '12px 11px',
-        cursor: onClick ? 'pointer' : undefined,
-        overflow: 'hidden',
-        flex: '0 0 auto',
         ...style,
       }}
     >
       {!imageUrl && (
         <>
-          <span
-            style={{
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              color: 'rgba(58,52,44,0.5)',
-            }}
-          >
-            {tag}
-          </span>
-          <span
-            style={{
-              fontFamily: "'Newsreader', serif",
-              fontSize: 14,
-              fontWeight: 600,
-              lineHeight: 1.1,
-              color: '#352f28',
-            }}
-          >
-            {title}
-          </span>
+          <span className={styles.tag}>{tag}</span>
+          <span className={styles.title}>{title}</span>
         </>
       )}
     </div>

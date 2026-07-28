@@ -1,0 +1,18 @@
+.loading {
+  color: var(--muted);
+  font-size: var(--fs-13);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.gate {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--muted);
+}
+
+.prompt {
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  margin: 12px 0 18px;
+}

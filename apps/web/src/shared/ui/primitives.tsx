@@ -1,26 +1,42 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import { Icon } from './Icon';
+import styles from './primitives.module.css';
+
+/** Joins the class names that are actually set. */
+function cx(...names: (string | false | undefined)[]): string {
+  return names.filter(Boolean).join(' ');
+}
+
+/** Padded page container — every screen sits in one. */
+export function Screen({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cx(styles.screen, className)}>{children}</div>;
+}
+
+/**
+ * Screen heading. The screen supplies its own bottom margin through
+ * `className`, since it differs from one to the next.
+ */
+export function ScreenTitle({ children, className }: { children: ReactNode; className?: string }) {
+  return <h2 className={cx(styles.screenTitle, className)}>{children}</h2>;
+}
 
 /** Rounded surface card. */
 export function Card({
   children,
+  className,
   style,
   onClick,
 }: {
   children: ReactNode;
+  className?: string;
   style?: CSSProperties;
   onClick?: () => void;
 }) {
   return (
     <div
       onClick={onClick}
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--line)',
-        borderRadius: 18,
-        boxShadow: 'var(--shadow)',
-        cursor: onClick ? 'pointer' : undefined,
-        ...style,
-      }}
+      className={cx(styles.card, onClick && styles.clickable, className)}
+      style={style}
     >
       {children}
     </div>
@@ -29,41 +45,41 @@ export function Card({
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
+/**
+ * `lg` and `block` are the two stacked calls to action on Detail, `compact`
+ * the button glued to the import field.
+ */
+type ButtonSize = 'default' | 'lg' | 'block' | 'compact';
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
+const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
+  primary: styles.primary,
+  secondary: styles.secondary,
+  ghost: styles.ghost,
+};
+
+const BUTTON_SIZES: Record<ButtonSize, string> = {
+  default: '',
+  lg: styles.sizeLg,
+  block: styles.sizeBlock,
+  compact: styles.sizeCompact,
+};
+
 /** Primary / secondary / ghost button. */
-export function Button({ variant = 'primary', style, children, ...rest }: ButtonProps) {
-  const variants: Record<ButtonVariant, CSSProperties> = {
-    primary: {
-      background: 'var(--accent)',
-      color: '#fff',
-      border: 'none',
-      boxShadow: '0 8px 18px -8px rgba(122,143,115,0.7)',
-    },
-    secondary: {
-      background: 'var(--surface)',
-      color: 'var(--ink-soft)',
-      border: '1.5px solid var(--line)',
-    },
-    ghost: { background: 'transparent', color: 'var(--ink-soft)', border: 'none' },
-  };
+export function Button({
+  variant = 'primary',
+  size = 'default',
+  className,
+  children,
+  ...rest
+}: ButtonProps) {
   return (
     <button
-      style={{
-        borderRadius: 15,
-        padding: '14px 18px',
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: 'pointer',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        ...variants[variant],
-        ...style,
-      }}
+      className={cx(styles.button, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className)}
       {...rest}
     >
       {children}
@@ -86,27 +102,10 @@ export function Chip({
   return (
     <button
       onClick={onClick}
-      style={{
-        flex: '0 0 auto',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '8px 14px',
-        borderRadius: 30,
-        cursor: onClick ? 'pointer' : 'default',
-        fontSize: 13,
-        fontWeight: 600,
-        fontFamily: 'inherit',
-        border: selected ? '1.5px solid var(--accent)' : '1.5px solid var(--line)',
-        background: selected ? 'var(--accent-soft)' : 'var(--surface)',
-        color: selected ? 'var(--accent-deep)' : 'var(--ink-soft)',
-      }}
+      className={cx(styles.chip, onClick && styles.chipClickable, selected && styles.chipSelected)}
     >
-      {dotColor && (
-        <span
-          style={{ width: 9, height: 9, borderRadius: '50%', background: dotColor, flex: '0 0 auto' }}
-        />
-      )}
+      {/* The dot carries the rank colour, which only the caller knows. */}
+      {dotColor && <span className={styles.chipDot} style={{ background: dotColor }} />}
       {children}
     </button>
   );
@@ -123,31 +122,16 @@ export function Segmented<T extends string>({
   onChange: (id: T) => void;
 }) {
   return (
-    <div style={{ display: 'flex', background: 'var(--chip)', borderRadius: 14, padding: 4 }}>
-      {options.map((opt) => {
-        const on = opt.id === value;
-        return (
-          <button
-            key={opt.id}
-            onClick={() => onChange(opt.id)}
-            style={{
-              flex: 1,
-              border: 'none',
-              cursor: 'pointer',
-              padding: '10px 0',
-              borderRadius: 11,
-              fontSize: 13.5,
-              fontWeight: 600,
-              fontFamily: 'inherit',
-              background: on ? 'var(--surface)' : 'transparent',
-              color: on ? 'var(--ink)' : 'var(--muted)',
-              boxShadow: on ? '0 3px 8px -4px rgba(74,64,52,0.35)' : 'none',
-            }}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+    <div className={styles.segmented}>
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          onClick={() => onChange(opt.id)}
+          className={cx(styles.segment, opt.id === value && styles.segmentOn)}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -155,16 +139,51 @@ export function Segmented<T extends string>({
 /** Section header with an optional action on the right. */
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: 'space-between',
-        marginBottom: 12,
-      }}
-    >
-      <h3 style={{ fontSize: 18 }}>{title}</h3>
-      {action && <span style={{ fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>{action}</span>}
+    <div className={styles.sectionHeader}>
+      <h3 className={styles.sectionTitle}>{title}</h3>
+      {action && <span className={styles.sectionAction}>{action}</span>}
     </div>
   );
+}
+
+/**
+ * "Nothing here yet" block: an icon and a sentence. The screen passes the
+ * padding it wants through `className`.
+ */
+export function EmptyState({
+  icon,
+  iconSize = 42,
+  className,
+  children,
+}: {
+  icon: string;
+  iconSize?: number;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={cx(styles.emptyState, className)}>
+      <Icon name={icon} size={iconSize} />
+      <p className={styles.emptyStateText}>{children}</p>
+    </div>
+  );
+}
+
+type StatusTone = 'muted' | 'faint' | 'error';
+
+const STATUS_TONES: Record<StatusTone, string> = {
+  muted: styles.statusMuted,
+  faint: styles.statusFaint,
+  error: styles.statusError,
+};
+
+/** One-line status paragraph: loading, error, or an invitation to act. */
+export function StatusText({
+  tone = 'muted',
+  children,
+}: {
+  tone?: StatusTone;
+  children: ReactNode;
+}) {
+  return <p className={cx(styles.status, STATUS_TONES[tone])}>{children}</p>;
 }
