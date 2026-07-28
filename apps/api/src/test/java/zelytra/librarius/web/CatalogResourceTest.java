@@ -51,9 +51,17 @@ class CatalogResourceTest {
                 new CatalogResult("BOOK", "Dune", "Frank Herbert", 1965, null, null,
                         null, "Pocket", "fre", null, "openlibrary", null)));
 
+        // Through queryParam rather than a hand-written query string: RestAssured re-encodes
+        // what it is handed, so a "Frank+Herbert" written inline reaches the resource as a
+        // literal plus and the criterion no longer matches.
         given().auth().oauth2(keycloak.getAccessToken("alice"))
-                .when().get("/api/catalog/search?q=dune&author=Frank+Herbert&year=1965"
-                        + "&language=fr&publisher=Pocket&kind=BOOK")
+                .queryParam("q", "dune")
+                .queryParam("author", "Frank Herbert")
+                .queryParam("year", 1965)
+                .queryParam("language", "fr")
+                .queryParam("publisher", "Pocket")
+                .queryParam("kind", "BOOK")
+                .when().get("/api/catalog/search")
                 .then().statusCode(200)
                 .body("[0].title", is("Dune"));
     }
@@ -75,8 +83,11 @@ class CatalogResourceTest {
 
     @Test
     void searchWithoutAnyCriterionAnswersAnEmptyList() {
+        // A whitespace-only field is no search at all: it must not reach a provider, and it
+        // must not be charged to the caller's quota either.
         given().auth().oauth2(keycloak.getAccessToken("alice"))
-                .when().get("/api/catalog/search?q=+")
+                .queryParam("q", "   ")
+                .when().get("/api/catalog/search")
                 .then().statusCode(200)
                 .body("size()", is(0));
     }

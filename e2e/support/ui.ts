@@ -19,9 +19,15 @@ export function figure(page: Page, label: string): Locator {
   return page.locator(`xpath=//div[normalize-space(text())="${label}"]/preceding-sibling::div[1]`);
 }
 
-/** Runs a catalog search on the Discover screen and waits for the results. */
+/**
+ * Runs a catalog search on the Discover screen and waits for the results.
+ *
+ * The placeholder is matched on its opening words rather than in full: it lists what can be
+ * searched, so it grows with every criterion the screen learns, and pinning the whole
+ * sentence made four journeys fail on a wording change that broke nothing.
+ */
 export async function searchCatalog(page: Page, query: string): Promise<void> {
-  await page.getByPlaceholder('Rechercher un titre, un auteur…').fill(query);
+  await page.getByPlaceholder(/^Rechercher un titre/).fill(query);
   await page.getByRole('button', { name: 'Rechercher' }).click();
   await page.getByRole('button', { name: 'Collection', exact: true }).first().waitFor();
 }
