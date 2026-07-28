@@ -116,6 +116,29 @@ Si de la documentation a changé (workflow `docs` : markdownlint + liens interne
 npx markdownlint-cli2@0.23.2
 ```
 
+### Poste sans JDK ni Docker
+
+Les tests de l'API exigent Docker (Dev Services démarre PostgreSQL et Keycloak). Sur un
+poste Windows d'entreprise qui n'a ni JDK ni Docker, passer par WSL — où Docker
+fonctionne — et exécuter Maven dans un conteneur :
+
+```bash
+wsl -d Ubuntu -- bash -lc 'docker run --rm --network host \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /mnt/c/Users/<utilisateur>/WebstormProjects/Librarius:/workspace \
+  -v librarius-m2:/root/.m2 \
+  -e TESTCONTAINERS_RYUK_DISABLED=true \
+  -w /workspace/apps/api \
+  maven:3.9-eclipse-temurin-21 mvn -B verify'
+```
+
+Le volume nommé `librarius-m2` conserve le cache Maven d'une exécution à l'autre : le
+premier lancement télécharge tout et prend plusieurs minutes, les suivants sont rapides.
+
+Côté front, Node et pnpm fonctionnent nativement. Attention toutefois : en Node ≥ 22,
+le `localStorage` natif prend le pas sur celui de jsdom — `src/test/setup.ts` le
+neutralise, ne pas retirer ce garde-fou.
+
 **Changement d'UI** : le vérifier dans un vrai navigateur (`pnpm web:dev`), pas
 seulement en test unitaire. Fournir la preuve dans la PR (texte rendu, styles
 calculés, absence d'erreur console).
