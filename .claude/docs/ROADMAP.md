@@ -26,9 +26,10 @@ An agent picking the project up with no more precise instruction takes, in this 
    any credential, but the exposed passwords are still valid: **rotating them on the
    cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`. Nothing an agent can do
    alone, and nothing else in this list matters as much.
-2. **[#60](https://github.com/zelytra/Librarius/issues/60)** — the rules exist and nothing
-   evaluates them. [#85](https://github.com/zelytra/Librarius/issues/85) showed what that
-   costs: deployment stayed broken for four weeks and was found by hand.
+2. **[#60](https://github.com/zelytra/Librarius/issues/60)** — the rules are evaluated now,
+   on the cluster and from outside it, but the in-cluster Alertmanager still notifies
+   nothing: **create the webhook Secret** (one `kubectl` command, `docs/DEPLOYMENT.md`
+   § "Alerting") and add the two `--set` lines to `cd.yml`. Nothing an agent can do alone.
 3. **[#59](https://github.com/zelytra/Librarius/issues/59)** — the backup CronJob is
    shipped but off, and no restore has ever been run against the cluster.
 
@@ -111,7 +112,7 @@ alert received when something breaks, deployment without downtime.
 | [#85](https://github.com/zelytra/Librarius/issues/85) | ✅ CD deployment fails: Kubernetes credentials rejected — settled by the move to the `librarius` namespace, eight green deployments since | — |
 | [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets — chart done, rotation pending on the cluster | — |
 | [#59](https://github.com/zelytra/Librarius/issues/59) | 🔴 Automated PostgreSQL backups with a tested restore procedure — CronJob and procedure shipped (off by default), the restore itself is still to be exercised on the cluster | — |
-| [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting — rules and runbooks shipped; needs a Prometheus, kube-state-metrics and an Alertmanager on the cluster | — |
+| [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting — the chart deploys Prometheus + Alertmanager, an `uptime` workflow opens an issue when the public URL stops answering, and three rules have been fired for real by `infra/alerting/fire-drill.sh`. Left: the webhook Secret so the cluster notifies too, kube-state-metrics for the pod and backup rules, and 7 quiet days | — |
 | [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting on catalog endpoints | — |
 | [#62](https://github.com/zelytra/Librarius/issues/62) | Restrict Swagger UI and /q endpoints in production | — |
 | [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure — pipeline and documentation done, the rollback itself is still to be exercised on the cluster | — |

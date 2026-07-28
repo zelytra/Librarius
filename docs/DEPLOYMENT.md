@@ -742,38 +742,119 @@ gap is deliberate for a staging environment and has to be closed before producti
 
 ## 🔔 Alerting
 
-The alert rules live in `infra/prometheus/rules/librarius.rules.yml`. They are the answer to
-a simple failure: continuous deployment was broken for four weeks and nobody was told.
+Two independent paths, because they fail in different ways:
 
-**No Prometheus is deployed by the Helm chart today.** Prometheus and Grafana exist in
-`infra/` for the compose stack only, so on the cluster these rules are *delivered, not
-running*. What follows is what they need to become live.
+| | Where it runs | Sees | Notifies | Needs |
+|---|---|---|---|---|
+| **Prometheus + Alertmanager** | in the `librarius` namespace, deployed by the chart | the API's own metrics: unreachable, 5xx share, p95 latency | a webhook | a Secret holding the URL |
+| **`uptime` workflow** | a GitHub runner, every 15 min | the public URL, the API through the ingress, the TLS certificate | a GitHub issue | **nothing** |
 
-### Loading them
+The second one is the one that works out of the box, and it is deliberately the one that
+watches from outside: a Prometheus inside the cluster cannot report that the cluster is
+gone, and its Alertmanager cannot notify through a credential that does not exist yet. The
+first one sees what the second cannot — a 5xx rate, a latency regression, an API that
+answers the ingress but has lost its database.
 
-Into the compose production stack — already wired, `infra/compose.prod.yml` mounts
-`./prometheus/rules` and `prometheus.prod.yml` loads `/etc/prometheus/rules/*.yml`:
+Both exist because of the same failure: continuous deployment was broken for four weeks
+and was found by hand ([#85](https://github.com/zelytra/Librarius/issues/85)).
+
+### What the chart deploys
+
+`monitoring.enabled` is **true** by default: two pods, no CRD, no cluster-scoped RBAC.
+
+| | |
+|---|---|
+| Prometheus | `prom/prometheus:v2.53.0`, scrapes `librarius-api:8080/q/metrics` and itself, every 30 s |
+| Rules | `infra/helm/librarius/files/librarius.rules.yml`, mounted from a ConfigMap the chart renders |
+| Alertmanager | `prom/alertmanager:v0.27.0`, grouping on `alertname`, `critical` repeating every 4 h and `warning` every 24 h |
+| Reachable at | nothing routes to them — `kubectl -n librarius port-forward svc/librarius-prometheus 9090:9090` |
+
+Neither is exposed through the ingress, for the same reason `/q` is not.
+
+**A rule change restarts the pod.** The pod template carries a checksum of the values and
+of the rules file, so editing a rule and running `helm upgrade` reloads it. Without that,
+the ConfigMap would change and the running Prometheus would keep the old rules — edited in
+git, absent from the process, which is precisely the kind of silence this feature exists
+to remove.
+
+#### Why not kube-prometheus-stack
+
+Measured on chart 62.7.0, rendered with `helm template`:
+
+| | kube-prometheus-stack | what the chart ships |
+|---|---|---|
+| Objects | **125** (640 KB of manifests) | **6** — two ConfigMaps, two Deployments, two Services |
+| CRDs | **10**, 3.9 MB | none |
+| Cluster-scoped objects | 5 ClusterRoles/bindings, 2 admission webhooks | none |
+| Resident pods | **6** — operator, Prometheus, Alertmanager, Grafana, kube-state-metrics, a node-exporter DaemonSet | **2** |
+| Resource requests declared | **none at all** — every pod lands BestEffort | measured, below |
+
+The last row is what settles it on this node. `zeserver` has 4 CPU allocatable and its
+requests were already 94% committed; six pods that request nothing are six pods the
+scheduler cannot reason about and the kubelet evicts first under pressure. The operator and
+its CRDs buy `ServiceMonitor` objects and multi-tenant discovery, neither of which this
+single-namespace stack has any use for.
+
+#### What it costs the node
+
+Measured with `docker stats` while the fire drill below was running, two targets scraped
+every 30 s and ten rules evaluated:
+
+| | CPU at startup | CPU settled | Memory after 11 min | Requested |
+|---|---|---|---|---|
+| Prometheus | 2.5 m | under 1 m | 36 MiB | 20 m / 128 Mi |
+| Alertmanager | 16 m (boot and gossip) | 2 m | 20 MiB | 10 m / 48 Mi |
+
+Requests sit just above the settled figure rather than at a comfortable round number,
+because CPU requests are the scarce resource here (§ "Deploying without downtime") and a
+request is a scheduling floor, not a cap — the boot burst is covered by the limit:
+
+| | CPU requests | Free of 4000 m |
+|---|---|---|
+| Before this change, steady | 3775 m | 225 m |
+| Before this change, rolling web + api | 3900 m | 100 m |
+| With monitoring, steady | 3805 m | 195 m |
+| With monitoring, rolling web + api | 3930 m | **70 m** |
+
+Both monitoring pods use the `Recreate` strategy, so they never surge and never appear
+twice in that arithmetic. If the node ever needs the 30 m back:
+
+```bash
+helm -n librarius upgrade ... --set monitoring.enabled=false
+```
+
+The `uptime` workflow keeps running: it depends on nothing in the cluster.
+
+#### Retention, and why there is no PVC
+
+`emptyDir`, 24 h, capped at 384 MB of TSDB and 512 Mi of volume. Alerting reads at most the
+last ten minutes — the longest window in any rule — so a Prometheus that lost its history
+is firing again within two evaluation cycles. A `local-path` PVC would pin the pod to the
+node and add a volume worth backing up that holds nothing anybody would miss. Raise
+`monitoring.prometheus.retention` and give it a PVC the day a Grafana on the cluster reads
+from it; until then history is a cost with no reader.
+
+Alertmanager's `emptyDir` holds silences and deduplication state. Losing it on a restart
+re-sends a notification, which is the harmless direction to fail in.
+
+### Loading the rules elsewhere
+
+Into the compose production stack — already wired, `infra/compose.prod.yml` mounts the
+chart's copy of the rules and `prometheus.prod.yml` loads `/etc/prometheus/rules/*.yml`:
 
 ```bash
 cd infra && docker compose -f compose.prod.yml up -d prometheus
 docker compose -f compose.prod.yml exec prometheus promtool check rules /etc/prometheus/rules/librarius.rules.yml
 ```
 
-Into a Prometheus running in Kubernetes, as a ConfigMap mounted on the rules directory:
-
-```bash
-kubectl -n librarius create configmap librarius-alert-rules \
-  --from-file=infra/prometheus/rules/librarius.rules.yml \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-Under the Prometheus Operator, the same file wrapped in a `PrometheusRule` object — the
+Under a Prometheus Operator, the same file wrapped in a `PrometheusRule` object — the
 `groups:` key is copied verbatim into `spec:`.
 
-Validate any change before applying it:
+Validate any change before applying it — this is also what the `alerting` workflow runs on
+every pull request, against the rendered ConfigMap rather than the source file:
 
 ```bash
-docker run --rm -v "$PWD/infra/prometheus/rules:/rules:ro" \
+docker run --rm -v "$PWD/infra/helm/librarius/files:/rules:ro" \
   --entrypoint promtool prom/prometheus:v2.53.0 check rules /rules/librarius.rules.yml
 ```
 
@@ -783,12 +864,28 @@ A rule whose metric is missing never fires: an incomplete monitoring stack goes 
 does not go noisy. That also means a rule can be silently useless — check this table before
 trusting a green dashboard.
 
-| Group | Requires | Missing today on the cluster |
+| Group | Requires | State on the cluster |
 |---|---|---|
-| `librarius-api` | the `librarius-api` scrape job on `/q/metrics` | Prometheus itself |
-| `librarius-cluster` | kubelet metrics + kube-state-metrics | both |
-| `librarius-tls` | cert-manager metrics, or a blackbox exporter | both |
-| `librarius-backup` | kube-state-metrics + `backup.enabled=true` | kube-state-metrics |
+| `librarius-api` | the `librarius-api` scrape job on `/q/metrics` | ✅ scraped by the chart's Prometheus |
+| `librarius-cluster` | kubelet metrics + kube-state-metrics | ❌ neither exporter is deployed |
+| `librarius-tls` | cert-manager metrics, or a blackbox exporter | ❌ — covered from outside by the `uptime` workflow instead |
+| `librarius-backup` | kube-state-metrics + `backup.enabled=true` | ❌ kube-state-metrics, and backups are off |
+
+Both missing exporters need **cluster-scoped RBAC** — a ClusterRole to read pods and volume
+stats across the cluster. The chart deliberately creates none: `cd.yml` deploys with a
+kubeconfig whose rights are not known to be cluster-admin, and a chart that suddenly needs
+a ClusterRole would fail every deployment rather than only the monitoring part of one.
+Adding kube-state-metrics is a deliberate, separate step:
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm -n librarius upgrade --install kube-state-metrics prometheus-community/kube-state-metrics \
+  --set resources.requests.cpu=10m --set resources.requests.memory=48Mi
+```
+
+then add its Service to `scrape_configs` in `templates/monitoring.yaml`. Do it only after
+checking the node has the headroom (`kubectl describe node zeserver | grep -A6 'Allocated
+resources'`).
 
 `LibrariusApiSlowResponses` reads `http_server_requests_seconds_bucket`. The Grafana
 dashboard already assumes those histogram buckets; if the API does not publish them, the
@@ -796,24 +893,135 @@ rule stays silent rather than firing wrongly.
 
 ### Notification channel
 
-Rules that fire into a UI nobody has open are not alerting. An Alertmanager is required, and
-it is **not shipped here**: its configuration file holds the webhook URL or the SMTP
-password in clear text, so it belongs in a Secret created by the maintainer, not in this
-repository.
+#### The one that works with no secret: a GitHub issue
 
-What has to be provided: a webhook URL (Slack, Discord, ntfy) *or* SMTP credentials and a
-recipient address. Then add the routing to Prometheus and point it at the Alertmanager:
+`.github/workflows/uptime.yml` runs `.github/scripts/uptime-probe.sh` against
+`https://librarius.zelytra.fr` every 15 minutes and, when it does not answer, **opens an
+issue** labelled `infra` / `P0` — which mails whoever watches the repository. A second
+failure comments on the same issue instead of opening another; the first success closes it.
+It authenticates with the run's own `GITHUB_TOKEN`, so there is nothing to create and
+nothing to rotate.
 
-```yaml
-# infra/prometheus/prometheus.prod.yml
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: ['alertmanager:9093']
+What it checks, and why each one:
+
+| Check | Expected | Why that answer |
+|---|---|---|
+| `GET /` | `200` | Traefik, TLS and the web pod are all standing |
+| `GET /api/me` | `401` | only the API answers 401 — `/q` is not routed and `/` catches everything else, so a request that reached nginx would come back `200` with `index.html` and look healthy |
+| TLS certificate | more than 15 days left | what a browser sees, which is not necessarily what cert-manager believes it renewed |
+
+Three attempts, 20 s apart, before anything is declared down: a rolling deployment is not
+an outage, and one unlucky sample must not open an issue. Run it by hand against any
+environment:
+
+```bash
+./.github/scripts/uptime-probe.sh https://librarius.zelytra.fr
 ```
 
-Send `critical` somewhere that interrupts and `warning` somewhere that does not; grouping on
-`alertname` keeps a restart loop to one message rather than one per evaluation.
+```text
+probe of https://librarius.zelytra.fr at 2026-07-28 21:44:07Z
+
+app  GET /                   HTTP 200           ok
+api  GET /api/me             HTTP 401           ok
+tls  certificate             89 days left       ok
+
+RESULT: ok
+```
+
+A failure is as legible, and exits non-zero — which is what opens the issue:
+
+```text
+app  GET /                   HTTP 200           ok
+api  GET /api/me             HTTP 404           FAIL (expected 401, 1 attempts)
+tls  certificate             56 days left       ok
+
+RESULT: 1 check(s) failed
+```
+
+Two limits worth knowing: GitHub queues scheduled workflows and drops them when runners are
+busy, so 15 minutes is a floor rather than a promise; and GitHub disables scheduled
+workflows on a repository with no activity for 60 days.
+
+#### The one that needs a Secret: the Alertmanager webhook
+
+Alertmanager is deployed and evaluating, and until a Secret exists its route points at a
+receiver that holds nothing — alerts are grouped and visible, and no notification leaves
+the cluster. **No URL appears in this repository**: a webhook URL is a credential, and
+Alertmanager reads it from a mounted file (`url_file`), the same rule the database and
+Keycloak passwords already follow.
+
+Pick a destination that costs nothing to create:
+
+| Destination | URL to use | `receiverType` |
+|---|---|---|
+| [ntfy.sh](https://ntfy.sh) | `https://ntfy.sh/<a topic name only you know>` | `webhook` |
+| Slack | an incoming webhook of the workspace | `slack` |
+| Discord | the channel webhook, **with `/slack` appended** — Discord accepts Slack-shaped payloads | `slack` |
+| Gotify, Mattermost, a bot of your own | its POST endpoint | `webhook` |
+
+Then, once:
+
+```bash
+kubectl -n librarius create secret generic librarius-alerting \
+  --from-literal=webhook-url='<the URL>'
+```
+
+and deploy with it — add the two `--set` lines to the `helm upgrade` step of `cd.yml`, or
+they are lost at the next deployment:
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set monitoring.alertmanager.existingSecret=librarius-alerting \
+  --set monitoring.alertmanager.receiverType=webhook \
+  --wait --timeout 8m
+```
+
+Check it arrived, without waiting for something to break — this posts a fake alert straight
+into Alertmanager, which routes it exactly as it would a real one:
+
+```bash
+kubectl -n librarius port-forward svc/librarius-alertmanager 9093:9093 &
+curl -sS -XPOST http://localhost:9093/api/v2/alerts -H 'Content-Type: application/json' -d '[{
+  "labels": {"alertname":"LibrariusNotificationTest","severity":"critical","service":"librarius"},
+  "annotations": {"summary":"Manual test of the notification path.","runbook":"Nothing is wrong. Delete this alert."}
+}]'
+kill %1
+```
+
+The notification lands after `group_wait`, so about 30 seconds later. If nothing arrives,
+`kubectl -n librarius logs deploy/librarius-alertmanager` names the reason — a 404 on the
+webhook URL and an unreachable host look nothing alike in that log.
+
+### Firing the alerts on purpose
+
+`infra/alerting/fire-drill.sh` runs the alerting stack on a laptop and breaks things until
+it notifies. Nothing in it is a mock of the configuration: the Prometheus config, the rules
+and the Alertmanager config are pulled out of the chart with `helm template`, so what is
+exercised is what the cluster runs. Only the API is fake, and only so it can be made to
+misbehave on command.
+
+```bash
+./infra/alerting/fire-drill.sh          # the three API rules, ~16 min
+./infra/alerting/fire-drill.sh down     # LibrariusApiDown only, ~4 min
+```
+
+It needs docker, docker compose and helm, and no cluster. The wait is the `for:` clause of
+each rule — the same delay the cluster will have. Run it after touching a rule, a threshold
+or the routing. It ends on what was received, and exits non-zero if anything was not:
+
+```text
+  ✔ LibrariusApiHighErrorRate notified after 396s
+  ✔ LibrariusApiSlowResponses notified after 700s
+stopping the api container — LibrariusApiDown from here
+  ✔ LibrariusApiDown notified after 900s
+
+── notifications delivered to the webhook ───────────────────────────────
+firing   LibrariusApiHighErrorRate        More than 5% of API responses have been 5xx for 5 minutes.
+firing   LibrariusApiSlowResponses        API p95 latency has been above 2 s for 10 minutes.
+firing   LibrariusApiDown                 The Librarius API has been unreachable for 2 minutes.
+```
 
 ### Runbooks
 
@@ -834,11 +1042,20 @@ opens at 3 a.m. Summarised:
 | `LibrariusBackupTooOld` | critical | No backup in 48 h, and nothing looks wrong | `k get cronjob librarius-postgres-backup`, check SUSPEND and LAST SCHEDULE, then run one by hand |
 | `LibrariusBackupCronJobMissing` | critical | No backup Job exists at all | `helm -n librarius get values librarius --all \| grep -A3 backup`, redeploy with `backup.enabled=true` |
 
-> **Never triggered for real.** Each rule is syntactically valid (`promtool check rules`,
-> 10 rules) and each expression is written against a metric the corresponding exporter is
-> documented to publish — but no alert has been fired deliberately, no notification has been
-> received, and the seven quiet days the issue asks for have not been observed.
-> [#60](https://github.com/zelytra/Librarius/issues/60) is not met until they are.
+### What has actually been proven
+
+| | |
+|---|---|
+| ✅ The rules load and evaluate | `promtool check rules` on the rendered ConfigMap: 10 rules, and all ten report `health=ok` in a running Prometheus |
+| ✅ Three alerts fired for real | fire drill of 2026-07-28: `LibrariusApiHighErrorRate` notified 6 min 36 s in, `LibrariusApiSlowResponses` 11 min 40 s in, `LibrariusApiDown` 3 min 20 s after the container was stopped — each one its `for:` clause plus the 30 s `group_wait`, which is the delay the cluster will have too |
+| ✅ A notification left the stack | each one delivered as a JSON POST to a webhook, carrying its `summary`, its `runbook` and the `environment: staging` label, routed through the `severity="critical"` branch |
+| ✅ The URL came from a mounted file | the drill mounts it where the chart mounts the Secret, so `url_file` is exercised, not assumed |
+| ❌ Not from the cluster | the drill runs on a laptop. Nothing has been deployed or fired on `librarius.zelytra.fr`, and the in-cluster Alertmanager notifies nothing until the webhook Secret exists |
+| ❌ No `uptime` issue has been opened | the workflow only runs on `main`; the probe script itself has been run against the live URL, the issue-opening half repeats what `cd.yml` already does |
+| ❌ Seven quiet days | not observed. The rules have never run for a day, let alone a week |
+| ❌ Seven of the ten rules | PVC, CrashLoopBackOff, TLS and the three backup rules have no exporter to read on the cluster (§ "What each rule needs") |
+
+[#60](https://github.com/zelytra/Librarius/issues/60) stays open on the last four rows.
 
 ## 🔙 Rolling back
 
