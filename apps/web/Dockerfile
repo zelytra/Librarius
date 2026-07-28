@@ -1,6 +1,6 @@
 # Image statique de la PWA Librarius (build pnpm → nginx).
 # Contexte de build attendu : racine du repo (workspace pnpm).
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 RUN corepack enable
 WORKDIR /repo
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
@@ -18,7 +18,7 @@ ARG VITE_APP_VERSION=""
 ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 RUN pnpm --filter @librarius/web build
 
-FROM nginx:1.27-alpine
+FROM nginx:1.31-alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
