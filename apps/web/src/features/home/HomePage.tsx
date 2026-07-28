@@ -5,6 +5,7 @@ import { Cover } from '../../shared/ui/Cover';
 import { Button, Screen, SectionHeader } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { goalPace, goalUnitOf } from '../../shared/goal';
 import {
   useGetApiCatalogUpcoming,
   useGetApiLibrary,
@@ -16,6 +17,72 @@ import styles from './HomePage.module.css';
 /** Shelves shown on the dashboard, and how many covers each of them holds. */
 const READING_SHELF_SIZE = 12;
 const READ_SHELF_SIZE = 8;
+
+interface ReadingGoalProps {
+  /** Target of the running year, absent when the user has not set one. */
+  target?: number;
+  /** What has been read this year, in the goal's unit. */
+  current: number;
+  unit?: string;
+  onSetGoal: () => void;
+}
+
+/**
+ * The annual goal: where the user stands, and what the rest of the year asks for.
+ *
+ * With no goal set this is an invitation rather than a gauge at zero — an empty bar
+ * reads like a failure, when nothing has been aimed at yet.
+ */
+function ReadingGoal({ target, current, unit, onSetGoal }: ReadingGoalProps) {
+  const { t } = useTranslation();
+  // The unit agrees with the number it qualifies, which is not the same one on both
+  // lines: "1 / 30 livres" but "encore 1 livre".
+  const units = (count: number) => t(`common.goalUnits.${goalUnitOf(unit)}`, { count });
+
+  if (!target) {
+    return (
+      <section className={`${styles.goal} ${styles.goalEmpty}`}>
+        <div className={styles.goalBody}>
+          <div className={styles.goalTitle}>{t('home.goal.unsetTitle')}</div>
+          <p className={styles.goalHint}>{t('home.goal.unsetHint')}</p>
+        </div>
+        <Button variant="secondary" onClick={onSetGoal}>
+          {t('home.goal.set')}
+        </Button>
+      </section>
+    );
+  }
+
+  const pace = goalPace(target, current, new Date());
+
+  return (
+    <section className={styles.goal}>
+      <div className={styles.goalHead}>
+        <div className={styles.goalTitle}>
+          {t('home.goal.title', { year: new Date().getFullYear() })}
+        </div>
+        <div className={styles.goalCount}>
+          {t('home.goal.progress', { current, target, unit: units(target) })}
+        </div>
+      </div>
+
+      <div className={styles.track} role="progressbar" aria-valuenow={pace.percent} aria-valuemin={0} aria-valuemax={100}>
+        {/* The filled part is the progress itself, known only at render time. */}
+        <div className={styles.bar} style={{ width: `${pace.percent}%` }} />
+      </div>
+
+      <p className={styles.goalHint}>
+        {pace.reached
+          ? t('home.goal.reached')
+          : t('home.goal.pace', {
+              remaining: pace.remaining,
+              unit: units(pace.remaining),
+              perWeek: pace.perWeek,
+            })}
+      </p>
+    </section>
+  );
+}
 
 function Dashboard() {
   const { t } = useTranslation();
@@ -89,6 +156,13 @@ function Dashboard() {
           ))}
         </div>
       </section>
+
+      <ReadingGoal
+        target={stats?.goalTarget}
+        current={stats?.goalCurrent ?? 0}
+        unit={stats?.goalUnit}
+        onSetGoal={() => navigate('/settings')}
+      />
 
       {upcoming.length > 0 && (
         <section>

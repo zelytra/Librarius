@@ -3,6 +3,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { goalUnitOf } from '../../shared/goal';
 import { useGetApiStats } from '../../api/generated/librarius';
 import styles from './StatsPage.module.css';
 
@@ -53,7 +54,13 @@ function StatsContent() {
         <div className={styles.goalBody}>
           <div className={styles.goalTitle}>{t('stats.goalTitle', { year: new Date().getFullYear() })}</div>
           <div className={styles.goalHint}>
-            {target > 0 ? t('stats.goalRemaining', { remaining }) : t('stats.goalUnset')}
+            {target === 0 && t('stats.goalUnset')}
+            {target > 0 && remaining === 0 && t('stats.goalReached')}
+            {target > 0 && remaining > 0 &&
+              t('stats.goalRemaining', {
+                remaining,
+                unit: t(`common.goalUnits.${goalUnitOf(stats.goalUnit)}`, { count: remaining }),
+              })}
           </div>
         </div>
       </div>

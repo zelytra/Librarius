@@ -21,7 +21,15 @@
     "search": "Rechercher",
     "remove": "Retirer",
     "retry": "Réessayer",
-    "errorWithStatus": "Erreur {{status}}"
+    "errorWithStatus": "Erreur {{status}}",
+    "goalUnits": {
+      "BOOKS_one": "livre",
+      "BOOKS_other": "livres",
+      "VOLUMES_one": "tome",
+      "VOLUMES_other": "tomes",
+      "PAGES_one": "page",
+      "PAGES_other": "pages"
+    }
   },
   "auth": {
     "signIn": "Se connecter",
@@ -56,6 +64,15 @@
       "read": "lus",
       "reading": "en cours",
       "toRead": "à lire"
+    },
+    "goal": {
+      "title": "Objectif {{year}}",
+      "progress": "{{current}} / {{target}} {{unit}}",
+      "pace": "Encore {{remaining}} {{unit}} d'ici la fin de l'année, soit environ {{perWeek}} par semaine.",
+      "reached": "Objectif atteint. Belle année de lecture.",
+      "unsetTitle": "Aucun objectif cette année",
+      "unsetHint": "Fixe-toi un nombre de livres, de tomes ou de pages à lire.",
+      "set": "Définir"
     },
     "empty": {
       "title": "Ta bibliothèque est vide.",
@@ -133,7 +150,8 @@
     "title": "Statistiques",
     "goalTitle": "Objectif {{year}}",
     "goalProgress": "/ {{target}}",
-    "goalRemaining": "Plus que {{remaining}} titre(s) pour atteindre ton objectif.",
+    "goalRemaining": "Plus que {{remaining}} {{unit}} pour atteindre ton objectif.",
+    "goalReached": "Objectif atteint. Belle année de lecture.",
     "goalUnset": "Définis un objectif de lecture annuel dans tes réglages.",
     "cards": {
       "read": "Livres lus",
@@ -167,6 +185,21 @@
     "title": "Réglages",
     "dashboard": "Tableau de bord",
     "appearance": "Apparence",
+    "goal": {
+      "title": "Objectif de lecture {{year}}",
+      "description": "Un nombre de livres, de tomes ou de pages à lire cette année. La progression s'affiche sur l'accueil.",
+      "target": "Objectif",
+      "placeholder": "Nombre à atteindre",
+      "save": "Enregistrer",
+      "saved": "Objectif enregistré.",
+      "failed": "Enregistrement impossible pour le moment.",
+      "carryOver": "Reprendre ton objectif {{year}} : {{target}} {{unit}}",
+      "units": {
+        "BOOKS": "Livres",
+        "VOLUMES": "Tomes",
+        "PAGES": "Pages"
+      }
+    },
     "notifications": "Notifications",
     "version": "Ma Bibliothèque · version {{version}}",
     "themes": {

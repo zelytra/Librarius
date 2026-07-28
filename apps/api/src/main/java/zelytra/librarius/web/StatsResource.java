@@ -6,6 +6,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import zelytra.librarius.domain.GoalUnit;
+import zelytra.librarius.domain.ReadingGoal;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.StatusTotals;
 import zelytra.librarius.domain.repository.ReadingGoalRepository;
@@ -50,13 +52,19 @@ public class StatsResource {
                 .map(GenreCount::of)
                 .toList();
 
-        Integer goalTarget = goals.findByUserAndYear(userId, Year.now().getValue())
-                .map(goal -> goal.targetCount)
-                .orElse(null);
+        int year = Year.now().getValue();
+        ReadingGoal goal = goals.findByUserAndYear(userId, year).orElse(null);
 
-        // Progress towards the goal is currently the number of titles read, all years
-        // taken together — same value as before, the goal unit is not applied yet.
+        // Progress is measured over the year and in the goal's own unit — a goal is annual,
+        // so a lifetime count would show a 30-book target already met by someone who read
+        // 30 books over ten years. With no goal set the figure still means something: how
+        // much has been read this year, in books, which is what the invitation to set one
+        // shows.
+        GoalUnit unit = goal != null ? goal.unit : GoalUnit.BOOKS;
+        long goalCurrent = library.readInYear(userId, year, unit);
+
         return new StatsDto(totals.read(), totals.reading(), totals.toRead(), totals.pagesRead(),
-                seriesCount, goalTarget, totals.read(), byGenre);
+                seriesCount, goal != null ? goal.targetCount : null, goalCurrent,
+                goal != null ? goal.unit.name() : null, byGenre);
     }
 }

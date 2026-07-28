@@ -139,8 +139,17 @@ public final class ApiDtos {
     public record ProgressDto(Integer currentPage, Integer percent, LibraryStatus status) {
     }
 
+    /**
+     * Aggregated statistics.
+     *
+     * @param goalTarget  target of the current year's goal, null when none is set
+     * @param goalCurrent what has been read <em>this year</em>, in {@code goalUnit}
+     * @param goalUnit    unit of the current year's goal, null when none is set — the
+     *                    figure above is then a count of titles
+     */
     public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-            Integer goalTarget, long goalCurrent, java.util.List<GenreCount> byGenre) {
+            Integer goalTarget, long goalCurrent, String goalUnit,
+            java.util.List<GenreCount> byGenre) {
     }
 
     /**

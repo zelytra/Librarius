@@ -241,6 +241,7 @@ export interface StatsDto {
   seriesCount?: number;
   goalTarget?: number;
   goalCurrent?: number;
+  goalUnit?: string;
   byGenre?: GenreCount[];
 }
 

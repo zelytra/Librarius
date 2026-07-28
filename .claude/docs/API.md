@@ -80,7 +80,7 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-         Integer goalTarget, long goalCurrent, List<GenreCount> byGenre)
+         Integer goalTarget, long goalCurrent, String goalUnit, List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
 ```
 
@@ -141,6 +141,28 @@ itself sorted the stored *name* — `PRIORITY, SOMEDAY, SOON` — and showed the
 date attached ahead of the ones the user meant to buy next
 ([#114](https://github.com/zelytra/Librarius/issues/114)). A new priority is one line in the
 enum: the `case` is generated from it, so the query and the enum cannot disagree.
+
+## Reading goals
+
+A goal belongs to a year, and `GET /api/stats` reports the one of the **running** year:
+`goalTarget`, `goalUnit` and `goalCurrent`, the last being what has been read *during that
+year* in that same unit. Both `goalTarget` and `goalUnit` are null when no goal is set; the
+progress is then a count of titles, which is what an invitation to set one shows.
+
+The progress is read off `reading_progress.finished_at`, never off the `READ` status: the
+status says a title has been read, never *when*. `PUT /api/library/{id}/progress` therefore
+stamps the dates the status implies — `READING` sets `started_at`, `READ` sets both — each
+only when it is still empty, so correcting a status later never rewrites the day the user
+actually read the book ([#50](https://github.com/zelytra/Librarius/issues/50)).
+
+Two consequences worth knowing:
+
+- A collection **imported in bulk** counts towards no year. That is the honest answer: no
+  one recorded when those books were read, and crediting them to the year of the import
+  would hand the user a goal they did not reach.
+- `BOOKS` and `VOLUMES` both count titles — a volume of a manga is a `work` of its own in
+  this model, so the two differ in wording only. `PAGES` sums the page counts of the
+  editions, those declaring none contributing zero.
 
 ## Pagination
 

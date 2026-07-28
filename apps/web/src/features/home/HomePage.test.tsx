@@ -93,4 +93,49 @@ describe('HomePage', () => {
 
     expect(await screen.findByText(/Connecte-toi pour retrouver ta bibliothèque/)).toBeInTheDocument();
   });
+
+  // ── Annual reading goal ────────────────────────────────────────────────────
+
+  /**
+   * The pace itself moves with the day it is looked at and is pinned down on frozen
+   * dates in `shared/goal.test.ts`; what is asserted here is what the screen makes of it.
+   */
+  test('shows the annual goal with what is left to read', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('12 / 30 livres')).toBeInTheDocument();
+    expect(screen.getByText(/Encore 18 livres/)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '40');
+  });
+
+  test('labels the goal in the unit it was set in', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 12000, goalCurrent: 4500, goalUnit: 'PAGES' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('4500 / 12000 pages')).toBeInTheDocument();
+    expect(screen.getByText(/Encore 7500 pages/)).toBeInTheDocument();
+  });
+
+  test('celebrates a goal met instead of asking for a pace', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 31, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/Objectif atteint/)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
+
+  /** No goal set is an invitation, never a gauge at zero — an empty bar reads as failure. */
+  test('invites the user to set a goal rather than showing an empty gauge', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: undefined, goalCurrent: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/Aucun objectif cette année/)).toBeInTheDocument();
+    expect(screen.getByText('Définir')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
 });

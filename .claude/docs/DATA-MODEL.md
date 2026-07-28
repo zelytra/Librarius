@@ -25,16 +25,9 @@ app_user ──┬─< library_item >── edition >── work >── series
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3) |
-| `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
+| `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item`. The two dates are stamped by the status transitions, never by the client — see below |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 
-The `priority` is stored as its name, so it is **not** what the wishlist is ordered by: the
-default ordering maps it to an urgency rank in the query, otherwise `SOMEDAY` sorts ahead of
-`SOON` ([#114](https://github.com/zelytra/Librarius/issues/114)). The `(user_id, priority)`
-index therefore serves the `priority=` filter and the budget grouping, not the sort — which
-is fine: it runs on one user's wishes, a set small enough for the sort to be free. Storing
-the rank in a column of its own would buy an index the ordering does not need, at the price
-of a denormalised field to keep in step on every write.
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
 | `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in |
 | `catalog_cache` | `(provider, query_hash)` | `payload JSONB`, `fetched_at`, `expires_at` | Owned by no user: it caches provider answers, not data. idx on `expires_at` for the purge |
@@ -43,6 +36,22 @@ of a denormalised field to keep in step on every write.
 | `work_genre` | `(work_id, genre_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(genre_id, work_id)` for the reverse walk (V6) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a).
+
+The `priority` of a wish is stored as its name, so it is **not** what the wishlist is
+ordered by: the default ordering maps it to an urgency rank in the query, otherwise
+`SOMEDAY` sorts ahead of `SOON`
+([#114](https://github.com/zelytra/Librarius/issues/114)). The `(user_id, priority)` index
+therefore serves the `priority=` filter and the budget grouping, not the sort — which is
+fine: it runs on one user's wishes, a set small enough for the sort to be free. Storing the
+rank in a column of its own would buy an index the ordering does not need, at the price of a
+denormalised field to keep in step on every write.
+
+`reading_progress.started_at` and `finished_at` are written by the API on the status
+transitions — `READING` stamps the start, `READ` stamps both — and only when they are still
+empty, so re-marking a title read never moves the day it was actually finished. They are the
+only record of *when* something was read, which is what an annual reading goal is counted
+against ([#50](https://github.com/zelytra/Librarius/issues/50)): a title read before the
+rule existed carries no date and counts towards no year.
 
 `V3__pagination_indexes.sql` adds no column: it only backs the server-side pagination of
 `/api/library` and `/api/wishlist` with the indexes their default ordering (newest first,

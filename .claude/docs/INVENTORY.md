@@ -113,6 +113,13 @@ backups and alert rules now exist but neither has been proven on the cluster).
   NOT NULL column — `PUT /api/goals/{year}` returned 500 for a year with no goal yet. Never
   caught, for lack of a test and for lack of a screen exposing the feature. Surfaced by the
   isolation tests.
+- **Goal progress counted every year at once**
+  ([#50](https://github.com/zelytra/Librarius/issues/50), 2026-07-28): `StatsDto.goalCurrent`
+  was the number of titles read all years taken together, and ignored the goal's unit — a
+  reader with a hundred books behind them met a thirty-book *annual* target on the first of
+  January. It is now counted over the year, off `reading_progress.finished_at`, in the unit
+  the goal was set in. The finish date had never been written by anything, so the status
+  transitions now stamp it.
 - **Wishlist sorted alphabetically instead of by urgency**
   ([#114](https://github.com/zelytra/Librarius/issues/114), 2026-07-28): the priority is
   stored as its name, so `order by priority` yielded `PRIORITY, SOMEDAY, SOON` and put the
@@ -165,8 +172,8 @@ production opens.*
 | Multiple editions per work | Schema ready (`work` 1→N `edition`), **no screen** lets you pick or compare an edition |
 | Upcoming **French** releases | `GET /api/catalog/upcoming` returns the **provider** dates (JP/EN), shown as "indicative dates". No French publisher data |
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
-| Reading progress | The `reading_progress` table exists; the UI only offers READING / READ (no current page, no %) |
-| Reading goals | `GET/PUT /api/goals` works, **no screen** exposes it |
+| Reading progress | The UI still offers only READING / READ (no current page, no %), but the transitions now stamp `started_at` / `finished_at` (#50) |
+| Reading goals | ✅ Set in Settings, gauge and required pace on Home, remaining on Statistics (#50) |
 | Custom categories | `POST /api/categories` works, the UI only shows Gold/Silver/Bronze |
 | Notifications | Nothing (no preferences, no push, no email) |
 | Series / volumes | Neither a series screen nor "missing volume" tracking |

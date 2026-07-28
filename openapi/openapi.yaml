@@ -390,6 +390,8 @@ components:
         goalCurrent:
           type: integer
           format: int64
+        goalUnit:
+          type: string
         byGenre:
           type: array
           items:

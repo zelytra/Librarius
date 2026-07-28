@@ -3,11 +3,13 @@ package zelytra.librarius.domain.repository;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.TypedQuery;
+import zelytra.librarius.domain.GoalUnit;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.genre.GenreNormalizer;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -261,6 +263,42 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                           and length(trim(li.edition.work.seriesTitle)) > 0
                         """, Long.class)
                 .setParameter("userId", userId)
+                .getSingleResult();
+    }
+
+    /**
+     * What the user finished during a year, counted in the unit their goal is set in.
+     *
+     * <p>An annual goal can only be measured against titles whose <em>finish date</em> is
+     * known, so the count runs off {@code reading_progress.finished_at} and not off the
+     * {@code READ} status: the status says a title has been read, never when. A collection
+     * imported in bulk therefore contributes nothing to the year it was imported in, which
+     * is the honest answer — nobody recorded when those books were read.
+     *
+     * <p>{@code BOOKS} and {@code VOLUMES} both count titles: a volume of a manga is a
+     * {@code work} of its own in this model, so the two units differ in wording only.
+     * {@code PAGES} sums the page counts, editions declaring none contributing zero.
+     */
+    public long readInYear(String userId, int year, GoalUnit unit) {
+        // The unit picks the aggregate, never anything a caller supplies: it is an enum.
+        String aggregate = unit == GoalUnit.PAGES
+                ? "coalesce(sum(li.edition.pageCount), 0)"
+                : "count(li)";
+
+        // A half-open range rather than year(finished_at): it can use the index, and it
+        // does not depend on how the database extracts a year from a date.
+        return getEntityManager()
+                .createQuery("""
+                        select %s
+                        from ReadingProgress rp
+                          join rp.libraryItem li
+                        where li.userId = :userId
+                          and rp.finishedAt >= :from
+                          and rp.finishedAt < :to
+                        """.formatted(aggregate), Long.class)
+                .setParameter("userId", userId)
+                .setParameter("from", LocalDate.of(year, 1, 1))
+                .setParameter("to", LocalDate.of(year + 1, 1, 1))
                 .getSingleResult();
     }
 

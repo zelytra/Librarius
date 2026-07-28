@@ -48,11 +48,25 @@ describe('StatsPage', () => {
     expect(await screen.findByText(/Définis un objectif de lecture annuel/)).toBeInTheDocument();
   });
 
-  test('renders how many titles remain when a goal is set', async () => {
-    statsReturns(stats({ goalTarget: 20, goalCurrent: 12 }));
+  test('renders how much remains, in the unit the goal was set in', async () => {
+    statsReturns(stats({ goalTarget: 20, goalCurrent: 12, goalUnit: 'BOOKS' }));
     renderWithProviders(<StatsPage />);
 
-    expect(await screen.findByText(/Plus que 8 titre\(s\)/)).toBeInTheDocument();
+    expect(await screen.findByText(/Plus que 8 livres/)).toBeInTheDocument();
+  });
+
+  test('a goal set in pages is not reported in books', async () => {
+    statsReturns(stats({ goalTarget: 12000, goalCurrent: 4500, goalUnit: 'PAGES' }));
+    renderWithProviders(<StatsPage />);
+
+    expect(await screen.findByText(/Plus que 7500 pages/)).toBeInTheDocument();
+  });
+
+  test('celebrates a goal met rather than asking for zero more', async () => {
+    statsReturns(stats({ goalTarget: 20, goalCurrent: 20, goalUnit: 'BOOKS' }));
+    renderWithProviders(<StatsPage />);
+
+    expect(await screen.findByText(/Objectif atteint/)).toBeInTheDocument();
   });
 
   test('signals an outage rather than showing an empty screen', async () => {

@@ -91,6 +91,7 @@ export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
     seriesCount: 5,
     goalTarget: undefined,
     goalCurrent: 12,
+    goalUnit: undefined,
     byGenre: [
       { genre: 'Fantasy', count: 8 },
       { genre: 'Science-fiction', count: 4 },

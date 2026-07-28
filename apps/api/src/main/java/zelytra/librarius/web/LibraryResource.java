@@ -36,6 +36,7 @@ import zelytra.librarius.web.ApiDtos.LibraryPageDto;
 import zelytra.librarius.web.ApiDtos.ProgressDto;
 import zelytra.librarius.web.ApiDtos.RankAssignDto;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -153,7 +154,15 @@ public class LibraryResource {
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
-    /** Updates the reading progress (and the status) of a title. */
+    /**
+     * Updates the reading progress (and the status) of a title.
+     *
+     * <p>The status carries its dates with it: moving to {@code READING} stamps the start,
+     * moving to {@code READ} stamps the finish, each only when it is still empty so that
+     * correcting a status later does not rewrite the day the user actually read the book.
+     * Nothing else in the application records <em>when</em> a title was read, and an annual
+     * reading goal cannot be computed without it.
+     */
     @PUT
     @Path("/{id}/progress")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -174,6 +183,19 @@ public class LibraryResource {
         });
         progress.currentPage = dto.currentPage();
         progress.percent = dto.percent();
+
+        LocalDate today = LocalDate.now();
+        if (item.status == LibraryStatus.READING && progress.startedAt == null) {
+            progress.startedAt = today;
+        }
+        if (item.status == LibraryStatus.READ) {
+            if (progress.startedAt == null) {
+                progress.startedAt = today;
+            }
+            if (progress.finishedAt == null) {
+                progress.finishedAt = today;
+            }
+        }
         return Response.noContent().build();
     }
 

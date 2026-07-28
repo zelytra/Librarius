@@ -61,7 +61,7 @@ Personal dashboard.
 | Recently read | ✅ | |
 | Empty state | ✅ | Points to Discover |
 | **Reorder / hide sections** | 🔜 | Persisted per user (`dashboard_layout`) |
-| **Annual goal** | 🔜 | Progress gauge, the API already exists |
+| **Annual goal** | ✅ | Gauge, what is left to read and the weekly pace it takes; an invitation towards Settings when no goal is set (#50) |
 
 ### 4.2 Collection ✅ / 🔜
 
@@ -113,14 +113,18 @@ Search across the external catalog (Open Library for books, AniList for manga).
 ### 4.6 Statistics ✅ / 🔜
 
 - ✅ Read / in progress / to read, pages read, number of series, breakdown by genre (top 6).
+- ✅ **Annual goal**: gauge, and what is left to read in the unit the goal was set in (#50).
 - 🔜 **Trend over time**: books read per month, per year.
-- 🔜 **Annual goal**: gauge, pace required, projection.
+- 🔜 Projection: on the current pace, where the year lands.
 - 🔜 Reading pace (pages/day), average time to finish a book.
 - 🔜 Breakdown by author, publisher, language, rank.
 - 🔜 A shareable year in review.
 
 ### 4.7 Settings ✅ / 🔜
 
+- ✅ **Annual reading goal**: a target and its unit (books, volumes, pages) for the running
+  year, with the previous year offered as a starting point rather than retyped every
+  January (#50).
 - ✅ Booknode / Babelio import (by handle) and CSV import.
 - ✅ Theme selection: four palettes (Crème, Sauge, Rose, Nuit) plus **Système**, which
   follows the operating system preference and is the default. The choice is kept in

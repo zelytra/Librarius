@@ -87,6 +87,68 @@
   font-weight: 500;
 }
 
+/* ── Annual reading goal ──────────────────────────────────────────────────── */
+
+.goal {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+/* With no goal set, the invitation sits next to its button rather than above a bar. */
+.goalEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.goalHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.goalBody {
+  min-width: 0;
+}
+
+.goalTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+
+.goalCount {
+  flex: 0 0 auto;
+  font-size: var(--fs-13);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.track {
+  height: 10px;
+  border-radius: var(--radius-badge);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-badge);
+  background: var(--accent);
+}
+
+.goalHint {
+  margin: 10px 0 0;
+  font-size: var(--fs-12);
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 /* ── Upcoming releases ────────────────────────────────────────────────────── */
 
 .upcomingList {
