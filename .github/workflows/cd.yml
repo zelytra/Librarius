@@ -45,15 +45,23 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Staging runs the head of `main`, which carries no version number: the commit is
+      # what identifies it. Released images get their X.Y.Z here instead (release.yml).
+      - name: Compute the displayed version
+        id: appver
+        run: echo "value=staging-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Build & push
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           push: true
-          # The web image bakes in the public OIDC authority at build time (ignored by the api).
+          # The web image bakes in the public OIDC authority and the displayed version at
+          # build time (both ignored by the api).
           build-args: |
             VITE_OIDC_AUTHORITY=https://librarius.zelytra.fr/auth/realms/librarius
+            VITE_APP_VERSION=${{ steps.appver.outputs.value }}
           tags: |
             ghcr.io/zelytra/librarius-${{ matrix.name }}:latest
             ghcr.io/zelytra/librarius-${{ matrix.name }}:${{ github.sha }}

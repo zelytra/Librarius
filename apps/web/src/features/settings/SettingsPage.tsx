@@ -5,7 +5,10 @@ import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
 import { ImportSection } from './ImportSection';
 
-const APP_VERSION = '1.0';
+// Stamped at build time by the image build (`VITE_APP_VERSION`, see apps/web/Dockerfile):
+// a released image carries its semantic version, a staging one the commit it was built
+// from. Empty on a local `pnpm web:dev`, where nothing has been stamped.
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
 
 export function SettingsPage() {
   const { t } = useTranslation();
