@@ -44,7 +44,8 @@ src/
     LoginGate.tsx              # per-screen authentication guard
     theme/                     # ThemeProvider, themes.ts, context.ts
     styles/                    # tokens.css (CSS variables), global.css
-    ui/                        # Icon, BookCover, primitives (Button, Chip, Segmented…)
+    ui/                        # Icon, Cover, coverPalette.ts, ranks.ts,
+                               # primitives (Screen, Button, Chip, Segmented, EmptyState…)
   i18n/                        # i18next + locales/fr.json
 ```
 
@@ -65,16 +66,21 @@ src/
   hand-written string, so a change of route does not silently break invalidation.
 - **Theme**: CSS variables (`--ink`, `--surface`, `--accent`, `--line`, `--muted`,
   `--faint`) defined in `tokens.css` and switched by `ThemeProvider`.
+- **Styling**: one `.module.css` per screen and per shared component, always through the
+  tokens — type scale (`--fs-*`), radii (`--radius-*`), shadows (`--shadow-*`), decorative
+  tints (`--tint-*`), screen padding (`--screen-pad-*`). `style={{…}}` is reserved for
+  genuinely dynamic values: a colour derived from a title, a computed width, a gauge
+  percentage.
 
 ### Decided changes
 
 1. ~~**TanStack Query** for server state~~ — done
    ([#30](https://github.com/zelytra/Librarius/issues/30)).
-2. **Move inline styles out** into CSS Modules backed by the tokens. Target: no `style={{…}}`
-   carrying durable presentation; inline stays acceptable for genuinely dynamic values (a
-   colour derived from a title, a computed width).
-3. **A single colour factory**: `colorFor()` and `PALETTE` are duplicated in `HomePage`,
-   `CollectionPage` and `DetailPage` → extract into `shared/ui/cover.ts`.
+2. ~~**Move inline styles out** into CSS Modules backed by the tokens~~ — done
+   ([#32](https://github.com/zelytra/Librarius/issues/32)).
+3. ~~**A single colour factory**~~ — done
+   ([#34](https://github.com/zelytra/Librarius/issues/34)): `PALETTE` and `colorFor()` live
+   in `shared/ui/coverPalette.ts`, the three near-duplicate covers in a single `<Cover>`.
 4. ~~**Authentication interceptor**~~ — done ([#31](https://github.com/zelytra/Librarius/issues/31)), shipped alongside the React Query move.
 5. **Error boundary** plus shared `<Loading>`, `<ErrorState>` and `<EmptyState>` components.
 
@@ -177,5 +183,5 @@ The OIDC authority is **baked into the web image at build time**
 | 5 | Rank as a column, not a join table | A title carries at most one rank | ✅ Applied (a simplification vs the initial vision) |
 | 6 | Provider release dates, not French ones | No reliable free API for French publishers | ✅ Accepted, to be revisited |
 | 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing | ✅ Applied |
-| 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | 🔜 Decided |
+| 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🔜 Decided |

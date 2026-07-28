@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
@@ -25,10 +25,14 @@ function searchFailureMessage(error: unknown): string {
   return 'Recherche indisponible pour le moment.';
 }
 import { Icon } from '../../shared/ui/Icon';
-import { Segmented } from '../../shared/ui/primitives';
+import { Screen, ScreenTitle, Segmented, StatusText } from '../../shared/ui/primitives';
 import { BookCover } from '../../shared/ui/BookCover';
+import styles from './DiscoverPage.module.css';
 
 type Kind = 'BOOK' | 'MANGA';
+
+/** Size of the thumbnail shown next to a catalogue result. */
+const RESULT_COVER = { width: 58, height: 84, radius: 8 };
 
 function toBook(r: CatalogResult, fallbackKind: Kind): ManualBookDto {
   return {
@@ -97,7 +101,7 @@ function DiscoverContent() {
 
   return (
     <>
-      <div style={{ marginBottom: 12 }}>
+      <div className={styles.kindSwitch}>
         <Segmented<Kind>
           value={kind}
           onChange={setKind}
@@ -108,45 +112,58 @@ function DiscoverContent() {
         />
       </div>
 
-      <form onSubmit={onSubmit} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: '10px 14px', marginBottom: 22 }}>
+      <form onSubmit={onSubmit} className={styles.searchBar}>
         <Icon name="search" size={21} color="var(--faint)" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('discover.searchPlaceholder')}
-          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--ink)', fontFamily: 'inherit' }}
+          className={styles.searchInput}
         />
-        <button type="submit" aria-label="Rechercher" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+        <button type="submit" aria-label="Rechercher" className={styles.submit}>
           <Icon name="arrow_forward" size={20} color="var(--accent-deep)" />
         </button>
       </form>
 
-      {loading && <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>}
-      {error && <p style={{ color: 'var(--rose)', fontSize: 13 }}>{error}</p>}
+      {loading && <StatusText>{t('common.loading')}</StatusText>}
+      {error && <StatusText tone="error">{error}</StatusText>}
       {!loading && !error && results.length === 0 && (
-        <p style={{ color: 'var(--faint)', fontSize: 13 }}>Lancez une recherche pour trouver des titres à ajouter.</p>
+        <StatusText tone="faint">Lancez une recherche pour trouver des titres à ajouter.</StatusText>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className={styles.results}>
         {results.map((r, i) => {
           const key = keyOf(r, i);
           const state = added[key];
           return (
-            <div key={key} style={{ display: 'flex', gap: 14, padding: 12, background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--line)' }}>
-              <BookCover color="var(--accent-soft)" imageUrl={r.coverUrl ?? undefined} title={r.coverUrl ? undefined : (r.title ?? undefined)} width={58} height={84} radius={8} />
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-                <div style={{ fontFamily: "'Newsreader',serif", fontSize: 15.5, fontWeight: 600, lineHeight: 1.1 }}>{r.title}</div>
-                <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{[r.authors, r.year].filter(Boolean).join(' · ')}</div>
+            <div key={key} className={styles.result}>
+              <BookCover
+                color="var(--accent-soft)"
+                imageUrl={r.coverUrl ?? undefined}
+                title={r.coverUrl ? undefined : (r.title ?? undefined)}
+                width={RESULT_COVER.width}
+                height={RESULT_COVER.height}
+                radius={RESULT_COVER.radius}
+              />
+              <div className={styles.resultBody}>
+                <div className={styles.resultTitle}>{r.title}</div>
+                <div className={styles.resultMeta}>{[r.authors, r.year].filter(Boolean).join(' · ')}</div>
                 {state ? (
-                  <div style={{ fontSize: 12, color: 'var(--accent-deep)', fontWeight: 600, marginTop: 4 }}>
+                  <div className={styles.added}>
                     {state === 'library' ? '✓ Ajouté à la collection' : '✓ Ajouté aux souhaits'}
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                    <button onClick={() => void add(r, key, 'library')} style={btn('var(--accent)')}>
-                      <Icon name="add" size={16} color="#fff" /> Collection
+                  <div className={styles.actions}>
+                    <button
+                      onClick={() => void add(r, key, 'library')}
+                      className={`${styles.action} ${styles.actionPrimary}`}
+                    >
+                      <Icon name="add" size={16} color="var(--on-accent)" /> Collection
                     </button>
-                    <button onClick={() => void add(r, key, 'wishlist')} style={btnGhost()}>
+                    <button
+                      onClick={() => void add(r, key, 'wishlist')}
+                      className={`${styles.action} ${styles.actionGhost}`}
+                    >
                       <Icon name="favorite" size={16} color="var(--rose)" /> Souhaits
                     </button>
                   </div>
@@ -160,21 +177,14 @@ function DiscoverContent() {
   );
 }
 
-function btn(bg: string): CSSProperties {
-  return { display: 'inline-flex', alignItems: 'center', gap: 5, background: bg, color: '#fff', border: 'none', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-}
-function btnGhost(): CSSProperties {
-  return { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--surface)', color: 'var(--ink-soft)', border: '1.5px solid var(--line)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-}
-
 export function DiscoverPage() {
   const { t } = useTranslation();
   return (
-    <div style={{ padding: '14px 22px 40px' }}>
-      <h2 style={{ fontSize: 27, margin: '6px 0 16px' }}>{t('discover.title')}</h2>
+    <Screen>
+      <ScreenTitle className={styles.title}>{t('discover.title')}</ScreenTitle>
       <LoginGate prompt="Connecte-toi pour rechercher et enrichir ta bibliothèque.">
         <DiscoverContent />
       </LoginGate>
-    </div>
+    </Screen>
   );
 }

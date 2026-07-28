@@ -1,0 +1,171 @@
+.loading {
+  padding: 40px var(--screen-pad-x);
+  color: var(--muted);
+}
+
+.notFound {
+  padding: 40px var(--screen-pad-x);
+  text-align: center;
+  color: var(--muted);
+}
+
+.page {
+  position: relative;
+}
+
+/* Coloured wash behind the top of the screen, tinted with the cover colour. */
+.wash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+}
+
+.body {
+  position: relative;
+  padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
+}
+
+.backRow {
+  padding: 14px 0 18px;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.coverRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: var(--fs-24);
+  line-height: 1.15;
+}
+
+.authors {
+  font-size: var(--fs-14);
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.genres {
+  font-size: var(--fs-12-5);
+  color: var(--accent-deep);
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* ── Stat strip ───────────────────────────────────────────────────────────── */
+
+.stats {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px 0;
+  margin-bottom: 22px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid var(--line);
+}
+
+.statGrow {
+  flex: 1.4;
+  padding: 0 8px;
+}
+
+.statLast {
+  border-right: none;
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-18);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.statValueGrow {
+  font-size: var(--fs-14);
+}
+
+.statLabel {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+
+.sectionTitle {
+  font-size: var(--fs-17);
+  margin: 0 0 8px;
+}
+
+.synopsis {
+  font-size: var(--fs-13-5);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+}
+
+.rankTitle {
+  font-size: var(--fs-17);
+  margin: 0 0 12px;
+}
+
+.rankRow {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 26px;
+}
+
+.rankButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+}
+
+.rankDot {
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-round);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

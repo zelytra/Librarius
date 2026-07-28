@@ -1,0 +1,104 @@
+.title {
+  margin-bottom: 12px;
+}
+
+.empty {
+  padding: 48px 24px;
+}
+
+.summary {
+  margin: 0 0 22px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 76px;
+  border-radius: var(--radius-thumb);
+  border-left: 3px solid var(--cover-spine);
+  box-shadow: var(--shadow-thumb);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.bookTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.authors {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.priority {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: var(--fs-10);
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-badge);
+}
+
+.priorityUrgent {
+  color: var(--tint-rose-ink);
+  background: var(--tint-blush);
+}
+
+.prioritySoon {
+  color: var(--tint-sage-ink);
+  background: var(--tint-sage);
+}
+
+.prioritySomeday {
+  color: var(--tint-violet-muted);
+  background: var(--tint-violet);
+}
+
+.aside {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.price {
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
+  font-weight: 600;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}

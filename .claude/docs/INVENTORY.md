@@ -8,7 +8,7 @@
 The project is a **complete and deployed** skeleton: all 7 screens exist, the API exposes
 9 resources, OIDC auth works end to end, and CI/CD ships to k3s. What is missing is
 **functional depth** (series, fine-grained progress, French release dates), **quality**
-(front-end tests almost absent, inline styles, incomplete i18n) and **operations**
+(incomplete i18n) and **operations**
 (plaintext secrets, no backups, no alerting).
 
 > **Environment**: `librarius.zelytra.fr` is a **staging** environment, not production.
@@ -36,10 +36,13 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 
 ### Front-end — critical
 
-1. **Inline styles everywhere.** Every screen carries its own CSS as `style={{…}}` (≈ 1,300
-   lines of JSX, a large share of which is styling). The tokens
-   (`shared/styles/tokens.css`) exist but are bypassed. Consequences: no real dark mode,
-   the `PALETTE`/`colorFor` palette duplicated across 3 files, no reuse possible.
+1. ~~**Inline styles everywhere.**~~ ✅ **Cleared on 2026-07-28**
+   ([#32](https://github.com/zelytra/Librarius/issues/32)): one `.module.css` per screen and
+   per shared component, all backed by `shared/styles/tokens.css`, which gained a type
+   scale, radii, shadows, screen padding and the decorative tints. No hex colour, font or
+   font size is hardcoded under `features/` any more; `style={{…}}` is left only where the
+   value is computed at render time. A real dark theme is now a matter of overriding tokens
+   ([#42](https://github.com/zelytra/Librarius/issues/42)).
 2. **No shared server state.** Every page redoes its own `fetch` inside a `useEffect` with
    `// eslint-disable-next-line react-hooks/exhaustive-deps`, with no cache, no
    invalidation, no retry. Opening Detail from Home reloads the whole library
@@ -53,8 +56,11 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    41 tests across 7 files cover the six application screens through MSW — nominal render,
    empty state, error state, missing session and the main interactions.
    Still to do: the Playwright e2e suite ([#37](https://github.com/zelytra/Librarius/issues/37)).
-6. **`mockData.ts` still imported** by `CollectionPage` and `DetailPage` for
-   `RANK_COLORS`/`RANK_ICONS` — a leftover from the mockup phase, to be extracted cleanly.
+6. ~~**`mockData.ts` still imported**~~ ✅ **Cleared on 2026-07-28**
+   ([#34](https://github.com/zelytra/Librarius/issues/34)): `RANK_COLORS`/`RANK_ICONS` moved
+   to `shared/ui/ranks.ts` and the file was deleted. The cover palette now has one
+   definition (`shared/ui/coverPalette.ts`), so a title keeps the same colour on every
+   screen.
 
 ### Back-end — moderate
 
