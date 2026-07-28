@@ -56,7 +56,7 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 | [#35](https://github.com/zelytra/Librarius/issues/35) | Extract every hardcoded string into i18n | — |
 | [#36](https://github.com/zelytra/Librarius/issues/36) | ✅ Cover the seven screens with Vitest | — |
 | [#37](https://github.com/zelytra/Librarius/issues/37) | Playwright end-to-end suite on the critical journeys | #36 |
-| [#38](https://github.com/zelytra/Librarius/issues/38) | Server-side pagination and filtering for library and wishlist | — |
+| [#38](https://github.com/zelytra/Librarius/issues/38) | ✅ Server-side pagination and filtering for library and wishlist | — |
 | [#39](https://github.com/zelytra/Librarius/issues/39) | ✅ Per-user data isolation tests | — |
 | [#40](https://github.com/zelytra/Librarius/issues/40) | Compute statistics in SQL | — |
 | [#41](https://github.com/zelytra/Librarius/issues/41) | Remove HelloResource | — |
@@ -75,7 +75,7 @@ annual goal.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#43](https://github.com/zelytra/Librarius/issues/43) | V3 migration: series and series_follow tables | — |
+| [#43](https://github.com/zelytra/Librarius/issues/43) | V4 migration: series and series_follow tables | — |
 | [#44](https://github.com/zelytra/Librarius/issues/44) | /api/series API: details, volumes and follow | #43 |
 | [#45](https://github.com/zelytra/Librarius/issues/45) | Series screen: volume grid | #44 |
 | [#46](https://github.com/zelytra/Librarius/issues/46) | "Series" view in the Collection | #44 |
