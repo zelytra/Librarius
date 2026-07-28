@@ -253,6 +253,19 @@
       "clear": "Retirer ma note",
       "placeholder": "Ce que j'en ai pensé…",
       "private": "Note et avis strictement privés : personne d'autre ne les voit."
+    },
+    "editions": {
+      "title": "Autres éditions",
+      "yours": "Tu as enregistré l'édition {{edition}}.",
+      "unknownPublisher": "Éditeur inconnu",
+      "pages": "{{pages}} pages",
+      "isbn": "ISBN {{isbn}}",
+      "choose": "C'est l'édition que je possède",
+      "chooseAria": "Je possède l'édition {{edition}}",
+      "alreadyOwned": "Déjà dans ta collection",
+      "alreadyOwnedError": "Tu as déjà cette édition dans ta collection.",
+      "error": "Impossible de changer d'édition.",
+      "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination."
     }
   },
   "settings": {

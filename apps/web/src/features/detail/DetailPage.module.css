@@ -147,6 +147,69 @@
   margin: 0 0 22px;
 }
 
+/* ── Alternate editions ───────────────────────────────────────────────────────
+   Catalog data, so no card: the two cards below belong to what the user writes.
+   Each edition is a bordered row instead, close enough to be compared at a glance
+   and separate enough to be picked from. */
+
+.editions {
+  margin-bottom: 22px;
+}
+
+.editionsHint {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.editionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edition {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+}
+
+.editionLabel {
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.editionMeta {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+  margin-top: 3px;
+  margin-bottom: 10px;
+}
+
+/* An edition already on the shelf under another entry: named, never offered —
+   UNIQUE(user, edition) would refuse the switch. */
+.editionOwned {
+  font-size: var(--fs-12-5);
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.editionsError {
+  font-size: var(--fs-12-5);
+  color: var(--rose);
+  margin: 10px 0 0;
+}
+
+.editionsNote {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin: 10px 0 0;
+}
+
 /* ── Reading progress ─────────────────────────────────────────────────────────
    A card rather than a bare block: the progress and the review are the two places
    on this screen where the user writes rather than reads, and the surface tells

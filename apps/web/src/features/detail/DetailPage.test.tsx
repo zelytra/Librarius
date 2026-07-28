@@ -249,4 +249,116 @@ describe('DetailPage', () => {
 
     expect(await screen.findByText(/strictement privés/)).toBeInTheDocument();
   });
+
+  // ── Alternate editions ─────────────────────────────────────────────────────
+
+  /** The item as the API returns it once the work carries more than one edition. */
+  const OWNED_EDITION = 'edition-pocket';
+  const OTHER_EDITION = 'edition-relie';
+
+  const MULTI_EDITION = libraryItem({
+    id: 'item-1',
+    book: {
+      ...libraryItem().book,
+      workId: 'work-1',
+      editionId: OWNED_EDITION,
+      publisher: 'Pocket',
+      pageCount: 512,
+    },
+  });
+
+  /** Serves `/api/works/{id}/editions`, the way the API scopes it to one work. */
+  function editionsReturn(editions: Record<string, unknown>[]) {
+    server.use(http.get('*/api/works/:id/editions', ({ params }) =>
+      params.id === 'work-1' ? HttpResponse.json(editions) : new HttpResponse(null, { status: 404 })));
+  }
+
+  const TWO_EDITIONS = [
+    { id: OWNED_EDITION, publisher: 'Pocket', language: 'fr', pageCount: 512, owned: true },
+    {
+      id: OTHER_EDITION,
+      publisher: 'Robert Laffont',
+      language: 'fr',
+      format: 'Relié',
+      pageCount: 640,
+      isbn13: '9782221252000',
+      releaseDate: '2019-10-03',
+      owned: false,
+    },
+  ];
+
+  /** Most works are known in a single edition: an "other editions" heading over nothing. */
+  test('hides the editions section when the work is known in one edition', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn([TWO_EDITIONS[0]]);
+    renderDetail();
+
+    await screen.findByRole('heading', { name: 'Le Nom du vent' });
+    expect(screen.queryByText('Autres éditions')).not.toBeInTheDocument();
+  });
+
+  test('lists the other editions with what tells them apart', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    renderDetail();
+
+    expect(await screen.findByText('Autres éditions')).toBeInTheDocument();
+    expect(screen.getByText('Robert Laffont · français · Relié')).toBeInTheDocument();
+    expect(screen.getByText(/640 pages/)).toBeInTheDocument();
+    expect(screen.getByText(/9782221252000/)).toBeInTheDocument();
+    // The one already on the shelf is named as the reference, not offered again.
+    expect(screen.getByText(/Pocket · français/)).toBeInTheDocument();
+  });
+
+  test('switches the collection row to the chosen edition', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    server.use(http.put('*/api/library/:id/edition', async ({ request }) => {
+      bodies.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json(MULTI_EDITION);
+    }));
+    renderDetail();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /Je possède l'édition Robert Laffont/ }));
+
+    await waitFor(() => expect(bodies[0]).toEqual({ editionId: OTHER_EDITION }));
+  });
+
+  /** Owning the same edition twice is what `UNIQUE(user, edition)` forbids. */
+  test('offers no switch onto an edition already in the collection', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn([
+      TWO_EDITIONS[0],
+      { ...TWO_EDITIONS[1], owned: true },
+    ]);
+    renderDetail();
+
+    expect(await screen.findByText('Déjà dans ta collection')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Je possède l'édition/ })).not.toBeInTheDocument();
+  });
+
+  /** A stale list can still send a switch the server refuses: the user is told why. */
+  test('explains a switch refused because the edition is already owned', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    server.use(http.put('*/api/library/:id/edition', () =>
+      HttpResponse.json({ message: 'déjà' }, { status: 409 })));
+    renderDetail();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /Je possède l'édition Robert Laffont/ }));
+
+    expect(await screen.findByText(/déjà cette édition dans ta collection/)).toBeInTheDocument();
+  });
+
+  /** What a change of edition does to the position is not obvious, so the screen says it. */
+  test('states what a change of edition does to the reading progress', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    renderDetail();
+
+    expect(await screen.findByText(/reprise en pourcentage/)).toBeInTheDocument();
+  });
 });
