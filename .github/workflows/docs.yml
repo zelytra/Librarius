@@ -1,7 +1,7 @@
 name: docs
 
-# Les workflows web/api/openapi-sync sont filtrés sur apps/** : une PR purement
-# documentaire ne déclenche donc aucun contrôle. Ce workflow comble ce trou.
+# The web, api and openapi-sync workflows are filtered on apps/**, so a docs-only
+# pull request would trigger no check at all. This workflow fills that gap.
 on:
   push:
     branches: [main, develop]
@@ -15,9 +15,17 @@ on:
       - '.markdownlint-cli2.jsonc'
       - '.github/workflows/docs.yml'
 
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint:
-    name: markdown · liens
+    name: markdown · links
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,17 +34,16 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      # Structure des documents : titres, listes, tableaux, blocs de code.
-      # Version épinglée pour que la CI et `npx markdownlint-cli2` en local
-      # appliquent exactement le même jeu de règles.
-      # Configuration : .markdownlint-cli2.jsonc à la racine.
+      # Document structure: headings, lists, tables, code fences.
+      # The version is pinned so that CI and a local `npx markdownlint-cli2` apply
+      # exactly the same rule set. Configuration: .markdownlint-cli2.jsonc at the root.
       - name: markdownlint
         run: npx --yes markdownlint-cli2@0.23.2
 
-      # Liens internes uniquement (--offline) : on vérifie que la documentation
-      # ne pointe pas vers un fichier renommé ou supprimé, sans dépendre de la
-      # disponibilité des sites externes ni se faire limiter par GitHub.
-      - name: liens internes
+      # Internal links only (--offline): checks that the documentation does not
+      # point at a renamed or deleted file, without depending on third-party sites
+      # being up or getting rate-limited by GitHub.
+      - name: internal links
         uses: lycheeverse/lychee-action@v2
         with:
           args: --offline --no-progress --include-fragments '**/*.md'

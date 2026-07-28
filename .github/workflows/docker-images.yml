@@ -1,0 +1,50 @@
+name: docker-images
+
+# Validates that both Docker images still build, on pull requests only.
+# Building, pushing and deploying on `main` is cd.yml's job: nothing is pushed to
+# the registry from here, hence no `packages: write` permission and no login step.
+on:
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'apps/web/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/docker-images.yml'
+
+# A newer push on the same pull request supersedes the run in progress.
+concurrency:
+  group: docker-images-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    name: build image (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      # One broken image should not hide the state of the other.
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: apps/api
+            file: apps/api/src/main/docker/Dockerfile.jvm
+          - name: web
+            context: .
+            file: apps/web/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: false
+          tags: librarius-${{ matrix.name }}:pr-${{ github.event.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

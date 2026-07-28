@@ -11,6 +11,14 @@ on:
       - 'apps/api/**'
       - '.github/workflows/api.yml'
 
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build · test (JVM)
@@ -24,6 +32,17 @@ jobs:
           java-version: 21
           cache: maven
 
+      # Dev Services starts throwaway PostgreSQL and Keycloak containers, so the
+      # runner's Docker daemon is a hard requirement for this job.
       - name: Build & test
         working-directory: apps/api
         run: ./mvnw -B -ntp verify
+
+      # Surefire reports make a failing run readable without replaying it locally.
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-surefire-reports
+          path: apps/api/target/surefire-reports/
+          retention-days: 7

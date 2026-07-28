@@ -1,10 +1,18 @@
 name: cd
 
-# Sur push main : build + push des images vers GHCR, puis déploiement Helm de la
-# PWA sur le cluster Kubernetes (book.zelytra.fr) via le secret KUBECONFIG.
+# On push to main: build and push the images to GHCR, then deploy the stack to the
+# Kubernetes cluster with Helm, using the KUBECONFIG secret.
+#
+# Target: librarius.zelytra.fr — a staging environment, not production.
 on:
   push:
     branches: [main]
+
+# Never run two deployments at once, and never cancel one midway: an interrupted
+# helm upgrade would leave the release in a partial state.
+concurrency:
+  group: cd
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -37,7 +45,7 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           push: true
-          # Le web embarque l'autorité OIDC publique au build (ignoré par l'api).
+          # The web image bakes in the public OIDC authority at build time (ignored by the api).
           build-args: |
             VITE_OIDC_AUTHORITY=https://librarius.zelytra.fr/auth/realms/librarius
           tags: |
@@ -47,7 +55,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: helm deploy (book.zelytra.fr)
+    name: helm deploy (librarius.zelytra.fr)
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -89,3 +97,40 @@ jobs:
           kubectl -n default rollout status deployment/librarius-web --timeout=180s
           kubectl -n default rollout status deployment/librarius-api --timeout=240s
           kubectl -n default get pods,ingress -l release=librarius
+
+  # A silent CD failure went unnoticed for 27 days (issue #85): images kept being
+  # published while nothing was deployed. Any failure now opens an issue.
+  report-failure:
+    name: report failure
+    needs: [build, deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Open an issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # One open issue is enough: one per failed run would just be noise.
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --label ci --search "in:title Deployment failed" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+              --body "Deployment failed again on \`$GITHUB_SHA\` — $RUN_URL"
+          else
+            printf '%s\n' \
+              "The \`cd\` workflow failed on commit \`$GITHUB_SHA\`." \
+              "" \
+              "Run: $RUN_URL" \
+              "" \
+              "Nothing reached \`librarius.zelytra.fr\`. Images may still have been pushed" \
+              "to GHCR — check which job failed before assuming the build is at fault." \
+              > body.md
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "Deployment failed on main" \
+              --label ci,infra,P0 \
+              --body-file body.md
+          fi
