@@ -109,7 +109,7 @@ alert received when something breaks, deployment without downtime.
 | [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting | — |
 | [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting on catalog endpoints | — |
 | [#62](https://github.com/zelytra/Librarius/issues/62) | Restrict Swagger UI and /q endpoints in production | — |
-| [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure | — |
+| [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure — pipeline and documentation done, the rollback itself is still to be exercised on the cluster | — |
 | [#64](https://github.com/zelytra/Librarius/issues/64) | Zero-downtime deployment | — |
 | [#65](https://github.com/zelytra/Librarius/issues/65) | Persistent catalog cache | — |
 | [#66](https://github.com/zelytra/Librarius/issues/66) | Harden CI: dependencies and static analysis | — |

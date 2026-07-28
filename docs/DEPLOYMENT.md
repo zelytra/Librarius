@@ -2,15 +2,88 @@
 
 ## Docker images
 
-The `.github/workflows/release.yml` workflow builds two images:
+Two images are published to GHCR:
 
 | Image | Contents | Dockerfile | Context |
 |---|---|---|---|
 | `ghcr.io/zelytra/librarius-api` | Quarkus API (JVM) | `apps/api/src/main/docker/Dockerfile.jvm` | `apps/api` |
 | `ghcr.io/zelytra/librarius-web` | Static PWA (nginx) | `apps/web/Dockerfile` | repository root |
 
-- **On pull requests**: images are **built but not pushed** (the Dockerfiles are only validated).
-- **On `main` / `v*` tags**: build **and push** to GHCR (tags `latest` and `<sha>`), using the `GITHUB_TOKEN` (`packages: write` permission).
+| Event | Workflow | Pushed | Image tags |
+|---|---|---|---|
+| Pull request | `docker-images.yml` | no — the Dockerfiles are only validated | — |
+| Merge into `main` | `cd.yml` | yes, then deployed to staging | `latest`, `<sha>` |
+| `vX.Y.Z` tag on `main` | `release.yml` | yes, nothing is deployed | `X.Y.Z`, `X.Y`, `X`, `<sha>` |
+
+Both push with the `GITHUB_TOKEN` (`packages: write` permission).
+
+`latest` means **the head of `main`**, i.e. what staging runs — not the last release. Ask
+for a version by its number, never by `latest`.
+
+## Versioning and releases
+
+`main` is permanently releasable. A release is cut by tagging it; the tag is the only
+thing that has to be decided by hand, everything below follows from it.
+
+```bash
+git checkout main && git pull
+git tag -a v0.5.0 -m "v0.5.0"
+git push origin v0.5.0
+```
+
+`release.yml` then, in order:
+
+1. **Refuses the tag** if it is not a strict `vMAJOR.MINOR.PATCH[-prerelease]`, or if it
+   points at a commit that is not contained in `main`.
+2. **Builds and pushes** both images with the tags below.
+3. **Renders the changelog** from the conventional commits between the previous tag and
+   this one (`.github/scripts/changelog.sh`).
+4. **Aligns the chart**: `Chart.yaml` (`version`, `appVersion`) and the default
+   `web.image.tag` / `api.image.tag` in `values.yaml`
+   (`.github/scripts/sync-version.sh`), then `helm lint` and `helm package`.
+5. **Creates the GitHub release**, with those notes and the packaged chart attached.
+6. **Opens a pull request** `chore/release-X.Y.Z` into `main` carrying the aligned chart
+   and the new `CHANGELOG.md` section — `main` takes no direct commit, not even from CI.
+
+### Image tags a tag produces
+
+| Git tag | Image tags published |
+|---|---|
+| `v0.5.0` | `0.5.0`, `0.5`, `0`, `<sha>` |
+| `v0.5.1` | `0.5.1`, `0.5`, `0`, `<sha>` — `0.5` and `0` now point here |
+| `v1.0.0` | `1.0.0`, `1.0`, `1`, `<sha>` |
+| `v1.0.0-rc.1` | `1.0.0-rc.1`, `<sha>` — a pre-release never moves `X` or `X.Y` |
+
+`X.Y.Z` and `<sha>` never move; `X.Y` and `X` do. Pin `X.Y.Z` in anything you may have to
+roll back.
+
+### Which version is running
+
+The version is stamped into the web bundle at build time (`VITE_APP_VERSION`, an `ARG` of
+`apps/web/Dockerfile`) and shown at the bottom of the **Settings** screen: `0.5.0` for a
+released image, `staging-<short sha>` for one built from `main`, `dev` for a local build.
+From the cluster:
+
+```bash
+helm -n librarius list                     # chart version and appVersion
+kubectl -n librarius get deploy librarius-web librarius-api \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}'
+```
+
+### Deploying a released version
+
+Production is not wired: it has no domain yet
+([#103](https://github.com/zelytra/Librarius/issues/103)), and `release.yml` deploys
+nothing. To run a released version on the existing cluster, deploy it explicitly:
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set web.image.tag=0.5.0 \
+  --set api.image.tag=0.5.0 \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --wait --timeout 8m
+```
 
 ## Running the production stack
 
@@ -170,10 +243,128 @@ No account is created by the deployment: sign-up is open, register from the web 
 The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
 plus `infra/keycloak/realm-librarius.json`, bound to localhost).
 
+## 🔙 Rolling back
+
+Read this one top to bottom. Nothing has to be rebuilt: the previous images are still in
+GHCR under their immutable tags, and Helm kept the values of every past revision.
+
+Everything below assumes the `librarius` namespace and the `librarius` release:
+
+```bash
+export KUBECONFIG=~/.kube/librarius.yaml   # whatever you keep the cluster config in
+alias h='helm -n librarius'
+alias k='kubectl -n librarius'
+```
+
+### 1. See what is deployed, and what came before
+
+```bash
+h history librarius
+```
+
+```text
+REVISION  UPDATED                   STATUS      CHART            APP VERSION  DESCRIPTION
+12        Mon Jul 27 21:04:11 2026  superseded  librarius-0.4.1  0.4.1        Upgrade complete
+13        Tue Jul 28 09:12:40 2026  deployed    librarius-0.5.0  0.5.0        Upgrade complete
+```
+
+The revision to go back to is the last one whose `APP VERSION` is the one that worked —
+here `12`. Check which images it actually carried before committing to it:
+
+```bash
+h get values librarius --revision 12 --all | grep -A2 'image:'
+```
+
+### 2. Roll back
+
+```bash
+h rollback librarius 12 --wait --timeout 8m
+```
+
+Without a revision number, `h rollback librarius` goes back exactly one step. Prefer the
+explicit number: after a second failed attempt, "one step back" is no longer the version
+you have in mind.
+
+Helm records the rollback as a **new revision** (14 here) rather than deleting anything,
+so a rollback can itself be rolled back.
+
+### 3. Check, in this order
+
+```bash
+# 1. Pods: every one Running and Ready, RESTARTS not climbing.
+k get pods -l release=librarius
+
+# 2. Images: the tags you expected, on both deployments.
+k get deploy librarius-web librarius-api \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}'
+
+# 3. API health, bypassing ingress and TLS. Leave the forward running in a second
+#    shell; it needs no tooling inside the container.
+k port-forward deploy/librarius-api 8080:8080 &
+curl -s localhost:8080/q/health/ready; kill %1
+
+# 4. Public entry point: 200 on the app, and the API reachable through the ingress.
+#    (/api needs a token — /q/health does not, so it is the honest check here.)
+curl -sSI https://librarius.zelytra.fr/ | head -1
+curl -s https://librarius.zelytra.fr/q/health/ready
+
+# 5. The API log, for a migration or a datasource refusing to start.
+k logs deploy/librarius-api --tail=80
+```
+
+Then, in a browser: sign in through Keycloak (the OIDC round trip is what a bad `web`
+image breaks first), open **Settings** and read the version at the bottom — it must be the
+one you rolled back to. Force-reload once: the PWA service worker serves the previous
+bundle until it updates.
+
+### If the rollback itself fails
+
+| Symptom | What to do |
+|---|---|
+| `Error: release: not found` | Wrong namespace. `helm list -A \| grep librarius`. |
+| `another operation (install/upgrade/rollback) is in progress` | A previous run was interrupted. `h status librarius` shows `pending-upgrade`; wait for the lock to expire, then `h rollback librarius <revision>`. Never delete the release to unblock it — that drops the PVC. |
+| Pods stuck in `ImagePullBackOff` | The `ghcr-pull` secret is missing or expired in the namespace: recreate it (see `cd.yml`), then `k rollout restart deploy/librarius-web deploy/librarius-api`. |
+| `--wait` times out but the pods look fine | The readiness probe is failing. `k describe pod <name>` and `k logs <name>` — decide, do not re-run blindly. |
+| Everything failed and the site is down | `h rollback librarius <last known good revision>` again; then, only if Helm itself is stuck, `k rollout undo deploy/librarius-api` as a stopgap — it moves the pods without touching the Helm history, which will then be out of step with the cluster. |
+
+### What a rollback does **not** undo
+
+- **Database migrations.** Flyway migrations are applied forward at API startup and are
+  never reverted. An older API image against a migrated schema starts only if the
+  migration was backward compatible; if it was not, `k logs deploy/librarius-api` shows
+  Flyway refusing to start, and the way out is forward (fix and release), not back. Check
+  what the release contained before assuming a rollback is safe.
+- **Keycloak realm changes** made in the admin console: they live in the database, not in
+  the chart.
+- **Data written by the newer version.** Rows already created stay.
+- **The `latest` tag**, which keeps pointing at the head of `main`.
+
+### Rolling back without a usable Helm history
+
+If `h history` is gone (release re-installed, cluster rebuilt), deploy the version by
+number instead — the images are still there:
+
+```bash
+h upgrade --install librarius ./infra/helm/librarius \
+  --set web.image.tag=0.4.1 \
+  --set api.image.tag=0.4.1 \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --wait --timeout 8m
+```
+
+Use the chart from the tag that produced those images (`git checkout v0.4.1`), not the one
+from `main`: a chart from a later commit may template values the older images do not read.
+
+> Not yet exercised on the cluster. The commands above are the documented procedure; the
+> first real rollback should be run once deliberately, out of hours, and this section
+> corrected with what actually happens
+> ([#63](https://github.com/zelytra/Librarius/issues/63)).
+
 ## Later on
 
 - A **native** image (GraalVM) for the API (faster startup, smaller footprint) — to be
-  enabled in `release.yml` only (too slow for the pull request CI).
+  enabled on the tag pipeline (`release.yml`) only, too slow for the pull request CI.
 - A secret store (External Secrets, Sealed Secrets) instead of Secrets created by hand.
 - Grafana SSO through Keycloak (generic OAuth).
 

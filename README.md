@@ -84,6 +84,9 @@ Architecture and roadmap details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 
 ## Deployment
 
-Docker images (JVM api + nginx web) are built and pushed to GHCR by `release.yml`, and
-the production stack is described by `infra/compose.prod.yml`. Full guide:
+Docker images (JVM api + nginx web) are pushed to GHCR by `cd.yml` on every merge into
+`main` (tags `latest` and `<sha>`, then deployed to staging) and by `release.yml` on a
+`vX.Y.Z` tag (tags `X.Y.Z`, `X.Y`, `X` and `<sha>`). The production stack is described by
+`infra/compose.prod.yml`. Releases are listed in [`CHANGELOG.md`](CHANGELOG.md); the full
+guide, including the rollback procedure, is in
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).

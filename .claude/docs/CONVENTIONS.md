@@ -58,8 +58,15 @@ held identical content most of the time, and the extra merge bought nothing.
 2. Merging into `main` triggers `cd.yml`: image build, then `helm upgrade` into the
    `librarius` namespace on the **staging** environment `librarius.zelytra.fr`.
    **Never merge with a red CI.** Downtime during that deployment is acceptable there.
-3. Production is deployed by **tagging** `main`, never by merging. It does not exist yet
+3. A `vX.Y.Z` tag on `main` runs `release.yml`: images tagged `X.Y.Z` / `X.Y` / `X` /
+   `<sha>`, a changelog built from the commit subjects below, the chart aligned on the
+   version, and a GitHub release. It **deploys nothing**. Full procedure and rollback:
+   [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
+4. Production is deployed by **tagging** `main`, never by merging. It does not exist yet
    — see [#103](https://github.com/zelytra/Librarius/issues/103), pending a domain.
+
+Because the changelog is generated from the commit subjects, a badly typed subject ends up
+verbatim in a published release: `type(scope): summary`, nothing else.
 
 Because pull requests now target the default branch, a `Closes #nn` in the body actually
 closes the issue on merge. It did not while they targeted `develop`.

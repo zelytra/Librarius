@@ -12,6 +12,10 @@ ARG VITE_OIDC_AUTHORITY=""
 ARG VITE_OIDC_CLIENT_ID=""
 ENV VITE_OIDC_AUTHORITY=${VITE_OIDC_AUTHORITY}
 ENV VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID}
+# Version stamped into the bundle and shown on the Settings screen: the semantic version
+# on a released image, the commit on a staging one. Empty builds fall back to "dev".
+ARG VITE_APP_VERSION=""
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 RUN pnpm --filter @librarius/web build
 
 FROM nginx:1.27-alpine
