@@ -258,10 +258,31 @@ export const WishPriority = {
   SOMEDAY: 'SOMEDAY',
 } as const;
 
+export interface WishlistAcquireDto {
+  status?: LibraryStatus;
+  rating?: number;
+  acquiredAt?: LocalDate;
+}
+
+export interface WishlistBudgetDto {
+  total?: number;
+  pricedCount?: number;
+  byPriority?: WishlistBudgetLineDto[];
+}
+
+export interface WishlistBudgetLineDto {
+  priority?: string;
+  count?: number;
+  pricedCount?: number;
+  total?: number;
+}
+
 export interface WishlistCreateDto {
   book: ManualBookDto;
   priority?: WishPriority;
+  /** @minimum 0 */
   estimatedPrice?: number;
+  /** @maxLength 512 */
   note?: string;
 }
 
@@ -278,6 +299,15 @@ export interface WishlistPageDto {
   page?: number;
   size?: number;
   total?: number;
+  budget?: WishlistBudgetDto;
+}
+
+export interface WishlistUpdateDto {
+  priority: WishPriority;
+  /** @minimum 0 */
+  estimatedPrice?: number;
+  /** @maxLength 512 */
+  note?: string;
 }
 
 export type GetApiCatalogSearchParams = {
@@ -2121,6 +2151,71 @@ export const usePostApiWishlist = <TError = void,
     }
     
 /**
+ * @summary Update
+ */
+export const putApiWishlistId = (
+    id: Uuid,
+    wishlistUpdateDto: WishlistUpdateDto,
+ ) => {
+      
+      
+      return apiClient<unknown>(
+      {url: `/api/wishlist/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: wishlistUpdateDto
+    },
+      );
+    }
+  
+
+
+export const getPutApiWishlistIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiWishlistId>>, TError,{id: Uuid;data: WishlistUpdateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiWishlistId>>, TError,{id: Uuid;data: WishlistUpdateDto}, TContext> => {
+
+const mutationKey = ['putApiWishlistId'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiWishlistId>>, {id: Uuid;data: WishlistUpdateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiWishlistId(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiWishlistIdMutationResult = NonNullable<Awaited<ReturnType<typeof putApiWishlistId>>>
+    export type PutApiWishlistIdMutationBody = WishlistUpdateDto
+    export type PutApiWishlistIdMutationError = void
+
+    /**
+ * @summary Update
+ */
+export const usePutApiWishlistId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiWishlistId>>, TError,{id: Uuid;data: WishlistUpdateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiWishlistId>>,
+        TError,
+        {id: Uuid;data: WishlistUpdateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPutApiWishlistIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Delete
  */
 export const deleteApiWishlistId = (
@@ -2178,6 +2273,71 @@ export const useDeleteApiWishlistId = <TError = void,
       > => {
 
       const mutationOptions = getDeleteApiWishlistIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Acquire
+ */
+export const postApiWishlistIdAcquire = (
+    id: Uuid,
+    wishlistAcquireDto: WishlistAcquireDto,
+ ) => {
+      
+      
+      return apiClient<unknown>(
+      {url: `/api/wishlist/${id}/acquire`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: wishlistAcquireDto
+    },
+      );
+    }
+  
+
+
+export const getPostApiWishlistIdAcquireMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>, TError,{id: Uuid;data: WishlistAcquireDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>, TError,{id: Uuid;data: WishlistAcquireDto}, TContext> => {
+
+const mutationKey = ['postApiWishlistIdAcquire'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>, {id: Uuid;data: WishlistAcquireDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiWishlistIdAcquire(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiWishlistIdAcquireMutationResult = NonNullable<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>>
+    export type PostApiWishlistIdAcquireMutationBody = WishlistAcquireDto
+    export type PostApiWishlistIdAcquireMutationError = void
+
+    /**
+ * @summary Acquire
+ */
+export const usePostApiWishlistIdAcquire = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiWishlistIdAcquire>>, TError,{id: Uuid;data: WishlistAcquireDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiWishlistIdAcquire>>,
+        TError,
+        {id: Uuid;data: WishlistAcquireDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiWishlistIdAcquireMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

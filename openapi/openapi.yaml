@@ -402,6 +402,41 @@ components:
       - PRIORITY
       - SOON
       - SOMEDAY
+    WishlistAcquireDto:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        rating:
+          type: integer
+          format: int32
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+    WishlistBudgetDto:
+      type: object
+      properties:
+        total:
+          type: number
+        pricedCount:
+          type: integer
+          format: int64
+        byPriority:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishlistBudgetLineDto"
+    WishlistBudgetLineDto:
+      type: object
+      properties:
+        priority:
+          type: string
+        count:
+          type: integer
+          format: int64
+        pricedCount:
+          type: integer
+          format: int64
+        total:
+          type: number
     WishlistCreateDto:
       type: object
       required:
@@ -413,8 +448,11 @@ components:
           $ref: "#/components/schemas/WishPriority"
         estimatedPrice:
           type: number
+          multipleOf: 0.01
+          minimum: 0
         note:
           type: string
+          maxLength: 512
     WishlistItemDto:
       type: object
       properties:
@@ -444,10 +482,25 @@ components:
         total:
           type: integer
           format: int64
+        budget:
+          $ref: "#/components/schemas/WishlistBudgetDto"
+    WishlistUpdateDto:
+      type: object
+      required:
+      - priority
+      properties:
+        priority:
+          $ref: "#/components/schemas/WishPriority"
+        estimatedPrice:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+        note:
+          type: string
+          maxLength: 512
   securitySchemes:
     SecurityScheme:
       type: openIdConnect
-      openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
       description: Authentication
 paths:
   /api/catalog/search:
@@ -1074,6 +1127,36 @@ paths:
       security:
       - SecurityScheme: []
   /api/wishlist/{id}:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WishlistUpdateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update
+      tags:
+      - Wishlist Resource
+      security:
+      - SecurityScheme: []
     delete:
       parameters:
       - name: id
@@ -1092,6 +1175,37 @@ paths:
         "403":
           description: Not Allowed
       summary: Delete
+      tags:
+      - Wishlist Resource
+      security:
+      - SecurityScheme: []
+  /api/wishlist/{id}/acquire:
+    post:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WishlistAcquireDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Acquire
       tags:
       - Wishlist Resource
       security:

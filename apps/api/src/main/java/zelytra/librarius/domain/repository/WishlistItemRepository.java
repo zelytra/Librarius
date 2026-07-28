@@ -7,6 +7,7 @@ import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -20,6 +21,16 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
 
     public boolean deleteOwned(String userId, UUID id) {
         return delete("id = ?1 and userId = ?2", id, userId) > 0;
+    }
+
+    /**
+     * Scoping-safe lookup: returns the wish only when it belongs to the caller.
+     *
+     * <p>Callers turn an empty result into a 404 rather than a 403 — confirming that a
+     * wish exists but belongs to someone else is already a leak.
+     */
+    public Optional<WishlistItem> findOwned(String userId, UUID id) {
+        return find("id = ?1 and userId = ?2", id, userId).firstResultOptional();
     }
 
     // ── Paged browsing ────────────────────────────────────────────────────────
@@ -42,10 +53,14 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
     /** Orderings offered on the wishlist, exposed as the {@code sort} query parameter. */
     public enum WishlistSort {
         /**
-         * Most urgent first, then most recently added — the historical ordering, kept as
-         * the default.
+         * Most urgent first, then most recently added — the default.
+         *
+         * <p>The urgency comes from {@link #urgencyRank()}, not from the column: the
+         * priority is stored as its name, so {@code order by wi.priority} sorted
+         * {@code PRIORITY, SOMEDAY, SOON} and showed the wishes the user had no date for
+         * ahead of the ones they meant to buy next.
          */
-        PRIORITY("wi.priority asc, wi.createdAt desc, wi.id desc"),
+        PRIORITY(urgencyRank() + " asc, wi.createdAt desc, wi.id desc"),
         ADDED("wi.createdAt desc, wi.id desc"),
         TITLE("lower(w.title) asc, wi.id asc"),
         AUTHOR("lower(coalesce(w.authors, '')) asc, lower(w.title) asc, wi.id asc"),
@@ -56,6 +71,23 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
 
         WishlistSort(String clause) {
             this.clause = clause;
+        }
+
+        /**
+         * Maps each priority to {@link WishPriority#rank} inside the query, so the wishlist
+         * is ordered by what the user meant rather than by how the value is spelled.
+         *
+         * <p>Generated from the enum instead of being spelled out once here and once in the
+         * enum: a fourth priority is then a single declaration, and the two can never
+         * disagree on which wish is the more urgent.
+         */
+        private static String urgencyRank() {
+            StringBuilder expression = new StringBuilder("case wi.priority");
+            for (WishPriority priority : WishPriority.values()) {
+                expression.append(" when ").append(WishPriority.class.getName()).append('.')
+                        .append(priority.name()).append(" then ").append(priority.rank);
+            }
+            return expression.append(" end").toString();
         }
 
         /**
@@ -97,6 +129,50 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
                 WishlistItem.class);
         params.forEach(query::setParameter);
         return query.setFirstResult(offset).setMaxResults(limit).getResultList();
+    }
+
+    /**
+     * What one priority's wishes would cost.
+     *
+     * @param priority    the group
+     * @param count       wishes in it, whether or not they carry an estimate
+     * @param pricedCount those of them that do
+     * @param total       sum of those estimates, never null
+     */
+    public record PriorityBudget(WishPriority priority, long count, long pricedCount,
+            BigDecimal total) {
+    }
+
+    /**
+     * Budget of the wishes matching the filter, grouped by priority, most urgent first.
+     *
+     * <p>Aggregated by the database rather than by summing the page: a page holds at most
+     * `size` rows, so adding up what is on screen would answer a different question from
+     * the one the user is asking. Priorities nobody wishes for are absent rather than
+     * reported as zero — the client shows what exists.
+     */
+    public List<PriorityBudget> budgetByPriority(WishlistFilter filter) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        String where = whereClause(filter, params);
+        TypedQuery<Object[]> query = getEntityManager().createQuery(
+                "select wi.priority, count(wi), count(wi.estimatedPrice),"
+                        + " coalesce(sum(wi.estimatedPrice), 0)"
+                        + " from WishlistItem wi join wi.edition e join e.work w"
+                        + " where " + where
+                        + " group by wi.priority",
+                Object[].class);
+        params.forEach(query::setParameter);
+
+        // Ordering happens here rather than in SQL: `order by wi.priority` would sort the
+        // stored names, which is the very bug #114 is about.
+        return query.getResultList().stream()
+                .map(row -> new PriorityBudget(
+                        (WishPriority) row[0],
+                        (Long) row[1],
+                        (Long) row[2],
+                        (BigDecimal) row[3]))
+                .sorted(java.util.Comparator.comparingInt(b -> b.priority().rank))
+                .toList();
     }
 
     /**

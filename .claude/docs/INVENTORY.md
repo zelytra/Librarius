@@ -99,6 +99,12 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
   NOT NULL column — `PUT /api/goals/{year}` returned 500 for a year with no goal yet. Never
   caught, for lack of a test and for lack of a screen exposing the feature. Surfaced by the
   isolation tests.
+- **Wishlist sorted alphabetically instead of by urgency**
+  ([#114](https://github.com/zelytra/Librarius/issues/114), 2026-07-28): the priority is
+  stored as its name, so `order by priority` yielded `PRIORITY, SOMEDAY, SOON` and put the
+  wishes with no date attached ahead of the next purchases. The ordering now maps the
+  column to `WishPriority.rank`. Spotted while adding pagination (#38) and kept as its own
+  issue rather than changed silently under an unrelated title.
 
 ### Operations
 

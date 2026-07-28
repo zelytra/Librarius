@@ -27,6 +27,14 @@ app_user ──┬─< library_item >── edition >── work >── series
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
+
+The `priority` is stored as its name, so it is **not** what the wishlist is ordered by: the
+default ordering maps it to an urgency rank in the query, otherwise `SOMEDAY` sorts ahead of
+`SOON` ([#114](https://github.com/zelytra/Librarius/issues/114)). The `(user_id, priority)`
+index therefore serves the `priority=` filter and the budget grouping, not the sort — which
+is fine: it runs on one user's wishes, a set small enough for the sort to be free. Storing
+the rank in a column of its own would buy an index the ordering does not need, at the price
+of a denormalised field to keep in step on every write.
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
 | `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in |
 | `catalog_cache` | `(provider, query_hash)` | `payload JSONB`, `fetched_at`, `expires_at` | Owned by no user: it caches provider answers, not data. idx on `expires_at` for the purge |

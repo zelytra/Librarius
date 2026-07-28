@@ -10,6 +10,7 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -25,9 +26,13 @@ import zelytra.librarius.domain.repository.WishlistItemRepository;
 import zelytra.librarius.domain.repository.WishlistItemRepository.WishlistFilter;
 import zelytra.librarius.domain.repository.WishlistItemRepository.WishlistSort;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.web.ApiDtos.WishlistAcquireDto;
+import zelytra.librarius.web.ApiDtos.WishlistBudgetDto;
 import zelytra.librarius.web.ApiDtos.WishlistCreateDto;
 import zelytra.librarius.web.ApiDtos.WishlistItemDto;
 import zelytra.librarius.web.ApiDtos.WishlistPageDto;
+import zelytra.librarius.web.ApiDtos.WishlistUpdateDto;
+import zelytra.librarius.wishlist.WishlistService;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,8 +52,12 @@ public class WishlistResource {
     @Inject
     CatalogEntryService catalog;
 
+    @Inject
+    WishlistService wishlist;
+
     /**
-     * One page of the wishlist, filtered and sorted by the database.
+     * One page of the wishlist, filtered and sorted by the database, with the budget of the
+     * whole filtered set.
      *
      * @param page     zero-based page index, clamped to 0 at the lowest
      * @param size     items per page, clamped to {@value PageRequest#MAX_SIZE}
@@ -76,7 +85,8 @@ public class WishlistResource {
         List<WishlistItemDto> slice =
                 items.listMatching(filter, ordering, window.offset(), window.size())
                         .stream().map(WishlistItemDto::of).toList();
-        return new WishlistPageDto(slice, window.page(), window.size(), total);
+        WishlistBudgetDto budget = WishlistBudgetDto.of(items.budgetByPriority(filter));
+        return new WishlistPageDto(slice, window.page(), window.size(), total, budget);
     }
 
     @POST
@@ -95,6 +105,38 @@ public class WishlistResource {
         items.persist(item);
 
         return Response.status(Response.Status.CREATED).entity(WishlistItemDto.of(item)).build();
+    }
+
+    /**
+     * Replaces the priority, the estimated price and the note of a wish.
+     *
+     * <p>An identifier belonging to someone else answers 404 like an unknown one: a 403
+     * would confirm that the wish exists.
+     */
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response update(@PathParam("id") UUID id, @Valid WishlistUpdateDto dto) {
+        return wishlist.update(currentUser.id(), id, dto)
+                .map(wish -> Response.ok(wish).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    /**
+     * "I bought it": the wish becomes an owned title and leaves the wishlist, in one
+     * transaction. Answers 201 with the created title, or 404 when the wish is not the
+     * caller's.
+     *
+     * @param dto status, rating and purchase date; optional, as is the body itself
+     */
+    @POST
+    @Path("/{id}/acquire")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response acquire(@PathParam("id") UUID id, @Valid WishlistAcquireDto dto) {
+        currentUser.require();
+        return wishlist.acquire(currentUser.id(), id, dto)
+                .map(item -> Response.status(Response.Status.CREATED).entity(item).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @DELETE
