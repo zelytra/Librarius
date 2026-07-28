@@ -1,0 +1,209 @@
+{{- if .Values.backup.enabled }}
+{{- $bucket := required "backup.s3.bucket is required when backup.enabled is true (see docs/DEPLOYMENT.md)" .Values.backup.s3.bucket }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-backup-scripts
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "backup") | nindent 4 }}
+data:
+  # Step 1 — runs as an init container, in the PostgreSQL image (pg_dump, gzip).
+  # Plain SQL rather than the custom format: a restore then needs nothing but
+  # psql, which the database pod already has. See docs/DEPLOYMENT.md.
+  dump.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    pg_dump \
+      --host "$PGHOST" \
+      --username "$PGUSER" \
+      --dbname "$PGDATABASE" \
+      --no-owner --no-privileges \
+      | gzip -9 > /work/dump.sql.gz
+
+    size=$(wc -c < /work/dump.sql.gz)
+    echo "dump: ${size} bytes compressed"
+    # A dump smaller than a gzipped empty file is a dump that failed quietly.
+    if [ "$size" -lt 512 ]; then
+      echo "dump: suspiciously small, failing rather than uploading it" >&2
+      exit 1
+    fi
+
+  # Step 2 — runs in the AWS CLI image (which ships gpg). Encrypts the dump,
+  # uploads it into the retention tiers it belongs to, then prunes each tier.
+  upload.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    export GNUPGHOME=/tmp/gnupg
+    mkdir -p "$GNUPGHOME"
+    chmod 700 "$GNUPGHOME"
+
+    stamp=$(date -u +%Y%m%dT%H%M%SZ)
+    file="librarius-${stamp}.sql.gz.gpg"
+
+    # Symmetric AES-256, passphrase mounted from the Secret. The archive is
+    # therefore unreadable to whoever holds the bucket credentials alone.
+    gpg --batch --quiet --symmetric --cipher-algo AES256 \
+        --passphrase-file /secrets/passphrase \
+        --output "/work/${file}" /work/dump.sql.gz
+
+    # A custom endpoint is only passed when one is configured, so the same
+    # script works against AWS S3 and against any S3-compatible provider.
+    s3() {
+      if [ -n "${S3_ENDPOINT}" ]; then
+        aws --endpoint-url "${S3_ENDPOINT}" s3 "$@"
+      else
+        aws s3 "$@"
+      fi
+    }
+
+    put() {
+      s3 cp "/work/${file}" "s3://${S3_BUCKET}/${S3_PREFIX}/$1/${file}" --only-show-errors
+      echo "uploaded ${S3_PREFIX}/$1/${file}"
+    }
+
+    # Names are timestamped, so a lexicographic sort is chronological: keep the
+    # last N, delete whatever is older.
+    prune() {
+      tier="$1"
+      keep="$2"
+      # `aws s3 ls` exits 1 on a prefix that holds nothing, which is the normal
+      # state of weekly/ and monthly/ for the first days after enabling backups.
+      listing=$(s3 ls "s3://${S3_BUCKET}/${S3_PREFIX}/${tier}/" || true)
+      printf '%s\n' "${listing}" \
+        | awk 'NF { print $4 }' \
+        | sort \
+        | head -n "-${keep}" \
+        | while read -r key; do
+            s3 rm "s3://${S3_BUCKET}/${S3_PREFIX}/${tier}/${key}" --only-show-errors
+            echo "pruned ${tier}/${key}"
+          done
+    }
+
+    put daily
+    if [ "$(date -u +%u)" = "7" ]; then put weekly; fi
+    if [ "$(date -u +%d)" = "01" ]; then put monthly; fi
+
+    prune daily "${KEEP_DAILY}"
+    prune weekly "${KEEP_WEEKLY}"
+    prune monthly "${KEEP_MONTHLY}"
+
+    # Read the object back: an upload that returned 0 but stored nothing is the
+    # failure mode this whole job exists to avoid.
+    s3 ls "s3://${S3_BUCKET}/${S3_PREFIX}/daily/${file}"
+    echo "backup complete"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-postgres-backup
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "backup") | nindent 4 }}
+spec:
+  # Schedule is interpreted in UTC by the CronJob controller.
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  # A node busy at the scheduled minute still gets its backup, up to an hour late.
+  startingDeadlineSeconds: 3600
+  # Kept deliberately above two days: the "no successful backup in 48 h" alert
+  # reads the completion time of these Job objects.
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "librarius.selector" (dict "ctx" . "component" "backup") | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+          initContainers:
+            - name: dump
+              image: {{ .Values.backup.dumpImage }}
+              command: ["bash", "/scripts/dump.sh"]
+              env:
+                - name: PGHOST
+                  value: {{ .Release.Name }}-postgres
+                - name: PGUSER
+                  value: {{ .Values.postgres.user | quote }}
+                - name: PGDATABASE
+                  value: {{ .Values.postgres.database | quote }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "librarius.postgres.secretName" . }}
+                      key: {{ .Values.postgres.secretKey }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+              resources:
+                {{- toYaml .Values.backup.resources | nindent 16 }}
+          containers:
+            - name: upload
+              image: {{ .Values.backup.uploadImage }}
+              command: ["bash", "/scripts/upload.sh"]
+              env:
+                # The AWS CLI writes its cache under $HOME; the container is not root.
+                - name: HOME
+                  value: /tmp
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "librarius.backup.secretName" . }}
+                      key: {{ .Values.backup.secretKeys.accessKeyId }}
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "librarius.backup.secretName" . }}
+                      key: {{ .Values.backup.secretKeys.secretAccessKey }}
+                - name: AWS_DEFAULT_REGION
+                  value: {{ .Values.backup.s3.region | quote }}
+                - name: S3_ENDPOINT
+                  value: {{ .Values.backup.s3.endpoint | quote }}
+                - name: S3_BUCKET
+                  value: {{ $bucket | quote }}
+                - name: S3_PREFIX
+                  value: {{ .Values.backup.s3.prefix | quote }}
+                - name: KEEP_DAILY
+                  value: {{ .Values.backup.retention.daily | quote }}
+                - name: KEEP_WEEKLY
+                  value: {{ .Values.backup.retention.weekly | quote }}
+                - name: KEEP_MONTHLY
+                  value: {{ .Values.backup.retention.monthly | quote }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+                - name: passphrase
+                  mountPath: /secrets
+                  readOnly: true
+              resources:
+                {{- toYaml .Values.backup.resources | nindent 16 }}
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ .Release.Name }}-backup-scripts
+                defaultMode: 0555
+            - name: work
+              emptyDir:
+                sizeLimit: {{ .Values.backup.workDirSize }}
+            - name: passphrase
+              secret:
+                secretName: {{ include "librarius.backup.secretName" . }}
+                defaultMode: 0400
+                items:
+                  - key: {{ .Values.backup.secretKeys.passphrase }}
+                    path: passphrase
+{{- end }}

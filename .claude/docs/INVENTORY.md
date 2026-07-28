@@ -8,8 +8,8 @@
 The project is a **complete and deployed** skeleton: all 7 screens exist, the API exposes
 9 resources, OIDC auth works end to end, and CI/CD ships to k3s. What is missing is
 **functional depth** (series, fine-grained progress, French release dates), **quality**
-(incomplete i18n) and **operations**
-(plaintext secrets, no backups, no alerting).
+(incomplete i18n) and **operations** (plaintext secrets; a backup mechanism whose restore
+has never been run, alert rules written but no Prometheus to load them).
 
 > **Environment**: `librarius.zelytra.fr` is a **staging** environment, not production.
 > No production environment is open to date. That lowers the immediate criticality of the
@@ -30,6 +30,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 | Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard |
+| Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
 | CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
 
 ## Technical debt identified 🔧
@@ -111,8 +112,14 @@ production opens.*
     comeback — but the old values remain readable in the history and the instance is
     reachable from the Internet: the exposure only closes once they are **rotated on the
     cluster**. Procedure in `docs/DEPLOYMENT.md`.
-14. **No PostgreSQL backup.** `local-path` PVC on a single node. Tolerable as long as the
-    staging data is disposable — to be handled before hosting any real data.
+14. **PostgreSQL backups: mechanism shipped, restore never exercised.** The chart carries a
+    daily CronJob (`pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention),
+    **off by default** until a bucket and its credentials exist. The chain is tested end to
+    end against a throwaway PostgreSQL and MinIO (`infra/backup/verify.sh`), and the restore
+    procedure is written down in `docs/DEPLOYMENT.md` — but it has never been run against
+    the cluster, and Keycloak's own database is not in the dump.
+    [#59](https://github.com/zelytra/Librarius/issues/59) stays open until a real restore is
+    done.
 15. **No alerting.** Grafana displays, nobody gets told.
 16. **`Recreate` strategy** (node CPU constraint) → downtime on every deployment. Accepted
     in staging.

@@ -92,6 +92,15 @@ API; Grafana (`:3000`) is provisioned as code (Prometheus datasource and the das
 searches). In dev, Prometheus scrapes the host (`host.docker.internal:8080`); in prod,
 the API container.
 
+## Backups ✅
+
+A Helm CronJob dumps PostgreSQL daily (`pg_dump`, gzip, AES-256 via gpg) to an
+S3-compatible bucket outside the cluster, keeping 7 daily, 4 weekly and 6 monthly
+archives. It is **off by default**: the destination and its credentials are an operator
+decision, read from a Kubernetes Secret. `infra/backup/verify.sh` exercises the whole
+chain against a throwaway PostgreSQL and MinIO. Restore procedure: `docs/DEPLOYMENT.md`
+§ "Restoring PostgreSQL".
+
 ## Pull request roadmap
 
 1. **Foundation** — monorepo, web/api skeletons, postgres compose, minimal CI ✅

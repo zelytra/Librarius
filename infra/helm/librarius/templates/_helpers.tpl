@@ -33,3 +33,12 @@ a password committed to the repository.
 {{- define "librarius.keycloak.secretName" -}}
 {{- required "keycloak.existingSecret is required: create the Secret then deploy with --set keycloak.existingSecret=<name> (see docs/DEPLOYMENT.md)" .Values.keycloak.existingSecret -}}
 {{- end -}}
+
+{{/*
+Name of the Secret holding the object-storage credentials and the backup
+encryption passphrase. Only reached when backup.enabled is true, so the chart
+still renders untouched for a deployment that has no backup destination yet.
+*/}}
+{{- define "librarius.backup.secretName" -}}
+{{- required "backup.existingSecret is required when backup.enabled is true: create the Secret then deploy with --set backup.existingSecret=<name> (see docs/DEPLOYMENT.md)" .Values.backup.existingSecret -}}
+{{- end -}}
