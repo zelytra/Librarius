@@ -1,7 +1,7 @@
 name: openapi-sync
 
-# Garantit que le schéma OpenAPI commité et le client TS généré sont à jour
-# vis-à-vis du code de l'API. Échoue si un `pnpm gen:api` aurait produit un diff.
+# Guarantees that the committed OpenAPI schema and the generated TypeScript client
+# match the API code. Fails when `pnpm gen:api` would produce a diff.
 on:
   push:
     branches: [main, develop]
@@ -18,6 +18,14 @@ on:
       - 'apps/web/orval.config.ts'
       - 'apps/web/src/api/**'
       - '.github/workflows/openapi-sync.yml'
+
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: openapi-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   sync:
@@ -36,7 +44,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Regenerate OpenAPI schema from the API
@@ -52,6 +60,6 @@ jobs:
       - name: Fail on drift
         run: |
           if ! git diff --exit-code -- apps/web/openapi apps/web/src/api/generated; then
-            echo "::error::Le schéma OpenAPI ou le client TS sont périmés. Lancez 'pnpm --filter @librarius/web gen:api' (après build de l'API) et committez."
+            echo "::error::The OpenAPI schema or the TypeScript client is stale. Run 'pnpm --filter @librarius/web gen:api' after building the API, then commit the result."
             exit 1
           fi

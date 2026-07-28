@@ -9,6 +9,7 @@ on:
       - 'pnpm-workspace.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - '.nvmrc'
       - '.github/workflows/web.yml'
   pull_request:
     paths:
@@ -17,7 +18,16 @@ on:
       - 'pnpm-workspace.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - '.nvmrc'
       - '.github/workflows/web.yml'
+
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -28,9 +38,10 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
+      # Single source of truth for the Node version, shared with local setups.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -38,6 +49,11 @@ jobs:
 
       - name: Lint
         run: pnpm --filter @librarius/web lint
+
+      # Explicit: `build` also runs tsc, but a type error must be reported as
+      # such rather than buried in a build failure.
+      - name: Type check
+        run: pnpm --filter @librarius/web typecheck
 
       - name: Test
         run: pnpm --filter @librarius/web test
