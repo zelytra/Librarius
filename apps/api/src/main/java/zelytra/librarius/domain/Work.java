@@ -6,6 +6,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
@@ -30,8 +32,17 @@ public class Work {
     @Column(length = 512)
     public String authors;
 
+    /**
+     * Denormalised label of {@link #series}, kept for the clients that still read it.
+     * Dropped once the front end goes through the series identifier — see V4.
+     */
     @Column(name = "series_title", length = 512)
     public String seriesTitle;
+
+    /** The run this work belongs to, {@code null} for a standalone title. */
+    @ManyToOne
+    @JoinColumn(name = "series_id")
+    public Series series;
 
     @Column(name = "volume_number")
     public Integer volumeNumber;
