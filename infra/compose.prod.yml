@@ -42,6 +42,9 @@ services:
       QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-librarius}
       QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in infra/.env}
       OIDC_AUTH_SERVER_URL: ${OIDC_AUTH_SERVER_URL:-http://localhost:8081/realms/librarius}
+      # Browsers send an Origin header on writes even same-origin: without the public
+      # origin allowed, every POST, PUT and DELETE is rejected with a 403.
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8088}
     depends_on:
       - postgres
       - keycloak
