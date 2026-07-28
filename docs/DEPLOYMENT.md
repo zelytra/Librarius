@@ -25,7 +25,7 @@ value**: compose refuses to start while one of them is missing, rather than fall
 to a password published in this repository. `infra/.env` is git-ignored.
 
 Services: `postgres`, `keycloak` (:8081), `api`, `web` (:8088), `prometheus`, `grafana` (:3000).
-The PWA (`web`) serves the app and **proxies** `/api` and `/q` to the API (see `apps/web/nginx.conf`).
+The PWA (`web`) serves the app and **proxies** `/api` to the API (see `apps/web/nginx.conf`). `/q` is not proxied: Prometheus reaches the api container directly over the compose network.
 
 ## Environment variables
 
@@ -66,7 +66,7 @@ chart (v0.2.0): **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) and **Key
 
 - **Single host** `librarius.zelytra.fr` (Traefik + cert-manager `letsencrypt-prod`,
   secret `librarius-zelytra-fr-tls`). Path-based routing:
-  `/auth` → Keycloak, `/api` + `/q` → api, `/` → web.
+  `/auth` → Keycloak, `/api` → api, `/` → web. `/q` is deliberately not routed.
 - **End-to-end OIDC**: issuer = `https://librarius.zelytra.fr/auth/realms/librarius`.
   The web app embeds that authority at build time (`VITE_OIDC_AUTHORITY`); the api
   validates internally (discovery/JWKS through the Keycloak service, dynamic
