@@ -29,3 +29,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Worktrees temporaires des agents
+.claude/worktrees/
