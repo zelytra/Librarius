@@ -87,30 +87,6 @@ components:
           type: string
         builtin:
           type: boolean
-    Cover:
-      type: object
-      properties:
-        large:
-          type: string
-    Data:
-      type: object
-      properties:
-        Page:
-          $ref: "#/components/schemas/Page"
-        Staff:
-          $ref: "#/components/schemas/StaffSearch"
-    FuzzyDate:
-      type: object
-      properties:
-        year:
-          type: integer
-          format: int32
-        month:
-          type: integer
-          format: int32
-        day:
-          type: integer
-          format: int32
     GenreCount:
       type: object
       properties:
@@ -151,19 +127,6 @@ components:
           minimum: 1
         unit:
           $ref: "#/components/schemas/GoalUnit"
-    GqlRequest:
-      type: object
-      properties:
-        query:
-          type: string
-        variables:
-          type: object
-          additionalProperties: {}
-    GqlResponse:
-      type: object
-      properties:
-        data:
-          $ref: "#/components/schemas/Data"
     ImportResult:
       type: object
       properties:
@@ -297,43 +260,6 @@ components:
           type: string
         locale:
           type: string
-    Media:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        title:
-          $ref: "#/components/schemas/Title"
-        startDate:
-          $ref: "#/components/schemas/FuzzyDate"
-        coverImage:
-          $ref: "#/components/schemas/Cover"
-        description:
-          type: string
-        isAdult:
-          type: boolean
-        staff:
-          $ref: "#/components/schemas/Staff"
-    MediaConnection:
-      type: object
-      properties:
-        nodes:
-          type: array
-          items:
-            $ref: "#/components/schemas/Media"
-    Name:
-      type: object
-      properties:
-        full:
-          type: string
-    Page:
-      type: object
-      properties:
-        media:
-          type: array
-          items:
-            $ref: "#/components/schemas/Media"
     ProgressDto:
       type: object
       properties:
@@ -477,30 +403,6 @@ components:
           type: boolean
         upcoming:
           type: boolean
-    Staff:
-      type: object
-      properties:
-        edges:
-          type: array
-          items:
-            $ref: "#/components/schemas/StaffEdge"
-    StaffEdge:
-      type: object
-      properties:
-        role:
-          type: string
-        node:
-          $ref: "#/components/schemas/StaffNode"
-    StaffNode:
-      type: object
-      properties:
-        name:
-          $ref: "#/components/schemas/Name"
-    StaffSearch:
-      type: object
-      properties:
-        staffMedia:
-          $ref: "#/components/schemas/MediaConnection"
     StatsDto:
       type: object
       properties:
@@ -529,13 +431,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GenreCount"
-    Title:
-      type: object
-      properties:
-        romaji:
-          type: string
-        english:
-          type: string
     UUID:
       type: string
       format: uuid
@@ -645,23 +540,9 @@ components:
   securitySchemes:
     SecurityScheme:
       type: openIdConnect
+      openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
       description: Authentication
 paths:
-  /:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GqlRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GqlResponse"
   /api/catalog/search:
     get:
       parameters:

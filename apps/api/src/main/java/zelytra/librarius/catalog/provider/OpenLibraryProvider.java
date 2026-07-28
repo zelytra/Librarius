@@ -98,7 +98,7 @@ public class OpenLibraryProvider implements CatalogProvider {
         if (value == null) {
             return;
         }
-        String cleaned = value.replace("\"", " ").replace("\\", " ").trim();
+        String cleaned = value.replace("\"", " ").replace("\\", " ").replaceAll("\\s+", " ").trim();
         if (cleaned.isEmpty()) {
             return;
         }
