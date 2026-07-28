@@ -12,7 +12,7 @@
 ## 2. Git flow
 
 ```text
-main      ──●────────────────●──────────►  production (déploiement automatique)
+main      ──●────────────────●──────────►  qualification (déploiement automatique)
              ↖ merge          ↖ merge
 develop   ──●──●──●──●──●──●──●──────────►  intégration
              ↖  ↖  ↖
@@ -30,8 +30,9 @@ feature/*    ●  ●  ●
 
 1. `feature/x` → PR vers `develop`, CI verte, merge, suppression de la branche.
 2. Pour livrer : PR `develop` → `main`, titre « Release — <sujet> ».
-3. Le merge sur `main` déclenche `cd.yml` (build images + `helm upgrade`) : **ne jamais
-   merger sur `main` avec une CI rouge**.
+3. Le merge sur `main` déclenche `cd.yml` (build images + `helm upgrade`) vers la
+   **qualification** `librarius.zelytra.fr` : **ne jamais merger sur `main` avec une CI
+   rouge**. La coupure de service pendant le déploiement y est acceptable.
 
 ### Identité de commit
 

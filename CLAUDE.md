@@ -59,7 +59,8 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 - Commits conventionnels en français : `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
 - Identité de commit : `zelytra` / `contact@zelytra.fr`.
 - Toute modification passe par une PR vers `develop`, puis `develop` → `main` pour livrer.
-- **Ne jamais merger avec une CI rouge.** `cd.yml` déploie automatiquement sur push `main`.
+- **Ne jamais merger avec une CI rouge.** `cd.yml` déploie automatiquement sur push `main`,
+  vers la **qualification** (pas de production ouverte à ce jour).
 
 ## Règles de code
 
@@ -79,4 +80,10 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 | Env | URL | Notes |
 |---|---|---|
 | Local | http://localhost:5173 | comptes de test `alice/alice`, `bob/bob` |
-| Prod | https://librarius.zelytra.fr | k3s, ingress unique ; `/auth` → Keycloak, `/api` + `/q` → api |
+| Qualification | https://librarius.zelytra.fr | k3s, ingress unique ; `/auth` → Keycloak, `/api` + `/q` → api |
+| Production | — | n'existe pas encore ; à ouvrir au jalon v1.0 |
+
+⚠️ `librarius.zelytra.fr` est un environnement de **qualification**, pas de production :
+une coupure de service à la livraison est acceptable, et les données y sont considérées
+comme jetables. Cette hypothèse tombe à l'ouverture de la production — voir
+[ROADMAP](.claude/docs/ROADMAP.md).
