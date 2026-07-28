@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
-import { libraryItem } from '../../test/fixtures';
+import { BUILTIN_CATEGORIES, libraryItem } from '../../test/fixtures';
 import { http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -44,18 +44,37 @@ describe('DetailPage', () => {
   });
 
   test('assigning a rank is reflected immediately', async () => {
-    libraryReturns([ITEM]);
-    server.use(http.put('*/api/library/:id/rank', () => HttpResponse.json({ id: 'item-1', rankCode: 'or' })));
+    // The screen re-reads the item after the mutation instead of patching its own
+    // state, so the handler has to record the new rank.
+    let item = { ...ITEM };
+    server.use(
+      http.get('*/api/library', () => HttpResponse.json([item])),
+      http.put('*/api/library/:id/rank', async ({ request }) => {
+        const body = (await request.json()) as { categoryId?: string };
+        const category = BUILTIN_CATEGORIES.find((c) => c.id === body.categoryId);
+        item = { ...item, rankCode: category?.code };
+        return HttpResponse.json(item);
+      }),
+    );
     renderDetail();
 
     await userEvent.click(await screen.findByText('Or'));
 
     // The button switches to the selected state: the accent border is applied.
-    expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' });
+    await waitFor(() =>
+      expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' }));
   });
 
   test('marking as read toggles the label', async () => {
-    libraryReturns([ITEM]);
+    let item = { ...ITEM };
+    server.use(
+      http.get('*/api/library', () => HttpResponse.json([item])),
+      http.put('*/api/library/:id/progress', async ({ request }) => {
+        const body = (await request.json()) as { status?: string };
+        item = { ...item, status: body.status };
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderDetail();
 
     await userEvent.click(await screen.findByText('Marquer comme lu'));

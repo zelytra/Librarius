@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
-import { getApiStats, type StatsDto } from '../../api/generated/librarius';
+import { useGetApiStats } from '../../api/generated/librarius';
 
 const GENRE_GRADIENTS = [
   'linear-gradient(90deg,#9aab92,#bccab2)',
@@ -13,21 +11,7 @@ const GENRE_GRADIENTS = [
 ];
 
 function StatsContent() {
-  const { opts } = useApiAuth();
-  const [stats, setStats] = useState<StatsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const res = await getApiStats(opts);
-        if (res.status === 200) setStats(res.data);
-      } finally {
-        setLoading(false);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: stats, isPending: loading } = useGetApiStats();
 
   if (loading) return <p style={{ color: 'var(--muted)', fontSize: 13 }}>Chargement…</p>;
   if (!stats) return <p style={{ color: 'var(--rose)', fontSize: 13 }}>Statistiques indisponibles.</p>;

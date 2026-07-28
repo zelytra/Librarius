@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Chip, Segmented } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  deleteApiLibraryId,
-  getApiLibrary,
+  getGetApiLibraryQueryKey,
+  getGetApiStatsQueryKey,
+  useDeleteApiLibraryId,
+  useGetApiLibrary,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
 import { RANK_COLORS, RANK_ICONS } from './mockData';
@@ -90,35 +92,26 @@ function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; on
 function CollectionContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { opts } = useApiAuth();
+  const queryClient = useQueryClient();
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-  const [items, setItems] = useState<LibraryItemDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [collType, setCollType] = useState<Kind>('BOOK');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('ajout');
   const [grouped, setGrouped] = useState(false);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getApiLibrary(undefined, opts);
-      if (res.status === 200) setItems(res.data);
-    } finally {
-      setLoading(false);
-    }
-    // opts identity changes each render; fetch once on mount is enough here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: items = [], isPending: loading } = useGetApiLibrary();
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const { mutate: removeItem } = useDeleteApiLibraryId({
+    mutation: {
+      onSuccess: () => {
+        // Removing a title also changes the counters and the home carousels.
+        void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+      },
+    },
+  });
 
-  async function remove(id: string) {
-    await deleteApiLibraryId(id, opts);
-    setItems((cur) => cur.filter((it) => it.id !== id));
-  }
+  const remove = (id: string) => removeItem({ id });
 
   const filtered = useMemo(() => {
     let list = items.filter((it) => it.book?.kind === collType);

@@ -44,7 +44,15 @@ describe('WishlistPage', () => {
   });
 
   test('removing a wish drops it from the list', async () => {
-    wishlistReturns([wishlistItem()]);
+    // The list is re-read after the mutation, so the handler applies the deletion.
+    let items = [wishlistItem()];
+    server.use(
+      http.get('*/api/wishlist', () => HttpResponse.json(items)),
+      http.delete('*/api/wishlist/:id', ({ params }) => {
+        items = items.filter((it) => it.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderWithProviders(<WishlistPage />);
 
     await screen.findByText('Vinland Saga');

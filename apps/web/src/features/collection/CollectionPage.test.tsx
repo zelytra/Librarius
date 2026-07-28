@@ -64,7 +64,16 @@ describe('CollectionPage', () => {
   });
 
   test('removing a title drops it from the list', async () => {
-    libraryReturns([ROMAN]);
+    // The list is re-read from the server after the mutation, so the handler has to
+    // actually apply the deletion — the screen no longer patches its own state.
+    let items = [ROMAN];
+    server.use(
+      http.get('*/api/library', () => HttpResponse.json(items)),
+      http.delete('*/api/library/:id', ({ params }) => {
+        items = items.filter((it) => it.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderWithProviders(<CollectionPage />);
 
     await screen.findByText('Le Nom du vent');

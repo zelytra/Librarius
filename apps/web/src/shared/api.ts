@@ -1,13 +1,16 @@
 import { useAuth } from 'react-oidc-context';
 
-/** Convenient access to the auth state plus the fetch options (token) for the API. */
+/**
+ * Authentication state for the screens that gate on it.
+ *
+ * It no longer hands out fetch options: the bearer token is attached by `apiClient`,
+ * which the generated hooks call. Screens only need to know whether a session exists.
+ */
 export function useApiAuth() {
   const auth = useAuth();
-  const token = auth.user?.access_token;
   return {
     authed: auth.isAuthenticated,
     loading: auth.isLoading,
     login: () => void auth.signinRedirect(),
-    opts: token ? ({ headers: { Authorization: `Bearer ${token}` } } as RequestInit) : undefined,
   };
 }

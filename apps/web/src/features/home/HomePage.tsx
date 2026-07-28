@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  getApiCatalogUpcoming,
-  getApiLibrary,
-  getApiStats,
-  type CatalogResult,
+  useGetApiCatalogUpcoming,
+  useGetApiLibrary,
+  useGetApiStats,
   type LibraryItemDto,
-  type StatsDto,
 } from '../../api/generated/librarius';
 
 const PALETTE = ['#bccab2', '#cabdd6', '#ddb9b3', '#b6c6d6', '#dccfae', '#aec8c0', '#d8b6a6', '#bcc9d8'];
@@ -36,24 +32,11 @@ function Cover({ item, onClick, w = 104 }: { item: LibraryItemDto; onClick: () =
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { opts } = useApiAuth();
-  const [items, setItems] = useState<LibraryItemDto[]>([]);
-  const [stats, setStats] = useState<StatsDto | null>(null);
-  const [upcoming, setUpcoming] = useState<CatalogResult[]>([]);
-
-  useEffect(() => {
-    void (async () => {
-      const [lib, st, up] = await Promise.all([
-        getApiLibrary(undefined, opts),
-        getApiStats(opts),
-        getApiCatalogUpcoming({ kind: 'MANGA', limit: 5 }, opts),
-      ]);
-      if (lib.status === 200) setItems(lib.data);
-      if (st.status === 200) setStats(st.data);
-      if (up.status === 200) setUpcoming(up.data);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The three queries run in parallel and are cached independently: coming back to Home
+  // after browsing no longer refetches the whole library.
+  const { data: items = [] } = useGetApiLibrary();
+  const { data: stats } = useGetApiStats();
+  const { data: upcoming = [] } = useGetApiCatalogUpcoming({ kind: 'MANGA', limit: 5 });
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const reading = items.filter((it) => it.status === 'READING');
