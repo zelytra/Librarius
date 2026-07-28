@@ -1,19 +1,28 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { DEFAULT_THEME, isThemeId, type ThemeId } from './themes';
+import {
+  STORAGE_KEY,
+  applyTheme,
+  darkModeQuery,
+  readStoredTheme,
+  resolveTheme,
+  type ThemeId,
+} from './themes';
 import { ThemeContext, type ThemeContextValue } from './context';
 
-const STORAGE_KEY = 'librarius.theme';
-
-function readInitialTheme(): ThemeId {
-  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-  return isThemeId(stored) ? stored : DEFAULT_THEME;
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>(readInitialTheme);
+  const [theme, setThemeState] = useState<ThemeId>(readStoredTheme);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    applyTheme(resolveTheme(theme));
+
+    // Following the system preference means following it while the app is open,
+    // not only at load time.
+    if (theme !== 'systeme') return;
+    const query = darkModeQuery();
+    if (!query) return;
+    const onChange = () => applyTheme(resolveTheme(theme));
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(

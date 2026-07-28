@@ -13,13 +13,17 @@
   position: relative;
 }
 
-/* Coloured wash behind the top of the screen, tinted with the cover colour. */
+/* Coloured wash behind the top of the screen, tinted with the cover colour.
+   The tint is a pastel whatever the theme, so on a dark palette it is toned
+   down: at full strength it made the top of the screen lighter than the title
+   printed on it. */
 .wash {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 300px;
+  opacity: var(--wash-opacity);
 }
 
 .body {
@@ -31,6 +35,8 @@
   padding: 14px 0 18px;
 }
 
+/* --overlay follows the theme: a fixed white pill would burn a hole in a dark
+   page, since the wash behind it is barely there. */
 .backButton {
   width: 40px;
   height: 40px;

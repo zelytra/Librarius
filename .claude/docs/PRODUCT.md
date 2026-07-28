@@ -119,7 +119,10 @@ Search across the external catalog (Open Library for books, AniList for manga).
 ### 4.7 Settings ✅ / 🔜
 
 - ✅ Booknode / Babelio import (by handle) and CSV import.
-- ✅ Theme selection.
+- ✅ Theme selection: four palettes (Crème, Sauge, Rose, Nuit) plus **Système**, which
+  follows the operating system preference and is the default. The choice is kept in
+  `localStorage` and applied before the first paint, so a reload never flashes the light
+  theme.
 - 🔜 **Profile**: display name, language, time zone.
 - 🔜 **Library export** (CSV + JSON) — *GDPR requirement*.
 - 🔜 **Account and data deletion** — *GDPR requirement*.
