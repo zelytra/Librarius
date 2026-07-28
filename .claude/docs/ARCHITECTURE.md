@@ -19,7 +19,7 @@ Browser (React 19 PWA)
 ```
 
 On the deployed environment, **a single host** `librarius.zelytra.fr` sits behind Traefik:
-`/auth` → Keycloak · `/api` + `/q` → API · `/` → nginx (the PWA).
+`/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the probes hit the pod, Prometheus scrapes the Service.
 The front end and the API are therefore *same-origin*: no CORS preflight.
 
 > `librarius.zelytra.fr` is a **staging** environment. No production environment is open to
@@ -142,7 +142,7 @@ regeneration.
 | Authorisation | `@Authenticated` on every resource, with no exception |
 | Data isolation | Application-level, through `user_id` in every query — locked down by `DataIsolationTest` since [#39](https://github.com/zelytra/Librarius/issues/39) |
 | Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
-| Exposed surface | Swagger UI enabled on the deployed environment (`always-include=true`) — to be restricted before opening to the public |
+| Exposed surface | Only `/auth`, `/api` and `/` are routed. Swagger UI is dev/test only, `/q` is cluster-internal ([#62](https://github.com/zelytra/Librarius/issues/62)) |
 | Rate limiting | None |
 | Static analysis | CodeQL on `javascript-typescript` and `java-kotlin`, weekly and on every pull request (`codeql.yml`) |
 | Dependency vulnerabilities | `pnpm audit --prod --audit-level high` blocks the pull request (`audit.yml`); Maven is covered by Dependabot alerts only — no keyless CI gate exists (see below) |

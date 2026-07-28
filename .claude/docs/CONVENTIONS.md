@@ -147,17 +147,24 @@ Windows machine that has neither a JDK nor Docker, go through WSL — where Dock
 run Maven inside a container:
 
 ```bash
-wsl -d Ubuntu -- bash -lc 'docker run --rm --network host \
+wsl -d Ubuntu -- bash -lc 'docker run --rm \
+  --add-host=host.docker.internal:host-gateway \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /mnt/c/Users/<user>/WebstormProjects/Librarius:/workspace \
   -v librarius-m2:/root/.m2 \
-  -e TESTCONTAINERS_RYUK_DISABLED=true \
   -w /workspace/apps/api \
   maven:3.9-eclipse-temurin-21 mvn -B verify'
 ```
 
 The named volume `librarius-m2` keeps the Maven cache between runs: the first run downloads
 everything and takes several minutes, the following ones are fast.
+
+**Do not add `--network host`.** It looks harmless and it is not: the container then shares
+WSL's network stack, so if the local dev stack is up (`pnpm infra:up`, Keycloak on 8081)
+Quarkus cannot bind its test port and the run fails with *Unable to start HTTP server* —
+one error followed by dozens of skipped tests, which reads like a code failure and is not.
+Testcontainers publishes its containers on the bridge and hands back
+`172.17.0.1:<port>`, so the default network works fine.
 
 On the front-end side, Node and pnpm work natively. One caveat: on Node ≥ 22 the native
 `localStorage` takes precedence over the jsdom one — `src/test/setup.ts` neutralises it, do

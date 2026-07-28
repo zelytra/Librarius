@@ -32,7 +32,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 
-Outside `/api`: `/q/health`, `/q/metrics` (Prometheus), `/q/swagger-ui`.
+Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the ingress does not route `/q`. Swagger UI is served in dev and test, and absent from the production build.
 
 ## Main DTOs
 
