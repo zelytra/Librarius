@@ -2,7 +2,7 @@
 
 Base : `/api`. Toutes les ressources sont `@Authenticated` (JWT Keycloak en
 `Authorization: Bearer …`) **sauf `/api/hello`**, endpoint de démo à supprimer.
-Contrat de référence : `apps/web/openapi/openapi.yaml` (généré au build).
+Contrat de référence : `openapi/openapi.yaml` (généré au build).
 
 > ⚠️ Toute modification d'une ressource ou d'un DTO impose de régénérer le schéma **et**
 > le client TS, sinon la CI `openapi-sync` échoue :

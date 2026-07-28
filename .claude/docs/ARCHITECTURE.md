@@ -118,7 +118,7 @@ zelytra/librarius/
 
 ```text
 apps/api (annotations JAX-RS)
-   └─ mvnw package → apps/web/openapi/openapi.{json,yaml}   (généré au build)
+   └─ mvnw package → openapi/openapi.{json,yaml}   (généré au build)
         └─ pnpm gen:api (orval) → apps/web/src/api/generated/librarius.ts
 ```
 
@@ -133,13 +133,13 @@ régénération.
 | Authentification | Keycloak OIDC, `quarkus.oidc.application-type=service`, JWT validé par JWKS |
 | Autorisation | `@Authenticated` sur toutes les ressources sauf `HelloResource` (à supprimer) |
 | Isolation des données | Applicative, via `user_id` dans chaque requête — **à couvrir par des tests dédiés** |
-| Secrets | ⚠️ En clair dans `helm/librarius/values.yaml` — à migrer vers des Secrets Kubernetes |
+| Secrets | ⚠️ En clair dans `infra/helm/librarius/values.yaml` — à migrer vers des Secrets Kubernetes |
 | Surface exposée | Swagger UI actif sur l'environnement déployé (`always-include=true`) — à restreindre avant l'ouverture publique |
 | Rate limiting | Aucun |
 
 ## 6. Déploiement
 
-Chart `helm/librarius` : `web`, `api`, `postgres` (PVC `local-path`, deux bases
+Chart `infra/helm/librarius` : `web`, `api`, `postgres` (PVC `local-path`, deux bases
 `librarius` + `keycloak`), `keycloak`, `ingress` (Traefik + cert-manager).
 Push sur `main` → `cd.yml` → build/push images GHCR taguées `<sha>` → `helm upgrade`.
 

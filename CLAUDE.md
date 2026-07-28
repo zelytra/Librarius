@@ -49,8 +49,10 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 |---|---|
 | `apps/web/` | PWA React 19 + Vite 6 + TS. `features/<écran>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **ne jamais éditer à la main**) |
 | `apps/api/` | Quarkus 3 / Java 21. `domain/` (entités + repositories Panache), `web/` (ressources JAX-RS + DTOs), `catalog/` (providers externes), `imports/`, `security/` |
-| `infra/` | docker-compose dev & prod, realm Keycloak, Prometheus, Grafana |
-| `helm/librarius/` | chart de déploiement k3s (web, api, postgres, keycloak, ingress) |
+| `openapi/` | **Contrat** entre l'api et le web : schéma produit au build de l'api, consommé par orval. N'appartient à aucune des deux applications |
+| `packages/` | Bibliothèques partagées — vide à ce jour, le glob du workspace l'attend |
+| `infra/` | docker-compose dev & prod, realm Keycloak, Prometheus, Grafana, chart Helm |
+| `infra/helm/librarius/` | chart de déploiement k3s (web, api, postgres, keycloak, ingress) |
 | `docs/` | doc publique (ARCHITECTURE, DEPLOYMENT) |
 | `.claude/docs/` | doc de travail détaillée pour les agents |
 
