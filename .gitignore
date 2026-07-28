@@ -12,6 +12,9 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
+# ── Lighthouse CI ─────────────────────────────────────────────────────────────
+.lighthouseci/
+
 # ── Playwright (e2e) ──────────────────────────────────────────────────────────
 test-results/
 playwright-report/
