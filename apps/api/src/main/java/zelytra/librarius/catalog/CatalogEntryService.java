@@ -9,6 +9,7 @@ import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.EditionRepository;
 import zelytra.librarius.domain.repository.SeriesRepository;
 import zelytra.librarius.domain.repository.WorkRepository;
+import zelytra.librarius.genre.GenreService;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
 /**
@@ -28,6 +29,9 @@ public class CatalogEntryService {
     @Inject
     SeriesRepository series;
 
+    @Inject
+    GenreService genres;
+
     public Edition createManualEdition(ManualBookDto dto) {
         Work work = new Work();
         work.kind = dto.kind();
@@ -38,7 +42,10 @@ public class CatalogEntryService {
         work.seriesTitle = work.series != null ? work.series.title : null;
         work.volumeNumber = dto.volumeNumber();
         work.synopsis = dto.synopsis();
-        work.genres = dto.genres();
+        // The raw wording is kept for the clients still reading it, and normalised into the
+        // genres the statistics and the collection filter go through.
+        work.genresText = dto.genres();
+        work.genres = genres.resolve(dto.genres());
         work.originalYear = dto.originalYear();
         works.persist(work);
 

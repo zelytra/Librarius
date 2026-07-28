@@ -47,7 +47,7 @@ public class StatsResource {
         StatusTotals totals = library.statusTotals(userId);
         long seriesCount = library.countDistinctSeries(userId);
         List<GenreCount> byGenre = library.topGenres(userId, TOP_GENRES).stream()
-                .map(genre -> new GenreCount(genre.genre(), genre.count()))
+                .map(GenreCount::of)
                 .toList();
 
         Integer goalTarget = goals.findByUserAndYear(userId, Year.now().getValue())

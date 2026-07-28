@@ -90,6 +90,8 @@ components:
     GenreCount:
       type: object
       properties:
+        code:
+          type: string
         genre:
           type: string
         count:
@@ -614,6 +616,26 @@ paths:
       - Category Resource
       security:
       - SecurityScheme: []
+  /api/genres:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GenreCount"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      tags:
+      - Genre Resource
+      security:
+      - SecurityScheme: []
   /api/goals:
     get:
       responses:
@@ -726,6 +748,10 @@ paths:
   /api/library:
     get:
       parameters:
+      - name: genre
+        in: query
+        schema:
+          type: string
       - name: kind
         in: query
         schema:

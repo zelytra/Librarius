@@ -69,6 +69,7 @@ export interface CategoryDto {
 }
 
 export interface GenreCount {
+  code?: string;
   genre?: string;
   count?: number;
 }
@@ -322,6 +323,7 @@ limit?: number;
 };
 
 export type GetApiLibraryParams = {
+genre?: string;
 kind?: Kind;
 page?: number;
 q?: string;
@@ -682,6 +684,98 @@ export const usePostApiCategories = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary List
+ */
+export const getApiGenres = (
+    
+ ) => {
+      
+      
+      return apiClient<GenreCount[]>(
+      {url: `/api/genres`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiGenresQueryKey = () => {
+    return [
+    `/api/genres`
+    ] as const;
+    }
+
+    
+export const getGetApiGenresQueryOptions = <TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiGenresQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiGenres>>> = () => getApiGenres();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiGenresQueryResult = NonNullable<Awaited<ReturnType<typeof getApiGenres>>>
+export type GetApiGenresQueryError = void
+
+
+export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiGenres>>,
+          TError,
+          Awaited<ReturnType<typeof getApiGenres>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiGenres>>,
+          TError,
+          Awaited<ReturnType<typeof getApiGenres>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List
+ */
+
+export function useGetApiGenres<TData = Awaited<ReturnType<typeof getApiGenres>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiGenres>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiGenresQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary List
  */

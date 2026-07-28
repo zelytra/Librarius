@@ -6,6 +6,7 @@ import jakarta.persistence.TypedQuery;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.genre.GenreNormalizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,10 +64,11 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * @param kind   restrict to books or to mangas
      * @param status restrict to a reading status
      * @param rank   code of the rank category the item is filed under
+     * @param genre  code of a genre the work carries, as {@code /api/genres} returns it
      * @param search free text matched against the title, the authors and the series
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
-            String search) {
+            String genre, String search) {
     }
 
     /** Orderings offered on the collection, exposed as the {@code sort} query parameter. */
@@ -75,7 +77,9 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         ADDED("li.createdAt desc, li.id desc"),
         TITLE("lower(w.title) asc, li.id asc"),
         AUTHOR("lower(coalesce(w.authors, '')) asc, lower(w.title) asc, li.id asc"),
-        GENRE("lower(coalesce(w.genres, '')) asc, lower(w.title) asc, li.id asc");
+        // Still the free-text value: a work now carries several genres, so there is no such
+        // thing as "its" genre to order on. The shelf keeps the ordering it had.
+        GENRE("lower(coalesce(w.genresText, '')) asc, lower(w.title) asc, li.id asc");
 
         private final String clause;
 
@@ -149,6 +153,17 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             clauses.add("rc.code = :rank");
             params.put("rank", filter.rank().trim());
         }
+        if (filter.genre() != null && !filter.genre().isBlank()) {
+            // A subquery rather than a join: joining the genres would repeat an item once
+            // per genre it carries, and a page would then hold fewer items than its size.
+            clauses.add("exists (select 1 from Work gw join gw.genres g"
+                    + " where gw.id = w.id and g.code = :genre)");
+            // The client normally passes a code back; folding whatever it sent makes
+            // `genre=Science Fiction` behave like `genre=science-fiction` rather than
+            // silently matching nothing. A wording that folds to nothing stays unmatchable.
+            String code = GenreNormalizer.code(filter.genre());
+            params.put("genre", code != null ? code : filter.genre().trim());
+        }
         if (filter.search() != null && !filter.search().isBlank()) {
             clauses.add("""
                     (lower(w.title) like :search escape '!'
@@ -186,8 +201,13 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     public record StatusTotals(long read, long reading, long toRead, long pagesRead) {
     }
 
-    /** A genre label and the number of the user's items carrying it. */
-    public record GenreTotal(String genre, long count) {
+    /**
+     * A genre and the number of the user's items carrying it.
+     *
+     * @param code  identity of the genre, what the collection filter takes
+     * @param label what a screen shows
+     */
+    public record GenreTotal(String code, String label, long count) {
     }
 
     /**
@@ -248,23 +268,30 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * The {@code limit} most represented genres in the user's collection, most frequent
      * first. Equal counts are broken alphabetically so the ranking stays stable from one
      * call to the next.
+     *
+     * <p>Grouped on the normalised genres, not on the free-text value: a title tagged
+     * "Fantasy, Aventure" counts towards both, where it used to form a third genre of its
+     * own. An item is counted once per genre it carries, so the counts add up to more than
+     * the size of the collection — that is what a breakdown by genre means.
      */
     public List<GenreTotal> topGenres(String userId, int limit) {
         return getEntityManager()
                 .createQuery("""
-                        select li.edition.work.genres, count(li)
+                        select g.code, g.label, count(li)
                         from LibraryItem li
+                          join li.edition e
+                          join e.work w
+                          join w.genres g
                         where li.userId = :userId
-                          and li.edition.work.genres is not null
-                          and length(trim(li.edition.work.genres)) > 0
-                        group by li.edition.work.genres
-                        order by count(li) desc, li.edition.work.genres asc
+                        group by g.code, g.label
+                        order by count(li) desc, g.label asc, g.code asc
                         """, Object[].class)
                 .setParameter("userId", userId)
                 .setMaxResults(limit)
                 .getResultList()
                 .stream()
-                .map(row -> new GenreTotal((String) row[0], ((Number) row[1]).longValue()))
+                .map(row -> new GenreTotal((String) row[0], (String) row[1],
+                        ((Number) row[2]).longValue()))
                 .toList();
     }
 }
