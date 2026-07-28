@@ -244,6 +244,143 @@ No account is created by the deployment: sign-up is open, register from the web 
 The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
 plus `infra/keycloak/realm-librarius.json`, bound to localhost).
 
+## 🚦 Deploying without downtime
+
+Both deployments roll: `maxSurge: 1`, `maxUnavailable: 0`. The replacement pod has to
+report ready before the running one is stopped, so a merge into `main` no longer takes the
+site down.
+
+That was not free. `Recreate` had been chosen because the node could not fit two API pods
+at once, and the fix is a sizing one before it is a strategy one — the requests were wrong,
+not the node.
+
+### What the node actually has
+
+`zeserver`, single-node k3s, **4 CPU** allocatable. Requests are what the scheduler
+counts, and they were **96% committed** (3850m) while the node was running at **8%**
+(318m) of real load. A surge pod does not fail to schedule because the machine is busy; it
+fails because the pods already on it have claimed CPU they never use.
+
+Measured on the cluster over six minutes, against what the chart used to ask for:
+
+| Pod | CPU used | CPU requested (before) | Memory used | Memory requested |
+|---|---|---|---|---|
+| `api` | 2–8m | 150m | 222Mi | 256Mi |
+| `web` | 1m | 50m | 6Mi | 64Mi |
+| `postgres` | 3–6m | 50m | 41Mi | 128Mi |
+| `keycloak` | 3–63m | 100m | 506Mi | 384Mi |
+
+The API request drops to **100m** and the web request to **25m** — still 12× and 25× what
+they draw. A request is a scheduling floor and a share weight under contention, not a
+budget: the JVM boot still bursts up to its 1 CPU limit and is not throttled by the lower
+request.
+
+### The arithmetic that makes it fit
+
+`helm upgrade` rolls both deployments at once, so the peak is both surge pods together:
+
+| | CPU requests | Free of 4000m |
+|---|---|---|
+| Before, steady | 3850m | 150m |
+| Before, rolling both | 4050m | **−50m — does not schedule** |
+| After, steady | 3775m | 225m |
+| After, rolling both | 3900m | 100m |
+
+That −50m is the nine-minute `Pending` of [#125](https://github.com/zelytra/Librarius/issues/125),
+and the reason its image pull then failed: the `ghcr-pull` token had expired by the time the
+pod was finally scheduled. The credential half of that failure is
+[#136](https://github.com/zelytra/Librarius/issues/136) and is not addressed here; the
+sizing half is. **The node takes a rolling update of the API, with 100m of margin.** No
+extra capacity is required.
+
+The margin is real but it is not large, and it is shared with projects this repository does
+not own — `default` holds five other stacks, together requesting 3500m for well under 100m
+of actual use. Before adding a component here, check the headroom rather than assuming it:
+
+```bash
+kubectl describe node zeserver | grep -A6 'Allocated resources'
+```
+
+### Why the API needed more than a strategy change
+
+A surge pod is only useful if the platform can tell "still starting" from "broken". It
+could not: the liveness probe gave up at 50s (`initialDelaySeconds: 20`, three periods of
+10s) against a JVM boot measured at **23.2s**, Flyway included. On a good day that is 19s
+of slack. On a contended node it is a healthy pod killed mid-boot, restarted, and killed
+again — a crash loop caused entirely by the probe.
+
+A `startupProbe` on `/q/health/started` removes the question: while it runs, liveness and
+readiness are **disabled outright**, and it allows 30 attempts at 5s intervals — 150s of
+boot budget. Quarkus answers that endpoint as soon as the HTTP layer is up, which is
+exactly the signal wanted.
+
+Both pods also get a **5s `preStop` pause**. Removing a pod from the Service endpoints and
+sending it SIGTERM are concurrent operations, not sequential ones: without the pause,
+Traefik keeps routing to a container that has already started shutting down, and a rolling
+update produces a handful of 502s precisely because it is rolling. The pause fits inside
+the termination grace period (30s for the API, 15s for nginx).
+
+### Two things this changes about how you deploy
+
+**Migrations now overlap.** A surging API runs its Flyway migrations while the previous
+one is still serving requests, for the ~30s the two coexist. Under `Recreate` the old pod
+was already gone. A migration that drops or renames anything the previous version reads
+will break it for that window:
+
+```bash
+# Deliberate downtime, for a migration that is not backward compatible.
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set api.strategy=Recreate \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak
+```
+
+Write migrations expand-then-contract and this never comes up: add the new column, ship
+the code that reads both, drop the old one a release later.
+
+**A node drain now blocks.** The `PodDisruptionBudget` asks for `minAvailable: 1` on a
+single replica, so the eviction API refuses to take it — which is the point for an
+accidental eviction, and an obstacle for a deliberate drain:
+
+```bash
+kubectl drain zeserver --ignore-daemonsets --disable-eviction   # bypasses the PDB
+# or, to remove the budgets entirely:
+helm -n librarius upgrade ... --set podDisruptionBudget.enabled=false
+```
+
+### Measuring it
+
+From outside the cluster, through the ingress — where the user stands. `infra/downtime-probe.sh`
+polls four times a second and counts a connection failure or a 5xx as down; anything the
+application answered, a 401 on `/api/me` included, is up.
+
+```bash
+./infra/downtime-probe.sh https://librarius.zelytra.fr/ 600 &      # frontend
+./infra/downtime-probe.sh https://librarius.zelytra.fr/api/me 600  # API
+```
+
+Start it, merge, and read the totals when `cd.yml` reports green. Do **not** probe
+`/q/health/ready` from outside: `/q` is not routed, so `/` catches it and nginx serves
+`index.html` with a 200 — the probe would report the API healthy while it is down.
+
+The reference to beat, measured on the deployment of 2026-07-28 17:17 UTC, the last one
+made under `Recreate`, from the pod events (`Killing` on the old pod → `Ready` on its
+replacement):
+
+| | Old pod stopped | New pod ready | Outage |
+|---|---|---|---|
+| `web` | 17:17:45 | 17:17:56 | **11s** |
+| `api` | 17:17:44 | 17:18:15 | **31s** |
+
+Both images pulled in under 3s and both pods scheduled instantly, so those are best-case
+figures for the old strategy, not typical ones.
+
+> **The rollout itself is unproven.** The chart renders, the arithmetic is taken from the
+> live node and the probe is tested, but no deployment has been run with these settings —
+> the measured "after" figure does not exist yet. Take it on the next merge into `main`,
+> with the two probes above, and correct this section with what actually happened.
+> [#64](https://github.com/zelytra/Librarius/issues/64) stays open until then.
+
 ## 💾 Automated backups
 
 PostgreSQL runs on a `local-path` PVC, on a single node, with no redundancy of any kind:
@@ -660,9 +797,12 @@ k port-forward deploy/librarius-api 8080:8080 &
 curl -s localhost:8080/q/health/ready; kill %1
 
 # 4. Public entry point: 200 on the app, and the API reachable through the ingress.
-#    (/api needs a token — /q/health does not, so it is the honest check here.)
+#    /api/me answers 401 without a token, which is the API answering; once the
+#    Service has no endpoint, Traefik answers 503 instead. Do NOT check
+#    /q/health/ready from outside — /q is not routed, so `/` catches it and nginx
+#    serves index.html with a 200 while the API is down.
 curl -sSI https://librarius.zelytra.fr/ | head -1
-curl -s https://librarius.zelytra.fr/q/health/ready
+curl -sSI https://librarius.zelytra.fr/api/me | head -1
 
 # 5. The API log, for a migration or a datasource refusing to start.
 k logs deploy/librarius-api --tail=80

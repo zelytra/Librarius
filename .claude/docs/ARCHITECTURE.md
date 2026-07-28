@@ -180,8 +180,12 @@ The `infra/helm/librarius` chart: `web`, `api`, `postgres` (`local-path` PVC, tw
 `librarius` + `keycloak`), `keycloak`, `ingress` (Traefik + cert-manager).
 Push to `main` → `cd.yml` → build/push GHCR images tagged `<sha>` → `helm upgrade`.
 
-The `Recreate` deployment strategy (the node is CPU-constrained) means **downtime on every
-release**. Acceptable while the environment is staging; blocking once production opens.
+Both deployments roll (`maxSurge: 1`, `maxUnavailable: 0`): the replacement pod must be
+ready before the running one stops. The node fits the surge because the CPU **requests**
+were cut to what the pods measurably use — it was never short of CPU, only of unclaimed
+requests. `api.strategy=Recreate` remains available for a migration that is not backward
+compatible, since a surging API migrates while the previous one still serves.
+docs/DEPLOYMENT.md § "Deploying without downtime".
 
 The OIDC authority is **baked into the web image at build time**
 (`--build-arg VITE_OIDC_AUTHORITY`): changing domain requires a rebuild.
