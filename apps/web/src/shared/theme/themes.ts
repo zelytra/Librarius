@@ -1,4 +1,4 @@
-/** Thèmes disponibles (correspondent aux jetons CSS de tokens.css). */
+/** Available themes (they match the CSS tokens in tokens.css). */
 export const THEMES = [
   { id: 'creme', labelKey: 'settings.themes.creme', swatch: '#f3ede3' },
   { id: 'sauge', labelKey: 'settings.themes.sauge', swatch: '#dfe6da' },

@@ -19,35 +19,35 @@ function renderAt(path: string) {
   );
 }
 
-test('affiche la navigation traduite en français', () => {
+test('renders the translated navigation', () => {
   renderAt('/');
   expect(screen.getByText('Accueil')).toBeInTheDocument();
   expect(screen.getByText('Collection')).toBeInTheDocument();
   expect(screen.getByText('Découvrir')).toBeInTheDocument();
 });
 
-test('le commutateur de thème applique le thème sur <html>', () => {
+test('the theme switcher applies the theme on <html>', () => {
   renderAt('/settings');
   fireEvent.click(screen.getByText('Nuit'));
   expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
 });
 
-test('la collection invite à se connecter si non authentifié', async () => {
+test('the collection prompts for sign-in when unauthenticated', async () => {
   renderAt('/collection');
   expect(await screen.findByText(/Connecte-toi pour voir ta collection/)).toBeInTheDocument();
 });
 
-test('les souhaits invitent à se connecter si non authentifié', async () => {
+test('the wishlist prompts for sign-in when unauthenticated', async () => {
   renderAt('/wishlist');
   expect(await screen.findByText(/Connecte-toi pour voir tes souhaits/)).toBeInTheDocument();
 });
 
-test('les statistiques invitent à se connecter si non authentifié', async () => {
+test('the stats page prompts for sign-in when unauthenticated', async () => {
   renderAt('/stats');
   expect(await screen.findByText(/Connecte-toi pour voir tes statistiques/)).toBeInTheDocument();
 });
 
-test('l\'accueil affiche l\'en-tête et invite à se connecter', async () => {
+test('the home page renders the header and prompts for sign-in', async () => {
   renderAt('/');
   expect(screen.getByText('Bonsoir')).toBeInTheDocument();
   expect(await screen.findByText(/Connecte-toi pour retrouver ta bibliothèque/)).toBeInTheDocument();

@@ -1,7 +1,7 @@
 import { defineConfig } from 'orval';
 
-// Génère un client TypeScript typé (fetch) à partir du schéma OpenAPI produit
-// par l'API Quarkus. Régénérer avec `pnpm --filter @librarius/web gen:api`.
+// Generates a typed TypeScript client (fetch) from the OpenAPI schema produced by the
+// Quarkus API. Regenerate with `pnpm --filter @librarius/web gen:api`.
 export default defineConfig({
   librarius: {
     input: './openapi/openapi.json',

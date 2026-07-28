@@ -1,7 +1,7 @@
 /**
- * Jeu de données local reproduisant la maquette, le temps que le flux de
- * connexion web (OIDC) et le branchement API live soient en place. Permet de
- * voir les écrans peuplés et fidèles. Sera remplacé par les données réelles.
+ * Local data set mirroring the mockup, until the web sign-in flow (OIDC) and the live
+ * API wiring are in place. Lets us see the screens populated and faithful to the
+ * design. Will be replaced by real data.
  */
 export type Rank = 'or' | 'argent' | 'bronze' | null;
 

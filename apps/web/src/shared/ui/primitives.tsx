@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 
-/** Carte de surface arrondie. */
+/** Rounded surface card. */
 export function Card({
   children,
   style,
@@ -33,7 +33,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
 }
 
-/** Bouton principal / secondaire / fantôme. */
+/** Primary / secondary / ghost button. */
 export function Button({ variant = 'primary', style, children, ...rest }: ButtonProps) {
   const variants: Record<ButtonVariant, CSSProperties> = {
     primary: {
@@ -71,7 +71,7 @@ export function Button({ variant = 'primary', style, children, ...rest }: Button
   );
 }
 
-/** Pastille / étiquette ronde. */
+/** Pill-shaped badge / tag. */
 export function Chip({
   children,
   selected = false,
@@ -112,7 +112,7 @@ export function Chip({
   );
 }
 
-/** Sélecteur segmenté (2+ options exclusives). */
+/** Segmented control (2+ mutually exclusive options). */
 export function Segmented<T extends string>({
   options,
   value,
@@ -152,7 +152,7 @@ export function Segmented<T extends string>({
   );
 }
 
-/** En-tête de section avec action optionnelle à droite. */
+/** Section header with an optional action on the right. */
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <div

@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         try {
           localStorage.setItem(STORAGE_KEY, next);
         } catch {
-          /* stockage indisponible : on garde le thème en mémoire seulement */
+          /* storage unavailable: keep the theme in memory only */
         }
       },
     }),

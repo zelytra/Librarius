@@ -8,7 +8,7 @@ interface IconProps {
   style?: CSSProperties;
 }
 
-/** Icône Material Symbols Rounded. */
+/** Material Symbols Rounded icon. */
 export function Icon({ name, size = 24, fill = false, color, style }: IconProps) {
   return (
     <span

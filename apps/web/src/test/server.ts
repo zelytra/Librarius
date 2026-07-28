@@ -3,12 +3,12 @@ import { setupServer } from 'msw/node';
 import { BUILTIN_CATEGORIES, stats } from './fixtures';
 
 /**
- * Serveur MSW : intercepte les appels de l'API au niveau réseau, sans mocker le client
- * généré. Les tests portent donc sur ce que voit l'utilisateur, pas sur la façon dont
- * les données sont chargées — ils survivent à un changement de client HTTP.
+ * MSW server: intercepts API calls at the network level, without mocking the generated
+ * client. Tests therefore assert on what the user sees, not on how the data is loaded —
+ * they survive a change of HTTP client.
  *
- * Les handlers ci-dessous sont les réponses par défaut (collection vide). Un test qui a
- * besoin d'autre chose les remplace avec `server.use(...)`.
+ * The handlers below are the default responses (empty collection). A test that needs
+ * something else overrides them with `server.use(...)`.
  */
 
 const BASE = '*/api';
@@ -35,7 +35,7 @@ export const defaultHandlers = [
 
 export const server = setupServer(...defaultHandlers);
 
-/** Fait répondre 500 à un chemin donné, pour éprouver les états d'erreur. */
+/** Makes a given path answer 500, to exercise the error states. */
 export function failWith(path: string, status = 500) {
   server.use(http.get(`${BASE}${path}`, () => new HttpResponse(null, { status })));
 }

@@ -3,10 +3,10 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './server';
 
-// Node ≥ 22 expose un `localStorage` natif qui prend le pas sur celui de jsdom et dont
-// getItem est inutilisable sans fichier de stockage : tout composant lisant une
-// préférence (le thème) échoue alors au rendu. On lui substitue un stockage mémoire.
-// Sans effet sur Node 20, la version de la CI, dont le localStorage jsdom fonctionne.
+// Node >= 22 exposes a native `localStorage` that takes precedence over the jsdom one,
+// and whose getItem is unusable without a storage file: any component reading a
+// preference (the theme) then fails to render. We substitute an in-memory storage.
+// No effect on Node 20, the CI version, whose jsdom localStorage works fine.
 if (typeof globalThis.localStorage?.getItem !== 'function') {
   const entries = new Map<string, string>();
   const memoryStorage: Storage = {
@@ -30,8 +30,8 @@ if (typeof globalThis.localStorage?.getItem !== 'function') {
   }
 }
 
-// Une requête non interceptée est une erreur : elle signale un appel absent des
-// handlers, donc un test qui ne vérifie pas ce qu'il croit vérifier.
+// An unhandled request is an error: it flags a call missing from the handlers, hence a
+// test that does not verify what it thinks it verifies.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 
 afterEach(() => {

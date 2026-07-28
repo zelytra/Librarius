@@ -5,10 +5,10 @@ import { ThemeProvider } from '../shared/theme/ThemeProvider';
 import '../i18n';
 
 /**
- * Monte un écran avec les fournisseurs dont il a besoin (thème, i18n, routeur).
+ * Mounts a screen with the providers it needs (theme, i18n, router).
  *
- * L'authentification n'est pas montée ici : les fichiers de test qui en ont besoin
- * substituent `react-oidc-context` par `test/oidcMock`.
+ * Authentication is not mounted here: the test files that need it replace
+ * `react-oidc-context` with `test/oidcMock`.
  */
 export function renderWithProviders(
   ui: ReactElement,
