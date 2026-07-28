@@ -153,21 +153,6 @@
   font-weight: 500;
 }
 
-/* ── EmptyState ───────────────────────────────────────────────────────────── */
-
-/* No padding here on purpose: each screen sets its own, and leaving the
-   property undeclared keeps the override free of any specificity contest. */
-.emptyState {
-  text-align: center;
-  color: var(--faint);
-}
-
-.emptyStateText {
-  font-size: var(--fs-13-5);
-  line-height: 1.5;
-  margin-top: 12px;
-}
-
 /* ── StatusText ───────────────────────────────────────────────────────────── */
 
 .status {

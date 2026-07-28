@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
-import { Icon } from './Icon';
 import styles from './primitives.module.css';
 
 /** Joins the class names that are actually set. */
@@ -142,29 +141,6 @@ export function SectionHeader({ title, action }: { title: string; action?: React
     <div className={styles.sectionHeader}>
       <h3 className={styles.sectionTitle}>{title}</h3>
       {action && <span className={styles.sectionAction}>{action}</span>}
-    </div>
-  );
-}
-
-/**
- * "Nothing here yet" block: an icon and a sentence. The screen passes the
- * padding it wants through `className`.
- */
-export function EmptyState({
-  icon,
-  iconSize = 42,
-  className,
-  children,
-}: {
-  icon: string;
-  iconSize?: number;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className={cx(styles.emptyState, className)}>
-      <Icon name={icon} size={iconSize} />
-      <p className={styles.emptyStateText}>{children}</p>
     </div>
   );
 }

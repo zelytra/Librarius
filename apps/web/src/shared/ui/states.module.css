@@ -1,0 +1,52 @@
+/* Shared non-nominal states: loading, failure, emptiness. Tokens only, so the
+   three follow the active theme like the rest of the interface. */
+
+.loading {
+  margin: 0;
+  padding: 32px 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+/* No padding here on purpose, as on the other shared blocks: each screen sets its
+   own through `className`, and leaving the property undeclared keeps the override
+   free of any specificity contest. */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--faint);
+}
+
+/* A failure is never tuned per screen, so it can carry its own breathing room. */
+.error {
+  padding: 44px var(--screen-pad-x);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.message {
+  max-width: 32ch;
+  margin: 0;
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.action {
+  margin-top: 6px;
+}
+
+/* A failure is not just an absence: its icon is tinted so it reads as one. */
+.error :global(.material-symbol) {
+  color: var(--rose);
+}

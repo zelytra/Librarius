@@ -1,12 +1,5 @@
-.loading {
-  padding: 40px var(--screen-pad-x);
-  color: var(--muted);
-}
-
 .notFound {
   padding: 40px var(--screen-pad-x);
-  text-align: center;
-  color: var(--muted);
 }
 
 .page {

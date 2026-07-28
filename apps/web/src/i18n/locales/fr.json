@@ -20,6 +20,7 @@
     "mangas": "Mangathèque",
     "search": "Rechercher",
     "remove": "Retirer",
+    "retry": "Réessayer",
     "errorWithStatus": "Erreur {{status}}"
   },
   "auth": {
@@ -32,6 +33,15 @@
       "wishlist": "Connecte-toi pour voir tes souhaits.",
       "stats": "Connecte-toi pour voir tes statistiques.",
       "detail": "Connecte-toi pour voir ce titre."
+    }
+  },
+  "errors": {
+    "title": "Quelque chose s'est mal passé.",
+    "message": "Impossible de récupérer ces données pour le moment.",
+    "boundary": {
+      "title": "L'application a rencontré un problème.",
+      "message": "Recharge la page pour repartir d'un écran propre.",
+      "reload": "Recharger la page"
     }
   },
   "home": {
@@ -49,8 +59,10 @@
     },
     "empty": {
       "title": "Ta bibliothèque est vide.",
-      "description": "Ajoute tes premiers titres depuis l'onglet Découvrir."
-    }
+      "description": "Ajoute tes premiers titres depuis l'onglet Découvrir.",
+      "action": "Découvrir des titres"
+    },
+    "error": "Impossible de charger ton tableau de bord."
   },
   "collection": {
     "title": "Ma collection",
@@ -80,8 +92,10 @@
     },
     "empty": {
       "title": "Aucun titre ici.",
-      "description": "Ajoute des livres depuis l'onglet Découvrir."
-    }
+      "description": "Ajoute des livres depuis l'onglet Découvrir.",
+      "action": "Découvrir des titres"
+    },
+    "error": "Impossible de charger ta collection."
   },
   "discover": {
     "title": "Découvrir",
@@ -110,8 +124,10 @@
     },
     "empty": {
       "title": "Ta liste de souhaits est vide.",
-      "description": "Ajoute des titres depuis l'onglet Découvrir."
-    }
+      "description": "Ajoute des titres depuis l'onglet Découvrir.",
+      "action": "Découvrir des titres"
+    },
+    "error": "Impossible de charger tes souhaits."
   },
   "stats": {
     "title": "Statistiques",
@@ -141,6 +157,7 @@
       "manga": "Manga"
     },
     "notFound": "Titre introuvable.",
+    "error": "Impossible de charger ce titre.",
     "startReading": "Commencer la lecture",
     "reading": "Lecture en cours",
     "markAsRead": "Marquer comme lu",

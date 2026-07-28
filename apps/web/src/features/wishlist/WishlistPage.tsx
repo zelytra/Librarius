@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { colorFor } from '../../shared/ui/coverPalette';
-import {
-  Button,
-  EmptyState,
-  Screen,
-  ScreenTitle,
-  StatusText,
-} from '../../shared/ui/primitives';
+import { Button, Screen, ScreenTitle } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import {
   getApiWishlist,
@@ -30,12 +26,15 @@ const PRIO: Record<string, string> = {
 
 function WishlistContent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // The server pages the wishlist; the screen asks for the next page on demand.
   const {
     data,
     isPending: loading,
+    isError,
+    refetch,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -67,13 +66,26 @@ function WishlistContent() {
   // /api/stats, which aggregates in SQL — see issue #38.
   const budget = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
 
-  if (loading) return <StatusText>{t('common.loading')}</StatusText>;
+  if (loading) return <Loading />;
+
+  if (isError) {
+    return <ErrorState message={t('wishlist.error')} onRetry={() => void refetch()} />;
+  }
 
   if (items.length === 0) {
     return (
-      <EmptyState icon="favorite" iconSize={40} className={styles.empty}>
-        {t('wishlist.empty.title')} {t('wishlist.empty.description')}
-      </EmptyState>
+      <EmptyState
+        icon="favorite"
+        iconSize={40}
+        className={styles.empty}
+        title={t('wishlist.empty.title')}
+        description={t('wishlist.empty.description')}
+        action={
+          <Button variant="secondary" onClick={() => navigate('/discover')}>
+            {t('wishlist.empty.action')}
+          </Button>
+        }
+      />
     );
   }
 

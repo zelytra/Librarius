@@ -17,6 +17,7 @@ import {
 
 import { Icon } from '../../shared/ui/Icon';
 import { Screen, ScreenTitle, Segmented, StatusText } from '../../shared/ui/primitives';
+import { ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import styles from './DiscoverPage.module.css';
 
@@ -67,12 +68,12 @@ function DiscoverContent() {
   const {
     data: results = [],
     isFetching: loading,
+    isError: searchFailed,
     error: searchError,
+    refetch,
   } = useGetApiCatalogSearch(submitted ? { q: submitted.q, kind: submitted.kind } : undefined, {
     query: { enabled: submitted != null },
   });
-
-  const error = addError ?? (searchError ? searchFailureMessage(t, searchError) : null);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -128,9 +129,12 @@ function DiscoverContent() {
         </button>
       </form>
 
-      {loading && <StatusText>{t('common.loading')}</StatusText>}
-      {error && <StatusText tone="error">{error}</StatusText>}
-      {!loading && !error && results.length === 0 && (
+      {loading && <Loading />}
+      {addError && <ErrorState message={addError} />}
+      {searchFailed && (
+        <ErrorState message={searchFailureMessage(t, searchError)} onRetry={() => void refetch()} />
+      )}
+      {!loading && !addError && !searchFailed && results.length === 0 && (
         <StatusText tone="faint">{t('discover.start')}</StatusText>
       )}
 

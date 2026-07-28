@@ -2,11 +2,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
+import { apiErrorStatus } from '../../shared/apiClient';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { colorFor } from '../../shared/ui/coverPalette';
 import { RANK_COLORS, type RankCode } from '../../shared/ui/ranks';
 import { Button } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import {
   getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
@@ -34,7 +36,7 @@ function DetailContent({ id }: { id: string }) {
   // One request for one title. The collection is paginated, so the item is no longer
   // guaranteed to be in a cached page — and a deep link never had it. Its own cache
   // entry also means the screen keeps working when the user reloads on this URL.
-  const { data: item = null, isPending: loading } = useGetApiLibraryId(id);
+  const { data: item = null, isPending: loading, isError, error, refetch } = useGetApiLibraryId(id);
   const { data: cats = [] } = useGetApiCategories();
 
   const invalidateLibrary = () => {
@@ -60,13 +62,26 @@ function DetailContent({ id }: { id: string }) {
     mutateProgress({ id, data: { status, percent: status === 'READ' ? 100 : undefined } });
   }
 
-  if (loading) return <p className={styles.loading}>{t('common.loading')}</p>;
+  if (loading) return <Loading />;
+
+  // A 404 is the normal answer for an unknown identifier — or for one belonging to
+  // another user. That is an absence, not an outage: no point offering a retry.
+  const notFound = apiErrorStatus(error) === 404;
+  if (isError && !notFound) {
+    return <ErrorState message={t('detail.error')} onRetry={() => void refetch()} />;
+  }
   if (!item) {
     return (
-      <div className={styles.notFound}>
-        <p>{t('detail.notFound')}</p>
-        <Button variant="secondary" onClick={() => navigate(-1)}>{t('common.back')}</Button>
-      </div>
+      <EmptyState
+        icon="search_off"
+        className={styles.notFound}
+        title={t('detail.notFound')}
+        action={
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            {t('common.back')}
+          </Button>
+        }
+      />
     );
   }
 

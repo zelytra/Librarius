@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useApiAuth } from './api';
 import { Button } from './ui/primitives';
 import { Icon } from './ui/Icon';
+import { Loading } from './ui/states';
 import styles from './LoginGate.module.css';
 
 /** Renders the content when the user is signed in, otherwise a sign-in prompt. */
@@ -11,7 +12,7 @@ export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: 
   const { authed, loading, login } = useApiAuth();
 
   if (loading) {
-    return <p className={styles.loading}>{t('common.loading')}</p>;
+    return <Loading />;
   }
   if (!authed) {
     return (

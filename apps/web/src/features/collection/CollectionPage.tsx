@@ -5,15 +5,8 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { RANK_COLORS, RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
-import {
-  Button,
-  Chip,
-  EmptyState,
-  Screen,
-  ScreenTitle,
-  Segmented,
-  StatusText,
-} from '../../shared/ui/primitives';
+import { Button, Chip, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import {
   getApiLibrary,
@@ -117,6 +110,8 @@ function CollectionContent() {
   const {
     data,
     isPending: loading,
+    isError,
+    refetch,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -219,12 +214,22 @@ function CollectionContent() {
         ))}
       </div>
 
-      {loading && <StatusText>{t('common.loading')}</StatusText>}
+      {loading && <Loading />}
 
-      {!loading && items.length === 0 && (
-        <EmptyState icon="bookmark_add" className={styles.empty}>
-          {t('collection.empty.title')} {t('collection.empty.description')}
-        </EmptyState>
+      {isError && <ErrorState message={t('collection.error')} onRetry={() => void refetch()} />}
+
+      {!loading && !isError && items.length === 0 && (
+        <EmptyState
+          icon="bookmark_add"
+          className={styles.empty}
+          title={t('collection.empty.title')}
+          description={t('collection.empty.description')}
+          action={
+            <Button variant="secondary" onClick={() => navigate('/discover')}>
+              {t('collection.empty.action')}
+            </Button>
+          }
+        />
       )}
 
       {!grouped && items.length > 0 && (

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
-import { Screen, ScreenTitle, StatusText } from '../../shared/ui/primitives';
+import { Screen, ScreenTitle } from '../../shared/ui/primitives';
+import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import { useGetApiStats } from '../../api/generated/librarius';
 import styles from './StatsPage.module.css';
@@ -10,10 +11,12 @@ const GENRE_BARS = [styles.bar1, styles.bar2, styles.bar3, styles.bar4];
 
 function StatsContent() {
   const { t } = useTranslation();
-  const { data: stats, isPending: loading } = useGetApiStats();
+  const { data: stats, isPending: loading, refetch } = useGetApiStats();
 
-  if (loading) return <StatusText>{t('common.loading')}</StatusText>;
-  if (!stats) return <StatusText tone="error">{t('stats.unavailable')}</StatusText>;
+  if (loading) return <Loading />;
+  // A failed call and an empty payload are the same thing here: there is nothing to
+  // chart, and retrying is the only useful move.
+  if (!stats) return <ErrorState message={t('stats.unavailable')} onRetry={() => void refetch()} />;
 
   const read = stats.read ?? 0;
   const reading = stats.reading ?? 0;

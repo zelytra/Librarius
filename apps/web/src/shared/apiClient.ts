@@ -30,6 +30,15 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Status behind a React Query failure, or `undefined` when the call never reached the
+ * API. The generated hooks type their error as `void`, so screens cannot narrow it
+ * themselves.
+ */
+export function apiErrorStatus(error: unknown): number | undefined {
+  return error instanceof ApiError ? error.status : undefined;
+}
+
 function buildUrl(url: string, params?: Record<string, unknown>): string {
   if (!params) return url;
   const search = new URLSearchParams();

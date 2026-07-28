@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
-import { EmptyState, Screen, SectionHeader } from '../../shared/ui/primitives';
+import { Button, Screen, SectionHeader } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import {
   useGetApiCatalogUpcoming,
@@ -22,14 +23,28 @@ function Dashboard() {
   // The queries run in parallel and are cached independently: coming back to Home after
   // browsing no longer refetches anything. Each shelf asks the server for its own status
   // rather than downloading the collection to filter it here.
-  const { data: inProgress } = useGetApiLibrary({ status: 'READING', size: READING_SHELF_SIZE });
-  const { data: finished } = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
-  const { data: stats } = useGetApiStats();
+  const readingQuery = useGetApiLibrary({ status: 'READING', size: READING_SHELF_SIZE });
+  const readQuery = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
+  const statsQuery = useGetApiStats();
   const { data: upcoming = [] } = useGetApiCatalogUpcoming({ kind: 'MANGA', limit: 5 });
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-  const reading = inProgress?.items ?? [];
-  const read = finished?.items ?? [];
+  const reading = readingQuery.data?.items ?? [];
+  const read = readQuery.data?.items ?? [];
+  const stats = statsQuery.data;
+
+  // The dashboard is made of the user's own data: as long as none of it has arrived,
+  // there is nothing worth rendering. Upcoming releases come from a third-party catalog
+  // and are deliberately left out — their outage must not hide the shelves.
+  const refetchAll = () => {
+    void readingQuery.refetch();
+    void readQuery.refetch();
+    void statsQuery.refetch();
+  };
+  if (readingQuery.isPending || readQuery.isPending || statsQuery.isPending) return <Loading />;
+  if (readingQuery.isError || readQuery.isError || statsQuery.isError) {
+    return <ErrorState message={t('home.error')} onRetry={refetchAll} />;
+  }
 
   // Emptiness comes from the counters, not from a shelf: a library made only of
   // owned-but-unread titles fills neither of the two above.
@@ -110,9 +125,17 @@ function Dashboard() {
       )}
 
       {libraryEmpty && (
-        <EmptyState icon="auto_stories" className={styles.empty}>
-          {t('home.empty.title')} {t('home.empty.description')}
-        </EmptyState>
+        <EmptyState
+          icon="auto_stories"
+          className={styles.empty}
+          title={t('home.empty.title')}
+          description={t('home.empty.description')}
+          action={
+            <Button variant="secondary" onClick={() => navigate('/discover')}>
+              {t('home.empty.action')}
+            </Button>
+          }
+        />
       )}
     </div>
   );
