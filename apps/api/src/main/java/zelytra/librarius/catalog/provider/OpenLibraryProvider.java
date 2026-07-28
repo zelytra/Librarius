@@ -22,6 +22,11 @@ public class OpenLibraryProvider implements CatalogProvider {
     OpenLibraryClient client;
 
     @Override
+    public String name() {
+        return "openlibrary";
+    }
+
+    @Override
     public Kind kind() {
         return Kind.BOOK;
     }

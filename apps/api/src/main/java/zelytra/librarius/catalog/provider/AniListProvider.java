@@ -27,6 +27,11 @@ public class AniListProvider implements CatalogProvider {
     AniListClient client;
 
     @Override
+    public String name() {
+        return "anilist";
+    }
+
+    @Override
     public Kind kind() {
         return Kind.MANGA;
     }
