@@ -161,6 +161,7 @@ else about them lives in this repository.
 |---|---|---|
 | `librarius-postgres` | `postgres-password` | postgres (`POSTGRES_PASSWORD`), api (`QUARKUS_DATASOURCE_PASSWORD`), keycloak (`KC_DB_PASSWORD`) |
 | `librarius-keycloak` | `admin-password` | keycloak (`KEYCLOAK_ADMIN_PASSWORD`) |
+| `librarius-backup` | `access-key-id`, `secret-access-key`, `encryption-passphrase` | the backup CronJob — **only** when `backup.enabled=true`, see § "Automated backups" |
 
 Create them once, with values generated locally. The namespace has to exist first — the
 pipeline creates it, but on a fresh cluster the secrets come before the first deployment:
@@ -242,6 +243,361 @@ DNS record is enough for the whole stack.
 No account is created by the deployment: sign-up is open, register from the web app.
 The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
 plus `infra/keycloak/realm-librarius.json`, bound to localhost).
+
+## 💾 Automated backups
+
+PostgreSQL runs on a `local-path` PVC, on a single node, with no redundancy of any kind:
+losing that disk loses every library ever entered by hand. The chart ships a CronJob that
+dumps the database off the node, encrypted, once a day.
+
+It is **disabled by default** (`backup.enabled: false`), and it stays disabled until
+somebody decides where the archives are to be stored. That decision is not the chart's to
+make, so the chart invents neither a bucket nor a credential.
+
+### What the maintainer has to provide
+
+Three things, none of which exist in this repository:
+
+1. **A bucket, outside the cluster.** Any S3-compatible provider works — AWS S3, Scaleway
+   Object Storage, OVH, Backblaze B2, a MinIO on another machine. It must be a *different*
+   failure domain than the node; a bucket on the same host backs up nothing.
+2. **A credential limited to that bucket**: an access key and a secret key, with write and
+   delete rights on the chosen prefix and nothing else. Delete is required — the job prunes
+   its own retention tiers.
+3. **An encryption passphrase**, generated locally and *kept somewhere other than the
+   cluster*. The archives are encrypted with it; without it they are unreadable, including
+   by you. Storing it only in the cluster you are backing up defeats the point.
+
+### Enabling it
+
+Create the Secret once, in the `librarius` namespace:
+
+```bash
+kubectl -n librarius create secret generic librarius-backup \
+  --from-literal=access-key-id='<access key>' \
+  --from-literal=secret-access-key='<secret key>' \
+  --from-literal=encryption-passphrase="$(openssl rand -base64 32)"
+```
+
+Read the passphrase back **immediately** and store it in a password manager — this is the
+one value you cannot regenerate later:
+
+```bash
+kubectl -n librarius get secret librarius-backup \
+  -o jsonpath='{.data.encryption-passphrase}' | base64 -d; echo
+```
+
+Then deploy with backups on. `backup.s3.endpoint` is left empty for AWS S3 itself and set
+to the provider's endpoint for anything else:
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set backup.enabled=true \
+  --set backup.existingSecret=librarius-backup \
+  --set backup.s3.bucket=librarius-backups \
+  --set backup.s3.region=fr-par \
+  --set backup.s3.endpoint=https://s3.fr-par.scw.cloud \
+  --wait --timeout 8m
+```
+
+`helm upgrade` refuses to render while `backup.s3.bucket` or `backup.existingSecret` is
+missing, in the same way it already refuses without the PostgreSQL Secret.
+
+**Beware of the reverse**: a later `helm upgrade` that omits `--set backup.enabled=true`
+removes the CronJob. Backups then stop without anything failing, which is exactly what the
+`LibrariusBackupTooOld` alert exists to catch.
+
+### What it does, and what it costs
+
+| | |
+|---|---|
+| Schedule | `backup.schedule`, `15 2 * * *` UTC by default |
+| Dump | `pg_dump` plain SQL, `gzip -9`, in the `postgres:16-alpine` image (init container) |
+| Encryption | `gpg --symmetric --cipher-algo AES256`, passphrase from the Secret |
+| Destination | `s3://<bucket>/<prefix>/{daily,weekly,monthly}/librarius-<UTC timestamp>.sql.gz.gpg` |
+| Retention | 7 daily · 4 weekly (Sundays) · 6 monthly (the 1st) — pruned oldest first, per tier |
+| Footprint | one pod, a couple of minutes a day, 50m CPU requested. Nothing stays resident |
+
+Plain SQL rather than the custom format is deliberate: a restore then needs `psql`, which
+the database pod already has, and not a matching `pg_restore` version at three in the
+morning.
+
+### Checking that it works
+
+```bash
+# 1. The CronJob exists, is not suspended, and has run.
+kubectl -n librarius get cronjob librarius-postgres-backup
+```
+
+```text
+NAME                        SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+librarius-postgres-backup   15 2 * * *    False     0        7h32m           3d
+```
+
+`SUSPEND=True` or an empty `LAST SCHEDULE` means no backup is being taken.
+
+```bash
+# 2. Run one now rather than waiting for tomorrow.
+kubectl -n librarius create job --from=cronjob/librarius-postgres-backup backup-manual-1
+kubectl -n librarius wait --for=condition=complete job/backup-manual-1 --timeout=10m
+kubectl -n librarius logs job/backup-manual-1 --all-containers
+```
+
+The log of a successful run ends like this — the last two lines are the job reading its own
+object back from the bucket:
+
+```text
+dump: 184320 bytes compressed
+uploaded librarius/daily/librarius-20260728T021503Z.sql.gz.gpg
+2026-07-28 02:15:11     184512 librarius-20260728T021503Z.sql.gz.gpg
+backup complete
+```
+
+Delete the manual job afterwards (`kubectl -n librarius delete job backup-manual-1`), so it
+does not sit in the history the alerting reads.
+
+## ♻️ Restoring PostgreSQL
+
+Read this section top to bottom **before** typing anything. It assumes the worst realistic
+case: the node is gone, the PVC with it, and the only thing left is the bucket.
+
+```bash
+export KUBECONFIG=~/.kube/librarius.yaml
+alias k='kubectl -n librarius'
+```
+
+You need, on the machine you are working from: `aws` (or any S3 client), `gpg`, `gunzip`,
+and the **encryption passphrase**. If you do not have the passphrase, stop — the archives
+cannot be opened, and no amount of cluster access changes that.
+
+### 1. Find the archive to restore
+
+```bash
+export AWS_ACCESS_KEY_ID=<access key>
+export AWS_SECRET_ACCESS_KEY=<secret key>
+export AWS_DEFAULT_REGION=fr-par
+alias s3='aws --endpoint-url https://s3.fr-par.scw.cloud s3'
+
+s3 ls s3://librarius-backups/librarius/daily/
+```
+
+```text
+2026-07-26 02:15:11     184512 librarius-20260726T021503Z.sql.gz.gpg
+2026-07-27 02:15:09     184704 librarius-20260727T021502Z.sql.gz.gpg
+2026-07-28 02:15:11     184896 librarius-20260728T021503Z.sql.gz.gpg
+```
+
+Take the most recent one, unless the incident is data corruption rather than data loss — in
+which case take the last one from *before* the corruption, and check `weekly/` and
+`monthly/` if you have to go further back. Sizes should look alike; an archive an order of
+magnitude smaller than its neighbours is a bad dump, take the one before it.
+
+### 2. Download, decrypt, decompress
+
+```bash
+ARCHIVE=librarius-20260728T021503Z.sql.gz.gpg
+s3 cp "s3://librarius-backups/librarius/daily/$ARCHIVE" .
+
+gpg --batch --decrypt --output restore.sql.gz "$ARCHIVE"   # asks for the passphrase
+gunzip restore.sql
+```
+
+`gunzip` writes `restore.sql`. Check you are holding a real dump before going near the
+database:
+
+```bash
+head -5 restore.sql && grep -c 'CREATE TABLE' restore.sql
+```
+
+```text
+--
+-- PostgreSQL database dump
+--
+...
+14
+```
+
+A `gpg: decryption failed: Bad session key` means a wrong passphrase, not a corrupt
+archive — try the other passphrase before re-downloading.
+
+### 3. Bring up an empty database
+
+If the cluster is intact and only the data is wrong, skip to step 4. After a full node
+loss, recreate the Secrets (§ "Cluster secrets") and deploy the stack **with the API scaled
+to zero**, so that Flyway does not create a schema the dump is about to recreate:
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set api.replicas=0 \
+  --wait --timeout 8m
+
+k get pods -l component=postgres      # wait for 1/1 Running
+```
+
+### 4. Load the dump
+
+The dump recreates the tables, so the target database has to be empty. Drop and recreate
+the schema, then pipe the file in — `ON_ERROR_STOP=1` matters, without it psql reports
+success after hundreds of errors:
+
+```bash
+k scale deploy/librarius-api --replicas=0
+
+k exec deploy/librarius-postgres -- \
+  psql -U librarius -d librarius -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+
+k exec -i deploy/librarius-postgres -- \
+  psql -v ON_ERROR_STOP=1 -U librarius -d librarius < restore.sql
+```
+
+Expected output — a long list of `CREATE TABLE` / `COPY nnn` / `ALTER TABLE`, and **no**
+`ERROR:` line. It ends on the constraints:
+
+```text
+CREATE TABLE
+COPY 4213
+...
+ALTER TABLE
+```
+
+A `psql: error: connection to server ... failed` means the pod is not ready yet. An
+`ERROR: relation "book" already exists` means the schema was not dropped — go back one
+command.
+
+### 5. Check, then let the application back in
+
+```bash
+# Row counts, on the tables that matter.
+k exec deploy/librarius-postgres -- psql -U librarius -d librarius -c \
+  "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;"
+
+# Flyway's own history must be there: without it the API re-runs every migration.
+k exec deploy/librarius-postgres -- psql -U librarius -d librarius -c \
+  'SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;'
+
+k scale deploy/librarius-api --replicas=1
+k rollout status deploy/librarius-api --timeout=5m
+k logs deploy/librarius-api --tail=50        # Flyway must report "up to date"
+```
+
+Then, in a browser: sign in and open the library. **The restore worked** when the book
+count on screen matches `n_live_tup` above, and the API log shows Flyway validating rather
+than migrating.
+
+Keycloak lives in the same PostgreSQL instance but in its own `keycloak` database, which
+this dump does **not** contain: after a full node loss, accounts have to be recreated. That
+gap is deliberate for a staging environment and has to be closed before production.
+
+> **Not yet exercised against the cluster.** The scripts themselves are tested end to end —
+> dump, encryption, upload, retention pruning and a restore into a second database, against
+> a real PostgreSQL and a real S3 (`infra/backup/verify.sh`). What has never been done is
+> the procedure above, on `librarius.zelytra.fr`, with its data. Until somebody runs it once
+> deliberately and corrects this section with what actually happened,
+> [#59](https://github.com/zelytra/Librarius/issues/59) is not met.
+
+## 🔔 Alerting
+
+The alert rules live in `infra/prometheus/rules/librarius.rules.yml`. They are the answer to
+a simple failure: continuous deployment was broken for four weeks and nobody was told.
+
+**No Prometheus is deployed by the Helm chart today.** Prometheus and Grafana exist in
+`infra/` for the compose stack only, so on the cluster these rules are *delivered, not
+running*. What follows is what they need to become live.
+
+### Loading them
+
+Into the compose production stack — already wired, `infra/compose.prod.yml` mounts
+`./prometheus/rules` and `prometheus.prod.yml` loads `/etc/prometheus/rules/*.yml`:
+
+```bash
+cd infra && docker compose -f compose.prod.yml up -d prometheus
+docker compose -f compose.prod.yml exec prometheus promtool check rules /etc/prometheus/rules/librarius.rules.yml
+```
+
+Into a Prometheus running in Kubernetes, as a ConfigMap mounted on the rules directory:
+
+```bash
+kubectl -n librarius create configmap librarius-alert-rules \
+  --from-file=infra/prometheus/rules/librarius.rules.yml \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Under the Prometheus Operator, the same file wrapped in a `PrometheusRule` object — the
+`groups:` key is copied verbatim into `spec:`.
+
+Validate any change before applying it:
+
+```bash
+docker run --rm -v "$PWD/infra/prometheus/rules:/rules:ro" \
+  --entrypoint promtool prom/prometheus:v2.53.0 check rules /rules/librarius.rules.yml
+```
+
+### What each rule needs
+
+A rule whose metric is missing never fires: an incomplete monitoring stack goes quiet, it
+does not go noisy. That also means a rule can be silently useless — check this table before
+trusting a green dashboard.
+
+| Group | Requires | Missing today on the cluster |
+|---|---|---|
+| `librarius-api` | the `librarius-api` scrape job on `/q/metrics` | Prometheus itself |
+| `librarius-cluster` | kubelet metrics + kube-state-metrics | both |
+| `librarius-tls` | cert-manager metrics, or a blackbox exporter | both |
+| `librarius-backup` | kube-state-metrics + `backup.enabled=true` | kube-state-metrics |
+
+`LibrariusApiSlowResponses` reads `http_server_requests_seconds_bucket`. The Grafana
+dashboard already assumes those histogram buckets; if the API does not publish them, the
+rule stays silent rather than firing wrongly.
+
+### Notification channel
+
+Rules that fire into a UI nobody has open are not alerting. An Alertmanager is required, and
+it is **not shipped here**: its configuration file holds the webhook URL or the SMTP
+password in clear text, so it belongs in a Secret created by the maintainer, not in this
+repository.
+
+What has to be provided: a webhook URL (Slack, Discord, ntfy) *or* SMTP credentials and a
+recipient address. Then add the routing to Prometheus and point it at the Alertmanager:
+
+```yaml
+# infra/prometheus/prometheus.prod.yml
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+```
+
+Send `critical` somewhere that interrupts and `warning` somewhere that does not; grouping on
+`alertname` keeps a restart loop to one message rather than one per evaluation.
+
+### Runbooks
+
+Every alert carries its runbook in its own `runbook` annotation — symptom, likely cause,
+first action — so it travels with the notification instead of living in a document nobody
+opens at 3 a.m. Summarised:
+
+| Alert | Severity | Symptom | First action |
+|---|---|---|---|
+| `LibrariusApiDown` | critical | API unreachable for 2 min, no library loads | `k get pods -l component=api`, then `k logs deploy/librarius-api --tail=100`; check PostgreSQL if the pod is Running |
+| `LibrariusApiHighErrorRate` | critical | > 5% of responses are 5xx over 5 min | `k logs deploy/librarius-api --tail=200 \| grep -i error` to find the endpoint; roll back if it started at a deployment |
+| `LibrariusApiSlowResponses` | warning | p95 above 2 s for 10 min, the app drags | Grafana "Overview" for the slow URI, then `k top pods` to tell a slow query from a saturated node |
+| `LibrariusPersistentVolumeAlmostFull` | warning | PVC over 80%; writes stop when it fills | `k exec deploy/librarius-postgres -- df -h /var/lib/postgresql/data`, then raise `postgres.storage` — local-path does not grow by itself |
+| `LibrariusPodCrashLooping` | critical | A pod restarts endlessly, never ready | `k logs <pod> --previous --tail=100` — the reason is in the *previous* container's log |
+| `LibrariusCertificateExpiringSoon` | warning | TLS certificate expires in under 15 days | `k describe certificate librarius-zelytra-fr-tls` and read the Events; the ACME challenge is what is failing |
+| `LibrariusPublicCertificateExpiringSoon` | warning | Same, seen from outside — what users get | `curl -vI https://librarius.zelytra.fr 2>&1 \| grep -i expire`; restart Traefik if the Secret is newer than what is served |
+| `LibrariusBackupJobFailed` | critical | Last night's backup did not complete | `k logs job/<name> --all-containers` — dump and upload are separate containers, the log names which failed |
+| `LibrariusBackupTooOld` | critical | No backup in 48 h, and nothing looks wrong | `k get cronjob librarius-postgres-backup`, check SUSPEND and LAST SCHEDULE, then run one by hand |
+| `LibrariusBackupCronJobMissing` | critical | No backup Job exists at all | `helm -n librarius get values librarius --all \| grep -A3 backup`, redeploy with `backup.enabled=true` |
+
+> **Never triggered for real.** Each rule is syntactically valid (`promtool check rules`,
+> 10 rules) and each expression is written against a metric the corresponding exporter is
+> documented to publish — but no alert has been fired deliberately, no notification has been
+> received, and the seven quiet days the issue asks for have not been observed.
+> [#60](https://github.com/zelytra/Librarius/issues/60) is not met until they are.
 
 ## 🔙 Rolling back
 

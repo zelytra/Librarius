@@ -64,3 +64,46 @@ keycloak:
   resources:
     requests: { cpu: 100m, memory: 384Mi }
     limits: { cpu: "1", memory: 768Mi }
+
+# ── PostgreSQL backups (CronJob → S3-compatible storage) ──────────────────────
+# Off by default. The destination bucket, its provider and its credentials are
+# an operator decision: the chart neither invents them nor ships a default, and
+# an existing release gains no CronJob until this is turned on deliberately.
+# What has to be created first: docs/DEPLOYMENT.md § "Automated backups".
+backup:
+  enabled: false
+  # UTC. Off-peak, and late enough that a daily run never overlaps a deployment.
+  schedule: "15 2 * * *"
+  # No image is built for this. The dump runs in the PostgreSQL image (pg_dump,
+  # gzip); the encryption and the upload run in the AWS CLI image, which ships
+  # gpg. Both are pinned: an unpinned backup job is a backup job that changes
+  # behaviour on its own.
+  dumpImage: postgres:16-alpine
+  uploadImage: amazon/aws-cli:2.17.0
+  # Tiers are pruned independently, oldest first.
+  retention:
+    daily: 7
+    weekly: 4
+    monthly: 6
+  s3:
+    bucket: ""
+    prefix: librarius
+    region: us-east-1
+    # Empty for AWS S3 itself. Any S3-compatible provider needs its endpoint
+    # here, e.g. https://s3.fr-par.scw.cloud or https://s3.eu-central-003.backblazeb2.com
+    endpoint: ""
+  # Secret carrying the bucket credentials and the encryption passphrase.
+  # Created by hand like the two above, never by the chart.
+  existingSecret: ""
+  secretKeys:
+    accessKeyId: access-key-id
+    secretAccessKey: secret-access-key
+    passphrase: encryption-passphrase
+  # Scratch space for the dump and its encrypted copy, on the node's disk.
+  # Comfortably above twice the compressed dump; raise it as the data grows.
+  workDirSize: 1Gi
+  # Modest on purpose: the node is CPU-constrained and this pod exists for a
+  # couple of minutes a day.
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 300m, memory: 256Mi }
