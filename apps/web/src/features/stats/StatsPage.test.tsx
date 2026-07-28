@@ -54,7 +54,7 @@ describe('StatsPage', () => {
 
     expect(await screen.findByText(/Fixe-toi un objectif de lecture/)).toBeInTheDocument();
     expect(screen.getByText('Définir un objectif')).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: /sur .* lus en/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar', { name: /lus en/ })).not.toBeInTheDocument();
   });
 
   test('renders how much is left when a goal is set', async () => {
@@ -62,7 +62,7 @@ describe('StatsPage', () => {
     renderWithProviders(<StatsPage />);
 
     expect(await screen.findByText(/Encore 8 pages/)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /12 sur 20 pages/ })).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: /12 sur 20 pages/ })).toBeInTheDocument();
   });
 
   test('signals an outage rather than showing an empty screen', async () => {

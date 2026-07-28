@@ -273,13 +273,17 @@ column goes away, and the codes take its place, once the front end reads them.
 `goalUnit` are null when no goal is set for the year — the client shows an invitation
 rather than a gauge at zero.
 
-The three units read the same rows differently:
-
 | Unit | What `goalCurrent` counts |
 |---|---|
 | `BOOKS` | every title finished during the year |
-| `VOLUMES` | only those carrying a `volume_number`, i.e. volumes of a run |
+| `VOLUMES` | the same thing — see below |
 | `PAGES` | the pages of the titles finished, editions with no page count contributing nothing |
+
+`BOOKS` and `VOLUMES` **measure the same figure** and differ in wording only: a volume of a
+manga is a `work` of its own in this model, so a title read is a title read either way.
+Counting only the titles carrying a `volume_number` under `VOLUMES` was tried and dropped —
+it made a "50 volumes" goal quietly ignore every novel read towards it, which is the kind of
+silent subtraction a user has no way to notice.
 
 **"Finished" means `reading_progress.finished_at`**, which
 `PUT /api/library/{id}/progress` stamps when the status becomes `READ` — the business rule

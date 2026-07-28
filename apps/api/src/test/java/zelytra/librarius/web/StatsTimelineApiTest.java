@@ -27,10 +27,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * The time-based statistics, end to end.
  *
- * <p>Each test works in a calendar year of its own, well before the current one: the
- * database is shared by the whole suite, and a title another test marks as read is stamped
- * with today's date. A window in 2016 or 2019 belongs to this class alone, so the figures
- * can be asserted absolutely rather than as a delta.
+ * <p>Each test works in a window of its own, well before the current year: the database and
+ * the {@code alice} account are shared by the whole suite, and a title another test marks
+ * as read is stamped with today's date.
+ *
+ * <p>"Well before the current year" is not enough on its own — {@code ProgressDto} lets a
+ * caller supply a finishing date, and {@code ReadingProgressApiTest} uses 31 December 2019
+ * to prove it. The windows below are therefore narrow enough to hold only what this class
+ * seeds, and a bucket that suddenly has company is a sign that another test has moved into
+ * the same months rather than that the aggregation is wrong.
  */
 @QuarkusTest
 class StatsTimelineApiTest {
@@ -61,8 +66,9 @@ class StatsTimelineApiTest {
         seed(alice, LocalDate.of(2019, 1, 20), null, 200, "Patrick Rothfuss");
         seed(alice, LocalDate.of(2019, 3, 15), LocalDate.of(2019, 3, 5), 150, "Frank Herbert");
 
+        // January to March: February holds nothing and must be absent, not a zero.
         float daysPerBook = given().auth().oauth2(token("alice"))
-                .queryParam("from", "2019-01-01").queryParam("to", "2019-12-31")
+                .queryParam("from", "2019-01-01").queryParam("to", "2019-03-31")
                 .when().get("/api/stats/timeline")
                 .then().statusCode(200)
                 .body("granularity", is("MONTH"))

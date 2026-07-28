@@ -115,7 +115,10 @@ describe('HomePage', () => {
     expect(await screen.findByText(`Objectif ${YEAR}`)).toBeInTheDocument();
     expect(screen.getByText(/Encore 18 livres/)).toBeInTheDocument();
     expect(screen.getByText(/pour tenir le rythme/)).toBeInTheDocument();
-    expect(screen.getByRole('img')).toHaveAccessibleName(/12 sur 30 livres/);
+    // A progress bar, not a picture: the value has to reach assistive tech as a value.
+    const gauge = screen.getByRole('progressbar', { name: /12 sur 30 livres/ });
+    expect(gauge).toHaveAttribute('aria-valuenow', '40');
+    expect(gauge).toHaveAttribute('aria-valuemax', '100');
   });
 
   /** An empty state, not a ring stuck at zero: the two look the same and only one helps. */
@@ -124,7 +127,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText(/Fixe-toi un objectif de lecture/)).toBeInTheDocument();
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar', { name: /lus en/ })).not.toBeInTheDocument();
   });
 
   /**

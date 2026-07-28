@@ -22,7 +22,11 @@ export interface GoalPace {
   remaining: number;
   /** Days still available, today included — 1 on 31 December. */
   daysLeft: number;
-  /** The remaining work spread evenly over the days left. */
+  /**
+   * The remaining work spread over the days left, **rounded up**: a pace rounded down is
+   * a pace that misses the goal, and the last week of the year asks for everything that is
+   * left rather than for a fraction of it. Zero once the target is met.
+   */
   perDay: number;
   perWeek: number;
   perMonth: number;
@@ -64,24 +68,32 @@ export function goalPace(current: number, target: number, today: Date): GoalPace
   const elapsed = Math.min(dayOfYear(today), total);
   const daysLeft = total - elapsed + 1;
   const remaining = Math.max(0, target - current);
-  const perDay = remaining / daysLeft;
+  const expected = (target * elapsed) / total;
+
+  // Each figure is rounded up on its own window rather than derived from the daily one:
+  // rounding the day up first and multiplying would turn "1 book a month" into seven. The
+  // window never outlasts the year — on 29 December a week is three days, and asking for
+  // "14 a week" when two titles are left would be arithmetic nobody can act on.
+  const over = (days: number) =>
+    remaining === 0 ? 0 : Math.ceil((remaining * Math.min(days, daysLeft)) / daysLeft);
 
   return {
     remaining,
     daysLeft,
-    perDay,
-    perWeek: perDay * 7,
-    perMonth: (perDay * total) / 12,
+    perDay: over(1),
+    perWeek: over(7),
+    perMonth: over(total / 12),
     percent: target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0,
-    expected: (target * elapsed) / total,
-    onTrack: current >= (target * elapsed) / total,
+    expected,
+    onTrack: current >= expected,
     reached: target > 0 && current >= target,
   };
 }
 
 /**
  * The pace figure that reads best for a unit. Pages are a daily habit — "30 pages a day" is
- * something one can hold; books are a monthly one, and "0.1 book a day" says nothing.
+ * something one can hold. Books are a monthly one: rounded up, a daily book target reads
+ * "1 a day" for any goal at all, which is both false and useless.
  */
 export function paceForUnit(pace: GoalPace, unit: Unit): { value: number; perMonth: boolean } {
   return unit === GoalUnit.PAGES
@@ -106,10 +118,10 @@ export function lastGoalBefore(goals: GoalDto[] | undefined, year: number): Goal
     .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0];
 }
 
-/** Rounds a pace for display: one decimal below ten, none above. */
+/**
+ * A pace as it is shown. Whole by construction — {@link goalPace} rounds up — so this only
+ * groups the thousands a demanding page target reaches.
+ */
 export function formatPace(value: number): string {
-  return value.toLocaleString('fr-FR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: value < 10 ? 1 : 0,
-  });
+  return value.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 }

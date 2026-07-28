@@ -23,9 +23,29 @@ describe('goalPace', () => {
 
     expect(pace.remaining).toBe(18);
     expect(pace.daysLeft).toBe(184);
-    expect(pace.perDay).toBeCloseTo(18 / 184, 6);
-    expect(pace.perWeek).toBeCloseTo((18 / 184) * 7, 6);
-    expect(pace.perMonth).toBeCloseTo(((18 / 184) * 365) / 12, 6);
+    // 18 over 184 days: 0.098 a day, 0.68 a week, 2.98 a month — each rounded up.
+    expect(pace.perDay).toBe(1);
+    expect(pace.perWeek).toBe(1);
+    expect(pace.perMonth).toBe(3);
+  });
+
+  /**
+   * Rounded up, and on each window in its own right: a pace rounded down is a pace that
+   * misses the goal, and rounding the day up first would turn one book a month into seven.
+   */
+  test('rounds every pace up, each on its own window', () => {
+    const pace = goalPace(0, 120, JULY_FIRST);
+
+    expect(pace.perDay).toBe(1); // 120 / 184 = 0.65
+    expect(pace.perWeek).toBe(5); // 120 / (184 / 7) = 4.57
+    expect(pace.perMonth).toBe(20); // 120 / (184 / 30.4) = 19.8
+  });
+
+  test('asks a demanding target for more than one a day', () => {
+    const pace = goalPace(0, 500, JULY_FIRST);
+
+    expect(pace.perDay).toBe(3); // 500 / 184 = 2.72
+    expect(pace.perWeek).toBe(20); // 500 / (184 / 7) = 19.02
   });
 
   test('measures being behind against a steady pace, not against the target', () => {
@@ -35,12 +55,14 @@ describe('goalPace', () => {
     expect(goalPace(15, 30, JULY_FIRST).onTrack).toBe(true);
   });
 
+  /** The last day of the year asks for everything left, not for a fraction of a week. */
   test('counts today as a day still available', () => {
-    // 31 December leaves one day, not zero: the pace must stay a number.
     const pace = goalPace(28, 30, new Date(2026, 11, 31));
 
     expect(pace.daysLeft).toBe(1);
     expect(pace.perDay).toBe(2);
+    expect(pace.perWeek).toBe(2);
+    expect(pace.perMonth).toBe(2);
   });
 
   test('stops at the target rather than reporting a negative pace', () => {
@@ -48,6 +70,8 @@ describe('goalPace', () => {
 
     expect(pace.remaining).toBe(0);
     expect(pace.perDay).toBe(0);
+    expect(pace.perWeek).toBe(0);
+    expect(pace.perMonth).toBe(0);
     expect(pace.percent).toBe(100);
     expect(pace.reached).toBe(true);
   });
@@ -108,9 +132,10 @@ describe('unit and goal lookup', () => {
 });
 
 describe('formatPace', () => {
-  test('keeps one decimal below ten and none above', () => {
-    expect(formatPace(2.9755)).toBe('3');
-    expect(formatPace(1.26)).toBe('1,3');
-    expect(formatPace(42.4)).toBe('42');
+  test('shows a whole figure, grouped once it reaches the thousands', () => {
+    expect(formatPace(3)).toBe('3');
+    expect(formatPace(42)).toBe('42');
+    // French groups the thousands; which space the locale data uses is its own business.
+    expect(formatPace(1200)).toMatch(/^1\D200$/);
   });
 });

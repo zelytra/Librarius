@@ -138,16 +138,11 @@ class GoalProgressTest {
 
     // ── Units ─────────────────────────────────────────────────────────────────
 
-    /**
-     * The same reading read three ways: one title, one volume of a run, and its pages. The
-     * standalone title counts for the books goal and not for the volumes one.
-     */
+    /** Titles are counted by the head, pages by the page. */
     @Test
     void countsTheSameReadingInTheUnitOfTheGoal() {
         setGoal(40, "BOOKS");
         int booksBefore = goalCurrent();
-        setGoal(40, "VOLUMES");
-        int volumesBefore = goalCurrent();
         setGoal(100_000, "PAGES");
         int pagesBefore = goalCurrent();
 
@@ -156,9 +151,32 @@ class GoalProgressTest {
 
         setGoal(40, "BOOKS");
         assertEquals(booksBefore + 2, goalCurrent(), "both titles count as books");
-        setGoal(40, "VOLUMES");
-        assertEquals(volumesBefore + 1, goalCurrent(), "only the one carrying a volume number");
         setGoal(100_000, "PAGES");
         assertEquals(pagesBefore + 500, goalCurrent(), "the pages of both");
+    }
+
+    /**
+     * A volume of a manga is a {@code work} of its own in this model, so a goal counted in
+     * volumes measures exactly what a goal counted in books does — the two differ in
+     * wording. Counting only the titles that carry a volume number would make "50 volumes"
+     * quietly ignore every novel read towards it, which is the kind of silent subtraction
+     * nobody would think to look for.
+     */
+    @Test
+    void countsVolumesAndBooksAlike() {
+        setGoal(40, "BOOKS");
+        int booksBefore = goalCurrent();
+        setGoal(40, "VOLUMES");
+        int volumesBefore = goalCurrent();
+        assertEquals(booksBefore, volumesBefore, "the two units start from the same figure");
+
+        // One standalone novel and one volume of a run: both are one title read.
+        setStatus(addTitle("Goal - a novel", null, 300), "READ");
+        setStatus(addTitle("Goal - volume three", 3, 200), "READ");
+
+        setGoal(40, "VOLUMES");
+        assertEquals(volumesBefore + 2, goalCurrent(), "the novel counts towards a volumes goal");
+        setGoal(40, "BOOKS");
+        assertEquals(booksBefore + 2, goalCurrent(), "and the volume towards a books goal");
     }
 }

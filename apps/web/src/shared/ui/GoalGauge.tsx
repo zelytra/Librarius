@@ -23,12 +23,23 @@ interface GoalGaugeProps {
  * <p>Two SVG circles rather than a charting library: an arc is a stroke with a gap in it,
  * and the ring has to follow the theme through the same tokens as everything around it.
  * The dash offset is the only value the component computes.
+ *
+ * <p>It is a {@code progressbar} and not an image: a screen reader has to announce how far
+ * along the user is, which means the value has to be exposed as a value. The label says
+ * the same thing in words, for the figures inside the ring mean nothing read on their own.
  */
 export function GoalGauge({ percent, value, targetLabel, unitLabel, label }: GoalGaugeProps) {
   const filled = Math.min(100, Math.max(0, percent));
 
   return (
-    <div className={styles.gauge} role="img" aria-label={label}>
+    <div
+      className={styles.gauge}
+      role="progressbar"
+      aria-label={label}
+      aria-valuenow={filled}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
       <svg viewBox="0 0 100 100" className={styles.ring} aria-hidden="true" focusable="false">
         <circle className={styles.track} cx="50" cy="50" r={RADIUS} />
         <circle
