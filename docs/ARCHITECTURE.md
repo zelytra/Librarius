@@ -63,8 +63,9 @@ and de-duplicates by ISBN13, then by fuzzy title+author. Persistent cache
 
 ## CI/CD & git flow
 
-Branches: `main` (release) ← `develop` (integration) ← `feature/*`; plus `release/*` and
-`hotfix/*`. GitHub Actions workflows (path-filtered):
+Branches: `main` ← `feature/*`. There is no `develop` branch — pull requests target
+`main`, merging deploys to staging, and production is deployed by tagging.
+GitHub Actions workflows (path-filtered):
 
 - **web**: pnpm `--frozen-lockfile` → eslint → `tsc` → vitest → `vite build`
 - **api**: JDK 21 + Maven cache → `./mvnw -B verify`

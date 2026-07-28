@@ -4,7 +4,7 @@ name: docs
 # pull request would trigger no check at all. This workflow fills that gap.
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - '**/*.md'
       - '.markdownlint-cli2.jsonc'

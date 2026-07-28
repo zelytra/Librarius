@@ -168,4 +168,4 @@ At the **end of every milestone**, however:
 
 1. Update [INVENTORY](INVENTORY.md) (debt cleared / discovered).
 2. Review the dependencies of the next milestone.
-3. Release: PR `develop` → `main`, tag `v0.x.0`.
+3. Tag `main` with `v0.x.0` once the milestone is complete.

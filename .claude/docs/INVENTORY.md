@@ -1,6 +1,6 @@
 # Inventory — repository audit
 
-> Audit carried out on **2026-07-28** against `develop` (`af55df2`). It describes the code
+> Audit carried out on **2026-07-28** against `af55df2`. It describes the code
 > **as it is**, not as it ought to be. To be revised at the end of every milestone.
 
 ## Overview

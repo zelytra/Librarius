@@ -2,7 +2,7 @@ name: api
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'apps/api/**'
       - '.github/workflows/api.yml'
