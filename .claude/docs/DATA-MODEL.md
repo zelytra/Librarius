@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series
@@ -29,6 +29,7 @@ app_user ──┬─< library_item >── edition >── work >── series
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
 | `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in |
+| `catalog_cache` | `(provider, query_hash)` | `payload JSONB`, `fetched_at`, `expires_at` | Owned by no user: it caches provider answers, not data. idx on `expires_at` for the purge |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a).
 
@@ -43,8 +44,16 @@ row per distinct (`kind`, `series_title`) already in the catalog — folded
 case-insensitively, mirroring the `toLowerCase()` deduplication the statistics used to do
 — then every matching `work` is attached. `work.series_title` **stays and stays
 populated**: `BookView` still exposes it and the deployed front end reads it. It is now the
-denormalised label of `series.title`, and is dropped in V5 once the front end goes through
+denormalised label of `series.title`, and is dropped in V6 once the front end goes through
 the series identifier.
+
+`V5__catalog_cache.sql` adds the second level of the catalog cache. Caffeine stays in front
+of it, but it dies with the pod and there is a deployment on every merge to `main`, so the
+searches went back out to Open Library and AniList several times a day on quotas the whole
+instance shares. A row holds one provider's answer to one canonical request, hashed;
+`expires_at` carries the time-to-live — six hours for a search, twelve for the upcoming
+releases — because the request type is inside the hash and cannot be read back from the
+row. It belongs to no user and holds nothing private: it is a copy of a public catalog.
 
 ### Cascades
 
@@ -60,16 +69,16 @@ their data — handy for GDPR account deletion.
 | L2 | **`genres` is a free-text `VARCHAR(512)`**, treated as atomic | "Fantasy, Aventure" ≠ "Fantasy" in the stats; no reliable genre filter |
 | L3 | **`authors` is a string** | No author page, no grouping, no exact search by author |
 | L4 | **No reading history** | A re-read overwrites `started_at`/`finished_at` |
-| L5 | **No `catalog_cache`** | The Caffeine cache dies on restart → pressure on the provider quotas |
+| L5 | ✅ Lifted by V5 — `catalog_cache` behind Caffeine | — |
 | L6 | **No `dashboard_layout`** | The Home sections are hardcoded |
 | L7 | **No `notification_pref`** and no notification channel | No alerting possible |
 | L8 | **No curated `upcoming_release`** | Impossible to offer French release dates |
 | L9 | ✅ Lifted by V4 — `series_follow` | — |
-| L10 | **`work.series_title` still duplicates `series.title`** | Two sources of truth for one label until the front end reads `series_id`; dropped in V5 |
+| L10 | **`work.series_title` still duplicates `series.title`** | Two sources of truth for one label until the front end reads `series_id`; dropped in V6 |
 
 ## 3. Planned changes
 
-### V5 — Drop `series_title`, normalised genres & history
+### V6 — Drop `series_title`, normalised genres & history
 
 `work.series_title` goes away as soon as the front end reads `series_id` (#45, #46):
 
@@ -94,15 +103,11 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V6 — Personalisation & notifications
+### V7 — Personalisation & notifications
 
 `dashboard_layout (user_id PK, sections JSONB)`,
 `notification_pref (user_id PK, prefs JSONB)`,
 `upcoming_release (id, series_id, volume_number, release_date, region, publisher, source)`.
-
-### V7 — Persistent catalog cache
-
-`catalog_cache (provider, query_hash, payload JSONB, fetched_at, PRIMARY KEY (provider, query_hash))`.
 
 ## 4. Rules for writing migrations
 

@@ -93,7 +93,8 @@ zelytra/librarius/
   domain/               # Panache entities + enums (Kind, LibraryStatus, WishPriority, GoalUnit)
     repository/         # PanacheRepositoryBase, every query scoped to the user
   web/                  # JAX-RS resources + ApiDtos (records) + exception mappers
-  catalog/              # CatalogProvider (SPI), CatalogService (aggregation + cache)
+  catalog/              # CatalogProvider (SPI), CatalogService (aggregation),
+                        # CatalogCache + CatalogCacheStore (Caffeine → PostgreSQL)
     provider/           # OpenLibraryProvider/Client, AniListProvider/Client
   imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService
   security/CurrentUser  # resolves the Keycloak "sub" → AppUser (JIT creation)
@@ -106,11 +107,18 @@ zelytra/librarius/
   that is the only isolation barrier, there is no PostgreSQL RLS.
 - **DTOs**: `ApiDtos` groups Java `record` types with `of(entity)` factories. Entities are
   **never** serialised directly.
-- **Catalog**: `CatalogProvider` is a CDI SPI (`kind()`, `search()`, `upcoming()`).
-  `CatalogService` indexes the providers by `Kind`, fans out, deduplicates by key
-  (`dedupKey`) and caches (`@CacheResult`, Caffeine, 6 h for search / 12 h for releases).
-  **Adding a provider means writing one `@ApplicationScoped implements CatalogProvider`
-  class** — nothing else needs to change.
+- **Catalog**: `CatalogProvider` is a CDI SPI (`name()`, `kind()`, `search()`,
+  `upcoming()`). `CatalogService` indexes the providers by `Kind`, fans out and deduplicates
+  by key (`dedupKey`). **Adding a provider means writing one `@ApplicationScoped implements
+  CatalogProvider` class** — nothing else needs to change.
+- **Catalog cache**: two levels behind `CatalogCache`, on the provider call rather than on
+  the merged answer. Caffeine first (6 h for a search, 12 h for the releases), then the
+  `catalog_cache` table (`CatalogCacheStore`), so a pod that has just started answers from
+  PostgreSQL instead of re-spending the shared provider quotas. A miss takes an advisory
+  lock on the key before calling out, so concurrent pods missing the same cold entry produce
+  one outbound call, not one each. Hits and misses are counted per level
+  (`librarius_catalog_cache_lookups_total{level,result}`) and a scheduled job drops the
+  expired rows off the request path.
 - **Import**: the same SPI pattern through `LibraryImporter`, exposed by
   `POST /api/import/{source}` and `POST /api/import/csv`.
 - **Migrations**: Flyway on startup, Hibernate in `validate`. The schema is the truth; an
@@ -124,8 +132,8 @@ zelytra/librarius/
 2. ~~**SQL aggregations** for the statistics~~ — done ([#40](https://github.com/zelytra/Librarius/issues/40)).
 3. **Pagination** (`page`, `size`) on `GET /api/library` and `GET /api/wishlist`.
 4. **Rate limiting** on `/api/catalog/*` (per user).
-5. **A persistent `catalog_cache`** alongside Caffeine, to survive restarts and spare the
-   providers' quotas.
+5. ~~**A persistent `catalog_cache`** alongside Caffeine~~ — done
+   ([#65](https://github.com/zelytra/Librarius/issues/65)).
 6. ~~Removal of `HelloResource`~~ — done ([#41](https://github.com/zelytra/Librarius/issues/41)).
 
 ## 4. Front ↔ back contract

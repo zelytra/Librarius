@@ -24,7 +24,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 20 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
 | Persistence | PostgreSQL + Panache + Flyway (2 migrations), Hibernate in `validate` mode |
-| Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), Caffeine cache 6 h / 12 h |
+| Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
 | Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
@@ -81,7 +81,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    are now ordered alphabetically rather than by insertion order, the old tie-break
    following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
-11. **Tables planned but never created**: `catalog_cache`, `dashboard_layout`,
+11. **Tables planned but never created**: `dashboard_layout`,
     `notification_pref`, `upcoming_release`, `library_item_rank` (the rank is a column, not
     a table — an acceptable simplification, worth documenting).
 12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
@@ -162,7 +162,7 @@ production opens.*
 | Java tests | 10 files |
 | Front-end files (src) | 30 |
 | Front-end tests | 7 files, 41 tests |
-| Flyway migrations | 2 |
+| Flyway migrations | 5 |
 | REST endpoints exposed | 19 (9 resources) |
 | Locales | 1 (fr) |
 | CI workflows | 5 |
