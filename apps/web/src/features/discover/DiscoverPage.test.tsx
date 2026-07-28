@@ -17,9 +17,41 @@ function searchReturns(results: unknown[], status = 200) {
   );
 }
 
+/** Records the query string of every catalog search the screen sends. */
+function capturedSearches(results: unknown[] = []): URLSearchParams[] {
+  const calls: URLSearchParams[] = [];
+  server.use(
+    http.get('*/api/catalog/search', ({ request }) => {
+      calls.push(new URL(request.url).searchParams);
+      return HttpResponse.json(results);
+    }),
+  );
+  return calls;
+}
+
+/** Records the bodies posted to the collection. */
+function capturedLibraryPosts(): Record<string, unknown>[] {
+  const posts: Record<string, unknown>[] = [];
+  server.use(
+    http.post('*/api/library', async ({ request }) => {
+      posts.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ id: 'nouveau' }, { status: 201 });
+    }),
+  );
+  return posts;
+}
+
 async function search(term = 'fourth wing') {
   await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), term);
   await userEvent.click(screen.getByLabelText('Rechercher'));
+}
+
+async function openAdvanced() {
+  await userEvent.click(screen.getByText('Recherche avancée'));
+}
+
+async function openManualForm() {
+  await userEvent.click(await screen.findByText('Ajouter manuellement'));
 }
 
 describe('DiscoverPage', () => {
@@ -86,5 +118,154 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     expect(await screen.findByText(/Connecte-toi pour rechercher/)).toBeInTheDocument();
+  });
+
+  describe('ISBN detection', () => {
+    test('searches a pasted ISBN13 on the ISBN field rather than as keywords', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await search('978-0-441-01359-3');
+
+      expect(await screen.findByText(/ISBN reconnu/)).toBeInTheDocument();
+      expect(calls).toHaveLength(1);
+      expect(calls[0].get('isbn')).toBe('9780441013593');
+      expect(calls[0].get('q')).toBeNull();
+    });
+
+    test('leaves an ordinary search on the keyword field', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await search('fourth wing');
+
+      expect(screen.queryByText(/ISBN reconnu/)).not.toBeInTheDocument();
+      expect(calls[0].get('q')).toBe('fourth wing');
+      expect(calls[0].get('isbn')).toBeNull();
+    });
+  });
+
+  describe('advanced search', () => {
+    test('carries every advanced criterion into the query', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.type(screen.getByLabelText('Auteur'), 'Frank Herbert');
+      await userEvent.type(screen.getByLabelText('Année'), '1965');
+      await userEvent.type(screen.getByLabelText('Éditeur'), 'Pocket');
+      await userEvent.selectOptions(screen.getByLabelText('Langue'), 'fr');
+      await search('dune');
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0].get('q')).toBe('dune');
+      expect(calls[0].get('author')).toBe('Frank Herbert');
+      expect(calls[0].get('year')).toBe('1965');
+      expect(calls[0].get('publisher')).toBe('Pocket');
+      expect(calls[0].get('language')).toBe('fr');
+    });
+
+    test('searches on an advanced criterion alone, with no keyword', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.type(screen.getByLabelText('Auteur'), 'Rebecca Yarros');
+      await userEvent.click(screen.getByLabelText('Rechercher'));
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0].get('author')).toBe('Rebecca Yarros');
+      expect(calls[0].get('q')).toBeNull();
+    });
+
+    test('never searches on a keystroke, only on submit', async () => {
+      // Each miss costs a call to a rate-limited third-party provider.
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'dune');
+      await userEvent.type(screen.getByLabelText('Auteur'), 'Herbert');
+
+      expect(calls).toHaveLength(0);
+    });
+
+    test('sends nothing when every field is empty', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await userEvent.click(screen.getByLabelText('Rechercher'));
+
+      expect(calls).toHaveLength(0);
+    });
+  });
+
+  describe('manual add', () => {
+    test('offers the manual entry when a search comes back empty', async () => {
+      searchReturns([]);
+      renderWithProviders(<DiscoverPage />);
+
+      await search('un fanzine introuvable');
+
+      expect(await screen.findByText(/Aucun titre ne correspond/)).toBeInTheDocument();
+      expect(screen.getByText('Ajouter manuellement')).toBeInTheDocument();
+    });
+
+    test('posts the typed book to the collection', async () => {
+      const posts = capturedLibraryPosts();
+      renderWithProviders(<DiscoverPage />);
+
+      await openManualForm();
+      await userEvent.type(screen.getByLabelText('Titre'), 'Le Fanzine du dimanche');
+      await userEvent.type(screen.getByLabelText('Auteur(s)'), 'Collectif');
+      await userEvent.type(screen.getByLabelText('Série'), 'Dimanche');
+      await userEvent.type(screen.getByLabelText('Tome'), '3');
+      await userEvent.type(screen.getByLabelText('ISBN'), '9780441013593');
+      await userEvent.type(screen.getByLabelText('Éditeur'), 'Autoédition');
+      await userEvent.type(screen.getByLabelText('Pages'), '48');
+      await userEvent.type(screen.getByLabelText('URL de la couverture'), 'https://cover.test/1.jpg');
+      await userEvent.click(screen.getByText('Ajouter à la collection'));
+
+      expect(await screen.findByText(/« Le Fanzine du dimanche » ajouté/)).toBeInTheDocument();
+      expect(posts).toHaveLength(1);
+      expect(posts[0]).toEqual({
+        book: {
+          kind: 'BOOK',
+          title: 'Le Fanzine du dimanche',
+          authors: 'Collectif',
+          seriesTitle: 'Dimanche',
+          volumeNumber: 3,
+          isbn13: '9780441013593',
+          publisher: 'Autoédition',
+          pageCount: 48,
+          coverUrl: 'https://cover.test/1.jpg',
+        },
+        status: 'OWNED',
+      });
+    });
+
+    test('records the kind the screen is set to', async () => {
+      const posts = capturedLibraryPosts();
+      renderWithProviders(<DiscoverPage />);
+
+      await userEvent.click(screen.getByText('Mangathèque'));
+      await openManualForm();
+      await userEvent.type(screen.getByLabelText('Titre'), 'Un doujinshi');
+      await userEvent.click(screen.getByText('Ajouter à la collection'));
+
+      expect(await screen.findByText(/« Un doujinshi » ajouté/)).toBeInTheDocument();
+      expect((posts[0].book as { kind: string }).kind).toBe('MANGA');
+    });
+
+    test('reports a rejected manual add', async () => {
+      server.use(http.post('*/api/library', () => new HttpResponse(null, { status: 500 })));
+      renderWithProviders(<DiscoverPage />);
+
+      await openManualForm();
+      await userEvent.type(screen.getByLabelText('Titre'), 'Un titre');
+      await userEvent.click(screen.getByText('Ajouter à la collection'));
+
+      expect(await screen.findByText(/Ajout impossible/)).toBeInTheDocument();
+    });
   });
 });
