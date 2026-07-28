@@ -44,6 +44,11 @@ spec:
             # (KC_HOSTNAME + dynamic backchannel on the Keycloak side).
             - name: OIDC_AUTH_SERVER_URL
               value: "http://{{ .Release.Name }}-keycloak:8081/auth/realms/librarius"
+            # The PWA and the API share a host, but browsers still send an Origin header
+            # on writes: without the public origin allowed, every POST, PUT and DELETE
+            # comes back 403.
+            - name: CORS_ORIGINS
+              value: "https://{{ .Values.domain }}"
           readinessProbe:
             httpGet: { port: 8080, path: /q/health/ready }
             initialDelaySeconds: 10
