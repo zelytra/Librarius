@@ -40,16 +40,28 @@ function buildUrl(url: string, params?: Record<string, unknown>): string {
   return query ? `${url}?${query}` : url;
 }
 
+/**
+ * Serialises the payload according to the content type the endpoint declares.
+ *
+ * Not every endpoint takes JSON: `/api/import/csv` consumes `text/plain`, and
+ * JSON-encoding its body turned the whole file into one quoted line with escaped
+ * newlines — the import then created a single title named after the entire CSV.
+ */
+function serialiseBody(data: unknown, contentType: string): BodyInit {
+  return contentType.includes('json') ? JSON.stringify(data) : String(data);
+}
+
 async function send(request: ApiRequest, token: string | undefined): Promise<Response> {
+  const contentType = request.headers?.['Content-Type'] ?? 'application/json';
   return fetch(buildUrl(request.url, request.params), {
     method: request.method,
     signal: request.signal,
     headers: {
-      ...(request.data !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(request.data !== undefined ? { 'Content-Type': contentType } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...request.headers,
     },
-    body: request.data !== undefined ? JSON.stringify(request.data) : undefined,
+    body: request.data !== undefined ? serialiseBody(request.data, contentType) : undefined,
   });
 }
 
