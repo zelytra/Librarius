@@ -1,0 +1,98 @@
+# Dependency updates.
+#
+# Everything is weekly and grouped: one pull request per ecosystem per week,
+# rather than a stream of one-line bumps that nobody reviews. Monday early
+# morning, so the week starts with the updates already waiting.
+#
+# Only labels that exist in the repository are used here: Dependabot silently
+# drops a label it cannot find.
+version: 2
+
+updates:
+  # GitHub Actions. The workflows pin actions by commit SHA with the version in a
+  # trailing comment; Dependabot understands that form and rewrites both.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    labels:
+      - ci
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Frontend. A single pnpm workspace lockfile at the root covers apps/web, so
+  # one entry is enough.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:15"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - web
+    groups:
+      # Runtime dependencies end up in the browser bundle: a regression there is
+      # visible to users, so they are reviewed apart from the toolchain.
+      web-runtime:
+        dependency-type: production
+        patterns:
+          - "*"
+      web-toolchain:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  # API. The Quarkus platform BOM drives most versions, hence a single group:
+  # splitting it would produce pull requests that cannot be merged separately.
+  - package-ecosystem: maven
+    directory: /apps/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:30"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - api
+    groups:
+      api:
+        patterns:
+          - "*"
+
+  # Base images of the two deployed containers.
+  - package-ecosystem: docker
+    directories:
+      - /apps/api/src/main/docker
+      - /apps/web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:45"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - infra
+    groups:
+      images:
+        patterns:
+          - "*"
