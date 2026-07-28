@@ -8,6 +8,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Locks down data isolation between users.
@@ -153,6 +154,71 @@ class DataIsolationTest {
                 .when().get("/api/wishlist")
                 .then().statusCode(200)
                 .body("items.id", hasItem(aliceWish));
+    }
+
+    @Test
+    void wishlistItemOfAnotherUserCannotBeEdited() {
+        String aliceWish = addWishlistItem("alice", "Isolation - edited wish");
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"priority\": \"PRIORITY\", \"estimatedPrice\": 99.00 }")
+                .when().put("/api/wishlist/" + aliceWish)
+                .then().statusCode(404);
+
+        // Alice's wish kept the priority she gave it.
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/wishlist")
+                .then().statusCode(200)
+                .body("items.find { it.id == '" + aliceWish + "' }.priority", is("SOON"));
+    }
+
+    /**
+     * Acquiring writes on two tables at once — it removes a wish and adds an owned title.
+     * Bob must be able to do neither with Alice's wish: no title in his collection, and
+     * hers still in her wishlist.
+     */
+    @Test
+    void wishlistItemOfAnotherUserCannotBeAcquired() {
+        String aliceWish = addWishlistItem("alice", "Isolation - acquired wish");
+
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{}")
+                .when().post("/api/wishlist/" + aliceWish + "/acquire")
+                .then().statusCode(404);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("items.book.title", not(hasItem("Isolation - acquired wish")));
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/wishlist")
+                .then().statusCode(200)
+                .body("items.id", hasItem(aliceWish));
+    }
+
+    /** The budget aggregates the caller's own wishes and nobody else's. */
+    @Test
+    void theWishlistBudgetOnlyCountsOwnWishes() {
+        String marker = "Isolation - budget";
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "Bob budget", "authors": "%s" },
+                          "priority": "SOON", "estimatedPrice": 10.00 }
+                        """.formatted(marker))
+                .when().post("/api/wishlist").then().statusCode(201);
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "Alice budget", "authors": "%s" },
+                          "priority": "SOON", "estimatedPrice": 500.00 }
+                        """.formatted(marker))
+                .when().post("/api/wishlist").then().statusCode(201);
+
+        double bobBudget = given().auth().oauth2(token("bob")).queryParam("q", marker)
+                .when().get("/api/wishlist")
+                .then().statusCode(200)
+                .body("total", is(1))
+                .extract().jsonPath().getDouble("budget.total");
+        assertEquals(10.00, bobBudget, 0.001, "Alice's 500 must not show up in Bob's budget");
     }
 
     // ── Categories ────────────────────────────────────────────────────────────

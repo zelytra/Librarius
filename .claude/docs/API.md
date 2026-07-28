@@ -111,6 +111,15 @@ and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded with
 are appended after the numbered ones with a null `volumeNumber`; they count towards
 `ownedCount` but are never reported as missing.
 
+## Wishlist
+
+**Ordering.** `WishPriority` carries an explicit `rank` (`PRIORITY` 0, `SOON` 1, `SOMEDAY`
+2) and the default ordering maps the column to it through a `case`. Ordering on the column
+itself sorted the stored *name* — `PRIORITY, SOMEDAY, SOON` — and showed the wishes with no
+date attached ahead of the ones the user meant to buy next
+([#114](https://github.com/zelytra/Librarius/issues/114)). A new priority is one line in the
+enum: the `case` is generated from it, so the query and the enum cannot disagree.
+
 ## Pagination
 
 `GET /api/library` and `GET /api/wishlist` return an envelope, never a bare array:
@@ -127,7 +136,7 @@ downloading the collection.
 |---|---|---|---|
 | `page` | `0` | both | Zero-based. Clamped to 0; a page past the end is empty with the right `total` |
 | `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
-| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`. Wishlist: `priority`, `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
+| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`. Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
 | `status` | — | collection | `OWNED` \| `READING` \| `READ` |
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
@@ -158,8 +167,8 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A3 | No `GET /api/export` (CSV/JSON) and no `DELETE /api/me` — **GDPR requirements** | Public product |
 | A4 | ✅ `/api/series` resource — details, volumes, follow (#44) | Core product |
 | A5 | No `DELETE`/`PUT` on `/api/categories/{id}` | Core product |
-| A6 | No `PUT /api/wishlist/{id}` (edit priority/price/note) | Core product |
-| A7 | No one-call conversion from wish to collection | Core product |
+| A6 | ✅ `PUT /api/wishlist/{id}` (edit priority/price/note) (#52) | Core product |
+| A7 | ✅ One-call conversion from wish to collection (#52) | Core product |
 | A8 | No `/api/dashboard/layout` | Core product |
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |

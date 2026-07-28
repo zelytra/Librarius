@@ -103,8 +103,11 @@ Search across the external catalog (Open Library for books, AniList for manga).
 ### 4.5 Wishlist ✅ / 🔜
 
 - ✅ List with priority (Priority / Soon / Someday), estimated price, note, removal.
-- 🔜 **Total budget** and budget per priority.
-- 🔜 **Conversion to ownership** in one gesture (wish → collection, status `OWNED`).
+- ✅ Ordered from the most urgent to the least, and not alphabetically (#114).
+- ✅ **Editing** a wish: priority, estimated price, note (API — screen still to come, #52).
+- ✅ **Total budget** and budget per priority (API — screen still to come, #52).
+- ✅ **Conversion to ownership** in one gesture (wish → collection, status `OWNED`) — API,
+  the "I bought it" button still to come (#52).
 - 🔜 A "one of your wishes is out soon" alert (cross-referenced with upcoming releases).
 
 ### 4.6 Statistics ✅ / 🔜

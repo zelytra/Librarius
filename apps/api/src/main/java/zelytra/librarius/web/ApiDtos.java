@@ -1,9 +1,12 @@
 package zelytra.librarius.web;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.GoalUnit;
@@ -15,6 +18,7 @@ import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.Work;
+import zelytra.librarius.domain.repository.WishlistItemRepository.PriorityBudget;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -107,9 +111,14 @@ public final class ApiDtos {
             long total) {
     }
 
-    /** One page of the wishlist. Same envelope as {@link LibraryPageDto}. */
+    /**
+     * One page of the wishlist. Same envelope as {@link LibraryPageDto}, plus the budget.
+     *
+     * @param budget estimated spend of the whole filtered wishlist — identical on every
+     *               page, exactly like {@code total}
+     */
     public record WishlistPageDto(java.util.List<WishlistItemDto> items, int page, int size,
-            long total) {
+            long total, WishlistBudgetDto budget) {
     }
 
     public record CategoryDto(UUID id, String code, String label, String color, boolean builtin) {
@@ -134,11 +143,35 @@ public final class ApiDtos {
     public record GenreCount(String genre, long count) {
     }
 
+    /**
+     * A new wish. The bounds on the price and the note are those of the columns: without
+     * them an oversized value reaches PostgreSQL and comes back as a 500 rather than a 400.
+     */
     public record WishlistCreateDto(
             @NotNull @Valid ManualBookDto book,
             WishPriority priority,
-            BigDecimal estimatedPrice,
-            String note) {
+            @PositiveOrZero @Digits(integer = 6, fraction = 2) BigDecimal estimatedPrice,
+            @Size(max = 512) String note) {
+    }
+
+    /**
+     * What the user can change about a wish once it exists.
+     *
+     * <p>A PUT, not a patch: the three fields are replaced as a whole, so a null price or a
+     * null note clears it. The priority is required — a wish always sits in one of the
+     * buckets, and the column has no room for the absence of one.
+     */
+    public record WishlistUpdateDto(
+            @NotNull WishPriority priority,
+            @PositiveOrZero @Digits(integer = 6, fraction = 2) BigDecimal estimatedPrice,
+            @Size(max = 512) String note) {
+    }
+
+    /**
+     * What the user knows about the purchase when a wish becomes a book they own. Every
+     * field is optional, body included: the title itself comes from the wish.
+     */
+    public record WishlistAcquireDto(LibraryStatus status, Integer rating, LocalDate acquiredAt) {
     }
 
     public record WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note,
@@ -146,6 +179,46 @@ public final class ApiDtos {
         public static WishlistItemDto of(WishlistItem it) {
             return new WishlistItemDto(it.id, it.priority.name(), it.estimatedPrice, it.note,
                     BookView.of(it.edition));
+        }
+    }
+
+    /**
+     * Estimated spend of one priority group of the wishlist.
+     *
+     * @param count       wishes in the group, whether they carry an estimate or not
+     * @param pricedCount those of them that do
+     * @param total       sum of those estimates
+     */
+    public record WishlistBudgetLineDto(String priority, long count, long pricedCount,
+            BigDecimal total) {
+        public static WishlistBudgetLineDto of(PriorityBudget b) {
+            return new WishlistBudgetLineDto(b.priority().name(), b.count(), b.pricedCount(),
+                    b.total());
+        }
+    }
+
+    /**
+     * What the wishlist would cost, for the wishes matching the current filters.
+     *
+     * <p>Rides on the list rather than living behind an endpoint of its own so that the
+     * figure a client shows can never contradict the rows it shows underneath: one request,
+     * one set of criteria, one answer.
+     *
+     * @param total       sum of every estimate, zero when no wish carries one
+     * @param pricedCount wishes carrying an estimate — tells an empty wishlist apart from
+     *                    one where nobody has entered a price yet
+     * @param byPriority  the same figures per priority, most urgent first; priorities no
+     *                    wish carries are absent rather than reported as zero
+     */
+    public record WishlistBudgetDto(BigDecimal total, long pricedCount,
+            java.util.List<WishlistBudgetLineDto> byPriority) {
+        public static WishlistBudgetDto of(java.util.List<PriorityBudget> groups) {
+            BigDecimal total = groups.stream()
+                    .map(PriorityBudget::total)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            long priced = groups.stream().mapToLong(PriorityBudget::pricedCount).sum();
+            return new WishlistBudgetDto(total, priced,
+                    groups.stream().map(WishlistBudgetLineDto::of).toList());
         }
     }
 
