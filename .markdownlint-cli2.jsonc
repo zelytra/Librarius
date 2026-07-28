@@ -1,0 +1,25 @@
+// Règles markdownlint pour la documentation du dépôt.
+// Volontairement permissif : on cible les erreurs de structure (titres, listes,
+// tableaux, liens), pas la mise en forme cosmétique.
+{
+  "config": {
+    "default": true,
+    // Les documents sont écrits en lignes longues assumées (tableaux, URLs).
+    "MD013": false,
+    // Plusieurs sections peuvent partager un titre (« Contexte », « Référence »).
+    "MD024": { "siblings_only": true },
+    // Les emphases servent parfois de pseudo-titres dans les encarts.
+    "MD036": false,
+    // HTML inline ponctuel toléré.
+    "MD033": false,
+    // Les URLs locales (localhost, cluster) sont écrites telles quelles.
+    "MD034": false,
+    // Séparateurs de tableaux compacts (`|---|---|`), style de tout le dépôt.
+    "MD060": false,
+    // La dette de ETAT-DES-LIEUX.md est numérotée en continu à travers les
+    // sections : les issues GitHub y renvoient par leur numéro (« dette #13 »).
+    "MD029": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", "**/node_modules/**", "apps/api/target/**"]
+}

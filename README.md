@@ -20,7 +20,7 @@ statistiques de lecture.
 
 ## Structure du monorepo
 
-```
+```text
 apps/
   web/        # PWA React + Vite + TS
   api/        # API Quarkus (Maven, wrapper mvnw)
