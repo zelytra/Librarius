@@ -59,6 +59,7 @@
     "notifications": "Notifications",
     "version": "Ma Bibliothèque · version {{version}}",
     "themes": {
+      "systeme": "Système",
       "creme": "Crème",
       "sauge": "Sauge",
       "rose": "Rose",
