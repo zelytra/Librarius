@@ -132,7 +132,7 @@ production opens.*
 - `quarkus.http.cors.origins=http://localhost:5173` hardcoded: check the configuration of
   the deployed environment (the web app is served by the same host, so same-origin — to be
   confirmed).
-- Swagger UI publicly exposed (`quarkus.swagger-ui.always-include=true`).
+- ~~Swagger UI publicly exposed~~ ✅ **Resolved on 2026-07-28** ([#62](https://github.com/zelytra/Librarius/issues/62)): Swagger UI is back to its default (dev and test only), and `/q` is no longer routed by the ingress.
 - Keycloak sign-up is **open** on the imported realm: anyone can create an account on
   `librarius.zelytra.fr`. Deliberate or not? To be decided.
 - The Booknode import is scraping of a third-party site: a fragile and legally grey

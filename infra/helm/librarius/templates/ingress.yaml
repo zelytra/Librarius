@@ -32,12 +32,12 @@ spec:
               service:
                 name: {{ .Release.Name }}-api
                 port: { number: 8080 }
-          - path: /q
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-api
-                port: { number: 8080 }
+          {{- /*
+            /q is deliberately not routed: health and metrics have no business being
+            public. The kubelet probes hit the pod directly on 8080, and Prometheus
+            scrapes the api Service from inside the cluster — neither goes through the
+            ingress.
+          */}}
           {{- end }}
           - path: /
             pathType: Prefix
