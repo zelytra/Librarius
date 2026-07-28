@@ -64,9 +64,14 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 
 ### Back-end — moderate
 
-7. **No `series` table** even though the target architecture calls for one: a series is
-   just a `work.series_title VARCHAR` deduplicated with `toLowerCase()` in
-   `StatsResource`. Tracking "volumes owned / total" properly is impossible.
+7. ~~**No `series` table**~~ ✅ **Resolved on 2026-07-28**
+   ([#43](https://github.com/zelytra/Librarius/issues/43),
+   [#44](https://github.com/zelytra/Librarius/issues/44)): `V4__series.sql` adds `series`,
+   `series_follow` and `work.series_id`, backfilled from the existing `series_title` values,
+   and `/api/series` exposes the counters, the missing volumes and the follow.
+   Left behind: `work.series_title` still duplicates `series.title` until the front end
+   reads the identifier (#45, #46), and `StatsResource.seriesCount` still counts distinct
+   lower-cased titles rather than joining `series`.
 8. **`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats (a book tagged
    "Fantasy, Aventure" counts as a genre distinct from "Fantasy").
 9. ~~**Statistics computed in memory**~~ ✅ **Resolved on 2026-07-28**
@@ -76,7 +81,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
    are now ordered alphabetically rather than by insertion order, the old tie-break
    following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
-11. **Tables planned but never created**: `series`, `catalog_cache`, `dashboard_layout`,
+11. **Tables planned but never created**: `catalog_cache`, `dashboard_layout`,
     `notification_pref`, `upcoming_release`, `library_item_rank` (the rank is a column, not
     a table — an acceptable simplification, worth documenting).
 12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.

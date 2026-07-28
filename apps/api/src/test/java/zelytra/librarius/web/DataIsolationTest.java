@@ -59,7 +59,7 @@ class DataIsolationTest {
     void everyScopedResourceRejectsAnonymousAccess() {
         for (String path : new String[] {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
-                "/api/goals", "/api/stats", "/api/catalog/search?q=test" }) {
+                "/api/goals", "/api/stats", "/api/series", "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
         }
@@ -225,6 +225,86 @@ class DataIsolationTest {
                 .when().get("/api/goals")
                 .then().statusCode(200)
                 .body("find { it.year == 2991 }.targetCount", is(22));
+    }
+
+    // ── Series ────────────────────────────────────────────────────────────────
+
+    /** Adds one volume of a series to the user's collection. */
+    private void addSeriesVolume(String user, String seriesTitle, int volume) {
+        given().auth().oauth2(token(user)).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "MANGA", "title": "%s vol. %d",
+                                    "authors": "Isolation Test", "seriesTitle": "%s",
+                                    "volumeNumber": %d },
+                          "status": "OWNED" }
+                        """.formatted(seriesTitle, volume, seriesTitle, volume))
+                .when().post("/api/library")
+                .then().statusCode(201);
+    }
+
+    private String seriesId(String user, String seriesTitle) {
+        return given().auth().oauth2(token(user))
+                .when().get("/api/series")
+                .then().statusCode(200)
+                .extract().path("find { it.title == '" + seriesTitle + "' }.id");
+    }
+
+    /**
+     * A series is shared catalog data, but the resource is not a catalog browser: it only
+     * exposes what the caller owns or follows. A series only Alice collects therefore
+     * answers 404 to Bob, on every one of its endpoints.
+     */
+    @Test
+    void seriesOfAnotherUserAreNeitherListedNorReachable() {
+        String title = "Isolation - series alice";
+        addSeriesVolume("alice", title, 1);
+        String aliceSeries = seriesId("alice", title);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/series")
+                .then().statusCode(200)
+                .body("id", not(hasItem(aliceSeries)));
+
+        given().auth().oauth2(token("bob")).when().get("/api/series/" + aliceSeries)
+                .then().statusCode(404);
+        given().auth().oauth2(token("bob")).when().get("/api/series/" + aliceSeries + "/missing")
+                .then().statusCode(404);
+        given().auth().oauth2(token("bob")).when().put("/api/series/" + aliceSeries + "/follow")
+                .then().statusCode(404);
+        given().auth().oauth2(token("bob")).when().delete("/api/series/" + aliceSeries + "/follow")
+                .then().statusCode(404);
+    }
+
+    /**
+     * Two users collecting the same run share the {@code series} row — the catalog is
+     * shared. What must not be shared is the follow, nor the ownership counters.
+     */
+    @Test
+    void followStateAndCountersStayPrivateOnASharedSeries() {
+        String title = "Isolation - shared series";
+        addSeriesVolume("alice", title, 1);
+        addSeriesVolume("alice", title, 2);
+        addSeriesVolume("bob", title, 1);
+
+        String shared = seriesId("alice", title);
+        // Same catalog row for both, so the isolation below is about the user data only.
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/series")
+                .then().statusCode(200)
+                .body("id", hasItem(shared));
+
+        given().auth().oauth2(token("alice")).when().put("/api/series/" + shared + "/follow")
+                .then().statusCode(204);
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + shared)
+                .then().statusCode(200)
+                .body("followed", is(true))
+                .body("ownedCount", is(2));
+
+        given().auth().oauth2(token("bob")).when().get("/api/series/" + shared)
+                .then().statusCode(200)
+                .body("followed", is(false))
+                .body("ownedCount", is(1));
     }
 
     // ── Statistics ────────────────────────────────────────────────────────────

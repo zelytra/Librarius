@@ -24,6 +24,11 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | DELETE | `/api/wishlist/{id}` | Removes a wish |
+| GET | `/api/series` | Series the user owns a volume of or follows (`SeriesSummaryDto`) |
+| GET | `/api/series/{id}` | A series and the state of each of its volumes (`SeriesDetailDto`) |
+| GET | `/api/series/{id}/missing` | Holes in the owned run (`SeriesMissingDto`) |
+| PUT | `/api/series/{id}/follow` | Starts following the series — 204, idempotent |
+| DELETE | `/api/series/{id}/follow` | Stops following the series — 204, idempotent |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
 | POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) |
 | GET | `/api/goals` | Reading goals |
@@ -64,13 +69,47 @@ CategoryCreateDto(String label, String color)
 GoalDto(UUID id, int year, int targetCount, String unit)
 GoalUpsertDto(Integer targetCount, GoalUnit unit)
 
+SeriesSummaryDto(UUID id, String kind, String title, String coverUrl, Integer totalVolumes,
+                 String status, long ownedCount, long readCount, boolean followed)
+SeriesVolumeDto(Integer volumeNumber, String title, UUID workId, UUID libraryItemId,
+                boolean owned, boolean read, boolean missing, boolean upcoming)
+SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String coverUrl,
+                String synopsis, Integer totalVolumes, String status, long ownedCount,
+                long readCount, boolean followed, List<SeriesVolumeDto> volumes)
+SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
+
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
          Integer goalTarget, long goalCurrent, List<GenreCount> byGenre)
 GenreCount(String genre, long count)
 ```
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
-`WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}`.
+`WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
+`SeriesStatus {ONGOING, COMPLETED, HIATUS}`.
+
+## Series
+
+A `series` row is shared catalog data, but `/api/series` is not a catalog browser: a series
+is visible to a caller only once they **own a volume of it or follow it**. Anything else
+answers 404, the same as an unknown identifier — a 403 would tell the caller that a series
+exists in someone else's collection.
+
+The volume list of `GET /api/series/{id}` runs from volume 1 to the furthest volume anyone
+knows about: the announced `total_volumes`, the last volume present in the shared catalog,
+or the last one the caller owns. Each entry carries four non-exclusive flags — a read
+volume is also an owned one:
+
+| Flag | Meaning |
+|---|---|
+| `owned` | the caller has this volume in their collection |
+| `read` | …and it is marked `READ` |
+| `missing` | not owned, and **below** the highest volume they own — a hole in the run |
+| `upcoming` | not owned, and **above** it — what is still ahead of them |
+
+`GET /api/series/{id}/missing` returns exactly the `missing` volume numbers: owning 1, 2
+and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded without one)
+are appended after the numbered ones with a null `volumeNumber`; they count towards
+`ownedCount` but are never reported as missing.
 
 ## Pagination
 
@@ -117,7 +156,7 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A1 | ✅ Pagination on `/api/library` and `/api/wishlist` (#38) | Foundations |
 | A2 | No `PATCH /api/me` (display name, language) | Public product |
 | A3 | No `GET /api/export` (CSV/JSON) and no `DELETE /api/me` — **GDPR requirements** | Public product |
-| A4 | No `/api/series` resource (details, volumes, follow) | Core product |
+| A4 | ✅ `/api/series` resource — details, volumes, follow (#44) | Core product |
 | A5 | No `DELETE`/`PUT` on `/api/categories/{id}` | Core product |
 | A6 | No `PUT /api/wishlist/{id}` (edit priority/price/note) | Core product |
 | A7 | No one-call conversion from wish to collection | Core product |

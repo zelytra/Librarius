@@ -3,12 +3,13 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3)
+## 1. Current schema (V1 + V2 + V3 + V4)
 
 ```text
-app_user ──┬─< library_item >── edition >── work
-           ├─< wishlist_item >──┘
-           ├─< reading_goal
+app_user ──┬─< library_item >── edition >── work >── series
+           ├─< wishlist_item >──┘                      ▲
+           ├─< reading_goal                            │
+           ├─< series_follow >─────────────────────────┘
            └─< rank_category (custom)          library_item ──1:1─ reading_progress
                     ▲                                │
               rank_category (built-ins, user_id NULL)┘
@@ -19,7 +20,9 @@ app_user ──┬─< library_item >── edition >── work
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
 | `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`) | No credential stored |
-| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `volume_number`, `synopsis`, `genres`, `original_year` | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3) |
+| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres`, `original_year` | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4) |
+| `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
+| `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
@@ -35,6 +38,14 @@ per user) and their `kind` / `title` / `author` / `genre` orderings need. The fr
 search deliberately has no trigram index — it runs on a set already narrowed down to one
 user's items; installing `pg_trgm` would need privileges the API role may not have.
 
+`V4__series.sql` turns the series into a first-class object and backfills it: one `series`
+row per distinct (`kind`, `series_title`) already in the catalog — folded
+case-insensitively, mirroring the `toLowerCase()` deduplication the statistics used to do
+— then every matching `work` is attached. `work.series_title` **stays and stays
+populated**: `BookView` still exposes it and the deployed front end reads it. It is now the
+denormalised label of `series.title`, and is dropped in V5 once the front end goes through
+the series identifier.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -45,7 +56,7 @@ their data — handy for GDPR account deletion.
 
 | # | Limit | Impact |
 |---|---|---|
-| L1 | **No `series` table** — a series is a free-text `work.series_title` | Impossible to count the volumes of a series, follow a series, or detect missing volumes. Deduplicated with `toLowerCase()` in `StatsResource` |
+| L1 | ✅ Lifted by V4 — `series` table, `work.series_id`, `series_follow` | — |
 | L2 | **`genres` is a free-text `VARCHAR(512)`**, treated as atomic | "Fantasy, Aventure" ≠ "Fantasy" in the stats; no reliable genre filter |
 | L3 | **`authors` is a string** | No author page, no grouping, no exact search by author |
 | L4 | **No reading history** | A re-read overwrites `started_at`/`finished_at` |
@@ -53,42 +64,20 @@ their data — handy for GDPR account deletion.
 | L6 | **No `dashboard_layout`** | The Home sections are hardcoded |
 | L7 | **No `notification_pref`** and no notification channel | No alerting possible |
 | L8 | **No curated `upcoming_release`** | Impossible to offer French release dates |
-| L9 | No `series_followed` | Upcoming releases cannot be personalised |
+| L9 | ✅ Lifted by V4 — `series_follow` | — |
+| L10 | **`work.series_title` still duplicates `series.title`** | Two sources of truth for one label until the front end reads `series_id`; dropped in V5 |
 
 ## 3. Planned changes
 
-### V4 — Series (milestone "Core product")
+### V5 — Drop `series_title`, normalised genres & history
+
+`work.series_title` goes away as soon as the front end reads `series_id` (#45, #46):
 
 ```sql
-CREATE TABLE series (
-    id            UUID PRIMARY KEY,
-    kind          VARCHAR(16)  NOT NULL,          -- BOOK | MANGA
-    title         VARCHAR(512) NOT NULL,
-    original_title VARCHAR(512),
-    total_volumes INT,                            -- NULL if unknown / ongoing
-    status        VARCHAR(16),                    -- ONGOING | COMPLETED | HIATUS
-    cover_url     VARCHAR(1024),
-    synopsis      TEXT,
-    provider      VARCHAR(32),
-    provider_ref  VARCHAR(255),
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-ALTER TABLE work ADD COLUMN series_id UUID REFERENCES series (id) ON DELETE SET NULL;
-CREATE INDEX idx_work_series ON work (series_id, volume_number);
-
-CREATE TABLE series_follow (
-    user_id   VARCHAR(255) NOT NULL REFERENCES app_user (id) ON DELETE CASCADE,
-    series_id UUID         NOT NULL REFERENCES series (id)   ON DELETE CASCADE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (user_id, series_id)
-);
+ALTER TABLE work DROP COLUMN series_title;
 ```
 
-Data migration: create one `series` per distinct `work.series_title` (per `kind`), attach
-the `work` rows, **keep `series_title`** read-only for one release so the front end does not
-break, then drop it in V4.
-
-### V5 — Normalised genres & history
+Genres stop being a free-text blob, and a re-read stops overwriting the previous one:
 
 ```sql
 CREATE TABLE genre (id UUID PRIMARY KEY, code VARCHAR(64) UNIQUE NOT NULL, label VARCHAR(64) NOT NULL);

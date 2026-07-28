@@ -188,6 +188,50 @@ export interface ScrapeRequest {
   handle: string;
 }
 
+export interface SeriesDetailDto {
+  id?: Uuid;
+  kind?: string;
+  title?: string;
+  originalTitle?: string;
+  coverUrl?: string;
+  synopsis?: string;
+  totalVolumes?: number;
+  status?: string;
+  ownedCount?: number;
+  readCount?: number;
+  followed?: boolean;
+  volumes?: SeriesVolumeDto[];
+}
+
+export interface SeriesMissingDto {
+  seriesId?: Uuid;
+  title?: string;
+  volumes?: number[];
+}
+
+export interface SeriesSummaryDto {
+  id?: Uuid;
+  kind?: string;
+  title?: string;
+  coverUrl?: string;
+  totalVolumes?: number;
+  status?: string;
+  ownedCount?: number;
+  readCount?: number;
+  followed?: boolean;
+}
+
+export interface SeriesVolumeDto {
+  volumeNumber?: number;
+  title?: string;
+  workId?: Uuid;
+  libraryItemId?: Uuid;
+  owned?: boolean;
+  read?: boolean;
+  missing?: boolean;
+  upcoming?: boolean;
+}
+
 export interface StatsDto {
   read?: number;
   reading?: number;
@@ -1325,6 +1369,376 @@ export function useGetApiMe<TData = Awaited<ReturnType<typeof getApiMe>>, TError
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const getApiSeries = (
+    
+ ) => {
+      
+      
+      return apiClient<SeriesSummaryDto[]>(
+      {url: `/api/series`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiSeriesQueryKey = () => {
+    return [
+    `/api/series`
+    ] as const;
+    }
+
+    
+export const getGetApiSeriesQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeries>>> = () => getApiSeries();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiSeriesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeries>>>
+export type GetApiSeriesQueryError = void
+
+
+export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeries>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeries>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeries>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeries>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiSeries<TData = Awaited<ReturnType<typeof getApiSeries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeries>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiSeriesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const getApiSeriesId = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<SeriesDetailDto>(
+      {url: `/api/series/${id}`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiSeriesIdQueryKey = (id?: Uuid,) => {
+    return [
+    `/api/series/${id}`
+    ] as const;
+    }
+
+    
+export const getGetApiSeriesIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesId>>> = () => getApiSeriesId(id, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiSeriesIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesId>>>
+export type GetApiSeriesIdQueryError = void
+
+
+export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiSeriesId<TData = Awaited<ReturnType<typeof getApiSeriesId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiSeriesIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const putApiSeriesIdFollow = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<void>(
+      {url: `/api/series/${id}/follow`, method: 'PUT'
+    },
+      );
+    }
+  
+
+
+export const getPutApiSeriesIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdFollow>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdFollow>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['putApiSeriesIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiSeriesIdFollow>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  putApiSeriesIdFollow(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiSeriesIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof putApiSeriesIdFollow>>>
+    
+    export type PutApiSeriesIdFollowMutationError = void
+
+    export const usePutApiSeriesIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdFollow>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiSeriesIdFollow>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+
+      const mutationOptions = getPutApiSeriesIdFollowMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const deleteApiSeriesIdFollow = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<void>(
+      {url: `/api/series/${id}/follow`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getDeleteApiSeriesIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['deleteApiSeriesIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiSeriesIdFollow(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiSeriesIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>>
+    
+    export type DeleteApiSeriesIdFollowMutationError = void
+
+    export const useDeleteApiSeriesIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiSeriesIdFollow>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteApiSeriesIdFollowMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const getApiSeriesIdMissing = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<SeriesMissingDto>(
+      {url: `/api/series/${id}/missing`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiSeriesIdMissingQueryKey = (id?: Uuid,) => {
+    return [
+    `/api/series/${id}/missing`
+    ] as const;
+    }
+
+    
+export const getGetApiSeriesIdMissingQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdMissingQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesIdMissing>>> = () => getApiSeriesIdMissing(id, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiSeriesIdMissingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesIdMissing>>>
+export type GetApiSeriesIdMissingQueryError = void
+
+
+export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdMissing>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdMissing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdMissing>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdMissing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdMissing>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiSeriesIdMissingQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

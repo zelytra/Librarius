@@ -385,6 +385,108 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /api/series:
+    get:
+      tags:
+      - Series Resource
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeriesSummaryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/series/{id}:
+    get:
+      tags:
+      - Series Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesDetailDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/series/{id}/follow:
+    put:
+      tags:
+      - Series Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    delete:
+      tags:
+      - Series Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /api/series/{id}/missing:
+    get:
+      tags:
+      - Series Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesMissingDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /api/stats:
     get:
       tags:
@@ -759,6 +861,94 @@ components:
         handle:
           pattern: \S
           type: string
+    SeriesDetailDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        originalTitle:
+          type: string
+        coverUrl:
+          type: string
+        synopsis:
+          type: string
+        totalVolumes:
+          format: int32
+          type: integer
+        status:
+          type: string
+        ownedCount:
+          format: int64
+          type: integer
+        readCount:
+          format: int64
+          type: integer
+        followed:
+          type: boolean
+        volumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeriesVolumeDto"
+    SeriesMissingDto:
+      type: object
+      properties:
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        title:
+          type: string
+        volumes:
+          type: array
+          items:
+            format: int32
+            type: integer
+    SeriesSummaryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        coverUrl:
+          type: string
+        totalVolumes:
+          format: int32
+          type: integer
+        status:
+          type: string
+        ownedCount:
+          format: int64
+          type: integer
+        readCount:
+          format: int64
+          type: integer
+        followed:
+          type: boolean
+    SeriesVolumeDto:
+      type: object
+      properties:
+        volumeNumber:
+          format: int32
+          type: integer
+        title:
+          type: string
+        workId:
+          $ref: "#/components/schemas/UUID"
+        libraryItemId:
+          $ref: "#/components/schemas/UUID"
+        owned:
+          type: boolean
+        read:
+          type: boolean
+        missing:
+          type: boolean
+        upcoming:
+          type: boolean
     StatsDto:
       type: object
       properties:
