@@ -10,9 +10,9 @@ import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.domain.repository.AppUserRepository;
 
 /**
- * Identité de l'appelant, dérivée du jeton OIDC. Provisionne l'{@link AppUser}
- * à la volée (JIT) lors du premier accès authentifié. Centralise l'accès à
- * l'identifiant : toutes les requêtes métier doivent passer par ici pour le scoping.
+ * Caller identity, derived from the OIDC token. Provisions the {@link AppUser}
+ * just in time (JIT) on the first authenticated access. Centralizes access to the
+ * identifier: every business query must go through here for scoping.
  */
 @RequestScoped
 public class CurrentUser {
@@ -27,8 +27,8 @@ public class CurrentUser {
     AppUserRepository users;
 
     /**
-     * Identifiant stable de l'utilisateur courant : le « sub » du jeton lorsqu'il
-     * est présent, sinon le nom du principal (préservé unique au sein du realm).
+     * Stable identifier of the current user: the token "sub" when present,
+     * otherwise the principal name (guaranteed unique within the realm).
      */
     public String id() {
         String sub = jwt.getSubject();
@@ -36,12 +36,12 @@ public class CurrentUser {
             sub = identity.getPrincipal() != null ? identity.getPrincipal().getName() : null;
         }
         if (sub == null || sub.isBlank()) {
-            throw new ForbiddenException("Jeton sans identifiant d'utilisateur exploitable.");
+            throw new ForbiddenException("Token without a usable user identifier.");
         }
         return sub;
     }
 
-    /** Renvoie l'utilisateur applicatif, en le créant s'il n'existe pas encore. */
+    /** Returns the application user, creating it when it does not exist yet. */
     @Transactional
     public AppUser require() {
         String id = id();

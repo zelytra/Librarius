@@ -20,7 +20,7 @@ import zelytra.librarius.web.ApiDtos.GoalUpsertDto;
 
 import java.util.List;
 
-/** Objectifs de lecture annuels de l'utilisateur. */
+/** The user's yearly reading goals. */
 @Path("/api/goals")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,8 +53,8 @@ public class GoalResource {
         }
         goal.targetCount = dto.targetCount();
         goal.unit = dto.unit() != null ? dto.unit() : GoalUnit.BOOKS;
-        // L'entité n'est persistée qu'une fois complète : target_count est NOT NULL,
-        // un persist() prématuré fait échouer l'insert au commit.
+        // The entity is only persisted once complete: target_count is NOT NULL,
+        // so a premature persist() would make the insert fail at commit time.
         if (created) {
             goals.persist(goal);
         }

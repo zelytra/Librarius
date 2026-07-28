@@ -2,6 +2,6 @@ package zelytra.librarius.imports;
 
 import zelytra.librarius.domain.LibraryStatus;
 
-/** Ligne normalisée issue d'un import (scraping ou fichier). */
+/** Normalized row coming from an import (scraping or file). */
 public record ImportedBook(String title, String author, String coverUrl, LibraryStatus status) {
 }

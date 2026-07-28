@@ -1,6 +1,6 @@
 package zelytra.librarius.domain;
 
-/** Priorité d'un souhait. */
+/** Priority of a wish. */
 public enum WishPriority {
     PRIORITY,
     SOON,

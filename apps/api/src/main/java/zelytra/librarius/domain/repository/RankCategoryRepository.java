@@ -11,7 +11,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class RankCategoryRepository implements PanacheRepositoryBase<RankCategory, UUID> {
 
-    /** Catégories visibles par l'utilisateur : built-ins (user_id NULL) + les siennes. */
+    /** Categories visible to the user: built-ins (user_id NULL) plus their own. */
     public List<RankCategory> listForUser(String userId) {
         return list("userId is null or userId = ?1 order by builtin desc, sortOrder asc, label asc",
                 userId);

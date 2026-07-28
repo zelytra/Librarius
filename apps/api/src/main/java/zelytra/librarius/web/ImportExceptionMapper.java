@@ -7,7 +7,7 @@ import zelytra.librarius.imports.ImportException;
 
 import java.util.Map;
 
-/** Renvoie un message d'import lisible (400) plutôt qu'une 500. */
+/** Returns a readable import message (400) instead of a 500. */
 @Provider
 public class ImportExceptionMapper implements ExceptionMapper<ImportException> {
     @Override

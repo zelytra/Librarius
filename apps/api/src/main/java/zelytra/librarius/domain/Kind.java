@@ -1,6 +1,6 @@
 package zelytra.librarius.domain;
 
-/** Nature d'une œuvre. */
+/** Nature of a work. */
 public enum Kind {
     BOOK,
     MANGA

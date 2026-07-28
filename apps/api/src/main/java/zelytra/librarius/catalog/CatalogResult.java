@@ -3,8 +3,8 @@ package zelytra.librarius.catalog;
 import java.time.LocalDate;
 
 /**
- * Résultat normalisé du catalogue externe, indépendant du fournisseur.
- * Sert directement de DTO de réponse (sérialisé tel quel).
+ * Normalized external catalog result, independent of the provider.
+ * Used directly as the response DTO (serialized as-is).
  */
 public record CatalogResult(
         String kind,

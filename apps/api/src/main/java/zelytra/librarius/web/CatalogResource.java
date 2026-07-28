@@ -15,7 +15,7 @@ import zelytra.librarius.domain.Kind;
 
 import java.util.List;
 
-/** Recherche dans le catalogue externe et prochaines sorties. */
+/** External catalog search and upcoming releases. */
 @Path("/api/catalog")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
@@ -36,7 +36,7 @@ public class CatalogResource {
             return List.of();
         }
         Kind target = kind != null ? kind : Kind.BOOK;
-        // Métrique métier : nombre de recherches catalogue par nature.
+        // Business metric: number of catalog searches per kind.
         meters.counter("librarius.catalog.search", "kind", target.name()).increment();
         return catalog.search(target, query.trim(), Math.clamp(limit, 1, 40));
     }

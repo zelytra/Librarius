@@ -1,6 +1,6 @@
 package zelytra.librarius.domain;
 
-/** Unité d'un objectif de lecture. */
+/** Unit of a reading goal. */
 public enum GoalUnit {
     BOOKS,
     VOLUMES,

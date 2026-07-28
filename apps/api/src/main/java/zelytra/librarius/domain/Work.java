@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Œuvre du catalogue : un roman, ou un tome de manga. */
+/** Catalog work: a novel, or a single manga volume. */
 @Entity
 @Table(name = "work")
 public class Work {

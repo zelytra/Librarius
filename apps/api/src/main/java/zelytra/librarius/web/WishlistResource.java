@@ -25,7 +25,7 @@ import zelytra.librarius.web.ApiDtos.WishlistItemDto;
 import java.util.List;
 import java.util.UUID;
 
-/** Liste de souhaits de l'utilisateur. */
+/** The user's wishlist. */
 @Path("/api/wishlist")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Possession d'une édition par un utilisateur. */
+/** Ownership of an edition by a user. */
 @Entity
 @Table(name = "library_item")
 public class LibraryItem {

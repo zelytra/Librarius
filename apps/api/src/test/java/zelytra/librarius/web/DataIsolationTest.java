@@ -10,15 +10,15 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Verrouille l'isolation des données entre utilisateurs.
+ * Locks down data isolation between users.
  *
- * <p>Il n'y a pas de RLS PostgreSQL : la seule barrière est le filtrage applicatif sur
- * {@code user_id} dans les repositories. Une requête qui oublierait ce filtre exposerait
- * la bibliothèque d'un autre utilisateur sans qu'aucun autre test ne le détecte. Chaque
- * ressource scopée est donc éprouvée ici avec deux comptes distincts.
+ * <p>There is no PostgreSQL RLS: the only barrier is the application-level filtering on
+ * {@code user_id} in the repositories. A query forgetting that filter would expose another
+ * user's library without any other test noticing. Every scoped resource is therefore
+ * exercised here with two distinct accounts.
  *
- * <p>Les assertions sont volontairement relatives (« l'identifiant d'Alice n'apparaît pas
- * chez Bob ») et non absolues : la base est partagée par toute la suite de tests.
+ * <p>Assertions are deliberately relative ("Alice's identifier does not show up for Bob")
+ * rather than absolute: the database is shared by the whole test suite.
  */
 @QuarkusTest
 class DataIsolationTest {
@@ -29,7 +29,7 @@ class DataIsolationTest {
         return keycloak.getAccessToken(user);
     }
 
-    /** Ajoute un titre à la collection de l'utilisateur et renvoie son identifiant. */
+    /** Adds a title to the user's collection and returns its identifier. */
     private String addLibraryItem(String user, String title, String status) {
         return given().auth().oauth2(token(user)).contentType("application/json")
                 .body("""
@@ -41,7 +41,7 @@ class DataIsolationTest {
                 .extract().path("id");
     }
 
-    /** Ajoute un souhait à l'utilisateur et renvoie son identifiant. */
+    /** Adds a wish to the user's wishlist and returns its identifier. */
     private String addWishlistItem(String user, String title) {
         return given().auth().oauth2(token(user)).contentType("application/json")
                 .body("""
@@ -53,7 +53,7 @@ class DataIsolationTest {
                 .extract().path("id");
     }
 
-    // ── Absence de jeton ──────────────────────────────────────────────────────
+    // ── Missing token ─────────────────────────────────────────────────────────
 
     @Test
     void everyScopedResourceRejectsAnonymousAccess() {
@@ -65,11 +65,11 @@ class DataIsolationTest {
         }
     }
 
-    // ── Collection ────────────────────────────────────────────────────────────
+    // ── Library ───────────────────────────────────────────────────────────────
 
     @Test
     void libraryItemsAreInvisibleToOtherUsers() {
-        String aliceItem = addLibraryItem("alice", "Isolation — collection", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - library", "OWNED");
 
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
@@ -83,18 +83,18 @@ class DataIsolationTest {
     }
 
     /**
-     * L'accès à l'identifiant d'autrui doit répondre 404 et non 403 : un 403 confirmerait
-     * l'existence de la ressource, ce qui est déjà une fuite d'information.
+     * Accessing someone else's identifier must answer 404 and not 403: a 403 would confirm
+     * that the resource exists, which is already an information leak.
      */
     @Test
     void libraryItemOfAnotherUserCannotBeDeleted() {
-        String aliceItem = addLibraryItem("alice", "Isolation — suppression", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - deletion", "OWNED");
 
         given().auth().oauth2(token("bob"))
                 .when().delete("/api/library/" + aliceItem)
                 .then().statusCode(404);
 
-        // L'item d'Alice est toujours là.
+        // Alice's item is still there.
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
                 .then().statusCode(200)
@@ -103,7 +103,7 @@ class DataIsolationTest {
 
     @Test
     void libraryItemOfAnotherUserCannotBeRanked() {
-        String aliceItem = addLibraryItem("alice", "Isolation — rang", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - rank", "OWNED");
         String orId = given().auth().oauth2(token("bob")).when().get("/api/categories")
                 .then().statusCode(200)
                 .extract().path("find { it.code == 'or' }.id");
@@ -116,7 +116,7 @@ class DataIsolationTest {
 
     @Test
     void libraryItemOfAnotherUserProgressCannotBeUpdated() {
-        String aliceItem = addLibraryItem("alice", "Isolation — progression", "READING");
+        String aliceItem = addLibraryItem("alice", "Isolation - progress", "READING");
 
         given().auth().oauth2(token("bob")).contentType("application/json")
                 .body("{ \"currentPage\": 999, \"percent\": 99, \"status\": \"READ\" }")
@@ -124,11 +124,11 @@ class DataIsolationTest {
                 .then().statusCode(404);
     }
 
-    // ── Souhaits ──────────────────────────────────────────────────────────────
+    // ── Wishlist ──────────────────────────────────────────────────────────────
 
     @Test
     void wishlistIsInvisibleToOtherUsers() {
-        String aliceWish = addWishlistItem("alice", "Isolation — souhait");
+        String aliceWish = addWishlistItem("alice", "Isolation - wish");
 
         given().auth().oauth2(token("alice"))
                 .when().get("/api/wishlist")
@@ -143,7 +143,7 @@ class DataIsolationTest {
 
     @Test
     void wishlistItemOfAnotherUserCannotBeDeleted() {
-        String aliceWish = addWishlistItem("alice", "Isolation — souhait protégé");
+        String aliceWish = addWishlistItem("alice", "Isolation - protected wish");
 
         given().auth().oauth2(token("bob"))
                 .when().delete("/api/wishlist/" + aliceWish)
@@ -155,11 +155,11 @@ class DataIsolationTest {
                 .body("id", hasItem(aliceWish));
     }
 
-    // ── Catégories ────────────────────────────────────────────────────────────
+    // ── Categories ────────────────────────────────────────────────────────────
 
     /**
-     * Les built-ins (Or / Argent / Bronze) portent {@code user_id NULL} et sont donc
-     * visibles de tous ; une catégorie créée par un utilisateur ne l'est que pour lui.
+     * Built-ins (Or / Argent / Bronze) carry {@code user_id NULL} and are therefore
+     * visible to everyone; a category created by a user is visible only to that user.
      */
     @Test
     void customCategoriesAreNotSharedButBuiltinsAre() {
@@ -179,11 +179,11 @@ class DataIsolationTest {
                 .when().get("/api/categories")
                 .then().statusCode(200)
                 .body("id", not(hasItem(aliceCategory)))
-                // Les built-ins restent partagés.
+                // Built-ins stay shared.
                 .body("code", hasItem("or"));
     }
 
-    /** Bob ne peut pas ranger son propre titre dans une catégorie appartenant à Alice. */
+    /** Bob cannot file his own title under a category owned by Alice. */
     @Test
     void categoryOfAnotherUserCannotBeAssigned() {
         String aliceCategory = given().auth().oauth2(token("alice")).contentType("application/json")
@@ -192,7 +192,7 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .extract().path("id");
 
-        String bobItem = addLibraryItem("bob", "Isolation — rang croisé", "OWNED");
+        String bobItem = addLibraryItem("bob", "Isolation - cross-user rank", "OWNED");
 
         given().auth().oauth2(token("bob")).contentType("application/json")
                 .body("{ \"categoryId\": \"" + aliceCategory + "\" }")
@@ -200,9 +200,9 @@ class DataIsolationTest {
                 .then().statusCode(400);
     }
 
-    // ── Objectifs ─────────────────────────────────────────────────────────────
+    // ── Goals ─────────────────────────────────────────────────────────────────
 
-    /** Années volontairement lointaines pour ne pas heurter les autres tests. */
+    /** Deliberately distant years so as not to clash with the other tests. */
     @Test
     void goalsAreIsolatedForTheSameYear() {
         given().auth().oauth2(token("alice")).contentType("application/json")
@@ -215,7 +215,7 @@ class DataIsolationTest {
                 .when().put("/api/goals/2991")
                 .then().statusCode(200).body("targetCount", is(22));
 
-        // Chacun conserve sa propre cible sur la même année.
+        // Each user keeps their own target for the same year.
         given().auth().oauth2(token("alice"))
                 .when().get("/api/goals")
                 .then().statusCode(200)
@@ -227,11 +227,11 @@ class DataIsolationTest {
                 .body("find { it.year == 2991 }.targetCount", is(22));
     }
 
-    // ── Statistiques ──────────────────────────────────────────────────────────
+    // ── Statistics ────────────────────────────────────────────────────────────
 
     /**
-     * Les statistiques agrègent la collection de l'utilisateur : l'ajout d'un titre lu
-     * par Alice ne doit rien changer aux compteurs de Bob.
+     * Statistics aggregate the user's own collection: a read title added by Alice must
+     * not change Bob's counters in any way.
      */
     @Test
     void statsOnlyCountOwnItems() {
@@ -240,7 +240,7 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .extract().jsonPath().getInt("read");
 
-        addLibraryItem("alice", "Isolation — statistiques", "READ");
+        addLibraryItem("alice", "Isolation - statistics", "READ");
 
         given().auth().oauth2(token("bob"))
                 .when().get("/api/stats")
