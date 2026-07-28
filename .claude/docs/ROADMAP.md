@@ -23,7 +23,8 @@ GitHub** ; les issues portent le détail et les critères d'acceptation.
 Un agent qui reprend le projet et n'a pas d'instruction plus précise prend, dans cet ordre :
 
 1. **[#58](https://github.com/zelytra/Librarius/issues/58)** — secrets en clair dans un
-   dépôt public : c'est le seul point qui expose une production en fonctionnement.
+   dépôt public : même si `librarius.zelytra.fr` n'est qu'une qualification, l'instance
+   est joignable depuis Internet et ces identifiants sont exploitables tels quels.
 2. **[#30](https://github.com/zelytra/Librarius/issues/30)** — l'état serveur conditionne
    presque tout le travail front qui suit.
 3. **[#32](https://github.com/zelytra/Librarius/issues/32)** — les styles inline bloquent
@@ -136,6 +137,10 @@ nouveaux, langues, accessibilité, performance.
 
 **Critère de sortie** : un inconnu peut créer un compte, comprendre l'app, exporter ou
 supprimer ses données, en français ou en anglais, avec un score Lighthouse ≥ 90.
+
+> C'est ce jalon qui ouvre une **production**. `librarius.zelytra.fr` reste une
+> qualification jusque-là. Les points de v0.5 tolérés en qualification — secrets,
+> sauvegardes, coupure au déploiement — deviennent bloquants ici.
 
 | Issue | Sujet | Dépend de |
 |---|---|---|

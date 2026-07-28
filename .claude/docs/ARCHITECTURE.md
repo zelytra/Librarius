@@ -17,9 +17,12 @@ Navigateur (PWA React 19)
                           └──► AniList       (GraphQL, mangas)
 ```
 
-En production, **un seul hôte** `librarius.zelytra.fr` derrière Traefik :
+Sur l'environnement déployé, **un seul hôte** `librarius.zelytra.fr` derrière Traefik :
 `/auth` → Keycloak · `/api` + `/q` → API · `/` → nginx (PWA).
-Le front et l'API sont donc *same-origin* : aucun préflight CORS en prod.
+Le front et l'API sont donc *same-origin* : aucun préflight CORS.
+
+> `librarius.zelytra.fr` est un environnement de **qualification**. Aucune production
+> n'est ouverte à ce jour ; elle est visée au jalon v1.0.
 
 ## 2. Frontend — `apps/web`
 
@@ -131,7 +134,7 @@ régénération.
 | Autorisation | `@Authenticated` sur toutes les ressources sauf `HelloResource` (à supprimer) |
 | Isolation des données | Applicative, via `user_id` dans chaque requête — **à couvrir par des tests dédiés** |
 | Secrets | ⚠️ En clair dans `helm/librarius/values.yaml` — à migrer vers des Secrets Kubernetes |
-| Surface exposée | Swagger UI actif en production (`always-include=true`) — à restreindre |
+| Surface exposée | Swagger UI actif sur l'environnement déployé (`always-include=true`) — à restreindre avant l'ouverture publique |
 | Rate limiting | Aucun |
 
 ## 6. Déploiement
@@ -141,7 +144,8 @@ Chart `helm/librarius` : `web`, `api`, `postgres` (PVC `local-path`, deux bases
 Push sur `main` → `cd.yml` → build/push images GHCR taguées `<sha>` → `helm upgrade`.
 
 Stratégie de déploiement `Recreate` (nœud contraint en CPU) : **coupure de service à
-chaque livraison**, à corriger quand la capacité le permettra.
+chaque livraison**. Acceptable tant que l'environnement est une qualification ;
+bloquant à l'ouverture de la production.
 
 L'autorité OIDC est **gravée dans l'image web au build**
 (`--build-arg VITE_OIDC_AUTHORITY`) : changer de domaine impose un rebuild.

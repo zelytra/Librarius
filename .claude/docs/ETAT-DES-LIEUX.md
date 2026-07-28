@@ -11,12 +11,18 @@ manque relève de **la profondeur fonctionnelle** (séries, progression fine, so
 de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) et de
 **l'exploitation** (secrets en clair, aucune sauvegarde, aucune alerte).
 
+> **Environnement** : `librarius.zelytra.fr` est une **qualification**, pas une
+> production. Aucune production n'est ouverte à ce jour. Cela abaisse la criticité
+> immédiate des points d'exploitation ci-dessous — sans les annuler : le dépôt est
+> public et l'instance est joignable depuis Internet avec inscription libre. Chacun de
+> ces points redevient bloquant à l'ouverture de la production (jalon v1.0).
+
 ## Ce qui fonctionne ✅
 
 | Domaine | État |
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 20 / pnpm 9.15.9 / JDK 21 |
-| Auth | Keycloak OIDC e2e — Dev Services en test, realm importé en dev, ingress `/auth` en prod |
+| Auth | Keycloak OIDC e2e — Dev Services en test, realm importé en dev, ingress `/auth` en qualification |
 | Persistence | PostgreSQL + Panache + Flyway (2 migrations), Hibernate en mode `validate` |
 | Catalogue | `CatalogService` agrège Open Library (livres) et AniList (mangas), cache Caffeine 6 h / 12 h |
 | Import | Booknode (scraping) + CSV, exposés dans les Réglages |
@@ -63,14 +69,21 @@ de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) 
     (le rang est une colonne, pas une table — simplification acceptable à documenter).
 12. **`HelloResource` non authentifiée** — endpoint de démo à supprimer.
 
-### Exploitation — critique
+### Exploitation
+
+*Criticité évaluée pour une qualification ; toutes ces lignes deviennent bloquantes à
+l'ouverture de la production.*
 
 13. **Secrets en clair dans `helm/librarius/values.yaml`** : `postgres.password:
-    librarius`, `keycloak.adminPassword: admin`, versionnés dans un dépôt public.
-14. **Aucune sauvegarde PostgreSQL.** PVC `local-path` sur un nœud unique : une perte
-    de disque = perte totale des bibliothèques.
+    librarius`, `keycloak.adminPassword: admin`, versionnés dans un **dépôt public**.
+    Reste sérieux même en qualification : l'instance est joignable depuis Internet, donc
+    ces identifiants sont exploitables tels quels par n'importe qui.
+14. **Aucune sauvegarde PostgreSQL.** PVC `local-path` sur un nœud unique. Supportable
+    tant que les données de qualification sont jetables — à traiter avant d'accueillir
+    des données réelles.
 15. **Aucune alerte.** Grafana affiche, personne n'est prévenu.
 16. **Stratégie `Recreate`** (contrainte CPU du nœud) → coupure à chaque déploiement.
+    Assumé en qualification.
 17. **Tags d'images `<sha>`** poussés sur `latest` : pas de versionnement sémantique ni
     de possibilité de rollback simple.
 
@@ -94,8 +107,9 @@ de **la qualité** (tests front quasi absents, styles inline, i18n incomplète) 
 
 - Secrets versionnés (voir dette #13).
 - `quarkus.http.cors.origins=http://localhost:5173` en dur : vérifier la configuration
-  de production (le web est servi par le même hôte, donc same-origin — à confirmer).
-- Swagger UI exposé en production (`quarkus.swagger-ui.always-include=true`).
+  de l'environnement déployé (le web est servi par le même hôte, donc same-origin — à
+  confirmer).
+- Swagger UI exposé publiquement (`quarkus.swagger-ui.always-include=true`).
 - Inscription Keycloak **ouverte** sur le realm importé : n'importe qui peut créer un
   compte sur `librarius.zelytra.fr`. Choix assumé ou non ? À trancher.
 - Import Booknode = scraping d'un site tiers : dépendance fragile et juridiquement
