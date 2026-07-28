@@ -1,0 +1,271 @@
+/* Series screen. Same anatomy as Detail — wash, back button, hero cover — so that
+   moving from a volume to its series does not feel like leaving the app. */
+
+.notFound {
+  padding: 40px var(--screen-pad-x);
+}
+
+.page {
+  position: relative;
+}
+
+.wash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  opacity: var(--wash-opacity);
+}
+
+.body {
+  position: relative;
+  padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
+}
+
+.backRow {
+  padding: 14px 0 18px;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.coverRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: var(--fs-24);
+  line-height: 1.15;
+}
+
+.meta {
+  margin-top: 8px;
+}
+
+.status {
+  font-size: var(--fs-11-5);
+  font-weight: 600;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  padding: 5px 12px;
+  border-radius: var(--radius-badge);
+}
+
+/* ── Progress ─────────────────────────────────────────────────────────────── */
+
+.progress {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.progressValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-18);
+  font-weight: 600;
+}
+
+.progressRead {
+  font-size: var(--fs-12);
+  color: var(--muted);
+}
+
+.track {
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-bar);
+  background: var(--accent);
+}
+
+.followRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.synopsis {
+  font-size: var(--fs-13-5);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+.sectionTitle {
+  font-size: var(--fs-17);
+  margin: 0 0 10px;
+}
+
+/* ── Volume grid ──────────────────────────────────────────────────────────── */
+
+/* The legend spells out what the fills and the icons mean; the grid itself stays
+   readable without it, which is the point of pairing a colour with an icon. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-badge);
+  font-size: var(--fs-10-5);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  aspect-ratio: 1;
+  padding: 4px;
+  border-radius: var(--radius-tile);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cellNumber {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+/* ── The four states ──────────────────────────────────────────────────────────
+   Each pairs a fill with an icon, and the two states the user does not own are
+   outlined rather than solid: three channels, so neither a colour-blind reader
+   nor a greyscale screenshot loses the distinction. Every value is a token, so
+   the grid follows the theme like the rest of the app. */
+
+/* Read: the strongest fill of the four — the run is done here. */
+.read {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1.5px solid var(--accent);
+}
+
+/* Owned but unread: same family as read, one step down. */
+.owned {
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  border: 1.5px solid var(--tint-sage-ink);
+}
+
+/* A hole in the run: dashed, as the gap it is. */
+.missing {
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  border: 1.5px dashed var(--tint-rose-ink);
+}
+
+/* Still ahead: neutral, nothing to act on yet. */
+.upcoming {
+  background: var(--chip);
+  color: var(--faint);
+  border: 1.5px solid var(--line);
+}
+
+/* ── Missing volumes and actions ──────────────────────────────────────────── */
+
+/* Names the holes in the run, in the same rose the grid flags them with. */
+.missingSummary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  font-size: var(--fs-12-5);
+  font-weight: 600;
+}
+
+.emptyVolumes {
+  padding: 30px var(--screen-pad-x);
+}
+
+.actions {
+  position: sticky;
+  bottom: 12px;
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-strong);
+  padding: 14px 16px;
+}
+
+.actionsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.actionsTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
+  font-weight: 600;
+}
+
+.closeButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.actionsButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

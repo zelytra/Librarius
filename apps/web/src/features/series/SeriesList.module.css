@@ -1,0 +1,90 @@
+/* Series view of the collection: a list of runs rather than a wall of covers. */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 62px;
+  border-radius: var(--radius-thumb);
+  box-shadow: var(--shadow-thumb);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15-5);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* An incomplete run is flagged by a tint and an icon, not by the wording alone. */
+.badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: var(--radius-badge);
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  font-size: var(--fs-10);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.count {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 3px 0 7px;
+}
+
+.track {
+  height: 6px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-bar);
+  background: var(--rose);
+}
+
+/* A finished run turns the bar to the accent: the collection is complete. */
+.barComplete {
+  background: var(--accent);
+}

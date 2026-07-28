@@ -15,10 +15,12 @@ import {
   getGetApiStatsQueryKey,
   useGetApiCategories,
   useGetApiLibraryId,
+  useGetApiSeries,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
 
 } from '../../api/generated/librarius';
+import { seriesIdOf } from '../series/series';
 import styles from './DetailPage.module.css';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
@@ -38,6 +40,10 @@ function DetailContent({ id }: { id: string }) {
   // entry also means the screen keeps working when the user reloads on this URL.
   const { data: item = null, isPending: loading, isError, error, refetch } = useGetApiLibraryId(id);
   const { data: cats = [] } = useGetApiCategories();
+  // The series a volume belongs to, when the user has one: `BookView` carries the series
+  // title but no identifier, so the link is resolved against their own series.
+  const { data: knownSeries = [] } = useGetApiSeries();
+  const seriesId = seriesIdOf(knownSeries, item?.book);
 
   const invalidateLibrary = () => {
     // The item has its own cache entry, whose key is not a prefix of the collection's:
@@ -118,7 +124,13 @@ function DetailContent({ id }: { id: string }) {
 
         <div className={styles.stats}>
           <Stat value={b.pageCount != null ? String(b.pageCount) : '—'} label={t('detail.pages')} />
-          <Stat value={b.seriesTitle || t('detail.standalone')} label={t('detail.series')} grow />
+          <Stat
+            value={b.seriesTitle || t('detail.standalone')}
+            label={t('detail.series')}
+            grow
+            // Only a series the user has a stake in has a screen to open.
+            onClick={seriesId ? () => navigate(`/series/${seriesId}`) : undefined}
+          />
           <Stat value={b.originalYear != null ? String(b.originalYear) : '—'} label={t('detail.released')} last />
         </div>
 
@@ -165,16 +177,35 @@ function DetailContent({ id }: { id: string }) {
   );
 }
 
-function Stat({ value, label, grow, last }: { value: string; label: string; grow?: boolean; last?: boolean }) {
-  return (
-    <div
-      className={[styles.stat, grow && styles.statGrow, last && styles.statLast]
-        .filter(Boolean)
-        .join(' ')}
-    >
+/** One cell of the stat strip. With an `onClick` it becomes the way into that stat. */
+function Stat({
+  value,
+  label,
+  grow,
+  last,
+  onClick,
+}: {
+  value: string;
+  label: string;
+  grow?: boolean;
+  last?: boolean;
+  onClick?: () => void;
+}) {
+  const className = [styles.stat, grow && styles.statGrow, last && styles.statLast]
+    .filter(Boolean)
+    .join(' ');
+  const body = (
+    <>
       <div className={`${styles.statValue} ${grow ? styles.statValueGrow : ''}`}>{value}</div>
       <div className={styles.statLabel}>{label}</div>
-    </div>
+    </>
+  );
+
+  if (!onClick) return <div className={className}>{body}</div>;
+  return (
+    <button type="button" onClick={onClick} className={`${className} ${styles.statLink}`}>
+      {body}
+    </button>
   );
 }
 

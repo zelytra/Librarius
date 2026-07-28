@@ -13,24 +13,26 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
   useDeleteApiLibraryId,
+  useGetApiSeries,
   type GetApiLibraryParams,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
+import { SeriesList } from '../series/SeriesList';
+import { SERIES_SORTS, filterSeries, type SeriesSort } from '../series/series';
 import styles from './CollectionPage.module.css';
 
 type Kind = 'BOOK' | 'MANGA';
 type RankFilter = 'all' | 'or' | 'argent' | 'bronze';
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
 type SortBy = 'added' | 'title' | 'author' | 'genre';
+/** The two ways of reading the collection: title by title, or run by run. */
+type View = 'flat' | 'series';
 
 /** Number of titles fetched per request — one shelf worth of covers. */
 const PAGE_SIZE = 24;
 
 /** Delay before a keystroke turns into a request. */
 const SEARCH_DEBOUNCE_MS = 300;
-
-/** Width of a cover inside a series shelf, where the grid no longer applies. */
-const SERIES_COVER_WIDTH = 84;
 
 /** Sort chips, in display order, each with the key of its label. */
 const SORTS: { id: SortBy; labelKey: string }[] = [
@@ -40,7 +42,7 @@ const SORTS: { id: SortBy; labelKey: string }[] = [
   { id: 'genre', labelKey: 'collection.sorts.genre' },
 ];
 
-function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void; width?: number }) {
+function CoverTile({ item, onDelete, onOpen }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void }) {
   const { t } = useTranslation();
   const b = item.book!;
   const rank = isRankCode(item.rankCode) ? item.rankCode : null;
@@ -50,7 +52,6 @@ function CoverTile({ item, onDelete, onOpen, width }: { item: LibraryItemDto; on
   return (
     <Cover
       variant="tile"
-      width={width}
       title={b.title ?? '—'}
       imageUrl={b.coverUrl}
       tag={tag}
@@ -85,9 +86,11 @@ function CollectionContent() {
   const [collType, setCollType] = useState<Kind>('BOOK');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('added');
+  const [seriesSort, setSeriesSort] = useState<SeriesSort>('progress');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [grouped, setGrouped] = useState(false);
+  const [view, setView] = useState<View>('flat');
+  const series = view === 'series';
 
   // One request per pause in the typing rather than one per keystroke.
   useEffect(() => {
@@ -125,6 +128,8 @@ function CollectionContent() {
       const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
       return loaded < (last.total ?? 0) ? (last.page ?? 0) + 1 : undefined;
     },
+    // The Series view reads `/api/series`, not the pages of the collection.
+    enabled: !series,
   });
 
   const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
@@ -143,16 +148,26 @@ function CollectionContent() {
 
   const remove = (id: string) => removeItem({ id });
 
-  // Grouping applies to what has been loaded so far; the button below extends it.
-  const groups = useMemo(() => {
-    const map = new Map<string, LibraryItemDto[]>();
-    items.forEach((it) => {
-      const s = it.book?.seriesTitle || it.book?.title || '—';
-      if (!map.has(s)) map.set(s, []);
-      map.get(s)!.push(it);
-    });
-    return [...map.entries()];
-  }, [items]);
+  // The Series view is not a grouping of the loaded page: `/api/series` knows the whole
+  // run — its announced total, what is owned of it and what is read — which no amount of
+  // grouping over the titles fetched so far could reconstruct.
+  const {
+    data: allSeries = [],
+    isPending: seriesLoading,
+    isError: seriesFailed,
+    refetch: refetchSeries,
+  } = useGetApiSeries({ query: { enabled: series } });
+
+  const shelf = useMemo(
+    () => filterSeries(allSeries, { kind: collType, search, sort: seriesSort }),
+    [allSeries, collType, search, seriesSort],
+  );
+
+  // The two views share the kind switch and the search box, so each one reads the state
+  // of whichever query is actually feeding the screen.
+  const showLoading = series ? seriesLoading : loading;
+  const showError = series ? seriesFailed : isError;
+  const isEmpty = !showLoading && !showError && (series ? shelf.length === 0 : items.length === 0);
 
   const cats: { id: RankFilter; name: string; dot?: string }[] = [
     { id: 'all', name: t('collection.ranks.all') },
@@ -185,23 +200,31 @@ function CollectionContent() {
         />
       </div>
 
-      <div className={`scroll-x ${styles.chipRow}`}>
-        {cats.map((c) => (
-          <Chip key={c.id} selected={rankFilter === c.id} dotColor={c.dot} onClick={() => setRankFilter(c.id)}>
-            {c.name}
-          </Chip>
-        ))}
-      </div>
+      {/* A rank belongs to a title, not to a run: the chips would filter nothing in the
+          Series view. They keep their state so switching back restores the filter. */}
+      {!series && (
+        <div className={`scroll-x ${styles.chipRow}`}>
+          {cats.map((c) => (
+            <Chip key={c.id} selected={rankFilter === c.id} dotColor={c.dot} onClick={() => setRankFilter(c.id)}>
+              {c.name}
+            </Chip>
+          ))}
+        </div>
+      )}
 
       <div className={styles.countRow}>
-        <span className={styles.count}>{t('collection.total', { total })}</span>
+        <span className={styles.count}>
+          {series
+            ? t('collection.seriesTotal', { total: shelf.length })
+            : t('collection.total', { total })}
+        </span>
         <div className={styles.viewSwitch}>
-          <Segmented<'flat' | 'grouped'>
-            value={grouped ? 'grouped' : 'flat'}
-            onChange={(v) => setGrouped(v === 'grouped')}
+          <Segmented<View>
+            value={view}
+            onChange={setView}
             options={[
               { id: 'flat', label: t('collection.list') },
-              { id: 'grouped', label: t('collection.series') },
+              { id: 'series', label: t('collection.series') },
             ]}
           />
         </div>
@@ -209,21 +232,34 @@ function CollectionContent() {
 
       <div className={`scroll-x ${styles.sortRow}`}>
         <span className={styles.sortLabel}>{t('collection.sortBy')}</span>
-        {SORTS.map((s) => (
-          <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>{t(s.labelKey)}</Chip>
-        ))}
+        {series
+          ? SERIES_SORTS.map((s) => (
+              <Chip key={s.id} selected={seriesSort === s.id} onClick={() => setSeriesSort(s.id)}>
+                {t(s.labelKey)}
+              </Chip>
+            ))
+          : SORTS.map((s) => (
+              <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>
+                {t(s.labelKey)}
+              </Chip>
+            ))}
       </div>
 
-      {loading && <Loading />}
+      {showLoading && <Loading />}
 
-      {isError && <ErrorState message={t('collection.error')} onRetry={() => void refetch()} />}
+      {showError && (
+        <ErrorState
+          message={t(series ? 'series.listError' : 'collection.error')}
+          onRetry={() => void (series ? refetchSeries() : refetch())}
+        />
+      )}
 
-      {!loading && !isError && items.length === 0 && (
+      {isEmpty && (
         <EmptyState
-          icon="bookmark_add"
+          icon={series ? 'collections_bookmark' : 'bookmark_add'}
           className={styles.empty}
-          title={t('collection.empty.title')}
-          description={t('collection.empty.description')}
+          title={t(series ? 'series.empty.title' : 'collection.empty.title')}
+          description={t(series ? 'series.empty.description' : 'collection.empty.description')}
           action={
             <Button variant="secondary" onClick={() => navigate('/discover')}>
               {t('collection.empty.action')}
@@ -232,44 +268,19 @@ function CollectionContent() {
         />
       )}
 
-      {!grouped && items.length > 0 && (
-        <div className={styles.grid}>
-          {items.map((it) => (
-            <CoverTile key={it.id} item={it} onOpen={() => open(it)} onDelete={() => void remove(it.id!)} />
-          ))}
-        </div>
+      {series ? (
+        shelf.length > 0 && <SeriesList series={shelf} />
+      ) : (
+        items.length > 0 && (
+          <div className={styles.grid}>
+            {items.map((it) => (
+              <CoverTile key={it.id} item={it} onOpen={() => open(it)} onDelete={() => void remove(it.id!)} />
+            ))}
+          </div>
+        )
       )}
 
-      {grouped && items.length > 0 && (
-        <div className={styles.groupList}>
-          {groups.map(([series, list]) => (
-            <div key={series} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <div className={styles.groupHeading}>
-                  <div className={styles.groupTitle}>{series}</div>
-                  <div className={styles.groupAuthors}>{list[0]?.book?.authors}</div>
-                </div>
-                <span className={styles.groupBadge}>
-                  {list.length > 1 ? t('collection.volumes', { volumes: list.length }) : (list[0]?.book?.genres ?? '')}
-                </span>
-              </div>
-              <div className={`scroll-x ${styles.groupShelf}`}>
-                {list.map((it) => (
-                  <CoverTile
-                    key={it.id}
-                    item={it}
-                    onOpen={() => open(it)}
-                    onDelete={() => void remove(it.id!)}
-                    width={SERIES_COVER_WIDTH}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {hasNextPage && (
+      {!series && hasNextPage && (
         <div className={styles.loadMore}>
           <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
             {isFetchingNextPage
