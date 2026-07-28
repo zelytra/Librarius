@@ -116,6 +116,7 @@ alert received when something breaks, deployment without downtime.
 | [#62](https://github.com/zelytra/Librarius/issues/62) | Restrict Swagger UI and /q endpoints in production | — |
 | [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure — pipeline and documentation done, the rollback itself is still to be exercised on the cluster | — |
 | [#64](https://github.com/zelytra/Librarius/issues/64) | ✅ Zero-downtime deployment — exercised on the cluster, 21 s rollout, 124 probes without a single failure | — |
+| [#136](https://github.com/zelytra/Librarius/issues/136) | ✅ Image pull no longer depends on a credential: the GHCR packages are public, the chart carries no pull secret, and `cd.yml` checks the anonymous pull before deploying | #64 |
 | [#65](https://github.com/zelytra/Librarius/issues/65) | Persistent catalog cache | — |
 | [#66](https://github.com/zelytra/Librarius/issues/66) | Harden CI: dependencies and static analysis | — |
 

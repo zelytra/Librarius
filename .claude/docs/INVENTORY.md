@@ -169,6 +169,16 @@ production opens.*
     and serialises runs (`concurrency: cd`).
     What this episode says about debt #15 stands: the breakage lasted four weeks and was
     found by triggering a release, not by an alert.
+19. ~~**Image pulls depended on a credential that dies with the workflow run.**~~
+    ✅ **Cleared on 2026-07-28** ([#136](https://github.com/zelytra/Librarius/issues/136)):
+    `cd.yml` used to write a `ghcr-pull` Secret from its own `GITHUB_TOKEN`, revoked as
+    soon as the run ended, so a pod scheduled late pulled with a dead credential —
+    `ImagePullBackOff` on a sound release ([#125](https://github.com/zelytra/Librarius/issues/125)).
+    Both GHCR packages are public, so the chart now carries **no `imagePullSecrets` at
+    all** and the kubelet pulls anonymously, whenever it is scheduled. `cd.yml` asserts
+    that anonymous pull before touching the cluster, and prints the pod events when a
+    rollout fails, so an unschedulable pod stops being reported as an auth error.
+    The trade-off and the private-registry fallback are in `docs/DEPLOYMENT.md`.
 
 ## Functional gaps vs the vision 📋
 
