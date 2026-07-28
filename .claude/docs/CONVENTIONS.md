@@ -134,6 +134,7 @@ What the change does, and why this approach over the alternatives.
 
 ## Verification
 - [ ] `pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build`
+- [ ] `node apps/web/scripts/check-bundle-size.mjs` if the front end changed
 - [ ] `cd apps/api && ./mvnw -B verify`
 - [ ] OpenAPI client regenerated if the API changed
 - [ ] Checked in a real browser (screenshots / DOM) if the UI changed
@@ -158,6 +159,44 @@ bundle:
 ```bash
 pnpm mobile:build
 ```
+
+### The size budget
+
+The app is read on a phone, often on a bookshop's network, so the weight of the first
+payload is a feature. The `web` workflow **fails** on it, and the same check runs
+locally on the `dist/` a build just produced:
+
+```bash
+node apps/web/scripts/check-bundle-size.mjs
+```
+
+Three budgets, all measured **gzipped** — what nginx puts on the wire:
+
+| Budget | Covers | Ceiling | Measured on 2026-07-28 |
+|---|---|---|---|
+| initial | everything `index.html` loads before the first paint | 155 kB | 137.0 kB |
+| deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
+| whole build | every file, i.e. what the service worker precaches | 200 kB | 172.9 kB |
+
+The figures come from that measurement plus ~15%, not from a round number: a budget with
+60% of slack catches nothing, and one set flush against the current size gets switched
+off the first time it goes red. The failure names the asset that went over and by how
+much, so a per-screen chunk points at the screen. Raising a budget is a legitimate
+decision — a dependency has to land somewhere — but it happens **in the diff**, in
+`apps/web/scripts/check-bundle-size.mjs`, with the reason in the pull request. Never by
+deleting the step.
+
+### Lighthouse
+
+The same workflow audits the built app with **Lighthouse** on the mobile profile, three
+runs, median, thresholds in `apps/web/lighthouserc.json`.
+
+It measures the **signed-out** app: a static build has neither API nor Keycloak behind
+it, so what is audited is the shell — boot, theme, fonts, first paint, the sign-in
+prompt. That is the part every visitor pays for, and it is the only part measurable
+reproducibly; the signed-in screens need the whole stack and belong to the e2e suite.
+The thresholds sit deliberately below the observed scores: a check that goes red at
+random teaches people to ignore red.
 
 If the API changed:
 
