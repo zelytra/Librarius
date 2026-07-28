@@ -96,6 +96,9 @@ jobs:
             --docker-password=${{ secrets.GITHUB_TOKEN }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      # The two Secrets below are created by hand on the cluster and never by the
+      # CI: no credential transits through this repository. Procedure in
+      # docs/DEPLOYMENT.md. A missing Secret makes the chart fail to render.
       - name: Helm upgrade --install
         run: |
           helm upgrade --install librarius ./infra/helm/librarius \
@@ -103,6 +106,8 @@ jobs:
             --create-namespace \
             --set web.image.tag=${{ github.sha }} \
             --set api.image.tag=${{ github.sha }} \
+            --set postgres.existingSecret=librarius-postgres \
+            --set keycloak.existingSecret=librarius-keycloak \
             --wait --timeout 8m
 
       - name: Verify rollout

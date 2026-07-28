@@ -7,7 +7,7 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
 spec:
   replicas: {{ .Values.api.replicas }}
-  # Recreate : remplace en place sans pod « surge » (nœud contraint en CPU).
+  # Recreate: replace in place, without a surge pod (CPU-constrained node).
   strategy:
     type: Recreate
   selector:
@@ -36,9 +36,12 @@ spec:
             - name: QUARKUS_DATASOURCE_USERNAME
               value: {{ .Values.postgres.user | quote }}
             - name: QUARKUS_DATASOURCE_PASSWORD
-              value: {{ .Values.postgres.password | quote }}
-            # Discovery + backchannel internes ; l'issuer reste l'URL publique
-            # (KC_HOSTNAME + backchannel dynamique côté Keycloak).
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.postgres.secretName" . }}
+                  key: {{ .Values.postgres.secretKey }}
+            # Internal discovery + backchannel; the issuer stays the public URL
+            # (KC_HOSTNAME + dynamic backchannel on the Keycloak side).
             - name: OIDC_AUTH_SERVER_URL
               value: "http://{{ .Release.Name }}-keycloak:8081/auth/realms/librarius"
           readinessProbe:
