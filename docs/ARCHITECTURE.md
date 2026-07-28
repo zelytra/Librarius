@@ -7,7 +7,7 @@ Document vivant décrivant les choix techniques et la roadmap. Mis à jour au fi
 Bibliothèque personnelle multi-utilisateurs pour **livres et mangas** : collection,
 suivi de lecture, souhaits, recherche (titre/auteur/date) avec couvertures et
 **éditions multiples**, **prochaines sorties**, statistiques. FR par défaut, i18n-ready.
-La maquette de référence (Claude Design) définit une UI mobile-first « papier »
+La maquette de référence définit une UI mobile-first « papier »
 (serif *Newsreader*, *DM Sans*, accent sauge `#9aab92` sur crème `#f3ede3`).
 
 ## Choix structurants
