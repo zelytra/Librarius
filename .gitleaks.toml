@@ -27,6 +27,12 @@ paths = [
   '''infra/keycloak/realm-librarius\.json''',
   '''apps/api/src/main/resources/application\.properties''',
   '''apps/web/src/test/.*''',
+  # The end-to-end suite: a stack created and destroyed by the test run, on localhost,
+  # carrying the same throwaway credentials as the dev compose file above. Its only
+  # accounts are the demo users already published in the versioned Keycloak realm.
+  # Scanning it produces nothing but noise — including on `password: user.password`,
+  # which is a variable reference, not a secret.
+  '''e2e/.*''',
   '''pnpm-lock\.yaml''',
   '''\.gitleaks\.toml''',
 ]

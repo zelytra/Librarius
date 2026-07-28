@@ -208,11 +208,46 @@ the evidence in the PR (rendered text, computed styles, no console error).
 | Scope | Tool | Expectation |
 |---|---|---|
 | Front-end unit / component | `vitest` + Testing Library | Every new screen or shared component |
-| Front-end e2e | Playwright 🔜 | Journeys P1–P5 from [PRODUCT](PRODUCT.md) |
+| End-to-end | Playwright, in `e2e/` | Journeys P1–P5 from [PRODUCT](PRODUCT.md) |
 | API integration | `@QuarkusTest` + Dev Services | Every new endpoint, including the "another user's data" case |
 | Data isolation | `@QuarkusTest` with `alice` and `bob` | **Mandatory** on every user-scoped resource |
 
 A bug fix ships with the test that was failing before it.
+
+### End-to-end suite
+
+`e2e/` drives a real browser against a real stack — PostgreSQL, Keycloak, the API and the
+web image — brought up by `e2e/docker-compose.e2e.yml`. It is the only place where
+authentication, the HTTP routing and the database are checked together, which is exactly
+where the regressions that reached production came from.
+
+```bash
+pnpm e2e:install     # first run only: Playwright and its browser
+cd e2e && pnpm exec playwright install chromium
+pnpm e2e             # builds the images if needed, runs the journeys, tears the stack down
+```
+
+Points worth knowing before touching it:
+
+- **It is not a pnpm workspace member.** The web image build context only copies the
+  manifests it needs; an importer declared in `pnpm-workspace.yaml` but missing from that
+  context breaks `pnpm install --frozen-lockfile` inside the Dockerfile. `e2e/` therefore
+  keeps its own lockfile and is installed with `--ignore-workspace`.
+- **Sign-in is programmatic.** The token is obtained through the direct access grant the
+  `librarius-web` client already allows, then written into `localStorage` in the shape
+  `oidc-client-ts` expects. No test pays for the Keycloak login form.
+- **The external catalogs are stubbed** (`e2e/stack/catalog-stub.conf`): the providers
+  swallow their own failures and return an empty list, so an unavailable Open Library
+  would surface as an empty result set and a puzzling failure.
+- **Assert through the interface, never on an API payload.** The suite must survive a
+  change of response shape; the only place that reads the API directly is the fixture
+  that empties the account between tests, and it tolerates both shapes.
+- **Ports 4173 and 8081 must be free.** The web image bakes `localhost:8081` in as its
+  OIDC authority and the realm only allows `localhost:5173` and `localhost:4173` as
+  redirect URIs; the suite takes 4173 so it can run next to a `pnpm web:dev`, but it does
+  collide with a `pnpm infra:up` Keycloak.
+- `E2E_STACK=external` skips the compose lifecycle and runs against an already-running
+  stack; `E2E_KEEP_STACK=1` leaves it up after a failure.
 
 ## 7. Security
 

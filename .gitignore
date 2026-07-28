@@ -12,6 +12,12 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
+# ── Playwright (e2e) ──────────────────────────────────────────────────────────
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
 # ── Java / Maven / Quarkus ────────────────────────────────────────────────────
 target/
 .mvn/wrapper/maven-wrapper.jar

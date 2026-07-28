@@ -55,7 +55,10 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 5. ~~**Tests almost non-existent.**~~ ✅ **Cleared on 2026-07-28** ([#36](https://github.com/zelytra/Librarius/issues/36)):
    41 tests across 7 files cover the six application screens through MSW — nominal render,
    empty state, error state, missing session and the main interactions.
-   Still to do: the Playwright e2e suite ([#37](https://github.com/zelytra/Librarius/issues/37)).
+   Completed on 2026-07-28 by the Playwright suite
+   ([#37](https://github.com/zelytra/Librarius/issues/37)): five journeys — Discover,
+   Detail, wishlist, statistics, CSV import — run in `e2e/` against the full stack
+   (PostgreSQL, Keycloak, API, web image) on every pull request.
 6. ~~**`mockData.ts` still imported**~~ ✅ **Cleared on 2026-07-28**
    ([#34](https://github.com/zelytra/Librarius/issues/34)): `RANK_COLORS`/`RANK_ICONS` moved
    to `shared/ui/ranks.ts` and the file was deleted. The cover palette now has one
