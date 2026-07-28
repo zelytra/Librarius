@@ -70,7 +70,8 @@ dashboard "Librarius — Vue d'ensemble" provisioned automatically.
 
 ## Contribution & git flow
 
-`main` (release) ← `develop` (integration) ← `feature/*`. Urgent fixes: `hotfix/*`.
+`main` ← `feature/*`. There is no `develop` branch: pull requests target `main` directly.
+Merging deploys to staging; production will be deployed by tagging `main`.
 
 - **Everything here is written in English**: code, comments, documentation, commit
   messages and pull requests alike.

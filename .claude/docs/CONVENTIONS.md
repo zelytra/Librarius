@@ -36,27 +36,33 @@ interface.
 ## 2. Git flow
 
 ```text
-main      ──●────────────────●──────────►  staging (automatic deployment)
-             ↖ merge          ↖ merge
-develop   ──●──●──●──●──●──●──●──────────►  integration
-             ↖  ↖  ↖
-feature/*    ●  ●  ●
+feature/*   ──●──●──●
+               ↘  ↘  ↘
+main        ────●──●──●──────────●──────────►  merge → deploy to staging
+                               v1.0.0          tag   → deploy to production
 ```
 
-- **No direct commit** on `main` or `develop`.
-- Branch from an **up-to-date** `develop` (`git fetch && git reset --hard origin/develop`).
-- Naming: `feature/<short-topic>`, `fix/<topic>`, `docs/<topic>`, `ci/<topic>`,
-  `hotfix/<topic>` (that last one branches from `main`).
-- One branch = one coherent change = one PR.
-- Never force-push `main` or `develop`.
+There is **no `develop` branch**. Pull requests target `main` directly: the two branches
+held identical content most of the time, and the extra merge bought nothing.
+
+- **No direct commit** on `main`.
+- Branch from an **up-to-date** `main` (`git fetch && git reset --hard origin/main`).
+- Naming: `feature/<short-topic>`, `fix/<topic>`, `docs/<topic>`, `ci/<topic>`.
+- One branch = one coherent change = one pull request.
+- Never force-push `main`.
+- `main` stays permanently releasable: a tag can be cut from it at any point.
 
 ### Releasing
 
-1. `feature/x` → PR into `develop`, green CI, merge, delete the branch.
-2. To release: PR `develop` → `main`, titled "Release — <topic>".
-3. Merging into `main` triggers `cd.yml` (image build + `helm upgrade`) towards the
-   **staging** environment `librarius.zelytra.fr`: **never merge into `main` with a red
-   CI**. Downtime during that deployment is acceptable there.
+1. `feature/x` → pull request into `main`, green CI, merge, delete the branch.
+2. Merging into `main` triggers `cd.yml`: image build, then `helm upgrade` into the
+   `librarius` namespace on the **staging** environment `librarius.zelytra.fr`.
+   **Never merge with a red CI.** Downtime during that deployment is acceptable there.
+3. Production is deployed by **tagging** `main`, never by merging. It does not exist yet
+   — see [#103](https://github.com/zelytra/Librarius/issues/103), pending a domain.
+
+Because pull requests now target the default branch, a `Closes #nn` in the body actually
+closes the issue on merge. It did not while they targeted `develop`.
 
 ### Commit identity
 
@@ -92,7 +98,7 @@ Usual scopes: `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
 ## 3. Pull requests
 
 Written **in English**, title included — the repository squash-merges, so the pull request
-title becomes the commit subject on `develop`. Same format as commits:
+title becomes the commit subject on `main`. Same format as commits:
 `<type>(<scope>): <summary>`.
 
 ```markdown
@@ -166,7 +172,9 @@ the evidence in the PR (rendered text, computed styles, no console error).
 
 - Function components, hooks. One screen per folder under `features/`.
 - **Never edit `src/api/generated/`** — regenerate it.
-- Check `status === 200` before using the `data` of an orval call.
+- Read the API through the generated React Query hooks. **Never fetch from a
+  `useEffect`**, and invalidate the affected queries after a mutation, using the generated
+  key helpers (`getGetApiLibraryQueryKey()`) rather than hand-written strings.
 - New styles: CSS Modules backed by the tokens (`tokens.css`). Inline is reserved for
   genuinely dynamic values.
 - User-facing text through `useTranslation()` with keys in `i18n/locales/`.

@@ -4,7 +4,7 @@ name: openapi-sync
 # match the API code. Fails when `pnpm gen:api` would produce a diff.
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'apps/api/**'
       - 'openapi/**'
