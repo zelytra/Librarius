@@ -1,53 +1,52 @@
 # Roadmap — Librarius
 
-Cible : **produit public** multi-utilisateurs, PWA + application mobile native.
-Cinq jalons, du plus structurant au plus exposé. Chaque jalon est un **milestone
-GitHub** ; les issues portent le détail et les critères d'acceptation.
+Target: a **public**, multi-user product, PWA plus a native mobile application.
+Five milestones, from the most structural to the most exposed. Each milestone is a **GitHub
+milestone**; the issues carry the detail and the acceptance criteria.
 
-> Suivi à jour : https://github.com/zelytra/Librarius/milestones
+> Live tracking: https://github.com/zelytra/Librarius/milestones
 
-## Principe d'ordonnancement
+## Ordering principle
 
-1. **v0.3 d'abord** : sans état serveur mutualisé ni design system, chaque nouvelle
-   feature multiplie la dette. On assainit avant d'élargir.
-2. **v0.4 ensuite** : la table `series` conditionne l'écran Série, la vue Séries de la
-   Collection, les tomes manquants et les sorties personnalisées. C'est la dépendance
-   la plus profonde du produit.
-3. **v0.5 en parallèle possible** : les sujets d'exploitation ne touchent pas au code
-   applicatif et peuvent avancer indépendamment.
-4. **v0.6** dépend de v0.3 (client API propre) mais pas de v0.4.
-5. **v1.0** ferme les exigences d'un produit public.
+1. **v0.3 first**: without shared server state or a design system, every new feature
+   multiplies the debt. Clean up before widening the scope.
+2. **v0.4 next**: the `series` table gates the Series screen, the Series view in the
+   Collection, missing volumes and personalised releases. It is the deepest dependency in
+   the product.
+3. **v0.5 can run in parallel**: the operational topics do not touch application code and
+   can move independently.
+4. **v0.6** depends on v0.3 (a clean API client) but not on v0.4.
+5. **v1.0** closes out what a public product requires.
 
-## Par où commencer
+## Where to start
 
-Un agent qui reprend le projet et n'a pas d'instruction plus précise prend, dans cet ordre :
+An agent picking the project up with no more precise instruction takes, in this order:
 
-1. **[#85](https://github.com/zelytra/Librarius/issues/85)** — le déploiement continu est
-   cassé depuis le 1er juillet : plus rien n'est livré, quoi qu'on fasse par ailleurs.
-2. **[#58](https://github.com/zelytra/Librarius/issues/58)** — secrets en clair dans un
-   dépôt public : même si `librarius.zelytra.fr` n'est qu'une qualification, l'instance
-   est joignable depuis Internet et ces identifiants sont exploitables tels quels.
-3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — l'état serveur conditionne
-   presque tout le travail front qui suit.
-4. **[#32](https://github.com/zelytra/Librarius/issues/32)** — les styles inline bloquent
-   le thème sombre, l'accessibilité et toute réutilisation.
+1. **[#85](https://github.com/zelytra/Librarius/issues/85)** — continuous deployment has
+   been broken since 1 July: nothing ships any more, whatever else gets done.
+2. **[#58](https://github.com/zelytra/Librarius/issues/58)** — plaintext secrets in a public
+   repository: even though `librarius.zelytra.fr` is only staging, the instance is reachable
+   from the Internet and those credentials are usable as-is.
+3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — server state gates almost all
+   the front-end work that follows.
+4. **[#32](https://github.com/zelytra/Librarius/issues/32)** — inline styles block dark mode,
+   accessibility and any reuse.
 
-Déjà traités : [#36](https://github.com/zelytra/Librarius/issues/36) (couverture front)
-et [#39](https://github.com/zelytra/Librarius/issues/39) (isolation des données), qui
-sert désormais de filet pour le reste du chantier.
+Already handled: [#36](https://github.com/zelytra/Librarius/issues/36) (front-end coverage)
+and [#39](https://github.com/zelytra/Librarius/issues/39) (data isolation), which now acts as
+a safety net for the rest of the work.
 
 ---
 
 ## v0.3 — Foundations & quality
 
-**Objectif** : rendre le code extensible. Aucune nouvelle fonctionnalité utilisateur
-visible, mais toutes les suivantes en dépendent.
+**Goal**: make the code extensible. No new user-visible feature, but every later one depends
+on it.
 
-**Critère de sortie** : plus aucun `useEffect` de chargement fait main, plus aucun
-style de mise en forme inline durable, couverture front sur les 7 écrans, isolation
-des données couverte par des tests.
+**Exit criterion**: no hand-rolled loading `useEffect` left, no durable inline presentation
+styling left, front-end coverage on the 7 screens, data isolation covered by tests.
 
-| Issue | Sujet | Dépend de |
+| Issue | Topic | Depends on |
 |---|---|---|
 | [#30](https://github.com/zelytra/Librarius/issues/30) | Move server state to TanStack Query | — |
 | [#31](https://github.com/zelytra/Librarius/issues/31) | Orval mutator: token injection and refresh | #30 |
@@ -67,14 +66,14 @@ des données couverte par des tests.
 
 ## v0.4 — Core product
 
-**Objectif** : livrer la profondeur fonctionnelle qui différencie Librarius —
-séries, tomes, progression, éditions.
+**Goal**: deliver the functional depth that sets Librarius apart — series, volumes, reading
+progress, editions.
 
-**Critère de sortie** : un utilisateur manga peut voir ses séries, ses tomes manquants,
-suivre une série et recevoir ses sorties ; un lecteur de romans peut suivre sa
-progression page à page et son objectif annuel.
+**Exit criterion**: a manga reader can see their series, their missing volumes, follow a
+series and get its releases; a novel reader can track their progress page by page and their
+annual goal.
 
-| Issue | Sujet | Dépend de |
+| Issue | Topic | Depends on |
 |---|---|---|
 | [#43](https://github.com/zelytra/Librarius/issues/43) | V3 migration: series and series_follow tables | — |
 | [#44](https://github.com/zelytra/Librarius/issues/44) | /api/series API: details, volumes and follow | #43 |
@@ -96,13 +95,13 @@ progression page à page et son objectif annuel.
 
 ## v0.5 — Operations & security
 
-**Objectif** : pouvoir exploiter le service sans risque de perte de données ni panne
-silencieuse. Peut avancer en parallèle de v0.4.
+**Goal**: be able to run the service without risking data loss or a silent outage. Can move
+in parallel with v0.4.
 
-**Critère de sortie** : aucun secret dans le dépôt, restauration de sauvegarde testée,
-alerte reçue en cas d'incident, déploiement sans coupure.
+**Exit criterion**: no secret in the repository, a restore procedure actually tested, an
+alert received when something breaks, deployment without downtime.
 
-| Issue | Sujet | Dépend de |
+| Issue | Topic | Depends on |
 |---|---|---|
 | [#85](https://github.com/zelytra/Librarius/issues/85) | 🔴 CD deployment fails: Kubernetes credentials rejected | — |
 | [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets | — |
@@ -119,13 +118,13 @@ alerte reçue en cas d'incident, déploiement sans coupure.
 
 ## v0.6 — Native mobile app (Capacitor)
 
-**Objectif** : le scan de code-barres en librairie, cas d'usage n°1 hors ligne du
-produit, plus les notifications push.
+**Goal**: barcode scanning in a bookshop, the product's number-one offline use case, plus
+push notifications.
 
-**Critère de sortie** : APK Android installable produite par la CI, scan ISBN
-fonctionnel, notification de sortie reçue.
+**Exit criterion**: an installable Android APK produced by CI, working ISBN scanning, a
+release notification actually received.
 
-| Issue | Sujet | Dépend de |
+| Issue | Topic | Depends on |
 |---|---|---|
 | [#67](https://github.com/zelytra/Librarius/issues/67) | Capacitor bootstrap: apps/mobile application | #30, #31 |
 | [#68](https://github.com/zelytra/Librarius/issues/68) | ISBN barcode scanning | #67, #53 |
@@ -137,17 +136,17 @@ fonctionnel, notification de sortie reçue.
 
 ## v1.0 — Public product
 
-**Objectif** : ce qu'exige une mise à disposition publique : conformité, accueil des
-nouveaux, langues, accessibilité, performance.
+**Goal**: what a public release demands — compliance, onboarding, languages, accessibility,
+performance.
 
-**Critère de sortie** : un inconnu peut créer un compte, comprendre l'app, exporter ou
-supprimer ses données, en français ou en anglais, avec un score Lighthouse ≥ 90.
+**Exit criterion**: a stranger can create an account, understand the app, export or delete
+their data, in French or in English, with a Lighthouse score ≥ 90.
 
-> C'est ce jalon qui ouvre une **production**. `librarius.zelytra.fr` reste une
-> qualification jusque-là. Les points de v0.5 tolérés en qualification — secrets,
-> sauvegardes, coupure au déploiement — deviennent bloquants ici.
+> This is the milestone that opens a **production** environment. `librarius.zelytra.fr`
+> remains staging until then. The v0.5 items tolerated in staging — secrets, backups,
+> downtime on deployment — become blocking here.
 
-| Issue | Sujet | Dépend de |
+| Issue | Topic | Depends on |
 |---|---|---|
 | [#72](https://github.com/zelytra/Librarius/issues/72) | Library export (CSV and JSON) | — |
 | [#73](https://github.com/zelytra/Librarius/issues/73) | Account deletion and erasure of all user data | — |
@@ -162,11 +161,11 @@ supprimer ses données, en français ou en anglais, avec un score Lighthouse ≥
 
 ---
 
-## Suivi
+## Tracking
 
-Cocher ici à la fermeture de chaque issue n'est pas nécessaire — GitHub fait foi.
-En revanche, **à la fin de chaque milestone** :
+Ticking a box here when an issue closes is not necessary — GitHub is the source of truth.
+At the **end of every milestone**, however:
 
-1. Mettre à jour [ÉTAT-DES-LIEUX](ETAT-DES-LIEUX.md) (dette résorbée / découverte).
-2. Réviser les dépendances du milestone suivant.
-3. Livrer : PR `develop` → `main`, tag `v0.x.0`.
+1. Update [INVENTORY](INVENTORY.md) (debt cleared / discovered).
+2. Review the dependencies of the next milestone.
+3. Release: PR `develop` → `main`, tag `v0.x.0`.

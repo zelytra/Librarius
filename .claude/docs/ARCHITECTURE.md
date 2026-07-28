@@ -1,165 +1,164 @@
-# Architecture technique — Librarius
+# Technical architecture — Librarius
 
-> Complète `docs/ARCHITECTURE.md` (doc publique) avec le détail utile pour intervenir
-> dans le code. Décrit l'existant, puis les évolutions décidées.
+> Complements `docs/ARCHITECTURE.md` (the public documentation) with the detail you
+> actually need to work in the code. Describes what exists, then the changes already
+> decided on.
 
-## 1. Vue d'ensemble
+## 1. Overview
 
 ```text
-Navigateur (PWA React 19)
+Browser (React 19 PWA)
    │  OIDC Authorization Code + PKCE (react-oidc-context)
-   ├──────────────► Keycloak  (realm librarius)
-   │                    ▲ validation JWT (JWKS)
+   ├──────────────► Keycloak  (librarius realm)
+   │                    ▲ JWT validation (JWKS)
    │  Bearer JWT        │
-   └──────────────► API Quarkus 3 / Java 21 ──► PostgreSQL 16 (Flyway + Panache)
+   └──────────────► Quarkus 3 / Java 21 API ──► PostgreSQL 16 (Flyway + Panache)
                           │
-                          ├──► Open Library  (REST, livres)
-                          └──► AniList       (GraphQL, mangas)
+                          ├──► Open Library  (REST, books)
+                          └──► AniList       (GraphQL, manga)
 ```
 
-Sur l'environnement déployé, **un seul hôte** `librarius.zelytra.fr` derrière Traefik :
-`/auth` → Keycloak · `/api` + `/q` → API · `/` → nginx (PWA).
-Le front et l'API sont donc *same-origin* : aucun préflight CORS.
+On the deployed environment, **a single host** `librarius.zelytra.fr` sits behind Traefik:
+`/auth` → Keycloak · `/api` + `/q` → API · `/` → nginx (the PWA).
+The front end and the API are therefore *same-origin*: no CORS preflight.
 
-> `librarius.zelytra.fr` est un environnement de **qualification**. Aucune production
-> n'est ouverte à ce jour ; elle est visée au jalon v1.0.
+> `librarius.zelytra.fr` is a **staging** environment. No production environment is open to
+> date; it is targeted for the v1.0 milestone.
 
 ## 2. Frontend — `apps/web`
 
-### Organisation
+### Layout
 
 ```text
 src/
-  api/generated/librarius.ts   # client orval — GÉNÉRÉ, ne pas éditer
+  api/generated/librarius.ts   # orval client — GENERATED, do not edit
   app/AppShell.tsx             # layout + <Outlet/>, BottomNav.tsx
-  auth/oidc.ts                 # configuration OIDC
-  features/<écran>/            # une page par écran, autonome
+  auth/oidc.ts                 # OIDC configuration
+  features/<screen>/           # one page per screen, self-contained
   shared/
     api.ts                     # useApiAuth() → { authed, loading, login, opts }
-    LoginGate.tsx              # garde d'authentification par écran
+    LoginGate.tsx              # per-screen authentication guard
     theme/                     # ThemeProvider, themes.ts, context.ts
-    styles/                    # tokens.css (variables CSS), global.css
+    styles/                    # tokens.css (CSS variables), global.css
     ui/                        # Icon, BookCover, primitives (Button, Chip, Segmented…)
   i18n/                        # i18next + locales/fr.json
 ```
 
-### Conventions actuelles
+### Current conventions
 
-- **Routage** : `react-router-dom` v7, routes déclarées dans `App.tsx`, toutes enfants
-  de `AppShell`. Fallback `*` → Accueil.
-- **Authentification** : chaque écran encapsule son contenu dans `<LoginGate>` ; le
-  jeton est injecté manuellement via `opts` dans chaque appel généré.
-- **Appels API** : fonctions orval typées (`getApiLibrary`, `postApiWishlist`, …)
-  appelées dans un `useEffect`. Les réponses portent `{ status, data }` — **toujours
-  tester `status === 200`** avant d'utiliser `data`.
-- **Thème** : variables CSS (`--ink`, `--surface`, `--accent`, `--line`, `--muted`,
-  `--faint`) définies dans `tokens.css` et commutées par `ThemeProvider`.
+- **Routing**: `react-router-dom` v7, routes declared in `App.tsx`, all children of
+  `AppShell`. The `*` fallback goes to Home.
+- **Authentication**: every screen wraps its content in `<LoginGate>`; the token is injected
+  by hand through `opts` on each generated call.
+- **API calls**: typed orval functions (`getApiLibrary`, `postApiWishlist`, …) called inside
+  a `useEffect`. Responses carry `{ status, data }` — **always check `status === 200`**
+  before using `data`.
+- **Theme**: CSS variables (`--ink`, `--surface`, `--accent`, `--line`, `--muted`,
+  `--faint`) defined in `tokens.css` and switched by `ThemeProvider`.
 
-### Évolutions décidées
+### Decided changes
 
-1. **TanStack Query** pour l'état serveur : cache, invalidation, retry, états de
-   chargement homogènes. Orval sait générer les hooks (`client: 'react-query'`) — la
-   bascule se fait dans `orval.config.ts`, pas à la main.
-2. **Sortie des styles inline** vers CSS Modules adossés aux tokens. Cible : aucun
-   `style={{…}}` porteur de mise en forme durable ; l'inline reste toléré pour les
-   valeurs réellement dynamiques (couleur dérivée d'un titre, largeur calculée).
-3. **Fabrique de couleur unique** : `colorFor()` et `PALETTE` sont dupliqués dans
-   `HomePage`, `CollectionPage` et `DetailPage` → extraire dans `shared/ui/cover.ts`.
-4. **Intercepteur d'authentification** : un `mutator` orval qui pose l'en-tête
-   `Authorization` et rafraîchit le jeton, au lieu de passer `opts` partout.
-5. **Frontière d'erreur** + composants `<Loading>`, `<ErrorState>`, `<EmptyState>`
-   partagés.
+1. **TanStack Query** for server state: cache, invalidation, retry, consistent loading
+   states. Orval can generate the hooks (`client: 'react-query'`) — the switch happens in
+   `orval.config.ts`, not by hand.
+2. **Move inline styles out** into CSS Modules backed by the tokens. Target: no `style={{…}}`
+   carrying durable presentation; inline stays acceptable for genuinely dynamic values (a
+   colour derived from a title, a computed width).
+3. **A single colour factory**: `colorFor()` and `PALETTE` are duplicated in `HomePage`,
+   `CollectionPage` and `DetailPage` → extract into `shared/ui/cover.ts`.
+4. **Authentication interceptor**: an orval `mutator` that sets the `Authorization` header
+   and refreshes the token, instead of threading `opts` everywhere.
+5. **Error boundary** plus shared `<Loading>`, `<ErrorState>` and `<EmptyState>` components.
 
 ## 3. Backend — `apps/api`
 
-### Organisation
+### Layout
 
 ```text
 zelytra/librarius/
-  domain/               # entités Panache + enums (Kind, LibraryStatus, WishPriority, GoalUnit)
-    repository/         # PanacheRepositoryBase, toutes les requêtes scopées user
-  web/                  # ressources JAX-RS + ApiDtos (records) + mappers d'exception
-  catalog/              # CatalogProvider (SPI), CatalogService (agrégation + cache)
+  domain/               # Panache entities + enums (Kind, LibraryStatus, WishPriority, GoalUnit)
+    repository/         # PanacheRepositoryBase, every query scoped to the user
+  web/                  # JAX-RS resources + ApiDtos (records) + exception mappers
+  catalog/              # CatalogProvider (SPI), CatalogService (aggregation + cache)
     provider/           # OpenLibraryProvider/Client, AniListProvider/Client
   imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService
-  security/CurrentUser  # résout le « sub » Keycloak → AppUser (création JIT)
+  security/CurrentUser  # resolves the Keycloak "sub" → AppUser (JIT creation)
 ```
 
-### Points structurants
+### Structural points
 
-- **Scoping utilisateur** : `CurrentUser.id()` retourne le `sub` du JWT ; `AppUser` est
-  créé *just-in-time* au premier appel. **Toute requête de possession filtre sur
-  `user_id`** — c'est la seule barrière d'isolation, il n'y a pas de RLS PostgreSQL.
-- **DTOs** : `ApiDtos` regroupe des `record` Java avec des fabriques `of(entity)`.
-  Les entités ne sont **jamais** sérialisées directement.
-- **Catalogue** : `CatalogProvider` est un SPI CDI (`kind()`, `search()`, `upcoming()`).
-  `CatalogService` indexe les providers par `Kind`, fan-out, dédoublonne par clé
-  (`dedupKey`) et met en cache (`@CacheResult`, Caffeine, 6 h recherche / 12 h sorties).
-  **Ajouter un provider = créer une classe `@ApplicationScoped implements
-  CatalogProvider`** ; aucune autre modification n'est nécessaire.
-- **Import** : même schéma SPI via `LibraryImporter`, exposé par
-  `POST /api/import/{source}` et `POST /api/import/csv`.
-- **Migrations** : Flyway au démarrage, Hibernate en `validate`. Le schéma est la
-  vérité ; une entité qui ne colle pas fait échouer le démarrage — comportement voulu.
-- **Tests** : `@QuarkusTest` avec **Dev Services** (PostgreSQL + Keycloak éphémères,
-  utilisateurs `alice`/`bob`). Aucun service externe requis pour lancer `mvnw verify`.
+- **User scoping**: `CurrentUser.id()` returns the `sub` from the JWT; the `AppUser` is
+  created *just in time* on the first call. **Every ownership query filters on `user_id`** —
+  that is the only isolation barrier, there is no PostgreSQL RLS.
+- **DTOs**: `ApiDtos` groups Java `record` types with `of(entity)` factories. Entities are
+  **never** serialised directly.
+- **Catalog**: `CatalogProvider` is a CDI SPI (`kind()`, `search()`, `upcoming()`).
+  `CatalogService` indexes the providers by `Kind`, fans out, deduplicates by key
+  (`dedupKey`) and caches (`@CacheResult`, Caffeine, 6 h for search / 12 h for releases).
+  **Adding a provider means writing one `@ApplicationScoped implements CatalogProvider`
+  class** — nothing else needs to change.
+- **Import**: the same SPI pattern through `LibraryImporter`, exposed by
+  `POST /api/import/{source}` and `POST /api/import/csv`.
+- **Migrations**: Flyway on startup, Hibernate in `validate`. The schema is the truth; an
+  entity that does not match makes startup fail — that is the intended behaviour.
+- **Tests**: `@QuarkusTest` with **Dev Services** (ephemeral PostgreSQL + Keycloak, users
+  `alice`/`bob`). No external service is needed to run `mvnw verify`.
 
-### Évolutions décidées
+### Decided changes
 
-1. **Table `series`** + `work.series_id`, avec migration de `work.series_title`.
-2. **Agrégations SQL** pour les statistiques (aujourd'hui calculées en mémoire).
-3. **Pagination** (`page`, `size`) sur `GET /api/library` et `GET /api/wishlist`.
-4. **Rate limiting** sur `/api/catalog/*` (par utilisateur).
-5. **`catalog_cache`** persistant en complément de Caffeine, pour survivre aux
-   redémarrages et ménager les quotas des providers.
-6. Suppression de `HelloResource`.
+1. **A `series` table** plus `work.series_id`, with a migration from `work.series_title`.
+2. **SQL aggregations** for the statistics (computed in memory today).
+3. **Pagination** (`page`, `size`) on `GET /api/library` and `GET /api/wishlist`.
+4. **Rate limiting** on `/api/catalog/*` (per user).
+5. **A persistent `catalog_cache`** alongside Caffeine, to survive restarts and spare the
+   providers' quotas.
+6. Removal of `HelloResource`.
 
-## 4. Contrat front ↔ back
+## 4. Front ↔ back contract
 
 ```text
-apps/api (annotations JAX-RS)
-   └─ mvnw package → openapi/openapi.{json,yaml}   (généré au build)
+apps/api (JAX-RS annotations)
+   └─ mvnw package → openapi/openapi.{json,yaml}   (generated at build time)
         └─ pnpm gen:api (orval) → apps/web/src/api/generated/librarius.ts
 ```
 
-Le workflow **`openapi-sync`** régénère et échoue sur diff : le schéma et le client
-sont donc **toujours** committés à jour. Toute PR touchant l'API doit inclure la
-régénération.
+The **`openapi-sync`** workflow regenerates and fails on any diff: the schema and the client
+are therefore **always** committed up to date. Any PR touching the API must include the
+regeneration.
 
-## 5. Sécurité
+## 5. Security
 
-| Aspect | État |
+| Aspect | State |
 |---|---|
-| Authentification | Keycloak OIDC, `quarkus.oidc.application-type=service`, JWT validé par JWKS |
-| Autorisation | `@Authenticated` sur toutes les ressources sauf `HelloResource` (à supprimer) |
-| Isolation des données | Applicative, via `user_id` dans chaque requête — **à couvrir par des tests dédiés** |
-| Secrets | ⚠️ En clair dans `infra/helm/librarius/values.yaml` — à migrer vers des Secrets Kubernetes |
-| Surface exposée | Swagger UI actif sur l'environnement déployé (`always-include=true`) — à restreindre avant l'ouverture publique |
-| Rate limiting | Aucun |
+| Authentication | Keycloak OIDC, `quarkus.oidc.application-type=service`, JWT validated against JWKS |
+| Authorisation | `@Authenticated` on every resource except `HelloResource` (to be removed) |
+| Data isolation | Application-level, through `user_id` in every query — **to be covered by dedicated tests** |
+| Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
+| Exposed surface | Swagger UI enabled on the deployed environment (`always-include=true`) — to be restricted before opening to the public |
+| Rate limiting | None |
 
-## 6. Déploiement
+## 6. Deployment
 
-Chart `infra/helm/librarius` : `web`, `api`, `postgres` (PVC `local-path`, deux bases
+The `infra/helm/librarius` chart: `web`, `api`, `postgres` (`local-path` PVC, two databases
 `librarius` + `keycloak`), `keycloak`, `ingress` (Traefik + cert-manager).
-Push sur `main` → `cd.yml` → build/push images GHCR taguées `<sha>` → `helm upgrade`.
+Push to `main` → `cd.yml` → build/push GHCR images tagged `<sha>` → `helm upgrade`.
 
-Stratégie de déploiement `Recreate` (nœud contraint en CPU) : **coupure de service à
-chaque livraison**. Acceptable tant que l'environnement est une qualification ;
-bloquant à l'ouverture de la production.
+The `Recreate` deployment strategy (the node is CPU-constrained) means **downtime on every
+release**. Acceptable while the environment is staging; blocking once production opens.
 
-L'autorité OIDC est **gravée dans l'image web au build**
-(`--build-arg VITE_OIDC_AUTHORITY`) : changer de domaine impose un rebuild.
+The OIDC authority is **baked into the web image at build time**
+(`--build-arg VITE_OIDC_AUTHORITY`): changing domain requires a rebuild.
 
-## 7. Décisions d'architecture
+## 7. Architecture decisions
 
-| # | Décision | Raison | Statut |
+| # | Decision | Rationale | Status |
 |---|---|---|---|
-| 1 | Catalogue partagé / possession privée | Évite la duplication, permet les stats globales | ✅ Appliqué |
-| 2 | Keycloak plutôt qu'une auth maison | Ne pas réimplémenter register/reset/refresh | ✅ Appliqué |
-| 3 | Flyway propriétaire du schéma | Migrations versionnées, pas de dérive Hibernate | ✅ Appliqué |
-| 4 | Client TS généré (orval) + gate CI | Contrat front/back toujours synchronisé | ✅ Appliqué |
-| 5 | Rang = colonne, pas table de liaison | Un titre porte au plus un rang | ✅ Appliqué (simplification vs vision initiale) |
-| 6 | Dates de sortie provider, pas VF | Aucune API gratuite fiable pour les éditeurs FR | ✅ Assumé, à revoir |
-| 7 | TanStack Query pour l'état serveur | Supprime cache/retry/invalidation faits main | 🔜 Décidé |
-| 8 | CSS Modules + tokens, fin de l'inline | Dark mode, cohérence, réutilisation | 🔜 Décidé |
-| 9 | Capacitor pour le mobile natif | Scan ISBN + notifications push, code partagé | 🔜 Décidé |
+| 1 | Shared catalog / private ownership | Avoids duplication, enables global stats | ✅ Applied |
+| 2 | Keycloak rather than home-grown auth | Do not reimplement register/reset/refresh | ✅ Applied |
+| 3 | Flyway owns the schema | Versioned migrations, no Hibernate drift | ✅ Applied |
+| 4 | Generated TS client (orval) + CI gate | Front/back contract always in sync | ✅ Applied |
+| 5 | Rank as a column, not a join table | A title carries at most one rank | ✅ Applied (a simplification vs the initial vision) |
+| 6 | Provider release dates, not French ones | No reliable free API for French publishers | ✅ Accepted, to be revisited |
+| 7 | TanStack Query for server state | Removes hand-rolled cache/retry/invalidation | 🔜 Decided |
+| 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | 🔜 Decided |
+| 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🔜 Decided |
