@@ -44,15 +44,20 @@ public class GoalResource {
     public GoalDto upsert(@PathParam("year") int year, @Valid GoalUpsertDto dto) {
         currentUser.require();
         String userId = currentUser.id();
-        ReadingGoal goal = goals.findByUserAndYear(userId, year).orElseGet(() -> {
-            ReadingGoal g = new ReadingGoal();
-            g.userId = userId;
-            g.year = year;
-            goals.persist(g);
-            return g;
-        });
+        ReadingGoal goal = goals.findByUserAndYear(userId, year).orElse(null);
+        boolean created = goal == null;
+        if (created) {
+            goal = new ReadingGoal();
+            goal.userId = userId;
+            goal.year = year;
+        }
         goal.targetCount = dto.targetCount();
         goal.unit = dto.unit() != null ? dto.unit() : GoalUnit.BOOKS;
+        // L'entité n'est persistée qu'une fois complète : target_count est NOT NULL,
+        // un persist() prématuré fait échouer l'insert au commit.
+        if (created) {
+            goals.persist(goal);
+        }
         return GoalDto.of(goal);
     }
 }
