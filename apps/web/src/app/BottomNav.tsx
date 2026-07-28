@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
+import styles from './BottomNav.module.css';
 
 const TABS = [
   { to: '/', icon: 'cottage', labelKey: 'nav.home' },
@@ -13,37 +14,15 @@ const TABS = [
 export function BottomNav() {
   const { t } = useTranslation();
   return (
-    <nav
-      style={{
-        flex: '0 0 auto',
-        height: 84,
-        background: 'color-mix(in srgb, var(--surface) 92%, transparent)',
-        backdropFilter: 'blur(12px)',
-        borderTop: '1px solid var(--chip)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        padding: '11px 12px 0',
-      }}
-    >
+    <nav className={styles.nav}>
       {TABS.map((tab) => (
-        <NavLink
-          key={tab.to}
-          to={tab.to}
-          end={tab.to === '/'}
-          style={{ flex: 1, textDecoration: 'none' }}
-        >
+        <NavLink key={tab.to} to={tab.to} end={tab.to === '/'} className={styles.tab}>
           {({ isActive }) => (
             <span
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                color: isActive ? 'var(--accent-deep)' : 'var(--faint)',
-              }}
+              className={`${styles.tabContent} ${isActive ? styles.tabContentActive : ''}`}
             >
               <Icon name={tab.icon} size={25} fill={isActive} />
-              <span style={{ fontSize: 10, fontWeight: 600 }}>{t(tab.labelKey)}</span>
+              <span className={styles.label}>{t(tab.labelKey)}</span>
             </span>
           )}
         </NavLink>

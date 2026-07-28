@@ -1,0 +1,154 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 22px;
+}
+
+.date {
+  font-size: var(--fs-13);
+  color: var(--faint);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.greeting {
+  font-family: var(--font-serif);
+  font-size: var(--fs-27);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.settingsButton {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--gradient-avatar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-accent-sm);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Horizontal shelf, bleeding out to the edges of the screen. */
+.shelf {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  margin: 0 var(--screen-bleed-x);
+  padding: 2px var(--screen-pad-x) 6px;
+}
+
+/* ── Mini counters ────────────────────────────────────────────────────────── */
+
+.miniRow {
+  display: flex;
+  gap: 10px;
+}
+
+.miniTile {
+  flex: 1;
+  border-radius: var(--radius-card);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.miniSage {
+  background: var(--tint-sage);
+}
+
+.miniRose {
+  background: var(--tint-rose);
+}
+
+.miniSand {
+  background: var(--tint-sand);
+}
+
+.miniValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.miniLabel {
+  font-size: var(--fs-11);
+  color: var(--ink-soft);
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* ── Upcoming releases ────────────────────────────────────────────────────── */
+
+.upcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upcomingRow {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+}
+
+.upcomingThumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 54px;
+  border-radius: var(--radius-thumb);
+  background: var(--surface-2);
+}
+
+.upcomingBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcomingTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcomingAuthors {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.releaseBadge {
+  flex: 0 0 auto;
+  font-size: var(--fs-10-5);
+  font-weight: 600;
+  color: var(--tint-rose-ink);
+  background: var(--tint-blush);
+  padding: 4px 9px;
+  border-radius: var(--radius-badge);
+}
+
+.footnote {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin-top: 8px;
+}
+
+.empty {
+  padding: 40px 24px;
+}

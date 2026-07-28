@@ -1,0 +1,183 @@
+.title {
+  margin-bottom: 20px;
+}
+
+/* ── Annual goal ──────────────────────────────────────────────────────────── */
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--surface);
+  border-radius: var(--radius-panel-lg);
+  padding: 20px;
+  border: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.gauge {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaugeCore {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaugeValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-22);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gaugeTarget {
+  font-size: var(--fs-10);
+  color: var(--muted);
+}
+
+.goalBody {
+  flex: 1;
+}
+
+.goalTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+}
+
+.goalHint {
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── Headline counters ────────────────────────────────────────────────────── */
+
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.tile {
+  border-radius: var(--radius-panel);
+  padding: 18px 16px;
+}
+
+.tileSage {
+  background: var(--tint-sage);
+}
+
+.tileRose {
+  background: var(--tint-rose);
+}
+
+.tileViolet {
+  background: var(--tint-violet);
+}
+
+.tileClay {
+  background: var(--tint-clay);
+}
+
+.tileValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-26);
+  font-weight: 600;
+  line-height: 1;
+  margin-top: 10px;
+}
+
+.tileLabel {
+  font-size: var(--fs-12);
+  color: var(--ink-soft);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── Favourite genres ─────────────────────────────────────────────────────── */
+
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius-panel-lg);
+  padding: 20px;
+  border: 1px solid var(--line);
+}
+
+.panelTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.panelEmpty {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  margin: 0;
+}
+
+.genres {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.genreHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-13);
+  margin-bottom: 6px;
+}
+
+.genreName {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.genreCount {
+  color: var(--muted);
+}
+
+.track {
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: var(--radius-bar);
+}
+
+.bar1 {
+  background: var(--gradient-genre-1);
+}
+
+.bar2 {
+  background: var(--gradient-genre-2);
+}
+
+.bar3 {
+  background: var(--gradient-genre-3);
+}
+
+.bar4 {
+  background: var(--gradient-genre-4);
+}

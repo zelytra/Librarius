@@ -1,0 +1,34 @@
+.cover {
+  border-left: 3px solid var(--cover-spine);
+  box-shadow: var(--shadow-cover);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 11px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.tag {
+  font-size: var(--fs-9);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cover-tag);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--cover-ink);
+}
+
+/* A real cover fills the block: declared last so it wins over the padding. */
+.withImage {
+  padding: 0;
+}

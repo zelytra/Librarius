@@ -29,12 +29,14 @@ An agent picking the project up with no more precise instruction takes, in this 
    cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`.
 3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — server state gates almost all
    the front-end work that follows.
-4. **[#32](https://github.com/zelytra/Librarius/issues/32)** — inline styles block dark mode,
-   accessibility and any reuse.
+4. **[#42](https://github.com/zelytra/Librarius/issues/42)** — the styling now runs entirely
+   on tokens, so a real dark theme is within reach.
 
 Already handled: [#36](https://github.com/zelytra/Librarius/issues/36) (front-end coverage)
 and [#39](https://github.com/zelytra/Librarius/issues/39) (data isolation), which now acts as
-a safety net for the rest of the work.
+a safety net for the rest of the work, plus
+[#32](https://github.com/zelytra/Librarius/issues/32) and
+[#34](https://github.com/zelytra/Librarius/issues/34) (CSS Modules and the shared palette).
 
 ---
 
@@ -50,9 +52,9 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 |---|---|---|
 | [#30](https://github.com/zelytra/Librarius/issues/30) | ✅ Move server state to TanStack Query | — |
 | [#31](https://github.com/zelytra/Librarius/issues/31) | ✅ Orval mutator: token injection and refresh | #30 |
-| [#32](https://github.com/zelytra/Librarius/issues/32) | Extract inline styles into CSS Modules | — |
+| [#32](https://github.com/zelytra/Librarius/issues/32) | ✅ Extract inline styles into CSS Modules | — |
 | [#33](https://github.com/zelytra/Librarius/issues/33) | Shared loading, error and empty states | #30 |
-| [#34](https://github.com/zelytra/Librarius/issues/34) | Factor out the cover palette and delete mockData.ts | #32 |
+| [#34](https://github.com/zelytra/Librarius/issues/34) | ✅ Factor out the cover palette and delete mockData.ts | #32 |
 | [#35](https://github.com/zelytra/Librarius/issues/35) | Extract every hardcoded string into i18n | — |
 | [#36](https://github.com/zelytra/Librarius/issues/36) | ✅ Cover the seven screens with Vitest | — |
 | [#37](https://github.com/zelytra/Librarius/issues/37) | Playwright end-to-end suite on the critical journeys | #36 |

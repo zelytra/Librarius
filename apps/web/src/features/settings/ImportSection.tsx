@@ -11,6 +11,7 @@ import {
   usePostApiImportSource,
   type ImportResult,
 } from '../../api/generated/librarius';
+import styles from './ImportSection.module.css';
 
 type Source = 'booknode' | 'babelio';
 
@@ -86,8 +87,8 @@ export function ImportSection() {
 
   return (
     <>
-      <h3 style={{ fontSize: 16, margin: '0 0 4px' }}>Importer ma bibliothèque</h3>
-      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 14px', lineHeight: 1.4 }}>
+      <h3 className={styles.title}>Importer ma bibliothèque</h3>
+      <p className={styles.intro}>
         Depuis Booknode (par pseudo) ou via un fichier CSV exporté (Babelio, Goodreads…).
       </p>
 
@@ -97,7 +98,7 @@ export function ImportSection() {
           Se connecter pour importer
         </Button>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 26 }}>
+        <div className={styles.form}>
           <Segmented<Source>
             value={source}
             onChange={(s) => {
@@ -109,30 +110,32 @@ export function ImportSection() {
               { id: 'babelio', label: 'Babelio' },
             ]}
           />
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className={styles.handleRow}>
             <input
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               placeholder={source === 'booknode' ? 'Pseudo Booknode' : 'Pseudo Babelio'}
-              style={{ flex: 1, border: '1.5px solid var(--line)', borderRadius: 12, padding: '11px 14px', fontSize: 13.5, fontFamily: 'inherit', color: 'var(--ink)', background: 'var(--surface)', outline: 'none' }}
+              className={styles.handleInput}
             />
-            <Button variant="primary" onClick={() => void runScrape()} disabled={busy} style={{ padding: '0 16px' }}>
+            <Button variant="primary" size="compact" onClick={() => void runScrape()} disabled={busy}>
               {busy ? '…' : 'Importer'}
             </Button>
           </div>
 
-          <button
-            onClick={() => fileInput.current?.click()}
-            disabled={busy}
-            style={{ alignSelf: 'flex-start', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-deep)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}
-          >
+          <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
             Importer un fichier CSV
           </button>
-          <input ref={fileInput} type="file" accept=".csv,text/csv,text/plain" onChange={onFile} style={{ display: 'none' }} />
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            onChange={onFile}
+            className={styles.hiddenInput}
+          />
 
-          {message && <p style={{ fontSize: 13, color: 'var(--accent-deep)', fontWeight: 600, margin: 0 }}>{message}</p>}
-          {error && <p style={{ fontSize: 13, color: 'var(--rose)', margin: 0 }}>{error}</p>}
+          {message && <p className={styles.success}>{message}</p>}
+          {error && <p className={styles.failure}>{error}</p>}
         </div>
       )}
     </>

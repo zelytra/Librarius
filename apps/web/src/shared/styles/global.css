@@ -13,7 +13,7 @@ body,
 
 body {
   margin: 0;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -22,7 +22,7 @@ body {
 h1,
 h2,
 h3 {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: var(--font-serif);
   font-weight: 600;
   color: var(--ink);
   margin: 0;
@@ -42,7 +42,7 @@ button {
 }
 
 .material-symbol {
-  font-family: 'Material Symbols Rounded';
+  font-family: var(--font-icon);
   font-weight: normal;
   font-style: normal;
   line-height: 1;

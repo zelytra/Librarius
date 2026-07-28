@@ -1,0 +1,71 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title {
+  font-size: var(--fs-25);
+}
+
+.sectionTitle {
+  font-size: var(--fs-16);
+  margin: 0 0 14px;
+}
+
+.themes {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.theme {
+  flex: 1;
+  text-align: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.swatch {
+  height: 54px;
+  border-radius: var(--radius-field);
+  border: 2px solid transparent;
+  box-shadow: var(--shadow-swatch);
+}
+
+.swatchActive {
+  border-color: var(--accent);
+}
+
+.themeLabel {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.themeLabelActive {
+  color: var(--accent-deep);
+  font-weight: 700;
+}
+
+.version {
+  text-align: center;
+  font-size: var(--fs-11-5);
+  color: var(--faint);
+}

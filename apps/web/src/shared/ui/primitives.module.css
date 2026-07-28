@@ -1,0 +1,187 @@
+/* ── Screen ───────────────────────────────────────────────────────────────── */
+
+.screen {
+  padding: var(--screen-pad-top) var(--screen-pad-x) var(--screen-pad-bottom);
+}
+
+/* The bottom margin is left to the screen: it varies from one to the next, and
+   the global `h1, h2, h3 { margin: 0 }` rule is what a page class overrides. */
+.screenTitle {
+  font-size: var(--fs-27);
+  margin-top: 6px;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+/* ── Button ───────────────────────────────────────────────────────────────── */
+
+.button {
+  border-radius: var(--radius-button);
+  padding: 14px 18px;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  box-shadow: var(--shadow-accent);
+}
+
+.secondary {
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: none;
+}
+
+/* Sizes, declared after `.button` so they override its padding. */
+.sizeLg {
+  padding: 15px;
+}
+
+.sizeBlock {
+  padding: 14px;
+}
+
+.sizeCompact {
+  padding: 0 16px;
+}
+
+/* ── Chip ─────────────────────────────────────────────────────────────────── */
+
+.chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-chip);
+  cursor: default;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+
+.chipClickable {
+  cursor: pointer;
+}
+
+.chipSelected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.chipDot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-round);
+  flex: 0 0 auto;
+}
+
+/* ── Segmented ────────────────────────────────────────────────────────────── */
+
+.segmented {
+  display: flex;
+  background: var(--chip);
+  border-radius: var(--radius-field);
+  padding: 4px;
+}
+
+.segment {
+  flex: 1;
+  border: none;
+  cursor: pointer;
+  padding: 10px 0;
+  border-radius: var(--radius-segment);
+  font-size: var(--fs-13-5);
+  font-weight: 600;
+  font-family: inherit;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.segmentOn {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-segment);
+}
+
+/* ── SectionHeader ────────────────────────────────────────────────────────── */
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: var(--fs-18);
+}
+
+.sectionAction {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ── EmptyState ───────────────────────────────────────────────────────────── */
+
+/* No padding here on purpose: each screen sets its own, and leaving the
+   property undeclared keeps the override free of any specificity contest. */
+.emptyState {
+  text-align: center;
+  color: var(--faint);
+}
+
+.emptyStateText {
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+/* ── StatusText ───────────────────────────────────────────────────────────── */
+
+.status {
+  font-size: var(--fs-13);
+}
+
+.statusMuted {
+  color: var(--muted);
+}
+
+.statusFaint {
+  color: var(--faint);
+}
+
+.statusError {
+  color: var(--rose);
+}
