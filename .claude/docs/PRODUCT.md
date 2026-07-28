@@ -34,7 +34,8 @@ v1.0 target: a **public**, multi-user product, open sign-up, French first.
 |---|---|---|
 | **Work** (`work`) | The intellectual content: a novel, or *one volume* of a manga | Shared catalog |
 | **Edition** (`edition`) | One materialisation: ISBN, publisher, language, page count, cover, format | Shared catalog |
-| **Series** (`series`) 🔜 | An ordered grouping of works ("One Piece", "A Song of Ice and Fire") | Shared catalog |
+| **Series** (`series`) | An ordered grouping of works ("One Piece", "A Song of Ice and Fire") | Shared catalog |
+| **Follow** (`series_follow`) | The user ↔ series link: "tell me about the next volumes" | User |
 | **Library item** (`library_item`) | The user ↔ edition link: status, rating, acquisition date, rank | User |
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
@@ -127,6 +128,8 @@ Search across the external catalog (Open Library for books, AniList for manga).
 - 🔜 Legal notice, terms of service, privacy policy.
 
 ### 4.8 Series 🔜 (screen to create)
+
+The API is in place (`/api/series`, #44); what is left is the screen (#45, #46).
 
 - Series page: cover, synopsis, status (ongoing / completed), total number of volumes.
 - Volume grid: owned, read, missing, upcoming.

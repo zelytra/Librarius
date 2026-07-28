@@ -32,6 +32,25 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         return delete("id = ?1 and userId = ?2", id, userId) > 0;
     }
 
+    /**
+     * The user's items belonging to a given series, edition and work fetched along the way:
+     * the series screen needs the volume number and the title of every one of them.
+     */
+    public List<LibraryItem> listBySeries(String userId, UUID seriesId) {
+        return getEntityManager()
+                .createQuery("""
+                        select li from LibraryItem li
+                          join fetch li.edition e
+                          join fetch e.work w
+                        where li.userId = :userId
+                          and w.series.id = :seriesId
+                        order by w.volumeNumber asc nulls last, li.id asc
+                        """, LibraryItem.class)
+                .setParameter("userId", userId)
+                .setParameter("seriesId", seriesId)
+                .getResultList();
+    }
+
     // ── Paged browsing ────────────────────────────────────────────────────────
     // The collection is filtered, sorted and sliced by the database. A 5000-title
     // library must cost the same to display as a 50-title one, and the front end

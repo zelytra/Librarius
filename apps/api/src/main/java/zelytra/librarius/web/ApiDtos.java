@@ -11,6 +11,7 @@ import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingGoal;
+import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.Work;
@@ -155,5 +156,64 @@ public final class ApiDtos {
     }
 
     public record GoalUpsertDto(@NotNull @Min(1) Integer targetCount, GoalUnit unit) {
+    }
+
+    // ── Series ────────────────────────────────────────────────────────────────
+
+    /**
+     * A series as it appears in the user's list: the catalog data plus where the user
+     * stands in the run.
+     *
+     * @param totalVolumes size of the complete run, {@code null} when the catalog does not
+     *                     know it — an ongoing series usually does not
+     * @param ownedCount   distinct volumes of the series in the user's collection
+     * @param readCount    of those, the ones marked {@code READ}
+     * @param followed     whether the user follows the series; private to each user
+     */
+    public record SeriesSummaryDto(UUID id, String kind, String title, String coverUrl,
+            Integer totalVolumes, String status, long ownedCount, long readCount,
+            boolean followed) {
+        public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
+                boolean followed) {
+            return new SeriesSummaryDto(s.id, s.kind.name(), s.title, s.coverUrl, s.totalVolumes,
+                    s.status != null ? s.status.name() : null, ownedCount, readCount, followed);
+        }
+    }
+
+    /**
+     * One volume of a series, seen through the user's collection.
+     *
+     * <p>The four flags are not exclusive: a read volume is also owned. {@code missing} and
+     * {@code upcoming} both mean "not owned", on either side of the highest volume the user
+     * owns — a hole in the run versus what is still ahead of them.
+     *
+     * @param title         title carried by the catalog, {@code null} for a volume nobody
+     *                      has entered yet
+     * @param libraryItemId the user's item for this volume, {@code null} when not owned
+     */
+    public record SeriesVolumeDto(Integer volumeNumber, String title, UUID workId,
+            UUID libraryItemId, boolean owned, boolean read, boolean missing,
+            boolean upcoming) {
+    }
+
+    /** A series, its counters and the state of each of its volumes. */
+    public record SeriesDetailDto(UUID id, String kind, String title, String originalTitle,
+            String coverUrl, String synopsis, Integer totalVolumes, String status,
+            long ownedCount, long readCount, boolean followed,
+            java.util.List<SeriesVolumeDto> volumes) {
+        public static SeriesDetailDto of(Series s, long ownedCount, long readCount,
+                boolean followed, java.util.List<SeriesVolumeDto> volumes) {
+            return new SeriesDetailDto(s.id, s.kind.name(), s.title, s.originalTitle, s.coverUrl,
+                    s.synopsis, s.totalVolumes, s.status != null ? s.status.name() : null,
+                    ownedCount, readCount, followed, volumes);
+        }
+    }
+
+    /**
+     * The holes in an owned run: the volumes between the first and the highest one owned
+     * that are not in the collection.
+     */
+    public record SeriesMissingDto(UUID seriesId, String title,
+            java.util.List<Integer> volumes) {
     }
 }

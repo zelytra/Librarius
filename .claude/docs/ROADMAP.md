@@ -75,8 +75,8 @@ annual goal.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#43](https://github.com/zelytra/Librarius/issues/43) | V4 migration: series and series_follow tables | — |
-| [#44](https://github.com/zelytra/Librarius/issues/44) | /api/series API: details, volumes and follow | #43 |
+| [#43](https://github.com/zelytra/Librarius/issues/43) | ✅ V4 migration: series and series_follow tables | — |
+| [#44](https://github.com/zelytra/Librarius/issues/44) | ✅ /api/series API: details, volumes and follow | #43 |
 | [#45](https://github.com/zelytra/Librarius/issues/45) | Series screen: volume grid | #44 |
 | [#46](https://github.com/zelytra/Librarius/issues/46) | "Series" view in the Collection | #44 |
 | [#47](https://github.com/zelytra/Librarius/issues/47) | Reading progress input in the Detail screen | — |
@@ -88,7 +88,7 @@ annual goal.
 | [#53](https://github.com/zelytra/Librarius/issues/53) | Advanced search and manual add in Discover | — |
 | [#54](https://github.com/zelytra/Librarius/issues/54) | Customizable Home screen: reorder and hide sections | — |
 | [#55](https://github.com/zelytra/Librarius/issues/55) | Time-based statistics and reading pace | #40 |
-| [#56](https://github.com/zelytra/Librarius/issues/56) | V4 migration: normalized genres | — |
+| [#56](https://github.com/zelytra/Librarius/issues/56) | V5 migration: normalized genres | — |
 | [#57](https://github.com/zelytra/Librarius/issues/57) | Personalized upcoming releases and upcoming_release table | #43, #44 |
 
 ---
