@@ -54,13 +54,13 @@ class LibraryApiTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
                 .then().statusCode(200)
-                .body("id", hasItem(aliceItemId));
+                .body("items.id", hasItem(aliceItemId));
 
         // Bob does not.
         given().auth().oauth2(token("bob"))
                 .when().get("/api/library")
                 .then().statusCode(200)
-                .body("id", not(hasItem(aliceItemId)));
+                .body("items.id", not(hasItem(aliceItemId)));
 
         // Bob cannot delete Alice's item.
         given().auth().oauth2(token("bob"))
