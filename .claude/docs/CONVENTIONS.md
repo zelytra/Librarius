@@ -147,11 +147,22 @@ committing.** Both write the schema, but under different profiles, and the schem
 sets and `%test` leaves to Dev Services. So `package` writes the line and **`verify`
 silently rewrites the file without it**.
 
+The deletion is the part that bites, because it is small enough to slip through a review.
+`verify` also **adds** noise the contract has no business carrying: the AniList client
+records show up as schema components, and a bogus `/` path appears. Those are loud enough
+to be caught; the missing one line is not.
+
 The committed contract is the `package` one — the same one `openapi-sync` regenerates. The
-trap is that running the test suite leaves `openapi/` dirty with that single deletion,
-which a `git add -A` then commits without anyone noticing. It has happened three times,
-once breaking `openapi-sync` on every API branch until someone traced it. If you see that
-line disappear, discard the change; do not commit it.
+trap is that running the test suite leaves `openapi/` dirty, and a `git add -A` then commits
+it without anyone noticing. It has happened three times, once breaking `openapi-sync` on
+every API branch until someone traced it.
+
+**So: after running the test suite, look at `git status` before staging.** Any change under
+`openapi/` that you did not intend is the test profile talking — discard it:
+
+```bash
+git checkout -- openapi/
+```
 
 If documentation changed (the `docs` workflow: markdownlint + internal links):
 
