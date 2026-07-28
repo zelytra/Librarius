@@ -17,7 +17,7 @@ function wishlistReturns(items: unknown[]) {
 describe('WishlistPage', () => {
   beforeEach(resetAuth);
 
-  test('affiche les souhaits avec leur priorité et leur prix', async () => {
+  test('renders the wishes with their priority and price', async () => {
     wishlistReturns([wishlistItem()]);
     renderWithProviders(<WishlistPage />);
 
@@ -26,7 +26,7 @@ describe('WishlistPage', () => {
     expect(screen.getByText('24,90 €')).toBeInTheDocument();
   });
 
-  test('totalise le budget estimé', async () => {
+  test('sums up the estimated budget', async () => {
     wishlistReturns([
       wishlistItem({ id: 'w1', estimatedPrice: 10 }),
       wishlistItem({ id: 'w2', estimatedPrice: 15.5 }),
@@ -36,14 +36,14 @@ describe('WishlistPage', () => {
     expect(await screen.findByText(/2 titres · estimé 25,50 €/)).toBeInTheDocument();
   });
 
-  test('propose Découvrir quand la liste est vide', async () => {
+  test('points to Discover when the list is empty', async () => {
     wishlistReturns([]);
     renderWithProviders(<WishlistPage />);
 
     expect(await screen.findByText(/Ta liste de souhaits est vide/)).toBeInTheDocument();
   });
 
-  test('retirer un souhait le fait disparaître', async () => {
+  test('removing a wish drops it from the list', async () => {
     wishlistReturns([wishlistItem()]);
     renderWithProviders(<WishlistPage />);
 
@@ -53,7 +53,7 @@ describe('WishlistPage', () => {
     await waitFor(() => expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument());
   });
 
-  test('invite à se connecter quand la session est absente', async () => {
+  test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<WishlistPage />);
 

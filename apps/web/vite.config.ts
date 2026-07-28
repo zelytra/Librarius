@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       workbox: {
-        // Ne pas servir la SPA (index.html) pour ces routes serveur : sinon le
-        // service worker intercepte la redirection OIDC vers Keycloak (/auth) et
-        // les appels API (/api, /q), et l'utilisateur « revient » sur le front.
+        // Do not serve the SPA (index.html) for these server routes: otherwise the
+        // service worker intercepts the OIDC redirect to Keycloak (/auth) and the API
+        // calls (/api, /q), and the user "bounces back" to the front end.
         navigateFallbackDenylist: [/^\/auth/, /^\/api/, /^\/q/],
       },
       manifest: {

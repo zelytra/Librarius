@@ -4,7 +4,7 @@ interface BookCoverProps {
   color: string;
   tag?: string;
   title?: string;
-  /** URL de couverture réelle ; prioritaire sur le rendu « tranche colorée ». */
+  /** Real cover URL; takes precedence over the "colored spine" rendering. */
   imageUrl?: string;
   width?: number | string;
   height?: number | string;
@@ -14,8 +14,8 @@ interface BookCoverProps {
 }
 
 /**
- * Couverture de livre / manga. À défaut d'image, rend une « tranche » colorée
- * stylisée (tag en haut, titre en bas) fidèle à la maquette.
+ * Book / manga cover. When no image is available, renders a stylized colored "spine"
+ * (tag on top, title at the bottom) faithful to the mockup.
  */
 export function BookCover({
   color,

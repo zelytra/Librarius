@@ -35,10 +35,10 @@ export function SettingsPage() {
         <h2 style={{ fontSize: 25 }}>{t('settings.title')}</h2>
       </div>
 
-      {/* Import de bibliothèque externe. */}
+      {/* External library import. */}
       <ImportSection />
 
-      {/* Apparence : commutateur de thème (fonctionnel). */}
+      {/* Appearance: theme switcher (functional). */}
       <h3 style={{ fontSize: 16, margin: '0 0 14px' }}>{t('settings.appearance')}</h3>
       <div style={{ display: 'flex', gap: 12, marginBottom: 26 }}>
         {THEMES.map((th) => {

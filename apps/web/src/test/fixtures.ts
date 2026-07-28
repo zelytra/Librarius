@@ -6,7 +6,7 @@ import type {
   WishlistItemDto,
 } from '../api/generated/librarius';
 
-/** Jeux de données de test, façonnés comme les réponses réelles de l'API. */
+/** Test data sets, shaped like the real API responses. */
 
 export function libraryItem(overrides: Partial<LibraryItemDto> = {}): LibraryItemDto {
   return {
