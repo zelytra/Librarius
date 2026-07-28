@@ -19,7 +19,7 @@ Browser (React 19 PWA)
 ```
 
 On the deployed environment, **a single host** `librarius.zelytra.fr` sits behind Traefik:
-`/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the probes hit the pod, Prometheus scrapes the Service.
+`/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the kubelet probes hit the pod directly. Metrics are meant to be scraped from inside the cluster — but **no Prometheus is deployed there** to do it ([#60](https://github.com/zelytra/Librarius/issues/60)); the one in `infra/docker-compose.yml` only exists locally.
 The front end and the API are therefore *same-origin*: no CORS preflight.
 
 > `librarius.zelytra.fr` is a **staging** environment. No production environment is open to

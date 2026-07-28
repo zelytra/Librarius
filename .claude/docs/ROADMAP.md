@@ -22,13 +22,15 @@ milestone**; the issues carry the detail and the acceptance criteria.
 
 An agent picking the project up with no more precise instruction takes, in this order:
 
-1. **[#85](https://github.com/zelytra/Librarius/issues/85)** — continuous deployment has
-   been broken since 1 July: nothing ships any more, whatever else gets done.
-2. **[#58](https://github.com/zelytra/Librarius/issues/58)** — the chart no longer carries
+1. **[#58](https://github.com/zelytra/Librarius/issues/58)** — the chart no longer carries
    any credential, but the exposed passwords are still valid: **rotating them on the
-   cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`.
-3. **[#30](https://github.com/zelytra/Librarius/issues/30)** — server state gates almost all
-   the front-end work that follows.
+   cluster** is a manual step, procedure in `docs/DEPLOYMENT.md`. Nothing an agent can do
+   alone, and nothing else in this list matters as much.
+2. **[#60](https://github.com/zelytra/Librarius/issues/60)** — the rules exist and nothing
+   evaluates them. [#85](https://github.com/zelytra/Librarius/issues/85) showed what that
+   costs: deployment stayed broken for four weeks and was found by hand.
+3. **[#59](https://github.com/zelytra/Librarius/issues/59)** — the backup CronJob is
+   shipped but off, and no restore has ever been run against the cluster.
 
 Already handled: [#36](https://github.com/zelytra/Librarius/issues/36) (front-end coverage)
 and [#39](https://github.com/zelytra/Librarius/issues/39) (data isolation), which now acts as
@@ -88,7 +90,7 @@ annual goal.
 | [#51](https://github.com/zelytra/Librarius/issues/51) | Custom category management | — |
 | [#52](https://github.com/zelytra/Librarius/issues/52) | ✅ Richer wishlist: editing, budget and conversion | — |
 | [#114](https://github.com/zelytra/Librarius/issues/114) | ✅ Order the wishlist by urgency and not by the enum name | — |
-| [#53](https://github.com/zelytra/Librarius/issues/53) | Advanced search and manual add in Discover | — |
+| [#53](https://github.com/zelytra/Librarius/issues/53) | ✅ Advanced search and manual add in Discover | — |
 | [#54](https://github.com/zelytra/Librarius/issues/54) | Customizable Home screen: reorder and hide sections | — |
 | [#55](https://github.com/zelytra/Librarius/issues/55) | Time-based statistics and reading pace | #40 |
 | [#56](https://github.com/zelytra/Librarius/issues/56) | ✅ V6 migration: normalized genres — API, genre filter pending in the Collection screen | — |
@@ -106,14 +108,15 @@ alert received when something breaks, deployment without downtime.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#85](https://github.com/zelytra/Librarius/issues/85) | 🔴 CD deployment fails: Kubernetes credentials rejected | — |
+| [#85](https://github.com/zelytra/Librarius/issues/85) | ✅ CD deployment fails: Kubernetes credentials rejected — settled by the move to the `librarius` namespace, eight green deployments since | — |
 | [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets — chart done, rotation pending on the cluster | — |
 | [#59](https://github.com/zelytra/Librarius/issues/59) | 🔴 Automated PostgreSQL backups with a tested restore procedure — CronJob and procedure shipped (off by default), the restore itself is still to be exercised on the cluster | — |
 | [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting — rules and runbooks shipped; needs a Prometheus, kube-state-metrics and an Alertmanager on the cluster | — |
 | [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting on catalog endpoints | — |
 | [#62](https://github.com/zelytra/Librarius/issues/62) | Restrict Swagger UI and /q endpoints in production | — |
 | [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure — pipeline and documentation done, the rollback itself is still to be exercised on the cluster | — |
-| [#64](https://github.com/zelytra/Librarius/issues/64) | Zero-downtime deployment | — |
+| [#64](https://github.com/zelytra/Librarius/issues/64) | ✅ Zero-downtime deployment — exercised on the cluster, 21 s rollout, 124 probes without a single failure | — |
+| [#136](https://github.com/zelytra/Librarius/issues/136) | ✅ Image pull no longer depends on a credential: the GHCR packages are public, the chart carries no pull secret, and `cd.yml` checks the anonymous pull before deploying | #64 |
 | [#65](https://github.com/zelytra/Librarius/issues/65) | Persistent catalog cache | — |
 | [#66](https://github.com/zelytra/Librarius/issues/66) | Harden CI: dependencies and static analysis | — |
 

@@ -577,20 +577,41 @@ paths:
   /api/catalog/search:
     get:
       parameters:
+      - name: author
+        in: query
+        schema:
+          type: string
+      - name: isbn
+        in: query
+        schema:
+          type: string
       - name: kind
         in: query
         schema:
           $ref: "#/components/schemas/Kind"
+      - name: language
+        in: query
+        schema:
+          type: string
       - name: limit
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+      - name: publisher
+        in: query
+        schema:
+          type: string
       - name: q
         in: query
         schema:
           type: string
+      - name: year
+        in: query
+        schema:
+          type: integer
+          format: int32
       responses:
         "200":
           description: OK

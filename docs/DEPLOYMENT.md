@@ -20,6 +20,91 @@ Both push with the `GITHUB_TOKEN` (`packages: write` permission).
 `latest` means **the head of `main`**, i.e. what staging runs — not the last release. Ask
 for a version by its number, never by `latest`.
 
+### Pulling the images
+
+**Both packages are public and the chart carries no pull secret**: `imagePullSecrets` is
+empty in `values.yaml`, so the kubelet fetches `ghcr.io/zelytra/librarius-*` anonymously,
+exactly as anyone else would.
+
+That is a decision, not an omission. `cd.yml` used to write a `ghcr-pull` Secret from the
+workflow's `GITHUB_TOKEN`, which is **revoked when the run ends**. The pull then only
+worked while the run was still alive: in
+[#125](https://github.com/zelytra/Librarius/issues/125) a pod sat `Pending` for nine
+minutes on a saturated node, and by the time the scheduler placed it the credential was
+dead — `ImagePullBackOff` on a release that was perfectly good, reported as an
+authentication error that said nothing about expiry. A pod carrying an `imagePullSecret`
+gets **no anonymous retry**, either: the kubelet uses the credentials in its keyring and
+stops there, so a dead token failed the pull of an image that needed no credential at all.
+
+The trade-off is that the images can be downloaded by anyone. The source they are built
+from already can be, and they carry no credential — every password comes from a Kubernetes
+Secret at runtime, and the only build arguments are the public OIDC authority and the
+version string — so publishing them exposes nothing this repository does not.
+
+What it buys: **no credential is involved in a pull**. Nothing expires, nothing has to be
+rotated, nothing can leak, and a pod evicted and rescheduled a week later pulls exactly
+like the first one did.
+
+Checking the visibility without credentials — the same question the kubelet asks:
+
+```bash
+repo=zelytra/librarius-web
+token=$(curl -fsS "https://ghcr.io/token?scope=repository:$repo:pull&service=ghcr.io" | jq -r .token)
+curl -sSI -H "Authorization: Bearer $token" \
+  -H 'Accept: application/vnd.oci.image.index.v1+json' \
+  "https://ghcr.io/v2/$repo/manifests/latest" | head -1
+```
+
+`HTTP/1.1 200 OK` is public; `403 Forbidden` is private, and every pod will end in
+`ImagePullBackOff`. `cd.yml` runs that check on both images before it touches the cluster,
+so a package flipped back to private fails the deployment in seconds with a message naming
+the visibility, instead of an authentication error several minutes later.
+
+The `ghcr-pull` Secret left behind by the old pipeline is no longer referenced by anything.
+It holds a token that expired long ago; delete it once, so it cannot be mistaken later for
+a credential the deployment depends on:
+
+```bash
+kubectl -n librarius delete secret ghcr-pull --ignore-not-found
+```
+
+#### Making a package public
+
+Only needed if one is not. GitHub → the `zelytra` profile → **Packages** →
+`librarius-web` → **Package settings** (right-hand column) → **Danger Zone** → **Change
+visibility** → *Public*, then type the package name to confirm. Repeat for
+`librarius-api`. Nothing in this repository can do it: it is an account-level setting.
+
+#### If the images ever have to be private
+
+A credential is then required, and it has to outlive the deployment run — never the
+workflow's `GITHUB_TOKEN`:
+
+1. Create a **classic** personal access token whose only scope is `read:packages`
+   (GitHub → *Settings* → *Developer settings* → *Personal access tokens* → *Tokens
+   (classic)* → *Generate new token (classic)*). Give it an expiry date you will actually
+   honour rather than none at all.
+2. Write it into the namespace once, by hand — not from CI, which is what expired:
+
+   ```bash
+   kubectl -n librarius create secret docker-registry ghcr-pull \
+     --docker-server=ghcr.io \
+     --docker-username='<github user>' \
+     --docker-password='<the token>' \
+     --dry-run=client -o yaml | kubectl apply -f -
+   ```
+
+3. Deploy with `--set imagePullSecrets[0].name=ghcr-pull`, and remove the anonymous check
+   from `cd.yml` — it asserts the opposite decision.
+
+**Rotating that credential**: the same command overwrites the Secret, and it has to be run
+before the token expires. Running pods are not affected — the Secret is only read when
+something is pulled — which is exactly the trap: nothing fails until the next pod is
+created, possibly weeks later and out of hours. So follow the rotation with
+`kubectl -n librarius rollout restart deploy/librarius-web deploy/librarius-api`, and watch
+that pull succeed rather than find out at 3 a.m. A token left to expire unnoticed is
+[#136](https://github.com/zelytra/Librarius/issues/136) again, one credential later.
+
 ## Versioning and releases
 
 `main` is permanently releasable. A release is cut by tagging it; the tag is the only
@@ -145,7 +230,7 @@ chart (v0.2.0): **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) and **Key
   validates internally (discovery/JWKS through the Keycloak service, dynamic
   backchannel).
 - **Trigger**: a push to `main` runs `cd.yml`: build and push the GHCR images (the web
-  image built with the OIDC authority), `ghcr-pull` secret, then
+  image built with the OIDC authority), check they are anonymously pullable, then
   `helm upgrade --install` with the `<sha>` tags.
 - **PostgreSQL**: one instance, two databases (`librarius` + `keycloak`), `local-path` PVC.
 - **Credentials**: read from Kubernetes Secrets, see the section below. The chart carries
@@ -288,10 +373,10 @@ request.
 
 That −50m is the nine-minute `Pending` of [#125](https://github.com/zelytra/Librarius/issues/125),
 and the reason its image pull then failed: the `ghcr-pull` token had expired by the time the
-pod was finally scheduled. The credential half of that failure is
-[#136](https://github.com/zelytra/Librarius/issues/136) and is not addressed here; the
-sizing half is. **The node takes a rolling update of the API, with 100m of margin.** No
-extra capacity is required.
+pod was finally scheduled. This section fixes the sizing half; the credential half is
+[#136](https://github.com/zelytra/Librarius/issues/136), settled by pulling public images
+with no credential at all (§ "Pulling the images"). **The node takes a rolling update of
+the API, with 100m of margin.** No extra capacity is required.
 
 The margin is real but it is not large, and it is shared with projects this repository does
 not own — `default` holds five other stacks, together requesting 3500m for well under 100m
@@ -375,11 +460,30 @@ replacement):
 Both images pulled in under 3s and both pods scheduled instantly, so those are best-case
 figures for the old strategy, not typical ones.
 
-> **The rollout itself is unproven.** The chart renders, the arithmetic is taken from the
-> live node and the probe is tested, but no deployment has been run with these settings —
-> the measured "after" figure does not exist yet. Take it on the next merge into `main`,
-> with the two probes above, and correct this section with what actually happened.
-> [#64](https://github.com/zelytra/Librarius/issues/64) stays open until then.
+### Measured, 2026-07-28
+
+Both deployments were restarted at once on the cluster while an external probe polled the
+public URL every ~3 s:
+
+```text
+22:51:43  kubectl -n librarius rollout restart deploy/librarius-web deploy/librarius-api
+          Waiting for deployment "librarius-web" rollout to finish: 1 old replicas are pending termination...
+          deployment "librarius-web" successfully rolled out
+          Waiting for deployment "librarius-api" rollout to finish: 1 old replicas are pending termination...
+          deployment "librarius-api" successfully rolled out
+22:52:04  done
+```
+
+**21 s** for both, and `1 old replicas are pending termination` is the ordering being
+respected: the replacement was already serving when the outgoing pod was removed — that is
+what `maxUnavailable: 0` buys.
+
+The probe covered the window and kept going for seven minutes: **124 samples, 124× `200`
+on `/` and 124× `401` on `/api/me`** — no 5xx, no connection error, no gap. `401` rather
+than `200` on the API is the point: it is the correct answer to an unauthenticated call, so
+it proves the API answered rather than the ingress falling back to the PWA.
+
+Compare with the `Recreate` strategy it replaces: 11 s of outage on `web`, 31 s on `api`.
 
 ## 💾 Automated backups
 
@@ -819,7 +923,7 @@ bundle until it updates.
 |---|---|
 | `Error: release: not found` | Wrong namespace. `helm list -A \| grep librarius`. |
 | `another operation (install/upgrade/rollback) is in progress` | A previous run was interrupted. `h status librarius` shows `pending-upgrade`; wait for the lock to expire, then `h rollback librarius <revision>`. Never delete the release to unblock it — that drops the PVC. |
-| Pods stuck in `ImagePullBackOff` | The `ghcr-pull` secret is missing or expired in the namespace: recreate it (see `cd.yml`), then `k rollout restart deploy/librarius-web deploy/librarius-api`. |
+| Pods stuck in `ImagePullBackOff` | Nothing authenticates that pull any more, so the tag is missing or the package went private: check it with the anonymous request in § "Pulling the images". If a pod still carries a stale `imagePullSecrets` from an older revision, `k get pod <name> -o jsonpath='{.spec.imagePullSecrets}'` shows it — redeploy from the current chart. |
 | `--wait` times out but the pods look fine | The readiness probe is failing. `k describe pod <name>` and `k logs <name>` — decide, do not re-run blindly. |
 | Everything failed and the site is down | `h rollback librarius <last known good revision>` again; then, only if Helm itself is stuck, `k rollout undo deploy/librarius-api` as a stopgap — it moves the pods without touching the Helm history, which will then be out of step with the cluster. |
 

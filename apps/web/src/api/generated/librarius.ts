@@ -359,9 +359,14 @@ export interface WishlistUpdateDto {
 }
 
 export type GetApiCatalogSearchParams = {
+author?: string;
+isbn?: string;
 kind?: Kind;
+language?: string;
 limit?: number;
+publisher?: string;
 q?: string;
+year?: number;
 };
 
 export type GetApiCatalogUpcomingParams = {

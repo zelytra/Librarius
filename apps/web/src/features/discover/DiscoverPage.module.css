@@ -6,6 +6,15 @@
   margin-bottom: 12px;
 }
 
+/* The search bar, the ISBN hint and the advanced panel are one block. */
+.searchForm {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
 .searchBar {
   display: flex;
   align-items: center;
@@ -14,7 +23,54 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-field);
   padding: 10px 14px;
-  margin-bottom: 22px;
+}
+
+/* Says the digits were understood as an ISBN before the search is even sent. */
+.isbnHint {
+  margin: 0;
+  font-size: var(--fs-12);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.advancedToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+.advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 14px;
+}
+
+.coverage {
+  margin: 0;
+  font-size: var(--fs-11-5);
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.manualAdded {
+  margin: 0 0 16px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
 }
 
 .searchInput {

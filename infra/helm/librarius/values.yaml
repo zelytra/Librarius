@@ -4,8 +4,13 @@
 
 domain: librarius.zelytra.fr
 
-imagePullSecrets:
-  - name: ghcr-pull
+# Empty on purpose: the two GHCR packages are public, so the kubelet pulls them
+# anonymously and no credential is involved. A pull secret was worse than useless
+# here — the kubelet does not fall back to an anonymous pull once a pod carries
+# one, so an expired token broke the pull of an image anybody could fetch. See
+# docs/DEPLOYMENT.md § "Pulling the images". Set this to
+# `- name: <secret>` to deploy from a registry that does require credentials.
+imagePullSecrets: []
 
 ingress:
   enabled: true

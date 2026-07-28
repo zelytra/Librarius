@@ -11,6 +11,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 import zelytra.librarius.catalog.CatalogService;
 import zelytra.librarius.catalog.RateLimiter;
@@ -37,12 +38,23 @@ public class CatalogResource {
     @Inject
     RateLimiter rateLimiter;
 
+    /**
+     * Searches the external catalogs. {@code q} is the free text; the other criteria are the
+     * advanced form, and each provider honours the ones its own API indexes — see
+     * {@link zelytra.librarius.catalog.CatalogQuery}.
+     */
     @GET
     @Path("/search")
     public List<CatalogResult> search(@QueryParam("q") String query,
+            @QueryParam("author") String author,
+            @QueryParam("year") Integer year,
+            @QueryParam("language") String language,
+            @QueryParam("publisher") String publisher,
+            @QueryParam("isbn") String isbn,
             @QueryParam("kind") Kind kind,
             @QueryParam("limit") @DefaultValue("20") int limit) {
-        if (query == null || query.isBlank()) {
+        CatalogQuery criteria = new CatalogQuery(query, author, year, language, publisher, isbn);
+        if (criteria.isEmpty()) {
             return List.of();
         }
         // Checked after the blank guard: an empty query never reaches a provider, so
@@ -51,7 +63,7 @@ public class CatalogResource {
         Kind target = kind != null ? kind : Kind.BOOK;
         // Business metric: number of catalog searches per kind.
         meters.counter("librarius.catalog.search", "kind", target.name()).increment();
-        return catalog.search(target, query.trim(), Math.clamp(limit, 1, 40));
+        return catalog.search(target, criteria, Math.clamp(limit, 1, 40));
     }
 
     @GET

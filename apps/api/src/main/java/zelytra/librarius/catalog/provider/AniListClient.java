@@ -27,14 +27,25 @@ public interface AniListClient {
     record GqlResponse(Data data) {
     }
 
-    record Data(@JsonProperty("Page") Page page) {
+    /**
+     * Root of the answer. Only one of the two branches is ever filled, depending on the query
+     * that was sent: {@code Page} for a title search, {@code Staff} for an author search.
+     */
+    record Data(@JsonProperty("Page") Page page, @JsonProperty("Staff") StaffSearch staff) {
     }
 
     record Page(List<Media> media) {
     }
 
+    /** A person, and the works AniList credits them with. */
+    record StaffSearch(MediaConnection staffMedia) {
+    }
+
+    record MediaConnection(List<Media> nodes) {
+    }
+
     record Media(int id, Title title, FuzzyDate startDate, Cover coverImage, String description,
-            Staff staff) {
+            Boolean isAdult, Staff staff) {
     }
 
     record Title(String romaji, String english) {

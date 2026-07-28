@@ -21,5 +21,13 @@
     "MD029": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules/**", "**/node_modules/**", "apps/api/target/**"]
+  // `.claude/worktrees/` holds git worktrees, which are git-ignored and are not this
+  // checkout's business. Linting them makes an agent fail on another agent's file,
+  // half-written, in a tree CI never sees.
+  "ignores": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "apps/api/target/**",
+    ".claude/worktrees/**"
+  ]
 }
