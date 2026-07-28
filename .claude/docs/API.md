@@ -1,45 +1,45 @@
-# API REST — Librarius
+# REST API — Librarius
 
-Base : `/api`. Toutes les ressources sont `@Authenticated` (JWT Keycloak en
-`Authorization: Bearer …`) **sauf `/api/hello`**, endpoint de démo à supprimer.
-Contrat de référence : `openapi/openapi.yaml` (généré au build).
+Base path: `/api`. Every resource is `@Authenticated` (Keycloak JWT in
+`Authorization: Bearer …`).
+Reference contract: `openapi/openapi.yaml` (generated at build time).
 
-> ⚠️ Toute modification d'une ressource ou d'un DTO impose de régénérer le schéma **et**
-> le client TS, sinon la CI `openapi-sync` échoue :
+> ⚠️ Any change to a resource or a DTO requires regenerating the schema **and** the TS
+> client, otherwise the `openapi-sync` CI job fails:
 > `cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api`
 
-## Inventaire
+## Inventory
 
-| Méthode | Chemin | Rôle |
+| Method | Path | Role |
 |---|---|---|
-| GET | `/api/me` | Profil courant (`MeDto`) — crée l'`app_user` à la volée |
-| GET | `/api/catalog/search?q=&kind=&limit=` | Recherche catalogue externe. `kind` défaut `BOOK`, `limit` borné 1–40 |
-| GET | `/api/catalog/upcoming?kind=&limit=` | Prochaines sorties. `kind` défaut `MANGA`, `limit` borné 1–50 |
-| GET | `/api/library?status=` | Titres possédés, filtre optionnel `OWNED\|READING\|READ` |
-| POST | `/api/library` | Ajoute un titre (`LibraryCreateDto`) — crée `work`+`edition` si besoin |
-| PUT | `/api/library/{id}/rank` | Assigne/retire un rang (`RankAssignDto`, `categoryId` nul = retrait) |
-| PUT | `/api/library/{id}/progress` | Statut et progression (`ProgressDto`) |
-| DELETE | `/api/library/{id}` | Retire un titre de la collection |
-| GET | `/api/wishlist` | Liste de souhaits |
-| POST | `/api/wishlist` | Ajoute un souhait (`WishlistCreateDto`) |
-| DELETE | `/api/wishlist/{id}` | Retire un souhait |
-| GET | `/api/categories` | Rangs built-in + catégories de l'utilisateur |
-| POST | `/api/categories` | Crée une catégorie personnalisée (`CategoryCreateDto`) |
-| GET | `/api/goals` | Objectifs de lecture |
-| PUT | `/api/goals/{year}` | Crée ou met à jour l'objectif d'une année (`GoalUpsertDto`) |
-| GET | `/api/stats` | Statistiques agrégées (`StatsDto`) |
-| POST | `/api/import/{source}` | Import par pseudo (`booknode`, `babelio`) — `{ "handle": "…" }` |
-| POST | `/api/import/csv` | Import CSV (corps = contenu brut) |
-| GET | `/api/hello` | 🔴 Démo non authentifiée — **à supprimer** |
+| GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
+| GET | `/api/catalog/search?q=&kind=&limit=` | External catalog search. `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
+| GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
+| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
+| GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
+| POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
+| PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
+| PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) |
+| DELETE | `/api/library/{id}` | Removes a title from the collection |
+| GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
+| POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
+| DELETE | `/api/wishlist/{id}` | Removes a wish |
+| GET | `/api/categories` | Built-in ranks + the user's own categories |
+| POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) |
+| GET | `/api/goals` | Reading goals |
+| PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |
+| GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
+| POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
+| POST | `/api/import/csv` | CSV import (the body is the raw content) |
 
-Hors `/api` : `/q/health`, `/q/metrics` (Prometheus), `/q/swagger-ui`.
+Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the ingress does not route `/q`. Swagger UI is served in dev and test, and absent from the production build.
 
-## DTOs principaux
+## Main DTOs
 
 ```java
 MeDto(String id, String email, String displayName, String locale)
 
-BookView(/* projection lecture d'une edition + son work */)
+BookView(/* read projection of an edition and its work */)
 
 ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
               Integer volumeNumber, String isbn13, String publisher, String language,
@@ -49,12 +49,14 @@ ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
 LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
 LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
                String rankCode, BookView book)
+LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
 ProgressDto(Integer currentPage, Integer percent, LibraryStatus status)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
 WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note, BookView book)
+WishlistPageDto(List<WishlistItemDto> items, int page, int size, long total)
 
 CategoryDto(UUID id, String code, String label, String color, boolean builtin)
 CategoryCreateDto(String label, String color)
@@ -67,33 +69,59 @@ StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
 GenreCount(String genre, long count)
 ```
 
-Enums : `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
+Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}`.
+
+## Pagination
+
+`GET /api/library` and `GET /api/wishlist` return an envelope, never a bare array:
+
+```json
+{ "items": [ … ], "page": 0, "size": 50, "total": 412 }
+```
+
+`total` is the number of items matching the filter, all pages taken together — that is what
+lets a client display a count, and decide whether there is more to fetch, without
+downloading the collection.
+
+| Parameter | Default | Applies to | Notes |
+|---|---|---|---|
+| `page` | `0` | both | Zero-based. Clamped to 0; a page past the end is empty with the right `total` |
+| `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
+| `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`. Wishlist: `priority`, `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
+| `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
+| `status` | — | collection | `OWNED` \| `READING` \| `READ` |
+| `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
+| `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
+| `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
+
+Every ordering ends on the identifier, so an item never swaps pages between two requests.
+Filters combine with an `and`, and all of them narrow a set already scoped to
+`CurrentUser.id()`.
 
 ## Conventions
 
-- **Ajout de titre** : le client envoie un `ManualBookDto` complet ; le serveur
-  rapproche ou crée `work` + `edition`, puis crée le `library_item`. Le front n'a
-  jamais à manipuler d'identifiant de catalogue.
-- **Isolation** : chaque ressource résout `CurrentUser.id()` et filtre. Un `id`
-  appartenant à un autre utilisateur doit répondre **404**, jamais 403 (pas de fuite
-  d'existence).
-- **Validation** : Jakarta Bean Validation (`@Valid`, `@NotBlank`, `@Min`) sur les DTOs
-  d'entrée ; les violations remontent en 400.
-- **Erreurs d'import** : `ImportException` → `ImportExceptionMapper`.
+- **Adding a title**: the client sends a complete `ManualBookDto`; the server matches or
+  creates the `work` + `edition`, then creates the `library_item`. The front end never has
+  to handle a catalog identifier.
+- **Isolation**: every resource resolves `CurrentUser.id()` and filters on it. An `id`
+  belonging to another user must answer **404**, never 403 (no leaking of existence).
+- **Validation**: Jakarta Bean Validation (`@Valid`, `@NotBlank`, `@Min`) on the input DTOs;
+  violations surface as 400.
+- **Import errors**: `ImportException` → `ImportExceptionMapper`.
 
-## Manques identifiés
+## Identified gaps
 
-| # | Manque | Milestone visé |
+| # | Gap | Target milestone |
 |---|---|---|
-| A1 | Pas de **pagination** sur `/api/library` et `/api/wishlist` | Fondations |
-| A2 | Pas de `PATCH /api/me` (nom affiché, langue) | Produit public |
-| A3 | Pas d'`GET /api/export` (CSV/JSON) ni de `DELETE /api/me` — **exigences RGPD** | Produit public |
-| A4 | Pas de ressource `/api/series` (fiche, tomes, suivi) | Cœur produit |
-| A5 | Pas de `DELETE`/`PUT` sur `/api/categories/{id}` | Cœur produit |
-| A6 | Pas de `PUT /api/wishlist/{id}` (modifier priorité/prix/note) | Cœur produit |
-| A7 | Pas de conversion souhait → collection en un appel | Cœur produit |
-| A8 | Pas de `/api/dashboard/layout` | Cœur produit |
-| A9 | Pas de recherche/filtre serveur sur la collection | Fondations |
-| A10 | Pas de rate limiting sur `/api/catalog/*` | Exploitation |
-| A11 | Pas de statistiques temporelles (`/api/stats/timeline`) | Cœur produit |
+| A1 | ✅ Pagination on `/api/library` and `/api/wishlist` (#38) | Foundations |
+| A2 | No `PATCH /api/me` (display name, language) | Public product |
+| A3 | No `GET /api/export` (CSV/JSON) and no `DELETE /api/me` — **GDPR requirements** | Public product |
+| A4 | No `/api/series` resource (details, volumes, follow) | Core product |
+| A5 | No `DELETE`/`PUT` on `/api/categories/{id}` | Core product |
+| A6 | No `PUT /api/wishlist/{id}` (edit priority/price/note) | Core product |
+| A7 | No one-call conversion from wish to collection | Core product |
+| A8 | No `/api/dashboard/layout` | Core product |
+| A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
+| A10 | No rate limiting on `/api/catalog/*` | Operations |
+| A11 | No time-based statistics (`/api/stats/timeline`) | Core product |

@@ -1,32 +1,37 @@
-# Librarius — instructions projet
+# Librarius — project instructions
 
-Bibliothèque personnelle **livres & mangas** : collection, suivi de lecture, souhaits,
-découverte catalogue, statistiques. PWA React + API Quarkus + PostgreSQL + Keycloak.
+Personal library for **books & manga**: collection, reading tracking, wishlist, catalog
+discovery, statistics. React PWA + Quarkus API + PostgreSQL + Keycloak.
 
-> 📚 **Documentation complète pour agents : [`.claude/docs/`](.claude/docs/README.md).**
-> Lis au minimum [ÉTAT-DES-LIEUX](.claude/docs/ETAT-DES-LIEUX.md) et
-> [CONVENTIONS](.claude/docs/CONVENTIONS.md) avant toute modification.
+> 📚 **Full working documentation for agents: [`.claude/docs/`](.claude/docs/README.md).**
+> Read at least [INVENTORY](.claude/docs/INVENTORY.md) and
+> [CONVENTIONS](.claude/docs/CONVENTIONS.md) before changing anything.
 
-## Langue
+## Language
 
-Réponses, commits, PR et documentation **en français** ; issues et milestones **en anglais**.
+**Everything in this repository is written in English**: code, comments and javadoc,
+documentation, commit messages, pull requests, issues and milestones. Where the existing
+content is still in French, convert what you touch. A pull request title becomes the
+commit subject when it is squashed, so it is English too.
 
-**Tout le code est en anglais**, commentaires et javadoc compris — y compris là où
-l'existant est encore en français : convertis ce que tu touches.
+Two things stay in French:
 
-**L'application reste en français** : `fr` est la seule locale, les textes utilisateur
-sont rédigés en français dans `i18n/locales/fr.json`.
+- **The application itself**: `fr` is the only locale, and user-facing copy is written
+  in French in `i18n/locales/fr.json`.
+- **Flyway migrations that have already shipped**, comments included: the Flyway
+  checksum covers the whole file, so rewording a comment breaks validation on databases
+  where the migration has already run.
 
-## Commandes
+## Commands
 
 ```bash
-pnpm install            # dépendances front (pnpm 9, Node 20)
+pnpm install            # frontend dependencies (pnpm 9, Node 20)
 pnpm infra:up           # postgres :5432 · keycloak :8081 · prometheus :9090 · grafana :3000
-pnpm api:dev            # API Quarkus :8080 (mvnw quarkus:dev)
-pnpm web:dev            # PWA Vite :5173 (proxy /api → 8080)
+pnpm api:dev            # Quarkus API :8080 (mvnw quarkus:dev)
+pnpm web:dev            # Vite PWA :5173 (proxies /api → 8080)
 ```
 
-Qualité — **à lancer avant tout push** :
+Quality gate — **run before every push**:
 
 ```bash
 pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build
@@ -36,60 +41,60 @@ pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm
 cd apps/api && ./mvnw -B verify
 ```
 
-Après toute modification d'une ressource JAX-RS ou d'un DTO, régénérer le client TS —
-sinon la CI `openapi-sync` échoue :
+After any change to a JAX-RS resource or a DTO, regenerate the TS client — otherwise the
+`openapi-sync` CI job fails:
 
 ```bash
 cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 ```
 
-## Structure
+## Layout
 
-| Chemin | Contenu |
+| Path | Contents |
 |---|---|
-| `apps/web/` | PWA React 19 + Vite 6 + TS. `features/<écran>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **ne jamais éditer à la main**) |
-| `apps/api/` | Quarkus 3 / Java 21. `domain/` (entités + repositories Panache), `web/` (ressources JAX-RS + DTOs), `catalog/` (providers externes), `imports/`, `security/` |
-| `openapi/` | **Contrat** entre l'api et le web : schéma produit au build de l'api, consommé par orval. N'appartient à aucune des deux applications |
-| `packages/` | Bibliothèques partagées — vide à ce jour, le glob du workspace l'attend |
-| `infra/` | docker-compose dev & prod, realm Keycloak, Prometheus, Grafana, chart Helm |
-| `infra/helm/librarius/` | chart de déploiement k3s (web, api, postgres, keycloak, ingress) |
-| `docs/` | doc publique (ARCHITECTURE, DEPLOYMENT) |
-| `.claude/docs/` | doc de travail détaillée pour les agents |
+| `apps/web/` | React 19 + Vite 6 + TS PWA. `features/<screen>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **never edit by hand**) |
+| `apps/api/` | Quarkus 3 / Java 21. `domain/` (entities + Panache repositories), `web/` (JAX-RS resources + DTOs), `catalog/` (external providers), `imports/`, `security/` |
+| `openapi/` | **Contract** between the api and the web app: schema produced by the api build, consumed by orval. Belongs to neither application |
+| `packages/` | Shared libraries — empty to date, the workspace glob expects it |
+| `infra/` | dev & prod docker-compose, Keycloak realm, Prometheus, Grafana, Helm chart |
+| `infra/helm/librarius/` | k3s deployment chart (web, api, postgres, keycloak, ingress) |
+| `docs/` | public documentation (ARCHITECTURE, DEPLOYMENT) |
+| `.claude/docs/` | detailed working documentation for agents |
 
-## Git flow — non négociable
+## Git flow — non-negotiable
 
-`main` (prod) ← `develop` (intégration) ← `feature/*`. Correctifs urgents : `hotfix/*`.
+`main` ← `feature/*`. **There is no `develop` branch.**
 
-- **Jamais de commit direct** sur `main` ni `develop`.
-- Une branche par changement, partant de `develop` à jour.
-- Commits conventionnels en français : `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
-- Identité de commit : `zelytra` / `contact@zelytra.fr`.
-- Toute modification passe par une PR vers `develop`, puis `develop` → `main` pour livrer.
-- **Ne jamais merger avec une CI rouge.** `cd.yml` déploie automatiquement sur push `main`,
-  vers la **qualification** (pas de production ouverte à ce jour).
+- **Never commit directly** on `main`.
+- One branch per change, cut from an up-to-date `main`.
+- Conventional commits **in English**: `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
+- Commit identity: `zelytra` / `contact@zelytra.fr`.
+- Every change goes through a pull request against `main`. Merge commits are refused:
+  squash or rebase only.
+- **Never merge on a red CI.** Merging into `main` deploys to **staging**; production
+  will be deployed by tagging `main`, and does not exist yet ([#103](https://github.com/zelytra/Librarius/issues/103)).
 
-## Règles de code
+## Code rules
 
-- **Pas de sur-ingénierie.** Solution simple et standard d'abord.
-- **Sécurité** : toute ressource est `@Authenticated` et **scopée par `CurrentUser.id()`** —
-  jamais d'accès à une entité sans filtrer sur `user_id`. Voir `security/CurrentUser.java`.
-- **Base** : Flyway possède le schéma (`hibernate-orm.database.generation=validate`).
-  Toute évolution du modèle passe par une migration `V<n>__description.sql`, jamais par
-  une modification d'une migration déjà livrée.
-- **Front** : pas de secret ni de clé dans le bundle ; textes utilisateur via `i18n`
-  (`useTranslation`), pas de chaîne en dur dans les nouveaux écrans.
-- **Tests** : tout comportement corrigé ou ajouté est verrouillé par un test
-  (`vitest` côté web, `@QuarkusTest` côté api).
+- **No over-engineering.** Reach for the simple, standard solution first.
+- **Security**: every resource is `@Authenticated` and **scoped by `CurrentUser.id()`** —
+  never read an entity without filtering on `user_id`. See `security/CurrentUser.java`.
+- **Database**: Flyway owns the schema (`hibernate-orm.database.generation=validate`).
+  Any model change goes through a `V<n>__description.sql` migration, never through an
+  edit to a migration that has already shipped.
+- **Frontend**: no secret nor key in the bundle; user-facing text goes through `i18n`
+  (`useTranslation`), no hard-coded string in new screens.
+- **Tests**: every fixed or added behaviour is locked down by a test (`vitest` on the
+  web side, `@QuarkusTest` on the api side).
 
-## Environnements
+## Environments
 
 | Env | URL | Notes |
 |---|---|---|
-| Local | http://localhost:5173 | comptes de test `alice/alice`, `bob/bob` |
-| Qualification | https://librarius.zelytra.fr | k3s, ingress unique ; `/auth` → Keycloak, `/api` + `/q` → api |
-| Production | — | n'existe pas encore ; à ouvrir au jalon v1.0 |
+| Local | http://localhost:5173 | test accounts `alice/alice`, `bob/bob` |
+| Staging | https://librarius.zelytra.fr | k3s, single ingress; `/auth` → Keycloak, `/api` + `/q` → api |
+| Production | — | does not exist yet; to be opened at the v1.0 milestone |
 
-⚠️ `librarius.zelytra.fr` est un environnement de **qualification**, pas de production :
-une coupure de service à la livraison est acceptable, et les données y sont considérées
-comme jetables. Cette hypothèse tombe à l'ouverture de la production — voir
-[ROADMAP](.claude/docs/ROADMAP.md).
+⚠️ `librarius.zelytra.fr` is a **staging** environment, not production: an outage during
+a release is acceptable, and the data there is considered disposable. That assumption
+goes away the day production opens — see [ROADMAP](.claude/docs/ROADMAP.md).

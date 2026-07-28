@@ -1,23 +1,23 @@
-// Règles markdownlint pour la documentation du dépôt.
-// Volontairement permissif : on cible les erreurs de structure (titres, listes,
-// tableaux, liens), pas la mise en forme cosmétique.
+// markdownlint rules for the repository documentation.
+// Deliberately permissive: it targets structural errors (headings, lists,
+// tables, links), not cosmetic formatting.
 {
   "config": {
     "default": true,
-    // Les documents sont écrits en lignes longues assumées (tableaux, URLs).
+    // The documents are written with deliberately long lines (tables, URLs).
     "MD013": false,
-    // Plusieurs sections peuvent partager un titre (« Contexte », « Référence »).
+    // Several sections may share a heading ("Context", "Reference").
     "MD024": { "siblings_only": true },
-    // Les emphases servent parfois de pseudo-titres dans les encarts.
+    // Emphasis is sometimes used as a pseudo-heading inside callouts.
     "MD036": false,
-    // HTML inline ponctuel toléré.
+    // Occasional inline HTML is tolerated.
     "MD033": false,
-    // Les URLs locales (localhost, cluster) sont écrites telles quelles.
+    // Local URLs (localhost, cluster) are written as-is.
     "MD034": false,
-    // Séparateurs de tableaux compacts (`|---|---|`), style de tout le dépôt.
+    // Compact table separators (`|---|---|`), the style used across the repository.
     "MD060": false,
-    // La dette de ETAT-DES-LIEUX.md est numérotée en continu à travers les
-    // sections : les issues GitHub y renvoient par leur numéro (« dette #13 »).
+    // The debt list in INVENTORY.md is numbered continuously across sections:
+    // GitHub issues refer to those numbers ("debt #13").
     "MD029": false
   },
   "globs": ["**/*.md"],

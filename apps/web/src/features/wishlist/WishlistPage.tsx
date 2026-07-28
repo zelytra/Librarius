@@ -1,13 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
+import { Button } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  deleteApiWishlistId,
   getApiWishlist,
-  type WishlistItemDto,
+  getGetApiWishlistQueryKey,
+  useDeleteApiWishlistId,
 } from '../../api/generated/librarius';
+
+/** Number of wishes fetched per request. */
+const PAGE_SIZE = 50;
 
 const PRIO: Record<string, { label: string; color: string; bg: string }> = {
   PRIORITY: { label: 'Priorité', color: '#b0857f', bg: '#f4e4e1' },
@@ -23,33 +27,45 @@ function colorFor(seed: string): string {
 }
 
 function WishlistContent() {
-  const { opts } = useApiAuth();
-  const [items, setItems] = useState<WishlistItemDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getApiWishlist(opts);
-      if (res.status === 200) setItems(res.data);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The server pages the wishlist; the screen asks for the next page on demand.
+  const {
+    data,
+    isPending: loading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    // Marked so an infinite result never lands under the key of a plain page query,
+    // while staying under the `/api/wishlist` prefix the mutations invalidate.
+    queryKey: [...getGetApiWishlistQueryKey({ size: PAGE_SIZE }), 'infinite'],
+    queryFn: ({ pageParam }) => getApiWishlist({ size: PAGE_SIZE, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
+      return loaded < (last.total ?? 0) ? (last.page ?? 0) + 1 : undefined;
+    },
+  });
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
+  const count = data?.pages[0]?.total ?? 0;
 
-  async function remove(id: string) {
-    await deleteApiWishlistId(id, opts);
-    setItems((cur) => cur.filter((it) => it.id !== id));
-  }
+  const { mutate: removeItem } = useDeleteApiWishlistId({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() }),
+    },
+  });
 
-  const total = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
+  const remove = (id: string) => removeItem({ id });
 
-  if (loading) return <p style={{ color: 'var(--muted)', fontSize: 13 }}>Chargement…</p>;
+  // Budget of what has been loaded. A total over the whole wishlist belongs to
+  // /api/stats, which aggregates in SQL — see issue #38.
+  const budget = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
+
+  if (loading) return <p style={{ color: 'var(--muted)', fontSize: 13 }}>{t('common.loading')}</p>;
 
   if (items.length === 0) {
     return (
@@ -65,7 +81,7 @@ function WishlistContent() {
   return (
     <>
       <p style={{ margin: '0 0 22px', fontSize: 13, color: 'var(--muted)' }}>
-        {items.length} titres · estimé {total.toFixed(2).replace('.', ',')} €
+        {count} titres · estimé {budget.toFixed(2).replace('.', ',')} €
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {items.map((w) => {
@@ -91,6 +107,16 @@ function WishlistContent() {
           );
         })}
       </div>
+
+      {hasNextPage && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
+            {isFetchingNextPage
+              ? t('common.loading')
+              : t('collection.loadMore', { loaded: items.length, total: count })}
+          </Button>
+        </div>
+      )}
     </>
   );
 }

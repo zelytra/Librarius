@@ -74,12 +74,12 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
                 .then().statusCode(200)
-                .body("id", hasItem(aliceItem));
+                .body("items.id", hasItem(aliceItem));
 
         given().auth().oauth2(token("bob"))
                 .when().get("/api/library")
                 .then().statusCode(200)
-                .body("id", not(hasItem(aliceItem)));
+                .body("items.id", not(hasItem(aliceItem)));
     }
 
     /**
@@ -98,7 +98,7 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
                 .then().statusCode(200)
-                .body("id", hasItem(aliceItem));
+                .body("items.id", hasItem(aliceItem));
     }
 
     @Test
@@ -133,12 +133,12 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/wishlist")
                 .then().statusCode(200)
-                .body("id", hasItem(aliceWish));
+                .body("items.id", hasItem(aliceWish));
 
         given().auth().oauth2(token("bob"))
                 .when().get("/api/wishlist")
                 .then().statusCode(200)
-                .body("id", not(hasItem(aliceWish)));
+                .body("items.id", not(hasItem(aliceWish)));
     }
 
     @Test
@@ -152,7 +152,7 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/wishlist")
                 .then().statusCode(200)
-                .body("id", hasItem(aliceWish));
+                .body("items.id", hasItem(aliceWish));
     }
 
     // ── Categories ────────────────────────────────────────────────────────────

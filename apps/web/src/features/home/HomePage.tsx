@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  getApiCatalogUpcoming,
-  getApiLibrary,
-  getApiStats,
-  type CatalogResult,
+  useGetApiCatalogUpcoming,
+  useGetApiLibrary,
+  useGetApiStats,
   type LibraryItemDto,
-  type StatsDto,
 } from '../../api/generated/librarius';
 
 const PALETTE = ['#bccab2', '#cabdd6', '#ddb9b3', '#b6c6d6', '#dccfae', '#aec8c0', '#d8b6a6', '#bcc9d8'];
@@ -34,30 +30,28 @@ function Cover({ item, onClick, w = 104 }: { item: LibraryItemDto; onClick: () =
   );
 }
 
+/** Shelves shown on the dashboard, and how many covers each of them holds. */
+const READING_SHELF_SIZE = 12;
+const READ_SHELF_SIZE = 8;
+
 function Dashboard() {
   const navigate = useNavigate();
-  const { opts } = useApiAuth();
-  const [items, setItems] = useState<LibraryItemDto[]>([]);
-  const [stats, setStats] = useState<StatsDto | null>(null);
-  const [upcoming, setUpcoming] = useState<CatalogResult[]>([]);
-
-  useEffect(() => {
-    void (async () => {
-      const [lib, st, up] = await Promise.all([
-        getApiLibrary(undefined, opts),
-        getApiStats(opts),
-        getApiCatalogUpcoming({ kind: 'MANGA', limit: 5 }, opts),
-      ]);
-      if (lib.status === 200) setItems(lib.data);
-      if (st.status === 200) setStats(st.data);
-      if (up.status === 200) setUpcoming(up.data);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The queries run in parallel and are cached independently: coming back to Home after
+  // browsing no longer refetches anything. Each shelf asks the server for its own status
+  // rather than downloading the collection to filter it here.
+  const { data: inProgress } = useGetApiLibrary({ status: 'READING', size: READING_SHELF_SIZE });
+  const { data: finished } = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
+  const { data: stats } = useGetApiStats();
+  const { data: upcoming = [] } = useGetApiCatalogUpcoming({ kind: 'MANGA', limit: 5 });
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-  const reading = items.filter((it) => it.status === 'READING');
-  const read = items.filter((it) => it.status === 'READ').slice(0, 8);
+  const reading = inProgress?.items ?? [];
+  const read = finished?.items ?? [];
+
+  // Emptiness comes from the counters, not from a shelf: a library made only of
+  // owned-but-unread titles fills neither of the two above.
+  const libraryEmpty =
+    stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
 
   const mini = [
     { value: String(stats?.read ?? 0), label: 'lus', bg: '#e6ece0' },
@@ -115,7 +109,7 @@ function Dashboard() {
         </section>
       )}
 
-      {items.length === 0 && (
+      {libraryEmpty && (
         <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--faint)' }}>
           <Icon name="auto_stories" size={42} />
           <p style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 12 }}>

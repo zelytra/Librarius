@@ -1,20 +1,24 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from 'react-oidc-context';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, test } from 'vitest';
 import App from './App';
 import { ThemeProvider } from './shared/theme/ThemeProvider';
+import { createTestQueryClient } from './test/utils';
 import { oidcConfig } from './auth/oidc';
 import './i18n';
 
 function renderAt(path: string) {
   return render(
     <AuthProvider {...oidcConfig}>
-      <ThemeProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <App />
-        </MemoryRouter>
-      </ThemeProvider>
+      <QueryClientProvider client={createTestQueryClient()}>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <App />
+          </MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
     </AuthProvider>,
   );
 }

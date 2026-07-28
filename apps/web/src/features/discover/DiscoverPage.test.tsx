@@ -71,6 +71,16 @@ describe('DiscoverPage', () => {
     expect(await screen.findByText(/Erreur 500/)).toBeInTheDocument();
   });
 
+  test('tells the user to wait when the catalog quota is exhausted', async () => {
+    searchReturns([], 429);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+
+    // "Error 429" would be useless: what matters is that waiting fixes it.
+    expect(await screen.findByText(/Réessaie dans une minute/)).toBeInTheDocument();
+  });
+
   test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<DiscoverPage />);

@@ -1,111 +1,131 @@
-# Conventions de travail — Librarius
+# Working conventions — Librarius
 
-## 1. Langue
+## 1. Language
 
-| Élément | Langue |
+| Item | Language |
 |---|---|
-| **Tout le code** : identifiants, commentaires, javadoc, noms de tests, messages de log, noms de fichiers et de branches | **Anglais** |
-| **Issues, milestones, labels** | **Anglais** |
-| Commits, pull requests, documentation du projet, échanges | **Français** |
-| Textes affichés à l'utilisateur | **Français**, via i18n — jamais en dur |
+| **All code**: identifiers, comments, javadoc, test names, log messages, file and branch names | **English** |
+| **Issues, milestones, labels** | **English** |
+| **Commit messages** and **pull requests** (title and description) | **English** |
+| **Project documentation**, this set included | **English** |
+| Exchanges with the maintainer | **French** |
+| Text shown to the user | **French**, through i18n — never hardcoded |
 
-Le code est intégralement en anglais, commentaires compris : ne pas suivre la langue du
-fichier voisin s'il est encore en français, l'écrire en anglais et convertir ce qu'on
-touche au passage.
+A pull request title becomes the commit subject when it is squashed: it must therefore be
+written like a commit message — English, imperative mood.
 
-Deux exceptions, volontaires :
+The code is entirely in English, comments included: do not follow the language of the
+neighbouring file if it is still French, write English and convert whatever you touch along
+the way.
 
-- **Les migrations Flyway déjà livrées** (`V1__init.sql`, `V2__progress_and_ranks.sql`)
-  gardent leurs commentaires français. Flyway calcule le checksum sur **le contenu
-  entier du fichier, commentaires compris** : les retoucher ferait échouer la validation
-  au démarrage sur toute base où la migration est déjà appliquée. Les migrations à venir
-  sont écrites en anglais.
-- **Les messages rendus à l'utilisateur** (`ImportException`, libellés `Or`/`Argent`/
-  `Bronze`) restent en français, puisque l'interface l'est. Les messages de log, eux,
-  sont en anglais.
+Two deliberate exceptions:
 
-**L'application, elle, reste en français** : `fr` est la seule locale, et les textes
-utilisateur sont rédigés en français dans `i18n/locales/fr.json`. L'anglais viendra avec
-[#77](https://github.com/zelytra/Librarius/issues/77) ; d'ici là, aucune traduction de
-l'interface.
+- **The Flyway migrations already shipped** (`V1__init.sql`, `V2__progress_and_ranks.sql`)
+  keep their French comments. Flyway computes the checksum over **the entire file, comments
+  included**: touching them would fail validation at startup on every database where the
+  migration is already applied. Future migrations are written in English.
+- **Messages rendered to the user** (`ImportException`, the `Or`/`Argent`/`Bronze` labels)
+  stay in French, since the interface is French. Log messages, on the other hand, are in
+  English.
+
+**The application itself stays in French**: `fr` is the only locale, and the user-facing
+copy is written in French in `i18n/locales/fr.json`. English will come with
+[#77](https://github.com/zelytra/Librarius/issues/77); until then, no translation of the
+interface.
 
 ## 2. Git flow
 
 ```text
-main      ──●────────────────●──────────►  qualification (déploiement automatique)
-             ↖ merge          ↖ merge
-develop   ──●──●──●──●──●──●──●──────────►  intégration
-             ↖  ↖  ↖
-feature/*    ●  ●  ●
+feature/*   ──●──●──●
+               ↘  ↘  ↘
+main        ────●──●──●──────────●──────────►  merge → deploy to staging
+                               v1.0.0          tag   → deploy to production
 ```
 
-- **Aucun commit direct** sur `main` ni `develop`.
-- Branche partant de `develop` **à jour** (`git fetch && git reset --hard origin/develop`).
-- Nommage : `feature/<sujet-court>`, `fix/<sujet>`, `docs/<sujet>`, `ci/<sujet>`,
-  `hotfix/<sujet>` (celui-ci part de `main`).
-- Une branche = un changement cohérent = une PR.
-- Jamais de force-push sur `main` ni `develop`.
+There is **no `develop` branch**. Pull requests target `main` directly: the two branches
+held identical content most of the time, and the extra merge bought nothing.
 
-### Livraison
+- **No direct commit** on `main`.
+- Branch from an **up-to-date** `main` (`git fetch && git reset --hard origin/main`).
+- Naming: `feature/<short-topic>`, `fix/<topic>`, `docs/<topic>`, `ci/<topic>`.
+- One branch = one coherent change = one pull request.
+- Never force-push `main`.
+- `main` stays permanently releasable: a tag can be cut from it at any point.
 
-1. `feature/x` → PR vers `develop`, CI verte, merge, suppression de la branche.
-2. Pour livrer : PR `develop` → `main`, titre « Release — <sujet> ».
-3. Le merge sur `main` déclenche `cd.yml` (build images + `helm upgrade`) vers la
-   **qualification** `librarius.zelytra.fr` : **ne jamais merger sur `main` avec une CI
-   rouge**. La coupure de service pendant le déploiement y est acceptable.
+### Releasing
 
-### Identité de commit
+1. `feature/x` → pull request into `main`, green CI, merge, delete the branch.
+2. Merging into `main` triggers `cd.yml`: image build, then `helm upgrade` into the
+   `librarius` namespace on the **staging** environment `librarius.zelytra.fr`.
+   **Never merge with a red CI.** Downtime during that deployment is acceptable there.
+3. A `vX.Y.Z` tag on `main` runs `release.yml`: images tagged `X.Y.Z` / `X.Y` / `X` /
+   `<sha>`, a changelog built from the commit subjects below, the chart aligned on the
+   version, and a GitHub release. It **deploys nothing**. Full procedure and rollback:
+   [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md).
+4. Production is deployed by **tagging** `main`, never by merging. It does not exist yet
+   — see [#103](https://github.com/zelytra/Librarius/issues/103), pending a domain.
+
+Because the changelog is generated from the commit subjects, a badly typed subject ends up
+verbatim in a published release: `type(scope): summary`, nothing else.
+
+Because pull requests now target the default branch, a `Closes #nn` in the body actually
+closes the issue on merge. It did not while they targeted `develop`.
+
+### Commit identity
 
 ```bash
 git config user.name "zelytra"
 git config user.email "contact@zelytra.fr"
 ```
 
-**Aucune mention d'outillage.** Pas de trailer `Co-Authored-By`, pas de « Generated
-with … », aucune signature d'assistant dans les messages de commit, les descriptions de
-PR, les issues, le code ou la documentation du projet. Seule exception : les fichiers
-destinés au maintien des agents — `CLAUDE.md` et `.claude/`. Y renvoyer par leur chemin
-depuis une issue ou une PR reste normal : c'est une référence de fichier, pas une
-attribution.
+**No mention of tooling.** No `Co-Authored-By` trailer, no "Generated with …", no assistant
+signature in commit messages, PR descriptions, issues, code or project documentation. The
+single exception is the files that exist to maintain the agents — `CLAUDE.md` and
+`.claude/`. Referring to them by path from an issue or a PR remains normal: that is a file
+reference, not an attribution.
 
-### Messages de commit
+### Commit messages
 
-Conventional commits, sujet en français, impératif, ≤ 72 caractères :
+Conventional commits, subject in **English**, imperative mood, ≤ 72 characters. The body
+explains the **why** rather than the what — the diff already says what changes:
 
 ```text
-feat(web): jauge d'objectif annuel sur l'accueil
+feat(web): expose the annual reading goal on the home screen
 
-L'API /api/goals existait déjà mais n'était exposée dans aucun écran.
-Ajoute la jauge, le calcul du rythme nécessaire et l'état vide quand
-aucun objectif n'est défini.
+/api/goals had been working since the initial back-end milestone, but no
+screen ever called it: the feature existed and was invisible. Adds the
+gauge, the pace needed to stay on track, and an empty state inviting the
+user to set a goal.
 
-Closes #42
+Closes #50
 ```
 
-Portées usuelles : `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
+Usual scopes: `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
 
 ## 3. Pull requests
 
-Titre : `<type>(<portée>) — <résumé>`. Description structurée :
+Written **in English**, title included — the repository squash-merges, so the pull request
+title becomes the commit subject on `main`. Same format as commits:
+`<type>(<scope>): <summary>`.
 
 ```markdown
-## Problème
-Ce qui ne va pas / ce qui manque aujourd'hui.
+## Problem
+What is wrong, or missing, today.
 
-## Correctif
-Ce que fait la PR, et pourquoi cette approche.
+## Fix
+What the change does, and why this approach over the alternatives.
 
-## Vérifications
+## Verification
 - [ ] `pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build`
 - [ ] `cd apps/api && ./mvnw -B verify`
-- [ ] Client OpenAPI régénéré si l'API a changé
-- [ ] Vérifié dans un navigateur (captures / DOM) si l'UI a changé
-- [ ] Documentation `.claude/docs/` mise à jour
+- [ ] OpenAPI client regenerated if the API changed
+- [ ] Checked in a real browser (screenshots / DOM) if the UI changed
+- [ ] `.claude/docs/` updated
 
 Closes #<issue>
 ```
 
-## 4. Qualité — avant tout push
+## 4. Quality — before any push
 
 ```bash
 pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build
@@ -115,106 +135,111 @@ pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm
 cd apps/api && ./mvnw -B verify
 ```
 
-Si l'API a changé :
+If the API changed:
 
 ```bash
 cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 ```
 
-Si de la documentation a changé (workflow `docs` : markdownlint + liens internes) :
+If documentation changed (the `docs` workflow: markdownlint + internal links):
 
 ```bash
 npx markdownlint-cli2@0.23.2
 ```
 
-### Poste sans JDK ni Docker
+### A machine without a JDK or Docker
 
-Les tests de l'API exigent Docker (Dev Services démarre PostgreSQL et Keycloak). Sur un
-poste Windows d'entreprise qui n'a ni JDK ni Docker, passer par WSL — où Docker
-fonctionne — et exécuter Maven dans un conteneur :
+The API tests need Docker (Dev Services starts PostgreSQL and Keycloak). On a corporate
+Windows machine that has neither a JDK nor Docker, go through WSL — where Docker works — and
+run Maven inside a container:
 
 ```bash
-wsl -d Ubuntu -- bash -lc 'docker run --rm --network host \
+wsl -d Ubuntu -- bash -lc 'docker run --rm \
+  --add-host=host.docker.internal:host-gateway \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /mnt/c/Users/<utilisateur>/WebstormProjects/Librarius:/workspace \
+  -v /mnt/c/Users/<user>/WebstormProjects/Librarius:/workspace \
   -v librarius-m2:/root/.m2 \
-  -e TESTCONTAINERS_RYUK_DISABLED=true \
   -w /workspace/apps/api \
   maven:3.9-eclipse-temurin-21 mvn -B verify'
 ```
 
-Le volume nommé `librarius-m2` conserve le cache Maven d'une exécution à l'autre : le
-premier lancement télécharge tout et prend plusieurs minutes, les suivants sont rapides.
+The named volume `librarius-m2` keeps the Maven cache between runs: the first run downloads
+everything and takes several minutes, the following ones are fast.
 
-Côté front, Node et pnpm fonctionnent nativement. Attention toutefois : en Node ≥ 22,
-le `localStorage` natif prend le pas sur celui de jsdom — `src/test/setup.ts` le
-neutralise, ne pas retirer ce garde-fou.
+**Do not add `--network host`.** It looks harmless and it is not: the container then shares
+WSL's network stack, so if the local dev stack is up (`pnpm infra:up`, Keycloak on 8081)
+Quarkus cannot bind its test port and the run fails with *Unable to start HTTP server* —
+one error followed by dozens of skipped tests, which reads like a code failure and is not.
+Testcontainers publishes its containers on the bridge and hands back
+`172.17.0.1:<port>`, so the default network works fine.
 
-**Changement d'UI** : le vérifier dans un vrai navigateur (`pnpm web:dev`), pas
-seulement en test unitaire. Fournir la preuve dans la PR (texte rendu, styles
-calculés, absence d'erreur console).
+On the front-end side, Node and pnpm work natively. One caveat: on Node ≥ 22 the native
+`localStorage` takes precedence over the jsdom one — `src/test/setup.ts` neutralises it, do
+not remove that safeguard.
 
-## 5. Style de code
+**UI change**: check it in a real browser (`pnpm web:dev`), not only in a unit test. Provide
+the evidence in the PR (rendered text, computed styles, no console error).
+
+## 5. Code style
 
 ### TypeScript / React
 
-- Composants fonctionnels, hooks. Un écran par dossier dans `features/`.
-- **Ne jamais éditer `src/api/generated/`** — régénérer.
-- Vérifier `status === 200` avant d'utiliser `data` d'un appel orval.
-- Nouveaux styles : CSS Modules adossés aux tokens (`tokens.css`). L'inline est réservé
-  aux valeurs réellement dynamiques.
-- Textes utilisateur via `useTranslation()` et clés dans `i18n/locales/`.
-- Pas de `eslint-disable` sans commentaire justifiant la dérogation.
+- Function components, hooks. One screen per folder under `features/`.
+- **Never edit `src/api/generated/`** — regenerate it.
+- Read the API through the generated React Query hooks. **Never fetch from a
+  `useEffect`**, and invalidate the affected queries after a mutation, using the generated
+  key helpers (`getGetApiLibraryQueryKey()`) rather than hand-written strings.
+- New styles: CSS Modules backed by the tokens (`tokens.css`). Inline is reserved for
+  genuinely dynamic values.
+- User-facing text through `useTranslation()` with keys in `i18n/locales/`.
+- No `eslint-disable` without a comment justifying the exemption.
 
 ### Java / Quarkus
 
-- Entités Panache dans `domain/`, requêtes dans `domain/repository/`, **toujours
-  scopées `user_id`**.
-- Ressources JAX-RS minces : validation + délégation. La logique va dans un service.
-- DTOs = `record` dans `ApiDtos`, avec fabrique `of(entity)`. **Jamais** d'entité
-  sérialisée directement.
-- Toute évolution de schéma = nouvelle migration Flyway (voir
-  [MODÈLE-DE-DONNÉES](MODELE-DE-DONNEES.md) § 4).
+- Panache entities in `domain/`, queries in `domain/repository/`, **always scoped by
+  `user_id`**.
+- Thin JAX-RS resources: validation + delegation. The logic belongs in a service.
+- DTOs are `record` types in `ApiDtos`, with an `of(entity)` factory. **Never** serialise an
+  entity directly.
+- Any schema change means a new Flyway migration (see [DATA-MODEL](DATA-MODEL.md) § 4).
 
 ## 6. Tests
 
-| Portée | Outil | Attendu |
+| Scope | Tool | Expectation |
 |---|---|---|
-| Front unitaire / composant | `vitest` + Testing Library | Tout nouvel écran ou composant partagé |
-| Front e2e | Playwright 🔜 | Parcours P1–P5 de [PRODUIT](PRODUIT.md) |
-| API intégration | `@QuarkusTest` + Dev Services | Tout nouvel endpoint, y compris le cas « données d'un autre utilisateur » |
-| Isolation des données | `@QuarkusTest` avec `alice` et `bob` | **Obligatoire** sur toute ressource scopée utilisateur |
+| Front-end unit / component | `vitest` + Testing Library | Every new screen or shared component |
+| Front-end e2e | Playwright 🔜 | Journeys P1–P5 from [PRODUCT](PRODUCT.md) |
+| API integration | `@QuarkusTest` + Dev Services | Every new endpoint, including the "another user's data" case |
+| Data isolation | `@QuarkusTest` with `alice` and `bob` | **Mandatory** on every user-scoped resource |
 
-Un correctif de bug s'accompagne du test qui échouait avant.
+A bug fix ships with the test that was failing before it.
 
-## 7. Sécurité
+## 7. Security
 
-- Aucun secret en clair dans le dépôt (ni `values.yaml`, ni `.env` committé, ni sortie
-  de commande). Masquer les jetons dans les logs et les réponses.
-- Toute nouvelle ressource est `@Authenticated` et scopée utilisateur, sauf décision
-  explicite documentée.
-- Les modifications de réglages de dépôt ou de cluster (protections de branches,
-  secrets CI, permissions) **ne sont pas faites en autonomie** : fournir la procédure
-  exacte et attendre validation.
+- No plaintext secret in the repository (not in `values.yaml`, not in a committed `.env`,
+  not in command output). Mask tokens in logs and responses.
+- Every new resource is `@Authenticated` and user-scoped, unless a documented explicit
+  decision says otherwise.
+- Changes to repository or cluster settings (branch protections, CI secrets, permissions)
+  **are not made autonomously**: provide the exact procedure and wait for approval.
 
 ## 8. Documentation
 
-Une PR qui change le comportement, le schéma ou le contrat met à jour le document
-concerné **dans la même PR** :
+A PR that changes behaviour, the schema or the contract updates the relevant document **in
+the same PR**:
 
-| Changement | Document |
+| Change | Document |
 |---|---|
-| Nouveau comportement utilisateur | [PRODUIT](PRODUIT.md) |
-| Nouveau module, dépendance, décision | [ARCHITECTURE](ARCHITECTURE.md) |
-| Migration Flyway | [MODÈLE-DE-DONNÉES](MODELE-DE-DONNEES.md) |
-| Endpoint ou DTO | [API](API.md) |
-| Issue terminée | [ROADMAP](ROADMAP.md) |
-| Dette résorbée ou découverte | [ÉTAT-DES-LIEUX](ETAT-DES-LIEUX.md) |
+| New user-facing behaviour | [PRODUCT](PRODUCT.md) |
+| New module, dependency, decision | [ARCHITECTURE](ARCHITECTURE.md) |
+| Flyway migration | [DATA-MODEL](DATA-MODEL.md) |
+| Endpoint or DTO | [API](API.md) |
+| Issue completed | [ROADMAP](ROADMAP.md) |
+| Debt cleared or discovered | [INVENTORY](INVENTORY.md) |
 
-## 9. Parallélisme (agents)
+## 9. Parallelism (agents)
 
-- Ne jamais bloquer sur une attente longue (pipeline, déploiement, suite e2e) :
-  lancer en tâche de fond et poursuivre.
-- Grouper les appels d'outils indépendants dans un même message.
-- Les gros travaux délégables (audit, traduction en masse, exploration) partent en
-  agents parallèles.
+- Never block on a long wait (pipeline, deployment, e2e suite): start it in the background
+  and carry on.
+- Group independent tool calls into a single message.
+- Large delegable jobs (audits, bulk translation, exploration) go to parallel agents.

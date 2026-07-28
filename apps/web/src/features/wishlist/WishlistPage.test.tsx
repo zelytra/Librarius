@@ -3,16 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { wishlistItem } from '../../test/fixtures';
-import { http, HttpResponse, server } from '../../test/server';
+import { http, HttpResponse, server, wishlistReturns } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
 const { WishlistPage } = await import('./WishlistPage');
-
-function wishlistReturns(items: unknown[]) {
-  server.use(http.get('*/api/wishlist', () => HttpResponse.json(items)));
-}
 
 describe('WishlistPage', () => {
   beforeEach(resetAuth);
@@ -44,7 +40,16 @@ describe('WishlistPage', () => {
   });
 
   test('removing a wish drops it from the list', async () => {
-    wishlistReturns([wishlistItem()]);
+    // The list is re-read after the mutation, so the handler applies the deletion.
+    let items = [wishlistItem()];
+    server.use(
+      http.get('*/api/wishlist', () =>
+        HttpResponse.json({ items, page: 0, size: 50, total: items.length })),
+      http.delete('*/api/wishlist/:id', ({ params }) => {
+        items = items.filter((it) => it.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderWithProviders(<WishlistPage />);
 
     await screen.findByText('Vinland Saga');
@@ -58,5 +63,31 @@ describe('WishlistPage', () => {
     renderWithProviders(<WishlistPage />);
 
     expect(await screen.findByText(/Connecte-toi pour voir tes souhaits/)).toBeInTheDocument();
+  });
+
+  // ── Server-side pagination ─────────────────────────────────────────────────
+
+  /** Sixty wishes, i.e. more than the fifty of a page. */
+  const MANY = Array.from({ length: 60 }, (_, i) =>
+    wishlistItem({ id: `wish-${i}`, estimatedPrice: 1, book: { kind: 'BOOK', title: `Souhait ${String(i).padStart(2, '0')}` } }));
+
+  test('loads one page and announces the server total', async () => {
+    wishlistReturns(MANY);
+    renderWithProviders(<WishlistPage />);
+
+    expect(await screen.findByText(/60 titres/)).toBeInTheDocument();
+    expect(screen.queryByText('Souhait 59')).not.toBeInTheDocument();
+  });
+
+  test('the load-more button appends the next page', async () => {
+    wishlistReturns(MANY);
+    renderWithProviders(<WishlistPage />);
+
+    await screen.findByText('Souhait 00');
+    await userEvent.click(await screen.findByText('Voir plus (50 / 60)'));
+
+    expect(await screen.findByText('Souhait 59')).toBeInTheDocument();
+    expect(screen.getByText('Souhait 00')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(/Voir plus/)).not.toBeInTheDocument());
   });
 });

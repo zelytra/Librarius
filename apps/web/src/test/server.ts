@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { BUILTIN_CATEGORIES, stats } from './fixtures';
+import { BUILTIN_CATEGORIES, libraryPage, stats, wishlistPage } from './fixtures';
+import type { BookView, LibraryItemDto, WishlistItemDto } from '../api/generated/librarius';
 
 /**
  * MSW server: intercepts API calls at the network level, without mocking the generated
@@ -14,8 +15,9 @@ import { BUILTIN_CATEGORIES, stats } from './fixtures';
 const BASE = '*/api';
 
 export const defaultHandlers = [
-  http.get(`${BASE}/library`, () => HttpResponse.json([])),
-  http.get(`${BASE}/wishlist`, () => HttpResponse.json([])),
+  http.get(`${BASE}/library`, () => HttpResponse.json(libraryPage([]))),
+  http.get(`${BASE}/library/:id`, () => new HttpResponse(null, { status: 404 })),
+  http.get(`${BASE}/wishlist`, () => HttpResponse.json(wishlistPage([]))),
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
   http.get(`${BASE}/goals`, () => HttpResponse.json([])),
@@ -38,6 +40,84 @@ export const server = setupServer(...defaultHandlers);
 /** Makes a given path answer 500, to exercise the error states. */
 export function failWith(path: string, status = 500) {
   server.use(http.get(`${BASE}${path}`, () => new HttpResponse(null, { status })));
+}
+
+/** Field a `sort` value orders on, matching the API. */
+const SORT_FIELD: Record<string, 'title' | 'authors' | 'genres'> = {
+  title: 'title',
+  author: 'authors',
+  genre: 'genres',
+};
+
+/** Free-text match, over the same three fields as the API. */
+function matches(book: BookView | undefined, q: string): boolean {
+  const needle = q.trim().toLowerCase();
+  return [book?.title, book?.authors, book?.seriesTitle]
+    .some((field) => (field ?? '').toLowerCase().includes(needle));
+}
+
+/**
+ * Serves `/api/library` the way the API does: filter, sort, then slice, and answer with
+ * the `{ items, page, size, total }` envelope. Tests keep asserting on what the screen
+ * shows, and a screen that forgot to forward a filter now visibly returns too much.
+ */
+export function libraryReturns(items: LibraryItemDto[]) {
+  server.use(http.get(`${BASE}/library`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    let matching = items;
+
+    const kind = params.get('kind');
+    if (kind) matching = matching.filter((it) => it.book?.kind === kind);
+    const status = params.get('status');
+    if (status) matching = matching.filter((it) => it.status === status);
+    const rank = params.get('rank');
+    if (rank) matching = matching.filter((it) => it.rankCode === rank);
+    const q = params.get('q');
+    if (q) matching = matching.filter((it) => matches(it.book, q));
+
+    const field = SORT_FIELD[params.get('sort') ?? 'added'];
+    if (field) {
+      matching = [...matching].sort((a, b) =>
+        (a.book?.[field] ?? '').localeCompare(b.book?.[field] ?? '', 'fr'));
+    }
+
+    const page = Number(params.get('page') ?? 0);
+    const size = Number(params.get('size') ?? 50);
+    return HttpResponse.json({
+      items: matching.slice(page * size, page * size + size),
+      page,
+      size,
+      total: matching.length,
+    });
+  }));
+}
+
+/** Serves one item on `/api/library/{id}`; any other identifier answers 404. */
+export function libraryItemReturns(item: LibraryItemDto) {
+  server.use(http.get(`${BASE}/library/:id`, ({ params }) =>
+    params.id === item.id ? HttpResponse.json(item) : new HttpResponse(null, { status: 404 })));
+}
+
+/** Same as {@link libraryReturns}, for the wishlist. */
+export function wishlistReturns(items: WishlistItemDto[]) {
+  server.use(http.get(`${BASE}/wishlist`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    let matching = items;
+
+    const kind = params.get('kind');
+    if (kind) matching = matching.filter((it) => it.book?.kind === kind);
+    const priority = params.get('priority');
+    if (priority) matching = matching.filter((it) => it.priority === priority);
+
+    const page = Number(params.get('page') ?? 0);
+    const size = Number(params.get('size') ?? 50);
+    return HttpResponse.json({
+      items: matching.slice(page * size, page * size + size),
+      page,
+      size,
+      total: matching.length,
+    });
+  }));
 }
 
 export { http, HttpResponse };

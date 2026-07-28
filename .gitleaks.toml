@@ -1,0 +1,32 @@
+# gitleaks configuration, used by .github/workflows/secrets.yml.
+# Scope: the working tree, not the git history (see the workflow for why).
+
+[extend]
+useDefault = true
+
+# The leak of issue #58 was a plain `password: <value>` in a chart, not an API
+# key: the default rules would not have caught it.
+[[rules]]
+id = "hardcoded-password-assignment"
+description = "Password assigned literally in a configuration file"
+# Anchored on a key at the start of a line (YAML, .properties, .env, compose):
+# prose mentioning a password, and values read from a variable or a Helm
+# template, are not assignments and must not be reported.
+regex = '''(?im)^[ \t-]*[a-z0-9_.-]*(?:password|passwd|pwd)[ \t]*[:=][ \t]*["']?[a-z0-9._@!%*+/-]{3,}'''
+tags = ["password", "config"]
+
+[allowlist]
+description = """
+Local development fixtures. These credentials only ever reach a container bound
+to localhost, they are documented as such in CLAUDE.md, and the API declares the
+same ones under its %dev profile. Deployed environments read their credentials
+from Kubernetes Secrets or from an unversioned .env file.
+"""
+paths = [
+  '''infra/docker-compose\.yml''',
+  '''infra/keycloak/realm-librarius\.json''',
+  '''apps/api/src/main/resources/application\.properties''',
+  '''apps/web/src/test/.*''',
+  '''pnpm-lock\.yaml''',
+  '''\.gitleaks\.toml''',
+]

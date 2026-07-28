@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { libraryItem } from '../../test/fixtures';
-import { http, HttpResponse, server } from '../../test/server';
+import { http, HttpResponse, libraryReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -13,9 +13,9 @@ const { CollectionPage } = await import('./CollectionPage');
 const ROMAN = libraryItem({ id: 'roman-1', book: { kind: 'BOOK', title: 'Le Nom du vent', authors: 'Patrick Rothfuss' } });
 const MANGA = libraryItem({ id: 'manga-1', book: { kind: 'MANGA', title: 'Vinland Saga', authors: 'Makoto Yukimura' } });
 
-function libraryReturns(items: unknown[]) {
-  server.use(http.get('*/api/library', () => HttpResponse.json(items)));
-}
+/** Thirty books, i.e. more than the twenty-four of a page. */
+const MANY = Array.from({ length: 30 }, (_, i) =>
+  libraryItem({ id: `book-${i}`, book: { kind: 'BOOK', title: `Titre ${String(i).padStart(2, '0')}` } }));
 
 describe('CollectionPage', () => {
   beforeEach(resetAuth);
@@ -64,7 +64,17 @@ describe('CollectionPage', () => {
   });
 
   test('removing a title drops it from the list', async () => {
-    libraryReturns([ROMAN]);
+    // The list is re-read from the server after the mutation, so the handler has to
+    // actually apply the deletion — the screen no longer patches its own state.
+    let items = [ROMAN];
+    server.use(
+      http.get('*/api/library', () =>
+        HttpResponse.json({ items, page: 0, size: 24, total: items.length })),
+      http.delete('*/api/library/:id', ({ params }) => {
+        items = items.filter((it) => it.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     renderWithProviders(<CollectionPage />);
 
     await screen.findByText('Le Nom du vent');
@@ -78,5 +88,77 @@ describe('CollectionPage', () => {
     renderWithProviders(<CollectionPage />);
 
     expect(await screen.findByText(/Connecte-toi pour voir ta collection/)).toBeInTheDocument();
+  });
+
+  // ── Server-side pagination, sorting and search ─────────────────────────────
+
+  test('asks the server for a single page instead of the whole collection', async () => {
+    const urls: string[] = [];
+    server.use(http.get('*/api/library', ({ request }) => {
+      urls.push(request.url);
+      const params = new URL(request.url).searchParams;
+      const size = Number(params.get('size'));
+      const page = Number(params.get('page'));
+      return HttpResponse.json({
+        items: MANY.slice(page * size, page * size + size),
+        page,
+        size,
+        total: MANY.length,
+      });
+    }));
+
+    renderWithProviders(<CollectionPage />);
+    await screen.findByText('Titre 00');
+
+    expect(urls.some((url) => url.includes('size=24') && url.includes('page=0'))).toBe(true);
+    // Only the page has been rendered, not the thirty titles.
+    expect(screen.queryByText('Titre 29')).not.toBeInTheDocument();
+  });
+
+  test('announces the server total rather than the number of loaded titles', async () => {
+    libraryReturns(MANY);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('30 titres')).toBeInTheDocument();
+    expect(screen.queryByText('Titre 29')).not.toBeInTheDocument();
+  });
+
+  test('the load-more button appends the next page', async () => {
+    libraryReturns(MANY);
+    renderWithProviders(<CollectionPage />);
+
+    await screen.findByText('Titre 00');
+    await userEvent.click(await screen.findByText('Voir plus (24 / 30)'));
+
+    expect(await screen.findByText('Titre 29')).toBeInTheDocument();
+    // The first page is still there: the pages accumulate.
+    expect(screen.getByText('Titre 00')).toBeInTheDocument();
+    // Everything is loaded, the button is gone.
+    await waitFor(() => expect(screen.queryByText(/Voir plus/)).not.toBeInTheDocument());
+  });
+
+  test('delegates the sorting to the server', async () => {
+    const sorts: (string | null)[] = [];
+    server.use(http.get('*/api/library', ({ request }) => {
+      sorts.push(new URL(request.url).searchParams.get('sort'));
+      return HttpResponse.json({ items: [ROMAN], page: 0, size: 24, total: 1 });
+    }));
+
+    renderWithProviders(<CollectionPage />);
+    await screen.findByText('Le Nom du vent');
+    await userEvent.click(screen.getByText('Titre'));
+
+    await waitFor(() => expect(sorts).toContain('title'));
+  });
+
+  test('forwards the search term to the server', async () => {
+    libraryReturns([ROMAN, libraryItem({ id: 'autre', book: { kind: 'BOOK', title: 'Le Trône de fer' } })]);
+    renderWithProviders(<CollectionPage />);
+
+    await screen.findByText('Le Nom du vent');
+    await userEvent.type(screen.getByLabelText('Rechercher dans ma collection…'), 'trône');
+
+    expect(await screen.findByText('Le Trône de fer')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument());
   });
 });

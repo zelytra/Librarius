@@ -1,81 +1,92 @@
-# Ma Bibliothèque (Librarius)
+# My Library (Librarius)
 
-Application de gestion de bibliothèque personnelle — **livres & mangas**. Suivez votre
-collection, vos lectures, vos souhaits ; recherchez des ouvrages (titre / auteur / date)
-avec couvertures et **éditions multiples** ; consultez les **prochaines sorties** et vos
-statistiques de lecture.
+Personal library manager — **books & manga**. Keep track of your collection, your
+reading and your wishlist; search for works (title / author / date) with covers and
+**multiple editions**; browse **upcoming releases** and your reading statistics.
 
-> 🇫🇷 Interface en français par défaut, architecture prête pour le multilingue.
+> 🇫🇷 The user interface is in French — `fr` is the only locale so far — but the
+> architecture is ready for more.
 
 ## Stack
 
-| Couche | Technologie |
+| Layer | Technology |
 |---|---|
-| Frontend | React + Vite + TypeScript, **PWA** responsive (PC + mobile) |
+| Frontend | React + Vite + TypeScript, responsive **PWA** (desktop + mobile) |
 | Backend | Java + **Quarkus** (REST, Hibernate Panache, Flyway) |
-| Base de données | PostgreSQL |
-| Auth | Keycloak (OIDC) — *à venir PR #2* |
-| Monitoring | Prometheus + Grafana (Micrometer) — *à venir PR #9* |
+| Database | PostgreSQL |
+| Auth | Keycloak (OIDC) — *coming in PR #2* |
+| Monitoring | Prometheus + Grafana (Micrometer) — *coming in PR #9* |
 | Monorepo | pnpm workspaces (web) + Maven (api) |
 
-## Structure du monorepo
+## Monorepo layout
 
 ```text
 apps/
-  web/        # PWA React + Vite + TS
-  api/        # API Quarkus (Maven, wrapper mvnw)
-packages/     # client TS généré depuis l'OpenAPI (à venir)
+  web/        # React + Vite + TS PWA
+  api/        # Quarkus API (Maven, mvnw wrapper)
+packages/     # TS client generated from the OpenAPI schema (coming)
 infra/        # docker-compose (postgres, …)
 docs/         # ARCHITECTURE.md
-.github/      # workflows CI/CD
+.github/      # CI/CD workflows
 ```
 
-## Prérequis
+## Requirements
 
-- **Node.js ≥ 20** + **pnpm 9** (`corepack enable` ou `npm i -g pnpm`)
+- **Node.js ≥ 20** + **pnpm 9** (`corepack enable` or `npm i -g pnpm`)
 - **JDK 21+**
-- **Docker** (pour PostgreSQL et, plus tard, Keycloak / Dev Services)
+- **Docker** (for PostgreSQL and, later on, Keycloak / Dev Services)
 
-## Démarrage rapide
+## Quick start
 
 ```bash
-# 1. Dépendances front
+# 1. Frontend dependencies
 pnpm install
 
-# 2. Infra : postgres + keycloak + prometheus + grafana
+# 2. Infra: postgres + keycloak + prometheus + grafana
 pnpm infra:up           # keycloak :8081 · prometheus :9090 · grafana :3000
 
 # 3. Backend (port 8080)
 pnpm api:dev            # cd apps/api && ./mvnw quarkus:dev
 
-# 4. Frontend (port 5173, proxy /api → 8080)
+# 4. Frontend (port 5173, proxies /api → 8080)
 pnpm web:dev
 ```
 
-Ouvrez http://localhost:5173. Pour la recherche catalogue (écran **Découvrir**),
-connectez-vous via Keycloak avec un utilisateur de test : **alice / alice** ou
-**bob / bob**. La console d'admin Keycloak est sur http://localhost:8081 (admin / admin).
+Open http://localhost:5173. Catalog search (the **Discover** screen) requires a
+Keycloak login: use one of the test accounts, **alice / alice** or **bob / bob**. The
+Keycloak admin console lives at http://localhost:8081 (admin / admin).
 
-**Monitoring** : l'API expose ses métriques Prometheus sur `/q/metrics`. Prometheus
-tourne sur http://localhost:9090 et Grafana sur http://localhost:3000 (admin / admin),
-avec un dashboard « Librarius — Vue d'ensemble » provisionné automatiquement.
+**Monitoring**: the API exposes its Prometheus metrics on `/q/metrics`. Prometheus runs
+on http://localhost:9090 and Grafana on http://localhost:3000 (admin / admin), with the
+dashboard "Librarius — Vue d'ensemble" provisioned automatically.
 
-## Scripts utiles
+## Handy scripts
 
-| Commande | Effet |
+| Command | Effect |
 |---|---|
-| `pnpm web:dev` / `web:build` / `web:test` / `web:lint` | Front |
-| `pnpm api:dev` / `api:test` | Back (via `mvnw`) |
-| `pnpm infra:up` / `infra:down` | Stack Docker locale |
+| `pnpm web:dev` / `web:build` / `web:test` / `web:lint` | Frontend |
+| `pnpm api:dev` / `api:test` | Backend (through `mvnw`) |
+| `pnpm infra:up` / `infra:down` | Local Docker stack |
 
 ## Contribution & git flow
 
-`main` (prod) ← `develop` (intégration) ← `feature/*`. Correctifs : `hotfix/*`.
-Chaque PR doit passer la CI (lint, typecheck, tests, build) avant merge. Détails
-d'architecture et de roadmap dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+`main` ← `feature/*`. There is no `develop` branch: pull requests target `main` directly.
+Merging deploys to staging; production will be deployed by tagging `main`.
 
-## Déploiement
+- **Everything here is written in English**: code, comments, documentation, commit
+  messages and pull requests alike.
+- Conventional commits: `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
+- **The repository refuses merge commits** — pull requests land by squash or rebase
+  only. A squashed pull request title becomes the commit subject, so write it with care.
+- Every pull request must pass CI (lint, typecheck, tests, build) before it is merged.
 
-Images Docker (api JVM + web nginx) construites et poussées vers GHCR par
-`release.yml`, stack de production via `infra/compose.prod.yml`. Guide complet :
+Architecture and roadmap details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Deployment
+
+Docker images (JVM api + nginx web) are pushed to GHCR by `cd.yml` on every merge into
+`main` (tags `latest` and `<sha>`, then deployed to staging) and by `release.yml` on a
+`vX.Y.Z` tag (tags `X.Y.Z`, `X.Y`, `X` and `<sha>`). The production stack is described by
+`infra/compose.prod.yml`. Releases are listed in [`CHANGELOG.md`](CHANGELOG.md); the full
+guide, including the rollback procedure, is in
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
