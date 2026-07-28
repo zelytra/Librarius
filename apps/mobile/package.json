@@ -1,0 +1,26 @@
+{
+  "name": "@librarius/mobile",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Native Android/iOS shell (Capacitor) around the @librarius/web bundle.",
+  "scripts": {
+    "build": "cap sync",
+    "typecheck": "tsc --noEmit",
+    "add:android": "cap add android",
+    "add:ios": "cap add ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios",
+    "doctor": "cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/core": "^7.6.8",
+    "@capacitor/ios": "^7.6.8"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.8",
+    "@librarius/web": "workspace:*",
+    "typescript": "~5.7.2"
+  }
+}

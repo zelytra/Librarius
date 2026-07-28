@@ -1,5 +1,9 @@
 # apps/api is a Maven project with no package.json: pnpm skips it on its own.
 # The `packages/*` glob is here for shared libraries; it currently matches nothing.
+# `apps/mobile` is matched by `apps/*` and is absent from the web image build context,
+# which copies apps/web's manifest only: pnpm 9.15.9 accepts a workspace member whose
+# directory is missing from the context, checked by building apps/web/Dockerfile with
+# no cache. Do not assume the same of a new member without checking it again.
 # `e2e` is deliberately *not* a workspace member: the web image build context only
 # copies the manifests it needs, and an importer declared here but missing from that
 # context would break `pnpm install --frozen-lockfile` inside the Dockerfile. It keeps
