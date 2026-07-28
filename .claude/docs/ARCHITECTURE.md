@@ -53,8 +53,10 @@ src/
 
 ### Current conventions
 
-- **Routing**: `react-router-dom` v7, routes declared in `App.tsx`, all children of
-  `AppShell`. The `*` fallback goes to Home.
+- **Routing**: `react-router` v8, routes declared in `App.tsx`, all children of
+  `AppShell`. The `*` fallback goes to Home. Declarative mode only — `BrowserRouter`
+  plus `<Routes>`, no data router, no loader, no action. Import from `react-router`:
+  the `react-router-dom` re-export package no longer exists in v8.
 - **Authentication**: every screen wraps its content in `<LoginGate>`. The bearer token is
   attached in one place, by `shared/apiClient.ts`; screens never handle it. On a 401 that
   client renews the session and replays the request once before falling back to sign-in.

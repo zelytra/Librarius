@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { AuthProvider } from 'react-oidc-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, test } from 'vitest';

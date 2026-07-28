@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import styles from './AppShell.module.css';
 
