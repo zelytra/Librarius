@@ -1,68 +1,85 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { useAuth } from 'react-oidc-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
+import { ApiError } from '../../shared/apiClient';
+import { useApiAuth } from '../../shared/api';
 import {
-  postApiImportCsv,
-  postApiImportSource,
+  getGetApiLibraryQueryKey,
+  getGetApiStatsQueryKey,
+  usePostApiImportCsv,
+  usePostApiImportSource,
   type ImportResult,
 } from '../../api/generated/librarius';
 
 type Source = 'booknode' | 'babelio';
 
-function authOpts(token?: string): RequestInit | undefined {
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
-}
-
 function resultMessage(r: ImportResult): string {
   return `${r.imported ?? 0} titre(s) importé(s) · ${r.skipped ?? 0} déjà présent(s).`;
 }
 
+/** The API reports import problems through the message of a 400 response. */
+function failureMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    try {
+      const parsed = JSON.parse(String(error.body)) as { message?: string };
+      if (parsed.message) return parsed.message;
+    } catch {
+      // Not a JSON payload: fall through to the status.
+    }
+    return `Erreur ${error.status}`;
+  }
+  return fallback;
+}
+
 export function ImportSection() {
-  const auth = useAuth();
+  const auth = useApiAuth();
+  const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<Source>('booknode');
   const [handle, setHandle] = useState('');
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const token = auth.user?.access_token;
+  const { mutateAsync: importFromSource, isPending: scraping } = usePostApiImportSource();
+  const { mutateAsync: importCsv, isPending: uploading } = usePostApiImportCsv();
+  const busy = scraping || uploading;
 
   function reset() {
     setMessage(null);
     setError(null);
   }
 
+  /** An import adds titles: the collection and the counters must be refreshed. */
+  function refreshLibrary() {
+    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+  }
+
   async function runScrape() {
     if (!handle.trim()) return;
-    setBusy(true);
     reset();
     try {
-      const res = await postApiImportSource(source, { handle: handle.trim() }, authOpts(token));
-      if (res.status === 200) setMessage(resultMessage(res.data));
-      else setError((res.data as unknown as { message?: string })?.message ?? `Erreur ${res.status}`);
-    } catch {
-      setError('Import indisponible pour le moment.');
-    } finally {
-      setBusy(false);
+      const result = await importFromSource({ source, data: { handle: handle.trim() } });
+      setMessage(resultMessage(result));
+      refreshLibrary();
+    } catch (e) {
+      setError(failureMessage(e, 'Import indisponible pour le moment.'));
     }
   }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setBusy(true);
     reset();
     try {
       const text = await file.text();
-      const res = await postApiImportCsv(text, authOpts(token));
-      if (res.status === 200) setMessage(resultMessage(res.data));
-      else setError((res.data as unknown as { message?: string })?.message ?? `Erreur ${res.status}`);
-    } catch {
-      setError('Fichier illisible.');
+      const result = await importCsv({ data: text });
+      setMessage(resultMessage(result));
+      refreshLibrary();
+    } catch (err) {
+      setError(failureMessage(err, 'Fichier illisible.'));
     } finally {
-      setBusy(false);
       if (fileInput.current) fileInput.current.value = '';
     }
   }
@@ -74,8 +91,8 @@ export function ImportSection() {
         Depuis Booknode (par pseudo) ou via un fichier CSV exporté (Babelio, Goodreads…).
       </p>
 
-      {!auth.isAuthenticated ? (
-        <Button variant="secondary" onClick={() => void auth.signinRedirect()}>
+      {!auth.authed ? (
+        <Button variant="secondary" onClick={auth.login}>
           <Icon name="login" size={18} color="var(--ink-soft)" />
           Se connecter pour importer
         </Button>

@@ -1,14 +1,24 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useApiAuth } from '../../shared/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
+import { ApiError } from '../../shared/apiClient';
 import {
-  getApiCatalogSearch,
-  postApiLibrary,
-  postApiWishlist,
+  getGetApiLibraryQueryKey,
+  getGetApiStatsQueryKey,
+  getGetApiWishlistQueryKey,
+  useGetApiCatalogSearch,
+  usePostApiLibrary,
+  usePostApiWishlist,
   type CatalogResult,
   type ManualBookDto,
 } from '../../api/generated/librarius';
+
+/** The provider is reachable but refused: show the status, it is actionable. */
+function searchFailureMessage(error: unknown): string {
+  if (error instanceof ApiError) return `Erreur ${error.status}`;
+  return 'Recherche indisponible pour le moment.';
+}
 import { Icon } from '../../shared/ui/Icon';
 import { Segmented } from '../../shared/ui/primitives';
 import { BookCover } from '../../shared/ui/BookCover';
@@ -32,42 +42,51 @@ function toBook(r: CatalogResult, fallbackKind: Kind): ManualBookDto {
 
 function DiscoverContent() {
   const { t } = useTranslation();
-  const { opts } = useApiAuth();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<Kind>('BOOK');
-  const [results, setResults] = useState<CatalogResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // The search only runs once submitted, never on every keystroke: each miss costs a
+  // call to a rate-limited third-party provider.
+  const [submitted, setSubmitted] = useState<{ q: string; kind: Kind } | null>(null);
   const [added, setAdded] = useState<Record<string, 'library' | 'wishlist'>>({});
+  const [addError, setAddError] = useState<string | null>(null);
 
   const keyOf = (r: CatalogResult, i: number) => `${r.provider ?? ''}:${r.providerRef ?? i}:${r.title ?? ''}`;
 
-  async function onSubmit(e: FormEvent) {
+  const {
+    data: results = [],
+    isFetching: loading,
+    error: searchError,
+  } = useGetApiCatalogSearch(submitted ? { q: submitted.q, kind: submitted.kind } : undefined, {
+    query: { enabled: submitted != null },
+  });
+
+  const error = addError ?? (searchError ? searchFailureMessage(searchError) : null);
+
+  function onSubmit(e: FormEvent) {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
-    setLoading(true);
-    setError(null);
     setAdded({});
-    try {
-      const res = await getApiCatalogSearch({ q, kind }, opts);
-      if (res.status === 200) setResults(res.data);
-      else setError(`Erreur ${res.status}`);
-    } catch {
-      setError('Recherche indisponible pour le moment.');
-    } finally {
-      setLoading(false);
-    }
+    setAddError(null);
+    setSubmitted({ q, kind });
   }
+
+  const { mutateAsync: addToLibrary } = usePostApiLibrary();
+  const { mutateAsync: addToWishlist } = usePostApiWishlist();
 
   async function add(r: CatalogResult, key: string, target: 'library' | 'wishlist') {
     const book = toBook(r, kind);
     try {
-      if (target === 'library') await postApiLibrary({ book, status: 'OWNED' }, opts);
-      else await postApiWishlist({ book, priority: 'SOON' }, opts);
+      if (target === 'library') await addToLibrary({ data: { book, status: 'OWNED' } });
+      else await addToWishlist({ data: { book, priority: 'SOON' } });
       setAdded((a) => ({ ...a, [key]: target }));
+      // The new title must show up in Collection, Wishlist, Home and the counters.
+      void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
     } catch {
-      setError("Ajout impossible pour le moment.");
+      setAddError('Ajout impossible pour le moment.');
     }
   }
 

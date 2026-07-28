@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { LoginGate } from '../../shared/LoginGate';
-import { useApiAuth } from '../../shared/api';
 import {
-  deleteApiWishlistId,
-  getApiWishlist,
-  type WishlistItemDto,
+  getGetApiWishlistQueryKey,
+  useDeleteApiWishlistId,
+  useGetApiWishlist,
 } from '../../api/generated/librarius';
 
 const PRIO: Record<string, { label: string; color: string; bg: string }> = {
@@ -23,29 +22,17 @@ function colorFor(seed: string): string {
 }
 
 function WishlistContent() {
-  const { opts } = useApiAuth();
-  const [items, setItems] = useState<WishlistItemDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: items = [], isPending: loading } = useGetApiWishlist();
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getApiWishlist(opts);
-      if (res.status === 200) setItems(res.data);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { mutate: removeItem } = useDeleteApiWishlistId({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() }),
+    },
+  });
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
-  async function remove(id: string) {
-    await deleteApiWishlistId(id, opts);
-    setItems((cur) => cur.filter((it) => it.id !== id));
-  }
+  const remove = (id: string) => removeItem({ id });
 
   const total = items.reduce((s, w) => s + (w.estimatedPrice ?? 0), 0);
 
