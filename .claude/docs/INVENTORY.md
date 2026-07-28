@@ -172,7 +172,7 @@ production opens.*
 | Multiple editions per work | Schema ready (`work` 1→N `edition`), **no screen** lets you pick or compare an edition |
 | Upcoming **French** releases | `GET /api/catalog/upcoming` returns the **provider** dates (JP/EN), shown as "indicative dates". No French publisher data |
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
-| Reading progress | The `reading_progress` table exists; the UI only offers READING / READ (no current page, no %) |
+| Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
 | Reading goals | `GET/PUT /api/goals` works, **no screen** exposes it |
 | Custom categories | `POST /api/categories` works, the UI only shows Gold/Silver/Bronze |
 | Notifications | Nothing (no preferences, no push, no email) |
@@ -199,11 +199,11 @@ production opens.*
 
 | Indicator | Value |
 |---|---|
-| Java classes (main) | 46 |
-| Java tests | 10 files |
-| Front-end files (src) | 30 |
-| Front-end tests | 7 files, 41 tests |
+| Java classes (main) | 58 |
+| Java tests | 17 files |
+| Front-end files (src) | 45 |
+| Front-end tests | 8 files, 59 tests |
 | Flyway migrations | 5 |
-| REST endpoints exposed | 19 (9 resources) |
+| REST endpoints exposed | 26 (9 resources) |
 | Locales | 1 (fr) |
 | CI workflows | 5 |

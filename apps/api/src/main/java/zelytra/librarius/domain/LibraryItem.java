@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
@@ -39,6 +40,14 @@ public class LibraryItem {
     public RankCategory rankCategory;
 
     public Integer rating;
+
+    /**
+     * Where the reader stands in the book. The inverse side of the 1-1, so that a single
+     * query can hand back an item and its progress; the list queries fetch it explicitly
+     * rather than paying one extra select per row.
+     */
+    @OneToOne(mappedBy = "libraryItem")
+    public ReadingProgress progress;
 
     @Column(name = "acquired_at")
     public LocalDate acquiredAt;

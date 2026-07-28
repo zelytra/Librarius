@@ -43,6 +43,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                         select li from LibraryItem li
                           join fetch li.edition e
                           join fetch e.work w
+                          left join fetch li.progress
                         where li.userId = :userId
                           and w.series.id = :seriesId
                         order by w.volumeNumber asc nulls last, li.id asc
@@ -125,7 +126,11 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         String where = whereClause(filter, params);
         TypedQuery<LibraryItem> query = getEntityManager().createQuery(
                 "select li from LibraryItem li join fetch li.edition e join fetch e.work w"
-                        + " left join fetch li.rankCategory rc where " + where
+                        + " left join fetch li.rankCategory rc"
+                        // Fetched, not lazily read one row at a time: every card on the
+                        // home carousel shows where the reader is, so a page of the
+                        // collection would otherwise cost one extra select per title.
+                        + " left join fetch li.progress p where " + where
                         + " order by " + sort.clause,
                 LibraryItem.class);
         params.forEach(query::setParameter);

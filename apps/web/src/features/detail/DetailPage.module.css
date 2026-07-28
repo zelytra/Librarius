@@ -147,6 +147,83 @@
   margin: 0 0 22px;
 }
 
+/* ── Reading progress ─────────────────────────────────────────────────────────
+   A card rather than a bare block: it is the one place on this screen where the
+   user writes rather than reads, and the surface tells it apart from the catalog
+   data above. */
+
+.progress {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-bar);
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.progressSummary {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+  margin: 8px 0 14px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.fieldInputRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldInput {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-14);
+  padding: 9px 10px;
+}
+
+.fieldUnit {
+  flex: 0 0 auto;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
 .rankTitle {
   font-size: var(--fs-17);
   margin: 0 0 12px;

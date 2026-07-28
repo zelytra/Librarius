@@ -55,7 +55,7 @@ Personal dashboard.
 | Section | State | Detail |
 |---|---|---|
 | Header (date, greeting, Settings shortcut) | ✅ | Greeting to be made contextual (morning/evening) |
-| Continue reading | ✅ | Carousel of `READING` titles — 🔜 show progress as a percentage |
+| Continue reading | ✅ | Carousel of `READING` titles, each cover carrying its progress |
 | Counters (read / in progress / to read) | ✅ | |
 | Upcoming releases | ✅ | 🔜 filter on the **series being followed** rather than on AniList trends |
 | Recently read | ✅ | |
@@ -84,7 +84,8 @@ The full inventory, with a **Books / Manga** toggle.
 - ✅ Cover, title, authors, genres, pages, series, year, synopsis.
 - ✅ Assigning a rank (Gold / Silver / Bronze).
 - ✅ Marking "in progress" / "read".
-- 🔜 **Progress input**: current page or percentage, start/finish dates.
+- ✅ **Progress input**: current page or percentage — each derived from the other when the
+  edition carries a page count — start and finish dates, and a progress bar.
 - 🔜 **Personal rating** (1–5) and private review.
 - ✅ **Link to the series**: the *série* cell of the stat strip opens the series screen when
   the user has a stake in that series.
@@ -170,7 +171,8 @@ collection.
 Discover → ISBN scan 🔜 → catalog page → pick a status → added to the collection.
 
 **P2 — Resume reading**
-Home → "Continue reading" carousel → Detail → enter the current page 🔜 → progress updated.
+Home → "Continue reading" carousel, each cover showing where the reader stands → Detail →
+enter the current page or the percentage → progress updated everywhere.
 
 **P3 — Complete a series**
 Collection → Series view → incomplete series → missing volumes → added to the wishlist in
@@ -189,7 +191,10 @@ the year 🔜.
 1. A user can own the same edition **only once** (`UNIQUE(user, edition)`). A re-read is not
    a duplicate: it belongs to the reading history 🔜.
 2. Statuses: `OWNED` (owned, unread) → `READING` → `READ`. Moving to `READ` sets
-   `finished_at`; moving to `READING` sets `started_at` if it is empty.
+   `finished_at` and completes the position (100 %, last page); moving to `READING` sets
+   `started_at` if it is empty. A date supplied by the user always wins over the default.
+   The page and the percentage are two views of one position: the server derives whichever
+   one the client left out, so no two screens can show different figures.
 3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`) and cannot be
    deleted. A user may create their own categories.
 4. A title carries **at most one rank**.

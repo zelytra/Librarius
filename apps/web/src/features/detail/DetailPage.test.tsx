@@ -13,6 +13,14 @@ const { DetailPage } = await import('./DetailPage');
 
 const ITEM = libraryItem({ id: 'item-1' });
 
+/** A title being read, three hundred pages long so the percentages come out whole. */
+const READING = libraryItem({
+  id: 'item-1',
+  status: 'READING',
+  book: { kind: 'BOOK', title: 'Le Nom du vent', authors: 'Patrick Rothfuss', pageCount: 300 },
+  progress: { currentPage: 30, percent: 10 },
+});
+
 function renderDetail(id = 'item-1') {
   return renderWithProviders(<DetailPage />, { route: `/detail/${id}`, path: '/detail/:id' });
 }
@@ -148,4 +156,57 @@ describe('DetailPage', () => {
 
     expect(await screen.findByText(/Connecte-toi pour voir ce titre/)).toBeInTheDocument();
   });
+
+  // ── Reading progress ───────────────────────────────────────────────────────
+
+  /** Page 120 of a 300-page book is 40 %, and the user only has to type one of them. */
+  test('derives the percentage from the page that is typed in', async () => {
+    libraryItemReturns(READING);
+    renderDetail();
+
+    const page = await screen.findByLabelText('Page');
+    await userEvent.clear(page);
+    await userEvent.type(page, '120');
+
+    expect(screen.getByLabelText('Pourcentage')).toHaveValue(40);
+    expect(screen.getByText('40 % · page 120 sur 300')).toBeInTheDocument();
+  });
+
+  test('derives the page from the percentage that is typed in', async () => {
+    libraryItemReturns(READING);
+    renderDetail();
+
+    const percent = await screen.findByLabelText('Pourcentage');
+    await userEvent.clear(percent);
+    await userEvent.type(percent, '50');
+
+    expect(screen.getByLabelText('Page')).toHaveValue(150);
+  });
+
+  test('sends the position and the dates to the server', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    libraryItemReturns(READING);
+    server.use(http.put('*/api/library/:id/progress', async ({ request }) => {
+      bodies.push((await request.json()) as Record<string, unknown>);
+      return new HttpResponse(null, { status: 204 });
+    }));
+    renderDetail();
+
+    const page = await screen.findByLabelText('Page');
+    await userEvent.clear(page);
+    await userEvent.type(page, '120');
+    await userEvent.click(screen.getByText('Enregistrer ma progression'));
+
+    await waitFor(() => expect(bodies[0]).toMatchObject({ currentPage: 120, percent: 40 }));
+  });
+
+  /** Nothing to show about a book nobody has opened: the buttons below start it. */
+  test('offers no progress form on a title that was never opened', async () => {
+    libraryItemReturns(ITEM);
+    renderDetail();
+
+    await screen.findByRole('heading', { name: 'Le Nom du vent' });
+    expect(screen.queryByText('Ma progression')).not.toBeInTheDocument();
+  });
+
 });

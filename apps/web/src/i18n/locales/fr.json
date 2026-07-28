@@ -49,6 +49,8 @@
     "greeting": "Bonsoir",
     "resumeReading": "Reprendre la lecture",
     "resumeCount": "{{reading}} en cours",
+    "progressBadge": "{{percent}} %",
+    "progressLabel": "Progression : {{percent}} %",
     "upcoming": "Prochaines sorties",
     "upcomingNote": "Dates indicatives (édition d'origine).",
     "recentlyBought": "Derniers achats",
@@ -213,7 +215,20 @@
     "startReading": "Commencer la lecture",
     "reading": "Lecture en cours",
     "markAsRead": "Marquer comme lu",
-    "read": "✓ Lu"
+    "read": "✓ Lu",
+    "progress": {
+      "title": "Ma progression",
+      "page": "Page",
+      "percent": "Pourcentage",
+      "percentUnit": "%",
+      "outOf": "/ {{total}}",
+      "summary": "{{percent}} % · page {{page}} sur {{total}}",
+      "summaryPercent": "{{percent}} % lus",
+      "summaryEmpty": "Pas encore commencé.",
+      "startedAt": "Commencée le",
+      "finishedAt": "Terminée le",
+      "save": "Enregistrer ma progression"
+    }
   },
   "settings": {
     "title": "Réglages",

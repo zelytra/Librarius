@@ -23,12 +23,11 @@ import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
-import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
-import zelytra.librarius.domain.repository.ReadingProgressRepository;
+import zelytra.librarius.library.ReadingProgressService;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.LibraryCreateDto;
 import zelytra.librarius.web.ApiDtos.LibraryItemDto;
@@ -58,7 +57,7 @@ public class LibraryResource {
     RankCategoryRepository categories;
 
     @Inject
-    ReadingProgressRepository progresses;
+    ReadingProgressService progress;
 
     /**
      * One page of the collection, filtered and sorted by the database.
@@ -153,27 +152,24 @@ public class LibraryResource {
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
-    /** Updates the reading progress (and the status) of a title. */
+    /**
+     * Updates the reading progress (and the status) of a title.
+     *
+     * <p>The transition rules and the page / percentage conversion belong to
+     * {@link ReadingProgressService}; the resource only resolves the item, which is where
+     * the ownership check lives.
+     */
     @PUT
     @Path("/{id}/progress")
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response setProgress(@PathParam("id") UUID id, ProgressDto dto) {
+    public Response setProgress(@PathParam("id") UUID id, @Valid ProgressDto dto) {
         LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
         if (item == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        if (dto.status() != null) {
-            item.status = dto.status();
-        }
-        ReadingProgress progress = progresses.findByItem(id).orElseGet(() -> {
-            ReadingProgress p = new ReadingProgress();
-            p.libraryItem = item;
-            progresses.persist(p);
-            return p;
-        });
-        progress.currentPage = dto.currentPage();
-        progress.percent = dto.percent();
+        // An empty body clears the progress, the same way a null field does.
+        progress.apply(item, dto != null ? dto : new ProgressDto(null, null, null, null, null));
         return Response.noContent().build();
     }
 

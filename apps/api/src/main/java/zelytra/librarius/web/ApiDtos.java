@@ -2,6 +2,7 @@ package zelytra.librarius.web;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingGoal;
+import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
@@ -89,11 +91,40 @@ public final class ApiDtos {
             LocalDate acquiredAt) {
     }
 
+    /**
+     * Where the reader stands in a title, as the screens display it.
+     *
+     * <p>Both sides of the position are always filled when the edition carries a page
+     * count, whichever one the user typed: a client renders a bar from {@code percent} and
+     * a "page x of y" line from {@code currentPage} without having to convert anything, and
+     * two screens can never disagree on the same book.
+     *
+     * @param currentPage page the reader stopped on, {@code null} when unknown
+     * @param percent     share of the book read, 0 to 100
+     */
+    public record ProgressView(Integer currentPage, Integer percent, LocalDate startedAt,
+            LocalDate finishedAt) {
+        public static ProgressView of(ReadingProgress p, Integer pageCount) {
+            Integer page = p.currentPage != null ? p.currentPage
+                    : ReadingProgress.pageOf(p.percent, pageCount);
+            Integer percent = p.percent != null ? p.percent
+                    : ReadingProgress.percentOf(p.currentPage, pageCount);
+            return new ProgressView(page, percent, p.startedAt, p.finishedAt);
+        }
+    }
+
+    /**
+     * An owned title.
+     *
+     * @param progress reading position, {@code null} while the title has never been opened
+     */
     public record LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
-            String rankCode, BookView book) {
+            String rankCode, ProgressView progress, BookView book) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.acquiredAt,
-                    it.rankCategory != null ? it.rankCategory.code : null, BookView.of(it.edition));
+                    it.rankCategory != null ? it.rankCategory.code : null,
+                    it.progress != null ? ProgressView.of(it.progress, it.edition.pageCount) : null,
+                    BookView.of(it.edition));
         }
     }
 
@@ -136,7 +167,22 @@ public final class ApiDtos {
     public record RankAssignDto(java.util.UUID categoryId) {
     }
 
-    public record ProgressDto(Integer currentPage, Integer percent, LibraryStatus status) {
+    /**
+     * Where the reader now stands, and optionally the status that goes with it.
+     *
+     * <p>A PUT, not a patch: the payload describes the whole progress, so a null field
+     * clears it. A client that only flips the status therefore hands the position back
+     * untouched — which is what the detail screen does.
+     *
+     * <p>Only one of {@code currentPage} and {@code percent} needs filling in: the server
+     * derives the other from the page count of the edition, so the two can never drift
+     * apart. Sending both keeps them as they are.
+     */
+    public record ProgressDto(@PositiveOrZero Integer currentPage,
+            @Min(0) @Max(100) Integer percent,
+            LibraryStatus status,
+            LocalDate startedAt,
+            LocalDate finishedAt) {
     }
 
     public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,

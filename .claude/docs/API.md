@@ -19,7 +19,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
-| PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) |
+| PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
@@ -54,10 +54,12 @@ ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
 
 LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
 LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
-               String rankCode, BookView book)
+               String rankCode, ProgressView progress, BookView book)
 LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
-ProgressDto(Integer currentPage, Integer percent, LibraryStatus status)
+ProgressView(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt)
+ProgressDto(Integer currentPage, Integer percent, LibraryStatus status,
+            LocalDate startedAt, LocalDate finishedAt)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
@@ -87,6 +89,33 @@ GenreCount(String code, String genre, long count)
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}`.
+
+## Reading progress
+
+`PUT /api/library/{id}/progress` replaces the whole position — it is a PUT, not a patch, so
+a field left out is cleared. A client that only flips the status therefore hands the
+position back untouched, which is what the detail screen does.
+
+**Page and percentage are two views of the same thing.** Only one needs sending: when the
+edition carries a `page_count`, the server derives the other and stores both. Page 120 of a
+300-page book is 40 % on every screen, in the collection listing and in the detail
+endpoint alike, because nobody but the server ever computes it. An edition with no page
+count keeps whichever side was supplied and leaves the other null — an unknown total makes
+the ratio meaningless, not zero.
+
+**The status transitions fill in what the user should not have to type:**
+
+| Transition | Effect |
+|---|---|
+| → `READING` | `started_at` set to today **when it is empty** |
+| → `READ` | `percent` 100, `current_page` set to the page count when known, `finished_at` set to today unless one was supplied |
+
+A date sent explicitly always wins: marking a book read on the day it was actually finished
+is a normal thing to want.
+
+`ProgressView` rides on `LibraryItemDto`, so a client never needs a second request to draw
+a progress bar — the "resume reading" carousel on Home reads it off the paginated
+collection.
 
 ## Series
 

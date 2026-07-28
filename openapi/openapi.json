@@ -215,7 +215,9 @@
           },
           "rating" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "maximum" : 5,
+            "minimum" : 1
           },
           "acquiredAt" : {
             "$ref" : "#/components/schemas/LocalDate"
@@ -235,11 +237,17 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "review" : {
+            "type" : "string"
+          },
           "acquiredAt" : {
             "$ref" : "#/components/schemas/LocalDate"
           },
           "rankCode" : {
             "type" : "string"
+          },
+          "progress" : {
+            "$ref" : "#/components/schemas/ProgressView"
           },
           "book" : {
             "$ref" : "#/components/schemas/BookView"
@@ -355,14 +363,42 @@
         "properties" : {
           "currentPage" : {
             "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          },
+          "percent" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 0
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/LibraryStatus"
+          },
+          "startedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "finishedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          }
+        }
+      },
+      "ProgressView" : {
+        "type" : "object",
+        "properties" : {
+          "currentPage" : {
+            "type" : "integer",
             "format" : "int32"
           },
           "percent" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "status" : {
-            "$ref" : "#/components/schemas/LibraryStatus"
+          "startedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "finishedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
           }
         }
       },
@@ -371,6 +407,21 @@
         "properties" : {
           "categoryId" : {
             "$ref" : "#/components/schemas/UUID"
+          }
+        }
+      },
+      "ReviewDto" : {
+        "type" : "object",
+        "properties" : {
+          "rating" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 5,
+            "minimum" : 1
+          },
+          "review" : {
+            "type" : "string",
+            "maxLength" : 5000
           }
         }
       },
@@ -1082,6 +1133,13 @@
             "$ref" : "#/components/schemas/Kind"
           }
         }, {
+          "name" : "minRating",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "schema" : {
@@ -1335,6 +1393,52 @@
           }
         },
         "summary" : "Set Rank",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/library/{id}/review" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReviewDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Review",
         "tags" : [ "Library Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
