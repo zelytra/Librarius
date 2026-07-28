@@ -15,9 +15,14 @@ The `.github/workflows/release.yml` workflow builds two images:
 ## Running the production stack
 
 ```bash
+cp infra/.env.example infra/.env   # then fill in every empty value
 cd infra
 docker compose -f compose.prod.yml up -d
 ```
+
+`POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` and `GF_ADMIN_PASSWORD` have **no default
+value**: compose refuses to start while one of them is missing, rather than falling back
+to a password published in this repository. `infra/.env` is git-ignored.
 
 Services: `postgres`, `keycloak` (:8081), `api`, `web` (:8088), `prometheus`, `grafana` (:3000).
 The PWA (`web`) serves the app and **proxies** `/api` and `/q` to the API (see `apps/web/nginx.conf`).
@@ -26,11 +31,13 @@ The PWA (`web`) serves the app and **proxies** `/api` and `/q` to the API (see `
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `librarius` | Database |
+| `POSTGRES_USER` / `POSTGRES_DB` | `librarius` | Database |
+| `POSTGRES_PASSWORD` | **required** | Database password |
+| `KEYCLOAK_ADMIN` / `GF_ADMIN_USER` | `admin` | Admin account names |
+| `KEYCLOAK_ADMIN_PASSWORD` / `GF_ADMIN_PASSWORD` | **required** | Admin console passwords |
 | `OIDC_AUTH_SERVER_URL` | `http://localhost:8081/realms/librarius` | Realm the API validates against |
 | `KC_HOSTNAME` | `http://localhost:8081` | Public host of Keycloak |
 | `WEB_PORT` / `GRAFANA_PORT` | `8088` / `3000` | Exposed ports |
-| `KEYCLOAK_ADMIN(_PASSWORD)` / `GF_ADMIN_*` | `admin` | Admin accounts (**change them**) |
 
 ## ⚠️ OIDC gotcha (issuer)
 
@@ -68,6 +75,86 @@ chart (v0.2.0): **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) and **Key
   image built with the OIDC authority), `ghcr-pull` secret, then
   `helm upgrade --install` with the `<sha>` tags.
 - **PostgreSQL**: one instance, two databases (`librarius` + `keycloak`), `local-path` PVC.
+- **Credentials**: read from Kubernetes Secrets, see the section below. The chart carries
+  none and ships no default.
+
+### 🔑 Cluster secrets (manual action, before any deployment)
+
+The chart reads two Secrets from the `default` namespace. Their names are passed by
+`cd.yml` (`--set postgres.existingSecret=…`, `--set keycloak.existingSecret=…`); nothing
+else about them lives in this repository.
+
+| Secret | Key | Read by |
+|---|---|---|
+| `librarius-postgres` | `postgres-password` | postgres (`POSTGRES_PASSWORD`), api (`QUARKUS_DATASOURCE_PASSWORD`), keycloak (`KC_DB_PASSWORD`) |
+| `librarius-keycloak` | `admin-password` | keycloak (`KEYCLOAK_ADMIN_PASSWORD`) |
+
+Create them once, with values generated locally:
+
+```bash
+kubectl -n default create secret generic librarius-postgres \
+  --from-literal=postgres-password="$(openssl rand -base64 24)"
+
+kubectl -n default create secret generic librarius-keycloak \
+  --from-literal=admin-password="$(openssl rand -base64 24)"
+```
+
+Read a value back when you need it (to sign in to the admin console, for instance):
+
+```bash
+kubectl -n default get secret librarius-keycloak \
+  -o jsonpath='{.data.admin-password}' | base64 -d; echo
+```
+
+While a Secret is missing, `helm upgrade` stops at render time with
+`postgres.existingSecret is required: …`: the deployment fails loudly instead of falling
+back to a known password.
+
+The chart seeds **no user** in the imported realm any more — a credential written there
+would be a credential published here. Sign-up is open: create your account through the web
+app.
+
+### 🔄 Rotating the exposed credentials (required)
+
+The passwords that used to sit in `values.yaml` **stay valid** until they are changed on
+the cluster, and they remain readable in the git history of a public repository. Removing
+them from the chart does not close the exposure; rotating them does.
+
+**1. PostgreSQL.** The container only reads `POSTGRES_PASSWORD` when it initialises an
+empty volume, so the role has to be altered in place, then the Secret updated to match:
+
+```bash
+NEW_PG=$(openssl rand -base64 24)
+
+kubectl -n default exec deploy/librarius-postgres -- \
+  psql -U librarius -d librarius -c "ALTER ROLE librarius WITH PASSWORD '$NEW_PG'"
+
+kubectl -n default create secret generic librarius-postgres \
+  --from-literal=postgres-password="$NEW_PG" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# The consumers only read the Secret at startup.
+kubectl -n default rollout restart deployment/librarius-api deployment/librarius-keycloak
+unset NEW_PG
+```
+
+**2. Keycloak admin.** `KEYCLOAK_ADMIN_PASSWORD` only bootstraps the account on the first
+startup: changing the Secret alone does not change an existing admin. Change it in the
+console — `https://librarius.zelytra.fr/auth/admin`, *master* realm, user `admin`,
+*Credentials* tab, *Reset password* — then align the Secret:
+
+```bash
+kubectl -n default create secret generic librarius-keycloak \
+  --from-literal=admin-password='<the new password>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Use a shell where history is disabled, or `read -rs NEW_KC` to avoid leaving the value in
+`~/.bash_history`.
+
+**3. Check what the exposure may have left behind.** The admin console was reachable from
+the Internet with a published password: in the *master* and *librarius* realms, review the
+user list, the clients and the service accounts, and delete anything you did not create.
 
 ### ⚠️ DNS prerequisite (action required)
 
@@ -76,11 +163,28 @@ chart (v0.2.0): **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) and **Key
 issue the certificate. Since Keycloak is served on a **path** (`/auth`), **a single**
 DNS record is enough for the whole stack.
 
-Test credentials (imported realm): **alice / alice** (self-registration is open).
+No account is created by the deployment: sign-up is open, register from the web app.
+The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
+plus `infra/keycloak/realm-librarius.json`, bound to localhost).
 
 ## Later on
 
 - A **native** image (GraalVM) for the API (faster startup, smaller footprint) — to be
   enabled in `release.yml` only (too slow for the pull request CI).
-- Secrets managed outside `compose.prod.yml` (an unversioned `.env` file or a secret store).
+- A secret store (External Secrets, Sealed Secrets) instead of Secrets created by hand.
 - Grafana SSO through Keycloak (generic OAuth).
+
+## Secret scanning
+
+The `secrets` workflow (`.github/workflows/secrets.yml`) runs `gitleaks` on the working
+tree of every pull request; the rules live in `.gitleaks.toml`. Reproduce a CI failure
+locally:
+
+```bash
+gitleaks detect --source . --config .gitleaks.toml --no-git --redact --verbose
+```
+
+The scan deliberately ignores the git history — it still holds the credentials removed
+here, and rewriting the history of a public repository is not an option. The allowlist
+covers the local development fixtures (`infra/docker-compose.yml`, the local realm, the
+`%dev` profile of the API), which never leave localhost.

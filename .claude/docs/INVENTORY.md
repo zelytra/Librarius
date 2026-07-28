@@ -91,10 +91,12 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 *Criticality assessed for a staging environment; every line below becomes blocking when
 production opens.*
 
-13. **Plaintext secrets in `infra/helm/librarius/values.yaml`**: `postgres.password:
-    librarius`, `keycloak.adminPassword: admin`, committed to a **public repository**.
-    Still serious even in staging: the instance is reachable from the Internet, so those
-    credentials are usable as-is by anyone.
+13. **Database and Keycloak credentials exposed in the git history**
+    (`infra/helm/librarius/values.yaml`, a **public repository**). The chart now reads
+    them from Kubernetes Secrets, ships no default value, and a `gitleaks` job blocks any
+    comeback — but the old values remain readable in the history and the instance is
+    reachable from the Internet: the exposure only closes once they are **rotated on the
+    cluster**. Procedure in `docs/DEPLOYMENT.md`.
 14. **No PostgreSQL backup.** `local-path` PVC on a single node. Tolerable as long as the
     staging data is disposable — to be handled before hosting any real data.
 15. **No alerting.** Grafana displays, nobody gets told.
@@ -126,7 +128,7 @@ production opens.*
 
 ## Security — items to address
 
-- Committed secrets (see debt #13).
+- Credentials exposed in the history, awaiting rotation (see debt #13).
 - `quarkus.http.cors.origins=http://localhost:5173` hardcoded: check the configuration of
   the deployed environment (the web app is served by the same host, so same-origin — to be
   confirmed).
