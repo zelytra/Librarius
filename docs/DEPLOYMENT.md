@@ -375,11 +375,30 @@ replacement):
 Both images pulled in under 3s and both pods scheduled instantly, so those are best-case
 figures for the old strategy, not typical ones.
 
-> **The rollout itself is unproven.** The chart renders, the arithmetic is taken from the
-> live node and the probe is tested, but no deployment has been run with these settings —
-> the measured "after" figure does not exist yet. Take it on the next merge into `main`,
-> with the two probes above, and correct this section with what actually happened.
-> [#64](https://github.com/zelytra/Librarius/issues/64) stays open until then.
+### Measured, 2026-07-28
+
+Both deployments were restarted at once on the cluster while an external probe polled the
+public URL every ~3 s:
+
+```text
+22:51:43  kubectl -n librarius rollout restart deploy/librarius-web deploy/librarius-api
+          Waiting for deployment "librarius-web" rollout to finish: 1 old replicas are pending termination...
+          deployment "librarius-web" successfully rolled out
+          Waiting for deployment "librarius-api" rollout to finish: 1 old replicas are pending termination...
+          deployment "librarius-api" successfully rolled out
+22:52:04  done
+```
+
+**21 s** for both, and `1 old replicas are pending termination` is the ordering being
+respected: the replacement was already serving when the outgoing pod was removed — that is
+what `maxUnavailable: 0` buys.
+
+The probe covered the window and kept going for seven minutes: **124 samples, 124× `200`
+on `/` and 124× `401` on `/api/me`** — no 5xx, no connection error, no gap. `401` rather
+than `200` on the API is the point: it is the correct answer to an unauthenticated call, so
+it proves the API answered rather than the ingress falling back to the PWA.
+
+Compare with the `Recreate` strategy it replaces: 11 s of outage on `web`, 31 s on `api`.
 
 ## 💾 Automated backups
 
