@@ -1,0 +1,42 @@
+{{- /*
+Disruption budgets for the two components that serve the public host. They cover
+*voluntary* disruption only — an eviction asked for by a controller or by
+`kubectl drain`. A rolling update is not an eviction: the Deployment creates and
+deletes pods itself, and is bound by maxSurge / maxUnavailable instead.
+
+With a single replica, `minAvailable: 1` denies every eviction rather than
+delaying it. On a one-node cluster that is the right default (nothing is gained
+by evicting the only copy) but it does mean a deliberate drain hangs — see the
+escape hatches in values.yaml.
+
+postgres and keycloak are deliberately left out: neither tolerates two instances
+on one PVC, and both are stateful enough that a budget promising availability
+they cannot deliver would be a lie told to a controller.
+*/}}
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}-web
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 6 }}
+{{- if .Values.api.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}-api
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "api") | nindent 6 }}
+{{- end }}
+{{- end }}

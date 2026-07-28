@@ -7,9 +7,16 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
 spec:
   replicas: {{ .Values.api.replicas }}
-  # Recreate: replace in place, without a surge pod (CPU-constrained node).
   strategy:
-    type: Recreate
+    type: {{ .Values.api.strategy }}
+    {{- if eq .Values.api.strategy "RollingUpdate" }}
+    # maxUnavailable 0: the old pod keeps serving until the new one reports
+    # ready, which is what makes the release invisible. maxSurge 1 is what the
+    # node can absorb — the CPU arithmetic is in docs/DEPLOYMENT.md.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    {{- end }}
   selector:
     matchLabels:
       {{- include "librarius.selector" (dict "ctx" . "component" "api") | nindent 6 }}
@@ -22,6 +29,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      # 30s ceiling: 5s of preStop, then Quarkus closing its in-flight requests
+      # and its JDBC pool. Reached only if a request outlives the hook.
+      terminationGracePeriodSeconds: 30
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
@@ -49,15 +59,32 @@ spec:
             # comes back 403.
             - name: CORS_ORIGINS
               value: "https://{{ .Values.domain }}"
+          # Removing the pod from the Service endpoints and sending it SIGTERM are
+          # concurrent, so without this pause Traefik keeps routing to a container
+          # that has already begun to stop. Native sleep action, k8s ≥ 1.30.
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          # A JVM boot is slow, not unhealthy. The startup probe holds the other
+          # two off entirely until the HTTP layer answers, so a cold start can
+          # never be read as a liveness failure — which is what the previous
+          # settings did: liveness gave up at 50s against a boot measured at 25s.
+          # 30 × 5s = 150s of budget, Flyway migrations included.
+          startupProbe:
+            httpGet: { port: 8080, path: /q/health/started }
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet: { port: 8080, path: /q/health/ready }
-            initialDelaySeconds: 10
             periodSeconds: 5
-            failureThreshold: 12
+            timeoutSeconds: 3
+            failureThreshold: 3
           livenessProbe:
             httpGet: { port: 8080, path: /q/health/live }
-            initialDelaySeconds: 20
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
 ---

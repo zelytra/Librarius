@@ -23,9 +23,15 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicas }}
-  # Recreate : pas de pod « surge » (le nœud partagé est contraint en CPU).
   strategy:
-    type: Recreate
+    type: {{ .Values.web.strategy }}
+    {{- if eq .Values.web.strategy "RollingUpdate" }}
+    # nginx and a static bundle: a surge pod costs 25m of CPU request and is
+    # ready in a few seconds, which the node absorbs without trouble.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    {{- end }}
   selector:
     matchLabels:
       {{- include "librarius.selector" (dict "ctx" . "component" "web") | nindent 6 }}
@@ -40,6 +46,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      # nginx stops in well under this; the window exists for the preStop pause.
+      terminationGracePeriodSeconds: 15
       containers:
         - name: web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
@@ -50,10 +58,24 @@ spec:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
+          # Same endpoint race as the api: keep answering while Traefik learns the
+          # pod is going away. Native sleep action, k8s ≥ 1.30.
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          # nginx listens almost immediately, so the probe cadence — not the
+          # server — is what decides how long the roll takes. 2s + 2s beats the
+          # 11s the previous 3s/5s settings produced.
           readinessProbe:
             httpGet: { port: 80, path: /healthz }
-            initialDelaySeconds: 3
-            periodSeconds: 5
+            initialDelaySeconds: 2
+            periodSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { port: 80, path: /healthz }
+            periodSeconds: 10
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
       volumes:
