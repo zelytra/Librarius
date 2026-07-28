@@ -63,6 +63,7 @@ services:
     command: ['--config.file=/etc/prometheus/prometheus.yml']
     volumes:
       - ./prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
     restart: unless-stopped
 
   grafana:

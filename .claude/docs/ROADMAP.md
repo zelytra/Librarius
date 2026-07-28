@@ -108,7 +108,7 @@ alert received when something breaks, deployment without downtime.
 | [#85](https://github.com/zelytra/Librarius/issues/85) | 🔴 CD deployment fails: Kubernetes credentials rejected | — |
 | [#58](https://github.com/zelytra/Librarius/issues/58) | 🔴 Move secrets out of values.yaml into Kubernetes Secrets — chart done, rotation pending on the cluster | — |
 | [#59](https://github.com/zelytra/Librarius/issues/59) | 🔴 Automated PostgreSQL backups with a tested restore procedure — CronJob and procedure shipped (off by default), the restore itself is still to be exercised on the cluster | — |
-| [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting | — |
+| [#60](https://github.com/zelytra/Librarius/issues/60) | Prometheus and Grafana alerting — rules and runbooks shipped; needs a Prometheus, kube-state-metrics and an Alertmanager on the cluster | — |
 | [#61](https://github.com/zelytra/Librarius/issues/61) | Rate limiting on catalog endpoints | — |
 | [#62](https://github.com/zelytra/Librarius/issues/62) | Restrict Swagger UI and /q endpoints in production | — |
 | [#63](https://github.com/zelytra/Librarius/issues/63) | Semantic versioning of images and a rollback procedure — pipeline and documentation done, the rollback itself is still to be exercised on the cluster | — |

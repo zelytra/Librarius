@@ -8,8 +8,8 @@
 The project is a **complete and deployed** skeleton: all 7 screens exist, the API exposes
 9 resources, OIDC auth works end to end, and CI/CD ships to k3s. What is missing is
 **functional depth** (series, fine-grained progress, French release dates), **quality**
-(incomplete i18n) and **operations** (plaintext secrets; a backup mechanism whose restore
-has never been run, alert rules written but no Prometheus to load them).
+(incomplete i18n) and **operations** (credentials still readable in the git history;
+backups and alert rules now exist but neither has been proven on the cluster).
 
 > **Environment**: `librarius.zelytra.fr` is a **staging** environment, not production.
 > No production environment is open to date. That lowers the immediate criticality of the
@@ -29,7 +29,7 @@ has never been run, alert rules written but no Prometheus to load them).
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
 | Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
-| Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard |
+| Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard, 10 alert rules with runbooks (`infra/prometheus/rules/`) — **not evaluated on the cluster**, see debt #15 |
 | Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
 | CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
 
@@ -120,7 +120,12 @@ production opens.*
     the cluster, and Keycloak's own database is not in the dump.
     [#59](https://github.com/zelytra/Librarius/issues/59) stays open until a real restore is
     done.
-15. **No alerting.** Grafana displays, nobody gets told.
+15. **Alerting: rules written, nothing evaluates them.** Ten rules with runbooks in
+    `infra/prometheus/rules/librarius.rules.yml` (API down, 5xx, p95, PVC, TLS, backups,
+    CrashLoopBackOff), loaded by the compose stack and `promtool`-clean. **The Helm chart
+    deploys no Prometheus**, there is no kube-state-metrics and no Alertmanager, so on the
+    cluster nobody is still being told anything.
+    [#60](https://github.com/zelytra/Librarius/issues/60) stays open.
 16. **`Recreate` strategy** (node CPU constraint) → downtime on every deployment. Accepted
     in staging.
 17. **Rollback never exercised.** A `vX.Y.Z` tag now publishes `X.Y.Z` / `X.Y` / `X`

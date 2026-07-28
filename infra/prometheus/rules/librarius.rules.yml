@@ -1,0 +1,207 @@
+# Alert rules for Librarius.
+#
+# Single source of truth: loaded by the compose production stack
+# (infra/compose.prod.yml) and meant to be applied to any Prometheus that
+# scrapes the cluster. Nothing in infra/helm deploys Prometheus today, so these
+# rules are delivered ready to apply rather than installed — see
+# docs/DEPLOYMENT.md § "Alerting" for how to load them and what each one means.
+#
+# Every group states the exporter it needs. A rule whose metric is absent never
+# fires: an incomplete monitoring stack degrades into silence, not into noise.
+#
+# Every alert carries two annotations, and they are the point of the file:
+#   summary — the symptom, as a human would describe it
+#   runbook — likely cause, then the first action to take
+groups:
+  # ── API ─────────────────────────────────────────────────────────────────────
+  # Needs: the `librarius-api` scrape job (Quarkus /q/metrics, Micrometer).
+  - name: librarius-api
+    rules:
+      - alert: LibrariusApiDown
+        expr: up{job="librarius-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "The Librarius API has been unreachable for 2 minutes."
+          runbook: >-
+            Symptom: /q/metrics does not answer, so the app cannot load a library.
+            Likely cause: the api pod is down, crash-looping, or its database is unreachable.
+            First action: `kubectl -n librarius get pods -l component=api` then
+            `kubectl -n librarius logs deploy/librarius-api --tail=100`; if the pod is Running,
+            check PostgreSQL before touching the api.
+
+      - alert: LibrariusApiHighErrorRate
+        # 0/0 is NaN and never compares greater than 0.05, so an idle API stays quiet.
+        expr: >-
+          sum(rate(http_server_requests_seconds_count{job="librarius-api",status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count{job="librarius-api"}[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "More than 5% of API responses have been 5xx for 5 minutes."
+          runbook: >-
+            Symptom: requests fail intermittently, the UI shows errors on some screens.
+            Likely cause: a regression in the last deployment, an exhausted datasource pool,
+            or an external catalog provider timing out.
+            First action: `kubectl -n librarius logs deploy/librarius-api --tail=200 | grep -i error`
+            to find which endpoint fails, then roll back if the failure started at a deployment
+            (docs/DEPLOYMENT.md § "Rolling back").
+
+      - alert: LibrariusApiSlowResponses
+        # Requires histogram buckets on http.server.requests. The Grafana dashboard
+        # already assumes them; if the API does not publish them this rule stays
+        # silent rather than firing wrongly.
+        expr: >-
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_server_requests_seconds_bucket{job="librarius-api"}[5m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+          service: librarius
+        annotations:
+          summary: "API p95 latency has been above 2 s for 10 minutes."
+          runbook: >-
+            Symptom: the app feels slow, searches and library pages take seconds.
+            Likely cause: a slow catalog provider, a query without an index, or the node
+            starved of CPU.
+            First action: open the Grafana "Overview" dashboard to see which URI is slow, then
+            `kubectl -n librarius top pods` to tell a slow query apart from a saturated node.
+
+  # ── Cluster ─────────────────────────────────────────────────────────────────
+  # Needs: kubelet metrics (kubelet_volume_stats_*) and kube-state-metrics.
+  - name: librarius-cluster
+    rules:
+      - alert: LibrariusPersistentVolumeAlmostFull
+        expr: >-
+          kubelet_volume_stats_used_bytes{namespace="librarius"}
+          / kubelet_volume_stats_capacity_bytes{namespace="librarius"}
+          > 0.8
+        for: 15m
+        labels:
+          severity: warning
+          service: librarius
+        annotations:
+          summary: "PVC {{ $labels.persistentvolumeclaim }} is over 80% full."
+          runbook: >-
+            Symptom: none yet; PostgreSQL stops accepting writes when the volume fills.
+            Likely cause: normal data growth, or WAL and logs never pruned.
+            First action: `kubectl -n librarius exec deploy/librarius-postgres -- df -h /var/lib/postgresql/data`,
+            then raise `postgres.storage` in the chart and redeploy — local-path volumes do
+            not grow by themselves.
+
+      - alert: LibrariusPodCrashLooping
+        expr: >-
+          max by (namespace, pod, container) (
+            kube_pod_container_status_waiting_reason{namespace="librarius",reason="CrashLoopBackOff"}
+          ) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "Pod {{ $labels.pod }} ({{ $labels.container }}) is in CrashLoopBackOff."
+          runbook: >-
+            Symptom: the component restarts endlessly and never becomes ready.
+            Likely cause: a missing Secret, a failed Flyway migration, or a bad image tag.
+            First action: `kubectl -n librarius logs {{ $labels.pod }} --previous --tail=100` —
+            the previous container's log holds the reason, the current one is usually empty.
+
+  # ── TLS ─────────────────────────────────────────────────────────────────────
+  # Needs: cert-manager metrics, or a blackbox exporter probing the public URL.
+  # Both rules are listed; whichever exporter is absent simply never fires.
+  - name: librarius-tls
+    rules:
+      - alert: LibrariusCertificateExpiringSoon
+        expr: >-
+          certmanager_certificate_expiration_timestamp_seconds{namespace="librarius"} - time()
+          < 15 * 24 * 3600
+        for: 1h
+        labels:
+          severity: warning
+          service: librarius
+        annotations:
+          summary: "TLS certificate {{ $labels.name }} expires in less than 15 days."
+          runbook: >-
+            Symptom: none yet; browsers will refuse the site once it expires.
+            Likely cause: cert-manager cannot complete the ACME challenge — DNS no longer
+            pointing at the cluster, or the ingress path for /.well-known blocked.
+            First action: `kubectl -n librarius describe certificate librarius-zelytra-fr-tls`
+            and read the last Events; renewal is automatic once the challenge succeeds.
+
+      - alert: LibrariusPublicCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 15 * 24 * 3600
+        for: 1h
+        labels:
+          severity: warning
+          service: librarius
+        annotations:
+          summary: "The certificate served by {{ $labels.instance }} expires in less than 15 days."
+          runbook: >-
+            Symptom: same as above, seen from outside — this is what users actually get.
+            Likely cause: cert-manager renewed the Secret but Traefik still serves the old
+            certificate, or the renewal itself failed.
+            First action: `curl -vI https://librarius.zelytra.fr 2>&1 | grep -i expire`; if the
+            Secret is newer than what is served, restart the Traefik pod.
+
+  # ── Backups ─────────────────────────────────────────────────────────────────
+  # Needs: kube-state-metrics, and the backup CronJob enabled (backup.enabled=true).
+  # Job history is capped at 7 successes, which keeps more than the 48 h this
+  # group reasons about.
+  - name: librarius-backup
+    rules:
+      - alert: LibrariusBackupJobFailed
+        expr: >-
+          kube_job_status_failed{namespace="librarius",job_name=~"librarius-postgres-backup-.*"} > 0
+        for: 15m
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "The PostgreSQL backup job {{ $labels.job_name }} failed."
+          runbook: >-
+            Symptom: last night's backup did not complete; the data is one incident from being lost.
+            Likely cause: expired bucket credentials, an unreachable endpoint, or a full bucket.
+            First action: `kubectl -n librarius logs job/{{ $labels.job_name }} --all-containers`
+            — the dump and the upload are separate containers, and the log names which one failed.
+
+      - alert: LibrariusBackupTooOld
+        expr: >-
+          (time() - max(kube_job_status_completion_time{namespace="librarius",job_name=~"librarius-postgres-backup-.*"}))
+          > 48 * 3600
+        for: 30m
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "No PostgreSQL backup has succeeded in the last 48 hours."
+          runbook: >-
+            Symptom: backups stopped without any job failing — worse than a failure, because
+            nothing looks wrong.
+            Likely cause: the CronJob is suspended, was removed by a `helm upgrade` with
+            backup.enabled unset, or every run is being skipped by concurrencyPolicy.
+            First action: `kubectl -n librarius get cronjob librarius-postgres-backup` and check
+            SUSPEND and LAST SCHEDULE, then trigger one by hand
+            (docs/DEPLOYMENT.md § "Automated backups").
+
+      - alert: LibrariusBackupCronJobMissing
+        expr: >-
+          absent(kube_job_status_completion_time{namespace="librarius",job_name=~"librarius-postgres-backup-.*"})
+        for: 6h
+        labels:
+          severity: critical
+          service: librarius
+        annotations:
+          summary: "No PostgreSQL backup job exists in the librarius namespace at all."
+          runbook: >-
+            Symptom: not a single backup Job object — the database is running with no backup.
+            Likely cause: backup.enabled was never turned on, or a deployment dropped it.
+            First action: `helm -n librarius get values librarius --all | grep -A3 backup`, then
+            redeploy with backup.enabled=true (docs/DEPLOYMENT.md § "Automated backups").

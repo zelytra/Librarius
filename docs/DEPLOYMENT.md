@@ -499,6 +499,106 @@ gap is deliberate for a staging environment and has to be closed before producti
 > deliberately and corrects this section with what actually happened,
 > [#59](https://github.com/zelytra/Librarius/issues/59) is not met.
 
+## 🔔 Alerting
+
+The alert rules live in `infra/prometheus/rules/librarius.rules.yml`. They are the answer to
+a simple failure: continuous deployment was broken for four weeks and nobody was told.
+
+**No Prometheus is deployed by the Helm chart today.** Prometheus and Grafana exist in
+`infra/` for the compose stack only, so on the cluster these rules are *delivered, not
+running*. What follows is what they need to become live.
+
+### Loading them
+
+Into the compose production stack — already wired, `infra/compose.prod.yml` mounts
+`./prometheus/rules` and `prometheus.prod.yml` loads `/etc/prometheus/rules/*.yml`:
+
+```bash
+cd infra && docker compose -f compose.prod.yml up -d prometheus
+docker compose -f compose.prod.yml exec prometheus promtool check rules /etc/prometheus/rules/librarius.rules.yml
+```
+
+Into a Prometheus running in Kubernetes, as a ConfigMap mounted on the rules directory:
+
+```bash
+kubectl -n librarius create configmap librarius-alert-rules \
+  --from-file=infra/prometheus/rules/librarius.rules.yml \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Under the Prometheus Operator, the same file wrapped in a `PrometheusRule` object — the
+`groups:` key is copied verbatim into `spec:`.
+
+Validate any change before applying it:
+
+```bash
+docker run --rm -v "$PWD/infra/prometheus/rules:/rules:ro" \
+  --entrypoint promtool prom/prometheus:v2.53.0 check rules /rules/librarius.rules.yml
+```
+
+### What each rule needs
+
+A rule whose metric is missing never fires: an incomplete monitoring stack goes quiet, it
+does not go noisy. That also means a rule can be silently useless — check this table before
+trusting a green dashboard.
+
+| Group | Requires | Missing today on the cluster |
+|---|---|---|
+| `librarius-api` | the `librarius-api` scrape job on `/q/metrics` | Prometheus itself |
+| `librarius-cluster` | kubelet metrics + kube-state-metrics | both |
+| `librarius-tls` | cert-manager metrics, or a blackbox exporter | both |
+| `librarius-backup` | kube-state-metrics + `backup.enabled=true` | kube-state-metrics |
+
+`LibrariusApiSlowResponses` reads `http_server_requests_seconds_bucket`. The Grafana
+dashboard already assumes those histogram buckets; if the API does not publish them, the
+rule stays silent rather than firing wrongly.
+
+### Notification channel
+
+Rules that fire into a UI nobody has open are not alerting. An Alertmanager is required, and
+it is **not shipped here**: its configuration file holds the webhook URL or the SMTP
+password in clear text, so it belongs in a Secret created by the maintainer, not in this
+repository.
+
+What has to be provided: a webhook URL (Slack, Discord, ntfy) *or* SMTP credentials and a
+recipient address. Then add the routing to Prometheus and point it at the Alertmanager:
+
+```yaml
+# infra/prometheus/prometheus.prod.yml
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+```
+
+Send `critical` somewhere that interrupts and `warning` somewhere that does not; grouping on
+`alertname` keeps a restart loop to one message rather than one per evaluation.
+
+### Runbooks
+
+Every alert carries its runbook in its own `runbook` annotation — symptom, likely cause,
+first action — so it travels with the notification instead of living in a document nobody
+opens at 3 a.m. Summarised:
+
+| Alert | Severity | Symptom | First action |
+|---|---|---|---|
+| `LibrariusApiDown` | critical | API unreachable for 2 min, no library loads | `k get pods -l component=api`, then `k logs deploy/librarius-api --tail=100`; check PostgreSQL if the pod is Running |
+| `LibrariusApiHighErrorRate` | critical | > 5% of responses are 5xx over 5 min | `k logs deploy/librarius-api --tail=200 \| grep -i error` to find the endpoint; roll back if it started at a deployment |
+| `LibrariusApiSlowResponses` | warning | p95 above 2 s for 10 min, the app drags | Grafana "Overview" for the slow URI, then `k top pods` to tell a slow query from a saturated node |
+| `LibrariusPersistentVolumeAlmostFull` | warning | PVC over 80%; writes stop when it fills | `k exec deploy/librarius-postgres -- df -h /var/lib/postgresql/data`, then raise `postgres.storage` — local-path does not grow by itself |
+| `LibrariusPodCrashLooping` | critical | A pod restarts endlessly, never ready | `k logs <pod> --previous --tail=100` — the reason is in the *previous* container's log |
+| `LibrariusCertificateExpiringSoon` | warning | TLS certificate expires in under 15 days | `k describe certificate librarius-zelytra-fr-tls` and read the Events; the ACME challenge is what is failing |
+| `LibrariusPublicCertificateExpiringSoon` | warning | Same, seen from outside — what users get | `curl -vI https://librarius.zelytra.fr 2>&1 \| grep -i expire`; restart Traefik if the Secret is newer than what is served |
+| `LibrariusBackupJobFailed` | critical | Last night's backup did not complete | `k logs job/<name> --all-containers` — dump and upload are separate containers, the log names which failed |
+| `LibrariusBackupTooOld` | critical | No backup in 48 h, and nothing looks wrong | `k get cronjob librarius-postgres-backup`, check SUSPEND and LAST SCHEDULE, then run one by hand |
+| `LibrariusBackupCronJobMissing` | critical | No backup Job exists at all | `helm -n librarius get values librarius --all \| grep -A3 backup`, redeploy with `backup.enabled=true` |
+
+> **Never triggered for real.** Each rule is syntactically valid (`promtool check rules`,
+> 10 rules) and each expression is written against a metric the corresponding exporter is
+> documented to publish — but no alert has been fired deliberately, no notification has been
+> received, and the seven quiet days the issue asks for have not been observed.
+> [#60](https://github.com/zelytra/Librarius/issues/60) is not met until they are.
+
 ## 🔙 Rolling back
 
 Read this one top to bottom. Nothing has to be rebuilt: the previous images are still in

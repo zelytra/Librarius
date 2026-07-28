@@ -92,6 +92,13 @@ API; Grafana (`:3000`) is provisioned as code (Prometheus datasource and the das
 searches). In dev, Prometheus scrapes the host (`host.docker.internal:8080`); in prod,
 the API container.
 
+Alert rules live in `infra/prometheus/rules/librarius.rules.yml` — API down, 5xx rate, p95
+latency, PVC saturation, TLS expiry, backup age, CrashLoopBackOff — each carrying its
+runbook as an annotation. The compose production stack loads them; the Helm chart deploys
+no Prometheus, so on the cluster they are delivered rather than running. Notification goes
+through an Alertmanager the maintainer configures, since its configuration holds a secret
+in clear text. See `docs/DEPLOYMENT.md` § "Alerting".
+
 ## Backups ✅
 
 A Helm CronJob dumps PostgreSQL daily (`pg_dump`, gzip, AES-256 via gpg) to an

@@ -5,6 +5,8 @@ scrape_configs:
   - job_name: librarius-api
     metrics_path: /q/metrics
     static_configs:
-      # En dev, l'API tourne sur l'hôte (quarkus:dev). En prod, remplacer par
-      # le nom du service conteneur (ex. api:8080).
+      # In dev the API runs on the host (quarkus:dev); in production the
+      # container service name is used instead (see prometheus.prod.yml).
+      # The alert rules are deliberately not loaded here: half of them describe
+      # a cluster this stack does not have, and would fire non-stop locally.
       - targets: ['host.docker.internal:8080']
