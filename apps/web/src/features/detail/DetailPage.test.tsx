@@ -209,4 +209,44 @@ describe('DetailPage', () => {
     expect(screen.queryByText('Ma progression')).not.toBeInTheDocument();
   });
 
+  // ── Rating and private review ──────────────────────────────────────────────
+
+  test('records a rating out of five', async () => {
+    const item = servesMutableItem();
+    server.use(http.put('*/api/library/:id/review', async ({ request }) => {
+      const body = (await request.json()) as { rating?: number; review?: string };
+      item.set({ ...item.current(), rating: body.rating, review: body.review });
+      return HttpResponse.json(item.current());
+    }));
+    renderDetail();
+
+    await userEvent.click(await screen.findByLabelText('Noter 4 sur 5'));
+
+    // The fourth star now offers to take the rating back: it is the one in force.
+    expect(await screen.findByLabelText('Retirer ma note')).toBeInTheDocument();
+    expect(item.current().rating).toBe(4);
+  });
+
+  test('saves the review when the field is left', async () => {
+    const item = servesMutableItem();
+    server.use(http.put('*/api/library/:id/review', async ({ request }) => {
+      const body = (await request.json()) as { rating?: number; review?: string };
+      item.set({ ...item.current(), rating: body.rating, review: body.review });
+      return HttpResponse.json(item.current());
+    }));
+    renderDetail();
+
+    await userEvent.type(await screen.findByLabelText('Ma note'), 'Kvothe est insupportable.');
+    await userEvent.tab();
+
+    await waitFor(() => expect(item.current().review).toBe('Kvothe est insupportable.'));
+  });
+
+  /** The user is told, on the screen itself, that none of this is shared. */
+  test('states that the rating and the review stay private', async () => {
+    libraryItemReturns(ITEM);
+    renderDetail();
+
+    expect(await screen.findByText(/strictement privés/)).toBeInTheDocument();
+  });
 });

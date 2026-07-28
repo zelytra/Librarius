@@ -86,13 +86,15 @@
       "added": "Ajout",
       "title": "Titre",
       "author": "Auteur",
-      "genre": "Genre"
+      "genre": "Genre",
+      "rating": "Note"
     },
     "ranks": {
       "all": "Tous",
       "gold": "Or",
       "silver": "Argent",
-      "bronze": "Bronze"
+      "bronze": "Bronze",
+      "favorites": "Mes coups de cœur"
     },
     "empty": {
       "title": "Aucun titre ici.",
@@ -228,6 +230,13 @@
       "startedAt": "Commencée le",
       "finishedAt": "Terminée le",
       "save": "Enregistrer ma progression"
+    },
+    "review": {
+      "title": "Ma note",
+      "star": "Noter {{rating}} sur 5",
+      "clear": "Retirer ma note",
+      "placeholder": "Ce que j'en ai pensé…",
+      "private": "Note et avis strictement privés : personne d'autre ne les voit."
     }
   },
   "settings": {

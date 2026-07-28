@@ -39,7 +39,12 @@ public class LibraryItem {
     @JoinColumn(name = "rank_category_id")
     public RankCategory rankCategory;
 
+    /** Personal rating, 1 to 5. Private to the owner: never shared, never aggregated. */
     public Integer rating;
+
+    /** Free-text notes on the title, as private as the rating above. */
+    @Column(columnDefinition = "text")
+    public String review;
 
     /**
      * Where the reader stands in the book. The inverse side of the 1-1, so that a single

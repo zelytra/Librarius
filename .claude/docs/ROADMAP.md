@@ -82,7 +82,7 @@ annual goal.
 | [#45](https://github.com/zelytra/Librarius/issues/45) | ✅ Series screen: volume grid | #44 |
 | [#46](https://github.com/zelytra/Librarius/issues/46) | ✅ "Series" view in the Collection | #44 |
 | [#47](https://github.com/zelytra/Librarius/issues/47) | ✅ Reading progress input in the Detail screen | — |
-| [#48](https://github.com/zelytra/Librarius/issues/48) | Personal rating and private review | — |
+| [#48](https://github.com/zelytra/Librarius/issues/48) | ✅ Personal rating and private review (V7 migration) | — |
 | [#49](https://github.com/zelytra/Librarius/issues/49) | Alternate editions of a work in the Detail screen | — |
 | [#50](https://github.com/zelytra/Librarius/issues/50) | Annual reading goal: setting and gauge on the Home screen | — |
 | [#51](https://github.com/zelytra/Librarius/issues/51) | Custom category management | — |

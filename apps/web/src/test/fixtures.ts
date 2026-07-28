@@ -31,6 +31,7 @@ export function libraryItem(overrides: Partial<LibraryItemDto> = {}): LibraryIte
     id: 'item-1',
     status: 'OWNED',
     rating: undefined,
+    review: undefined,
     acquiredAt: '2026-01-15',
     rankCode: undefined,
     // A title nobody has opened carries no progress at all.

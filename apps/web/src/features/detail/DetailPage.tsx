@@ -19,8 +19,10 @@ import {
   useGetApiSeries,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
+  usePutApiLibraryIdReview,
   type LibraryItemDto,
   type ProgressDto,
+  type ReviewDto,
 } from '../../api/generated/librarius';
 import { seriesIdOf } from '../series/series';
 import styles from './DetailPage.module.css';
@@ -31,6 +33,9 @@ const WASH_TO = '00';
 
 /** Opacity suffix of the selected rank's background. */
 const RANK_TINT = '22';
+
+/** The rating is out of five, like everywhere the app shows one. */
+const STARS = [1, 2, 3, 4, 5];
 
 /** What the progress form holds while it is being edited — strings, as inputs give them. */
 interface ProgressDraft {
@@ -202,6 +207,74 @@ function ProgressSection({
   );
 }
 
+/**
+ * The private half of a title: a rating out of five and free-text notes.
+ *
+ * <p>Both are saved optimistically — the star fills in as it is clicked rather than after
+ * the round trip — and the screen tells the user, in as many words, that neither leaves
+ * their account.
+ */
+function ReviewSection({
+  item,
+  onSave,
+}: {
+  item: LibraryItemDto;
+  onSave: (data: ReviewDto) => void;
+}) {
+  const { t } = useTranslation();
+  const rating = item.rating ?? 0;
+  const stored = item.review ?? '';
+
+  const [review, setReview] = useState(stored);
+  const [synced, setSynced] = useState(stored);
+  if (synced !== stored) {
+    setSynced(stored);
+    setReview(stored);
+  }
+
+  return (
+    <section className={styles.review}>
+      <h3 className={styles.sectionTitle}>{t('detail.review.title')}</h3>
+      <div className={styles.stars}>
+        {STARS.map((n) => (
+          <button
+            key={n}
+            type="button"
+            // Clicking the current rating again removes it: there has to be a way back
+            // from a rating given by mistake.
+            onClick={() =>
+              onSave({ rating: n === rating ? undefined : n, review: review || undefined })
+            }
+            aria-label={n === rating ? t('detail.review.clear') : t('detail.review.star', { rating: n })}
+            aria-pressed={n <= rating}
+            className={styles.star}
+          >
+            <Icon
+              name="star"
+              size={30}
+              fill={n <= rating}
+              color={n <= rating ? 'var(--gold)' : 'var(--line)'}
+            />
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        value={review}
+        rows={4}
+        placeholder={t('detail.review.placeholder')}
+        aria-label={t('detail.review.title')}
+        className={styles.reviewInput}
+        onChange={(e) => setReview(e.target.value)}
+        onBlur={() => {
+          if (review !== stored) onSave({ rating: item.rating ?? undefined, review: review || undefined });
+        }}
+      />
+      <p className={styles.privateNote}>{t('detail.review.private')}</p>
+    </section>
+  );
+}
+
 function DetailContent({ id }: { id: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -231,6 +304,19 @@ function DetailContent({ id }: { id: string }) {
   const { mutate: mutateProgress } = usePutApiLibraryIdProgress({
     mutation: { onSuccess: invalidateLibrary },
   });
+  const { mutate: mutateReview } = usePutApiLibraryIdReview({
+    mutation: {
+      // Painted before the round trip: a star that only lights up once the server has
+      // answered feels broken on a slow connection. The invalidation then reconciles
+      // with what was actually stored.
+      onMutate: ({ data }) => {
+        queryClient.setQueryData<LibraryItemDto>(getGetApiLibraryIdQueryKey(id), (prev) =>
+          prev ? { ...prev, rating: data.rating, review: data.review } : prev);
+      },
+      onSettled: invalidateLibrary,
+    },
+  });
+
   function assignRank(categoryId?: string) {
     mutateRank({ id, data: { categoryId } });
   }
@@ -333,6 +419,8 @@ function DetailContent({ id }: { id: string }) {
         {tracking && (
           <ProgressSection item={item} onSave={(data) => mutateProgress({ id, data })} />
         )}
+
+        <ReviewSection item={item} onSave={(data) => mutateReview({ id, data })} />
 
         <h3 className={styles.rankTitle}>{t('detail.ranking')}</h3>
         <div className={styles.rankRow}>

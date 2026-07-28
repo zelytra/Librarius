@@ -87,7 +87,7 @@ public final class ApiDtos {
     public record LibraryCreateDto(
             @NotNull @Valid ManualBookDto book,
             LibraryStatus status,
-            Integer rating,
+            @Min(1) @Max(5) Integer rating,
             LocalDate acquiredAt) {
     }
 
@@ -116,13 +116,15 @@ public final class ApiDtos {
     /**
      * An owned title.
      *
+     * @param rating   personal rating, 1 to 5 — private to the owner
+     * @param review   private notes on the title, never shared nor aggregated
      * @param progress reading position, {@code null} while the title has never been opened
      */
-    public record LibraryItemDto(UUID id, String status, Integer rating, LocalDate acquiredAt,
-            String rankCode, ProgressView progress, BookView book) {
+    public record LibraryItemDto(UUID id, String status, Integer rating, String review,
+            LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book) {
         public static LibraryItemDto of(LibraryItem it) {
-            return new LibraryItemDto(it.id, it.status.name(), it.rating, it.acquiredAt,
-                    it.rankCategory != null ? it.rankCategory.code : null,
+            return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
+                    it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.edition.pageCount) : null,
                     BookView.of(it.edition));
         }
@@ -183,6 +185,17 @@ public final class ApiDtos {
             LibraryStatus status,
             LocalDate startedAt,
             LocalDate finishedAt) {
+    }
+
+    /**
+     * What the reader thought of a title. Strictly private: it is stored on the user's own
+     * {@code library_item}, is returned to nobody else, and is never aggregated into a
+     * shared score.
+     *
+     * <p>A PUT of the pair, so clearing the rating is sending a null one — the alternative,
+     * a partial update, gives no way to say "I no longer want to rate this".
+     */
+    public record ReviewDto(@Min(1) @Max(5) Integer rating, @Size(max = 5000) String review) {
     }
 
     public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,

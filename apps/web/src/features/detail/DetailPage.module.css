@@ -148,11 +148,12 @@
 }
 
 /* ── Reading progress ─────────────────────────────────────────────────────────
-   A card rather than a bare block: it is the one place on this screen where the
-   user writes rather than reads, and the surface tells it apart from the catalog
-   data above. */
+   A card rather than a bare block: the progress and the review are the two places
+   on this screen where the user writes rather than reads, and the surface tells
+   them apart from the catalog data above. */
 
-.progress {
+.progress,
+.review {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
@@ -222,6 +223,41 @@
   flex: 0 0 auto;
   font-size: var(--fs-12-5);
   color: var(--muted);
+}
+
+/* ── Rating & private review ──────────────────────────────────────────────── */
+
+.stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.star {
+  border: none;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.reviewInput {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  padding: 10px;
+  resize: vertical;
+}
+
+.privateNote {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin: 8px 0 0;
 }
 
 .rankTitle {

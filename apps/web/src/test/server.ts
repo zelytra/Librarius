@@ -41,6 +41,7 @@ export const defaultHandlers = [
   http.post(`${BASE}/categories`, () => HttpResponse.json({ id: 'cat', code: 'perso' })),
   http.put(`${BASE}/library/:id/rank`, () => HttpResponse.json({ id: 'item-1' })),
   http.put(`${BASE}/library/:id/progress`, () => new HttpResponse(null, { status: 204 })),
+  http.put(`${BASE}/library/:id/review`, () => HttpResponse.json({ id: 'item-1' })),
   http.delete(`${BASE}/library/:id`, () => new HttpResponse(null, { status: 204 })),
   http.delete(`${BASE}/wishlist/:id`, () => new HttpResponse(null, { status: 204 })),
 ];
@@ -82,6 +83,8 @@ export function libraryReturns(items: LibraryItemDto[]) {
     if (status) matching = matching.filter((it) => it.status === status);
     const rank = params.get('rank');
     if (rank) matching = matching.filter((it) => it.rankCode === rank);
+    const minRating = params.get('minRating');
+    if (minRating) matching = matching.filter((it) => (it.rating ?? 0) >= Number(minRating));
     const q = params.get('q');
     if (q) matching = matching.filter((it) => matches(it.book, q));
 

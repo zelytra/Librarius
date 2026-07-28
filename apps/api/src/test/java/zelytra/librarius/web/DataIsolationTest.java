@@ -126,6 +126,54 @@ class DataIsolationTest {
                 .then().statusCode(404);
     }
 
+    /**
+     * A rating and a review are the most private thing the application stores: they are
+     * what the user thought, written for nobody else. Bob can neither write them on Alice's
+     * item nor read the ones she wrote — and the refusal is a 404, so he does not even
+     * learn that the item exists.
+     */
+    @Test
+    void libraryItemOfAnotherUserCannotBeReviewed() {
+        String aliceItem = addLibraryItem("alice", "Isolation - review", "READ");
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 5, \"review\": \"Note privée d'Alice.\" }")
+                .when().put("/api/library/" + aliceItem + "/review")
+                .then().statusCode(200);
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"rating\": 1, \"review\": \"Bob passait par là.\" }")
+                .when().put("/api/library/" + aliceItem + "/review")
+                .then().statusCode(404);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/library/" + aliceItem)
+                .then().statusCode(404);
+
+        // Alice's own rating and review came through untouched.
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/library/" + aliceItem)
+                .then().statusCode(200)
+                .body("rating", is(5))
+                .body("review", is("Note privée d'Alice."));
+    }
+
+    /** A review never leaves its owner's collection, not even through the paged listing. */
+    @Test
+    void reviewsAreNotVisibleInAnotherUsersCollection() {
+        String marker = "Isolation - private review";
+        String aliceItem = addLibraryItem("alice", marker, "READ");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 5, \"review\": \"Secret.\" }")
+                .when().put("/api/library/" + aliceItem + "/review")
+                .then().statusCode(200);
+
+        given().auth().oauth2(token("bob")).queryParam("q", marker)
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("total", is(0));
+    }
+
     // ── Wishlist ──────────────────────────────────────────────────────────────
 
     @Test

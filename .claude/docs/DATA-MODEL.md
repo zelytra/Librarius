@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series
@@ -24,7 +24,7 @@ app_user ──┬─< library_item >── edition >── work >── series
 | `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
-| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3) |
+| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 
@@ -99,6 +99,14 @@ end shows it. It is now the denormalised label list of `work_genre`, and is drop
 front end reads the codes. `sort=genre` still orders on it: a work carries several genres, so
 there is no such thing as "its" genre to order on.
 
+`V7__library_item_review.sql` adds `library_item.review`. It sits on the ownership row
+rather than on the shared `work` on purpose: an opinion belongs to one user's copy of a
+book, and on `work` it would have been readable by everyone owning the title — the one
+thing [PRODUCT](PRODUCT.md) § 6 rule 6 forbids. The index it ships,
+`(user_id, rating DESC NULLS LAST)`, backs the "my favourites" filter (`rating >= 4`) and
+the ordering by rating; `NULLS LAST` matches the ordering the API applies, so unrated
+titles sort after the rated ones rather than ahead of them.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -123,7 +131,7 @@ their data — handy for GDPR account deletion.
 
 ## 3. Planned changes
 
-### V7 — Drop the denormalised labels & reading history
+### V8 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -146,7 +154,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V8 — Personalisation & notifications
+### V9 — Personalisation & notifications
 
 `dashboard_layout (user_id PK, sections JSONB)`,
 `notification_pref (user_id PK, prefs JSONB)`,

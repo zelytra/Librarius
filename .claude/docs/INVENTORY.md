@@ -199,11 +199,11 @@ production opens.*
 
 | Indicator | Value |
 |---|---|
-| Java classes (main) | 58 |
-| Java tests | 17 files |
-| Front-end files (src) | 45 |
-| Front-end tests | 8 files, 59 tests |
-| Flyway migrations | 5 |
-| REST endpoints exposed | 26 (9 resources) |
+| Java classes (main) | 64 |
+| Java tests | 22 files |
+| Front-end files (src) | 49 |
+| Front-end tests | 8 files, 63 tests |
+| Flyway migrations | 7 |
+| REST endpoints exposed | 28 (10 resources) |
 | Locales | 1 (fr) |
 | CI workflows | 5 |

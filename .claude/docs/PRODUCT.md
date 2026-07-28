@@ -68,11 +68,12 @@ Personal dashboard.
 The full inventory, with a **Books / Manga** toggle.
 
 - ✅ Cover grid, rank badge, quick removal.
-- ✅ Sorting: date added, title, author, genre. Filter by rank.
+- ✅ Sorting: date added, title, author, genre, rating. Filter by rank, and "my favourites"
+  (rated 4 or more).
 - ✅ **Series view**: one row per series with its cover, `12 / 105 volumes` and a progress
   bar, an *Incomplète* badge on a run with volumes left to buy, ordering by progress or
   title, and a way into the series screen. The kind switch and the search carry across the
-  toggle; the rank chips do not apply to a run and are hidden there.
+  toggle; the rank and favourites chips apply to a title, not to a run, and are hidden there.
 - 🔜 Ordering the Series view by most recently added — `SeriesSummaryDto` carries no date.
 - 🔜 Text search inside one's own collection.
 - 🔜 Extra filters: status, year of acquisition, publisher, language.
@@ -86,7 +87,8 @@ The full inventory, with a **Books / Manga** toggle.
 - ✅ Marking "in progress" / "read".
 - ✅ **Progress input**: current page or percentage — each derived from the other when the
   edition carries a page count — start and finish dates, and a progress bar.
-- 🔜 **Personal rating** (1–5) and private review.
+- ✅ **Personal rating** (1–5) and private review, saved optimistically. Neither is ever
+  shared nor aggregated across users.
 - ✅ **Link to the series**: the *série* cell of the stat strip opens the series screen when
   the user has a stake in that series.
 - 🔜 **Alternate editions**: list the other `edition` rows of the same `work`, let the user
@@ -201,6 +203,8 @@ the year 🔜.
 5. The release dates shown are the **provider's** (often JP/EN) and must be flagged as such
    for as long as French release dates are unavailable.
 6. Ownership data is **strictly private**: no resource ever returns another user's data.
+   The rating and the review are the sharpest case: they live on the user's own
+   `library_item`, are never shared, and are never folded into a score across accounts.
 7. An import never creates a duplicate: matching by ISBN13, then by title + author.
 
 ## 7. Out of scope (explicit decisions)
