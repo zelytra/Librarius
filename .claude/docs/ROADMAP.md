@@ -86,7 +86,7 @@ annual goal.
 | [#49](https://github.com/zelytra/Librarius/issues/49) | Alternate editions of a work in the Detail screen | — |
 | [#50](https://github.com/zelytra/Librarius/issues/50) | Annual reading goal: setting and gauge on the Home screen | — |
 | [#51](https://github.com/zelytra/Librarius/issues/51) | Custom category management | — |
-| [#52](https://github.com/zelytra/Librarius/issues/52) | Richer wishlist: editing, budget and conversion — ✅ API, screen pending | — |
+| [#52](https://github.com/zelytra/Librarius/issues/52) | ✅ Richer wishlist: editing, budget and conversion | — |
 | [#114](https://github.com/zelytra/Librarius/issues/114) | ✅ Order the wishlist by urgency and not by the enum name | — |
 | [#53](https://github.com/zelytra/Librarius/issues/53) | Advanced search and manual add in Discover | — |
 | [#54](https://github.com/zelytra/Librarius/issues/54) | Customizable Home screen: reorder and hide sections | — |

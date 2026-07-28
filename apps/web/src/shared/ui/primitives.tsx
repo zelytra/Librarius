@@ -125,6 +125,9 @@ export function Segmented<T extends string>({
       {options.map((opt) => (
         <button
           key={opt.id}
+          // Explicit, because a button inside a form submits it by default: picking an
+          // option is a choice, never the validation of the form around it.
+          type="button"
           onClick={() => onChange(opt.id)}
           className={cx(styles.segment, opt.id === value && styles.segmentOn)}
         >

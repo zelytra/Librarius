@@ -12,6 +12,24 @@
   color: var(--muted);
 }
 
+/* One priority bucket: its header, then its wishes. */
+.group + .group {
+  margin-top: 24px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.groupTotal {
+  font-size: var(--fs-12);
+  color: var(--muted);
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -21,7 +39,7 @@
 .row {
   display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: flex-start;
   padding: 12px;
   background: var(--surface);
   border-radius: var(--radius-card);
@@ -42,6 +60,14 @@
   min-width: 0;
 }
 
+/* Title on the left, price on the right, both on the first line. */
+.headline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .bookTitle {
   font-family: var(--font-serif);
   font-size: var(--fs-15);
@@ -55,9 +81,15 @@
   margin-top: 1px;
 }
 
+.note {
+  margin: 6px 0 0;
+  font-size: var(--fs-12);
+  color: var(--faint);
+  font-style: italic;
+}
+
 .priority {
   display: inline-block;
-  margin-top: 6px;
   font-size: var(--fs-10);
   font-weight: 600;
   padding: 3px 8px;
@@ -79,22 +111,83 @@
   background: var(--tint-violet);
 }
 
-.aside {
-  flex: 0 0 auto;
-  text-align: right;
-}
-
 .price {
+  flex: 0 0 auto;
   font-family: var(--font-serif);
   font-size: var(--fs-16);
   font-weight: 600;
 }
 
-.removeButton {
+/* "I bought it" on the left, edit and remove pushed to the right. */
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.acquire {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-badge);
+  background: var(--surface-2);
+  color: var(--accent-deep);
+  font-family: inherit;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iconButtons {
+  display: flex;
+  gap: 2px;
+}
+
+.iconButton {
+  display: inline-flex;
+  padding: 4px;
   background: none;
   border: none;
   cursor: pointer;
-  margin-top: 4px;
+}
+
+/* Edit form, taking the place of the body of the row it belongs to. */
+.editor {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editorInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-thumb);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-13);
+}
+
+.editorInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.editorInput[aria-invalid='true'] {
+  border-color: var(--rose);
+}
+
+.editorActions {
+  display: flex;
+  gap: 8px;
 }
 
 .loadMore {

@@ -22,8 +22,10 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
-| GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist (`WishlistPageDto`) |
+| GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist, with the budget of the whole filtered set (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
+| PUT | `/api/wishlist/{id}` | Replaces the priority, the estimated price and the note (`WishlistUpdateDto`) |
+| POST | `/api/wishlist/{id}/acquire` | "I bought it": creates the owned title and drops the wish, in one transaction (`WishlistAcquireDto`, body optional) |
 | DELETE | `/api/wishlist/{id}` | Removes a wish |
 | GET | `/api/series` | Series the user owns a volume of or follows (`SeriesSummaryDto`) |
 | GET | `/api/series/{id}` | A series and the state of each of its volumes (`SeriesDetailDto`) |
@@ -65,8 +67,13 @@ ReviewDto(Integer rating, String review)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
+WishlistUpdateDto(WishPriority priority, BigDecimal estimatedPrice, String note)
+WishlistAcquireDto(LibraryStatus status, Integer rating, LocalDate acquiredAt)
 WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note, BookView book)
-WishlistPageDto(List<WishlistItemDto> items, int page, int size, long total)
+WishlistPageDto(List<WishlistItemDto> items, int page, int size, long total,
+                WishlistBudgetDto budget)
+WishlistBudgetDto(BigDecimal total, long pricedCount, List<WishlistBudgetLineDto> byPriority)
+WishlistBudgetLineDto(String priority, long count, long pricedCount, BigDecimal total)
 
 CategoryDto(UUID id, String code, String label, String color, boolean builtin)
 CategoryCreateDto(String label, String color)
@@ -182,6 +189,13 @@ itself sorted the stored *name* — `PRIORITY, SOMEDAY, SOON` — and showed the
 date attached ahead of the ones the user meant to buy next
 ([#114](https://github.com/zelytra/Librarius/issues/114)). A new priority is one line in the
 enum: the `case` is generated from it, so the query and the enum cannot disagree.
+
+**Budget.** `GET /api/wishlist` carries a `budget` alongside the items rather than exposing
+it behind an endpoint of its own, so the figure a client shows can never contradict the
+rows underneath it: one request, one set of criteria, one answer. Like `total`, it covers
+the whole filtered set and is identical on every page — a client sums nothing client-side,
+which would only ever describe the pages it happens to have loaded. Priorities no wish
+carries are absent from `byPriority` rather than reported as zero.
 
 ## Pagination
 
