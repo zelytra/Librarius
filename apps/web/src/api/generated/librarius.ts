@@ -289,6 +289,7 @@ export interface StatsDto {
   pagesRead?: number;
   seriesCount?: number;
   goalTarget?: number;
+  goalUnit?: string;
   goalCurrent?: number;
   byGenre?: GenreCount[];
 }

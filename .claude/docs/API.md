@@ -97,7 +97,7 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-         Integer goalTarget, long goalCurrent, List<GenreCount> byGenre)
+         Integer goalTarget, String goalUnit, long goalCurrent, List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
 ```
 
@@ -257,6 +257,32 @@ where it used to form a third genre of its own
 `BookView.genres` still returns the raw wording, and no per-title list of codes is exposed:
 reading them while rendering a page of the collection would cost one query per item. The
 column goes away, and the codes take its place, once the front end reads them.
+
+## Reading goal
+
+`GET /api/stats` carries the goal set for the **current calendar year**: `goalTarget`,
+`goalUnit` and `goalCurrent`, the last one counted in that unit. Both `goalTarget` and
+`goalUnit` are null when no goal is set for the year — the client shows an invitation
+rather than a gauge at zero.
+
+The three units read the same rows differently:
+
+| Unit | What `goalCurrent` counts |
+|---|---|
+| `BOOKS` | every title finished during the year |
+| `VOLUMES` | only those carrying a `volume_number`, i.e. volumes of a run |
+| `PAGES` | the pages of the titles finished, editions with no page count contributing nothing |
+
+**"Finished" means `reading_progress.finished_at`**, which
+`PUT /api/library/{id}/progress` stamps when the status becomes `READ` — the business rule
+[PRODUCT](PRODUCT.md) § 6.2 describes. Moving to `READING` stamps `started_at` if it is
+empty and **clears** `finished_at`: a title being read again is not a finished one, and it
+must stop counting towards the year it was first finished in.
+
+A title added straight in the `READ` state — an import, or a manual add — carries no reading
+date: the application does not know when it was read. It counts in the all-time counters and
+not towards the year's goal, which is the honest answer and keeps an import from spiking the
+day it ran.
 
 ## Wishlist
 

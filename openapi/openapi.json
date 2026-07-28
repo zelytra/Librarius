@@ -637,6 +637,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "goalUnit" : {
+            "type" : "string"
+          },
           "goalCurrent" : {
             "type" : "integer",
             "format" : "int64"

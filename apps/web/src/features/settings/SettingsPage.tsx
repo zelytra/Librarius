@@ -4,6 +4,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
 import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
+import { GoalSection } from './GoalSection';
 import { ImportSection } from './ImportSection';
 import styles from './SettingsPage.module.css';
 
@@ -29,6 +30,9 @@ export function SettingsPage() {
         </button>
         <h2 className={styles.title}>{t('settings.title')}</h2>
       </div>
+
+      {/* Annual reading goal, which the Home gauge is drawn from. */}
+      <GoalSection />
 
       {/* External library import. */}
       <ImportSection />

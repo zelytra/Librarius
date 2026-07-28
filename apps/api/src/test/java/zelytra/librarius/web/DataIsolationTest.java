@@ -572,4 +572,29 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .body("read", is(bobReadBefore));
     }
+
+    /**
+     * Goal progress is built on the day a title was finished, so it only moves when the
+     * caller themselves finishes something. Alice marking a book as read — which stamps
+     * {@code finished_at} with today's date, inside the current year — must leave Bob's
+     * figure exactly where it was.
+     */
+    @Test
+    void goalProgressOnlyCountsOwnReadings() {
+        int bobProgressBefore = given().auth().oauth2(token("bob"))
+                .when().get("/api/stats")
+                .then().statusCode(200)
+                .extract().jsonPath().getInt("goalCurrent");
+
+        String aliceItem = addLibraryItem("alice", "Isolation - goal progress", "OWNED");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"percent\": 100, \"status\": \"READ\" }")
+                .when().put("/api/library/" + aliceItem + "/progress")
+                .then().statusCode(204);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/stats")
+                .then().statusCode(200)
+                .body("goalCurrent", is(bobProgressBefore));
+    }
 }

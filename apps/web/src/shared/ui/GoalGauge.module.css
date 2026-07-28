@@ -1,0 +1,70 @@
+/* Circular progress towards the annual goal: an SVG ring with the figures laid
+   over its hole. Both circles are painted with theme tokens, so the gauge follows
+   the palette like every other surface. */
+
+.gauge {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100px;
+  height: 100px;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.track,
+.arc {
+  fill: none;
+  stroke-width: 9;
+}
+
+.track {
+  stroke: var(--chip);
+}
+
+.arc {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 400ms ease;
+}
+
+/* The figures sit in the hole of the ring, centred on the same box as the SVG. */
+.core {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.value {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.target {
+  font-size: var(--fs-11);
+  color: var(--muted);
+}
+
+.unit {
+  font-size: var(--fs-9);
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* A motion-averse reader gets the final position without the sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .arc {
+    transition: none;
+  }
+}

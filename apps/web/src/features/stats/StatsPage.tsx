@@ -1,8 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
+import { GoalGauge } from '../../shared/ui/GoalGauge';
 import { Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { goalPace, toUnit } from '../../shared/goal';
 import { useGetApiStats } from '../../api/generated/librarius';
 import styles from './StatsPage.module.css';
 
@@ -11,6 +14,7 @@ const GENRE_BARS = [styles.bar1, styles.bar2, styles.bar3, styles.bar4];
 
 function StatsContent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: stats, isPending: loading, refetch } = useGetApiStats();
 
   if (loading) return <Loading />;
@@ -25,8 +29,9 @@ function StatsContent() {
   const goalCurrent = stats.goalCurrent ?? 0;
   const byGenre = stats.byGenre ?? [];
   const target = stats.goalTarget ?? 0;
-  const pct = target > 0 ? Math.min(100, Math.round((goalCurrent / target) * 100)) : 0;
-  const remaining = target > 0 ? Math.max(0, target - goalCurrent) : 0;
+  const year = new Date().getFullYear();
+  const unitLabel = t(`goal.units.${toUnit(stats.goalUnit)}`);
+  const pace = goalPace(goalCurrent, target, new Date());
 
   const bigStats = [
     { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
@@ -39,22 +44,32 @@ function StatsContent() {
 
   return (
     <>
+      {/* No goal means an invitation, not a ring stuck at zero: the two look the same
+          and only one of them tells the user what to do about it. */}
       <div className={styles.goal}>
-        <div
-          className={styles.gauge}
-          // The filled arc is the progress itself.
-          style={{ background: `conic-gradient(var(--accent) 0% ${pct}%, var(--chip) ${pct}% 100%)` }}
-        >
-          <div className={styles.gaugeCore}>
-            <span className={styles.gaugeValue}>{goalCurrent}</span>
-            <span className={styles.gaugeTarget}>{t('stats.goalProgress', { target: target || '—' })}</span>
-          </div>
-        </div>
+        {target > 0 && (
+          <GoalGauge
+            percent={pace.percent}
+            value={goalCurrent}
+            targetLabel={t('goal.outOf', { target })}
+            unitLabel={unitLabel}
+            label={t('goal.gaugeLabel', { current: goalCurrent, target, unit: unitLabel, year })}
+          />
+        )}
         <div className={styles.goalBody}>
-          <div className={styles.goalTitle}>{t('stats.goalTitle', { year: new Date().getFullYear() })}</div>
-          <div className={styles.goalHint}>
-            {target > 0 ? t('stats.goalRemaining', { remaining }) : t('stats.goalUnset')}
+          <div className={styles.goalTitle}>
+            {target > 0 ? t('goal.title', { year }) : t('goal.empty.title')}
           </div>
+          <div className={styles.goalHint}>
+            {target <= 0 && t('goal.empty.description', { year })}
+            {target > 0 && pace.reached && t('goal.reached')}
+            {target > 0 &&
+              !pace.reached &&
+              t('goal.remaining', { remaining: pace.remaining, unit: unitLabel })}
+          </div>
+          <button className={styles.goalLink} onClick={() => navigate('/settings')}>
+            {t(target > 0 ? 'goal.edit' : 'goal.empty.action')}
+          </button>
         </div>
       </div>
 

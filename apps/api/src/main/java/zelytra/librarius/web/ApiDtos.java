@@ -237,8 +237,17 @@ public final class ApiDtos {
     public record ReviewDto(@Min(1) @Max(5) Integer rating, @Size(max = 5000) String review) {
     }
 
+    /**
+     * The counters the Home and Stats screens are built on.
+     *
+     * @param goalTarget  target of the current year's goal, {@code null} when none is set
+     * @param goalUnit    unit that target is expressed in, {@code null} alongside it
+     * @param goalCurrent how far the user is into that target, counted in {@code goalUnit}
+     *                    over the titles finished this year — see {@link TimelineDto}
+     */
     public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-            Integer goalTarget, long goalCurrent, java.util.List<GenreCount> byGenre) {
+            Integer goalTarget, String goalUnit, long goalCurrent,
+            java.util.List<GenreCount> byGenre) {
     }
 
     /**

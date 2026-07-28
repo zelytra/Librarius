@@ -67,6 +67,45 @@
     },
     "error": "Impossible de charger ton tableau de bord."
   },
+  "goal": {
+    "title": "Objectif {{year}}",
+    "outOf": "/ {{target}}",
+    "gaugeLabel": "{{current}} sur {{target}} {{unit}} lus en {{year}}",
+    "remaining": "Encore {{remaining}} {{unit}} avant la fin de l'année.",
+    "reached": "Objectif atteint. Belle année de lecture !",
+    "onTrack": "Dans les temps",
+    "behind": "En retard",
+    "edit": "Modifier l'objectif",
+    "units": {
+      "BOOKS": "livres",
+      "VOLUMES": "tomes",
+      "PAGES": "pages"
+    },
+    "pace": {
+      "perMonth": "Soit {{value}} {{unit}} par mois pour tenir le rythme.",
+      "perDay": "Soit {{value}} {{unit}} par jour pour tenir le rythme."
+    },
+    "empty": {
+      "title": "Fixe-toi un objectif de lecture",
+      "description": "Choisis un nombre de livres, de tomes ou de pages pour {{year}} : ta progression s'affichera ici.",
+      "action": "Définir un objectif"
+    },
+    "rollover": {
+      "title": "Nouvelle année, nouvel objectif",
+      "description": "En {{year}}, tu visais {{target}} {{unit}}. On repart sur la même base ?",
+      "action": "Reprendre {{target}} {{unit}}",
+      "other": "Choisir un autre objectif"
+    },
+    "settings": {
+      "title": "Objectif de lecture {{year}}",
+      "description": "Un nombre de livres, de tomes ou de pages à lire cette année. La jauge de l'accueil suit ta progression.",
+      "placeholder": "Nombre à atteindre",
+      "submit": "Enregistrer",
+      "saved": "Objectif enregistré : {{target}} {{unit}}.",
+      "failed": "Impossible d'enregistrer l'objectif pour le moment.",
+      "signIn": "Connecte-toi pour définir un objectif de lecture."
+    }
+  },
   "collection": {
     "title": "Ma collection",
     "sortBy": "Trier",
@@ -240,10 +279,6 @@
   },
   "stats": {
     "title": "Statistiques",
-    "goalTitle": "Objectif {{year}}",
-    "goalProgress": "/ {{target}}",
-    "goalRemaining": "Plus que {{remaining}} titre(s) pour atteindre ton objectif.",
-    "goalUnset": "Définis un objectif de lecture annuel dans tes réglages.",
     "cards": {
       "read": "Livres lus",
       "pages": "Pages lues",

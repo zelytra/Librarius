@@ -41,18 +41,21 @@ describe('StatsPage', () => {
     expect(screen.getByText('Science-fiction')).toBeInTheDocument();
   });
 
-  test('points to the settings when no goal is set', async () => {
+  test('invites the user to set a goal rather than showing a gauge at zero', async () => {
     statsReturns(stats({ goalTarget: undefined }));
     renderWithProviders(<StatsPage />);
 
-    expect(await screen.findByText(/Définis un objectif de lecture annuel/)).toBeInTheDocument();
+    expect(await screen.findByText(/Fixe-toi un objectif de lecture/)).toBeInTheDocument();
+    expect(screen.getByText('Définir un objectif')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
-  test('renders how many titles remain when a goal is set', async () => {
-    statsReturns(stats({ goalTarget: 20, goalCurrent: 12 }));
+  test('renders how much is left when a goal is set', async () => {
+    statsReturns(stats({ goalTarget: 20, goalCurrent: 12, goalUnit: 'PAGES' }));
     renderWithProviders(<StatsPage />);
 
-    expect(await screen.findByText(/Plus que 8 titre\(s\)/)).toBeInTheDocument();
+    expect(await screen.findByText(/Encore 8 pages/)).toBeInTheDocument();
+    expect(screen.getByRole('img')).toHaveAccessibleName(/12 sur 20 pages/);
   });
 
   test('signals an outage rather than showing an empty screen', async () => {

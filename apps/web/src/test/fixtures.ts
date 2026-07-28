@@ -1,6 +1,7 @@
 import type {
   CatalogResult,
   CategoryDto,
+  GoalDto,
   LibraryItemDto,
   LibraryPageDto,
   SeriesDetailDto,
@@ -188,11 +189,22 @@ export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
     pagesRead: 4200,
     seriesCount: 5,
     goalTarget: undefined,
+    goalUnit: undefined,
     goalCurrent: 12,
     byGenre: [
       { genre: 'Fantasy', count: 8 },
       { genre: 'Science-fiction', count: 4 },
     ],
+    ...overrides,
+  };
+}
+
+export function goal(overrides: Partial<GoalDto> = {}): GoalDto {
+  return {
+    id: 'goal-1',
+    year: new Date().getFullYear(),
+    targetCount: 30,
+    unit: 'BOOKS',
     ...overrides,
   };
 }

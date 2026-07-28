@@ -11,6 +11,7 @@ import {
   useGetApiStats,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
+import { GoalCard } from './GoalCard';
 import styles from './HomePage.module.css';
 
 /** Shelves shown on the dashboard, and how many covers each of them holds. */
@@ -123,6 +124,13 @@ function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* The annual goal, or the invitation to set one — never a gauge at zero. */}
+      {!libraryEmpty && (
+        <section>
+          <GoalCard stats={stats} />
+        </section>
+      )}
 
       {upcoming.length > 0 && (
         <section>
