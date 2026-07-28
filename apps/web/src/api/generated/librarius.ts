@@ -213,8 +213,6 @@ kind?: Kind;
 limit?: number;
 };
 
-export type GetApiHello200 = {[key: string]: unknown};
-
 export type GetApiLibraryParams = {
 status?: LibraryStatus;
 };
@@ -538,45 +536,6 @@ export const putApiGoalsYear = async (year: number,
   
   const data: putApiGoalsYearResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as putApiGoalsYearResponse
-}
-
-
-
-export type getApiHelloResponse200 = {
-  data: GetApiHello200
-  status: 200
-}
-    
-export type getApiHelloResponseSuccess = (getApiHelloResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getApiHelloResponse = (getApiHelloResponseSuccess)
-
-export const getGetApiHelloUrl = () => {
-
-
-  
-
-  return `/api/hello`
-}
-
-export const getApiHello = async ( options?: RequestInit): Promise<getApiHelloResponse> => {
-  
-  const res = await fetch(getGetApiHelloUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getApiHelloResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getApiHelloResponse
 }
 
 

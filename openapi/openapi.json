@@ -242,24 +242,6 @@
         } ]
       }
     },
-    "/api/hello" : {
-      "get" : {
-        "tags" : [ "Hello Resource" ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : { }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/import/csv" : {
       "post" : {
         "tags" : [ "Import Resource" ],
