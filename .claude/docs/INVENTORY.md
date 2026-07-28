@@ -30,7 +30,7 @@ The project is a **complete and deployed** skeleton: all 7 screens exist, the AP
 | Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard |
-| CI/CD | 5 path-filtered workflows; push to `main` → build GHCR images + `helm upgrade` |
+| CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
 
 ## Technical debt identified 🔧
 

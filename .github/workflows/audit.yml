@@ -1,0 +1,52 @@
+name: audit
+
+# Fails on a known high or critical vulnerability in the dependencies that ship
+# to users.
+#
+# No path filter and a weekly run: an advisory is published against a version
+# that is already in the lockfile, so waiting for the lockfile to move would
+# defeat the purpose.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Monday 05:41 UTC, after the Dependabot pull requests of the same morning.
+    - cron: '41 5 * * 1'
+
+# A newer push on the same ref supersedes the run in progress.
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: pnpm audit (production tree)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+
+      # `pnpm audit` reads pnpm-lock.yaml directly: no install needed.
+      #
+      # Scoped to `--prod` deliberately. Runtime dependencies are the ones that
+      # reach a browser; the toolchain (vitest, orval, eslint and their trees)
+      # runs on trusted machines only and is kept current by the weekly
+      # Dependabot pull requests instead of by a hard gate — otherwise a
+      # build-tool advisory blocks every unrelated pull request.
+      #
+      # Advisories deliberately accepted are listed in `pnpm.auditConfig` in the
+      # root package.json. Currently one: GHSA-qwww-vcr4-c8h2, a CSRF bypass in
+      # React Router's RSC mode. This app is a client-rendered SPA and never
+      # enables RSC; the fix is react-router 8, a major upgrade tracked
+      # separately.
+      - name: Audit runtime dependencies
+        run: pnpm run web:audit
