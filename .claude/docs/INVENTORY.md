@@ -27,7 +27,7 @@ backups and alert rules now exist but neither has been proven on the cluster).
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
-| Screens | Home, Collection, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
+| Screens | Home, Collection, Series, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard, 10 alert rules with runbooks (`infra/prometheus/rules/`) — **not evaluated on the cluster**, see debt #15 |
 | Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
@@ -54,7 +54,7 @@ backups and alert rules now exist but neither has been proven on the cluster).
    hardcoded in the JSX ("Reprendre la lecture", "Classement", "Marquer comme lu",
    "Titre introuvable"…). No other language.
 5. ~~**Tests almost non-existent.**~~ ✅ **Cleared on 2026-07-28** ([#36](https://github.com/zelytra/Librarius/issues/36)):
-   41 tests across 7 files cover the six application screens through MSW — nominal render,
+   74 tests across 9 files cover the seven application screens through MSW — nominal render,
    empty state, error state, missing session and the main interactions.
    Completed on 2026-07-28 by the Playwright suite
    ([#37](https://github.com/zelytra/Librarius/issues/37)): five journeys — Discover,
@@ -73,9 +73,11 @@ backups and alert rules now exist but neither has been proven on the cluster).
    [#44](https://github.com/zelytra/Librarius/issues/44)): `V4__series.sql` adds `series`,
    `series_follow` and `work.series_id`, backfilled from the existing `series_title` values,
    and `/api/series` exposes the counters, the missing volumes and the follow.
-   Left behind: `work.series_title` still duplicates `series.title` until the front end
-   reads the identifier (#45, #46), and `StatsResource.seriesCount` still counts distinct
-   lower-cased titles rather than joining `series`.
+   Left behind: `StatsResource.seriesCount` still counts distinct lower-cased titles rather
+   than joining `series`; `work.series_title` still duplicates `series.title`; and
+   `BookView` exposes `seriesTitle` without a `seriesId`, so the Detail screen resolves the
+   link to a series by matching kind and title against `/api/series`
+   ([#45](https://github.com/zelytra/Librarius/issues/45)).
 8. ~~**`genres` is a `VARCHAR(512)`** treated as an atomic value in the stats~~
    ✅ **Resolved on 2026-07-28** ([#56](https://github.com/zelytra/Librarius/issues/56)):
    `V6__normalized_genres.sql` adds `genre`, `genre_alias` and `work_genre`, backfilled by
@@ -169,7 +171,7 @@ production opens.*
 | Reading goals | `GET/PUT /api/goals` works, **no screen** exposes it |
 | Custom categories | `POST /api/categories` works, the UI only shows Gold/Silver/Bronze |
 | Notifications | Nothing (no preferences, no push, no email) |
-| Series / volumes | Neither a series screen nor "missing volume" tracking |
+| Series / volumes | ✅ `/series/:id` and the Series view of the collection. Missing: a `wished` flag on a volume (the marker is session-local), volume covers, and ordering the series by most recently added — none of the three exists in the API payloads |
 | Export / account deletion | Nothing — **blocking for a public product (GDPR)** |
 | Multilingual | i18n plumbing in place, a single locale |
 | Native mobile | No Capacitor project |

@@ -1,9 +1,10 @@
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders } from '../../test/utils';
-import { BUILTIN_CATEGORIES, libraryItem } from '../../test/fixtures';
-import { http, HttpResponse, libraryItemReturns, server } from '../../test/server';
+import { TestProviders, renderWithProviders } from '../../test/utils';
+import { BUILTIN_CATEGORIES, libraryItem, seriesSummary } from '../../test/fixtures';
+import { http, HttpResponse, libraryItemReturns, seriesReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -107,6 +108,38 @@ describe('DetailPage', () => {
 
     await screen.findByRole('heading', { name: 'Le Nom du vent' });
     expect(urls.some((url) => url.endsWith('/api/library/item-1'))).toBe(true);
+  });
+
+  /**
+   * `BookView` carries the series title but no identifier, so the way into the series
+   * screen is resolved against the series the user has a stake in.
+   */
+  test('opens the series of the volume', async () => {
+    libraryItemReturns(ITEM);
+    seriesReturns([
+      seriesSummary({ id: 'series-9', kind: 'BOOK', title: 'Chronique du tueur de roi' }),
+    ]);
+    render(
+      <TestProviders route="/detail/item-1">
+        <Routes>
+          <Route path="/detail/:id" element={<DetailPage />} />
+          <Route path="/series/:id" element={<p>écran de la série</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Chronique du tueur de roi'));
+
+    expect(await screen.findByText('écran de la série')).toBeInTheDocument();
+  });
+
+  test('leaves the series inert when the user has no series of that name', async () => {
+    libraryItemReturns(ITEM);
+    renderDetail();
+
+    // No `/api/series` entry matches, so there is nothing to open.
+    const series = await screen.findByText('Chronique du tueur de roi');
+    expect(series.closest('button')).toBeNull();
   });
 
   test('prompts for sign-in when there is no session', async () => {

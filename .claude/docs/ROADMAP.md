@@ -79,8 +79,8 @@ annual goal.
 |---|---|---|
 | [#43](https://github.com/zelytra/Librarius/issues/43) | ✅ V4 migration: series and series_follow tables | — |
 | [#44](https://github.com/zelytra/Librarius/issues/44) | ✅ /api/series API: details, volumes and follow | #43 |
-| [#45](https://github.com/zelytra/Librarius/issues/45) | Series screen: volume grid | #44 |
-| [#46](https://github.com/zelytra/Librarius/issues/46) | "Series" view in the Collection | #44 |
+| [#45](https://github.com/zelytra/Librarius/issues/45) | ✅ Series screen: volume grid | #44 |
+| [#46](https://github.com/zelytra/Librarius/issues/46) | ✅ "Series" view in the Collection | #44 |
 | [#47](https://github.com/zelytra/Librarius/issues/47) | Reading progress input in the Detail screen | — |
 | [#48](https://github.com/zelytra/Librarius/issues/48) | Personal rating and private review | — |
 | [#49](https://github.com/zelytra/Librarius/issues/49) | Alternate editions of a work in the Detail screen | — |

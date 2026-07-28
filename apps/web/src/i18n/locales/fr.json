@@ -32,7 +32,8 @@
       "discover": "Connecte-toi pour rechercher et enrichir ta bibliothèque.",
       "wishlist": "Connecte-toi pour voir tes souhaits.",
       "stats": "Connecte-toi pour voir tes statistiques.",
-      "detail": "Connecte-toi pour voir ce titre."
+      "detail": "Connecte-toi pour voir ce titre.",
+      "series": "Connecte-toi pour voir cette série."
     }
   },
   "errors": {
@@ -72,7 +73,8 @@
     "searchPlaceholder": "Rechercher dans ma collection…",
     "loadMore": "Voir plus ({{loaded}} / {{total}})",
     "total": "{{total}} titres",
-    "volumes": "{{volumes}} tomes",
+    "seriesTotal_one": "{{count}} série",
+    "seriesTotal_other": "{{count}} séries",
     "volumeShort": "T.{{number}}",
     "tag": {
       "book": "LIVRE",
@@ -96,6 +98,56 @@
       "action": "Découvrir des titres"
     },
     "error": "Impossible de charger ta collection."
+  },
+  "series": {
+    "follow": "Suivre cette série",
+    "following": "✓ Série suivie",
+    "volumesOfTotal": "{{owned}} / {{total}} tomes",
+    "volumesOwned_one": "{{count}} tome",
+    "volumesOwned_other": "{{count}} tomes",
+    "readCount_one": "{{count}} lu",
+    "readCount_other": "{{count}} lus",
+    "volumesTitle": "Tomes",
+    "volume": "Tome {{number}}",
+    "volumeTitle": "{{series}} — Tome {{number}}",
+    "volumeLabel": "Tome {{number}} — {{state}}",
+    "volumeLabelWished": "Tome {{number}} — {{state}} · dans mes souhaits",
+    "unnumbered": "Tome hors série",
+    "unnumberedShort": "HS",
+    "unnumberedLabel": "{{title}} — {{state}}",
+    "status": {
+      "ONGOING": "Série en cours",
+      "COMPLETED": "Série terminée",
+      "HIATUS": "Série en pause"
+    },
+    "states": {
+      "read": "lu",
+      "owned": "possédé",
+      "missing": "manquant",
+      "upcoming": "à paraître"
+    },
+    "missingList": "Il te manque les tomes {{volumes}}",
+    "missingListTruncated": "Il te manque les tomes {{volumes}}…",
+    "addToWishlist": "Ajouter aux souhaits",
+    "addToCollection": "Ajouter à ma collection",
+    "addFailed": "Ajout impossible pour le moment.",
+    "closeActions": "Fermer",
+    "incomplete": "Incomplète",
+    "sorts": {
+      "progress": "Progression",
+      "title": "Titre"
+    },
+    "notFound": "Série introuvable.",
+    "error": "Impossible de charger cette série.",
+    "listError": "Impossible de charger tes séries.",
+    "emptyVolumes": {
+      "title": "Aucun tome connu pour cette série.",
+      "description": "Ajoute un tome à ta collection pour commencer la série."
+    },
+    "empty": {
+      "title": "Aucune série ici.",
+      "description": "Les séries apparaissent dès qu'un de leurs tomes rejoint ta collection."
+    }
   },
   "discover": {
     "title": "Découvrir",

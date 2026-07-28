@@ -8,6 +8,7 @@ import { SettingsPage } from './features/settings/SettingsPage';
 import { CollectionPage } from './features/collection/CollectionPage';
 import { DetailPage } from './features/detail/DetailPage';
 import { DiscoverPage } from './features/discover/DiscoverPage';
+import { SeriesPage } from './features/series/SeriesPage';
 import { WishlistPage } from './features/wishlist/WishlistPage';
 import { StatsPage } from './features/stats/StatsPage';
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="stats" element={<StatsPage />} />
           <Route path="detail/:id" element={<DetailPage />} />
+          <Route path="series/:id" element={<SeriesPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>

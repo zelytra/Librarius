@@ -69,8 +69,11 @@ The full inventory, with a **Books / Manga** toggle.
 
 - ✅ Cover grid, rank badge, quick removal.
 - ✅ Sorting: date added, title, author, genre. Filter by rank.
-- 🔜 **Series view**: group by series, show "12 / 105 volumes", flag the missing volumes in
-  a run the user owns.
+- ✅ **Series view**: one row per series with its cover, `12 / 105 volumes` and a progress
+  bar, an *Incomplète* badge on a run with volumes left to buy, ordering by progress or
+  title, and a way into the series screen. The kind switch and the search carry across the
+  toggle; the rank chips do not apply to a run and are hidden there.
+- 🔜 Ordering the Series view by most recently added — `SeriesSummaryDto` carries no date.
 - 🔜 Text search inside one's own collection.
 - 🔜 Extra filters: status, year of acquisition, publisher, language.
 - 🔜 Pagination / infinite scrolling (the API returns everything today).
@@ -83,9 +86,11 @@ The full inventory, with a **Books / Manga** toggle.
 - ✅ Marking "in progress" / "read".
 - 🔜 **Progress input**: current page or percentage, start/finish dates.
 - 🔜 **Personal rating** (1–5) and private review.
+- ✅ **Link to the series**: the *série* cell of the stat strip opens the series screen when
+  the user has a stake in that series.
 - 🔜 **Alternate editions**: list the other `edition` rows of the same `work`, let the user
   say which one they own.
-- 🔜 **Series navigation**: previous / next volume, link to the series page.
+- 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 
 ### 4.4 Discover ✅ / 🔜
@@ -133,13 +138,31 @@ Search across the external catalog (Open Library for books, AniList for manga).
 - 🔜 Custom category management (the API already exists).
 - 🔜 Legal notice, terms of service, privacy policy.
 
-### 4.8 Series 🔜 (screen to create)
+### 4.8 Series ✅ / 🔜
 
-The API is in place (`/api/series`, #44); what is left is the screen (#45, #46).
+`/series/:id`, reachable from a volume's detail screen and from the Series view of the
+collection.
 
-- Series page: cover, synopsis, status (ongoing / completed), total number of volumes.
-- Volume grid: owned, read, missing, upcoming.
-- A "follow this series" action → feeds upcoming releases and notifications.
+- ✅ Header: cover, title, publication status, `x / y volumes` with a progress bar, the
+  number read, and a **Follow** toggle.
+- ✅ Volume grid. The four states are told apart **without reading anything**, on three
+  channels at once: a fill, an icon, and an outline — colour alone would be lost on a
+  colour-blind reader.
+
+  | State | Fill | Icon | Outline |
+  |---|---|---|---|
+  | Read | `--accent`, solid | `check_circle` | plain |
+  | Owned | `--tint-sage` | `book_2` | plain |
+  | Missing | `--tint-rose` | `priority_high` | **dashed** |
+  | Upcoming | `--chip`, neutral | `schedule` | plain |
+
+- ✅ A volume already owned opens its detail screen; a missing or upcoming one opens the
+  two ways of getting it — **wishlist** or **collection** — in one gesture. The holes in
+  the run are named under the grid.
+- 🔜 Marking a volume as wished survives a reload: `SeriesVolumeDto` has no `wished` flag,
+  so the marker is session-local for now.
+- 🔜 Volume covers and titles: the grid shows numbers, since `/api/series/{id}` only names
+  the volumes present in the shared catalog.
 
 ## 5. Key journeys
 
@@ -150,7 +173,7 @@ Discover → ISBN scan 🔜 → catalog page → pick a status → added to the 
 Home → "Continue reading" carousel → Detail → enter the current page 🔜 → progress updated.
 
 **P3 — Complete a series**
-Collection → Series view 🔜 → incomplete series → missing volumes → added to the wishlist in
+Collection → Series view → incomplete series → missing volumes → added to the wishlist in
 one gesture.
 
 **P4 — Arrive on Librarius with an existing library**

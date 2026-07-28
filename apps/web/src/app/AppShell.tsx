@@ -2,8 +2,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import styles from './AppShell.module.css';
 
-// The bottom bar is hidden on "full screen" screens (detail, settings).
-const HIDDEN_NAV_PREFIXES = ['/detail', '/settings'];
+// The bottom bar is hidden on "full screen" screens (detail, series, settings).
+const HIDDEN_NAV_PREFIXES = ['/detail', '/series', '/settings'];
 
 export function AppShell() {
   const location = useLocation();

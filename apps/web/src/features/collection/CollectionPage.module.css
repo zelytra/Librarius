@@ -111,64 +111,6 @@
   justify-content: center;
 }
 
-/* ── Series grouping ──────────────────────────────────────────────────────── */
-
-.groupList {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.group {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  padding: 15px 0 14px;
-}
-
-.groupHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px 12px;
-}
-
-.groupHeading {
-  min-width: 0;
-}
-
-.groupTitle {
-  font-family: var(--font-serif);
-  font-size: var(--fs-16);
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-.groupAuthors {
-  font-size: var(--fs-12);
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-.groupBadge {
-  flex: 0 0 auto;
-  margin-left: 12px;
-  font-size: var(--fs-11);
-  font-weight: 600;
-  color: var(--accent-deep);
-  background: var(--accent-soft);
-  padding: 5px 11px;
-  border-radius: var(--radius-badge);
-  white-space: nowrap;
-}
-
-.groupShelf {
-  display: flex;
-  gap: 11px;
-  overflow-x: auto;
-  padding: 2px 16px 4px;
-}
-
 .loadMore {
   display: flex;
   justify-content: center;

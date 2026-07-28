@@ -3,6 +3,9 @@ import type {
   CategoryDto,
   LibraryItemDto,
   LibraryPageDto,
+  SeriesDetailDto,
+  SeriesSummaryDto,
+  SeriesVolumeDto,
   StatsDto,
   WishlistItemDto,
   WishlistPageDto,
@@ -72,6 +75,66 @@ export function catalogResult(overrides: Partial<CatalogResult> = {}): CatalogRe
     providerRef: 'OL123W',
     year: 2023,
     coverUrl: undefined,
+    ...overrides,
+  };
+}
+
+/**
+ * Lays a run out the way the API does: a volume the user does not own is a hole when it
+ * sits below the highest one they own, and still ahead of them above it.
+ */
+export function seriesVolumes({
+  total,
+  owned = [],
+  read = [],
+}: {
+  total: number;
+  owned?: number[];
+  read?: number[];
+}): SeriesVolumeDto[] {
+  const highestOwned = Math.max(0, ...owned);
+  return Array.from({ length: total }, (_, i) => {
+    const volumeNumber = i + 1;
+    const isOwned = owned.includes(volumeNumber);
+    return {
+      volumeNumber,
+      libraryItemId: isOwned ? `item-${volumeNumber}` : undefined,
+      owned: isOwned,
+      read: read.includes(volumeNumber),
+      missing: !isOwned && volumeNumber < highestOwned,
+      upcoming: !isOwned && volumeNumber > highestOwned,
+    };
+  });
+}
+
+export function seriesSummary(overrides: Partial<SeriesSummaryDto> = {}): SeriesSummaryDto {
+  return {
+    id: 'series-1',
+    kind: 'MANGA',
+    title: 'Vinland Saga',
+    coverUrl: undefined,
+    totalVolumes: 27,
+    status: 'ONGOING',
+    ownedCount: 3,
+    readCount: 1,
+    followed: false,
+    ...overrides,
+  };
+}
+
+export function seriesDetail(overrides: Partial<SeriesDetailDto> = {}): SeriesDetailDto {
+  return {
+    id: 'series-1',
+    kind: 'MANGA',
+    title: 'Vinland Saga',
+    coverUrl: undefined,
+    synopsis: 'Thorfinn poursuit sa vengeance.',
+    totalVolumes: 5,
+    status: 'ONGOING',
+    ownedCount: 3,
+    readCount: 1,
+    followed: false,
+    volumes: seriesVolumes({ total: 5, owned: [1, 2, 4], read: [1] }),
     ...overrides,
   };
 }
