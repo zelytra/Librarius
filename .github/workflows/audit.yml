@@ -8,7 +8,7 @@ name: audit
 # defeat the purpose.
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
   schedule:
     # Monday 05:41 UTC, after the Dependabot pull requests of the same morning.

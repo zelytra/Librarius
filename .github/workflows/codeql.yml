@@ -7,9 +7,9 @@ name: codeql
 # pull request never touched, which is exactly the point of the weekly run.
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   schedule:
     # Monday 05:11 UTC — after the Dependabot pull requests of the same morning.
     - cron: '11 5 * * 1'
