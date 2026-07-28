@@ -224,7 +224,7 @@ public class LibraryResource {
      * <p>Only the materialisation changes: what the row records about the reader is left
      * alone, and the reading position follows the rules of {@link EditionService}. Owning
      * the same edition twice is what {@code UNIQUE(user_id, edition_id)} forbids, so a
-     * switch onto an edition already in the collection is refused with a **409** and a
+     * switch onto an edition already in the collection is refused with a {@code 409} and a
      * message rather than with a constraint violation.
      */
     @PUT
@@ -247,8 +247,9 @@ public class LibraryResource {
     }
 
     /**
-     * A refusal the user gets to read. French like the import errors, the interface being
-     * French; the front end shows it as it comes rather than mapping every status itself.
+     * A refusal that says why, in the shape {@code ImportExceptionMapper} already uses.
+     * French like the import errors, the interface being French — though the PWA renders its
+     * own copy from the status code, so this is what a second client, or a log, reads.
      */
     private static Response error(Response.Status status, String message) {
         return Response.status(status).entity(Map.of("message", message)).build();
