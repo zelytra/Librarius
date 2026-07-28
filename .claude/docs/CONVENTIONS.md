@@ -6,8 +6,12 @@
 |---|---|
 | **Tout le code** : identifiants, commentaires, javadoc, noms de tests, messages de log, noms de fichiers et de branches | **Anglais** |
 | **Issues, milestones, labels** | **Anglais** |
-| Commits, pull requests, documentation du projet, échanges | **Français** |
+| **Messages de commit** et **pull requests** (titre et description) | **Anglais** |
+| Documentation du projet, échanges avec le mainteneur | **Français** |
 | Textes affichés à l'utilisateur | **Français**, via i18n — jamais en dur |
+
+Le titre d'une pull request devient le sujet du commit au moment du squash : il doit
+donc être rédigé comme un message de commit, en anglais, à l'impératif.
 
 Le code est intégralement en anglais, commentaires compris : ne pas suivre la langue du
 fichier voisin s'il est encore en français, l'écrire en anglais et convertir ce qu'on
@@ -70,37 +74,41 @@ attribution.
 
 ### Messages de commit
 
-Conventional commits, sujet en français, impératif, ≤ 72 caractères :
+Conventional commits, sujet en **anglais**, à l'impératif, ≤ 72 caractères. Le corps
+explique le **pourquoi** plutôt que le quoi — le diff dit déjà ce qui change :
 
 ```text
-feat(web): jauge d'objectif annuel sur l'accueil
+feat(web): expose the annual reading goal on the home screen
 
-L'API /api/goals existait déjà mais n'était exposée dans aucun écran.
-Ajoute la jauge, le calcul du rythme nécessaire et l'état vide quand
-aucun objectif n'est défini.
+/api/goals had been working since the initial back-end milestone, but no
+screen ever called it: the feature existed and was invisible. Adds the
+gauge, the pace needed to stay on track, and an empty state inviting the
+user to set a goal.
 
-Closes #42
+Closes #50
 ```
 
 Portées usuelles : `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
 
 ## 3. Pull requests
 
-Titre : `<type>(<portée>) — <résumé>`. Description structurée :
+Rédigées **en anglais**, titre compris — le dépôt merge en squash, donc le titre de la
+pull request devient le sujet du commit sur `develop`. Même format que les commits :
+`<type>(<scope>): <summary>`.
 
 ```markdown
-## Problème
-Ce qui ne va pas / ce qui manque aujourd'hui.
+## Problem
+What is wrong, or missing, today.
 
-## Correctif
-Ce que fait la PR, et pourquoi cette approche.
+## Fix
+What the change does, and why this approach over the alternatives.
 
-## Vérifications
+## Verification
 - [ ] `pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build`
 - [ ] `cd apps/api && ./mvnw -B verify`
-- [ ] Client OpenAPI régénéré si l'API a changé
-- [ ] Vérifié dans un navigateur (captures / DOM) si l'UI a changé
-- [ ] Documentation `.claude/docs/` mise à jour
+- [ ] OpenAPI client regenerated if the API changed
+- [ ] Checked in a real browser (screenshots / DOM) if the UI changed
+- [ ] `.claude/docs/` updated
 
 Closes #<issue>
 ```

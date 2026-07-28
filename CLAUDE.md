@@ -9,7 +9,8 @@ découverte catalogue, statistiques. PWA React + API Quarkus + PostgreSQL + Keyc
 
 ## Langue
 
-Réponses, commits, PR et documentation **en français** ; issues et milestones **en anglais**.
+Réponses et documentation **en français**. Code, commits, pull requests, issues et
+milestones **en anglais** — le titre d'une PR devient le message de commit au squash.
 
 **Tout le code est en anglais**, commentaires et javadoc compris — y compris là où
 l'existant est encore en français : convertis ce que tu touches.
@@ -62,7 +63,7 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 
 - **Jamais de commit direct** sur `main` ni `develop`.
 - Une branche par changement, partant de `develop` à jour.
-- Commits conventionnels en français : `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
+- Commits conventionnels **en anglais** : `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
 - Identité de commit : `zelytra` / `contact@zelytra.fr`.
 - Toute modification passe par une PR vers `develop`, puis `develop` → `main` pour livrer.
 - **Ne jamais merger avec une CI rouge.** `cd.yml` déploie automatiquement sur push `main`,
