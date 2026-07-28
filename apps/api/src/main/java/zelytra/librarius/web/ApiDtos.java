@@ -207,6 +207,14 @@ public final class ApiDtos {
     public record CategoryCreateDto(@NotBlank String label, String color) {
     }
 
+    /**
+     * Renaming a category. The label is all there is to change: the code follows from it,
+     * and the colour is not editable — no screen offers a picker, so a field nothing can
+     * fill would only be a way of clearing what the creation set.
+     */
+    public record CategoryUpdateDto(@NotBlank String label) {
+    }
+
     public record RankAssignDto(java.util.UUID categoryId) {
     }
 

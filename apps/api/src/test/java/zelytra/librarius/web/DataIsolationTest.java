@@ -432,6 +432,62 @@ class DataIsolationTest {
                 .then().statusCode(400);
     }
 
+    /**
+     * A category belongs to its creator, and so do the writes on it. Bob can neither rename
+     * nor delete one of Alice's — and the refusal is a 404, so he does not even learn that
+     * the identifier corresponds to anything. A 403 is reserved for the built-ins, which
+     * everybody can see.
+     */
+    @Test
+    void categoryOfAnotherUserCanBeNeitherRenamedNorDeleted() {
+        String aliceCategory = given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"label\": \"Isolation Alice Suppression\" }")
+                .when().post("/api/categories")
+                .then().statusCode(200)
+                .extract().path("id");
+        String aliceItem = addLibraryItem("alice", "Isolation - ranked title", "OWNED");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"categoryId\": \"" + aliceCategory + "\" }")
+                .when().put("/api/library/" + aliceItem + "/rank")
+                .then().statusCode(200);
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"label\": \"Renommée par Bob\" }")
+                .when().put("/api/categories/" + aliceCategory)
+                .then().statusCode(404);
+
+        given().auth().oauth2(token("bob"))
+                .when().delete("/api/categories/" + aliceCategory)
+                .then().statusCode(404);
+
+        // Alice's category is untouched, and her title is still filed under it.
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/categories")
+                .then().statusCode(200)
+                .body("find { it.id == '" + aliceCategory + "' }.label",
+                        is("Isolation Alice Suppression"));
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/library/" + aliceItem)
+                .then().statusCode(200)
+                .body("rankCode", is("isolation-alice-suppression"));
+    }
+
+    /**
+     * The names are unique per user, not across the instance: two accounts naming a shelf
+     * the same way is not a conflict, since neither ever sees the other's.
+     */
+    @Test
+    void twoUsersCanGiveACategoryTheSameName() {
+        for (String user : new String[] { "alice", "bob" }) {
+            given().auth().oauth2(token(user)).contentType("application/json")
+                    .body("{ \"label\": \"Isolation Même Nom\" }")
+                    .when().post("/api/categories")
+                    .then().statusCode(200)
+                    .body("code", is("isolation-meme-nom"));
+        }
+    }
+
     // ── Goals ─────────────────────────────────────────────────────────────────
 
     /** Deliberately distant years so as not to clash with the other tests. */

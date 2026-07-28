@@ -41,4 +41,22 @@ public class RankCategoryRepository implements PanacheRepositoryBase<RankCategor
         return find("code = ?1 and (userId = ?2 or userId is null) order by userId desc nulls last",
                 code.trim(), userId).firstResultOptional();
     }
+
+    /**
+     * Whether a code is already taken among the categories the user can see — their own and
+     * the built-ins. The built-ins are part of the check because they share the code space:
+     * a custom category coded {@code or} would answer to the same {@code ?rank=or} filter as
+     * the built-in one, and the two shelves would be impossible to tell apart.
+     *
+     * @param excluding identifier left out of the check, {@code null} on a creation, so
+     *                  renaming a category to the label it already carries is not a
+     *                  conflict with itself
+     */
+    public boolean codeTaken(String userId, String code, UUID excluding) {
+        if (excluding == null) {
+            return count("code = ?1 and (userId is null or userId = ?2)", code, userId) > 0;
+        }
+        return count("code = ?1 and (userId is null or userId = ?2) and id <> ?3",
+                code, userId, excluding) > 0;
+    }
 }

@@ -2,25 +2,32 @@ package zelytra.librarius.web;
 
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import zelytra.librarius.domain.RankCategory;
-import zelytra.librarius.domain.repository.RankCategoryRepository;
+import jakarta.ws.rs.core.Response;
+import zelytra.librarius.category.CategoryService;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.CategoryCreateDto;
 import zelytra.librarius.web.ApiDtos.CategoryDto;
+import zelytra.librarius.web.ApiDtos.CategoryUpdateDto;
 
-import java.text.Normalizer;
 import java.util.List;
-import java.util.Locale;
+import java.util.UUID;
 
-/** Ranking categories: built-ins (Gold/Silver/Bronze) plus custom categories. */
+/**
+ * Ranking categories: the built-ins (Or / Argent / Bronze) plus the caller's own.
+ *
+ * <p>The rules — ownership, read-only built-ins, one name per user, and what deleting a
+ * category does to the titles filed under it — live in {@link CategoryService}.
+ */
 @Path("/api/categories")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,36 +37,43 @@ public class CategoryResource {
     CurrentUser currentUser;
 
     @Inject
-    RankCategoryRepository categories;
+    CategoryService service;
 
+    /** The built-ins, shared by everyone, followed by the caller's own categories. */
     @GET
     public List<CategoryDto> list() {
-        return categories.listForUser(currentUser.id()).stream().map(CategoryDto::of).toList();
+        return service.list(currentUser.id()).stream().map(CategoryDto::of).toList();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
     public CategoryDto create(@Valid CategoryCreateDto dto) {
-        String userId = currentUser.id();
         currentUser.require();
-        RankCategory cat = new RankCategory();
-        cat.userId = userId;
-        cat.label = dto.label().trim();
-        cat.code = slug(dto.label());
-        cat.color = dto.color() != null ? dto.color() : "#9a8fa6";
-        cat.sortOrder = 100;
-        cat.builtin = false;
-        categories.persist(cat);
-        return CategoryDto.of(cat);
+        return CategoryDto.of(service.create(currentUser.id(), dto.label(), dto.color()));
     }
 
-    private static String slug(String label) {
-        String n = Normalizer.normalize(label, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.FRENCH)
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
-        return n.isBlank() ? "cat-" + Math.abs(label.hashCode()) : n;
+    /**
+     * Renames one of the caller's categories. The titles filed under it keep their rank.
+     *
+     * <p>A built-in answers 403: it is shared by every account, and the caller has just
+     * listed it, so denying its existence would be a lie. Someone else's category answers
+     * 404, like an unknown identifier. A name the caller already uses answers 409.
+     */
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public CategoryDto update(@PathParam("id") UUID id, @Valid CategoryUpdateDto dto) {
+        return CategoryDto.of(service.rename(currentUser.id(), id, dto.label()));
+    }
+
+    /**
+     * Deletes one of the caller's categories. The titles that were in it stay in the
+     * collection and lose their rank — see {@link CategoryService#delete}.
+     */
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") UUID id) {
+        service.delete(currentUser.id(), id);
+        return Response.noContent().build();
     }
 }
