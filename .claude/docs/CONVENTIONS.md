@@ -141,6 +141,18 @@ If the API changed:
 cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 ```
 
+⚠️ **Regenerate with `package`, never with `verify`, and check `openapi/` before
+committing.** Both write the schema, but under different profiles, and the schema differs:
+`securitySchemes.openIdConnectUrl` comes from `quarkus.oidc.auth-server-url`, which `%prod`
+sets and `%test` leaves to Dev Services. So `package` writes the line and **`verify`
+silently rewrites the file without it**.
+
+The committed contract is the `package` one — the same one `openapi-sync` regenerates. The
+trap is that running the test suite leaves `openapi/` dirty with that single deletion,
+which a `git add -A` then commits without anyone noticing. It has happened three times,
+once breaking `openapi-sync` on every API branch until someone traced it. If you see that
+line disappear, discard the change; do not commit it.
+
 If documentation changed (the `docs` workflow: markdownlint + internal links):
 
 ```bash
