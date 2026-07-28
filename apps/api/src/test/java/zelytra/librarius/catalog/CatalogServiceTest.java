@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import zelytra.librarius.domain.Kind;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,6 +19,11 @@ class CatalogServiceTest {
 
     private record FakeProvider(Kind kind, CatalogResult canned) implements CatalogProvider {
         @Override
+        public String name() {
+            return "fake-" + kind;
+        }
+
+        @Override
         public List<CatalogResult> search(String query, int limit) {
             return List.of(canned);
         }
@@ -28,11 +34,26 @@ class CatalogServiceTest {
         }
     }
 
+    /**
+     * Pass-through cache: this test covers routing and merging, and wiring the real two-level
+     * cache in would drag a database into a test that needs neither CDI nor network.
+     */
+    private static CatalogCache passThroughCache() {
+        return new CatalogCache() {
+            @Override
+            public List<CatalogResult> get(Scope scope, String provider, String key,
+                    Supplier<List<CatalogResult>> loader) {
+                return loader.get();
+            }
+        };
+    }
+
     @Test
     void routesToTheProviderMatchingTheKind() {
         CatalogService service = new CatalogService(List.of(
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
-                new FakeProvider(Kind.MANGA, result("MANGA", "One Piece"))));
+                new FakeProvider(Kind.MANGA, result("MANGA", "One Piece"))),
+                passThroughCache());
 
         assertEquals("Fourth Wing", service.search(Kind.BOOK, "wing", 10).get(0).title());
         assertEquals("One Piece", service.search(Kind.MANGA, "piece", 10).get(0).title());
@@ -41,7 +62,8 @@ class CatalogServiceTest {
     @Test
     void returnsEmptyWhenNoProviderForKind() {
         CatalogService service = new CatalogService(List.of(
-                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))));
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))),
+                passThroughCache());
 
         assertTrue(service.search(Kind.MANGA, "piece", 10).isEmpty());
     }
@@ -51,7 +73,8 @@ class CatalogServiceTest {
         // Two book providers returning the same title.
         CatalogService service = new CatalogService(List.of(
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
-                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))));
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))),
+                passThroughCache());
 
         // The duplicate (same title/author) is merged into a single entry.
         assertEquals(1, service.search(Kind.BOOK, "wing", 10).size());
