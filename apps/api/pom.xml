@@ -11,15 +11,15 @@
   <description>Backend Quarkus de Ma Bibliothèque (Librarius)</description>
 
   <properties>
-    <compiler-plugin.version>3.13.0</compiler-plugin.version>
+    <compiler-plugin.version>3.15.0</compiler-plugin.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.15.1</quarkus.platform.version>
+    <quarkus.platform.version>3.37.4</quarkus.platform.version>
     <skipITs>true</skipITs>
-    <surefire-plugin.version>3.5.0</surefire-plugin.version>
+    <surefire-plugin.version>3.5.6</surefire-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
-      <version>1.18.3</version>
+      <version>1.22.2</version>
     </dependency>
 
     <!-- Catalogue externe (clients REST + cache) -->
