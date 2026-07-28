@@ -15,6 +15,7 @@ by describing *what the code actually is*, the working rules and the scope left 
 | 5 | [DATA-MODEL](DATA-MODEL.md) | Any change to the schema or to an entity |
 | 6 | [API](API.md) | Adding or changing an endpoint, front↔back contract |
 | 7 | [ROADMAP](ROADMAP.md) | Choosing the next task: milestones, priorities, dependencies |
+| 8 | [MOBILE](MOBILE.md) | Anything touching `apps/mobile`: how the web bundle is shared, and why sign-in does not work in the container yet |
 
 ## Update rule
 

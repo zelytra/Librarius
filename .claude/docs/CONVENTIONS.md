@@ -135,6 +135,13 @@ pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm
 cd apps/api && ./mvnw -B verify
 ```
 
+If `apps/mobile` or the web build output changed — the native shell has to still find the
+bundle:
+
+```bash
+pnpm mobile:build
+```
+
 If the API changed:
 
 ```bash

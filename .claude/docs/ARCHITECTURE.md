@@ -35,7 +35,7 @@ Alerting is deliberately two paths, because they fail differently: the in-cluste
 src/
   api/generated/librarius.ts   # orval client — GENERATED, do not edit
   app/AppShell.tsx             # layout + <Outlet/>, BottomNav.tsx
-  auth/oidc.ts                 # OIDC configuration
+  auth/oidc.ts                 # OIDC configuration (browser origin or native scheme)
   features/<screen>/           # one page per screen, self-contained
   shared/
     api.ts                     # useApiAuth() → { authed, loading, login }
@@ -144,7 +144,41 @@ zelytra/librarius/
    ([#65](https://github.com/zelytra/Librarius/issues/65)).
 6. ~~Removal of `HelloResource`~~ — done ([#41](https://github.com/zelytra/Librarius/issues/41)).
 
-## 4. Front ↔ back contract
+## 4. Native shell — `apps/mobile`
+
+```text
+apps/mobile/
+  capacitor.config.ts   # appId, appName, webDir → ../web/dist
+  package.json          # Capacitor 7, plus "@librarius/web": "workspace:*"
+  tsconfig.json
+```
+
+Bootstrapped by [#67](https://github.com/zelytra/Librarius/issues/67). The workspace holds
+**no application code**: the native WebView loads the bundle `apps/web` produces, so every
+screen is written once. `webDir` reaches that build output directly, and the workspace
+dependency is what orders the build — `pnpm mobile:build` runs `@librarius/web build`, then
+`cap sync`.
+
+`apps/mobile/android` and `apps/mobile/ios` do not exist yet: `cap add` generates them and
+needs the platform SDKs ([#70](https://github.com/zelytra/Librarius/issues/70),
+[#71](https://github.com/zelytra/Librarius/issues/71)). Capacitor is pinned to 7.x because
+its 8.x CLI requires Node 22 and the repository builds on Node 20.
+
+**Two things do not work inside the container yet**, and neither can be finished before a
+native project exists:
+
+- **Sign-in.** The native origin (`https://localhost` on Android, `capacitor://localhost`
+  on iOS) is not a redirect target, RFC 8252 rules out signing in inside the WebView, and
+  the callback comes back through a custom scheme. `redirect_uri` is already branched to
+  `fr.zelytra.librarius://auth`; the Keycloak client, the two plugins, the custom
+  `INavigator` and the natively registered scheme are still missing.
+- **The API base URL.** The generated client calls relative URLs, which resolve against the
+  bundle once it is served from the container, and the API's CORS origins know nothing of
+  the native ones.
+
+Both are written out in full in [MOBILE](MOBILE.md).
+
+## 5. Front ↔ back contract
 
 ```text
 apps/api (JAX-RS annotations)
@@ -156,7 +190,7 @@ The **`openapi-sync`** workflow regenerates and fails on any diff: the schema an
 are therefore **always** committed up to date. Any PR touching the API must include the
 regeneration.
 
-## 5. Security
+## 6. Security
 
 | Aspect | State |
 |---|---|
@@ -176,7 +210,7 @@ throttle per runner IP or need the dependency graph enabled on the repository. E
 **Dependency graph** and **Dependabot security updates** in the repository settings is the
 missing piece; the gate can then be revisited.
 
-## 6. Deployment
+## 7. Deployment
 
 The `infra/helm/librarius` chart: `web`, `api`, `postgres` (`local-path` PVC, two databases
 `librarius` + `keycloak`), `keycloak`, `ingress` (Traefik + cert-manager).
@@ -192,7 +226,7 @@ docs/DEPLOYMENT.md § "Deploying without downtime".
 The OIDC authority is **baked into the web image at build time**
 (`--build-arg VITE_OIDC_AUTHORITY`): changing domain requires a rebuild.
 
-## 7. Architecture decisions
+## 8. Architecture decisions
 
 | # | Decision | Rationale | Status |
 |---|---|---|---|
@@ -204,5 +238,5 @@ The OIDC authority is **baked into the web image at build time**
 | 6 | Provider release dates, not French ones | No reliable free API for French publishers | ✅ Accepted, to be revisited |
 | 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing | ✅ Applied |
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
-| 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🔜 Decided |
+| 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🚧 Bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): the shell loads the web bundle; native projects and native sign-in pending |
 | 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library and AniList are stubbed because both providers swallow their own failures: an unavailable third party would look like an empty result set | ✅ Applied |
