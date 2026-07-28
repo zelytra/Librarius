@@ -169,7 +169,7 @@ production opens.*
 
 | Expected (docs/ARCHITECTURE.md) | Reality |
 |---|---|
-| Multiple editions per work | Schema ready (`work` 1→N `edition`), **no screen** lets you pick or compare an edition |
+| Multiple editions per work | ✅ `GET /api/works/{id}/editions` and the "Autres éditions" section of the Detail screen compare them and switch the collection row onto one. The 1→N only became real when entries started being matched against the catalog instead of founding a work each — before that a work never held two editions. Missing: enriching the list from the providers, which needs a provider reference `work` does not carry ([API](API.md) gap A12) |
 | Upcoming **French** releases | `GET /api/catalog/upcoming` returns the **provider** dates (JP/EN), shown as "indicative dates". No French publisher data |
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
@@ -199,11 +199,11 @@ production opens.*
 
 | Indicator | Value |
 |---|---|
-| Java classes (main) | 64 |
-| Java tests | 22 files |
+| Java classes (main) | 66 |
+| Java tests | 23 files |
 | Front-end files (src) | 49 |
 | Front-end tests | 8 files, 63 tests |
 | Flyway migrations | 7 |
-| REST endpoints exposed | 28 (10 resources) |
+| REST endpoints exposed | 30 (11 resources) |
 | Locales | 1 (fr) |
 | CI workflows | 5 |

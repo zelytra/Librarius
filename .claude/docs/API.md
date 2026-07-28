@@ -21,7 +21,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
+| PUT | `/api/library/{id}/edition` | "This is the edition I own" (`EditionSwitchDto`) — see [Editions](#editions) |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
+| GET | `/api/works/{id}/editions` | Known editions of a work (`EditionDto`), the caller's own flagged `owned` |
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist, with the budget of the whole filtered set (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | PUT | `/api/wishlist/{id}` | Replaces the priority, the estimated price and the note (`WishlistUpdateDto`) |
@@ -48,7 +50,11 @@ Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the 
 ```java
 MeDto(String id, String email, String displayName, String locale)
 
-BookView(/* read projection of an edition and its work */)
+BookView(/* read projection of an edition and its work; carries editionId and workId */)
+
+EditionDto(UUID id, String isbn13, String publisher, String language, Integer pageCount,
+           String format, LocalDate releaseDate, String coverUrl, boolean owned)
+EditionSwitchDto(UUID editionId)
 
 ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
               Integer volumeNumber, String isbn13, String publisher, String language,
@@ -135,6 +141,49 @@ empty string.
 Both are **strictly private**. They live on the caller's own `library_item`, are returned to
 nobody else, and are never aggregated into a shared score — there is no public average and
 no plan for one. Another user's identifier answers 404 like an unknown one.
+
+## Editions
+
+A `work` is the intellectual content, an `edition` one materialisation of it — publisher,
+ISBN, language, page count, format. Both are shared catalog data; the `library_item`
+pointing at an edition is not.
+
+**A work only holds several editions because entries are deduplicated.** `POST /api/library`
+and `POST /api/wishlist` match the work before creating it — kind, title, authors and volume
+number, folded to lower case, the key the import path already used — and always create the
+edition, since the publisher and the ISBN are exactly what tells two editions apart. Without
+that matching every entry founded a work of its own, and no work ever held more than one
+edition. A matched work is only ever **completed** with the fields it lacks: it is shared, so
+a thin entry never overwrites a synopsis somebody else supplied.
+
+**Visibility.** `GET /api/works/{id}/editions` opens on a work the caller owns an edition of,
+and answers 404 on anything else — the same answer an unknown identifier gets, exactly like
+[Series](#series). Each entry carries `owned`, which describes the caller's own collection
+and nobody else's: two readers of the same title see the same editions and different flags.
+
+**Switching.** `PUT /api/library/{id}/edition` moves the ownership row onto another edition
+of the same work.
+
+| Case | Answer |
+|---|---|
+| The edition already in force | 200, unchanged — a double click is not an error |
+| Another edition of the same work | 200 with the updated `LibraryItemDto` |
+| Someone else's item, or an unknown one | **404** |
+| Unknown edition, or an edition of another work | **400** |
+| An edition already in the caller's collection | **409** with a `message` — `UNIQUE(user_id, edition_id)` |
+
+**What the switch keeps.** Status, rating, review, rank, acquisition date and the reading
+dates are left untouched: they describe the reader, not the object. Buying the hardcover
+does not un-read a book.
+
+**What it recomputes.** The reading position, and only it. A percentage means the same thing
+in every printing; a page number does not — page 150 of a 300-page paperback is nowhere near
+page 150 of a 600-page hardcover. The position is therefore carried over as its **percentage**
+and the page is re-derived from the page count of the new edition, the same conversion
+[Reading progress](#reading-progress) applies on every save. An edition with no page count
+leaves the page empty rather than keeping a page number that now means nothing. The one
+exception: when no percentage was ever recorded — a raw page typed on an edition that carried
+no page count either — the page is left alone, being the only thing the reader ever supplied.
 
 ## Series
 
@@ -252,3 +301,4 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | No time-based statistics (`/api/stats/timeline`) | Core product |
+| A12 | No **provider enrichment** of the editions of a work: the list holds what users entered. `work` carries no `provider_ref`, so no provider can be asked "the other editions of *this* work" | Core product |

@@ -43,8 +43,10 @@ v1.0 target: a **public**, multi-user product, open sign-up, French first.
 | **Reading goal** (`reading_goal`) | Annual target in books, volumes or pages | User |
 
 **Structural rule**: the catalog is **shared** across all users, ownership is **private**.
-Two users who own the same volume point at the same `edition` but have two distinct
-`library_item` rows.
+Two users who own the same title point at the same `work` — entries are matched against the
+catalog before a work is created — but keep two distinct `library_item` rows. They point at
+the same `edition` only when they entered the same one; two printings of one novel are two
+`edition` rows under one `work`, which is what the Detail screen lets a user choose between.
 
 ## 4. Screens
 
@@ -91,8 +93,15 @@ The full inventory, with a **Books / Manga** toggle.
   shared nor aggregated across users.
 - ✅ **Link to the series**: the *série* cell of the stat strip opens the series screen when
   the user has a stake in that series.
-- 🔜 **Alternate editions**: list the other `edition` rows of the same `work`, let the user
-  say which one they own.
+- ✅ **Alternate editions**: the other `edition` rows of the same `work` — publisher,
+  language, format, page count, ISBN, release date — with **"C'est l'édition que je
+  possède"** on each. The section is hidden when the catalog knows a single edition, and an
+  edition already in the collection is named as such instead of being offered. Switching
+  keeps status, rating, review and rank, and re-anchors the reading position on its
+  percentage (see [API](API.md) § Editions).
+- 🔜 **Enriching the editions from the providers**: the list holds what users entered.
+  `work` carries no provider reference, so no provider can be asked for "the other editions
+  of *this* work" — see [API](API.md) gap A12.
 - 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 
@@ -208,6 +217,11 @@ the year 🔜.
    The rating and the review are the sharpest case: they live on the user's own
    `library_item`, are never shared, and are never folded into a score across accounts.
 7. An import never creates a duplicate: matching by ISBN13, then by title + author.
+8. Correcting the **edition** of an owned title changes the object, not the reading of it:
+   status, rating, review, rank and the reading dates carry over untouched. The position
+   carries over as a **percentage** — the only measure that survives a change of pagination —
+   and the page is recomputed from the new page count. A user cannot own the same edition
+   twice, so a switch onto one already in their collection is refused with a message.
 
 ## 7. Out of scope (explicit decisions)
 
