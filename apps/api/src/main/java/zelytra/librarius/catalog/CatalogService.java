@@ -41,9 +41,9 @@ public class CatalogService {
         }
     }
 
-    public List<CatalogResult> search(Kind kind, String query, int limit) {
+    public List<CatalogResult> search(Kind kind, CatalogQuery query, int limit) {
         return aggregate(kind, limit, provider -> cache.get(CatalogCache.Scope.SEARCH,
-                provider.name(), "search|" + kind + '|' + query + '|' + limit,
+                provider.name(), "search|" + kind + '|' + query.cacheKey() + '|' + limit,
                 () -> provider.search(query, limit)));
     }
 

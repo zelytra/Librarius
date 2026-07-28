@@ -17,8 +17,12 @@ public interface CatalogProvider {
     /** Kind covered by this provider. */
     Kind kind();
 
-    /** Search by title / author. */
-    List<CatalogResult> search(String query, int limit);
+    /**
+     * Searches the provider for the criteria it understands, ignoring the others: a
+     * publisher means nothing to AniList, and returning nothing because of it would be
+     * worse than answering on the criteria that do apply.
+     */
+    List<CatalogResult> search(CatalogQuery query, int limit);
 
     /** Known upcoming releases (best-effort, depending on the provider's data). */
     List<CatalogResult> upcoming(int limit);

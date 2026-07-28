@@ -101,12 +101,18 @@ The full inventory, with a **Books / Manga** toggle.
 Search across the external catalog (Open Library for books, AniList for manga).
 
 - ✅ Keyword search, Book / Manga toggle, direct add to the collection or the wishlist.
-- 🔜 Search **by author** and **by year** (announced in the vision, not implemented).
+- ✅ **Advanced search**: author, year, language, publisher, folded away behind a toggle.
+  The criteria a provider does not index are ignored rather than faked, and the panel says
+  so — see [API](API.md#catalog-search) for what each one honours.
+- ✅ **ISBN recognised in the search field**: pasting the number off a back cover searches
+  the ISBN rather than the digits as keywords. The check digit is verified, so a barcode
+  or an order number still goes through as an ordinary search.
+- ✅ **Manual entry** for a title absent from the catalogs — self-published, an old
+  edition, a fanzine. Offered from both empty states, which is where the user meets it.
 - 🔜 **ISBN barcode scanning** (camera) — the key feature in a bookshop, native through
-  Capacitor.
+  Capacitor. The ISBN search it feeds already exists.
 - 🔜 A catalog page before adding: pick the *edition* and the initial *status*.
 - 🔜 Personalised suggestions based on the genres most present in the collection.
-- 🔜 Guided manual entry (for a book absent from the catalogs).
 
 ### 4.5 Wishlist ✅ / 🔜
 

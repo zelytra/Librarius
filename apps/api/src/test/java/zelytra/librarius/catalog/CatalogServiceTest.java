@@ -3,7 +3,9 @@ package zelytra.librarius.catalog;
 import org.junit.jupiter.api.Test;
 import zelytra.librarius.domain.Kind;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,13 +26,40 @@ class CatalogServiceTest {
         }
 
         @Override
-        public List<CatalogResult> search(String query, int limit) {
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
             return List.of(canned);
         }
 
         @Override
         public List<CatalogResult> upcoming(int limit) {
             return List.of(canned);
+        }
+    }
+
+    /** Keeps the criteria it was handed, to check they survive the trip to the provider. */
+    private static final class RecordingProvider implements CatalogProvider {
+
+        private CatalogQuery received;
+
+        @Override
+        public String name() {
+            return "recording";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOK;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            received = query;
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
         }
     }
 
@@ -55,8 +84,10 @@ class CatalogServiceTest {
                 new FakeProvider(Kind.MANGA, result("MANGA", "One Piece"))),
                 passThroughCache());
 
-        assertEquals("Fourth Wing", service.search(Kind.BOOK, "wing", 10).get(0).title());
-        assertEquals("One Piece", service.search(Kind.MANGA, "piece", 10).get(0).title());
+        assertEquals("Fourth Wing",
+                service.search(Kind.BOOK, CatalogQuery.of("wing"), 10).get(0).title());
+        assertEquals("One Piece",
+                service.search(Kind.MANGA, CatalogQuery.of("piece"), 10).get(0).title());
     }
 
     @Test
@@ -65,7 +96,7 @@ class CatalogServiceTest {
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))),
                 passThroughCache());
 
-        assertTrue(service.search(Kind.MANGA, "piece", 10).isEmpty());
+        assertTrue(service.search(Kind.MANGA, CatalogQuery.of("piece"), 10).isEmpty());
     }
 
     @Test
@@ -77,6 +108,41 @@ class CatalogServiceTest {
                 passThroughCache());
 
         // The duplicate (same title/author) is merged into a single entry.
-        assertEquals(1, service.search(Kind.BOOK, "wing", 10).size());
+        assertEquals(1, service.search(Kind.BOOK, CatalogQuery.of("wing"), 10).size());
+    }
+
+    @Test
+    void handsEveryAdvancedCriterionToTheProvider() {
+        RecordingProvider provider = new RecordingProvider();
+        CatalogService service = new CatalogService(List.of(provider), passThroughCache());
+        CatalogQuery query = new CatalogQuery("dune", "herbert", 1965, "fr", "pocket", null);
+
+        service.search(Kind.BOOK, query, 10);
+
+        // The service aggregates and caches; narrowing is the provider's job, and it can
+        // only do it if the criteria reach it untouched.
+        assertEquals(query, provider.received);
+    }
+
+    @Test
+    void doesNotShareACacheEntryBetweenTwoDifferentCriteria() {
+        Set<String> keys = new HashSet<>();
+        CatalogCache recordingCache = new CatalogCache() {
+            @Override
+            public List<CatalogResult> get(Scope scope, String provider, String key,
+                    Supplier<List<CatalogResult>> loader) {
+                keys.add(key);
+                return loader.get();
+            }
+        };
+        CatalogService service = new CatalogService(
+                List.of(new FakeProvider(Kind.BOOK, result("BOOK", "Dune"))), recordingCache);
+
+        service.search(Kind.BOOK, CatalogQuery.of("dune"), 10);
+        service.search(Kind.BOOK, new CatalogQuery("dune", "herbert", null, null, null, null), 10);
+
+        // Same text, one extra criterion: the second search must not be served the first
+        // one's answer.
+        assertEquals(2, keys.size());
     }
 }

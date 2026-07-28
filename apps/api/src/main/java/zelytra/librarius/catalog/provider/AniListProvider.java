@@ -5,22 +5,40 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zelytra.librarius.catalog.CatalogProvider;
+import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 import zelytra.librarius.domain.Kind;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
-/** Manga catalog provider backed by AniList (GraphQL). */
+/**
+ * Manga catalog provider backed by AniList (GraphQL).
+ *
+ * <p>AniList describes works, not editions: it holds a title, a start date and the staff who
+ * made it, and knows nothing of a publisher, a language or an ISBN. Those three criteria are
+ * therefore ignored here rather than faked — the search still answers on the ones it does
+ * index, and a book-only criterion simply does not narrow a manga search.
+ */
 @ApplicationScoped
 public class AniListProvider implements CatalogProvider {
 
     private static final String FIELDS = """
             id title { romaji english } startDate { year month day }
-            coverImage { large } description(asHtml: false)
+            coverImage { large } description(asHtml: false) isAdult
             staff(perPage: 1) { edges { role node { name { full } } } }
             """;
+
+    /**
+     * Page size used when results still have to be narrowed locally. The author search goes
+     * through the staff's works, which cannot be filtered on a title or a year server-side,
+     * so it asks for AniList's maximum and trims afterwards.
+     */
+    private static final int MAX_PAGE = 50;
 
     @Inject
     @RestClient
@@ -37,11 +55,16 @@ public class AniListProvider implements CatalogProvider {
     }
 
     @Override
-    public List<CatalogResult> search(String query, int limit) {
-        // isAdult: false filters out explicit content server-side (NSFW filter).
-        String gql = "query ($q: String, $n: Int) { Page(perPage: $n) { media("
-                + "type: MANGA, search: $q, sort: SEARCH_MATCH, isAdult: false) { " + FIELDS + " } } }";
-        return run(gql, Map.of("q", query, "n", limit));
+    public List<CatalogResult> search(CatalogQuery query, int limit) {
+        if (query.author() != null) {
+            return byAuthor(query, limit);
+        }
+        if (query.text() == null && query.year() == null) {
+            // Only criteria AniList does not index (publisher, language, ISBN): answering the
+            // most popular mangas would look like a result and be one by accident.
+            return List.of();
+        }
+        return byTitle(query, limit);
     }
 
     @Override
@@ -49,21 +72,103 @@ public class AniListProvider implements CatalogProvider {
         String gql = "query ($n: Int) { Page(perPage: $n) { media("
                 + "type: MANGA, status: NOT_YET_RELEASED, sort: START_DATE, isAdult: false) { "
                 + FIELDS + " } } }";
-        return run(gql, Map.of("n", limit));
+        return fetch(gql, Map.of("n", limit), AniListProvider::mediaOfPage).stream()
+                .map(this::toResult)
+                .toList();
     }
 
-    private List<CatalogResult> run(String gql, Map<String, Object> variables) {
+    /**
+     * Title search, with the year applied by AniList itself through the start-date window.
+     *
+     * <p>A null {@code search} is accepted and simply not applied, but a null
+     * {@code startDate_greater} is rejected outright ("Illegal operator and value
+     * combination"), so the window is only declared when a year is actually being filtered
+     * on.
+     */
+    private List<CatalogResult> byTitle(CatalogQuery query, int limit) {
+        boolean withYear = query.year() != null;
+        String sort = query.text() != null ? "SEARCH_MATCH" : "POPULARITY_DESC";
+        String gql = "query ($q: String, $n: Int"
+                + (withYear ? ", $from: FuzzyDateInt, $to: FuzzyDateInt" : "")
+                + ") { Page(perPage: $n) { media(type: MANGA, search: $q, sort: " + sort
+                + ", isAdult: false"
+                + (withYear ? ", startDate_greater: $from, startDate_lesser: $to" : "")
+                + ") { " + FIELDS + " } } }";
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("q", query.text());
+        variables.put("n", Math.min(limit, MAX_PAGE));
+        if (withYear) {
+            variables.put("from", query.year() * 10000 + 101);
+            variables.put("to", query.year() * 10000 + 1231);
+        }
+        return fetch(gql, variables, AniListProvider::mediaOfPage).stream()
+                .map(this::toResult)
+                .toList();
+    }
+
+    /**
+     * Author search: AniList does not index the author on a work, it links works to the staff
+     * who made them. So the name is resolved to a person first, and their manga are what the
+     * search returns — a title or a year narrows that list here, since a staff's works accept
+     * no filter of their own. An unknown name answers 404, which {@link #run} reports as no
+     * result.
+     */
+    private List<CatalogResult> byAuthor(CatalogQuery query, int limit) {
+        boolean narrowed = query.text() != null || query.year() != null;
+        String gql = "query ($a: String, $n: Int) { Staff(search: $a) { staffMedia("
+                + "type: MANGA, sort: POPULARITY_DESC, perPage: $n) { nodes { " + FIELDS
+                + " } } } }";
+        Map<String, Object> variables = Map.of("a", query.author(),
+                "n", narrowed ? MAX_PAGE : Math.min(limit, MAX_PAGE));
+
+        return fetch(gql, variables, AniListProvider::mediaOfStaff).stream()
+                // staffMedia carries no isAdult filter of its own, unlike the title search.
+                .filter(m -> !Boolean.TRUE.equals(m.isAdult()))
+                .filter(m -> matchesTitle(m, query.text()))
+                .filter(m -> query.year() == null
+                        || (m.startDate() != null && query.year().equals(m.startDate().year())))
+                .map(this::toResult)
+                .limit(limit)
+                .toList();
+    }
+
+    private static boolean matchesTitle(AniListClient.Media media, String text) {
+        if (text == null) {
+            return true;
+        }
+        String needle = text.toLowerCase(Locale.ROOT);
+        AniListClient.Title title = media.title();
+        return title != null
+                && ((title.romaji() != null && title.romaji().toLowerCase(Locale.ROOT).contains(needle))
+                        || (title.english() != null
+                                && title.english().toLowerCase(Locale.ROOT).contains(needle)));
+    }
+
+    /** Runs the query and extracts the media list the answer carries, or none on failure. */
+    private List<AniListClient.Media> fetch(String gql, Map<String, Object> variables,
+            Function<AniListClient.Data, List<AniListClient.Media>> extract) {
         try {
             AniListClient.GqlResponse res = client.query(new AniListClient.GqlRequest(gql, variables));
-            if (res == null || res.data() == null || res.data().page() == null
-                    || res.data().page().media() == null) {
+            if (res == null || res.data() == null) {
                 return List.of();
             }
-            return res.data().page().media().stream().map(this::toResult).toList();
+            List<AniListClient.Media> media = extract.apply(res.data());
+            return media == null ? List.of() : media;
         } catch (Exception e) {
             Log.warnf("AniList search failed: %s", e.getMessage());
             return List.of();
         }
+    }
+
+    private static List<AniListClient.Media> mediaOfPage(AniListClient.Data data) {
+        return data.page() == null ? null : data.page().media();
+    }
+
+    private static List<AniListClient.Media> mediaOfStaff(AniListClient.Data data) {
+        return data.staff() == null || data.staff().staffMedia() == null
+                ? null
+                : data.staff().staffMedia().nodes();
     }
 
     private CatalogResult toResult(AniListClient.Media m) {

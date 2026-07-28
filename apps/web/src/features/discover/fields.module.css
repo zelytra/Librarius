@@ -1,0 +1,41 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 380px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.control {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  padding: 8px 10px;
+  font-size: var(--fs-14);
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--accent);
+}

@@ -13,7 +13,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | Method | Path | Role |
 |---|---|---|
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
-| GET | `/api/catalog/search?q=&kind=&limit=` | External catalog search. `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
+| GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
@@ -135,6 +135,34 @@ empty string.
 Both are **strictly private**. They live on the caller's own `library_item`, are returned to
 nobody else, and are never aggregated into a shared score — there is no public average and
 no plan for one. Another user's identifier answers 404 like an unknown one.
+
+## Catalog search
+
+`GET /api/catalog/search` takes six criteria, all optional and all combining: `q` (free
+text), `author`, `year`, `language`, `publisher` and `isbn`. A call with none of them
+answers an empty list without charging the rate limit — an empty field must not cost a
+provider call.
+
+Each provider honours what its own API indexes, and ignores the rest rather than answering
+nothing:
+
+| Criterion | Open Library (`BOOK`) | AniList (`MANGA`) |
+|---|---|---|
+| `q` | ✅ free text | ✅ `media(search:)` |
+| `author` | ✅ `author:` | ✅ resolved through `Staff(search:)`, then that person's works |
+| `year` | ✅ `first_publish_year:` | ✅ `startDate` window |
+| `publisher` | ✅ `publisher:` | ❌ AniList describes works, not editions |
+| `language` | ✅ `language:`, ISO 639-1 mapped to the MARC code (`fr` → `fre`) | ❌ |
+| `isbn` | ✅ `isbn:` | ❌ |
+
+A manga search carrying only criteria AniList cannot honour returns nothing, rather than
+the most popular mangas — an answer that looks like a result and is one by accident.
+
+`language` is given as an **ISO 639-1** code, which is what a client holds; the mapping to
+whatever a provider indexes belongs to the provider.
+
+Every criterion takes part in the cache key, so two searches differing by a single field
+are never served the same answer.
 
 ## Series
 
