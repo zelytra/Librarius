@@ -298,12 +298,15 @@ k get pods -l release=librarius
 k get deploy librarius-web librarius-api \
   -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}'
 
-# 3. API health, from inside the cluster (bypasses ingress and TLS).
-k exec deploy/librarius-api -- curl -sf localhost:8080/q/health/ready
+# 3. API health, bypassing ingress and TLS. Leave the forward running in a second
+#    shell; it needs no tooling inside the container.
+k port-forward deploy/librarius-api 8080:8080 &
+curl -s localhost:8080/q/health/ready; kill %1
 
-# 4. Public entry point: 200, and a certificate that is still valid.
+# 4. Public entry point: 200 on the app, and the API reachable through the ingress.
+#    (/api needs a token — /q/health does not, so it is the honest check here.)
 curl -sSI https://librarius.zelytra.fr/ | head -1
-curl -sf https://librarius.zelytra.fr/api/library >/dev/null; echo "api via ingress: $?"
+curl -s https://librarius.zelytra.fr/q/health/ready
 
 # 5. The API log, for a migration or a datasource refusing to start.
 k logs deploy/librarius-api --tail=80
