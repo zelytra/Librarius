@@ -20,8 +20,16 @@ web:
     tag: "0.1.0"
     pullPolicy: IfNotPresent
   replicas: 1
+  # RollingUpdate (maxSurge 1, maxUnavailable 0): the replacement pod has to be
+  # Ready before the old one is stopped, so a release drops no request. See
+  # docs/DEPLOYMENT.md § "Deploying without downtime" for the node arithmetic.
+  strategy: RollingUpdate
+  # 25m: nginx serving a static bundle draws 1m and 6Mi in steady state on the
+  # cluster (measured over 6 minutes). The old value of 50m was a guess, and on a
+  # node whose CPU requests are 96% committed, 25m of guess is the difference
+  # between a surge pod that schedules and one that waits.
   resources:
-    requests: { cpu: 50m, memory: 64Mi }
+    requests: { cpu: 25m, memory: 64Mi }
     limits: { cpu: 200m, memory: 192Mi }
 
 # ── API (Quarkus) ─────────────────────────────────────────────────────────────
@@ -32,9 +40,31 @@ api:
     tag: "0.1.0"
     pullPolicy: IfNotPresent
   replicas: 1
+  # RollingUpdate surges a second API pod, so the new one runs its Flyway
+  # migrations while the old one still serves traffic: a migration that is not
+  # backward compatible breaks the old pod for the ~30s of the overlap. Deploy
+  # such a migration with `--set api.strategy=Recreate`, which trades the
+  # downtime back for the safety. docs/DEPLOYMENT.md § "Deploying without
+  # downtime".
+  strategy: RollingUpdate
+  # 100m: the JVM draws 4-8m and 222Mi in steady state (measured over 6 minutes).
+  # The request is a scheduling floor, not a budget — boot bursts up to the 1 CPU
+  # limit and is not throttled by it. 150m was too much to surge on this node.
   resources:
-    requests: { cpu: 150m, memory: 256Mi }
+    requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: "1", memory: 768Mi }
+
+# ── Disruption budget ─────────────────────────────────────────────────────────
+# Keeps an involuntary eviction (a descheduler, a stray `kubectl drain`) from
+# taking the only replica of web or api down. It does *not* govern a rolling
+# update: a Deployment replaces pods directly, it does not evict them.
+#
+# ⚠️ With replicas: 1, `minAvailable: 1` means a deliberate node drain blocks
+# instead of proceeding. That is the point, but on a single-node cluster the
+# drain is usually intentional — use `kubectl drain --disable-eviction`, or
+# deploy with `--set podDisruptionBudget.enabled=false` first.
+podDisruptionBudget:
+  enabled: true
 
 # ── PostgreSQL ────────────────────────────────────────────────────────────────
 postgres:

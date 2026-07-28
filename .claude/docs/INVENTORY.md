@@ -147,8 +147,13 @@ production opens.*
     deploys no Prometheus**, there is no kube-state-metrics and no Alertmanager, so on the
     cluster nobody is still being told anything.
     [#60](https://github.com/zelytra/Librarius/issues/60) stays open.
-16. **`Recreate` strategy** (node CPU constraint) → downtime on every deployment. Accepted
-    in staging.
+16. **Zero-downtime rollout shipped, never exercised.** Both deployments now roll
+    (`maxSurge: 1`, `maxUnavailable: 0`) on requests cut to measured usage, with a
+    `startupProbe`, `preStop` pauses and disruption budgets. The `Recreate` outage it
+    replaces was measured at 11s (web) and 31s (api); the figure *after* the change does
+    not exist, because no deployment has run with these settings. Take it on the next
+    merge with `infra/downtime-probe.sh`.
+    [#64](https://github.com/zelytra/Librarius/issues/64) stays open until then.
 17. **Rollback never exercised.** A `vX.Y.Z` tag now publishes `X.Y.Z` / `X.Y` / `X`
     images, aligns the chart and generates the changelog (`release.yml`), and the
     `helm rollback` procedure is written down in `docs/DEPLOYMENT.md` — but it has never
