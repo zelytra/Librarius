@@ -57,7 +57,7 @@ styling left, front-end coverage on the 7 screens, data isolation covered by tes
 | [#34](https://github.com/zelytra/Librarius/issues/34) | ✅ Factor out the cover palette and delete mockData.ts | #32 |
 | [#35](https://github.com/zelytra/Librarius/issues/35) | Extract every hardcoded string into i18n | — |
 | [#36](https://github.com/zelytra/Librarius/issues/36) | ✅ Cover the seven screens with Vitest | — |
-| [#37](https://github.com/zelytra/Librarius/issues/37) | Playwright end-to-end suite on the critical journeys | #36 |
+| [#37](https://github.com/zelytra/Librarius/issues/37) | ✅ Playwright end-to-end suite on the critical journeys | #36 |
 | [#38](https://github.com/zelytra/Librarius/issues/38) | ✅ Server-side pagination and filtering for library and wishlist | — |
 | [#39](https://github.com/zelytra/Librarius/issues/39) | ✅ Per-user data isolation tests | — |
 | [#40](https://github.com/zelytra/Librarius/issues/40) | ✅ Compute statistics in SQL | — |

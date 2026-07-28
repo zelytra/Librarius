@@ -185,3 +185,4 @@ The OIDC authority is **baked into the web image at build time**
 | 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing | ✅ Applied |
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🔜 Decided |
+| 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library and AniList are stubbed because both providers swallow their own failures: an unavailable third party would look like an empty result set | ✅ Applied |

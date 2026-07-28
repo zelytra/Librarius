@@ -25,6 +25,7 @@ apps/
   web/        # React + Vite + TS PWA
   api/        # Quarkus API (Maven, mvnw wrapper)
 packages/     # TS client generated from the OpenAPI schema (coming)
+e2e/          # Playwright suite: the key journeys against the whole stack
 infra/        # docker-compose (postgres, …)
 docs/         # ARCHITECTURE.md
 .github/      # CI/CD workflows
@@ -67,6 +68,7 @@ dashboard "Librarius — Vue d'ensemble" provisioned automatically.
 | `pnpm web:dev` / `web:build` / `web:test` / `web:lint` | Frontend |
 | `pnpm api:dev` / `api:test` | Backend (through `mvnw`) |
 | `pnpm infra:up` / `infra:down` | Local Docker stack |
+| `pnpm e2e:install` then `pnpm e2e` | End-to-end journeys (starts and stops its own stack) |
 
 ## Contribution & git flow
 
