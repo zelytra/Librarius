@@ -1,26 +1,26 @@
-# Documentation de travail — Librarius
+# Working documentation — Librarius
 
-Documentation destinée aux **agents** et contributeurs qui reprennent le projet.
-Elle complète la doc publique (`docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`) en
-décrivant *l'état réel du code*, les règles de travail et le périmètre à construire.
+Documentation aimed at the **agents** and contributors picking the project up.
+It complements the public documentation (`docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`)
+by describing *what the code actually is*, the working rules and the scope left to build.
 
-## Ordre de lecture recommandé
+## Recommended reading order
 
-| # | Document | À lire quand |
+| # | Document | Read it when |
 |---|---|---|
-| 1 | [ÉTAT-DES-LIEUX](ETAT-DES-LIEUX.md) | **Toujours en premier.** Ce qui existe vraiment, ce qui manque, la dette identifiée |
-| 2 | [CONVENTIONS](CONVENTIONS.md) | Avant d'écrire la moindre ligne : git flow, commits, PR, style de code, tests |
-| 3 | [PRODUIT](PRODUIT.md) | Travail fonctionnel : personas, écrans, parcours, règles métier |
-| 4 | [ARCHITECTURE](ARCHITECTURE.md) | Travail technique : modules, flux, dépendances, décisions structurantes |
-| 5 | [MODÈLE-DE-DONNÉES](MODELE-DE-DONNEES.md) | Toute évolution de schéma ou d'entité |
-| 6 | [API](API.md) | Ajout/modification d'endpoint, contrat front↔back |
-| 7 | [ROADMAP](ROADMAP.md) | Choix de la prochaine tâche : milestones, priorités, dépendances |
+| 1 | [INVENTORY](INVENTORY.md) | **Always first.** What really exists, what is missing, the debt already identified |
+| 2 | [CONVENTIONS](CONVENTIONS.md) | Before writing a single line: git flow, commits, PRs, code style, tests |
+| 3 | [PRODUCT](PRODUCT.md) | Functional work: personas, screens, journeys, business rules |
+| 4 | [ARCHITECTURE](ARCHITECTURE.md) | Technical work: modules, flows, dependencies, structural decisions |
+| 5 | [DATA-MODEL](DATA-MODEL.md) | Any change to the schema or to an entity |
+| 6 | [API](API.md) | Adding or changing an endpoint, front↔back contract |
+| 7 | [ROADMAP](ROADMAP.md) | Choosing the next task: milestones, priorities, dependencies |
 
-## Règle de mise à jour
+## Update rule
 
-Ces documents sont **vivants**. Une PR qui change le comportement, le schéma ou le
-contrat d'API met à jour le document concerné **dans la même PR**. Une PR qui ferme
-une issue coche la ligne correspondante dans [ROADMAP](ROADMAP.md).
+These documents are **living**. A PR that changes behaviour, the schema or the API
+contract updates the relevant document **in the same PR**. A PR that closes an issue
+ticks the matching line in [ROADMAP](ROADMAP.md).
 
-Si un document contredit le code, **le code fait foi** : corrige le document et
-signale l'écart dans la description de la PR.
+If a document contradicts the code, **the code wins**: fix the document and flag the
+discrepancy in the PR description.

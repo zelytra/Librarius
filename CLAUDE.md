@@ -4,7 +4,7 @@ Personal library for **books & manga**: collection, reading tracking, wishlist, 
 discovery, statistics. React PWA + Quarkus API + PostgreSQL + Keycloak.
 
 > 📚 **Full working documentation for agents: [`.claude/docs/`](.claude/docs/README.md).**
-> Read at least [ÉTAT-DES-LIEUX](.claude/docs/ETAT-DES-LIEUX.md) and
+> Read at least [INVENTORY](.claude/docs/INVENTORY.md) and
 > [CONVENTIONS](.claude/docs/CONVENTIONS.md) before changing anything.
 
 ## Language
