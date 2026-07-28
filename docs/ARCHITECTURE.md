@@ -1,87 +1,97 @@
-# Architecture — Ma Bibliothèque (Librarius)
+# Architecture — My Library (Librarius)
 
-Document vivant décrivant les choix techniques et la roadmap. Mis à jour au fil des PR.
+A living document describing the technical choices and the roadmap. Kept up to date as
+pull requests land.
 
-## Vision produit
+## Product vision
 
-Bibliothèque personnelle multi-utilisateurs pour **livres et mangas** : collection,
-suivi de lecture, souhaits, recherche (titre/auteur/date) avec couvertures et
-**éditions multiples**, **prochaines sorties**, statistiques. FR par défaut, i18n-ready.
-La maquette de référence définit une UI mobile-first « papier »
-(serif *Newsreader*, *DM Sans*, accent sauge `#9aab92` sur crème `#f3ede3`).
+Multi-user personal library for **books and manga**: collection, reading tracking,
+wishlist, search (title/author/date) with covers and **multiple editions**, **upcoming
+releases**, statistics. French user interface, i18n-ready. The reference mockup defines
+a mobile-first "paper" look (serif *Newsreader*, *DM Sans*, sage accent `#9aab92` on
+cream `#f3ede3`).
 
-## Choix structurants
+## Structuring choices
 
-| Domaine | Choix | Justification courte |
+| Area | Choice | Short rationale |
 |---|---|---|
-| Front | React + Vite + TS, PWA | Un seul code responsive PC + mobile ; installable ; prêt Capacitor |
-| Back | Java + Quarkus | Démarrage rapide, Micrometer/Prometheus natif, `quarkus-oidc` |
-| DB | PostgreSQL + Hibernate Panache + Flyway | Migrations versionnées, scoping user au niveau repository |
-| Auth | Keycloak (OIDC) | N'implémente pas soi-même register/reset/refresh ; SSO Grafana partagé |
-| Client API | orval (OpenAPI → hooks typés) | Types front/back synchronisés, gate CI sur le diff |
-| Catalogue livres | Open Library (sans clé) | Recherche titre/auteur, couvertures, ISBN |
-| Catalogue mangas | AniList + Jikan + MangaDex | Meilleures données manga gratuites |
-| Monorepo | pnpm (web) + Maven (api) | Coexistence sans friction, séparés en CI par path filters |
+| Frontend | React + Vite + TS, PWA | One responsive codebase for desktop and mobile; installable; Capacitor-ready |
+| Backend | Java + Quarkus | Fast startup, built-in Micrometer/Prometheus, `quarkus-oidc` |
+| DB | PostgreSQL + Hibernate Panache + Flyway | Versioned migrations, per-user scoping at the repository level |
+| Auth | Keycloak (OIDC) | No home-grown register/reset/refresh; SSO shared with Grafana |
+| API client | orval (OpenAPI → typed hooks) | Frontend and backend types stay in sync, CI gate on the diff |
+| Book catalog | Open Library (no API key) | Title/author search, covers, ISBN |
+| Manga catalog | AniList + Jikan + MangaDex | Best free manga data available |
+| Monorepo | pnpm (web) + Maven (api) | Coexist without friction, kept apart in CI by path filters |
 
-## Modèle de données (cible)
+## Data model (target)
 
-Principe clé : **séparer le catalogue partagé** (`series` / `work` / `edition`) de la
-**possession par utilisateur** (`library_item`). Deux utilisateurs partagent la même
-`edition` ; chacun a sa `library_item`.
+Key principle: **keep the shared catalog** (`series` / `work` / `edition`) **separate
+from per-user ownership** (`library_item`). Two users share the same `edition`; each has
+their own `library_item`.
 
-- `app_user` (id = `sub` Keycloak, display_name, email, locale) — JIT, **aucun credential stocké**
-- `series` (titre, kind BOOK|MANGA, total_volumes?, status)
-- `work` (titre, titre_original, auteurs, kind, series_id?, volume_number?, synopsis, genres[], année)
-- `edition` (work_id, isbn13/10, éditeur, langue, pages, cover_url, format, release_date, provider, provider_ref) — **1 work → N éditions**
-- `library_item` (user_id, edition_id, acquired_at, rating, status OWNED|READING|READ, UNIQUE(user,edition))
+- `app_user` (id = Keycloak `sub`, display_name, email, locale) — provisioned JIT,
+  **no credential stored**
+- `series` (title, kind BOOK|MANGA, total_volumes?, status)
+- `work` (title, original_title, authors, kind, series_id?, volume_number?, synopsis,
+  genres[], year)
+- `edition` (work_id, isbn13/10, publisher, language, pages, cover_url, format,
+  release_date, provider, provider_ref) — **1 work → N editions**
+- `library_item` (user_id, edition_id, acquired_at, rating, status OWNED|READING|READ,
+  UNIQUE(user, edition))
 - `reading_progress` (library_item_id, current_page, percent, started_at, finished_at)
-- `rank_category` (user_id NULL pour built-ins Or/Argent/Bronze, code, label, color, is_builtin) + `library_item_rank`
+- `rank_category` (user_id NULL for the built-in Gold/Silver/Bronze ranks, code, label,
+  color, is_builtin) + `library_item_rank`
 - `wishlist_item` (user_id, work/edition, priority, estimated_price, note)
 - `reading_goal` (user_id, year, target_count, unit)
-- `dashboard_layout` (user_id, sections JSONB) — accueil réordonnable/masquable
+- `dashboard_layout` (user_id, sections JSONB) — reorderable/hideable home screen
 - `notification_pref` (user_id, JSONB)
 - `catalog_cache` (provider, query_hash, payload JSONB, fetched_at)
 
-## Catalogue externe
+## External catalog
 
-Abstraction `CatalogProvider` (search / getWork / getEditions / upcomingReleases) +
-`CatalogAggregator` qui fan-out par type, normalise vers `work`/`edition` et dédoublonne
-par ISBN13 puis titre+auteur flou. Cache persistant (`catalog_cache`, TTL) + Caffeine.
+A `CatalogProvider` abstraction (search / getWork / getEditions / upcomingReleases) plus
+a `CatalogAggregator` that fans out per kind, normalises results into `work`/`edition`
+and de-duplicates by ISBN13, then by fuzzy title+author. Persistent cache
+(`catalog_cache`, with a TTL) backed by Caffeine.
 
-> ⚠️ **Prochaines sorties manga VF** : aucune API gratuite fiable ne couvre les
-> calendriers des éditeurs français (Glénat, Ki-oon, Kana, Pika). Les API (AniList/MAL/
-> MangaDex) donnent surtout des dates JP/EN. MVP = dates providers **étiquetées** + table
-> `upcoming_release` curée manuellement ; scraper FR best-effort = phase ultérieure.
+> ⚠️ **Upcoming French-language manga releases**: no reliable free API covers the
+> release calendars of the French publishers (Glénat, Ki-oon, Kana, Pika). The available
+> APIs (AniList/MAL/MangaDex) mostly return JP/EN dates. The MVP therefore combines
+> **labelled** provider dates with a manually curated `upcoming_release` table; a
+> best-effort French scraper is left for a later phase.
 
 ## CI/CD & git flow
 
-Branches : `main` (prod) ← `develop` (intégration) ← `feature/*` ; `release/*`, `hotfix/*`.
-Workflows GitHub Actions (path-filtered) :
+Branches: `main` (release) ← `develop` (integration) ← `feature/*`; plus `release/*` and
+`hotfix/*`. GitHub Actions workflows (path-filtered):
 
-- **web** : pnpm `--frozen-lockfile` → eslint → `tsc` → vitest → `vite build`
-- **api** : JDK 21 + cache Maven → `./mvnw -B verify`
-- **openapi-sync** *(PR #3)* : régénère le client, échoue sur diff
-- **release** *(PR #10)* : build + push images Docker GHCR (web nginx, api JVM ; natif optionnel)
+- **web**: pnpm `--frozen-lockfile` → eslint → `tsc` → vitest → `vite build`
+- **api**: JDK 21 + Maven cache → `./mvnw -B verify`
+- **openapi-sync** *(PR #3)*: regenerates the client, fails on a diff
+- **release** *(PR #10)*: builds and pushes Docker images to GHCR (nginx web, JVM api;
+  native optional)
 
-Chaque PR doit être verte avant merge.
+Every pull request must be green before it is merged.
 
 ## Monitoring ✅
 
-`quarkus-micrometer-registry-prometheus` → `/q/metrics` (JVM, HTTP, system) + métrique
-métier `librarius_catalog_search_total{kind}`. Prometheus (`:9090`) scrape l'API ;
-Grafana (`:3000`) est provisionné as-code (datasource Prometheus + dashboard
-« Librarius — Vue d'ensemble » : débit/latence HTTP, mémoire JVM, recherches catalogue).
-En dev, Prometheus scrape l'hôte (`host.docker.internal:8080`) ; en prod, le conteneur API.
+`quarkus-micrometer-registry-prometheus` → `/q/metrics` (JVM, HTTP, system) plus the
+business metric `librarius_catalog_search_total{kind}`. Prometheus (`:9090`) scrapes the
+API; Grafana (`:3000`) is provisioned as code (Prometheus datasource and the dashboard
+"Librarius — Vue d'ensemble": HTTP throughput and latency, JVM memory, catalog
+searches). In dev, Prometheus scrapes the host (`host.docker.internal:8080`); in prod,
+the API container.
 
-## Roadmap des PR
+## Pull request roadmap
 
-1. **Fondation** — monorepo, skeletons web/api, compose postgres, CI minimale ✅
-2. Backend core + auth (Flyway, entités Panache, Keycloak OIDC)
-3. OpenAPI + client TS (orval)
-4. Providers catalogue (recherche / éditions / sorties)
-5. Design system + i18n (thèmes, polices, PWA, app shell)
-6. Écrans A — Collection, Détail
-7. Écrans B — Découvrir, Souhaits, Stats
-8. Accueil personnalisable + Réglages
-9. Monitoring Grafana
-10. Déploiement (images GHCR, compose prod)
+1. **Foundation** — monorepo, web/api skeletons, postgres compose, minimal CI ✅
+2. Backend core + auth (Flyway, Panache entities, Keycloak OIDC)
+3. OpenAPI + TS client (orval)
+4. Catalog providers (search / editions / releases)
+5. Design system + i18n (themes, fonts, PWA, app shell)
+6. Screens A — Collection, Detail
+7. Screens B — Discover, Wishlist, Stats
+8. Customisable home screen + Settings
+9. Grafana monitoring
+10. Deployment (GHCR images, prod compose)
