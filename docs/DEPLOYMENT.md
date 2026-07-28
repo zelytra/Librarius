@@ -80,7 +80,7 @@ chart (v0.2.0): **web** (PWA), **api** (Quarkus), **PostgreSQL** (PVC) and **Key
 
 ### 🔑 Cluster secrets (manual action, before any deployment)
 
-The chart reads two Secrets from the `default` namespace. Their names are passed by
+The chart reads two Secrets from the `librarius` namespace. Their names are passed by
 `cd.yml` (`--set postgres.existingSecret=…`, `--set keycloak.existingSecret=…`); nothing
 else about them lives in this repository.
 
@@ -89,20 +89,23 @@ else about them lives in this repository.
 | `librarius-postgres` | `postgres-password` | postgres (`POSTGRES_PASSWORD`), api (`QUARKUS_DATASOURCE_PASSWORD`), keycloak (`KC_DB_PASSWORD`) |
 | `librarius-keycloak` | `admin-password` | keycloak (`KEYCLOAK_ADMIN_PASSWORD`) |
 
-Create them once, with values generated locally:
+Create them once, with values generated locally. The namespace has to exist first — the
+pipeline creates it, but on a fresh cluster the secrets come before the first deployment:
 
 ```bash
-kubectl -n default create secret generic librarius-postgres \
+kubectl create namespace librarius --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n librarius create secret generic librarius-postgres \
   --from-literal=postgres-password="$(openssl rand -base64 24)"
 
-kubectl -n default create secret generic librarius-keycloak \
+kubectl -n librarius create secret generic librarius-keycloak \
   --from-literal=admin-password="$(openssl rand -base64 24)"
 ```
 
 Read a value back when you need it (to sign in to the admin console, for instance):
 
 ```bash
-kubectl -n default get secret librarius-keycloak \
+kubectl -n librarius get secret librarius-keycloak \
   -o jsonpath='{.data.admin-password}' | base64 -d; echo
 ```
 
@@ -126,15 +129,15 @@ empty volume, so the role has to be altered in place, then the Secret updated to
 ```bash
 NEW_PG=$(openssl rand -base64 24)
 
-kubectl -n default exec deploy/librarius-postgres -- \
+kubectl -n librarius exec deploy/librarius-postgres -- \
   psql -U librarius -d librarius -c "ALTER ROLE librarius WITH PASSWORD '$NEW_PG'"
 
-kubectl -n default create secret generic librarius-postgres \
+kubectl -n librarius create secret generic librarius-postgres \
   --from-literal=postgres-password="$NEW_PG" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # The consumers only read the Secret at startup.
-kubectl -n default rollout restart deployment/librarius-api deployment/librarius-keycloak
+kubectl -n librarius rollout restart deployment/librarius-api deployment/librarius-keycloak
 unset NEW_PG
 ```
 
@@ -144,7 +147,7 @@ console — `https://librarius.zelytra.fr/auth/admin`, *master* realm, user `adm
 *Credentials* tab, *Reset password* — then align the Secret:
 
 ```bash
-kubectl -n default create secret generic librarius-keycloak \
+kubectl -n librarius create secret generic librarius-keycloak \
   --from-literal=admin-password='<the new password>' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
