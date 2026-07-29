@@ -81,7 +81,7 @@ on: it is the check that the two workspaces are still wired together.
 
 ## 4. Prerequisites for the native projects
 
-Nothing beyond Node 20 and pnpm is needed for what is in the repository today. The native
+Nothing beyond Node 24 and pnpm is needed for what is in the repository today. The native
 projects need, when [#70](https://github.com/zelytra/Librarius/issues/70) and
 [#71](https://github.com/zelytra/Librarius/issues/71) get picked up:
 
@@ -90,9 +90,17 @@ projects need, when [#70](https://github.com/zelytra/Librarius/issues/70) and
 | Android | Android Studio, the Android SDK (API 23+), a JDK 21 — the one already used by `apps/api` |
 | iOS | macOS, Xcode, CocoaPods, a paid Apple developer account for a device or TestFlight |
 
-**Version note.** Capacitor is pinned to **7.x** because `@capacitor/cli` 8 declares
-`node >= 22` and this repository builds on Node 20 (`.nvmrc`, used by every workflow).
-Moving to Capacitor 8 therefore means bumping `.nvmrc` first, for the whole monorepo.
+**Version note.** Capacitor was pinned to **7.x** because `@capacitor/cli` 8 declares
+`node >= 22` while the repository still built on Node 20. **That constraint is gone**:
+`.nvmrc` moved to **24** with the toolchain upgrade
+([#133](https://github.com/zelytra/Librarius/issues/133)), Node 20 having reached end of
+life in April 2026.
+
+So 8.x is now merely **untried**, not blocked. The pin stays until someone moves it
+deliberately and runs `pnpm mobile:build` against it — a major bump nobody has exercised is
+not something to inherit silently while [#68](https://github.com/zelytra/Librarius/issues/68)
+to [#71](https://github.com/zelytra/Librarius/issues/71) are still unwritten. Whoever picks
+one of them up should try 8 first, rather than building on 7 and migrating afterwards.
 
 ## 5. Authentication — what does not work yet
 

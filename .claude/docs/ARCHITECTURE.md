@@ -164,7 +164,10 @@ dependency is what orders the build — `pnpm mobile:build` runs `@librarius/web
 `apps/mobile/android` and `apps/mobile/ios` do not exist yet: `cap add` generates them and
 needs the platform SDKs ([#70](https://github.com/zelytra/Librarius/issues/70),
 [#71](https://github.com/zelytra/Librarius/issues/71)). Capacitor is pinned to 7.x because
-its 8.x CLI requires Node 22 and the repository builds on Node 20.
+its 8.x CLI required Node 22 while the repository still built on Node 20 — **that reason is
+gone**: `.nvmrc` moved to 24 with the toolchain upgrade
+([#133](https://github.com/zelytra/Librarius/issues/133)). The pin is now simply untested,
+not blocked. See [MOBILE](MOBILE.md) § 4.
 
 **Two things do not work inside the container yet**, and neither can be finished before a
 native project exists:
