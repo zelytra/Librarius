@@ -58,6 +58,18 @@ api:
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: "1", memory: 768Mi }
+  # Deleting an account (GDPR art. 17) deletes the Keycloak login too, which needs a
+  # service account. Off by default, and no credential is invented: while this is off,
+  # DELETE /api/me answers 503 and erases nothing — never the reverse, which would leave
+  # a working login in front of a library that no longer exists.
+  # What to create first: docs/DEPLOYMENT.md § "Account deletion".
+  accountDeletion:
+    enabled: false
+    # Client id of the service account, in the `librarius` realm.
+    clientId: librarius-api-admin
+    # Secret holding its client secret. Created by hand, never by the chart.
+    existingSecret: ""
+    secretKey: admin-client-secret
 
 # ── Disruption budget ─────────────────────────────────────────────────────────
 # Keeps an involuntary eviction (a descheduler, a stray `kubectl drain`) from

@@ -1,0 +1,114 @@
+.title {
+  font-size: var(--fs-16);
+  margin: 0 0 4px;
+}
+
+.intro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.reveal {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--rose);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  margin-bottom: 26px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1.5px solid var(--rose);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: 16px;
+  margin-bottom: 26px;
+}
+
+.warning {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.detail {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.exportFirst {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.label {
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.input {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 11px 14px;
+  font-size: var(--fs-13-5);
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* The one destructive button in the application: it says so in the colour, not only in
+   the wording. */
+.confirmButton {
+  background: var(--rose);
+  color: var(--on-accent);
+}
+
+.confirmButton:disabled {
+  opacity: 0.5;
+}
+
+.failure {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  margin: 0;
+}
+
+.done {
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+  margin: 0 0 26px;
+  line-height: 1.45;
+}

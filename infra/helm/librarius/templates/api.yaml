@@ -59,6 +59,26 @@ spec:
             # comes back 403.
             - name: CORS_ORIGINS
               value: "https://{{ .Values.domain }}"
+            {{- if .Values.api.accountDeletion.enabled }}
+            {{- if not .Values.api.accountDeletion.existingSecret }}
+            {{- fail "api.accountDeletion.existingSecret is required when api.accountDeletion.enabled is true (see docs/DEPLOYMENT.md § Account deletion)" }}
+            {{- end }}
+            # Admin API, cluster-internal: the same Keycloak the tokens come from, reached
+            # on its service rather than through the ingress.
+            - name: KEYCLOAK_ADMIN_ENABLED
+              value: "true"
+            - name: KEYCLOAK_ADMIN_SERVER_URL
+              value: "http://{{ .Release.Name }}-keycloak:8081/auth"
+            - name: KEYCLOAK_ADMIN_REALM
+              value: "librarius"
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              value: {{ .Values.api.accountDeletion.clientId | quote }}
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.accountDeletion.existingSecret }}
+                  key: {{ .Values.api.accountDeletion.secretKey }}
+            {{- end }}
           # Removing the pod from the Service endpoints and sending it SIGTERM are
           # concurrent, so without this pause Traefik keeps routing to a container
           # that has already begun to stop. Native sleep action, k8s ≥ 1.30.

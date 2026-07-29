@@ -106,7 +106,10 @@ zelytra/librarius/
   catalog/              # CatalogProvider (SPI), CatalogService (aggregation),
                         # CatalogCache + CatalogCacheStore (Caffeine → PostgreSQL)
     provider/           # OpenLibraryProvider/Client, AniListProvider/Client
-  imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService
+  imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService,
+                        # ArchiveImportService (restores a JSON export)
+  export/               # ExportService (JSON + CSV), ExportCsv, ExportJobs (deferred)
+  account/              # AccountDeletionService, AccountEraser, KeycloakAccountDeleter
   series/SeriesService  # a series seen through one user's collection
   stats/StatsService    # counters, annual goal and reading timeline
   wishlist/             # WishlistService — the writes spanning two tables
@@ -284,3 +287,5 @@ The OIDC authority is **baked into the web image at build time**
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🚧 Bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): the shell loads the web bundle; native projects and native sign-in pending |
 | 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library and AniList are stubbed because both providers swallow their own failures: an unavailable third party would look like an empty result set | ✅ Applied |
+| 11 | Account deletion goes through Keycloak **first**, and refuses outright when it cannot | The two halves of an account live in two systems that fail independently. Erasing the rows while the login survives gives the user a freshly provisioned empty account on their next sign-in — indistinguishable from data loss, and irreversible. The reverse window (login gone, rows orphaned) is far less likely and is recoverable by hand from the deletion log | ✅ Applied |
+| 12 | The Keycloak admin call is two plain HTTP requests, not the admin-client extension | Token then `DELETE /admin/realms/{realm}/users/{id}`: about sixty lines against a JAX-RS client stack and a build-time configuration nothing else here needs. It also keeps the degradation path — "not configured" as a first-class outcome — under our control rather than the extension's | ✅ Applied |

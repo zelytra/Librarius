@@ -156,8 +156,13 @@ something as read — an existing collection carries no reading dates.
   `localStorage` and applied before the first paint, so a reload never flashes the light
   theme.
 - 🔜 **Profile**: display name, language, time zone.
-- 🔜 **Library export** (CSV + JSON) — *GDPR requirement*.
-- 🔜 **Account and data deletion** — *GDPR requirement*.
+- ✅ **Library export** (JSON + CSV) — *GDPR art. 20*. The JSON archive holds everything
+  and can be re-imported here; the CSV opens in a spreadsheet and carries the column names
+  Goodreads and Booknode understand, so a user can leave for another tool.
+- ✅ **Account and data deletion** — *GDPR art. 17*. Behind a confirmation that spells out
+  what goes, what stays in the shared catalog and how long the encrypted backups keep it,
+  asks the user to type their own username, and offers the export first. The Keycloak login
+  goes with the data; if it cannot, nothing is erased and the screen says so.
 - 🔜 Notification preferences.
 - 🔜 Custom category management (the API already exists).
 - 🔜 Legal notice, terms of service, privacy policy.

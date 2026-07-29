@@ -403,6 +403,30 @@
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible."
+    },
+    "export": {
+      "title": "Exporter mes données",
+      "description": "Récupère toute ta bibliothèque : collection, souhaits, lectures, notes, objectifs et catégories.",
+      "signIn": "Se connecter pour exporter",
+      "json": "Fichier JSON",
+      "csv": "Fichier CSV",
+      "hint": "Le JSON contient tout et peut être réimporté ici. Le CSV s'ouvre dans un tableur et reprend les colonnes utilisées par Goodreads et Booknode.",
+      "done": "Export téléchargé.",
+      "failed": "Export impossible pour le moment."
+    },
+    "deleteAccount": {
+      "title": "Supprimer mon compte",
+      "description": "Efface définitivement ton compte et toutes tes données.",
+      "start": "Supprimer mon compte",
+      "warning": "Cette action est définitive : ta collection, tes souhaits, tes lectures, tes objectifs et ton identifiant de connexion sont supprimés, sans possibilité de retour.",
+      "kept": "Les fiches des livres (titres, éditions, séries) restent dans le catalogue partagé : elles ne t'appartiennent pas et servent aux autres lecteurs. Rien n'y indique que tu les as possédées.",
+      "delay": "L'effacement en base est immédiat. Les sauvegardes chiffrées de la base, elles, sont conservées jusqu'à six mois : tes données y subsistent jusqu'à l'expiration de la dernière sauvegarde qui les contient, et ne sont restaurées qu'en cas d'incident majeur.",
+      "exportFirst": "Exporter mes données d'abord",
+      "confirmLabel": "Pour confirmer, tape ton nom d'utilisateur : {{username}}",
+      "cancel": "Annuler",
+      "confirm": "Supprimer définitivement",
+      "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Ma Bibliothèque.",
+      "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     }
   }
 }

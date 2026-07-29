@@ -19,6 +19,7 @@ import { vi } from 'vitest';
  */
 
 export const signinRedirect = vi.fn();
+export const removeUser = vi.fn();
 
 /** Mutable state, to be adjusted before rendering (see `setAuthenticated`). */
 export const authState = {
@@ -41,6 +42,7 @@ export function resetAuth() {
   authState.isAuthenticated = true;
   authState.isLoading = false;
   signinRedirect.mockClear();
+  removeUser.mockClear();
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -53,5 +55,6 @@ export function useAuth() {
     isLoading: authState.isLoading,
     user: authState.isAuthenticated ? { access_token: authState.accessToken } : undefined,
     signinRedirect,
+    removeUser,
   };
 }
