@@ -49,7 +49,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/dashboard/layout` | Replaces it — full replace, same convention as `ProgressDto` |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
 | GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
-| POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
+| POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
 
@@ -462,6 +462,24 @@ rows underneath it: one request, one set of criteria, one answer. Like `total`, 
 the whole filtered set and is identical on every page — a client sums nothing client-side,
 which would only ever describe the pages it happens to have loaded. Priorities no wish
 carries are absent from `byPriority` rather than reported as zero.
+
+## Import
+
+Three routes bring an existing library in: `POST /api/import/{source}` from a handle,
+`POST /api/import/csv` from an exported file, and `POST /api/import/json` from a Librarius
+archive ([Export](#export)). All three answer an `ImportResult` counting what was
+`imported` and what was `skipped`, and none of them ever duplicates a title: the first two
+match on title plus author folded to lower case, the archive on the whole edition
+([Export](#export)), so running the same import twice adds nothing the second time.
+
+**`{source}` is not a list of equals.** `booknode` scrapes a member's public library, which
+is what makes a handle enough. `babelio` is registered so that a client can name the source
+a user came from, and its importer answers **400 on every handle**, permanently: Babelio has
+no API, and a member's shelves need a session, so there is nothing to fetch anonymously. It
+is a stub by design, not a scraper waiting to be repaired — the Babelio path in is the CSV
+export, and the Settings screen says so before anything is submitted rather than letting the
+400 explain it ([#193](https://github.com/zelytra/Librarius/issues/193)). An unknown source
+answers 400 as well.
 
 ## Export
 

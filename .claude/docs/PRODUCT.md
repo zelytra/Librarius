@@ -158,7 +158,11 @@ something as read — an existing collection carries no reading dates.
 
 ### 4.7 Settings ✅ / 🔜
 
-- ✅ Booknode / Babelio import (by handle) and CSV import.
+- ✅ **Import**: Booknode **by handle**, and a **CSV file** — the two sources are not
+  interchangeable. Babelio has no API and a member's shelves need a session, so there is
+  nothing to fetch from a handle: picking Babelio offers no handle field at all, it says the
+  library is not public and points at the CSV export, one click below. Only Booknode is
+  scraped.
 - ✅ **Dashboard** shortcut to Home's own "Personnaliser l'accueil" panel (§ 4.1) — Settings
   is not where the reordering happens, but a reader would not necessarily think to look on
   Home for it.
@@ -241,6 +245,10 @@ one gesture.
 **P4 — Arrive on Librarius with an existing library**
 Settings → Import → Booknode handle → titles matched against the catalog → collection
 populated.
+Coming from **Babelio** the first step differs, and only the first: Settings → Import →
+Babelio → export the list from Babelio → import that CSV file → same matching, same
+collection. Nothing is fetched from a Babelio handle, and the screen says so before
+anything is submitted.
 
 **P5 — Track the annual goal**
 Settings → set the goal → gauge on the Home screen → year in review at the end of the
