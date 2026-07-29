@@ -55,6 +55,8 @@
     "resumeCount": "{{reading}} en cours",
     "progressBadge": "{{percent}} %",
     "progressLabel": "Progression : {{percent}} %",
+    "toRead": "Ta pile à lire",
+    "toReadCount": "{{toRead}} en attente",
     "recentlyBought": "Derniers achats",
     "recentlyRead": "Derniers lus",
     "counters": {

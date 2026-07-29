@@ -274,6 +274,7 @@ export function dashboardLayout(overrides: Partial<DashboardLayoutDto> = {}): Da
   return {
     sections: [
       { code: 'resumeReading', hidden: false },
+      { code: 'toRead', hidden: false },
       { code: 'counters', hidden: false },
       { code: 'goal', hidden: false },
       { code: 'upcoming', hidden: false },

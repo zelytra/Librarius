@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders } from '../../test/utils';
+import { renderWithProviders, TestProviders } from '../../test/utils';
 import { dashboardLayout, goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
@@ -53,6 +54,74 @@ describe('HomePage', () => {
 
     expect(await screen.findByText('Derniers lus')).toBeInTheDocument();
     expect(screen.queryByText('Reprendre la lecture')).not.toBeInTheDocument();
+  });
+
+  // ── To-read pile (#166) ─────────────────────────────────────────────────────
+
+  test('shelves the titles the reader owns and has never opened', async () => {
+    libraryReturns([
+      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'La Horde du Contrevent' } }),
+    ]);
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Ta pile à lire')).toBeInTheDocument();
+    expect(screen.getByText('La Horde du Contrevent')).toBeInTheDocument();
+  });
+
+  test('hides the pile when nothing is waiting to be read', async () => {
+    libraryReturns([libraryItem({ id: 'lu', status: 'READ' })]);
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Derniers lus')).toBeInTheDocument();
+    expect(screen.queryByText('Ta pile à lire')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The pile is what is *waiting*, and a title given up on is not waiting for anything
+   * (#163). The four statuses being exclusive, asking for `OWNED` is enough — this test is
+   * what keeps that true the day someone widens the filter.
+   */
+  test('leaves the titles the reader gave up on out of the pile', async () => {
+    libraryReturns([
+      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
+      libraryItem({ id: 'abandonne', status: 'ABANDONED', book: { kind: 'BOOK', title: 'Titre abandonné' } }),
+    ]);
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Titre qui attend')).toBeInTheDocument();
+    expect(screen.queryByText('Titre abandonné')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The shelf holds a dozen covers, the pile can hold hundreds: the header reports the
+   * server's count of the whole thing, not the length of the page it drew.
+   */
+  test('announces the size of the whole pile, not of the shelf', async () => {
+    libraryReturns(Array.from({ length: 20 }, (_, i) =>
+      libraryItem({ id: `pal-${i}`, status: 'OWNED', book: { kind: 'BOOK', title: `Titre ${i}` } })));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('20 en attente')).toBeInTheDocument();
+    // The shelf itself is capped, so the twentieth title is not on it.
+    expect(screen.queryByText('Titre 19')).not.toBeInTheDocument();
+  });
+
+  test('opens a title from the pile on its detail screen', async () => {
+    libraryReturns([
+      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
+    ]);
+    render(
+      <TestProviders>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/detail/:id" element={<p>écran du titre</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Titre qui attend'));
+
+    expect(await screen.findByText('écran du titre')).toBeInTheDocument();
   });
 
   // ── Personalised upcoming releases ──────────────────────────────────────────
@@ -153,6 +222,9 @@ describe('HomePage', () => {
 
     expect(statuses).toContain('READING');
     expect(statuses).toContain('READ');
+    // The pile asks for `OWNED` alone: it is a shelf of what is waiting, so it neither
+    // downloads the collection to sort it here nor scoops up the abandoned titles.
+    expect(statuses).toContain('OWNED');
     expect(statuses).not.toContain(null);
   });
 
@@ -350,8 +422,8 @@ describe('HomePage', () => {
 
     await screen.findByText('lus');
     await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    // "Compteurs de lecture" is the second row by default order; moving it up swaps it
-    // with "Reprendre la lecture".
+    // "Compteurs de lecture" is the third row by default order; moving it up swaps it
+    // with "Ta pile à lire".
     await userEvent.click(await screen.findByRole('button', {
       name: "Déplacer « Compteurs de lecture » vers le haut",
     }));
@@ -359,7 +431,7 @@ describe('HomePage', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0].sections?.map((s) => s.code)).toEqual([
-      'counters', 'resumeReading', 'goal', 'upcoming', 'recentlyRead',
+      'resumeReading', 'counters', 'toRead', 'goal', 'upcoming', 'recentlyRead',
     ]);
   });
 

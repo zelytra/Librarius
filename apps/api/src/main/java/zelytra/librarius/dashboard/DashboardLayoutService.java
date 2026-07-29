@@ -36,12 +36,15 @@ import java.util.Set;
 public class DashboardLayoutService {
 
     /**
-     * The Home sections, in the order a fresh account sees them. A section added later is
-     * appended here and starts showing up — at the end, visible — for every account that
-     * saved a layout before it existed; see {@link #normalize}.
+     * The Home sections, in the order a fresh account sees them. Where a new section goes
+     * in this list is a product decision — {@code toRead} sits right after
+     * {@code resumeReading} because the pile is what comes next after what is already open.
+     * That placement only ever decides what a <em>fresh</em> account sees: an account that
+     * already saved a layout gets the new section appended at the end, visible, whatever
+     * its rank here; see {@link #normalize}.
      */
     static final List<String> DEFAULT_ORDER =
-            List.of("resumeReading", "counters", "goal", "upcoming", "recentlyRead");
+            List.of("resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead");
 
     private static final String SELECT = "SELECT sections FROM dashboard_layout WHERE user_id = ?";
 

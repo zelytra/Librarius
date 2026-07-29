@@ -11,6 +11,7 @@ import {
   type StatsDto,
 } from '../../api/generated/librarius';
 import { GoalCard } from './GoalCard';
+import { ToReadPile } from './ToReadPile';
 import { UpcomingReleases } from './UpcomingReleases';
 import { defaultLayout } from './dashboardLayout';
 import styles from './HomePage.module.css';
@@ -109,6 +110,12 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
             </section>
           )
         );
+
+      case 'toRead':
+        // Self-contained, like `upcoming` below: it fetches its own page of the pile and
+        // hides itself when there is nothing waiting. Nothing to hand it — the shelves
+        // above are fetched by status too, and this one is no different.
+        return <ToReadPile key={code} />;
 
       case 'counters':
         return (

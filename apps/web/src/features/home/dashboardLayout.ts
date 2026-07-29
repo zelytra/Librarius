@@ -24,6 +24,7 @@ export type DashboardSectionPref = DashboardSectionDto;
  */
 export const DEFAULT_SECTION_ORDER = [
   'resumeReading',
+  'toRead',
   'counters',
   'goal',
   'upcoming',

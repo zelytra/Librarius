@@ -41,7 +41,7 @@ class DashboardLayoutApiTest {
                 .when().get("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "counters", "goal", "upcoming", "recentlyRead"));
+                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"));
     }
 
     /** An empty body resets to the default order, all sections visible — see #54. */
@@ -52,7 +52,7 @@ class DashboardLayoutApiTest {
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code",
-                        is(java.util.List.of("resumeReading", "counters", "goal", "upcoming", "recentlyRead")))
+                        is(java.util.List.of("resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead")))
                 .body("sections.hidden", everyItem(is(false)));
     }
 
@@ -65,6 +65,7 @@ class DashboardLayoutApiTest {
                             { "code": "goal", "hidden": true },
                             { "code": "counters", "hidden": false },
                             { "code": "resumeReading", "hidden": false },
+                            { "code": "toRead", "hidden": false },
                             { "code": "upcoming", "hidden": true },
                             { "code": "recentlyRead", "hidden": false }
                         ] }
@@ -72,13 +73,13 @@ class DashboardLayoutApiTest {
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code", is(java.util.List.of(
-                        "goal", "counters", "resumeReading", "upcoming", "recentlyRead")));
+                        "goal", "counters", "resumeReading", "toRead", "upcoming", "recentlyRead")));
 
         given().auth().oauth2(token())
                 .when().get("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code", is(java.util.List.of(
-                        "goal", "counters", "resumeReading", "upcoming", "recentlyRead")))
+                        "goal", "counters", "resumeReading", "toRead", "upcoming", "recentlyRead")))
                 .body("sections.find { it.code == 'goal' }.hidden", is(true))
                 .body("sections.find { it.code == 'upcoming' }.hidden", is(true))
                 .body("sections.find { it.code == 'counters' }.hidden", is(false));
@@ -96,7 +97,7 @@ class DashboardLayoutApiTest {
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "counters", "goal", "upcoming", "recentlyRead"))
+                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"))
                 .body("sections[0].code", is("recentlyRead"));
     }
 
@@ -108,7 +109,7 @@ class DashboardLayoutApiTest {
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
                 .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "counters", "goal", "upcoming", "recentlyRead"));
+                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"));
     }
 
     @Test
