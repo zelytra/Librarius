@@ -31,6 +31,22 @@ test('changes the status of a title from its detail screen', async ({ page }) =>
   // READING → READ, opening the title from the carousel this time.
   await openTitle(page, FIRST_BOOK);
   await page.getByRole('button', { name: 'Marquer comme lu' }).click();
+
+  // Finishing opens the rating-and-shelving sheet over the screen. Answering it here
+  // rather than skipping it is what gives its two writes one pass against the real API;
+  // the statistics journey takes the other path and dismisses it.
+  const sheet = page.getByRole('dialog');
+  await expect(sheet.getByRole('heading', { name: 'Terminé !' })).toBeVisible();
+  await sheet.getByRole('button', { name: 'Noter 4 sur 5' }).click();
+  await sheet.getByRole('button', { name: 'Or', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Enregistrer' }).click();
+  await sheet.waitFor({ state: 'hidden' });
+
+  // Both round-tripped: the screen re-reads the title, so what it shows is what was stored.
+  await expect(page.getByRole('button', { name: 'Retirer ma note' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Or', exact: true }))
+    .toHaveAttribute('aria-pressed', 'true');
+
   await expect(page.getByRole('button', { name: '✓ Lu' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Commencer la lecture' })).toBeHidden();
 

@@ -1,5 +1,5 @@
 import { expect, test } from '../support/fixtures';
-import { addResult, figure, FIRST_BOOK, openTitle, searchCatalog } from '../support/ui';
+import { addResult, figure, FIRST_BOOK, markAsRead, openTitle, searchCatalog } from '../support/ui';
 
 /**
  * P5 — the figures follow what the user does.
@@ -30,7 +30,9 @@ test('keeps the statistics consistent after an addition', async ({ page }) => {
 
   await page.getByRole('link', { name: 'Collection' }).click();
   await openTitle(page, FIRST_BOOK);
-  await page.getByRole('button', { name: 'Marquer comme lu' }).click();
+  // Skipping the sheet that follows: the figures below are about the status alone, and
+  // a title read without a rating or a shelf still counts as read.
+  await markAsRead(page);
   await expect(page.getByRole('button', { name: '✓ Lu' })).toBeVisible();
   await page.getByRole('button', { name: 'Retour' }).click();
 
