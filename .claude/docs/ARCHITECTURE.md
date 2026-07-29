@@ -81,6 +81,14 @@ src/
   tints (`--tint-*`), screen padding (`--screen-pad-*`). `style={{…}}` is reserved for
   genuinely dynamic values: a colour derived from a title, a computed width, a gauge
   percentage.
+- **Icons**: `<Icon name="arrow_back" />` (`shared/ui/Icon.tsx`) draws from a self-hosted
+  Material Symbols Rounded subset — `shared/ui/iconSubset.ts` maps each name to its
+  Private Use Area code point, `shared/styles/fonts/material-symbols-subset.woff2` holds
+  only those glyphs (4.6 kB against the 407 kB full family, [#161](https://github.com/zelytra/Librarius/issues/161)). Adding an icon: add its
+  name and code point to `iconSubset.ts`, then `pnpm --filter @librarius/web
+  generate:icon-font` and commit the regenerated font — same shape as `gen:api`, a
+  generated artifact that is never hand-edited. A name missing from that table throws
+  under Vitest rather than silently rendering a blank glyph.
 
 ### Decided changes
 
