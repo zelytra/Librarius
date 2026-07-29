@@ -196,19 +196,26 @@ it, so what is audited is the shell — boot, theme, fonts, first paint, the sig
 prompt. That is the part every visitor pays for, and it is the only part measurable
 reproducibly; the signed-in screens need the whole stack and belong to the e2e suite.
 
-| Category | Threshold | Observed on CI |
+| Category | Threshold | Observed on CI — 18 runs of the same code |
 |---|---|---|
-| accessibility | ≥ 0.95 | 1.00 on every run |
-| best practices | ≥ 0.90 | 1.00 on every run |
-| performance | ≥ 0.50 | 0.64 / 0.98 / 0.98 on Home, one run |
+| accessibility | ≥ 0.95 | 1.00 every time |
+| best practices | ≥ 0.90 | 1.00 every time |
+| performance | ≥ 0.50 | single runs 0.48 – 0.98, **medians 0.72 – 0.98** |
 
 The first two carry no timing, so they cannot flap. **Performance can and does**: the
 page blocks its first paint on a third-party stylesheet (Google Fonts), whose latency
-belongs to somebody else, and the cold run pays for the connection. So the threshold is
-a **floor**, roughly 20% under the lowest score CI has produced: low enough never to go
-red on the weather, high enough to fail a build that ships a genuinely heavy regression.
+belongs to somebody else, so the same commit scores 0.48 on one run and 0.98 on another.
+Two decisions follow, and both matter more than the number:
+
+- **Aggregate on the median**, not on LHCI's default optimistic pick. One lucky run
+  cannot then hide a regression, and one unlucky run cannot invent one — the 0.48 above
+  is precisely the sample a median throws away.
+- **Assert a floor, not the target.** 0.50 is 0.22 under the lowest median CI has
+  produced: low enough never to go red on the weather, high enough to fail a build that
+  ships a genuinely heavy regression.
+
 It is raised to the **0.9** the v1.0 milestone requires by the change that takes the
-fonts off the critical path — a check that goes red at random teaches people to ignore
+fonts off the critical path. A check that goes red at random teaches people to ignore
 red checks, which is worse than not having it.
 
 That change is also the biggest performance item outstanding: a first load is **747 kB**,
