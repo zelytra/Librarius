@@ -3,12 +3,14 @@ package zelytra.librarius.catalog.provider;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zelytra.librarius.catalog.CatalogProvider;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 import zelytra.librarius.domain.Kind;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,10 @@ public class AniListProvider implements CatalogProvider {
     @Inject
     @RestClient
     AniListClient client;
+
+    /** Absolute deadline of one call, whatever AniList does with the socket. */
+    @ConfigProperty(name = "librarius.catalog.provider.call-timeout", defaultValue = "12S")
+    Duration callTimeout;
 
     @Override
     public String name() {
@@ -149,7 +155,8 @@ public class AniListProvider implements CatalogProvider {
     private List<AniListClient.Media> fetch(String gql, Map<String, Object> variables,
             Function<AniListClient.Data, List<AniListClient.Media>> extract) {
         try {
-            AniListClient.GqlResponse res = client.query(new AniListClient.GqlRequest(gql, variables));
+            AniListClient.GqlResponse res = client.query(new AniListClient.GqlRequest(gql, variables))
+                    .await().atMost(callTimeout);
             if (res == null || res.data() == null) {
                 return List.of();
             }

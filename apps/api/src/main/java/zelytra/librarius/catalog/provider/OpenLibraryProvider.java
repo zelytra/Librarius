@@ -3,12 +3,14 @@ package zelytra.librarius.catalog.provider;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zelytra.librarius.catalog.CatalogProvider;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 import zelytra.librarius.domain.Kind;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +34,10 @@ public class OpenLibraryProvider implements CatalogProvider {
     @RestClient
     OpenLibraryClient client;
 
+    /** Absolute deadline of one call, whatever Open Library does with the socket. */
+    @ConfigProperty(name = "librarius.catalog.provider.call-timeout", defaultValue = "12S")
+    Duration callTimeout;
+
     @Override
     public String name() {
         return "openlibrary";
@@ -49,7 +55,8 @@ public class OpenLibraryProvider implements CatalogProvider {
             return List.of();
         }
         try {
-            OpenLibraryClient.SearchResponse res = client.search(q, Math.min(limit, 40), FIELDS);
+            OpenLibraryClient.SearchResponse res =
+                    client.search(q, Math.min(limit, 40), FIELDS).await().atMost(callTimeout);
             if (res == null || res.docs() == null) {
                 return List.of();
             }

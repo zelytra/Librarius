@@ -129,6 +129,27 @@ zelytra/librarius/
   one outbound call, not one each. Hits and misses are counted per level
   (`librarius_catalog_cache_lookups_total{level,result}`) and a scheduled job drops the
   expired rows off the request path.
+- **What a cold fetch costs the connection pool** — the trade-off settled by
+  [#132](https://github.com/zelytra/Librarius/issues/132), because the shape of the code
+  does not make it obvious. That advisory lock has to be held for the whole outbound call,
+  otherwise it guarantees nothing; a PostgreSQL lock cannot outlive its transaction, nor a
+  transaction its connection. **A cold fetch therefore holds one pooled connection while
+  Open Library or AniList is on the line, and no rearrangement of the code avoids that** —
+  only moving the claim into a leased row would, at the price of a migration, a poll loop and
+  a way to tell a lease from a value, all to protect a deployment that runs one replica.
+  What *is* bounded is how many cold fetches do it at once: `fetch.concurrency` permits
+  (4 of the 20 connections Agroal pools by default), taken **before** any connection is, so a
+  fetch that has to queue queues on a worker thread. Sixteen connections therefore stay
+  available to the rest of the API whatever the search rate. Past the permits — and past
+  `fetch.queue-timeout` — a fetch goes out unlocked rather than queue for a connection, which
+  costs one duplicated provider call instead of every other request in the pod;
+  `librarius_catalog_cache_unlocked_fetches_total` counts those and is the signal to raise
+  the permit count.
+- **Outbound deadline**: `quarkus.rest-client.*.read-timeout` is not the ceiling it looks
+  like — Vert.x restarts that timer on every chunk received, so it bounds silence, not
+  slowness. `librarius.catalog.provider.call-timeout` (12 s) is the absolute one, applied by
+  the providers on the `Uni` the REST clients return. That is why those clients are reactive:
+  a synchronous call cannot be given up on.
 - **Import**: the same SPI pattern through `LibraryImporter`, exposed by
   `POST /api/import/{source}` and `POST /api/import/csv`.
 - **Migrations**: Flyway on startup, Hibernate in `validate`. The schema is the truth; an

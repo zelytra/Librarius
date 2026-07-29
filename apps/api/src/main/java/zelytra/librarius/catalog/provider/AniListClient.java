@@ -1,6 +1,7 @@
 package zelytra.librarius.catalog.provider;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -11,7 +12,13 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.util.List;
 import java.util.Map;
 
-/** REST client for the AniList GraphQL API (mangas). */
+/**
+ * REST client for the AniList GraphQL API (mangas).
+ *
+ * <p>Returns a {@code Uni} rather than the response itself so the caller can put an absolute
+ * deadline on the call. {@code read-timeout} does not provide one: Vert.x restarts that timer
+ * on every chunk received, so it bounds silence, not slowness.
+ */
 @RegisterRestClient(configKey = "anilist")
 @Path("/")
 public interface AniListClient {
@@ -19,7 +26,7 @@ public interface AniListClient {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GqlResponse query(GqlRequest body);
+    Uni<GqlResponse> query(GqlRequest body);
 
     record GqlRequest(String query, Map<String, Object> variables) {
     }
