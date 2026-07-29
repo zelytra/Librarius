@@ -15,6 +15,17 @@ description = "Password assigned literally in a configuration file"
 regex = '''(?im)^[ \t-]*[a-z0-9_.-]*(?:password|passwd|pwd)[ \t]*[:=][ \t]*["']?[a-z0-9._@!%*+/-]{3,}'''
 tags = ["password", "config"]
 
+# Scoped to this rule alone, so every default rule — API keys, tokens, private
+# keys — still applies to these files. Keycloak names two of its login messages
+# `showPassword` and `hidePassword`, and a message bundle assigns a translation
+# to a key with `=`. `showPassword=Afficher le mot de passe` is therefore a
+# password assignment as far as the regex above can tell, and is in fact the
+# accessible name of the eye button on the sign-in form. A bundle holds interface
+# copy; there is no value here for a credential to be.
+[rules.allowlist]
+description = "Login theme message bundles — translated copy, not credentials"
+paths = ['''infra/helm/librarius/files/keycloak-theme/login/messages/.*\.properties''']
+
 [allowlist]
 description = """
 Local development fixtures. These credentials only ever reach a container bound
