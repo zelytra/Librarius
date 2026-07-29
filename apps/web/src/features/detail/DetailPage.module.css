@@ -366,6 +366,19 @@
   border-radius: var(--radius-round);
 }
 
+/* Says the title was given up on, right above the buttons that take it back. Tinted
+   rather than left as plain text: it describes a state, unlike the grey notes elsewhere
+   on this screen, which only ever explain the control they sit under. */
+.abandonedNote {
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 10px 12px;
+  margin: 0 0 12px;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

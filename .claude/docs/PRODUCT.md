@@ -97,6 +97,11 @@ The full inventory, with a **Books / Manga** toggle.
 - ✅ Cover, title, authors, genres, pages, series, year, synopsis.
 - ✅ Assigning a rank (Gold / Silver / Bronze).
 - ✅ Marking "in progress" / "read".
+- ✅ **Giving up on a title**: *"J'abandonne ce livre"*, offered while the title is owned or
+  being read and on nothing else. It records the day the reader stopped and **keeps the
+  position untouched** — the page reached is the point of the state. The screen then says
+  so, and the main button becomes *"Reprendre la lecture"*: coming back to a book one gave
+  up on is a normal thing to do ([#163](https://github.com/zelytra/Librarius/issues/163)).
 - ✅ **Progress input**: current page or percentage — each derived from the other when the
   edition carries a page count — start and finish dates, and a progress bar.
 - ✅ **Personal rating** (1–5) and private review, saved optimistically. Neither is ever
@@ -223,8 +228,8 @@ collection.
 `/categories`, reached from the shelf row of the Collection — where the user is standing
 when they realise they want another shelf.
 
-- ✅ The list of the categories the user has: the three built-ins first, flagged *Intégrée*
-  and offering no action, then their own.
+- ✅ The list of the categories the user has: the four built-ins first — *Or*, *Argent*,
+  *Bronze* and *Abandon* — flagged *Intégrée* and offering no action, then their own.
 - ✅ Creating one by name, renaming one, deleting one.
 - ✅ Deleting asks for a confirmation that **says what it costs**: the titles filed under the
   category stay in the collection and lose only their rank. That is not something to
@@ -234,7 +239,7 @@ when they realise they want another shelf.
 - 🔜 Reordering the categories: `sort_order` exists in the schema, every custom one is
   created at 100 and the list falls back to alphabetical order.
 - 🔜 Picking a colour. A custom category gets a neutral one; the built-ins keep the gold,
-  silver and bronze of V1.
+  silver and bronze of V1, and the muted grey V11 gave *Abandon*.
 
 ### 4.10 Waiting, on every screen ✅ / 🔜
 
@@ -288,15 +293,26 @@ year 🔜.
 
 1. A user can own the same edition **only once** (`UNIQUE(user, edition)`). A re-read is not
    a duplicate: it belongs to the reading history 🔜.
-2. Statuses: `OWNED` (owned, unread) → `READING` → `READ`. Moving to `READ` sets
-   `finished_at` and completes the position (100 %, last page); moving to `READING` sets
-   `started_at` if it is empty and clears `finished_at` — a title being read again is not a
-   finished one. A date supplied by the user always wins over the default. The page and the
-   percentage are two views of one position: the server derives whichever one the client
-   left out, so no two screens can show different figures. `started_at` and `finished_at`
-   are what the annual goal and the reading timeline are counted from.
-3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`): shared by every
-   account, they can be neither renamed nor deleted. A user creates as many categories of
+2. Statuses: `OWNED` (owned, unread) → `READING` → `READ`, plus `ABANDONED` for a title
+   given up on partway through. Moving to `READ` sets `finished_at` and completes the
+   position (100 %, last page); moving to `READING` sets `started_at` if it is empty and
+   clears `finished_at` — a title being read again is not a finished one. A date supplied by
+   the user always wins over the default. The page and the percentage are two views of one
+   position: the server derives whichever one the client left out, so no two screens can
+   show different figures. `started_at` and `finished_at` are what the annual goal and the
+   reading timeline are counted from.
+   **Abandoning** sets `finished_at` — the day the reader stopped — and leaves the position
+   exactly where it was: a book put down at page 120 was read up to page 120, and rounding
+   it up to 100 % would erase the only thing the status records. It is therefore **not** a
+   variety of "read": an abandoned title advances no goal, fills no timeline bucket and
+   counts in none of the read / in progress / to read figures, but keeps a counter of its
+   own. There is a way back — picking a book up again is the ordinary move to `READING`,
+   and one given up on can still be marked `READ`.
+3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`), and so is
+   **Abandon**, the shelf a title given up on is filed under: shared by every account, they
+   can be neither renamed nor deleted. Filing a title under *Abandon* and marking it
+   `ABANDONED` are two separate gestures — a rank says what the reader thinks of a book, a
+   status where they are in it — and neither implies the other. A user creates as many categories of
    their own as they like; they are **private** — invisible and unassignable to anyone else
    — and their names are unique per user, so two accounts may both have a "Coup de cœur".
    **Deleting a category never deletes a title**: the titles filed under it stay in the

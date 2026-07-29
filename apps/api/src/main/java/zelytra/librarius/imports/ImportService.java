@@ -127,6 +127,14 @@ public class ImportService {
             return LibraryStatus.OWNED;
         }
         String s = raw.toLowerCase(Locale.FRENCH);
+        // First, and before "cours": Goodreads has no abandoned shelf, so the wording is
+        // whatever the exporting site chose — `abandoned` is what this application writes,
+        // `dnf` ("did not finish") what the English-speaking sites settled on, and a French
+        // export says "abandonné" or, more rarely, "lecture en cours abandonnée".
+        if (s.contains("abandon") || s.equals("dnf") || s.contains("did not finish")
+                || s.contains("did-not-finish")) {
+            return LibraryStatus.ABANDONED;
+        }
         if (s.contains("cours") || s.contains("reading") || s.contains("currently")) {
             return LibraryStatus.READING;
         }

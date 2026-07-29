@@ -161,6 +161,7 @@ export const LibraryStatus = {
   OWNED: 'OWNED',
   READING: 'READING',
   READ: 'READ',
+  ABANDONED: 'ABANDONED',
 } as const;
 
 export interface ExportProgressDto {
@@ -385,6 +386,7 @@ export interface StatsDto {
   read?: number;
   reading?: number;
   toRead?: number;
+  abandoned?: number;
   pagesRead?: number;
   seriesCount?: number;
   goalTarget?: number;

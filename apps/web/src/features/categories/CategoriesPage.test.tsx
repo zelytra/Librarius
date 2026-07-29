@@ -27,7 +27,10 @@ describe('CategoriesPage', () => {
 
     expect(await screen.findByText('Doré')).toBeInTheDocument();
     expect(screen.getByText('Or')).toBeInTheDocument();
-    expect(screen.getAllByText('Intégrée')).toHaveLength(3);
+    // Four built-ins since the abandoned status shipped: the three metals and the shelf
+    // a title given up on is filed under.
+    expect(screen.getByText('Abandon')).toBeInTheDocument();
+    expect(screen.getAllByText('Intégrée')).toHaveLength(BUILTIN_CATEGORIES.length);
   });
 
   /** A built-in is shared by every account: nothing on its row offers to touch it. */

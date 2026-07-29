@@ -340,12 +340,19 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     /**
      * Per-status item counters, plus the pages of the read ones.
      *
+     * <p>One counter per status, and no status folded into another: an abandoned title is
+     * neither read nor waiting to be read, and adding it to either would make the figure
+     * next to it a lie. It gets a counter of its own instead, which is also what lets a
+     * client tell an empty collection from one made only of abandoned titles.
+     *
      * @param read      items marked {@code READ}
      * @param reading   items marked {@code READING}
      * @param toRead    items marked {@code OWNED}, i.e. owned but not started
+     * @param abandoned items marked {@code ABANDONED}, i.e. given up on partway through
      * @param pagesRead total pages of the read items, ignoring editions with no page count
      */
-    public record StatusTotals(long read, long reading, long toRead, long pagesRead) {
+    public record StatusTotals(long read, long reading, long toRead, long abandoned,
+            long pagesRead) {
     }
 
     /**
@@ -376,6 +383,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         long read = 0;
         long reading = 0;
         long toRead = 0;
+        long abandoned = 0;
         long pagesRead = 0;
         for (Object[] row : rows) {
             long count = ((Number) row[1]).longValue();
@@ -386,9 +394,12 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                 }
                 case READING -> reading = count;
                 case OWNED -> toRead = count;
+                // Its own counter, and no share of `pagesRead`: those are the pages of the
+                // books that were finished, and this one was not.
+                case ABANDONED -> abandoned = count;
             }
         }
-        return new StatusTotals(read, reading, toRead, pagesRead);
+        return new StatusTotals(read, reading, toRead, abandoned, pagesRead);
     }
 
     /**

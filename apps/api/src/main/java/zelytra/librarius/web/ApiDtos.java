@@ -250,13 +250,18 @@ public final class ApiDtos {
     /**
      * The counters the Home and Stats screens are built on.
      *
+     * @param abandoned   titles given up on. A counter of its own rather than a share of one
+     *                    of the three above: an abandoned title is neither read nor on the
+     *                    to-read pile, and a client summing the counters to tell an empty
+     *                    collection from a full one needs it in the sum
+     * @param pagesRead   pages of the titles read to the end, the abandoned ones excluded
      * @param goalTarget  target of the current year's goal, {@code null} when none is set
      * @param goalUnit    unit that target is expressed in, {@code null} alongside it
      * @param goalCurrent how far the user is into that target, counted in {@code goalUnit}
      *                    over the titles finished this year — see {@link TimelineDto}
      */
-    public record StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-            Integer goalTarget, String goalUnit, long goalCurrent,
+    public record StatsDto(long read, long reading, long toRead, long abandoned, long pagesRead,
+            long seriesCount, Integer goalTarget, String goalUnit, long goalCurrent,
             java.util.List<GenreCount> byGenre) {
     }
 

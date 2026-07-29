@@ -405,6 +405,7 @@ components:
       - OWNED
       - READING
       - READ
+      - ABANDONED
     LocalDate:
       type: string
       format: date
@@ -619,6 +620,9 @@ components:
           type: integer
           format: int64
         toRead:
+          type: integer
+          format: int64
+        abandoned:
           type: integer
           format: int64
         pagesRead:

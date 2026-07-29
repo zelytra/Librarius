@@ -3,6 +3,7 @@ package zelytra.librarius.domain.repository;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import zelytra.librarius.domain.GoalUnit;
+import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingProgress;
 
 import java.time.LocalDate;
@@ -14,6 +15,25 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingProgress, UUID> {
+
+    /**
+     * What tells a finished title from an abandoned one in every aggregation below.
+     *
+     * <p>Giving a title up stamps {@code finished_at} as well — the day tracking stopped is
+     * worth keeping, and it is the date the reader would look for — so that column on its
+     * own no longer means "read to the end". Without this clause a book put down at page 40
+     * would advance the annual goal, fill a timeline bucket and enter the pace average, and
+     * the figures would be wrong in the one direction nobody checks: upwards.
+     *
+     * <p>It excludes the abandoned rather than requiring {@code READ}, which is the same
+     * thing for anything written through {@link zelytra.librarius.library.ReadingProgressService}
+     * and not for a row restored from an archive, where the status and the dates come from
+     * the file. Excluding changes the answer for the new status only.
+     *
+     * <p>The alias is {@code li} in the HQL and in the one native statement alike, so a
+     * single fragment serves both and the four queries cannot drift apart.
+     */
+    private static final String NOT_ABANDONED = "and li.status <> :abandoned";
 
     public Optional<ReadingProgress> findByItem(UUID libraryItemId) {
         return find("libraryItem.id", libraryItemId).firstResultOptional();
@@ -110,10 +130,12 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                           join rp.libraryItem li
                         where li.userId = :userId
                           and rp.finishedAt between :from and :to
+                          %s
                         group by %s
                         order by %s
-                        """.formatted(bucket, bucket, bucket), Object[].class)
+                        """.formatted(bucket, NOT_ABANDONED, bucket, bucket), Object[].class)
                 .setParameter("userId", userId)
+                .setParameter("abandoned", LibraryStatus.ABANDONED)
                 .setParameter("from", from)
                 .setParameter("to", to)
                 .getResultList();
@@ -148,8 +170,11 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                           and rp.started_at is not null
                           and rp.finished_at between :from and :to
                           and rp.finished_at >= rp.started_at
-                        """)
+                          %s
+                        """.formatted(NOT_ABANDONED))
                 .setParameter("userId", userId)
+                // A native statement compares against the stored name, not against the enum.
+                .setParameter("abandoned", LibraryStatus.ABANDONED.name())
                 .setParameter("from", from)
                 .setParameter("to", to)
                 .getSingleResult();
@@ -175,13 +200,16 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                           join e.work w%s
                         where li.userId = :userId
                           and rp.finishedAt between :from and :to
+                          %s
                           and %s is not null
                           and length(trim(%s)) > 0
                         group by %s
                         order by count(rp) desc, %s asc
-                        """.formatted(column, dimension.extraJoin, column, column, column, column),
+                        """.formatted(column, dimension.extraJoin, NOT_ABANDONED,
+                                column, column, column, column),
                         Object[].class)
                 .setParameter("userId", userId)
+                .setParameter("abandoned", LibraryStatus.ABANDONED)
                 .setParameter("from", from)
                 .setParameter("to", to)
                 .setMaxResults(limit)
@@ -212,8 +240,10 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                           join rp.libraryItem li
                         where li.userId = :userId
                           and rp.finishedAt between :from and :to
-                        """.formatted(aggregate), Object.class)
+                          %s
+                        """.formatted(aggregate, NOT_ABANDONED), Object.class)
                 .setParameter("userId", userId)
+                .setParameter("abandoned", LibraryStatus.ABANDONED)
                 .setParameter("from", from)
                 .setParameter("to", to)
                 .getSingleResult();

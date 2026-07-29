@@ -41,9 +41,11 @@ function Dashboard() {
   }
 
   // Emptiness comes from the counters, not from a shelf: a library made only of
-  // owned-but-unread titles fills neither of the two above.
-  const libraryEmpty =
-    stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
+  // owned-but-unread titles fills neither of the two above. Every status counts here,
+  // the abandoned ones included — a reader whose shelf holds nothing but books they gave
+  // up on has a collection, and being invited to start one would be absurd.
+  const libraryEmpty = stats != null
+    && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) + (stats.abandoned ?? 0) === 0;
 
   return (
     <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />

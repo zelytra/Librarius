@@ -568,7 +568,7 @@
       },
       "LibraryStatus" : {
         "type" : "string",
-        "enum" : [ "OWNED", "READING", "READ" ]
+        "enum" : [ "OWNED", "READING", "READ", "ABANDONED" ]
       },
       "LocalDate" : {
         "type" : "string",
@@ -871,6 +871,10 @@
             "format" : "int64"
           },
           "toRead" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "abandoned" : {
             "type" : "integer",
             "format" : "int64"
           },

@@ -123,6 +123,48 @@ class GoalProgressTest {
         assertEquals(finished - 1, goalCurrent(), "a title being read again is not a finished one");
     }
 
+    /**
+     * The trap the fourth status sets: giving up on a title stamps {@code finished_at} as
+     * well, and the goal is counted from that column. A gauge taking the date at face value
+     * would credit the reader for a book they put down.
+     */
+    @Test
+    void givingUpOnATitleDoesNotAdvanceTheGoal() {
+        setGoal(40, "BOOKS");
+        int before = goalCurrent();
+
+        String item = addTitle("Goal - given up", null, 400);
+        setStatus(item, "READING");
+        setStatus(item, "ABANDONED");
+
+        assertEquals(before, goalCurrent(), "an abandoned title is not a finished one");
+    }
+
+    /** And it takes back the credit of a title that had been finished before. */
+    @Test
+    void givingUpOnAFinishedTitleTakesItBackOutOfTheGoal() {
+        setGoal(40, "BOOKS");
+        String item = addTitle("Goal - unfinished after all", null, 250);
+
+        setStatus(item, "READ");
+        int finished = goalCurrent();
+        setStatus(item, "ABANDONED");
+
+        assertEquals(finished - 1, goalCurrent(),
+                "the finishing date survives the change of status, the credit does not");
+    }
+
+    /** Pages are counted the same way: a book put down contributes none of them. */
+    @Test
+    void givingUpOnATitleAddsNoPagesToAPagesGoal() {
+        setGoal(100_000, "PAGES");
+        int before = goalCurrent();
+
+        setStatus(addTitle("Goal - pages given up", null, 900), "ABANDONED");
+
+        assertEquals(before, goalCurrent(), "the pages of an abandoned title are not read pages");
+    }
+
     /** Marking the same title as read twice does not count it twice. */
     @Test
     void markingATitleAsReadTwiceCountsItOnce() {

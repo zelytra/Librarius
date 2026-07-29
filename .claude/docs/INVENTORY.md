@@ -13,10 +13,13 @@ that totals a budget, custom categories, personalised French release dates, a
 reorderable dashboard, GDPR export and account deletion.
 
 What is missing has moved with it. **Functional depth** is now the long tail the later
-milestones carry — authors as entities, a catalog beyond books and manga, a reading
-workflow with a fourth status, and eventually the social half. **Quality** is no
-accessibility pass and no desktop layout — the single locale left that list on 2026-07-29,
-the interface now shipping in French and English. **Operations** is what only the
+milestones carry — authors as entities, a catalog beyond books and manga, the screens a
+finished or abandoned title should lead to, and eventually the social half. The fourth
+status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
+a title can be given up on, it keeps the page it was given up at, and it counts towards no
+goal. **Quality** is no accessibility pass and no desktop layout — the single locale left
+that list on 2026-07-29, the interface now shipping in French and English. **Operations**
+is what only the
 project owner can do: rotating the credentials still readable in the git history, wiring
 the Alertmanager webhook, and running a restore and a rollback for real.
 
@@ -32,7 +35,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
-| Persistence | PostgreSQL + Panache + Flyway (10 migrations), Hibernate in `validate` mode |
+| Persistence | PostgreSQL + Panache + Flyway (11 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |

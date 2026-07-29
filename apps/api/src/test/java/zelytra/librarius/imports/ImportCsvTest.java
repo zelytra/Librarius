@@ -47,4 +47,27 @@ class ImportCsvTest {
         assertEquals(LibraryStatus.READ, books.get(2).status());
         assertEquals(LibraryStatus.READING, books.get(3).status());
     }
+
+    /**
+     * A book given up on comes back as such. Goodreads has no shelf for it, so the wording
+     * belongs to whoever exported the file: {@code abandoned} is what this application
+     * writes, {@code dnf} what the English-speaking sites settled on, and a French list says
+     * "Abandonné". None of them contains "read", so all three used to land on the to-read
+     * pile — the same silent downgrade the test above locks down in the other direction.
+     */
+    @Test
+    void aBookGivenUpOnIsImportedAsAbandoned() {
+        String csv = """
+                Title,Author,Exclusive Shelf
+                Ravage,René Barjavel,abandoned
+                La Horde du Contrevent,Alain Damasio,Abandonné
+                Fourth Wing,Rebecca Yarros,DNF
+                Iron Flame,Rebecca Yarros,lecture en cours abandonnée
+                """;
+        List<ImportedBook> books = ImportService.parseCsv(csv);
+        assertEquals(4, books.size());
+        for (ImportedBook book : books) {
+            assertEquals(LibraryStatus.ABANDONED, book.status(), book.title());
+        }
+    }
 }

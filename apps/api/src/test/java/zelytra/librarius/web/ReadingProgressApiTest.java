@@ -170,6 +170,145 @@ class ReadingProgressApiTest {
                 .body("progress.percent", is(100));
     }
 
+    // ── Abandoning ────────────────────────────────────────────────────────────
+
+    /**
+     * The whole point of the fourth status: a book given up at page 120 was read up to page
+     * 120. The date is stamped like a finish date — the day tracking stopped is worth
+     * keeping — but the position is left exactly where the reader got to. Completing it the
+     * way {@code READ} does would destroy the only thing this status has to record.
+     */
+    @Test
+    void givingUpOnATitleStampsTheDateAndKeepsThePosition() {
+        String itemId = addBook("Progress - given up", "READING");
+        putProgress(itemId, "{ \"currentPage\": 120 }").statusCode(204);
+
+        putProgress(itemId, "{ \"status\": \"ABANDONED\", \"currentPage\": 120 }").statusCode(204);
+
+        item(itemId)
+                .body("status", is("ABANDONED"))
+                .body("progress.currentPage", is(120))
+                .body("progress.percent", is(40))
+                .body("progress.finishedAt", is(LocalDate.now().toString()));
+    }
+
+    /** A date the user typed wins here as well: the book may have been dropped last year. */
+    @Test
+    void anExplicitAbandonDateIsKept() {
+        String itemId = addBook("Progress - explicit abandon date", "READING");
+
+        putProgress(itemId, "{ \"status\": \"ABANDONED\", \"finishedAt\": \"2021-06-01\","
+                + " \"percent\": 15 }").statusCode(204);
+
+        item(itemId)
+                .body("progress.finishedAt", is("2021-06-01"))
+                .body("progress.percent", is(15));
+    }
+
+    /**
+     * Picking a book up again is a normal thing to do, and nothing special-cases against it:
+     * {@code ABANDONED} → {@code READING} is the ordinary transition, and it clears the date
+     * the abandonment left behind.
+     */
+    @Test
+    void anAbandonedTitleCanBePickedUpAgain() {
+        String itemId = addBook("Progress - picked up again", "READING");
+        putProgress(itemId, "{ \"status\": \"ABANDONED\", \"startedAt\": \"2024-02-02\","
+                + " \"currentPage\": 90 }").statusCode(204);
+
+        putProgress(itemId, "{ \"status\": \"READING\", \"startedAt\": \"2024-02-02\","
+                + " \"currentPage\": 90 }").statusCode(204);
+
+        item(itemId)
+                .body("status", is("READING"))
+                .body("progress.startedAt", is("2024-02-02"))
+                .body("progress.currentPage", is(90))
+                .body("progress.finishedAt", nullValue());
+    }
+
+    /** And it can be finished after all, which completes the position the normal way. */
+    @Test
+    void anAbandonedTitleCanStillBeFinished() {
+        String itemId = addBook("Progress - finished after all", "READING");
+        putProgress(itemId, "{ \"status\": \"ABANDONED\", \"currentPage\": 60 }").statusCode(204);
+
+        putProgress(itemId, "{ \"status\": \"READ\" }").statusCode(204);
+
+        item(itemId)
+                .body("status", is("READ"))
+                .body("progress.percent", is(100))
+                .body("progress.currentPage", is(PAGE_COUNT));
+    }
+
+    /** A filter value of its own: an abandoned title falls into none of the three others. */
+    @Test
+    void abandonedTitlesAreFilteredOnLikeAnyOtherStatus() {
+        String itemId = addBook("Progress - filtered abandoned", "READING");
+        putProgress(itemId, "{ \"status\": \"ABANDONED\" }").statusCode(204);
+
+        given().auth().oauth2(token()).queryParam("status", "ABANDONED")
+                .queryParam("q", "Progress - filtered abandoned")
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("total", is(1))
+                .body("items[0].id", is(itemId));
+
+        for (String other : new String[] {"OWNED", "READING", "READ"}) {
+            given().auth().oauth2(token()).queryParam("status", other)
+                    .queryParam("q", "Progress - filtered abandoned")
+                    .when().get("/api/library")
+                    .then().statusCode(200)
+                    .body("total", is(0));
+        }
+    }
+
+    /** It counts in the abandoned counter of {@code /api/stats}, and in no other. */
+    @Test
+    void abandonedTitlesHaveTheirOwnCounter() {
+        var before = given().auth().oauth2(token()).when().get("/api/stats")
+                .then().statusCode(200).extract().jsonPath();
+        int abandoned = before.getInt("abandoned");
+        int read = before.getInt("read");
+        int reading = before.getInt("reading");
+        int toRead = before.getInt("toRead");
+        int pagesRead = before.getInt("pagesRead");
+
+        putProgress(addBook("Progress - counted apart", "READING"), "{ \"status\": \"ABANDONED\" }")
+                .statusCode(204);
+
+        given().auth().oauth2(token()).when().get("/api/stats")
+                .then().statusCode(200)
+                .body("abandoned", is(abandoned + 1))
+                // The fixture was added as READING and left it again: the three other
+                // counters are exactly where they were.
+                .body("read", is(read))
+                .body("reading", is(reading))
+                .body("toRead", is(toRead))
+                // The 300 pages of the fixture are not read pages.
+                .body("pagesRead", is(pagesRead));
+    }
+
+    /**
+     * Another user's item is unknown, not forbidden — a 403 would confirm that it exists.
+     * Asserted on this transition rather than trusted from the endpoint's other tests: the
+     * status is new, and an ownership check is exactly what a new branch gets written around.
+     */
+    @Test
+    void anotherUsersTitleCannotBeAbandoned() {
+        String itemId = addBook("Progress - not bob's to abandon", "READING");
+        putProgress(itemId, "{ \"currentPage\": 30 }").statusCode(204);
+
+        given().auth().oauth2(keycloak.getAccessToken("bob")).contentType("application/json")
+                .body("{ \"status\": \"ABANDONED\" }")
+                .when().put("/api/library/" + itemId + "/progress")
+                .then().statusCode(404);
+
+        // And Alice's title is untouched: not abandoned, and still at page 30.
+        item(itemId)
+                .body("status", is("READING"))
+                .body("progress.currentPage", is(30));
+    }
+
     // ── Exposure ──────────────────────────────────────────────────────────────
 
     /**
