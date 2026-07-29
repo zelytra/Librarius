@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
+import { Loading } from '../shared/ui/states';
 import styles from './AppShell.module.css';
 
 // The bottom bar is hidden on "full screen" screens (detail, series, settings).
@@ -13,7 +15,12 @@ export function AppShell() {
     <div className={styles.viewport}>
       <div className={styles.frame}>
         <main className={`scroll-x ${styles.content}`}>
-          <Outlet />
+          {/* The screens behind the routes are code split (see App.tsx): this boundary
+              covers the moment their chunk is on the wire, and sits inside the frame so
+              the bottom bar does not disappear during the fetch. */}
+          <Suspense fallback={<Loading />}>
+            <Outlet />
+          </Suspense>
         </main>
         {showNav && <BottomNav />}
       </div>

@@ -1,16 +1,38 @@
+import { lazy } from 'react';
 import { Routes, Route } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from './app/AppShell';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { ErrorState } from './shared/ui/states';
 import { HomePage } from './features/home/HomePage';
-import { SettingsPage } from './features/settings/SettingsPage';
-import { CollectionPage } from './features/collection/CollectionPage';
-import { DetailPage } from './features/detail/DetailPage';
-import { DiscoverPage } from './features/discover/DiscoverPage';
-import { SeriesPage } from './features/series/SeriesPage';
-import { WishlistPage } from './features/wishlist/WishlistPage';
-import { StatsPage } from './features/stats/StatsPage';
+
+// Home is imported eagerly: it is the landing route and the `*` fallback, so making it
+// lazy would only add a round trip to the critical path. The other screens are code
+// split — the first load stops paying for seven screens nobody is looking at, and the
+// service worker precaches their chunks right after, so a later navigation is offline
+// and instant anyway. The Suspense boundary lives in AppShell, which keeps the bottom
+// bar painted while a screen loads.
+const SettingsPage = lazy(() =>
+  import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const CollectionPage = lazy(() =>
+  import('./features/collection/CollectionPage').then((m) => ({ default: m.CollectionPage })),
+);
+const DetailPage = lazy(() =>
+  import('./features/detail/DetailPage').then((m) => ({ default: m.DetailPage })),
+);
+const DiscoverPage = lazy(() =>
+  import('./features/discover/DiscoverPage').then((m) => ({ default: m.DiscoverPage })),
+);
+const SeriesPage = lazy(() =>
+  import('./features/series/SeriesPage').then((m) => ({ default: m.SeriesPage })),
+);
+const WishlistPage = lazy(() =>
+  import('./features/wishlist/WishlistPage').then((m) => ({ default: m.WishlistPage })),
+);
+const StatsPage = lazy(() =>
+  import('./features/stats/StatsPage').then((m) => ({ default: m.StatsPage })),
+);
 
 function App() {
   const { t } = useTranslation();

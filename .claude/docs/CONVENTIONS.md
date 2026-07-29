@@ -134,6 +134,7 @@ What the change does, and why this approach over the alternatives.
 
 ## Verification
 - [ ] `pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build`
+- [ ] `node apps/web/scripts/check-bundle-size.mjs` if the front end changed
 - [ ] `cd apps/api && ./mvnw -B verify`
 - [ ] OpenAPI client regenerated if the API changed
 - [ ] Checked in a real browser (screenshots / DOM) if the UI changed
@@ -158,6 +159,75 @@ bundle:
 ```bash
 pnpm mobile:build
 ```
+
+### The size budget
+
+The app is read on a phone, often on a bookshop's network, so the weight of the first
+payload is a feature. The `web` workflow **fails** on it, and the same check runs
+locally on the `dist/` a build just produced:
+
+```bash
+node apps/web/scripts/check-bundle-size.mjs
+```
+
+Three budgets, all measured **gzipped** — what nginx puts on the wire:
+
+| Budget | Covers | Ceiling | Measured on 2026-07-29 |
+|---|---|---|---|
+| initial | everything `index.html` loads before the first paint | 155 kB | 137.9 kB |
+| deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
+| whole build | every file, i.e. what the service worker precaches | 200 kB | 176.4 kB |
+
+The rule matters more than the figures: **the measurement plus about 15%**. A budget
+with 60% of slack catches nothing, and one set flush against the current size gets
+switched off the first time it goes red. The failure names the asset that went over and
+by how much, so a per-screen chunk points at the screen.
+
+Raising a budget is a legitimate decision — a dependency has to land somewhere — but it
+happens **in the diff**, in `apps/web/scripts/check-bundle-size.mjs`, with the reason in
+the pull request. Never by deleting the step. And it is re-derived only when the
+**baseline** deliberately changes: `@capacitor/core` (#154) is eager, permanent and
+decided, so it moved the number up; the react-router 8 and orval 8 upgrade (#157) moved
+it back down, by more than #154 had added; the advanced search (#146) and the
+alternative editions (#152) did not move it at all, because both landed behind the route
+split, in the Discover and Detail chunks. A screen growing is not a reason to raise a
+budget — that is the budget working.
+
+### Lighthouse
+
+The same workflow audits the built app with **Lighthouse** on the mobile profile, three
+runs, median, thresholds in `apps/web/lighthouserc.json`.
+
+It measures the **signed-out** app: a static build has neither API nor Keycloak behind
+it, so what is audited is the shell — boot, theme, fonts, first paint, the sign-in
+prompt. That is the part every visitor pays for, and it is the only part measurable
+reproducibly; the signed-in screens need the whole stack and belong to the e2e suite.
+
+| Category | Threshold | Observed on CI — 24 runs of the same code |
+|---|---|---|
+| accessibility | ≥ 0.95 | 1.00 every time |
+| best practices | ≥ 0.90 | 1.00 every time |
+| performance | ≥ 0.50 | single runs 0.48 – 0.98, **medians 0.65 – 0.98** |
+
+The first two carry no timing, so they cannot flap. **Performance can and does**: the
+page blocks its first paint on a third-party stylesheet (Google Fonts), whose latency
+belongs to somebody else, so the same commit scores 0.48 on one run and 0.98 on another.
+Two decisions follow, and both matter more than the number:
+
+- **Aggregate on the median**, not on LHCI's default optimistic pick. One lucky run
+  cannot then hide a regression, and one unlucky run cannot invent one — the 0.48 above
+  is precisely the sample a median throws away.
+- **Assert a floor, not the target.** 0.50 is 0.15 under the lowest of the eight medians
+  CI has produced: low enough never to go red on the weather, high enough to fail a
+  build that ships a genuinely heavy regression.
+
+It is raised to the **0.9** the v1.0 milestone requires by the change that takes the
+fonts off the critical path. A check that goes red at random teaches people to ignore
+red checks, which is worse than not having it.
+
+That change is also the biggest performance item outstanding: a first load is **750 kB**,
+of which **602 kB are the three Google fonts** — 407 kB for the full Material Symbols
+set alone — against 139 kB of script. The bundle is not what makes this app heavy.
 
 If the API changed:
 

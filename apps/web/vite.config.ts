@@ -8,6 +8,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // The default injects the registration as a plain <script src> in <head>, which
+      // blocks rendering on a 134-byte file whose only job is to register the service
+      // worker — Lighthouse measured 482 ms of it. Deferred, it registers just as
+      // reliably, only after the page has painted.
+      injectRegister: 'script-defer',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       workbox: {
         // Do not serve the SPA (index.html) for these server routes: otherwise the

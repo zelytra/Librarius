@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "Lighthouse in CI, on the mobile profile (the default: throttled 4G, mid-range phone).",
+    "Audits the signed-out app: a static build has neither API nor Keycloak behind it, so",
+    "what is measured is the shell — boot, theme, fonts, first paint, the sign-in prompt.",
+    "That is the part every visitor pays for, and the only part measurable reproducibly;",
+    "the signed-in screens need the whole stack and belong to the e2e suite.",
+    "Home and Collection render the same sign-in prompt while signed out, but both are",
+    "kept so the check follows if they ever diverge.",
+    "",
+    "Thresholds — measured, not wished for. See .claude/docs/CONVENTIONS.md § 4.",
+    "accessibility and best practices came back at 1.00 on every run, on CI and locally:",
+    "they carry no timing, so they cannot flap, and they are asserted just under.",
+    "performance cannot be asserted at the 0.9 the v1.0 milestone wants. Twenty-four",
+    "runs over four CI runs of the same code scored anywhere between 0.48 and 0.98,",
+    "because index.html blocks its first paint on a third-party stylesheet (Google",
+    "Fonts) whose latency belongs to somebody else. Two decisions follow. The",
+    "aggregation is the median rather than LHCI's default optimistic pick, so one lucky",
+    "run cannot hide a regression and one unlucky run cannot invent one — the 0.48 above",
+    "is exactly the sample a median throws away. And the threshold is a floor at 0.5,",
+    "0.15 under the lowest of the eight medians CI has produced: it still fails a build",
+    "that ships a genuinely heavy",
+    "regression, and it never goes red on the weather. It gets raised to 0.9 by the",
+    "change that takes the fonts off the critical path — a red check nobody can predict",
+    "teaches people to ignore red checks."
+  ],
+  "ci": {
+    "collect": {
+      "staticDistDir": "./dist",
+      "isSinglePageApplication": true,
+      "url": ["http://localhost/", "http://localhost/collection"],
+      "numberOfRuns": 3,
+      "settings": {
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["error", { "minScore": 0.9 }],
+        "categories:performance": [
+          "error",
+          { "minScore": 0.5, "aggregationMethod": "median" }
+        ]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci/reports"
+    }
+  }
+}
