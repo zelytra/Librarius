@@ -22,7 +22,7 @@ ingress:
 web:
   image:
     repository: ghcr.io/zelytra/librarius-web
-    tag: "0.1.0"
+    tag: "0.4.0"
     pullPolicy: IfNotPresent
   replicas: 1
   # RollingUpdate (maxSurge 1, maxUnavailable 0): the replacement pod has to be
@@ -42,7 +42,7 @@ api:
   enabled: true
   image:
     repository: ghcr.io/zelytra/librarius-api
-    tag: "0.1.0"
+    tag: "0.4.0"
     pullPolicy: IfNotPresent
   replicas: 1
   # RollingUpdate surges a second API pod, so the new one runs its Flyway
