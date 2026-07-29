@@ -201,11 +201,11 @@ it, so what is audited is the shell — boot, theme, fonts, first paint, the sig
 prompt. That is the part every visitor pays for, and it is the only part measurable
 reproducibly; the signed-in screens need the whole stack and belong to the e2e suite.
 
-| Category | Threshold | Observed on CI — 18 runs of the same code |
+| Category | Threshold | Observed on CI — 24 runs of the same code |
 |---|---|---|
 | accessibility | ≥ 0.95 | 1.00 every time |
 | best practices | ≥ 0.90 | 1.00 every time |
-| performance | ≥ 0.50 | single runs 0.48 – 0.98, **medians 0.72 – 0.98** |
+| performance | ≥ 0.50 | single runs 0.48 – 0.98, **medians 0.65 – 0.98** |
 
 The first two carry no timing, so they cannot flap. **Performance can and does**: the
 page blocks its first paint on a third-party stylesheet (Google Fonts), whose latency
@@ -215,17 +215,17 @@ Two decisions follow, and both matter more than the number:
 - **Aggregate on the median**, not on LHCI's default optimistic pick. One lucky run
   cannot then hide a regression, and one unlucky run cannot invent one — the 0.48 above
   is precisely the sample a median throws away.
-- **Assert a floor, not the target.** 0.50 is 0.22 under the lowest median CI has
-  produced: low enough never to go red on the weather, high enough to fail a build that
-  ships a genuinely heavy regression.
+- **Assert a floor, not the target.** 0.50 is 0.15 under the lowest of the eight medians
+  CI has produced: low enough never to go red on the weather, high enough to fail a
+  build that ships a genuinely heavy regression.
 
 It is raised to the **0.9** the v1.0 milestone requires by the change that takes the
 fonts off the critical path. A check that goes red at random teaches people to ignore
 red checks, which is worse than not having it.
 
-That change is also the biggest performance item outstanding: a first load is **747 kB**,
+That change is also the biggest performance item outstanding: a first load is **750 kB**,
 of which **602 kB are the three Google fonts** — 407 kB for the full Material Symbols
-set alone — against 136 kB of script. The bundle is not what makes this app heavy.
+set alone — against 139 kB of script. The bundle is not what makes this app heavy.
 
 If the API changed:
 
