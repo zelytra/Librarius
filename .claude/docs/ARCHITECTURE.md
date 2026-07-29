@@ -129,6 +129,42 @@ zelytra/librarius/
   one outbound call, not one each. Hits and misses are counted per level
   (`librarius_catalog_cache_lookups_total{level,result}`) and a scheduled job drops the
   expired rows off the request path.
+- **What a cold fetch costs the connection pool** — the trade-off settled by
+  [#132](https://github.com/zelytra/Librarius/issues/132), because the shape of the code
+  does not make it obvious. That advisory lock has to be held for the whole outbound call,
+  otherwise it guarantees nothing; a PostgreSQL lock cannot outlive its transaction, nor a
+  transaction its connection. **A cold fetch therefore holds one pooled connection while
+  Open Library or AniList is on the line, and no rearrangement of the code avoids that** —
+  only moving the claim into a leased row would, at the price of a migration, a poll loop and
+  a way to tell a lease from a value, all to protect a deployment that runs one replica.
+  The threshold, measured: **50 concurrent cold searches emptied the pool**, and the 51st
+  request of any kind — library, wishlist, stats — waited the 5 s acquisition timeout and
+  then failed. As a rate that is 50 / call duration: ~100 cold misses per second while the
+  providers answer in 500 ms, but 4.5 per second at the 11 s worst case, which the
+  30-per-minute quota reaches with nine users. `CatalogCacheConnectionTest` runs the same
+  arithmetic against a pool of 4.
+  What *is* bounded is how many cold fetches do it at once: `fetch.concurrency` permits
+  (4 of the 50 the pool holds), taken **before** any connection is, so a fetch that has to
+  queue queues on a worker thread. Forty-six connections therefore stay
+  available to the rest of the API whatever the search rate. Past the permits — and past
+  `fetch.queue-timeout` — a fetch goes out unlocked rather than queue for a connection, which
+  costs one duplicated provider call instead of every other request in the pod;
+  `librarius_catalog_cache_unlocked_fetches_total` counts those and is the signal to raise
+  the permit count.
+- **The pool has no metric**, which is worth knowing before the next person goes looking for
+  one. `/q/metrics` carries JVM, Netty and worker-pool figures and nothing about the
+  connection pool; `quarkus.datasource.jdbc.metrics.enabled=true` does not change that,
+  because `quarkus-micrometer` ships no datasource binder, so the `agroal_*` gauges never
+  reach Prometheus. Verified against the live endpoint, not assumed. Until it is wired up,
+  pool exhaustion is only visible once it has become 5xx, through
+  `LibrariusApiHighErrorRate` — whose runbook already names it as a cause. The leading
+  indicator would be `agroal_awaiting_count`, and an alert on it is worth adding the day the
+  gauge exists; adding the rule first would only produce silence that reads as calm.
+- **Outbound deadline**: `quarkus.rest-client.*.read-timeout` is not the ceiling it looks
+  like — Vert.x restarts that timer on every chunk received, so it bounds silence, not
+  slowness. `librarius.catalog.provider.call-timeout` (12 s) is the absolute one, applied by
+  the providers on the `Uni` the REST clients return. That is why those clients are reactive:
+  a synchronous call cannot be given up on.
 - **Import**: the same SPI pattern through `LibraryImporter`, exposed by
   `POST /api/import/{source}` and `POST /api/import/csv`.
 - **Migrations**: Flyway on startup, Hibernate in `validate`. The schema is the truth; an

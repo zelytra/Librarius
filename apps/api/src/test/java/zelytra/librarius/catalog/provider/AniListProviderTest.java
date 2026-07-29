@@ -1,9 +1,11 @@
 package zelytra.librarius.catalog.provider;
 
+import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -22,9 +24,10 @@ class AniListProviderTest {
         private List<AniListClient.Media> staffMedia = List.of();
 
         @Override
-        public GqlResponse query(GqlRequest body) {
+        public Uni<GqlResponse> query(GqlRequest body) {
             request = body;
-            return new GqlResponse(new Data(null, new StaffSearch(new MediaConnection(staffMedia))));
+            return Uni.createFrom().item(
+                    new GqlResponse(new Data(null, new StaffSearch(new MediaConnection(staffMedia)))));
         }
     }
 
@@ -36,8 +39,13 @@ class AniListProviderTest {
     private final CapturingClient client = new CapturingClient();
 
     private AniListProvider provider() {
+        return provider(client, Duration.ofSeconds(5));
+    }
+
+    private AniListProvider provider(AniListClient client, Duration timeout) {
         AniListProvider provider = new AniListProvider();
         provider.client = client;
+        provider.callTimeout = timeout;
         return provider;
     }
 
@@ -108,5 +116,21 @@ class AniListProviderTest {
         // Ignoring them and returning the most popular mangas would look like a result.
         assertTrue(provider().search(
                 new CatalogQuery(null, null, null, "fr", "Glénat", "9782344012345"), 20).isEmpty());
+    }
+
+    @Test
+    void givesUpOnAProviderThatNeverAnswers() {
+        // `read-timeout` bounds silence, not slowness — Vert.x restarts that timer on every
+        // chunk. The deadline below is the only thing that stops a cold fetch from holding a
+        // database connection for as long as AniList feels like taking.
+        AniListProvider provider =
+                provider(body -> Uni.createFrom().nothing(), Duration.ofMillis(200));
+
+        long start = System.nanoTime();
+        List<CatalogResult> results = provider.search(CatalogQuery.of("never answers"), 20);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(results.isEmpty(), "a timed-out call degrades into an empty result");
+        assertTrue(elapsedMs < 5_000, "the call must give up on its own, took " + elapsedMs + "ms");
     }
 }

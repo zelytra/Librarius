@@ -1,8 +1,10 @@
 package zelytra.librarius.catalog.provider;
 
+import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import zelytra.librarius.catalog.CatalogQuery;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,18 +20,23 @@ class OpenLibraryProviderTest {
         private String q;
 
         @Override
-        public SearchResponse search(String q, int limit, String fields) {
+        public Uni<SearchResponse> search(String q, int limit, String fields) {
             this.q = q;
-            return new SearchResponse(List.of());
+            return Uni.createFrom().item(new SearchResponse(List.of()));
         }
     }
 
     private final CapturingClient client = new CapturingClient();
 
-    private String queryFor(CatalogQuery criteria) {
+    private OpenLibraryProvider provider(OpenLibraryClient client, Duration timeout) {
         OpenLibraryProvider provider = new OpenLibraryProvider();
         provider.client = client;
-        provider.search(criteria, 20);
+        provider.callTimeout = timeout;
+        return provider;
+    }
+
+    private String queryFor(CatalogQuery criteria) {
+        provider(client, Duration.ofSeconds(5)).search(criteria, 20);
         return client.q;
     }
 
@@ -73,5 +80,21 @@ class OpenLibraryProviderTest {
 
         assertEquals("author:\"Herbert OR\"", q);
         assertFalse(q.contains("\"\""), q);
+    }
+
+    @Test
+    void givesUpOnAProviderThatNeverAnswers() {
+        // `read-timeout` bounds silence, not slowness — Vert.x restarts that timer on every
+        // chunk. The deadline below is the only thing that stops a cold fetch from holding a
+        // database connection for as long as Open Library feels like taking.
+        OpenLibraryProvider provider = provider(
+                (q, limit, fields) -> Uni.createFrom().nothing(), Duration.ofMillis(200));
+
+        long start = System.nanoTime();
+        List<?> results = provider.search(CatalogQuery.of("never answers"), 20);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(results.isEmpty(), "a timed-out call degrades into an empty result");
+        assertTrue(elapsedMs < 5_000, "the call must give up on its own, took " + elapsedMs + "ms");
     }
 }
