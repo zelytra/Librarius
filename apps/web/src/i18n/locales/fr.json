@@ -406,6 +406,20 @@
     "read": "✓ Lu",
     "giveUp": "J'abandonne ce livre",
     "abandonedNote": "Tu as abandonné ce livre. Ta progression est conservée telle quelle, et il ne compte pas dans ton objectif de lecture.",
+    "outcome": {
+      "read": {
+        "title": "Terminé !",
+        "subtitle": "« {{title}} » est marqué comme lu. Note-le et range-le tant que c'est frais : les deux sont facultatifs."
+      },
+      "abandoned": {
+        "title": "Abandonné",
+        "subtitle": "« {{title}} » est marqué comme abandonné, et ta progression reste telle quelle. Tu peux quand même le noter et le ranger : les deux sont facultatifs."
+      },
+      "shelfHint": "Un titre ne porte qu'un seul rang : resélectionne celui qui est retenu pour l'enlever.",
+      "confirm": "Enregistrer",
+      "skip": "Plus tard",
+      "close": "Fermer"
+    },
     "progress": {
       "title": "Ma progression",
       "page": "Page",

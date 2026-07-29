@@ -1,0 +1,85 @@
+/* Fixed rather than absolute: the shell frame scrolls its own content, so a sheet
+   anchored inside it would slide away with the screen it was opened over. The scrim is
+   a fixed dark rather than a token, because it dims both palettes — a theme-following
+   veil over the dark surface would be no veil at all. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(28, 24, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* 440px is the phone frame's own width, so on a phone the sheet covers the shell edge
+   to edge and on a desktop it stays a sheet instead of stretching across the window.
+   Written out rather than read from --app-max-width, which resolves to `none` past the
+   tablet breakpoint — exactly where the cap is needed most. Scrollable on its own: a
+   short landscape viewport must not push the buttons out of reach. */
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  box-shadow: var(--shadow-strong);
+  padding: 22px 20px 20px;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title {
+  font-size: var(--fs-19);
+  /* Leaves room for the close button, which is drawn over this line. */
+  padding-right: 36px;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: var(--fs-13);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+/* The rating and the shelf are two questions, spaced further apart than a heading is
+   from what it labels. */
+.block {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.hint {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin: 10px 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

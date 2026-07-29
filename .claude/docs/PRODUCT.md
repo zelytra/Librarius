@@ -96,8 +96,19 @@ The full inventory, with a **Books / Manga** toggle.
 ### 4.3 Title detail ✅ / 🔜
 
 - ✅ Cover, title, authors, genres, pages, series, year, synopsis.
-- ✅ Assigning a rank (Gold / Silver / Bronze).
+- ✅ **Assigning a rank**: every category the caller has — the four built-ins and their own —
+  rather than the three metals the row was first written for. Choosing the one in force
+  clears it.
 - ✅ Marking "in progress" / "read".
+- ✅ **The end-of-reading sheet**: finishing a title, or giving up on one, records the status
+  and then opens a single sheet asking for a star rating and a shelf
+  ([#164](https://github.com/zelytra/Librarius/issues/164),
+  [#165](https://github.com/zelytra/Librarius/issues/165)). Both answers are optional and
+  written only on confirmation, so a sheet dismissed leaves the title exactly as the button
+  left it. An abandonment opens on the built-in *Abandon* shelf — a starting point, not a
+  constraint — and the sheet writes no reading position, which is what keeps the page the
+  reader stopped on. Marking a title read again later asks nothing: the moment belongs to
+  the transition.
 - ✅ **Giving up on a title**: *"J'abandonne ce livre"*, offered while the title is owned or
   being read and on nothing else. It records the day the reader stopped and **keeps the
   position untouched** — the page reached is the point of the state. The screen then says

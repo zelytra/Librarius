@@ -296,22 +296,11 @@
 
 /* ── Rating & private review ──────────────────────────────────────────────── */
 
-.stars {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.star {
-  border: none;
-  background: none;
-  padding: 2px;
-  cursor: pointer;
-  line-height: 0;
-}
-
 .reviewInput {
   width: 100%;
+  /* The stars sit right above, and own no margin of their own: the sheet stacks them
+     against a different neighbour. */
+  margin-top: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
   background: var(--surface-2);
@@ -337,33 +326,10 @@
   margin: 0 0 12px;
 }
 
-.rankRow {
-  display: flex;
-  gap: 9px;
+/* The row itself belongs to CategoryChoice, which the end-of-reading sheet draws too:
+   only the space under it is this screen's business. */
+.rankSection {
   margin-bottom: 26px;
-}
-
-.rankButton {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 10px;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  font-size: var(--fs-13);
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--ink-soft);
-  border: 1.5px solid var(--line);
-  background: var(--surface);
-}
-
-.rankDot {
-  width: 11px;
-  height: 11px;
-  border-radius: var(--radius-round);
 }
 
 /* Says the title was given up on, right above the buttons that take it back. Tinted
