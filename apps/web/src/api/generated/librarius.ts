@@ -94,6 +94,16 @@ export interface CategoryUpdateDto {
   label: string;
 }
 
+export interface DashboardSectionDto {
+  /** @pattern \S */
+  code: string;
+  hidden?: boolean;
+}
+
+export interface DashboardLayoutDto {
+  sections: DashboardSectionDto[];
+}
+
 export interface EditionDto {
   id?: Uuid;
   isbn13?: string;
@@ -1071,6 +1081,178 @@ export const useDeleteApiCategoriesId = <TError = void,
       > => {
       return useMutation(getDeleteApiCategoriesIdMutationOptions(options), queryClient);
     }
+
+export const getPutApiDashboardLayoutUrl = () => {
+
+
+
+
+  return `/api/dashboard/layout`
+}
+
+/**
+ * @summary Save
+ */
+export const putApiDashboardLayout = async (dashboardLayoutDto: DashboardLayoutDto, options?: RequestInit): Promise<DashboardLayoutDto> => {
+
+  return apiClient<DashboardLayoutDto>(getPutApiDashboardLayoutUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(dashboardLayoutDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiDashboardLayoutMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiDashboardLayout>>, TError,{data: DashboardLayoutDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiDashboardLayout>>, TError,{data: DashboardLayoutDto}, TContext> => {
+
+const mutationKey = ['putApiDashboardLayout'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiDashboardLayout>>, {data: DashboardLayoutDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiDashboardLayout(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiDashboardLayoutMutationResult = NonNullable<Awaited<ReturnType<typeof putApiDashboardLayout>>>
+    export type PutApiDashboardLayoutMutationBody = DashboardLayoutDto
+    export type PutApiDashboardLayoutMutationError = void
+
+    /**
+ * @summary Save
+ */
+export const usePutApiDashboardLayout = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiDashboardLayout>>, TError,{data: DashboardLayoutDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiDashboardLayout>>,
+        TError,
+        {data: DashboardLayoutDto},
+        TContext
+      > => {
+      return useMutation(getPutApiDashboardLayoutMutationOptions(options), queryClient);
+    }
+
+export const getGetApiDashboardLayoutUrl = () => {
+
+
+
+
+  return `/api/dashboard/layout`
+}
+
+/**
+ * @summary Get
+ */
+export const getApiDashboardLayout = async ( options?: RequestInit): Promise<DashboardLayoutDto> => {
+
+  return apiClient<DashboardLayoutDto>(getGetApiDashboardLayoutUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiDashboardLayoutQueryKey = () => {
+    return [
+    `/api/dashboard/layout`
+    ] as const;
+    }
+
+
+export const getGetApiDashboardLayoutQueryOptions = <TData = Awaited<ReturnType<typeof getApiDashboardLayout>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiDashboardLayoutQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiDashboardLayout>>> = () => getApiDashboardLayout();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiDashboardLayoutQueryResult = NonNullable<Awaited<ReturnType<typeof getApiDashboardLayout>>>
+export type GetApiDashboardLayoutQueryError = void
+
+
+export function useGetApiDashboardLayout<TData = Awaited<ReturnType<typeof getApiDashboardLayout>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiDashboardLayout>>,
+          TError,
+          Awaited<ReturnType<typeof getApiDashboardLayout>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiDashboardLayout<TData = Awaited<ReturnType<typeof getApiDashboardLayout>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiDashboardLayout>>,
+          TError,
+          Awaited<ReturnType<typeof getApiDashboardLayout>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiDashboardLayout<TData = Awaited<ReturnType<typeof getApiDashboardLayout>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get
+ */
+
+export function useGetApiDashboardLayout<TData = Awaited<ReturnType<typeof getApiDashboardLayout>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiDashboardLayout>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiDashboardLayoutQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiExportUrl = (params?: GetApiExportParams,) => {
   const normalizedParams = new URLSearchParams();

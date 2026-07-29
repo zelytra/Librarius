@@ -95,6 +95,10 @@ class AccountDeletionTest {
 
         given().auth().oauth2(token()).when().put("/api/series/" + seriesId() + "/follow")
                 .then().statusCode(204);
+
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"sections\": [ { \"code\": \"goal\", \"hidden\": true } ] }")
+                .when().put("/api/dashboard/layout").then().statusCode(200);
     }
 
     private String seriesId() {
@@ -127,6 +131,7 @@ class AccountDeletionTest {
         assertEquals(1L, before.get("rank_category"));
         assertEquals(1L, before.get("series_follow"));
         assertEquals(1L, before.get("reading_progress"));
+        assertEquals(1L, before.get("dashboard_layout"));
 
         given().auth().oauth2(token())
                 .when().delete("/api/me")

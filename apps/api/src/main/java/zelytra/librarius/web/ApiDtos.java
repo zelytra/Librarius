@@ -605,4 +605,29 @@ public final class ApiDtos {
                     r.region.name(), r.publisher, r.source, r.confidence.name());
         }
     }
+
+    // ── Dashboard layout ──────────────────────────────────────────────────────
+
+    /**
+     * One section of the Home dashboard: its code and whether the user hid it.
+     *
+     * <p>{@code code} is deliberately a plain string rather than a closed enum: the set of
+     * sections is meant to grow, and a layout saved before a new one existed must go on
+     * working rather than fail to deserialise. An unrecognised code is dropped rather than
+     * rejected — see {@link zelytra.librarius.dashboard.DashboardLayoutService}.
+     */
+    public record DashboardSectionDto(@NotBlank String code, boolean hidden) {
+    }
+
+    /**
+     * The Home screen's layout: which sections show, and in which order.
+     *
+     * <p>Always complete on the way out: {@code GET} fills in whatever the user never
+     * touched — every section, the first time — so the client never has to know the
+     * defaults itself. A {@code PUT} is a full replace, the same convention as
+     * {@link ProgressDto}: a section left out of the body is not "leave it as it is", the
+     * next {@code GET} adds it back in, visible.
+     */
+    public record DashboardLayoutDto(@NotNull @Valid java.util.List<DashboardSectionDto> sections) {
+    }
 }

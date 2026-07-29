@@ -86,7 +86,25 @@
       "description": "Ajoute tes premiers titres depuis l'onglet Découvrir.",
       "action": "Découvrir des titres"
     },
-    "error": "Impossible de charger ton tableau de bord."
+    "error": "Impossible de charger ton tableau de bord.",
+    "customize": {
+      "open": "Personnaliser l'accueil",
+      "title": "Personnaliser l'accueil",
+      "hint": "Réordonne les sections avec les flèches, masque celles qui ne t'intéressent pas.",
+      "moveUp": "Déplacer « {{section}} » vers le haut",
+      "moveDown": "Déplacer « {{section}} » vers le bas",
+      "hide": "Masquer « {{section}} »",
+      "show": "Afficher « {{section}} »",
+      "hiddenBadge": "Masquée",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "failed": "Impossible d'enregistrer la disposition pour le moment.",
+      "sections": {
+        "counters": "Compteurs de lecture",
+        "goal": "Objectif de lecture annuel",
+        "recentlyRead": "Derniers lus"
+      }
+    }
   },
   "goal": {
     "title": "Objectif {{year}}",
@@ -417,6 +435,8 @@
   "settings": {
     "title": "Réglages",
     "dashboard": "Tableau de bord",
+    "dashboardDescription": "Réordonne ou masque les sections de l'accueil : reprise de lecture, compteurs, objectif, prochaines sorties, derniers lus.",
+    "dashboardAction": "Aller à l'accueil",
     "appearance": "Apparence",
     "notifications": "Notifications",
     "version": "Ma Bibliothèque · version {{version}}",

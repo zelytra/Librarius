@@ -1,6 +1,7 @@
 import type {
   CatalogResult,
   CategoryDto,
+  DashboardLayoutDto,
   GoalDto,
   LibraryItemDto,
   LibraryPageDto,
@@ -261,6 +262,20 @@ export function goal(overrides: Partial<GoalDto> = {}): GoalDto {
     year: new Date().getFullYear(),
     targetCount: 30,
     unit: 'BOOKS',
+    ...overrides,
+  };
+}
+
+/** The dashboard layout of an account that never reordered or hid anything. */
+export function dashboardLayout(overrides: Partial<DashboardLayoutDto> = {}): DashboardLayoutDto {
+  return {
+    sections: [
+      { code: 'resumeReading', hidden: false },
+      { code: 'counters', hidden: false },
+      { code: 'goal', hidden: false },
+      { code: 'upcoming', hidden: false },
+      { code: 'recentlyRead', hidden: false },
+    ],
     ...overrides,
   };
 }

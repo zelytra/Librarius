@@ -96,11 +96,13 @@ the public URL from outside — see debt #15.
    are now ordered alphabetically rather than by insertion order, the old tie-break
    following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
-11. **Tables planned but never created**: `dashboard_layout`,
-    `notification_pref`, `library_item_rank` (the rank is a column, not
-    a table — an acceptable simplification, worth documenting).
+11. **Tables planned but never created**: `notification_pref` alone, waiting on
+    [#69](https://github.com/zelytra/Librarius/issues/69), plus `library_item_rank` (the
+    rank is a column, not a table — an acceptable simplification, worth documenting).
     ~~`upcoming_release`~~ ✅ **Created on 2026-07-29** ([#57](https://github.com/zelytra/Librarius/issues/57)):
     `V8__upcoming_release.sql`, read through `GET /api/releases/upcoming`.
+    ~~`dashboard_layout`~~ ✅ **Created on 2026-07-29** ([#54](https://github.com/zelytra/Librarius/issues/54)):
+    `V10__dashboard_layout.sql`, read through `GET /api/dashboard/layout`.
 12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
 
 ### Defects fixed since the audit ✅
@@ -227,7 +229,7 @@ production opens.*
 |---|---|
 | Multiple editions per work | ✅ `GET /api/works/{id}/editions` and the "Autres éditions" section of the Detail screen compare them and switch the collection row onto one. The 1→N only became real when entries started being matched against the catalog instead of founding a work each — before that a work never held two editions. Missing: enriching the list from the providers, which needs a provider reference `work` does not carry ([API](API.md) gap A12) |
 | Upcoming **French** releases | ✅ `GET /api/releases/upcoming` ([#57](https://github.com/zelytra/Librarius/issues/57)) joins the caller's stake (owned/wished/followed series) against `upcoming_release`, labelling the market (FR/JP/EN), the date precision and the source of every announcement. `GET /api/catalog/upcoming` (generic provider trends) still exists but the Home screen no longer reads it. Curated French dates are still entered by hand — no admin UI or CSV ingestion yet |
-| Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
+| Reorderable/hideable Home | ✅ "Personnaliser l'accueil" panel on Home, backed by `dashboard_layout` (#54) |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
 | Reading goals | ✅ Set in Settings, gauged on Home and summarised on Stats (#50) |
 | Custom categories | ✅ `/categories` creates, renames and deletes them; the Collection's shelf row is built from the user's categories and no longer names the three built-ins ([#51](https://github.com/zelytra/Librarius/issues/51)). Missing: reordering (`sort_order` is always 100), a colour picker, and **the Detail screen**, which still filters the categories down to `['or', 'argent', 'bronze']` (`DetailPage.tsx`) and reads their colours from its own table, so a custom category cannot be assigned to a title from there |
