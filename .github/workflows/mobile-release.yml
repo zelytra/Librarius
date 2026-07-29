@@ -1,7 +1,9 @@
 name: mobile-release
 
-# A `vX.Y.Z` tag on `main` — the same tag release.yml reacts to — builds a signed, Play
-# Store-installable Android release APK and publishes it as a workflow artifact.
+# A `vX.Y.Z` tag on `main` — the same tag release.yml reacts to — builds a signed,
+# installable Android release APK and publishes it as a workflow artifact. Play Store
+# publishing itself (an .aab, a store listing, a privacy policy) is not part of this: #70
+# only asks for a signed APK, and .claude/docs/MOBILE.md § 1 tracks what is still open.
 #
 # The keystore is never in the repository. It has to be decoded from ANDROID_KEYSTORE_BASE64,
 # a repository secret nobody has created yet — .claude/docs/MOBILE.md § 8 has the exact

@@ -29,6 +29,9 @@ What is deliberately **not** here yet:
 - Any plugin. A plugin that no issue asks for is dead weight the next agent has to
   explain; the camera comes with [#68](https://github.com/zelytra/Librarius/issues/68),
   push with [#69](https://github.com/zelytra/Librarius/issues/69).
+- **Play Store publishing.** #70 asked for this alongside the signed APK; this document
+  covers CI producing that APK (§ 7, § 8) and stops there. The Play Console account, the
+  store listing and the privacy policy it requires are unclaimed, undocumented work.
 
 ## 2. How the code is shared with the web app
 
