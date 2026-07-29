@@ -2,8 +2,8 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
-import { catalogResult, goal, libraryItem, stats } from '../../test/fixtures';
-import { http, HttpResponse, libraryReturns, server } from '../../test/server';
+import { goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
+import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -55,15 +55,51 @@ describe('HomePage', () => {
     expect(screen.queryByText('Reprendre la lecture')).not.toBeInTheDocument();
   });
 
-  test('announces upcoming releases as indicative', async () => {
-    server.use(
-      http.get('*/api/catalog/upcoming', () =>
-        HttpResponse.json([catalogResult({ title: 'Berserk 43', releaseDate: '2026-09-01' })])),
-    );
+  // ── Personalised upcoming releases ──────────────────────────────────────────
+
+  test('shows the releases of the series the reader has a stake in, dated and labelled', async () => {
+    upcomingReleasesReturn([
+      upcomingRelease({
+        seriesTitle: 'Vinland Saga',
+        volumeNumber: 28,
+        releaseDate: '2026-09-01',
+        datePrecision: 'DAY',
+        region: 'FR',
+        source: 'manual',
+        confidence: 'CONFIRMED',
+      }),
+    ]);
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText('Berserk 43')).toBeInTheDocument();
-    expect(screen.getByText(/Dates indicatives/)).toBeInTheDocument();
+    expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+    expect(screen.getByText('Tome 28')).toBeInTheDocument();
+    // The region and the source travel with the date, never a bare figure on its own.
+    expect(screen.getByText('Édition française')).toBeInTheDocument();
+    expect(screen.getByText('1 septembre 2026')).toBeInTheDocument();
+    expect(screen.getByText("Confirmé par l'éditeur")).toBeInTheDocument();
+  });
+
+  test('invites the reader to follow a series when nothing is coming', async () => {
+    // Default stats are not all-zero, so the big empty-state at the bottom of the
+    // dashboard does not already cover this invitation.
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText("Aucune sortie à venir pour l'instant.")).toBeInTheDocument();
+    expect(screen.getByText('Voir mes séries')).toBeInTheDocument();
+  });
+
+  /**
+   * A brand-new account already gets the big invitation at the bottom of the dashboard —
+   * a second, smaller one for the same "go find something" message would just be noise.
+   */
+  test('does not repeat the invitation when the whole dashboard is already empty', async () => {
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/Ta bibliothèque est vide/)).toBeInTheDocument();
+    expect(screen.queryByText("Aucune sortie à venir pour l'instant.")).not.toBeInTheDocument();
   });
 
   /**

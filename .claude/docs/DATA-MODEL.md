@@ -3,10 +3,10 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8)
 
 ```text
-app_user ──┬─< library_item >── edition >── work >── series
+app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
            ├─< wishlist_item >──┘             │        ▲
            ├─< reading_goal                   └─< work_genre >── genre >─< genre_alias
            ├─< series_follow >─────────────────────────┘
@@ -41,6 +41,7 @@ of a denormalised field to keep in step on every write.
 | `genre` | `id UUID` | `code` **UNIQUE**, `label` | `code` is the identity, `label` only what a screen shows (V6) |
 | `genre_alias` | `alias VARCHAR(64)` | `code` FK → `genre(code)` | Provider wording → canonical genre. Seed data, never written at runtime (V6) |
 | `work_genre` | `(work_id, genre_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(genre_id, work_id)` for the reverse walk (V6) |
+| `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a).
 
@@ -128,6 +129,24 @@ thing [PRODUCT](PRODUCT.md) § 6 rule 6 forbids. The index it ships,
 the ordering by rating; `NULLS LAST` matches the ordering the API applies, so unrated
 titles sort after the rated ones rather than ahead of them.
 
+`V8__upcoming_release.sql` adds the table personalised upcoming releases read from
+([#57](https://github.com/zelytra/Librarius/issues/57)). It is catalog data — one row per
+series and per market, never per user — filled off the request path by
+`UpcomingReleaseRefresher` from two feeds (the providers behind their existing 12 h cache,
+and the editions of the catalog already dated ahead) and by curated rows (`source =
+manual`), which the refresher never overwrites. `release_date` is always stored on the
+first day of the window `date_precision` opens, so a provider that only knows the month
+never invents a day; `region` says which edition the date belongs to, the one label
+`GET /api/releases/upcoming` never drops. The unique index folds a `NULL` volume number
+through `coalesce(..., -1)`, since an announcement naming no volume must still collide with
+a second refresh of itself, where `NULL` never equals `NULL`.
+
+This migration was implemented ahead of the two placeholders `§ 3` had reserved for it —
+the personalisation half of the planned V9 below — and takes **V8** rather than either of
+those numbers, being the first version free on `main` at the time it landed. The two
+planned entries were renumbered down to keep the roadmap contiguous; neither had been
+implemented yet, so nothing shipped needed to move.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -145,14 +164,14 @@ their data — handy for GDPR account deletion.
 | L5 | ✅ Lifted by V5 — `catalog_cache` behind Caffeine | — |
 | L6 | **No `dashboard_layout`** | The Home sections are hardcoded |
 | L7 | **No `notification_pref`** and no notification channel | No alerting possible |
-| L8 | **No curated `upcoming_release`** | Impossible to offer French release dates |
+| L8 | ✅ Lifted by V8 — `upcoming_release`, read through `GET /api/releases/upcoming` | — |
 | L9 | ✅ Lifted by V4 — `series_follow` | — |
 | L10 | **`work.series_title` still duplicates `series.title`** | Two sources of truth for one label until the front end reads `series_id`; dropped in a later migration |
 | L11 | **`work.genres` still duplicates `work_genre`** | Same, for the genres: the raw wording stays until the front end reads the codes |
 
 ## 3. Planned changes
 
-### V8 — Drop the denormalised labels & reading history
+### V9 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -175,11 +194,11 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V9 — Personalisation & notifications
+### V10 — Personalisation & notifications
 
 `dashboard_layout (user_id PK, sections JSONB)`,
-`notification_pref (user_id PK, prefs JSONB)`,
-`upcoming_release (id, series_id, volume_number, release_date, region, publisher, source)`.
+`notification_pref (user_id PK, prefs JSONB)`. The third table this slot used to reserve,
+`upcoming_release`, shipped ahead of it as V8 — see § 1.
 
 ## 4. Rules for writing migrations
 

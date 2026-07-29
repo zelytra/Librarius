@@ -6,12 +6,12 @@ import { Button, Screen, SectionHeader } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import {
-  useGetApiCatalogUpcoming,
   useGetApiLibrary,
   useGetApiStats,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
 import { GoalCard } from './GoalCard';
+import { UpcomingReleases } from './UpcomingReleases';
 import styles from './HomePage.module.css';
 
 /** Shelves shown on the dashboard, and how many covers each of them holds. */
@@ -27,7 +27,6 @@ function Dashboard() {
   const readingQuery = useGetApiLibrary({ status: 'READING', size: READING_SHELF_SIZE });
   const readQuery = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
   const statsQuery = useGetApiStats();
-  const { data: upcoming = [] } = useGetApiCatalogUpcoming({ kind: 'MANGA', limit: 5 });
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const reading = readingQuery.data?.items ?? [];
@@ -35,8 +34,8 @@ function Dashboard() {
   const stats = statsQuery.data;
 
   // The dashboard is made of the user's own data: as long as none of it has arrived,
-  // there is nothing worth rendering. Upcoming releases come from a third-party catalog
-  // and are deliberately left out — their outage must not hide the shelves.
+  // there is nothing worth rendering. Upcoming releases are deliberately left out of this
+  // gate — see UpcomingReleases — so a slow or failing answer never hides the shelves.
   const refetchAll = () => {
     void readingQuery.refetch();
     void readQuery.refetch();
@@ -132,32 +131,7 @@ function Dashboard() {
         </section>
       )}
 
-      {upcoming.length > 0 && (
-        <section>
-          <SectionHeader title={t('home.upcoming')} />
-          <div className={styles.upcomingList}>
-            {upcoming.map((u, i) => (
-              <div key={`${u.providerRef ?? i}`} className={styles.upcomingRow}>
-                <div
-                  className={styles.upcomingThumb}
-                  // The cover is a remote image, known only at render time.
-                  style={
-                    u.coverUrl
-                      ? { background: `center/cover no-repeat url(${u.coverUrl})` }
-                      : undefined
-                  }
-                />
-                <div className={styles.upcomingBody}>
-                  <div className={styles.upcomingTitle}>{u.title}</div>
-                  <div className={styles.upcomingAuthors}>{u.authors}</div>
-                </div>
-                {u.releaseDate && <span className={styles.releaseBadge}>{u.releaseDate}</span>}
-              </div>
-            ))}
-          </div>
-          <p className={styles.footnote}>{t('home.upcomingNote')}</p>
-        </section>
-      )}
+      <UpcomingReleases libraryEmpty={libraryEmpty} />
 
       {read.length > 0 && (
         <section>

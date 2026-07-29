@@ -401,6 +401,22 @@ export interface TimelineDto {
   byRank?: BreakdownCountDto[];
 }
 
+export interface UpcomingReleaseDto {
+  id?: Uuid;
+  seriesId?: Uuid;
+  seriesTitle?: string;
+  kind?: string;
+  coverUrl?: string;
+  volumeNumber?: number;
+  title?: string;
+  releaseDate?: LocalDate;
+  datePrecision?: string;
+  region?: string;
+  publisher?: string;
+  source?: string;
+  confidence?: string;
+}
+
 export interface WishlistAcquireDto {
   status?: LibraryStatus;
   rating?: number;
@@ -483,6 +499,11 @@ rank?: string;
 size?: number;
 sort?: string;
 status?: LibraryStatus;
+};
+
+export type GetApiReleasesUpcomingParams = {
+kind?: Kind;
+limit?: number;
 };
 
 export type GetApiStatsTimelineParams = {
@@ -2410,6 +2431,114 @@ export const useDeleteApiMe = <TError = void,
       > => {
       return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
     }
+
+export const getGetApiReleasesUpcomingUrl = (params?: GetApiReleasesUpcomingParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/releases/upcoming?${stringifiedParams}` : `/api/releases/upcoming`
+}
+
+/**
+ * @summary Upcoming
+ */
+export const getApiReleasesUpcoming = async (params?: GetApiReleasesUpcomingParams, options?: RequestInit): Promise<UpcomingReleaseDto[]> => {
+
+  return apiClient<UpcomingReleaseDto[]>(getGetApiReleasesUpcomingUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiReleasesUpcomingQueryKey = (params?: GetApiReleasesUpcomingParams,) => {
+    return [
+    `/api/releases/upcoming`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiReleasesUpcomingQueryOptions = <TData = Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError = void>(params?: GetApiReleasesUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiReleasesUpcomingQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiReleasesUpcoming>>> = () => getApiReleasesUpcoming(params, );
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiReleasesUpcomingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiReleasesUpcoming>>>
+export type GetApiReleasesUpcomingQueryError = void
+
+
+export function useGetApiReleasesUpcoming<TData = Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError = void>(
+ params: undefined |  GetApiReleasesUpcomingParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiReleasesUpcoming>>,
+          TError,
+          Awaited<ReturnType<typeof getApiReleasesUpcoming>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiReleasesUpcoming<TData = Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError = void>(
+ params?: GetApiReleasesUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiReleasesUpcoming>>,
+          TError,
+          Awaited<ReturnType<typeof getApiReleasesUpcoming>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiReleasesUpcoming<TData = Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError = void>(
+ params?: GetApiReleasesUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Upcoming
+ */
+
+export function useGetApiReleasesUpcoming<TData = Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError = void>(
+ params?: GetApiReleasesUpcomingParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiReleasesUpcoming>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiReleasesUpcomingQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiSeriesUrl = () => {
 

@@ -11,9 +11,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -51,6 +53,23 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
      */
     public Optional<WishlistItem> findOwned(String userId, UUID id) {
         return find("id = ?1 and userId = ?2", id, userId).firstResultOptional();
+    }
+
+    /**
+     * Series the user has a wish on. Part of the stake that makes an upcoming release
+     * theirs: wanting the next volume is exactly the state the wishlist records.
+     */
+    public Set<UUID> seriesIdsWished(String userId) {
+        return new LinkedHashSet<>(getEntityManager()
+                .createQuery("""
+                        select distinct w.series.id from WishlistItem wi
+                          join wi.edition e
+                          join e.work w
+                        where wi.userId = :userId
+                          and w.series is not null
+                        """, UUID.class)
+                .setParameter("userId", userId)
+                .getResultList());
     }
 
     // ── Paged browsing ────────────────────────────────────────────────────────

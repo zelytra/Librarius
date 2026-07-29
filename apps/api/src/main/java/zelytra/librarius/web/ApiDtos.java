@@ -565,4 +565,36 @@ public final class ApiDtos {
     public record AccountDeletionDto(int libraryItems, int wishlistItems, int goals,
             int categories, int seriesFollows) {
     }
+
+    // ── Upcoming releases ─────────────────────────────────────────────────────
+
+    /**
+     * One announced release of a series the caller has a stake in.
+     *
+     * <p>Every field describing the date travels with it, because a release date on its own
+     * is not a fact a screen can display: {@code region} says which edition it belongs to,
+     * {@code datePrecision} how much of it is real, {@code confidence} whether anybody
+     * committed to it, and {@code source} where it comes from. A client that shows the date
+     * without them shows a precision the data does not have.
+     *
+     * @param releaseDate   first day of the announced window, {@code null} when the volume
+     *                      is known to be coming and not known to be dated
+     * @param datePrecision {@code DAY}, {@code MONTH}, {@code QUARTER} or {@code YEAR} —
+     *                      {@code null} exactly when {@code releaseDate} is
+     * @param region        {@code FR}, {@code JP} or {@code EN}: the market the date applies
+     *                      to, never to be dropped when rendering
+     * @param source        {@code manual}, {@code catalog}, or the provider it came from
+     */
+    public record UpcomingReleaseDto(UUID id, UUID seriesId, String seriesTitle, String kind,
+            String coverUrl, Integer volumeNumber, String title, LocalDate releaseDate,
+            String datePrecision, String region, String publisher, String source,
+            String confidence) {
+        public static UpcomingReleaseDto of(zelytra.librarius.domain.UpcomingRelease r) {
+            Series s = r.series;
+            return new UpcomingReleaseDto(r.id, s.id, s.title, s.kind.name(), s.coverUrl,
+                    r.volumeNumber, r.title, r.releaseDate,
+                    r.datePrecision != null ? r.datePrecision.name() : null,
+                    r.region.name(), r.publisher, r.source, r.confidence.name());
+        }
+    }
 }

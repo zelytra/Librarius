@@ -1,8 +1,20 @@
 package zelytra.librarius.web;
 
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.keycloak.client.KeycloakTestClient;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import zelytra.librarius.domain.DatePrecision;
+import zelytra.librarius.domain.ReleaseConfidence;
+import zelytra.librarius.domain.ReleaseRegion;
+import zelytra.librarius.domain.UpcomingRelease;
+import zelytra.librarius.domain.repository.SeriesRepository;
+import zelytra.librarius.domain.repository.UpcomingReleaseRepository;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItem;
@@ -26,6 +38,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class DataIsolationTest {
 
     private final KeycloakTestClient keycloak = new KeycloakTestClient();
+
+    @Inject
+    SeriesRepository series;
+
+    @Inject
+    UpcomingReleaseRepository releases;
 
     private String token(String user) {
         return keycloak.getAccessToken(user);
@@ -63,7 +81,8 @@ class DataIsolationTest {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
                 "/api/goals", "/api/stats", "/api/stats/timeline", "/api/series", "/api/genres",
                 "/api/works/00000000-0000-0000-0000-000000000000/editions",
-                "/api/export", "/api/catalog/search?q=test" }) {
+                "/api/export", "/api/releases/upcoming",
+                "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
         }
@@ -518,6 +537,48 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .body("followed", is(false))
                 .body("ownedCount", is(1));
+    }
+
+    // ── Upcoming releases ─────────────────────────────────────────────────────
+
+    /** Stores an announcement on a series, the way the refresher writes one. */
+    private String announce(String seriesId, int volume) {
+        return QuarkusTransaction.requiringNew().call(() -> {
+            UpcomingRelease release = new UpcomingRelease();
+            release.series = series.findById(UUID.fromString(seriesId));
+            release.volumeNumber = volume;
+            release.releaseDate = LocalDate.now().plusMonths(3);
+            release.datePrecision = DatePrecision.DAY;
+            release.region = ReleaseRegion.FR;
+            release.source = UpcomingRelease.SOURCE_MANUAL;
+            release.confidence = ReleaseConfidence.CONFIRMED;
+            release.updatedAt = OffsetDateTime.now();
+            releases.persist(release);
+            return release.id.toString();
+        });
+    }
+
+    /**
+     * An announcement is catalog data — it says what comes out, never who is waiting for
+     * it. What must stay private is the perimeter: the series a user owns, has a wish on,
+     * or follows. A run only Alice collects therefore announces nothing to Bob, even though
+     * the row itself belongs to nobody.
+     */
+    @Test
+    void upcomingReleasesOnlyCoverTheCallersOwnSeries() {
+        String title = "Isolation - sorties alice";
+        addSeriesVolume("alice", title, 1);
+        String announced = announce(seriesId("alice", title), 2);
+
+        given().auth().oauth2(token("alice")).queryParam("limit", 50)
+                .when().get("/api/releases/upcoming")
+                .then().statusCode(200)
+                .body("id", hasItem(announced));
+
+        given().auth().oauth2(token("bob")).queryParam("limit", 50)
+                .when().get("/api/releases/upcoming")
+                .then().statusCode(200)
+                .body("id", not(hasItem(announced)));
     }
 
     // ── Genres ────────────────────────────────────────────────────────────────

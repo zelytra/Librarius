@@ -51,14 +51,34 @@
     "resumeCount": "{{reading}} en cours",
     "progressBadge": "{{percent}} %",
     "progressLabel": "Progression : {{percent}} %",
-    "upcoming": "Prochaines sorties",
-    "upcomingNote": "Dates indicatives (édition d'origine).",
     "recentlyBought": "Derniers achats",
     "recentlyRead": "Derniers lus",
     "counters": {
       "read": "lus",
       "reading": "en cours",
       "toRead": "à lire"
+    },
+    "upcomingReleases": {
+      "title": "Prochaines sorties",
+      "unknownDate": "Date à confirmer",
+      "quarter": "T{{quarter}} {{year}}",
+      "region": {
+        "FR": "Édition française",
+        "JP": "Édition originale",
+        "EN": "Édition anglaise",
+        "unknown": "Édition inconnue"
+      },
+      "source": {
+        "manual": "Confirmé par l'éditeur",
+        "catalog": "D'après notre catalogue",
+        "estimated": "Date estimée",
+        "provider": "Source : {{provider}}"
+      },
+      "empty": {
+        "title": "Aucune sortie à venir pour l'instant.",
+        "description": "Suis une série depuis ta collection pour voir apparaître ses prochains tomes ici.",
+        "action": "Voir mes séries"
+      }
     },
     "empty": {
       "title": "Ta bibliothèque est vide.",

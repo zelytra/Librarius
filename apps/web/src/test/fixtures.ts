@@ -9,6 +9,7 @@ import type {
   SeriesVolumeDto,
   StatsDto,
   TimelineDto,
+  UpcomingReleaseDto,
   WishlistBudgetDto,
   WishlistItemDto,
   WishlistPageDto,
@@ -181,6 +182,26 @@ export const BUILTIN_CATEGORIES: CategoryDto[] = [
   { id: 'cat-argent', code: 'argent', label: 'Argent', color: '#b3b7bf', builtin: true },
   { id: 'cat-bronze', code: 'bronze', label: 'Bronze', color: '#c08a5a', builtin: true },
 ];
+
+/** One announced release, dated to the day, French edition, confirmed by the publisher. */
+export function upcomingRelease(overrides: Partial<UpcomingReleaseDto> = {}): UpcomingReleaseDto {
+  return {
+    id: 'release-1',
+    seriesId: 'series-1',
+    seriesTitle: 'Vinland Saga',
+    kind: 'MANGA',
+    coverUrl: undefined,
+    volumeNumber: 28,
+    title: undefined,
+    releaseDate: '2026-09-01',
+    datePrecision: 'DAY',
+    region: 'FR',
+    publisher: 'Kurokawa',
+    source: 'manual',
+    confidence: 'CONFIRMED',
+    ...overrides,
+  };
+}
 
 export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
   return {
