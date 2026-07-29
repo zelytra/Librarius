@@ -31,7 +31,7 @@ the public URL from outside — see debt #15.
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
 | Screens | Home, Collection, Series, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
-| Mobile shell | `apps/mobile`: Capacitor 7 loading the `apps/web` build (`webDir`), `pnpm mobile:build` covered by the `mobile` workflow. Container only — no native project, no native sign-in ([MOBILE](MOBILE.md)) |
+| Mobile shell | `apps/mobile`: Capacitor 7 loading the `apps/web` build (`webDir`). Android project committed, built to a debug APK on every push/PR (`mobile` workflow) and to a signed release APK on tags once a keystore exists (`mobile-release`, not yet configured). No iOS project, no native sign-in ([MOBILE](MOBILE.md)) |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned in compose, "Overview" dashboard |
 | Alerting | 10 rules with runbooks (`infra/helm/librarius/files/`), evaluated on the cluster by a Prometheus + Alertmanager the chart deploys, and an `uptime` workflow probing the public URL from outside every 15 min. Notification from the cluster still waits on a webhook Secret, see debt #15 |
 | Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
@@ -233,7 +233,7 @@ production opens.*
 | Series / volumes | ✅ `/series/:id` and the Series view of the collection. Missing: a `wished` flag on a volume (the marker is session-local), volume covers, and ordering the series by most recently added — none of the three exists in the API payloads |
 | Export / account deletion | Nothing — **blocking for a public product (GDPR)** |
 | Multilingual | i18n plumbing in place, a single locale |
-| Native mobile | `apps/mobile` bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): a Capacitor shell over the **web bundle**, no duplicated code. No Android or iOS project yet, and **sign-in does not work inside the container** — see [MOBILE](MOBILE.md) |
+| Native mobile | `apps/mobile` bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): a Capacitor shell over the **web bundle**, no duplicated code. Android project committed and built to a debug APK by CI ([#70](https://github.com/zelytra/Librarius/issues/70)); release signing wired but blocked on a keystore nobody has created yet, no iOS project, and **sign-in does not work inside the container** — see [MOBILE](MOBILE.md) |
 
 ## Security — items to address
 
