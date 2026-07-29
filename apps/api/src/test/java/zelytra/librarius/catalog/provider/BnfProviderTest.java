@@ -172,6 +172,28 @@ class BnfProviderTest {
     }
 
     @Test
+    void doesNotMistakeAnArkForAnIsbn() {
+        // "ark:/12148/cb11934534t" strips down to thirteen digits, exactly an ISBN-13's
+        // length. Only the 978/979 prefix tells the two apart, and every BnF record carries
+        // its ark, so getting this wrong would put a call number in every result's isbn13.
+        String xml = """
+                <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
+                  <srw:records><srw:record><srw:recordData>
+                    <dc xmlns="http://purl.org/dc/elements/1.1/">
+                      <title>Dune</title>
+                      <identifier>http://catalogue.bnf.fr/ark:/12148/cb11934534t</identifier>
+                    </dc>
+                  </srw:recordData></srw:record></srw:records>
+                </srw:searchRetrieveResponse>
+                """;
+
+        CatalogResult result = resultsOf(xml, CatalogQuery.of("dune")).get(0);
+
+        assertNull(result.isbn13());
+        assertEquals("ark:/12148/cb11934534t", result.providerRef());
+    }
+
+    @Test
     void filtersTheYearOnTheRecordsThemselves() {
         List<CatalogResult> results =
                 resultsOf(DUNE, new CatalogQuery("dune", null, 1975, null, null, null));

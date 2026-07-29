@@ -6,9 +6,12 @@
 #
 #   - the API and the web images are built from the working tree, never pulled from
 #     GHCR: a pull request has to be validated against its own code;
-#   - the external catalogs (Open Library, AniList) are replaced by `catalog-stub`, so
-#     the search journey does not depend on the availability, the rate limits or the
-#     changing contents of two public APIs.
+#   - the external catalogs (Open Library, the BnF, AniList) are replaced by
+#     `catalog-stub`, so the search journey does not depend on the availability, the
+#     rate limits or the changing contents of three public APIs. Every one of them has
+#     to be redirected, not just the ones a journey is about: the two book providers
+#     share a single result limit, so one left pointing at the real internet crowds the
+#     fixtures out of the answer.
 #
 # The ports are fixed on purpose: the web image bakes `localhost:8081` in as its OIDC
 # authority, and the Keycloak realm only allows `localhost:5173` and `localhost:4173` as
@@ -69,6 +72,7 @@ services:
       QUARKUS_OIDC_JWKS_PATH: protocol/openid-connect/certs
       QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8081/realms/librarius
       QUARKUS_REST_CLIENT_OPENLIBRARY_URL: http://catalog-stub
+      QUARKUS_REST_CLIENT_BNF_URL: http://catalog-stub
       QUARKUS_REST_CLIENT_ANILIST_URL: http://catalog-stub
       # `quarkus.http.cors.origins` is pinned to the Vite dev server in
       # application.properties. Browsers attach an `Origin` header to same-origin POSTs
