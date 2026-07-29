@@ -63,7 +63,7 @@ Personal dashboard.
 | Recently read | ✅ | |
 | Empty state | ✅ | Points to Discover |
 | **Reorder / hide sections** | 🔜 | Persisted per user (`dashboard_layout`) |
-| **Annual goal** | 🔜 | Progress gauge, the API already exists |
+| **Annual goal** | ✅ | Gauge, what is left, pace to hold; invitation when no goal is set, and the previous year's target offered on 1 January |
 
 ### 4.2 Collection ✅ / 🔜
 
@@ -138,11 +138,15 @@ Search across the external catalog (Open Library for books, AniList for manga).
 ### 4.6 Statistics ✅ / 🔜
 
 - ✅ Read / in progress / to read, pages read, number of series, breakdown by genre (top 6).
-- 🔜 **Trend over time**: books read per month, per year.
-- 🔜 **Annual goal**: gauge, pace required, projection.
-- 🔜 Reading pace (pages/day), average time to finish a book.
-- 🔜 Breakdown by author, publisher, language, rank.
+- ✅ **Annual goal**: gauge, what is left, pace required.
+- ✅ **Trend over time**: titles and pages finished per month, running total against the goal.
+- ✅ Reading pace (pages/day), average time to finish a title, best month.
+- ✅ Breakdown by author, publisher, language, rank.
 - 🔜 A shareable year in review.
+
+Everything over time is counted from the day a title was **finished**
+(`reading_progress.finished_at`), so the history starts the day the user first marks
+something as read — an existing collection carries no reading dates.
 
 ### 4.7 Settings ✅ / 🔜
 
@@ -202,8 +206,8 @@ Settings → Import → Booknode handle → titles matched against the catalog �
 populated.
 
 **P5 — Track the annual goal**
-Settings/Stats → set the goal → gauge on the Home screen 🔜 → year in review at the end of
-the year 🔜.
+Settings → set the goal → gauge on the Home screen → year in review at the end of the
+year 🔜.
 
 ## 6. Business rules
 
@@ -211,9 +215,11 @@ the year 🔜.
    a duplicate: it belongs to the reading history 🔜.
 2. Statuses: `OWNED` (owned, unread) → `READING` → `READ`. Moving to `READ` sets
    `finished_at` and completes the position (100 %, last page); moving to `READING` sets
-   `started_at` if it is empty. A date supplied by the user always wins over the default.
-   The page and the percentage are two views of one position: the server derives whichever
-   one the client left out, so no two screens can show different figures.
+   `started_at` if it is empty and clears `finished_at` — a title being read again is not a
+   finished one. A date supplied by the user always wins over the default. The page and the
+   percentage are two views of one position: the server derives whichever one the client
+   left out, so no two screens can show different figures. `started_at` and `finished_at`
+   are what the annual goal and the reading timeline are counted from.
 3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`) and cannot be
    deleted. A user may create their own categories.
 4. A title carries **at most one rank**.

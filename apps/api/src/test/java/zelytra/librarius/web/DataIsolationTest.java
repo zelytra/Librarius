@@ -60,7 +60,7 @@ class DataIsolationTest {
     void everyScopedResourceRejectsAnonymousAccess() {
         for (String path : new String[] {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
-                "/api/goals", "/api/stats", "/api/series", "/api/genres",
+                "/api/goals", "/api/stats", "/api/stats/timeline", "/api/series", "/api/genres",
                 "/api/works/00000000-0000-0000-0000-000000000000/editions",
                 "/api/catalog/search?q=test" }) {
             given().when().get(path)
@@ -571,5 +571,60 @@ class DataIsolationTest {
                 .when().get("/api/stats")
                 .then().statusCode(200)
                 .body("read", is(bobReadBefore));
+    }
+
+    /**
+     * Goal progress is built on the day a title was finished, so it only moves when the
+     * caller themselves finishes something. Alice marking a book as read — which stamps
+     * {@code finished_at} with today's date, inside the current year — must leave Bob's
+     * figure exactly where it was.
+     */
+    @Test
+    void goalProgressOnlyCountsOwnReadings() {
+        int bobProgressBefore = given().auth().oauth2(token("bob"))
+                .when().get("/api/stats")
+                .then().statusCode(200)
+                .extract().jsonPath().getInt("goalCurrent");
+
+        String aliceItem = addLibraryItem("alice", "Isolation - goal progress", "OWNED");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"percent\": 100, \"status\": \"READ\" }")
+                .when().put("/api/library/" + aliceItem + "/progress")
+                .then().statusCode(204);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/stats")
+                .then().statusCode(200)
+                .body("goalCurrent", is(bobProgressBefore));
+    }
+
+    /**
+     * The timeline aggregates the caller's own readings and nobody else's — buckets, totals
+     * and breakdowns alike. Alice finishing a book must leave Bob's year exactly as it was,
+     * and her authors must not show up among his.
+     */
+    @Test
+    void theTimelineOnlyCountsOwnReadings() {
+        int bobBooksBefore = given().auth().oauth2(token("bob"))
+                .when().get("/api/stats/timeline")
+                .then().statusCode(200)
+                .extract().jsonPath().getInt("books");
+
+        String aliceItem = addLibraryItem("alice", "Isolation - timeline", "OWNED");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"percent\": 100, \"status\": \"READ\" }")
+                .when().put("/api/library/" + aliceItem + "/progress")
+                .then().statusCode(204);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/stats/timeline")
+                .then().statusCode(200)
+                .body("byAuthor.label", hasItem("Isolation Test"));
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/stats/timeline")
+                .then().statusCode(200)
+                .body("books", is(bobBooksBefore))
+                .body("byAuthor.label", not(hasItem("Isolation Test")));
     }
 }

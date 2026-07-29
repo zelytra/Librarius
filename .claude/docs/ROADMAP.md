@@ -87,13 +87,13 @@ annual goal.
 | [#47](https://github.com/zelytra/Librarius/issues/47) | ✅ Reading progress input in the Detail screen | — |
 | [#48](https://github.com/zelytra/Librarius/issues/48) | ✅ Personal rating and private review (V7 migration) | — |
 | [#49](https://github.com/zelytra/Librarius/issues/49) | ✅ Alternate editions of a work in the Detail screen — enriching them from the providers left open | — |
-| [#50](https://github.com/zelytra/Librarius/issues/50) | Annual reading goal: setting and gauge on the Home screen | — |
+| [#50](https://github.com/zelytra/Librarius/issues/50) | ✅ Annual reading goal: setting and gauge on the Home screen | — |
 | [#51](https://github.com/zelytra/Librarius/issues/51) | Custom category management | — |
 | [#52](https://github.com/zelytra/Librarius/issues/52) | ✅ Richer wishlist: editing, budget and conversion | — |
 | [#114](https://github.com/zelytra/Librarius/issues/114) | ✅ Order the wishlist by urgency and not by the enum name | — |
 | [#53](https://github.com/zelytra/Librarius/issues/53) | ✅ Advanced search and manual add in Discover | — |
 | [#54](https://github.com/zelytra/Librarius/issues/54) | Customizable Home screen: reorder and hide sections | — |
-| [#55](https://github.com/zelytra/Librarius/issues/55) | Time-based statistics and reading pace | #40 |
+| [#55](https://github.com/zelytra/Librarius/issues/55) | ✅ Time-based statistics and reading pace | #40 |
 | [#56](https://github.com/zelytra/Librarius/issues/56) | ✅ V6 migration: normalized genres — API, genre filter pending in the Collection screen | — |
 | [#57](https://github.com/zelytra/Librarius/issues/57) | Personalized upcoming releases and upcoming_release table | #43, #44 |
 

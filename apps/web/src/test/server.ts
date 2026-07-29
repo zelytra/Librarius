@@ -4,6 +4,7 @@ import {
   BUILTIN_CATEGORIES,
   libraryPage,
   stats,
+  timeline,
   wishlistBudget,
   wishlistPage,
 } from './fixtures';
@@ -36,6 +37,7 @@ export const defaultHandlers = [
   http.delete(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
+  http.get(`${BASE}/stats/timeline`, () => HttpResponse.json(timeline())),
   http.get(`${BASE}/goals`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/search`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/upcoming`, () => HttpResponse.json([])),
@@ -45,6 +47,15 @@ export const defaultHandlers = [
   http.post(`${BASE}/library`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),
   http.post(`${BASE}/wishlist`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),
   http.post(`${BASE}/categories`, () => HttpResponse.json({ id: 'cat', code: 'perso' })),
+  http.put(`${BASE}/goals/:year`, async ({ params, request }) => {
+    const body = (await request.json()) as { targetCount?: number; unit?: string };
+    return HttpResponse.json({
+      id: 'goal-1',
+      year: Number(params.year),
+      targetCount: body.targetCount,
+      unit: body.unit ?? 'BOOKS',
+    });
+  }),
   http.put(`${BASE}/library/:id/rank`, () => HttpResponse.json({ id: 'item-1' })),
   http.put(`${BASE}/library/:id/progress`, () => new HttpResponse(null, { status: 204 })),
   http.put(`${BASE}/library/:id/review`, () => HttpResponse.json({ id: 'item-1' })),

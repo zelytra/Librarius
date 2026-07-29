@@ -45,6 +45,11 @@ export interface BookView {
   genres?: string;
 }
 
+export interface BreakdownCountDto {
+  label?: string;
+  count?: number;
+}
+
 export type LocalDate = string;
 
 export interface CatalogResult {
@@ -289,8 +294,32 @@ export interface StatsDto {
   pagesRead?: number;
   seriesCount?: number;
   goalTarget?: number;
+  goalUnit?: string;
   goalCurrent?: number;
   byGenre?: GenreCount[];
+}
+
+export interface TimelinePointDto {
+  period?: string;
+  books?: number;
+  pages?: number;
+}
+
+export interface TimelineDto {
+  from?: LocalDate;
+  to?: LocalDate;
+  granularity?: string;
+  points?: TimelinePointDto[];
+  books?: number;
+  pages?: number;
+  pagesPerDay?: number;
+  daysPerBook?: number;
+  bestPeriod?: string;
+  bestPeriodBooks?: number;
+  byAuthor?: BreakdownCountDto[];
+  byPublisher?: BreakdownCountDto[];
+  byLanguage?: BreakdownCountDto[];
+  byRank?: BreakdownCountDto[];
 }
 
 export type WishPriority = typeof WishPriority[keyof typeof WishPriority];
@@ -380,6 +409,12 @@ rank?: string;
 size?: number;
 sort?: string;
 status?: LibraryStatus;
+};
+
+export type GetApiStatsTimelineParams = {
+from?: string;
+granularity?: string;
+to?: string;
 };
 
 export type GetApiWishlistParams = {
@@ -2485,6 +2520,114 @@ export function useGetApiStats<TData = Awaited<ReturnType<typeof getApiStats>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiStatsTimelineUrl = (params?: GetApiStatsTimelineParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stats/timeline?${stringifiedParams}` : `/api/stats/timeline`
+}
+
+/**
+ * @summary Timeline
+ */
+export const getApiStatsTimeline = async (params?: GetApiStatsTimelineParams, options?: RequestInit): Promise<TimelineDto> => {
+
+  return apiClient<TimelineDto>(getGetApiStatsTimelineUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiStatsTimelineQueryKey = (params?: GetApiStatsTimelineParams,) => {
+    return [
+    `/api/stats/timeline`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiStatsTimelineQueryOptions = <TData = Awaited<ReturnType<typeof getApiStatsTimeline>>, TError = void>(params?: GetApiStatsTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiStatsTimelineQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiStatsTimeline>>> = () => getApiStatsTimeline(params, );
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiStatsTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof getApiStatsTimeline>>>
+export type GetApiStatsTimelineQueryError = void
+
+
+export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiStatsTimeline>>, TError = void>(
+ params: undefined |  GetApiStatsTimelineParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsTimeline>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiStatsTimeline>>, TError = void>(
+ params?: GetApiStatsTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsTimeline>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiStatsTimeline>>, TError = void>(
+ params?: GetApiStatsTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Timeline
+ */
+
+export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiStatsTimeline>>, TError = void>(
+ params?: GetApiStatsTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsTimeline>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiStatsTimelineQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -1,13 +1,17 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
-import { catalogResult, libraryItem, stats } from '../../test/fixtures';
+import { catalogResult, goal, libraryItem, stats } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
 const { HomePage } = await import('./HomePage');
+
+/** The goal is set per calendar year, so the fixtures follow the clock. */
+const YEAR = new Date().getFullYear();
 
 describe('HomePage', () => {
   beforeEach(resetAuth);
@@ -99,6 +103,72 @@ describe('HomePage', () => {
     expect(statuses).toContain('READING');
     expect(statuses).toContain('READ');
     expect(statuses).not.toContain(null);
+  });
+
+  // ── Annual reading goal ────────────────────────────────────────────────────
+
+  test('gauges the annual goal and says what pace holds it', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(`Objectif ${YEAR}`)).toBeInTheDocument();
+    expect(screen.getByText(/Encore 18 livres/)).toBeInTheDocument();
+    expect(screen.getByText(/pour tenir le rythme/)).toBeInTheDocument();
+    // A progress bar, not a picture: the value has to reach assistive tech as a value.
+    const gauge = screen.getByRole('progressbar', { name: /12 sur 30 livres/ });
+    expect(gauge).toHaveAttribute('aria-valuenow', '40');
+    expect(gauge).toHaveAttribute('aria-valuemax', '100');
+  });
+
+  /**
+   * The unit agrees with the number in front of it. Rounding the pace up made "1" a common
+   * figure, and "1 livres" is the kind of wording a reader notices before anything else.
+   */
+  test('says one title in the singular', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 29, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/^Encore 1 livre avant la fin/)).toBeInTheDocument();
+  });
+
+  /** An empty state, not a ring stuck at zero: the two look the same and only one helps. */
+  test('invites the user to set a goal rather than gauging nothing', async () => {
+    server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ goalTarget: undefined }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/Fixe-toi un objectif de lecture/)).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar', { name: /lus en/ })).not.toBeInTheDocument();
+  });
+
+  /**
+   * The year turns over on its own, the goal does not. Rather than an empty form on
+   * 1 January, the card offers the target of the year that just ended.
+   */
+  test('offers to carry the previous year’s goal over', async () => {
+    const saved: { year: string; body: unknown }[] = [];
+    server.use(
+      http.get('*/api/stats', () => HttpResponse.json(stats({ goalTarget: undefined }))),
+      http.get('*/api/goals', () =>
+        HttpResponse.json([goal({ year: YEAR - 1, targetCount: 24, unit: 'VOLUMES' })])),
+      http.put('*/api/goals/:year', async ({ params, request }) => {
+        saved.push({ year: String(params.year), body: await request.json() });
+        return HttpResponse.json({ id: 'goal-1' });
+      }),
+    );
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Nouvelle année, nouvel objectif')).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`En ${YEAR - 1}, tu visais 24 tomes`))).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('Reprendre 24 tomes'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toEqual({
+      year: String(YEAR),
+      body: { targetCount: 24, unit: 'VOLUMES' },
+    });
   });
 
   test('prompts for sign-in when there is no session', async () => {

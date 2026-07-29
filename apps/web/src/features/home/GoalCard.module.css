@@ -1,0 +1,96 @@
+/* Annual reading goal on the dashboard: the ring on the left, what is left to
+   read and the pace to hold on the right. The row wraps to nothing below 375 px —
+   a 100 px gauge plus a text column fits the narrowest screen the app targets. */
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  padding: 16px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Behind or on track is the one thing the card is read for at a glance, so it is
+   said in words as well as in colour — the badge is never the only signal. */
+.badgeOnTrack,
+.badgeBehind {
+  flex: 0 0 auto;
+  font-size: var(--fs-10);
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-chip);
+  white-space: nowrap;
+}
+
+.badgeOnTrack {
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+}
+
+.badgeBehind {
+  background: var(--tint-clay);
+  color: var(--tint-clay-ink);
+}
+
+.line {
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.pace {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 4px 0 0;
+}
+
+.edit {
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+/* The invitation replaces the whole card, so it carries the card's own frame. */
+.empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  padding: 22px 18px;
+}
+
+.emptyActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}

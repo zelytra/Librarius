@@ -35,9 +35,14 @@ public class ReadingProgressService {
      *
      * <ul>
      *   <li>{@code READING} stamps the start date when there is not one yet — the day the
-     *       book was opened is the day the button was pressed;</li>
+     *       book was opened is the day the button was pressed — and clears the finish date:
+     *       a title being read again is not a finished one, and it must stop counting
+     *       towards the year it was first finished in, so the annual goal and the reading
+     *       timeline stay accurate;</li>
      *   <li>{@code READ} finishes the book: 100 %, the last page when the edition has a
-     *       page count, and today as the finish date unless one was supplied.</li>
+     *       page count, and today as the finish date unless one was supplied;</li>
+     *   <li>{@code OWNED} clears the finish date — reverting to "not read" cannot leave one
+     *       behind.</li>
      * </ul>
      *
      * @param item the caller's item — ownership is checked before this is reached
@@ -70,8 +75,11 @@ public class ReadingProgressService {
         progress.finishedAt = dto.finishedAt();
 
         LocalDate today = LocalDate.now();
-        if (item.status == LibraryStatus.READING && progress.startedAt == null) {
-            progress.startedAt = today;
+        if (item.status == LibraryStatus.READING) {
+            if (progress.startedAt == null) {
+                progress.startedAt = today;
+            }
+            progress.finishedAt = null;
         }
         if (item.status == LibraryStatus.READ) {
             progress.percent = COMPLETE_PERCENT;
@@ -81,6 +89,9 @@ public class ReadingProgressService {
             if (progress.finishedAt == null) {
                 progress.finishedAt = today;
             }
+        }
+        if (item.status == LibraryStatus.OWNED) {
+            progress.finishedAt = null;
         }
     }
 }

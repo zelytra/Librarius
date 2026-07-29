@@ -55,6 +55,18 @@
           }
         }
       },
+      "BreakdownCountDto" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "CatalogResult" : {
         "type" : "object",
         "properties" : {
@@ -637,6 +649,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "goalUnit" : {
+            "type" : "string"
+          },
           "goalCurrent" : {
             "type" : "integer",
             "format" : "int64"
@@ -646,6 +661,89 @@
             "items" : {
               "$ref" : "#/components/schemas/GenreCount"
             }
+          }
+        }
+      },
+      "TimelineDto" : {
+        "type" : "object",
+        "properties" : {
+          "from" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "to" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "granularity" : {
+            "type" : "string"
+          },
+          "points" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TimelinePointDto"
+            }
+          },
+          "books" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pages" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pagesPerDay" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "daysPerBook" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "bestPeriod" : {
+            "type" : "string"
+          },
+          "bestPeriodBooks" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "byAuthor" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byPublisher" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byLanguage" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byRank" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          }
+        }
+      },
+      "TimelinePointDto" : {
+        "type" : "object",
+        "properties" : {
+          "period" : {
+            "type" : "string"
+          },
+          "books" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pages" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -1779,6 +1877,52 @@
           }
         },
         "summary" : "Stats",
+        "tags" : [ "Stats Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/stats/timeline" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "from",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "granularity",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimelineDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Timeline",
         "tags" : [ "Stats Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]

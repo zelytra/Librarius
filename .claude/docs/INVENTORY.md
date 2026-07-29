@@ -119,6 +119,11 @@ the public URL from outside — see debt #15.
   NOT NULL column — `PUT /api/goals/{year}` returned 500 for a year with no goal yet. Never
   caught, for lack of a test and for lack of a screen exposing the feature. Surfaced by the
   isolation tests.
+- **Reading dates never written** ([#50](https://github.com/zelytra/Librarius/issues/50),
+  2026-07-28): `reading_progress.started_at` and `finished_at` existed in the schema and in
+  the business rules ([PRODUCT](PRODUCT.md) § 6.2) since the first migration, and
+  `PUT /api/library/{id}/progress` never set either of them. Nothing read them, so nothing
+  reported it — until the annual goal needed to know which year a title was finished in.
 - **Wishlist sorted alphabetically instead of by urgency**
   ([#114](https://github.com/zelytra/Librarius/issues/114), 2026-07-28): the priority is
   stored as its name, so `order by priority` yielded `PRIORITY, SOMEDAY, SOON` and put the
@@ -222,7 +227,7 @@ production opens.*
 | Upcoming **French** releases | `GET /api/catalog/upcoming` returns the **provider** dates (JP/EN), shown as "indicative dates". No French publisher data |
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
-| Reading goals | `GET/PUT /api/goals` works, **no screen** exposes it |
+| Reading goals | ✅ Set in Settings, gauged on Home and summarised on Stats (#50) |
 | Custom categories | `POST /api/categories` works, the UI only shows Gold/Silver/Bronze |
 | Notifications | Nothing (no preferences, no push, no email) |
 | Series / volumes | ✅ `/series/:id` and the Series view of the collection. Missing: a `wished` flag on a volume (the marker is session-local), volume covers, and ordering the series by most recently added — none of the three exists in the API payloads |

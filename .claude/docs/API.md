@@ -40,6 +40,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/goals` | Reading goals |
 | PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
+| GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 
@@ -97,8 +98,15 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-         Integer goalTarget, long goalCurrent, List<GenreCount> byGenre)
+         Integer goalTarget, String goalUnit, long goalCurrent, List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
+
+TimelineDto(LocalDate from, LocalDate to, String granularity, List<TimelinePointDto> points,
+            long books, long pages, double pagesPerDay, Double daysPerBook,
+            String bestPeriod, long bestPeriodBooks,
+            List<BreakdownCountDto> byAuthor, byPublisher, byLanguage, byRank)
+TimelinePointDto(String period, long books, long pages)
+BreakdownCountDto(String label, long count)
 ```
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
@@ -258,6 +266,67 @@ where it used to form a third genre of its own
 reading them while rendering a page of the collection would cost one query per item. The
 column goes away, and the codes take its place, once the front end reads them.
 
+## Reading goal
+
+`GET /api/stats` carries the goal set for the **current calendar year**: `goalTarget`,
+`goalUnit` and `goalCurrent`, the last one counted in that unit. Both `goalTarget` and
+`goalUnit` are null when no goal is set for the year — the client shows an invitation
+rather than a gauge at zero.
+
+| Unit | What `goalCurrent` counts |
+|---|---|
+| `BOOKS` | every title finished during the year |
+| `VOLUMES` | the same thing — see below |
+| `PAGES` | the pages of the titles finished, editions with no page count contributing nothing |
+
+`BOOKS` and `VOLUMES` **measure the same figure** and differ in wording only: a volume of a
+manga is a `work` of its own in this model, so a title read is a title read either way.
+Counting only the titles carrying a `volume_number` under `VOLUMES` was tried and dropped —
+it made a "50 volumes" goal quietly ignore every novel read towards it, which is the kind of
+silent subtraction a user has no way to notice.
+
+**"Finished" means `reading_progress.finished_at`**, which
+`PUT /api/library/{id}/progress` stamps when the status becomes `READ` — the business rule
+[PRODUCT](PRODUCT.md) § 6.2 describes. Moving to `READING` stamps `started_at` if it is
+empty and **clears** `finished_at`: a title being read again is not a finished one, and it
+must stop counting towards the year it was first finished in.
+
+A title added straight in the `READ` state — an import, or a manual add — carries no reading
+date: the application does not know when it was read. It counts in the all-time counters and
+not towards the year's goal, which is the honest answer and keeps an import from spiking the
+day it ran.
+
+## Timeline
+
+`GET /api/stats/timeline` reads the same `finished_at` the goal is counted from, over a
+window the caller chooses.
+
+| Parameter | Default | Notes |
+|---|---|---|
+| `from` | 1 January of the current year | ISO `yyyy-MM-dd`; an unparseable value is a **400** |
+| `to` | 31 December of the current year | Inclusive. A window ending before it starts is a **400** |
+| `granularity` | `month` | `month` \| `year`, case-insensitive; anything else is a **400** |
+
+**Only the buckets holding something come back.** A month with no reading is an absent
+point, not a zero: the answer then follows the data rather than the range asked for, and a
+client charting a full year pads the gaps itself. `points[].period` is `2026-03` at month
+granularity and `2026` at year granularity.
+
+The derived figures ride along rather than living behind endpoints of their own, so a
+screen can never show a pace that contradicts the buckets above it: `pagesPerDay` divides
+the pages by the **elapsed** part of the window (a year in progress is not twelve months of
+reading), `daysPerBook` averages `finished_at - started_at` over the titles carrying both
+dates and is `null` when none does, and `bestPeriod` is the bucket with the most titles.
+
+`byAuthor`, `byPublisher`, `byLanguage` and `byRank` rank the six most represented labels
+of the window, ties broken alphabetically — same shape as the all-time `byGenre` of
+`/api/stats`. The rank breakdown only covers the titles filed under one.
+
+Every aggregation is a `group by` in the database. The endpoint costs six queries whatever
+the length of the reading history behind it, which is what
+[#40](https://github.com/zelytra/Librarius/issues/40) bought and what
+`ReadingTimelineTest` keeps.
+
 ## Wishlist
 
 **Ordering.** `WishPriority` carries an explicit `rank` (`PRIORITY` 0, `SOON` 1, `SOMEDAY`
@@ -328,5 +397,5 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A8 | No `/api/dashboard/layout` | Core product |
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
-| A11 | No time-based statistics (`/api/stats/timeline`) | Core product |
+| A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
 | A12 | No **provider enrichment** of the editions of a work: the list holds what users entered. `work` carries no `provider_ref`, so no provider can be asked "the other editions of *this* work" | Core product |
