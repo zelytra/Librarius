@@ -99,6 +99,27 @@ end shows it. It is now the denormalised label list of `work_genre`, and is drop
 front end reads the codes. `sort=genre` still orders on it: a work carries several genres, so
 there is no such thing as "its" genre to order on.
 
+### How a work comes to hold several editions
+
+No migration is involved, but the rule that fills these two tables changed with
+[#49](https://github.com/zelytra/Librarius/issues/49) and it is what makes the 1→N usable.
+`CatalogEntryService` used to create a brand-new `work` for every entry, so a work never
+held more than one `edition` and two readers of the same novel never shared a catalog row —
+the opposite of what [PRODUCT](PRODUCT.md) § 3 promises. It now **matches the work** on
+(`kind`, `lower(title)`, `lower(authors)`, `volume_number`) — the key the import path already
+deduplicated on — and **always creates the edition**, since the publisher, the ISBN, the page
+count and the format are precisely what tells two editions apart.
+
+The lookup rides on `idx_work_title_lower` (V3), which is why it folds `lower(title)` and not
+`lower(trim(title))`: an expression the index does not carry would turn every add into a
+sequential scan over the catalog. A matched work is only ever **completed** with the columns
+it left null (`synopsis`, `original_year`, `genres`, `series_id`), never overwritten: the row
+belongs to everyone owning the title.
+
+Rows created before the change keep the work they founded, duplicates included; nothing
+back-fills them. The lookup returns the **oldest** match, so the editions entered from now on
+gather on the first of them rather than scattering.
+
 `V7__library_item_review.sql` adds `library_item.review`. It sits on the ownership row
 rather than on the shared `work` on purpose: an opinion belongs to one user's copy of a
 book, and on `work` it would have been readable by everyone owning the title — the one

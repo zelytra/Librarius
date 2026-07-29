@@ -14,12 +14,16 @@ import {
   getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
+  getGetApiWorksIdEditionsQueryKey,
   useGetApiCategories,
   useGetApiLibraryId,
   useGetApiSeries,
+  useGetApiWorksIdEditions,
+  usePutApiLibraryIdEdition,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
   usePutApiLibraryIdReview,
+  type EditionDto,
   type LibraryItemDto,
   type ProgressDto,
   type ReviewDto,
@@ -275,6 +279,115 @@ function ReviewSection({
   );
 }
 
+/**
+ * Language of an edition, named rather than coded: providers hand back `fre`, `fr` or
+ * `eng`, which mean nothing on a shelf. An unknown code is shown as it came — better a raw
+ * code than a language silently dropped.
+ */
+function languageName(code: string): string {
+  try {
+    return new Intl.DisplayNames(['fr'], { type: 'language' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** Month and year of a release, the precision a reader actually compares editions on. */
+function releaseLabel(date: string): string {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'long' }).format(parsed);
+}
+
+/** The identity of an edition on one line: who published it, in what language and shape. */
+function editionLabel(edition: EditionDto, unknown: string): string {
+  const parts = [
+    edition.publisher,
+    edition.language ? languageName(edition.language) : undefined,
+    edition.format,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(' · ') : unknown;
+}
+
+/**
+ * The other editions of the same work, and the way to say which one is on the shelf.
+ *
+ * <p>The section only exists when the catalog knows more than one edition — most works are
+ * known in a single one, and an "other editions" heading over an empty list says nothing.
+ * An edition already in the collection is named as such instead of being offered: owning
+ * the same edition twice is what `UNIQUE(user, edition)` forbids, and a button the server
+ * would refuse is worse than no button.
+ */
+function EditionsSection({
+  item,
+  onChoose,
+  error,
+}: {
+  item: LibraryItemDto;
+  onChoose: (editionId: string) => void;
+  error: string | null;
+}) {
+  const { t } = useTranslation();
+  // The hook disables itself on an empty identifier, so a book whose payload predates
+  // `workId` simply shows no section rather than firing a request for `/works//editions`.
+  const { data: editions = [] } = useGetApiWorksIdEditions(item.book?.workId ?? '');
+
+  const current = item.book?.editionId;
+  const others = editions.filter((edition) => edition.id !== current);
+  if (others.length === 0) return null;
+
+  const mine = editions.find((edition) => edition.id === current);
+  const unknown = t('detail.editions.unknownPublisher');
+
+  return (
+    <section className={styles.editions}>
+      <h3 className={styles.sectionTitle}>{t('detail.editions.title')}</h3>
+      {mine && (
+        <p className={styles.editionsHint}>
+          {t('detail.editions.yours', { edition: editionLabel(mine, unknown) })}
+        </p>
+      )}
+
+      <ul className={styles.editionList}>
+        {others.map((edition) => {
+          const label = editionLabel(edition, unknown);
+          const meta = [
+            edition.pageCount != null
+              ? t('detail.editions.pages', { pages: edition.pageCount })
+              : undefined,
+            edition.releaseDate ? releaseLabel(edition.releaseDate) : undefined,
+            edition.isbn13 ? t('detail.editions.isbn', { isbn: edition.isbn13 }) : undefined,
+          ].filter(Boolean);
+
+          return (
+            <li key={edition.id} className={styles.edition}>
+              <div className={styles.editionLabel}>{label}</div>
+              {meta.length > 0 && <div className={styles.editionMeta}>{meta.join(' · ')}</div>}
+              {edition.owned ? (
+                <div className={styles.editionOwned}>{t('detail.editions.alreadyOwned')}</div>
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="block"
+                  aria-label={t('detail.editions.chooseAria', { edition: label })}
+                  onClick={() => onChoose(edition.id!)}
+                >
+                  {t('detail.editions.choose')}
+                </Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {error && <p className={styles.editionsError}>{error}</p>}
+      {/* Says what the switch does to the position, because it is not obvious: a page
+          number does not survive a change of pagination, a percentage does. */}
+      <p className={styles.editionsNote}>{t('detail.editions.keepsProgress')}</p>
+    </section>
+  );
+}
+
 function DetailContent({ id }: { id: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -289,6 +402,9 @@ function DetailContent({ id }: { id: string }) {
   // title but no identifier, so the link is resolved against their own series.
   const { data: knownSeries = [] } = useGetApiSeries();
   const seriesId = seriesIdOf(knownSeries, item?.book);
+
+  const workId = item?.book?.workId;
+  const [editionError, setEditionError] = useState<string | null>(null);
 
   const invalidateLibrary = () => {
     // The item has its own cache entry, whose key is not a prefix of the collection's:
@@ -314,6 +430,28 @@ function DetailContent({ id }: { id: string }) {
           prev ? { ...prev, rating: data.rating, review: data.review } : prev);
       },
       onSettled: invalidateLibrary,
+    },
+  });
+
+  const { mutate: mutateEdition } = usePutApiLibraryIdEdition({
+    mutation: {
+      onSuccess: () => {
+        setEditionError(null);
+        invalidateLibrary();
+        // The `owned` flags of the list have just moved, and so has the edition the
+        // section calls "yours".
+        if (workId) {
+          void queryClient.invalidateQueries({
+            queryKey: getGetApiWorksIdEditionsQueryKey(workId),
+          });
+        }
+      },
+      // A 409 is the one refusal the user can act on: that edition is already on their
+      // shelf, under another entry. Anything else is an outage, and says so.
+      onError: (failure) =>
+        setEditionError(t(apiErrorStatus(failure) === 409
+          ? 'detail.editions.alreadyOwnedError'
+          : 'detail.editions.error')),
     },
   });
 
@@ -415,6 +553,12 @@ function DetailContent({ id }: { id: string }) {
             <p className={styles.synopsis}>{b.synopsis}</p>
           </>
         )}
+
+        <EditionsSection
+          item={item}
+          error={editionError}
+          onChoose={(editionId) => mutateEdition({ id, data: { editionId } })}
+        />
 
         {tracking && (
           <ProgressSection item={item} onSave={(data) => mutateProgress({ id, data })} />

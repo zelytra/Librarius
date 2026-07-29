@@ -61,6 +61,7 @@ class DataIsolationTest {
         for (String path : new String[] {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
                 "/api/goals", "/api/stats", "/api/series", "/api/genres",
+                "/api/works/00000000-0000-0000-0000-000000000000/editions",
                 "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
@@ -172,6 +173,101 @@ class DataIsolationTest {
                 .when().get("/api/library")
                 .then().statusCode(200)
                 .body("total", is(0));
+    }
+
+    // ── Editions ──────────────────────────────────────────────────────────────
+
+    /** Adds a title with a given publisher, and returns the created item. */
+    private String addEdition(String user, String title, String publisher) {
+        return given().auth().oauth2(token(user)).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "%s", "authors": "Isolation Test",
+                                    "publisher": "%s", "pageCount": 300 },
+                          "status": "OWNED" }
+                        """.formatted(title, publisher))
+                .when().post("/api/library")
+                .then().statusCode(201)
+                .extract().path("id");
+    }
+
+    private String bookField(String user, String itemId, String field) {
+        return given().auth().oauth2(token(user))
+                .when().get("/api/library/" + itemId)
+                .then().statusCode(200)
+                .extract().path("book." + field);
+    }
+
+    /**
+     * A work and its editions are shared catalog data, but the resource listing them is not
+     * a catalog browser: it opens on a work the caller owns something of, and answers 404
+     * everywhere else — the same answer an unknown identifier gets, so that a work
+     * identifier cannot be used to probe someone else's shelves.
+     */
+    @Test
+    void editionsOfAWorkTheCallerOwnsNothingOfAreNotReachable() {
+        String aliceItem = addEdition("alice", "Isolation - éditions", "Pocket");
+        String workId = bookField("alice", aliceItem, "workId");
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/works/" + workId + "/editions")
+                .then().statusCode(200);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/works/" + workId + "/editions")
+                .then().statusCode(404);
+    }
+
+    /**
+     * Two readers of the same title share the work and see the same editions — that is the
+     * catalog doing its job. What must not be shared is the ownership: {@code owned} flags
+     * the caller's own copy and nobody else's.
+     */
+    @Test
+    void theOwnedFlagOnASharedWorkIsPerCaller() {
+        String title = "Isolation - éditions partagées";
+        String aliceItem = addEdition("alice", title, "Pocket");
+        String bobItem = addEdition("bob", title, "Gallimard");
+
+        String workId = bookField("alice", aliceItem, "workId");
+        assertEquals(workId, bookField("bob", bobItem, "workId"),
+                "the catalog row is shared by the two readers");
+
+        String aliceEdition = bookField("alice", aliceItem, "editionId");
+        String bobEdition = bookField("bob", bobItem, "editionId");
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/works/" + workId + "/editions")
+                .then().statusCode(200)
+                .body("find { it.id == '" + aliceEdition + "' }.owned", is(true))
+                .body("find { it.id == '" + bobEdition + "' }.owned", is(false));
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/works/" + workId + "/editions")
+                .then().statusCode(200)
+                .body("find { it.id == '" + bobEdition + "' }.owned", is(true))
+                .body("find { it.id == '" + aliceEdition + "' }.owned", is(false));
+    }
+
+    /**
+     * The edition is the only thing shared here: the row saying who owns it is not. Bob
+     * cannot move Alice's copy onto another edition, even one he owns himself — and the
+     * refusal is a 404, so he does not learn that her item exists.
+     */
+    @Test
+    void libraryItemOfAnotherUserCannotBeMovedToAnotherEdition() {
+        String title = "Isolation - bascule d'édition";
+        String aliceItem = addEdition("alice", title, "Pocket");
+        String bobItem = addEdition("bob", title, "Gallimard");
+        String bobEdition = bookField("bob", bobItem, "editionId");
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"editionId\": \"" + bobEdition + "\" }")
+                .when().put("/api/library/" + aliceItem + "/edition")
+                .then().statusCode(404);
+
+        // Alice's copy still points at the edition she recorded.
+        assertEquals("Pocket", bookField("alice", aliceItem, "publisher"),
+                "Bob must not have moved Alice's copy");
     }
 
     // ── Wishlist ──────────────────────────────────────────────────────────────

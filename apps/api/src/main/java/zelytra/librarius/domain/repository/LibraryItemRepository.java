@@ -11,10 +11,12 @@ import zelytra.librarius.genre.GenreNormalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -31,6 +33,41 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
 
     public boolean deleteOwned(String userId, UUID id) {
         return delete("id = ?1 and userId = ?2", id, userId) > 0;
+    }
+
+    /**
+     * Whether the user owns any edition of a work — the stake that makes the shared catalog
+     * row visible to them.
+     *
+     * <p>Same rule as the series: a work is shared data, but nothing here is a catalog
+     * browser. A work the caller collects nothing of answers 404 like an unknown one, so
+     * that an identifier cannot be used to probe what other people own.
+     */
+    public boolean ownsWork(String userId, UUID workId) {
+        return count("userId = ?1 and edition.work.id = ?2", userId, workId) > 0;
+    }
+
+    /**
+     * Editions of a work already in the user's collection.
+     *
+     * <p>What {@code UNIQUE(user_id, edition_id)} forbids taking twice: the section listing
+     * the editions marks them, rather than offering a switch the database would refuse.
+     */
+    public Set<UUID> ownedEditionIds(String userId, UUID workId) {
+        return new LinkedHashSet<>(getEntityManager()
+                .createQuery("""
+                        select li.edition.id from LibraryItem li
+                        where li.userId = :userId
+                          and li.edition.work.id = :workId
+                        """, UUID.class)
+                .setParameter("userId", userId)
+                .setParameter("workId", workId)
+                .getResultList());
+    }
+
+    /** The user's item on a given edition, if they own it. */
+    public Optional<LibraryItem> findByEdition(String userId, UUID editionId) {
+        return find("userId = ?1 and edition.id = ?2", userId, editionId).firstResultOptional();
     }
 
     /**

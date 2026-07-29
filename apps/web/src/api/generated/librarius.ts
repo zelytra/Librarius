@@ -24,6 +24,7 @@ import type {
 import { apiClient } from '../../shared/apiClient';
 export interface BookView {
   editionId?: Uuid;
+  workId?: Uuid;
   kind?: string;
   title?: string;
   authors?: string;
@@ -66,6 +67,22 @@ export interface CategoryDto {
   label?: string;
   color?: string;
   builtin?: boolean;
+}
+
+export interface EditionDto {
+  id?: Uuid;
+  isbn13?: string;
+  publisher?: string;
+  language?: string;
+  pageCount?: number;
+  format?: string;
+  releaseDate?: LocalDate;
+  coverUrl?: string;
+  owned?: boolean;
+}
+
+export interface EditionSwitchDto {
+  editionId: Uuid;
 }
 
 export interface GenreCount {
@@ -1410,6 +1427,71 @@ export const useDeleteApiLibraryId = <TError = void,
     }
     
 /**
+ * @summary Set Edition
+ */
+export const putApiLibraryIdEdition = (
+    id: Uuid,
+    editionSwitchDto: EditionSwitchDto,
+ ) => {
+      
+      
+      return apiClient<unknown>(
+      {url: `/api/library/${id}/edition`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: editionSwitchDto
+    },
+      );
+    }
+  
+
+
+export const getPutApiLibraryIdEditionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionSwitchDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionSwitchDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdEdition'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdEdition>>, {id: Uuid;data: EditionSwitchDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdEdition(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdEditionMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdEdition>>>
+    export type PutApiLibraryIdEditionMutationBody = EditionSwitchDto
+    export type PutApiLibraryIdEditionMutationError = void
+
+    /**
+ * @summary Set Edition
+ */
+export const usePutApiLibraryIdEdition = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionSwitchDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdEdition>>,
+        TError,
+        {id: Uuid;data: EditionSwitchDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPutApiLibraryIdEditionMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Set Progress
  */
 export const putApiLibraryIdProgress = (
@@ -2536,3 +2618,91 @@ export const usePostApiWishlistIdAcquire = <TError = void,
 
       return useMutation(mutationOptions, queryClient);
     }
+    
+/**
+ * @summary List
+ */
+export const getApiWorksIdEditions = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<EditionDto[]>(
+      {url: `/api/works/${id}/editions`, method: 'GET'
+    },
+      );
+    }
+  
+
+
+
+export const getGetApiWorksIdEditionsQueryKey = (id?: Uuid,) => {
+    return [
+    `/api/works/${id}/editions`
+    ] as const;
+    }
+
+    
+export const getGetApiWorksIdEditionsQueryOptions = <TData = Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorksIdEditionsQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorksIdEditions>>> = () => getApiWorksIdEditions(id, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorksIdEditionsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorksIdEditions>>>
+export type GetApiWorksIdEditionsQueryError = void
+
+
+export function useGetApiWorksIdEditions<TData = Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorksIdEditions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorksIdEditions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorksIdEditions<TData = Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorksIdEditions>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorksIdEditions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorksIdEditions<TData = Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List
+ */
+
+export function useGetApiWorksIdEditions<TData = Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdEditions>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorksIdEditionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
