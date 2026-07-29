@@ -103,8 +103,9 @@ English: code, comments, documentation, commit messages and pull requests alike.
 
 ## Documentation
 
-- **[Developer wiki](docs/wiki/README.md)** — start here if you are new to the project:
-  architecture, catalog search, data model, running it locally, contributing, deployment.
+- **[Developer wiki](https://github.com/zelytra/Librarius/wiki)** — start here if you are
+  new to the project: architecture, catalog search, data model, running it locally,
+  contributing, deployment.
 - **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** — technical choices and the pull
   request roadmap, kept current as the code changes.
 - **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** — the full deployment guide: releases,
