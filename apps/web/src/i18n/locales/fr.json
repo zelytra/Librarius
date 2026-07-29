@@ -38,6 +38,74 @@
       "detail": "Connecte-toi pour voir ce titre.",
       "series": "Connecte-toi pour voir cette série.",
       "categories": "Connecte-toi pour gérer tes catégories."
+    },
+    "discover": "Découvrir l'application"
+  },
+  "landing": {
+    "hero": {
+      "title": "Ta bibliothèque, tome par tome.",
+      "lead": "Ce que tu possèdes jusqu'au tome et à l'édition, où tu en es dans tes lectures, et ce qui sort ensuite dans les séries que tu suis."
+    },
+    "cta": {
+      "label": "Se connecter ou créer un compte",
+      "note": "L'inscription est ouverte.",
+      "beta": "Bêta ouverte : cette instance est un environnement de test, ses données peuvent être remises à zéro sans préavis."
+    },
+    "needs": {
+      "title": "Trois questions, une réponse",
+      "own": {
+        "title": "Ce que je possède",
+        "body": "Jusqu'au tome et à l'édition : éditeur, langue, pages, ISBN. De quoi ne pas racheter un livre en librairie."
+      },
+      "progress": {
+        "title": "Où j'en suis",
+        "body": "Lectures en cours, page atteinte, dates, note et avis privés, objectif annuel et rythme à tenir."
+      },
+      "next": {
+        "title": "Ce qui arrive",
+        "body": "Les sorties annoncées des séries que tu suis, et une liste de souhaits classée par urgence avec son budget."
+      }
+    },
+    "series": {
+      "title": "Une série n'est pas une pile de livres",
+      "body": "La différence assumée : les autres outils raisonnent en livres isolés. Ici une série se lit d'un coup d'œil — lu, en rayon, manquant — et un tome absent part en liste de souhaits en un geste.",
+      "progress": "{{owned}} / {{total}} tomes",
+      "incomplete": "Incomplète",
+      "alt": "Exemple : douze tomes d'une série, chacun marqué lu, possédé ou manquant.",
+      "states": {
+        "read": "Lu",
+        "owned": "Possédé",
+        "missing": "Manquant"
+      }
+    },
+    "audience": {
+      "title": "C'est pour toi si…",
+      "manga": {
+        "title": "Tu collectionnes des mangas",
+        "body": "Vingt-cinq séries en cours : savoir quel tome manque compte plus que la liste."
+      },
+      "novels": {
+        "title": "Tu lis des romans",
+        "body": "Suivre ta progression, tenir un objectif sur l'année, retrouver ce que tu avais aimé."
+      },
+      "import": {
+        "title": "Tu viens de Booknode",
+        "body": "Importe ta bibliothèque depuis ton pseudo ou un fichier CSV, sans rien retaper."
+      }
+    },
+    "features": {
+      "title": "Ce qui est en ligne aujourd'hui",
+      "collection": "Collection en couvertures, vue par série, recherche, tri, catégories",
+      "discover": "Recherche dans Open Library et AniList, par mots-clés ou par ISBN",
+      "wishlist": "Souhaits classés par urgence, budget estimé, « je l'ai acheté »",
+      "stats": "Objectif annuel, rythme, répartition par genre et par auteur",
+      "import": "Import depuis un pseudo Booknode ou un fichier CSV",
+      "export": "Export JSON et CSV, suppression du compte et des données",
+      "themes": "Quatre thèmes clairs et sombres, en français et en anglais"
+    },
+    "closing": {
+      "title": "Commence par un tome.",
+      "body": "Tes notes et tes avis restent privés, et ne sont jamais agrégés entre utilisateurs."
     }
   },
   "errors": {

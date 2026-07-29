@@ -16,7 +16,37 @@
       href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
       rel="stylesheet"
     />
-    <title>Ma Bibliothèque</title>
+    <title>Ma Bibliothèque — ta bibliothèque, tome par tome</title>
+    <!--
+      Sharing metadata (#80). Static and French, deliberately: a crawler or a chat client
+      unfurling a link does not run the JavaScript that switches the interface, so what it
+      reads is whatever ships in this file — which is also why `lang` and the title above
+      are French, the locale the copy is authored in.
+
+      The URLs are absolute because Open Graph requires it, and they name the only public
+      address this application has: `librarius.zelytra.fr` is staging. They move the day
+      production opens — https://github.com/zelytra/Librarius/issues/103.
+
+      og:image reuses the 512×512 PWA icon rather than shipping a 1200×630 render of its
+      own: a raster that size would cost more than every remaining byte of the whole-build
+      budget (see scripts/check-bundle-size.mjs), and this file is already built,
+      precached and served. Square, hence `summary` rather than `summary_large_image`.
+    -->
+    <meta
+      name="description"
+      content="Bibliothèque personnelle de livres et de mangas : ce que tu possèdes jusqu'au tome et à l'édition, où tu en es dans tes lectures, et ce qui sort ensuite dans les séries que tu suis."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ma Bibliothèque" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Ma Bibliothèque — ta bibliothèque, tome par tome" />
+    <meta
+      property="og:description"
+      content="Bibliothèque personnelle de livres et de mangas : ce que tu possèdes jusqu'au tome et à l'édition, où tu en es dans tes lectures, et ce qui sort ensuite dans les séries que tu suis."
+    />
+    <meta property="og:url" content="https://librarius.zelytra.fr/welcome" />
+    <meta property="og:image" content="https://librarius.zelytra.fr/pwa-512x512.png" />
+    <meta name="twitter:card" content="summary" />
     <script>
       // Applies the stored theme before the first paint. A React effect runs after
       // it, so the light palette would flash on every load — and the stylesheet is

@@ -34,3 +34,15 @@
   line-height: 1.5;
   margin: 10px 0 6px;
 }
+
+/* Secondary on purpose: signing in is what the visitor came for, finding out what the
+   application is comes second — but it has to be reachable, since the gate is the whole
+   of the product for anyone arriving on a shared link. */
+.discover {
+  margin-top: 4px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
