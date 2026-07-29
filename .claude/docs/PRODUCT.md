@@ -41,6 +41,7 @@ v1.0 target: a **public**, multi-user product, open sign-up, French first.
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
 | **Rank** (`rank_category`) | Gold / Silver / Bronze + custom categories | Shared (built-ins) + user |
 | **Reading goal** (`reading_goal`) | Annual target in books, volumes or pages | User |
+| **Upcoming release** (`upcoming_release`) | An announced volume of a series, dated and labelled per market (FR/JP/EN) | Shared catalog |
 
 **Structural rule**: the catalog is **shared** across all users, ownership is **private**.
 Two users who own the same title point at the same `work` — entries are matched against the
@@ -59,7 +60,7 @@ Personal dashboard.
 | Header (date, greeting, Settings shortcut) | ✅ | Greeting to be made contextual (morning/evening) |
 | Continue reading | ✅ | Carousel of `READING` titles, each cover carrying its progress |
 | Counters (read / in progress / to read) | ✅ | |
-| Upcoming releases | ✅ | 🔜 filter on the **series being followed** rather than on AniList trends |
+| Upcoming releases | ✅ | Personalised to the series the reader owns, wishes on or follows, each date labelled with its market (FR/JP/EN) and its precision ([#57](https://github.com/zelytra/Librarius/issues/57)). No stake in anything → invites the reader towards their collection rather than an empty section. 🔜 admin/CSV ingestion of curated dates — entries are seeded by hand for now |
 | Recently read | ✅ | |
 | Empty state | ✅ | Points to Discover |
 | **Reorder / hide sections** | 🔜 | Persisted per user (`dashboard_layout`) |
@@ -228,8 +229,12 @@ year 🔜.
 3. The **Gold / Silver / Bronze** ranks are built-ins (`user_id NULL`) and cannot be
    deleted. A user may create their own categories.
 4. A title carries **at most one rank**.
-5. The release dates shown are the **provider's** (often JP/EN) and must be flagged as such
-   for as long as French release dates are unavailable.
+5. A release date is never shown without the **market** it belongs to (FR/JP/EN) — the
+   generic catalog trends (`/api/catalog/upcoming`) are the provider's, often JP/EN, and are
+   captioned as indicative as a whole; the personalised releases
+   (`/api/releases/upcoming`, [#57](https://github.com/zelytra/Librarius/issues/57)) label
+   each date individually, since French and original-edition dates can sit side by side in
+   the same list.
 6. Ownership data is **strictly private**: no resource ever returns another user's data.
    The rating and the review are the sharpest case: they live on the user's own
    `library_item`, are never shared, and are never folded into a score across accounts.

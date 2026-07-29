@@ -17,7 +17,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
-| GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
+| GET | `/api/catalog/upcoming?kind=&limit=` | Generic provider trends, same answer to every caller. `kind` defaults to `MANGA`, `limit` clamped to 1–50. No longer read by the Home screen — see `/api/releases/upcoming` |
+| GET | `/api/releases/upcoming?kind=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
@@ -118,6 +119,11 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
                 long readCount, boolean followed, List<SeriesVolumeDto> volumes)
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
 
+UpcomingReleaseDto(UUID id, UUID seriesId, String seriesTitle, String kind, String coverUrl,
+                   Integer volumeNumber, String title, LocalDate releaseDate,
+                   String datePrecision, String region, String publisher, String source,
+                   String confidence)
+
 StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
          Integer goalTarget, String goalUnit, long goalCurrent, List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
@@ -132,7 +138,8 @@ BreakdownCountDto(String label, long count)
 
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
-`SeriesStatus {ONGOING, COMPLETED, HIATUS}`.
+`SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
+`ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}`.
 
 ## Reading progress
 
@@ -265,6 +272,29 @@ volume is also an owned one:
 and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded without one)
 are appended after the numbered ones with a null `volumeNumber`; they count towards
 `ownedCount` but are never reported as missing.
+
+## Upcoming releases
+
+`GET /api/releases/upcoming` is the personalised counterpart to `GET /api/catalog/upcoming`:
+where that one answers the same provider trends to every caller, this one reads
+`upcoming_release` ([DATA-MODEL](DATA-MODEL.md) § 1) through the caller's own **stake** —
+the series they own a volume of, have a wish on, or follow — and returns nothing about any
+other run. A caller with no stake in anything gets an empty list, the ordinary answer for a
+new account rather than a failure.
+
+An announcement already behind the caller — a volume they already own — is dropped; one
+still ahead but with no date at all is always kept, being exactly a volume known to be
+coming and not known to be out yet. No provider is called on the request path: the table is
+filled once a day by `UpcomingReleaseRefresher`, off the request path, so displaying the
+section costs one query rather than the Open Library / AniList quota the whole instance
+shares.
+
+**Never show a date without what qualifies it.** `region` (`FR`\|`JP`\|`EN`) says which
+edition it belongs to — a JP date shown unlabelled is the exact confusion this endpoint
+exists to remove — `datePrecision` says how much of `releaseDate` is real (a provider that
+only knows the month must not be shown a day it never announced), and `source`/`confidence`
+say where the date came from and how firm it is. A curated row (`source = manual`) always
+wins over a provider guess, and the refresher never touches one.
 
 ## Genres
 

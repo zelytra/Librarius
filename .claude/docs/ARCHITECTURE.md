@@ -293,7 +293,7 @@ The OIDC authority is **baked into the web image at build time**
 | 3 | Flyway owns the schema | Versioned migrations, no Hibernate drift | ✅ Applied |
 | 4 | Generated TS client (orval) + CI gate | Front/back contract always in sync | ✅ Applied |
 | 5 | Rank as a column, not a join table | A title carries at most one rank | ✅ Applied (a simplification vs the initial vision) |
-| 6 | Provider release dates, not French ones | No reliable free API for French publishers | ✅ Accepted, to be revisited |
+| 6 | Provider release dates, not French ones, on the generic catalog trends | No reliable free API for French publishers | ✅ Accepted for `/api/catalog/upcoming`. Partially revisited by `upcoming_release` ([#57](https://github.com/zelytra/Librarius/issues/57)): a curated or catalog-derived French date now travels alongside the provider one, labelled by market — still hand-entered, no automated French-publisher feed |
 | 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing. Since orval 8 the mutator takes `(url, RequestInit)` and the generated code builds the URL and encodes the body, so `apiClient.ts` is down to the session concerns | ✅ Applied |
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🚧 Bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): the shell loads the web bundle; native projects and native sign-in pending |

@@ -97,8 +97,10 @@ the public URL from outside — see debt #15.
    following a listing order that SQL cannot reproduce.
 10. **No pagination** on `GET /api/library` or `GET /api/wishlist`.
 11. **Tables planned but never created**: `dashboard_layout`,
-    `notification_pref`, `upcoming_release`, `library_item_rank` (the rank is a column, not
+    `notification_pref`, `library_item_rank` (the rank is a column, not
     a table — an acceptable simplification, worth documenting).
+    ~~`upcoming_release`~~ ✅ **Created on 2026-07-29** ([#57](https://github.com/zelytra/Librarius/issues/57)):
+    `V8__upcoming_release.sql`, read through `GET /api/releases/upcoming`.
 12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
 
 ### Defects fixed since the audit ✅
@@ -224,7 +226,7 @@ production opens.*
 | Expected (docs/ARCHITECTURE.md) | Reality |
 |---|---|
 | Multiple editions per work | ✅ `GET /api/works/{id}/editions` and the "Autres éditions" section of the Detail screen compare them and switch the collection row onto one. The 1→N only became real when entries started being matched against the catalog instead of founding a work each — before that a work never held two editions. Missing: enriching the list from the providers, which needs a provider reference `work` does not carry ([API](API.md) gap A12) |
-| Upcoming **French** releases | `GET /api/catalog/upcoming` returns the **provider** dates (JP/EN), shown as "indicative dates". No French publisher data |
+| Upcoming **French** releases | ✅ `GET /api/releases/upcoming` ([#57](https://github.com/zelytra/Librarius/issues/57)) joins the caller's stake (owned/wished/followed series) against `upcoming_release`, labelling the market (FR/JP/EN), the date precision and the source of every announcement. `GET /api/catalog/upcoming` (generic provider trends) still exists but the Home screen no longer reads it. Curated French dates are still entered by hand — no admin UI or CSV ingestion yet |
 | Reorderable/hideable Home | Sections hardcoded in `HomePage.tsx` |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |
 | Reading goals | ✅ Set in Settings, gauged on Home and summarised on Stats (#50) |
