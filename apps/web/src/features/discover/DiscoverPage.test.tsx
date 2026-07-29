@@ -257,6 +257,20 @@ describe('DiscoverPage', () => {
       expect((posts[0].book as { kind: string }).kind).toBe('MANGA');
     });
 
+    /** The submit button used to say "…" while it waited; it now keeps its label. */
+    test('shows the compact indicator while the manual add is in flight', async () => {
+      server.use(http.post('*/api/library', () => new Promise<Response>(() => {})));
+      renderWithProviders(<DiscoverPage />);
+
+      await openManualForm();
+      await userEvent.type(screen.getByLabelText('Titre'), 'Un titre');
+      await userEvent.click(screen.getByText('Ajouter à la collection'));
+
+      expect(await screen.findByRole('status', undefined, { timeout: 3000 })).toBeInTheDocument();
+      // The label stays put — the indicator is added to the button, not swapped in for it.
+      expect(screen.getByRole('button', { name: /Ajouter à la collection/ })).toBeDisabled();
+    });
+
     test('reports a rejected manual add', async () => {
       server.use(http.post('*/api/library', () => new HttpResponse(null, { status: 500 })));
       renderWithProviders(<DiscoverPage />);

@@ -361,4 +361,47 @@ describe('DetailPage', () => {
 
     expect(await screen.findByText(/reprise en pourcentage/)).toBeInTheDocument();
   });
+
+  // ── Actions in flight ──────────────────────────────────────────────────────
+
+  /** A handler that never answers, so the wait it opens can be observed on screen. */
+  const staysInFlight = () => new Promise<Response>(() => {});
+
+  /** Everything the four mutating actions need to be on screen at the same time. */
+  const READING_MULTI_EDITION = libraryItem({
+    id: 'item-1',
+    status: 'READING',
+    book: MULTI_EDITION.book,
+    progress: { currentPage: 30, percent: 10 },
+  });
+
+  /**
+   * None of the four used to surface a pending state at all: the control sat there until
+   * the query invalidated. Each now lights up the compact indicator — on the control when
+   * the section has only one, on the heading when several of them write the same thing.
+   */
+  test('shows a compact indicator while each of the four actions is in flight', async () => {
+    libraryItemReturns(READING_MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    server.use(
+      http.put('*/api/library/:id/progress', staysInFlight),
+      http.put('*/api/library/:id/rank', staysInFlight),
+      http.put('*/api/library/:id/review', staysInFlight),
+      http.put('*/api/library/:id/edition', staysInFlight),
+    );
+    renderDetail();
+
+    await userEvent.click(await screen.findByText('Enregistrer ma progression'));
+    await screen.findByRole('status', undefined, { timeout: 3000 });
+
+    await userEvent.click(screen.getByText('Or'));
+    await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(2), { timeout: 3000 });
+
+    await userEvent.click(screen.getByLabelText('Noter 4 sur 5'));
+    await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(3), { timeout: 3000 });
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Je possède l'édition Robert Laffont/ }));
+    await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(4), { timeout: 3000 });
+  });
 });

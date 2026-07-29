@@ -1,11 +1,36 @@
+/* The waiting and the signed-out branches of the gate share one branded block, so a
+   cold load and a missing session look like the same screen at two moments rather than
+   like two unrelated ones. Tokens only: it follows the palette like every other surface. */
+
 .gate {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   padding: 48px 16px;
+  text-align: center;
   color: var(--muted);
 }
 
+.name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-22);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tagline {
+  max-width: 30ch;
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 1.5;
+  color: var(--faint);
+}
+
 .prompt {
+  max-width: 32ch;
   font-size: var(--fs-13-5);
   line-height: 1.5;
-  margin: 12px 0 18px;
+  margin: 10px 0 6px;
 }

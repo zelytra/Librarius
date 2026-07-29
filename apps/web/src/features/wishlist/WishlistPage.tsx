@@ -101,7 +101,8 @@ function WishEditor({ wish, busy, onCancel, onSave }: EditorProps) {
       />
       <div className={styles.editorActions}>
         <Button type="submit" size="compact" disabled={busy || !priceValid}>
-          {t(busy ? 'common.working' : 'wishlist.edit.save')}
+          {t('wishlist.edit.save')}
+          <Loading size="compact" pending={busy} />
         </Button>
         <Button type="button" variant="ghost" size="compact" onClick={onCancel}>
           {t('wishlist.edit.cancel')}

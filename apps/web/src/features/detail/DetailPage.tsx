@@ -100,9 +100,11 @@ function pageFrom(percent: string, total: number | null): string {
  */
 function ProgressSection({
   item,
+  saving,
   onSave,
 }: {
   item: LibraryItemDto;
+  saving: boolean;
   onSave: (data: ProgressDto) => void;
 }) {
   const { t } = useTranslation();
@@ -204,8 +206,12 @@ function ProgressSection({
         </label>
       </div>
 
+      {/* This section has a single control, so the indicator belongs on it. The status
+          buttons at the foot of the screen write through the same endpoint, and light it
+          up too: marking a title read *is* saving a position. */}
       <Button variant="secondary" size="block" onClick={() => onSave(payloadOf(draft))}>
         {t('detail.progress.save')}
+        <Loading size="compact" pending={saving} />
       </Button>
     </section>
   );
@@ -220,9 +226,11 @@ function ProgressSection({
  */
 function ReviewSection({
   item,
+  saving,
   onSave,
 }: {
   item: LibraryItemDto;
+  saving: boolean;
   onSave: (data: ReviewDto) => void;
 }) {
   const { t } = useTranslation();
@@ -238,7 +246,13 @@ function ReviewSection({
 
   return (
     <section className={styles.review}>
-      <h3 className={styles.sectionTitle}>{t('detail.review.title')}</h3>
+      {/* Five stars and a text area all write here, so the indicator sits on the heading
+          rather than on any one of them. The rating is painted optimistically; this is
+          what says the round trip behind it is still running. */}
+      <h3 className={styles.sectionTitle}>
+        {t('detail.review.title')}
+        <Loading size="compact" pending={saving} />
+      </h3>
       <div className={styles.stars}>
         {STARS.map((n) => (
           <button
@@ -321,10 +335,12 @@ function editionLabel(edition: EditionDto, unknown: string): string {
 function EditionsSection({
   item,
   onChoose,
+  switching,
   error,
 }: {
   item: LibraryItemDto;
   onChoose: (editionId: string) => void;
+  switching: boolean;
   error: string | null;
 }) {
   const { t } = useTranslation();
@@ -341,7 +357,12 @@ function EditionsSection({
 
   return (
     <section className={styles.editions}>
-      <h3 className={styles.sectionTitle}>{t('detail.editions.title')}</h3>
+      {/* One button per row, any of which can be the one running: the heading is the only
+          place that speaks for the section as a whole. */}
+      <h3 className={styles.sectionTitle}>
+        {t('detail.editions.title')}
+        <Loading size="compact" pending={switching} />
+      </h3>
       {mine && (
         <p className={styles.editionsHint}>
           {t('detail.editions.yours', { edition: editionLabel(mine, unknown) })}
@@ -414,13 +435,13 @@ function DetailContent({ id }: { id: string }) {
     void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
   };
 
-  const { mutate: mutateRank } = usePutApiLibraryIdRank({
+  const { mutate: mutateRank, isPending: rankSaving } = usePutApiLibraryIdRank({
     mutation: { onSuccess: invalidateLibrary },
   });
-  const { mutate: mutateProgress } = usePutApiLibraryIdProgress({
+  const { mutate: mutateProgress, isPending: progressSaving } = usePutApiLibraryIdProgress({
     mutation: { onSuccess: invalidateLibrary },
   });
-  const { mutate: mutateReview } = usePutApiLibraryIdReview({
+  const { mutate: mutateReview, isPending: reviewSaving } = usePutApiLibraryIdReview({
     mutation: {
       // Painted before the round trip: a star that only lights up once the server has
       // answered feels broken on a slow connection. The invalidation then reconciles
@@ -433,7 +454,7 @@ function DetailContent({ id }: { id: string }) {
     },
   });
 
-  const { mutate: mutateEdition } = usePutApiLibraryIdEdition({
+  const { mutate: mutateEdition, isPending: editionSwitching } = usePutApiLibraryIdEdition({
     mutation: {
       onSuccess: () => {
         setEditionError(null);
@@ -557,16 +578,30 @@ function DetailContent({ id }: { id: string }) {
         <EditionsSection
           item={item}
           error={editionError}
+          switching={editionSwitching}
           onChoose={(editionId) => mutateEdition({ id, data: { editionId } })}
         />
 
         {tracking && (
-          <ProgressSection item={item} onSave={(data) => mutateProgress({ id, data })} />
+          <ProgressSection
+            item={item}
+            saving={progressSaving}
+            onSave={(data) => mutateProgress({ id, data })}
+          />
         )}
 
-        <ReviewSection item={item} onSave={(data) => mutateReview({ id, data })} />
+        <ReviewSection
+          item={item}
+          saving={reviewSaving}
+          onSave={(data) => mutateReview({ id, data })}
+        />
 
-        <h3 className={styles.rankTitle}>{t('detail.ranking')}</h3>
+        {/* Three buttons write the rank, so the heading carries the indicator for all of
+            them — the same rule as the review and the editions above. */}
+        <h3 className={styles.rankTitle}>
+          {t('detail.ranking')}
+          <Loading size="compact" pending={rankSaving} />
+        </h3>
         <div className={styles.rankRow}>
           {ranks.map((r) => {
             const on = item.rankCode === r.code;

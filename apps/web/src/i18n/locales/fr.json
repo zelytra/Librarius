@@ -26,6 +26,9 @@
   "auth": {
     "signIn": "Se connecter",
     "defaultPrompt": "Connecte-toi pour accéder à cette section.",
+    "welcome": {
+      "opening": "Ouverture de ta bibliothèque…"
+    },
     "prompts": {
       "home": "Connecte-toi pour retrouver ta bibliothèque et tes lectures.",
       "collection": "Connecte-toi pour voir ta collection.",
