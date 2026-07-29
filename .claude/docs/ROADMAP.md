@@ -220,7 +220,7 @@ signing in shows something branded; loading and empty states stop flashing.
 | [#169](https://github.com/zelytra/Librarius/issues/169) | ✅ Loading indicator: compact and large formats, with an appearance delay | #33 |
 | [#170](https://github.com/zelytra/Librarius/issues/170) | ✅ Authentication gate: a branded waiting screen instead of plain text | #169 |
 | [#171](https://github.com/zelytra/Librarius/issues/171) | ✅ Desktop layout foundation: breakpoints and a real grid | — |
-| [#172](https://github.com/zelytra/Librarius/issues/172) | Desktop navigation: a side nav for wide viewports | #171 |
+| [#172](https://github.com/zelytra/Librarius/issues/172) | ✅ Desktop navigation: a side nav for wide viewports | #171 |
 | [#173](https://github.com/zelytra/Librarius/issues/173) | Desktop layout: Home and Collection | #171, #172 |
 | [#174](https://github.com/zelytra/Librarius/issues/174) | Desktop layout: Discover, Wishlist and Stats | #171, #172 |
 | [#175](https://github.com/zelytra/Librarius/issues/175) | Desktop layout: Detail, Series and Settings | #171, #172 |

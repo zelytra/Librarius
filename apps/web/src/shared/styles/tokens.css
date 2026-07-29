@@ -254,6 +254,26 @@
      paragraph of Detail running the full width of one is unreadable. */
   --content-max: none;
 
+  /* ── Side navigation ──────────────────────────────────────────────────────
+     The navigation of a wide viewport (#172), in its two forms. It is not
+     mounted below --bp-tablet at all — the bottom bar is, unchanged — so what
+     is declared here is the *rail*: 88px wide, icon over a small label, which
+     is the bottom bar's tab stood on its side. Past --bp-desktop the block at
+     the end of this file turns it into a sidebar: 240px, icon beside a label
+     at reading size.
+
+     Why not the sidebar from --bp-tablet: 240px is 40% of a 600px window and
+     leaves 464px of content, three cover columns — one fewer than the width
+     just bought. The rail costs 88px, and 464 against 456 is the same three
+     columns, for the 84px of height the bar gives back. --bp-desktop is the
+     width at which the 240px form stops costing a column (six of them remain),
+     which is precisely what it was derived from. */
+  --nav-side-width: 88px;
+  --nav-side-item-direction: column;
+  --nav-side-item-gap: 4px;
+  --nav-side-item-pad-x: 4px;
+  --nav-side-label-size: var(--fs-10);
+
   /* ── Grid ─────────────────────────────────────────────────────────────────
      The two column shapes the screens share. Each is a whole track list rather
      than a column count, because the two sides of the breakpoint want different
@@ -372,5 +392,13 @@
 @media (min-width: 1120px) {
   :root {
     --screen-pad-x: 32px;
+
+    /* The rail becomes the sidebar this breakpoint was measured for: 240px of
+       navigation still leaving six cover columns beside it. */
+    --nav-side-width: 240px;
+    --nav-side-item-direction: row;
+    --nav-side-item-gap: 12px;
+    --nav-side-item-pad-x: 14px;
+    --nav-side-label-size: var(--fs-14);
   }
 }

@@ -34,7 +34,8 @@ Alerting is deliberately two paths, because they fail differently: the in-cluste
 ```text
 src/
   api/generated/librarius.ts   # orval client — GENERATED, do not edit
-  app/AppShell.tsx             # layout + <Outlet/>, BottomNav.tsx
+  app/AppShell.tsx             # layout + <Outlet/>; BottomNav.tsx (phone) and SideNav.tsx
+                               # (wide viewport) over the destinations in navigation.ts
   auth/oidc.ts                 # OIDC configuration (browser origin or native scheme)
   features/<screen>/           # one page per screen, self-contained
   shared/
@@ -102,13 +103,25 @@ src/
   themed token would collide with the `[data-theme]` blocks it sits next to.
   `shared/ui/breakpoints.ts` mirrors the two numbers for the cases only JS can answer —
   *which* component to render at a width, rather than how to draw it — and
-  `breakpoints.test.ts` fails if the two halves drift apart.
+  `breakpoints.test.ts` fails if the two halves drift apart. `useViewportAtLeast()` there
+  is that decision as a hook, and `AppShell` is its only caller so far.
   `Screen` (`shared/ui/primitives.tsx`) is the container: it owns the page padding, the
   `--content-max` cap and the centring, so a screen widens without being touched. `Grid`
   is opt-in, in two shapes — `cover` for a grid of covers, `panel` for a row of cards —
   and never declares a column count: below the tablet breakpoint the track list is the
   fixed one each screen already draws, above it the browser fits as many columns as the
   width holds.
+- **Navigation** ([#172](https://github.com/zelytra/Librarius/issues/172)): exactly one
+  navigation is mounted, chosen by width rather than hidden by CSS — `BottomNav` below
+  `--bp-tablet`, `SideNav` from it up. Both read `app/navigation.ts`, so a destination is
+  declared once; only the side navigation carries Settings. `SideNav` has two forms and
+  draws neither: `--nav-side-*` is an 88px rail between the breakpoints and the 240px
+  sidebar `--bp-desktop` was measured for. `HIDDEN_NAV_PREFIXES` (detail, series,
+  settings) applies to the bottom bar alone — the side navigation is persistent, since
+  hiding it would shift the page sideways and leave browser-back as the only way out.
+
+  The active destination is styled from the `aria-current="page"` that `NavLink` already
+  sets, not from a class of its own, so what is seen and what is announced cannot drift.
 - **Icons**: `<Icon name="arrow_back" />` (`shared/ui/Icon.tsx`) draws from a self-hosted
   Material Symbols Rounded subset — `shared/ui/iconSubset.ts` maps each name to its
   Private Use Area code point, `shared/styles/fonts/material-symbols-subset.woff2` holds

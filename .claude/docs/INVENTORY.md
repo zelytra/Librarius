@@ -98,17 +98,18 @@ the Alertmanager webhook, and running a restore and a rollback for real.
    to `shared/ui/ranks.ts` and the file was deleted. The cover palette now has one
    definition (`shared/ui/coverPalette.ts`), so a title keeps the same colour on every
    screen.
-23. **No desktop layout: foundations laid on 2026-07-29, screens still to come.**
+23. **No desktop layout: shell and navigation done on 2026-07-29, screens still to come.**
     The whole `src/` tree used to hold **one** `@media` query — a 380px tweak in
     `discover/fields.module.css` — and `AppShell` framed the app in a 440 × 900 card on
     every viewport, so a 1440px browser rendered a phone on an empty desk.
-    [#171](https://github.com/zelytra/Librarius/issues/171) fixed the foundation, not the
-    screens: two breakpoints in `tokens.css` with the reasoning behind their values, the
-    frame caps and the page width turned into tokens those two `@media` blocks redeclare,
-    and a `Grid` primitive the screens can opt into. What is left is the visible half —
-    the bottom bar is still a bottom bar at 1440px
-    ([#172](https://github.com/zelytra/Librarius/issues/172)) and every screen still lays
-    its content out in one column
+    [#171](https://github.com/zelytra/Librarius/issues/171) fixed the foundation: two
+    breakpoints in `tokens.css` with the reasoning behind their values, the frame caps and
+    the page width turned into tokens those two `@media` blocks redeclare, and a `Grid`
+    primitive the screens can opt into.
+    [#172](https://github.com/zelytra/Librarius/issues/172) then retired the bottom bar
+    above 600px in favour of a persistent side navigation — a rail, then a 240px sidebar
+    past `--bp-desktop` — mounted by width rather than hidden by CSS. What is left is the
+    screens themselves, which still lay their content out in one column
     ([#173](https://github.com/zelytra/Librarius/issues/173),
     [#174](https://github.com/zelytra/Librarius/issues/174),
     [#175](https://github.com/zelytra/Librarius/issues/175)).
