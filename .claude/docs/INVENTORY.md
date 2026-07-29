@@ -64,7 +64,11 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 3. ~~**Inconsistent error and loading handling.**~~ ✅ **Cleared on 2026-07-28**
    ([#33](https://github.com/zelytra/Librarius/issues/33)): `Loading`, `ErrorState` and
    `EmptyState` live in `shared/ui/states.tsx` and every screen goes through them, so a
-   failed call can no longer render as a silently empty screen.
+   failed call can no longer render as a silently empty screen. #33 covered the *screen*;
+   the *actions* kept four ad hoc treatments of the same wait, three of them a button label
+   swapped for an ellipsis and the fourth nothing at all. Finished on 2026-07-29
+   ([#169](https://github.com/zelytra/Librarius/issues/169)): one indicator, two formats,
+   an appearance delay, and no call site left drawing its own.
 4. ~~**Incomplete i18n.**~~ ✅ **Cleared on 2026-07-28**
    ([#35](https://github.com/zelytra/Librarius/issues/35)): `fr.json` is 432 lines and
    `react/jsx-no-literals` fails the lint on a user-facing string left in the JSX. One

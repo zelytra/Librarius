@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { Button } from './primitives';
@@ -10,13 +10,95 @@ import styles from './states.module.css';
  * wherever the failure happens.
  */
 
-/** Data on its way. */
-export function Loading({ label }: { label?: string }) {
+/**
+ * How long a wait has to last before it is worth announcing. Under this, the indicator
+ * would appear and disappear inside the blink it was meant to explain, which reads as a
+ * glitch rather than as feedback — most calls to this API answer well below it.
+ */
+export const LOADING_DELAY_MS = 400;
+
+/**
+ * How long the indicator stays once it has appeared. Without a floor, an answer landing
+ * just past the delay above would paint it for a single frame, which is the same flicker
+ * seen from the other end.
+ */
+export const LOADING_MIN_VISIBLE_MS = 400;
+
+/**
+ * Whether the wait has lasted long enough to be shown, and has not been on screen long
+ * enough to be taken away again. Both thresholds are about flicker, not about the wait
+ * itself: a fast round trip is shown as nothing at all.
+ */
+function useIndicatorVisible(pending: boolean): boolean {
+  const [visible, setVisible] = useState(false);
+  const shownAt = useRef(0);
+
+  useEffect(() => {
+    // Waiting and already shown, or idle and already hidden: nothing to schedule.
+    if (pending === visible) return;
+
+    if (pending) {
+      const timer = setTimeout(() => {
+        shownAt.current = Date.now();
+        setVisible(true);
+      }, LOADING_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+
+    const left = LOADING_MIN_VISIBLE_MS - (Date.now() - shownAt.current);
+    if (left <= 0) {
+      setVisible(false);
+      return;
+    }
+    const timer = setTimeout(() => setVisible(false), left);
+    return () => clearTimeout(timer);
+  }, [pending, visible]);
+
+  return visible;
+}
+
+/** `large` fills a screen that has nothing to show yet; `compact` sits inside a control. */
+type LoadingSize = 'large' | 'compact';
+
+interface LoadingProps {
+  size?: LoadingSize;
+  /** Overrides the generic wording. The large format prints it, the compact one hides it. */
+  label?: string;
+  /**
+   * Whether the wait is still running. A mounted `Loading` is a wait by definition, so a
+   * screen that swaps it for its content on arrival passes nothing; an action passes its
+   * mutation's `isPending` and leaves the component mounted, which is what lets the
+   * minimum visible duration outlive the end of the wait.
+   */
+  pending?: boolean;
+}
+
+/**
+ * Data on its way, in the one shape the whole app waits in.
+ *
+ * <p>The animated mark is a placeholder for the animated logo planned for later. It is
+ * drawn here and nowhere else, so that swap is this component plus one CSS rule rather
+ * than every call site.
+ */
+export function Loading({ size = 'large', label, pending = true }: LoadingProps) {
   const { t } = useTranslation();
+  const visible = useIndicatorVisible(pending);
+  if (!visible) return null;
+
+  const text = label ?? t('common.loading');
+  if (size === 'compact') {
+    return (
+      <span className={styles.loadingCompact} role="status">
+        <span className={`${styles.mark} ${styles.markCompact}`} />
+        <span className={styles.srOnly}>{text}</span>
+      </span>
+    );
+  }
   return (
-    <p className={styles.loading} role="status">
-      {label ?? t('common.loading')}
-    </p>
+    <div className={styles.loadingLarge} role="status">
+      <span className={`${styles.mark} ${styles.markLarge}`} />
+      <p className={styles.loadingLabel}>{text}</p>
+    </div>
   );
 }
 

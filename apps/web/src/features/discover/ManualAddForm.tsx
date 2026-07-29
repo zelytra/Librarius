@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../shared/ui/primitives';
-import { ErrorState } from '../../shared/ui/states';
+import { ErrorState, Loading } from '../../shared/ui/states';
 import { usePostApiLibrary, type Kind, type ManualBookDto } from '../../api/generated/librarius';
 import { Field, FieldGrid } from './fields';
 import styles from './ManualAddForm.module.css';
@@ -98,7 +98,8 @@ export function ManualAddForm({ kind, onCancel, onAdded }: ManualAddFormProps) {
 
       <div className={styles.actions}>
         <Button type="submit" disabled={isPending || title.trim() === ''}>
-          {t(isPending ? 'common.working' : 'discover.manual.submit')}
+          {t('discover.manual.submit')}
+          <Loading size="compact" pending={isPending} />
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel}>
           {t('discover.manual.close')}

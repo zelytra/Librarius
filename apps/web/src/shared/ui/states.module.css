@@ -1,12 +1,88 @@
 /* Shared non-nominal states: loading, failure, emptiness. Tokens only, so the
    three follow the active theme like the rest of the interface. */
 
-.loading {
-  margin: 0;
+/* ── Loading ──────────────────────────────────────────────────────────────────
+   One indicator in two formats: `large` stands in for a screen with nothing to
+   show yet, `compact` sits inside a button or beside the heading of the section
+   whose action is running. */
+
+.loadingLarge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   padding: 32px 0;
   text-align: center;
-  font-size: var(--fs-13);
   color: var(--muted);
+}
+
+.loadingLabel {
+  margin: 0;
+  font-size: var(--fs-13);
+}
+
+/* Refuses to shrink: its host is usually a flex row — a button, a heading — and a
+   squashed ring reads as a rendering bug rather than as a wait. */
+.loadingCompact {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* The mark is the placeholder for the animated logo planned for later, and the only
+   thing in the app that draws a wait: replacing it is this rule, its keyframes and
+   the element in `states.tsx` that carries them — never a call site.
+
+   It is painted in `currentColor`, so it takes the colour of whatever it sits in:
+   the muted label of the large format, the ink of a secondary button, the on-accent
+   ink of a primary one. No palette can therefore leave it invisible. */
+.mark {
+  display: block;
+  border-radius: var(--radius-round);
+  border-style: solid;
+  border-color: transparent;
+  border-top-color: currentColor;
+  animation: spin 720ms linear infinite;
+}
+
+.markLarge {
+  width: 34px;
+  height: 34px;
+  border-width: 3px;
+}
+
+.markCompact {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* A motion-averse reader gets a closed ring rather than a stopped quarter of one: a
+   frozen arc reads as a spinner that has crashed. */
+@media (prefers-reduced-motion: reduce) {
+  .mark {
+    animation: none;
+    border-color: currentColor;
+  }
+}
+
+/* The compact format has no room for its wording, but a screen reader still announces
+   the live region, so the label is hidden rather than dropped. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* No padding here on purpose, as on the other shared blocks: each screen sets its

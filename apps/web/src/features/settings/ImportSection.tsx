@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
+import { Loading } from '../../shared/ui/states';
 import { Icon } from '../../shared/ui/Icon';
 import { ApiError } from '../../shared/apiClient';
 import { useApiAuth } from '../../shared/api';
@@ -132,7 +133,9 @@ export function ImportSection() {
                 className={styles.handleInput}
               />
               <Button variant="primary" size="compact" onClick={() => void runScrape()} disabled={busy}>
-                {t(busy ? 'common.working' : 'settings.import.submit')}
+                {t('settings.import.submit')}
+                {/* Either import feeds it: a CSV upload disables the same controls. */}
+                <Loading size="compact" pending={busy} />
               </Button>
             </div>
           ) : (

@@ -160,6 +160,22 @@ describe('WishlistPage', () => {
     await waitFor(() => expect(sent).toEqual({ priority: 'PRIORITY', note: 'Édition collector' }));
   });
 
+  /**
+   * The editor used to swap its button's label for an ellipsis and nothing else: the
+   * shared compact indicator replaces it, and only shows up on a save that actually waits.
+   */
+  test('shows the compact indicator while a wish is being saved', async () => {
+    wishlistReturns([wishlistItem()]);
+    server.use(http.put('*/api/wishlist/:id', () => new Promise<Response>(() => {})));
+    renderWithProviders(<WishlistPage />);
+
+    await screen.findByText('Vinland Saga');
+    await userEvent.click(screen.getByLabelText('Modifier'));
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    expect(await screen.findByRole('status', undefined, { timeout: 3000 })).toBeInTheDocument();
+  });
+
   test('a price that is not a number refuses to be saved', async () => {
     wishlistReturns([wishlistItem()]);
     renderWithProviders(<WishlistPage />);

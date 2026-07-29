@@ -135,7 +135,13 @@
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 
+/* A flex row, because a heading carries the compact indicator of the action its section
+   governs: the indicator then sits on the heading's baseline instead of wrapping under
+   it. A heading without one renders exactly as it did. */
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--fs-17);
   margin: 0 0 8px;
 }
@@ -324,6 +330,9 @@
 }
 
 .rankTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--fs-17);
   margin: 0 0 12px;
 }
