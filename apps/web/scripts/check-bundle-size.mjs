@@ -29,26 +29,34 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Budgets in kB (1000 bytes, the unit Vite reports), measured on 2026-07-29 against
- * 9d1b440, once the routes were code split.
+ * 0309edc, once the routes were code split.
  *
- * - `initial` — measured 137.3 kB gz, of which react-dom alone is 56.5 kB,
- *   oidc-client-ts 17.4 kB, i18next 14.2 kB, react-router 13.5 kB and query-core
- *   11.6 kB. Set at 155 kB: ~13% of room, enough for a shared dependency or for the
- *   shell to grow, not enough to absorb a UI kit unnoticed. It also stays clear of the
- *   200 kB gz ceiling issue #79 sets for the product, which leaves somewhere to raise
- *   it to on purpose.
- * - `chunk` — measured 3.6 kB gz for the heaviest screen (Discover, after #146) and
- *   5.2 kB for the Workbox runtime. Set at 10 kB: a screen can double or triple as it
+ * The rule, which matters more than the figures: **the measurement plus about 15%**.
+ * A budget with 60% of slack catches nothing, and one set flush against the current
+ * size gets switched off the first time it goes red.
+ *
+ * - `initial` — measured 140.5 kB gz, of which react-dom alone is 56.5 kB,
+ *   oidc-client-ts 17.4 kB, i18next 14.2 kB, react-router 13.5 kB, query-core 11.6 kB
+ *   and @capacitor/core 3.2 kB. Set at 160 kB: 19.5 kB of room, about one medium
+ *   dependency. It stays 40 kB clear of the 200 kB gz ceiling issue #79 sets for the
+ *   product, which leaves somewhere to raise it to on purpose.
+ * - `chunk` — measured 5.2 kB gz for the Workbox runtime and 4.1 kB for the heaviest
+ *   screen (Detail, after #152). Set at 10 kB: a screen can more than double as it
  *   gains features, but a charting library landing in Stats (~50 kB gz) fails, and it
  *   fails naming Stats.
- * - `total` — measured 175.3 kB. Set at 200 kB, the same ~15% of room, as the backstop
- *   for what the other two cannot see: an uncompressed image dropped into public/, a
- *   locale file, a second font.
+ * - `total` — measured 179.4 kB. Set at 205 kB, as the backstop for what the other two
+ *   cannot see: an uncompressed image dropped into public/, a locale file, a font.
+ *
+ * These figures were re-derived on the day they shipped, because the baseline moved:
+ * @capacitor/core (#154) is eager, permanent and decided, so it belongs in the
+ * baseline. #146 and #152 did **not** move them — both landed behind the route split,
+ * in the Discover and Detail chunks. That is the distinction to keep: the budget is
+ * re-derived when the baseline deliberately changes, never merely because a screen grew.
  */
 const BUDGET_KB = {
-  initial: 155,
+  initial: 160,
   chunk: 10,
-  total: 200,
+  total: 205,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
