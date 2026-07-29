@@ -1,7 +1,13 @@
 /* ── Screen ───────────────────────────────────────────────────────────────── */
 
+/* The container every page sits in, and the single place a page gets its width
+   from. --content-max is `none` on a phone, where the frame is already the cap,
+   so this is the layout shipped today; past --bp-tablet it caps the page and
+   centres it, and every screen widens at once without touching any of them. */
 .screen {
   padding: var(--screen-pad-top) var(--screen-pad-x) var(--screen-pad-bottom);
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
 
 /* The bottom margin is left to the screen: it varies from one to the next, and
@@ -9,6 +15,29 @@
 .screenTitle {
   font-size: var(--fs-27);
   margin-top: 6px;
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────────────
+   Opt-in, never applied by Screen: the pages differ too much for one column
+   shape to fit them all — a cover grid, a hero and a stack of settings sections
+   are three different things. A page adopts a grid where it has a collection to
+   lay out, and keeps its own layout everywhere else.
+
+   Both shapes are one token away from their track list, which is what lets the
+   same class give a phone the fixed columns it draws today and a desktop as
+   many as the width holds — see the Grid block of tokens.css. */
+
+.grid {
+  display: grid;
+  gap: var(--grid-gap-y) var(--grid-gap-x);
+}
+
+.gridCover {
+  grid-template-columns: var(--grid-cover-columns);
+}
+
+.gridPanel {
+  grid-template-columns: var(--grid-panel-columns);
 }
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */

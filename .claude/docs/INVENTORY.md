@@ -17,10 +17,10 @@ milestones carry — authors as entities, a catalog beyond books and manga, the 
 finished or abandoned title should lead to, and eventually the social half. The fourth
 status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
 a title can be given up on, it keeps the page it was given up at, and it counts towards no
-goal. **Quality** is no accessibility pass and no desktop layout — the single locale left
-that list on 2026-07-29, the interface now shipping in French and English. **Operations**
-is what only the
-project owner can do: rotating the credentials still readable in the git history, wiring
+goal. **Quality** is no accessibility pass, and a desktop layout whose foundations are laid
+but whose screens are still a phone column (debt #23) — the single locale left that list on
+2026-07-29, the interface now shipping in French and English. **Operations** is what only
+the project owner can do: rotating the credentials still readable in the git history, wiring
 the Alertmanager webhook, and running a restore and a rollback for real.
 
 > **Environment**: `librarius.zelytra.fr` is a **staging** environment, not production.
@@ -97,6 +97,20 @@ the Alertmanager webhook, and running a restore and a rollback for real.
    to `shared/ui/ranks.ts` and the file was deleted. The cover palette now has one
    definition (`shared/ui/coverPalette.ts`), so a title keeps the same colour on every
    screen.
+23. **No desktop layout: foundations laid on 2026-07-29, screens still to come.**
+    The whole `src/` tree used to hold **one** `@media` query — a 380px tweak in
+    `discover/fields.module.css` — and `AppShell` framed the app in a 440 × 900 card on
+    every viewport, so a 1440px browser rendered a phone on an empty desk.
+    [#171](https://github.com/zelytra/Librarius/issues/171) fixed the foundation, not the
+    screens: two breakpoints in `tokens.css` with the reasoning behind their values, the
+    frame caps and the page width turned into tokens those two `@media` blocks redeclare,
+    and a `Grid` primitive the screens can opt into. What is left is the visible half —
+    the bottom bar is still a bottom bar at 1440px
+    ([#172](https://github.com/zelytra/Librarius/issues/172)) and every screen still lays
+    its content out in one column
+    ([#173](https://github.com/zelytra/Librarius/issues/173),
+    [#174](https://github.com/zelytra/Librarius/issues/174),
+    [#175](https://github.com/zelytra/Librarius/issues/175)).
 
 ### Back-end — moderate
 
