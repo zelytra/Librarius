@@ -300,16 +300,17 @@ one error followed by dozens of skipped tests, which reads like a code failure a
 Testcontainers publishes its containers on the bridge and hands back
 `172.17.0.1:<port>`, so the default network works fine.
 
-**Two tests fail in that container and are expected to.** `CatalogResourceTest` uses
+**`CatalogResourceTest` fails in that container, whole, and is expected to.** It uses
 `@InjectMock`, and Mockito's inline mock maker needs Byte Buddy to attach an agent to the
-running JVM. That attachment does not work inside the container, so both its tests error
-out with *Could not self-attach to current VM* before anything of theirs runs. Neither
-`--cap-add=SYS_PTRACE` nor `-Djdk.attach.allowAttachSelf=true` helps.
+running JVM. That attachment does not work inside the container, so **every one of its
+tests** errors out with *Could not self-attach to current VM* before anything of theirs
+runs. Neither `--cap-add=SYS_PTRACE` nor `-Djdk.attach.allowAttachSelf=true` helps.
 
 It is a property of the sandbox, not of the code: the `api` workflow runs the same commits
-green on a GitHub runner. So a local run showing **exactly those two errors and nothing
-else** is a pass. Read the failing test names before concluding — an error count of 2 that
-happens to include something else is not the same thing.
+green on a GitHub runner. So a local run whose errors are **exactly the tests of that class
+and nothing else** is a pass. Count the class, not the errors: it held two tests when this
+was written and five since the catalog search grew, so a fixed number here would only ever
+mislead. Read the failing test names before concluding.
 
 On the front-end side, Node and pnpm work natively. One caveat: on Node ≥ 22 the native
 `localStorage` takes precedence over the jsdom one — `src/test/setup.ts` neutralises it, do

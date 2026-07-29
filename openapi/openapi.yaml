@@ -2,6 +2,24 @@
 openapi: 3.1.0
 components:
   schemas:
+    AccountDeletionDto:
+      type: object
+      properties:
+        libraryItems:
+          type: integer
+          format: int32
+        wishlistItems:
+          type: integer
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        categories:
+          type: integer
+          format: int32
+        seriesFollows:
+          type: integer
+          format: int32
     BookView:
       type: object
       properties:
@@ -134,6 +152,123 @@ components:
       properties:
         editionId:
           $ref: "#/components/schemas/UUID"
+    ExportCategoryDto:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+          format: int32
+    ExportCollectionItemDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+        rankCode:
+          type: string
+        progress:
+          $ref: "#/components/schemas/ExportProgressDto"
+    ExportDto:
+      type: object
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        exportedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        user:
+          $ref: "#/components/schemas/ExportUserDto"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportCategoryDto"
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportGoalDto"
+        collection:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportCollectionItemDto"
+        wishlist:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportWishDto"
+        followedSeries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportSeriesFollowDto"
+    ExportGoalDto:
+      type: object
+      properties:
+        year:
+          type: integer
+          format: int32
+        targetCount:
+          type: integer
+          format: int32
+        unit:
+          $ref: "#/components/schemas/GoalUnit"
+    ExportProgressDto:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        percent:
+          type: integer
+          format: int32
+        startedAt:
+          $ref: "#/components/schemas/LocalDate"
+        finishedAt:
+          $ref: "#/components/schemas/LocalDate"
+    ExportSeriesFollowDto:
+      type: object
+      properties:
+        kind:
+          $ref: "#/components/schemas/Kind"
+        title:
+          type: string
+    ExportUserDto:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        locale:
+          type: string
+    ExportWishDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        priority:
+          $ref: "#/components/schemas/WishPriority"
+        estimatedPrice:
+          type: number
+        note:
+          type: string
     GenreCount:
       type: object
       properties:
@@ -307,6 +442,11 @@ components:
           type: string
         locale:
           type: string
+    OffsetDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50-04:00
     ProgressDto:
       type: object
       properties:
@@ -541,6 +681,36 @@ components:
       type: string
       format: uuid
       pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+    UpcomingReleaseDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        seriesTitle:
+          type: string
+        kind:
+          type: string
+        coverUrl:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        title:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        datePrecision:
+          type: string
+        region:
+          type: string
+        publisher:
+          type: string
+        source:
+          type: string
+        confidence:
+          type: string
     WishPriority:
       type: string
       enum:
@@ -835,6 +1005,53 @@ paths:
       - Category Resource
       security:
       - SecurityScheme: []
+  /api/export:
+    get:
+      parameters:
+      - name: format
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+            text/csv: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Export
+      tags:
+      - Export Resource
+      security:
+      - SecurityScheme: []
+  /api/export/{jobId}:
+    get:
+      parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+            text/csv: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Job
+      tags:
+      - Export Resource
+      security:
+      - SecurityScheme: []
   /api/genres:
     get:
       responses:
@@ -928,6 +1145,32 @@ paths:
         "403":
           description: Not Allowed
       summary: Csv
+      tags:
+      - Import Resource
+      security:
+      - SecurityScheme: []
+  /api/import/json:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExportDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Json
       tags:
       - Import Resource
       security:
@@ -1234,6 +1477,54 @@ paths:
       summary: Me
       tags:
       - Me Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountDeletionDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+  /api/releases/upcoming:
+    get:
+      parameters:
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UpcomingReleaseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Upcoming
+      tags:
+      - Release Resource
       security:
       - SecurityScheme: []
   /api/series:
