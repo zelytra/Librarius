@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import {
   BUILTIN_CATEGORIES,
+  dashboardLayout,
   libraryPage,
   stats,
   timeline,
@@ -10,6 +11,7 @@ import {
 } from './fixtures';
 import type {
   BookView,
+  DashboardLayoutDto,
   LibraryItemDto,
   SeriesDetailDto,
   SeriesSummaryDto,
@@ -43,6 +45,7 @@ export const defaultHandlers = [
   http.get(`${BASE}/catalog/search`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/upcoming`, () => HttpResponse.json([])),
   http.get(`${BASE}/releases/upcoming`, () => HttpResponse.json([])),
+  http.get(`${BASE}/dashboard/layout`, () => HttpResponse.json(dashboardLayout())),
   http.get(`${BASE}/me`, () =>
     HttpResponse.json({ id: 'alice', displayName: 'alice', email: 'alice@test.fr', locale: 'fr' })),
 
@@ -60,6 +63,11 @@ export const defaultHandlers = [
   }),
   http.put(`${BASE}/categories/:id`, () => HttpResponse.json({ id: 'cat', code: 'perso' })),
   http.delete(`${BASE}/categories/:id`, () => new HttpResponse(null, { status: 204 })),
+  // Echoes back exactly what was sent — the normalising (filling in a section missing
+  // from the body) is server-side behaviour, covered by the API test suite, not something
+  // a front-end test needs a mock to reproduce.
+  http.put(`${BASE}/dashboard/layout`, async ({ request }) =>
+    HttpResponse.json(await request.json() as DashboardLayoutDto)),
   http.put(`${BASE}/library/:id/rank`, () => HttpResponse.json({ id: 'item-1' })),
   http.put(`${BASE}/library/:id/progress`, () => new HttpResponse(null, { status: 204 })),
   http.put(`${BASE}/library/:id/review`, () => HttpResponse.json({ id: 'item-1' })),

@@ -45,6 +45,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/categories/{id}` | Deletes it and unranks its titles — 204 |
 | GET | `/api/goals` | Reading goals |
 | PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |
+| GET | `/api/dashboard/layout` | The caller's Home screen layout, always complete (`DashboardLayoutDto`) — see [Dashboard layout](#dashboard-layout) |
+| PUT | `/api/dashboard/layout` | Replaces it — full replace, same convention as `ProgressDto` |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
 | GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
@@ -95,6 +97,9 @@ CategoryUpdateDto(String label)
 
 GoalDto(UUID id, int year, int targetCount, String unit)
 GoalUpsertDto(Integer targetCount, GoalUnit unit)
+
+DashboardSectionDto(String code, boolean hidden)
+DashboardLayoutDto(List<DashboardSectionDto> sections)
 
 ExportDto(int schemaVersion, OffsetDateTime exportedAt, ExportUserDto user,
           List<ExportCategoryDto> categories, List<ExportGoalDto> goals,
@@ -386,6 +391,31 @@ date: the application does not know when it was read. It counts in the all-time 
 not towards the year's goal, which is the honest answer and keeps an import from spiking the
 day it ran.
 
+## Dashboard layout
+
+`GET /api/dashboard/layout` is **always complete**: every known section is in the answer
+exactly once, whatever is actually stored. An account that never saved a preference gets
+the default order, computed in memory rather than persisted — nothing is written until the
+first `PUT`, so the feature costs an account that never touches it exactly one indexed
+lookup that finds nothing, and a confirmation screen never has to special-case "no layout
+yet" against "a layout with everything visible", because there is no difference to show.
+
+`PUT /api/dashboard/layout` **replaces the whole list**, the same convention
+`ProgressDto` uses: a section left out of the body is not "leave it as it is", the next
+`GET` adds it back in, visible. This is also how a section shipped after a layout was last
+saved shows up without breaking it — the acceptance criterion of #54: `GET` (and `PUT`,
+which normalises before writing) fills in whatever a stored layout is missing, in the order
+new sections are declared server-side, and drops a code it no longer recognises rather than
+rejecting it. A hidden section is never dropped from the answer, only flagged `hidden`:
+hiding is a preference, not a deletion, and the client's "customize" panel lists every
+section for exactly that reason — there would be no way back to a hidden one otherwise.
+
+`code` is a plain string rather than a closed enum on purpose, in both directions: the set
+of sections is meant to grow, and a fixed enumeration would turn every new one into a
+question of deployment order. `DashboardLayoutService` reads and writes the JSONB column
+through plain JDBC, not a Panache entity — the same choice `catalog_cache` made, and for
+the same reason ([DATA-MODEL](DATA-MODEL.md) § V10).
+
 ## Timeline
 
 `GET /api/stats/timeline` reads the same `finished_at` the goal is counted from, over a
@@ -556,7 +586,7 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A5 | ✅ `PUT`/`DELETE` on `/api/categories/{id}` (#51) | Core product |
 | A6 | ✅ `PUT /api/wishlist/{id}` (edit priority/price/note) (#52) | Core product |
 | A7 | ✅ One-call conversion from wish to collection (#52) | Core product |
-| A8 | No `/api/dashboard/layout` | Core product |
+| A8 | ✅ `GET`/`PUT /api/dashboard/layout` (#54) | Core product |
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |

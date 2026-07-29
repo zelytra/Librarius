@@ -58,6 +58,8 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   favorite: 0xe87e,
   flag: 0xf0c6,
   insights: 0xf092,
+  keyboard_arrow_down: 0xe313,
+  keyboard_arrow_up: 0xe316,
   library_books: 0xe02f,
   local_fire_department: 0xef55,
   lock: 0xe899,
@@ -74,5 +76,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   table_view: 0xf1be,
   tune: 0xe429,
   upload_file: 0xe9fc,
+  visibility: 0xe8f4,
+  visibility_off: 0xe8f5,
   workspace_premium: 0xe7af,
 };

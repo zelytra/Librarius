@@ -36,6 +36,15 @@ export function SettingsPage() {
       {/* Annual reading goal, which the Home gauge is drawn from. */}
       <GoalSection />
 
+      {/* Reordering and hiding sections happens on Home itself (#54) — this is only the
+          way there for someone who would not otherwise think to look on the dashboard. */}
+      <h3 className={styles.sectionTitle}>{t('settings.dashboard')}</h3>
+      <p className={styles.sectionIntro}>{t('settings.dashboardDescription')}</p>
+      <button className={styles.dashboardLink} onClick={() => navigate('/')}>
+        <Icon name="tune" size={16} color="var(--accent-deep)" />
+        {t('settings.dashboardAction')}
+      </button>
+
       {/* External library import. */}
       <ImportSection />
 

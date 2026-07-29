@@ -3,16 +3,17 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
            ├─< wishlist_item >──┘             │        ▲
            ├─< reading_goal                   └─< work_genre >── genre >─< genre_alias
            ├─< series_follow >─────────────────────────┘
-           └─< rank_category (custom)          library_item ──1:1─ reading_progress
-                    ▲                                │
-              rank_category (built-ins, user_id NULL)┘
+           ├─< rank_category (custom)          library_item ──1:1─ reading_progress
+           │        ▲                                │
+           │  rank_category (built-ins, user_id NULL)┘
+           └─< dashboard_layout
 ```
 
 ### Tables
@@ -37,6 +38,7 @@ the rank in a column of its own would buy an index the ordering does not need, a
 of a denormalised field to keep in step on every write.
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
 | `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in. `UNIQUE(user_id, code)` (V9) |
+| `dashboard_layout` | `user_id VARCHAR(255)` | `sections JSONB` — `[{"code": "...", "hidden": false}, …]` | No surrogate key: one layout per user, so `user_id` is the identity. No row until the first `PUT` (V10) |
 | `catalog_cache` | `(provider, query_hash)` | `payload JSONB`, `fetched_at`, `expires_at` | Owned by no user: it caches provider answers, not data. idx on `expires_at` for the purge |
 | `genre` | `id UUID` | `code` **UNIQUE**, `label` | `code` is the identity, `label` only what a screen shows (V6) |
 | `genre_alias` | `alias VARCHAR(64)` | `code` FK → `genre(code)` | Provider wording → canonical genre. Seed data, never written at runtime (V6) |
@@ -163,6 +165,18 @@ contain (they are `[a-z0-9-]`), so it can collide neither with an existing code 
 another rewrite. `idx_rank_category_user` goes away with the same migration: the constraint's
 index leads on `user_id` and covers what it was for.
 
+`V10__dashboard_layout.sql` adds `dashboard_layout` ([#54](https://github.com/zelytra/Librarius/issues/54)): the sections the Home screen
+shows, and in which order. `sections` is a JSONB array of `{"code": "...", "hidden": false}`
+rather than one column per section, because the set is meant to grow — a section added
+later is missing from a layout saved before it existed, and `DashboardLayoutService.get`
+fills the gap in rather than the client needing to know the defaults itself. No JPA entity
+maps the table: `DashboardLayoutService` reads and writes the JSONB column through plain
+JDBC and a Jackson `ObjectMapper`, the same choice `V5__catalog_cache.sql` made and for the
+same reason — mapping a JSONB column through Hibernate buys nothing for a table nothing
+else joins against. No row exists until the first `PUT`: `GET` computes the default order
+in memory when it finds none, so an account that never touches the feature costs this
+table exactly one indexed lookup that finds nothing.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -181,7 +195,7 @@ row, so the intent is readable from the code and not only from a DDL clause.
 | L3 | **`authors` is a string** | No author page, no grouping, no exact search by author |
 | L4 | **No reading history** | A re-read overwrites `started_at`/`finished_at` |
 | L5 | ✅ Lifted by V5 — `catalog_cache` behind Caffeine | — |
-| L6 | **No `dashboard_layout`** | The Home sections are hardcoded |
+| L6 | ✅ Lifted by V10 — `dashboard_layout` ([#54](https://github.com/zelytra/Librarius/issues/54)) | — |
 | L7 | **No `notification_pref`** and no notification channel | No alerting possible |
 | L8 | ✅ Lifted by V8 — `upcoming_release`, read through `GET /api/releases/upcoming` | — |
 | L9 | ✅ Lifted by V4 — `series_follow` | — |
@@ -190,11 +204,11 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 and V9 are taken — V8 by the upcoming releases, V9 by the category
-> constraint above. The plan below therefore starts at **V10**; it used to be written as
-> V8 and V9.
+> Numbering: V8, V9 and V10 are taken — the upcoming releases, the category constraint and
+> the dashboard layout, all three shipped by the last of the v0.4 work. The plan below
+> therefore starts at **V11**.
 
-### V10 — Drop the denormalised labels & reading history
+### V11 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -217,11 +231,11 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V11 — Personalisation & notifications
+### V12 — Notifications
 
-`dashboard_layout (user_id PK, sections JSONB)`,
-`notification_pref (user_id PK, prefs JSONB)`. The third table this slot used to reserve,
-`upcoming_release`, shipped ahead of it as V8 — see § 1.
+`notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
+The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and
+`dashboard_layout` as V10 (#54) — see § 1.
 
 ## 4. Rules for writing migrations
 

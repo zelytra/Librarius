@@ -1,17 +1,11 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
-import { Cover } from '../../shared/ui/Cover';
-import { Button, Screen, SectionHeader } from '../../shared/ui/primitives';
-import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
+import { Screen } from '../../shared/ui/primitives';
+import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
-import {
-  useGetApiLibrary,
-  useGetApiStats,
-  type LibraryItemDto,
-} from '../../api/generated/librarius';
-import { GoalCard } from './GoalCard';
-import { UpcomingReleases } from './UpcomingReleases';
+import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius';
+import { DashboardSections } from './DashboardSections';
 import styles from './HomePage.module.css';
 
 /** Shelves shown on the dashboard, and how many covers each of them holds. */
@@ -20,7 +14,6 @@ const READ_SHELF_SIZE = 8;
 
 function Dashboard() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   // The queries run in parallel and are cached independently: coming back to Home after
   // browsing no longer refetches anything. Each shelf asks the server for its own status
   // rather than downloading the collection to filter it here.
@@ -28,14 +21,14 @@ function Dashboard() {
   const readQuery = useGetApiLibrary({ status: 'READ', size: READ_SHELF_SIZE });
   const statsQuery = useGetApiStats();
 
-  const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const reading = readingQuery.data?.items ?? [];
   const read = readQuery.data?.items ?? [];
   const stats = statsQuery.data;
 
   // The dashboard is made of the user's own data: as long as none of it has arrived,
-  // there is nothing worth rendering. Upcoming releases are deliberately left out of this
-  // gate — see UpcomingReleases — so a slow or failing answer never hides the shelves.
+  // there is nothing worth rendering. The upcoming releases and the section layout are
+  // both deliberately left out of this gate — each fetches its own data and falls back on
+  // its own — so neither one being slow or unavailable hides the shelves under it.
   const refetchAll = () => {
     void readingQuery.refetch();
     void readQuery.refetch();
@@ -51,109 +44,8 @@ function Dashboard() {
   const libraryEmpty =
     stats != null && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) === 0;
 
-  const mini = [
-    { value: String(stats?.read ?? 0), label: t('home.counters.read'), tone: styles.miniSage },
-    { value: String(stats?.reading ?? 0), label: t('home.counters.reading'), tone: styles.miniRose },
-    { value: String(stats?.toRead ?? 0), label: t('home.counters.toRead'), tone: styles.miniSand },
-  ];
-
-  const cover = (it: LibraryItemDto) => (
-    <Cover
-      key={it.id}
-      title={it.book?.title ?? '—'}
-      imageUrl={it.book?.coverUrl}
-      caption={it.book?.authors}
-      onClick={() => open(it)}
-    />
-  );
-
-  /**
-   * Same cover, with where the reader stands drawn on it. "Resume reading" without that
-   * was a shelf of titles the user had opened and no hint of how far in they were.
-   */
-  const readingCover = (it: LibraryItemDto) => {
-    const percent = it.progress?.percent;
-    return (
-      <Cover
-        key={it.id}
-        title={it.book?.title ?? '—'}
-        imageUrl={it.book?.coverUrl}
-        caption={it.book?.authors}
-        onClick={() => open(it)}
-      >
-        {percent != null && (
-          <>
-            <span className={styles.progressBadge}>
-              {t('home.progressBadge', { percent })}
-            </span>
-            <span
-              className={styles.progressTrack}
-              role="progressbar"
-              aria-label={t('home.progressLabel', { percent })}
-              aria-valuenow={percent}
-            >
-              {/* The fill is the value itself: its width can only be inline. */}
-              <span className={styles.progressFill} style={{ width: `${percent}%` }} />
-            </span>
-          </>
-        )}
-      </Cover>
-    );
-  };
-
   return (
-    <div className={styles.sections}>
-      {reading.length > 0 && (
-        <section>
-          <SectionHeader
-            title={t('home.resumeReading')}
-            action={t('home.resumeCount', { reading: reading.length })}
-          />
-          <div className={`scroll-x ${styles.shelf}`}>{reading.map(readingCover)}</div>
-        </section>
-      )}
-
-      <section>
-        <div className={styles.miniRow}>
-          {mini.map((s) => (
-            <div key={s.label} className={`${styles.miniTile} ${s.tone}`}>
-              <div className={styles.miniValue}>{s.value}</div>
-              <div className={styles.miniLabel}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* The annual goal, or the invitation to set one — never a gauge at zero. */}
-      {!libraryEmpty && (
-        <section>
-          <GoalCard stats={stats} />
-        </section>
-      )}
-
-      <UpcomingReleases libraryEmpty={libraryEmpty} />
-
-      {read.length > 0 && (
-        <section>
-          <SectionHeader title={t('home.recentlyRead')} />
-          <div className={`scroll-x ${styles.shelf}`}>{read.map(cover)}</div>
-        </section>
-      )}
-
-      {libraryEmpty && (
-        <EmptyState
-          icon="auto_stories"
-          className={styles.empty}
-          title={t('home.empty.title')}
-          description={t('home.empty.description')}
-          action={
-            <Button variant="secondary" onClick={() => navigate('/discover')}>
-              {t('home.empty.action')}
-            </Button>
-          }
-        />
-      )}
-    </div>
+    <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />
   );
 }
 

@@ -26,6 +26,29 @@
   margin: 0 0 14px;
 }
 
+.sectionIntro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: -8px 0 14px;
+  line-height: 1.4;
+}
+
+.dashboardLink {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  margin-bottom: 26px;
+}
+
 .themes {
   display: flex;
   gap: 12px;

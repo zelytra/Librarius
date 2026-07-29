@@ -123,6 +123,25 @@ components:
         label:
           type: string
           pattern: \S
+    DashboardLayoutDto:
+      type: object
+      required:
+      - sections
+      properties:
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardSectionDto"
+    DashboardSectionDto:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          pattern: \S
+        hidden:
+          type: boolean
     EditionDto:
       type: object
       properties:
@@ -1003,6 +1022,49 @@ paths:
       summary: Delete
       tags:
       - Category Resource
+      security:
+      - SecurityScheme: []
+  /api/dashboard/layout:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DashboardLayoutDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardLayoutDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Save
+      tags:
+      - Dashboard Layout Resource
+      security:
+      - SecurityScheme: []
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardLayoutDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      tags:
+      - Dashboard Layout Resource
       security:
       - SecurityScheme: []
   /api/export:

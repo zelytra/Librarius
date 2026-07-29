@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
-import { goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
+import { dashboardLayout, goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -212,5 +212,156 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText(/Connecte-toi pour retrouver ta bibliothèque/)).toBeInTheDocument();
+  });
+
+  // ── Customizable dashboard (#54) ──────────────────────────────────────────
+
+  test('renders the sections in the order the saved layout gives, not the hard-coded one', async () => {
+    server.use(http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
+      sections: [
+        { code: 'recentlyRead', hidden: false },
+        { code: 'counters', hidden: false },
+        { code: 'goal', hidden: false },
+        { code: 'upcoming', hidden: false },
+        { code: 'resumeReading', hidden: false },
+      ],
+    }))));
+    libraryReturns([
+      libraryItem({ id: 'en-cours', status: 'READING' }),
+      libraryItem({ id: 'lu', status: 'READ' }),
+    ]);
+    const { container } = renderWithProviders(<HomePage />);
+
+    await screen.findByText('Derniers lus');
+    await screen.findByText('Reprendre la lecture');
+    const text = container.textContent ?? '';
+    expect(text.indexOf('Derniers lus')).toBeLessThan(text.indexOf('Reprendre la lecture'));
+  });
+
+  test('does not render a section the user hid', async () => {
+    server.use(http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
+      sections: [
+        { code: 'resumeReading', hidden: false },
+        { code: 'counters', hidden: false },
+        { code: 'goal', hidden: true },
+        { code: 'upcoming', hidden: false },
+        { code: 'recentlyRead', hidden: false },
+      ],
+    }))));
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    // The layout query is not part of the loading gate (by design, see DashboardSections):
+    // "lus" can paint from the default order before the real layout has arrived, so the
+    // hidden section's absence is an eventual condition, not an immediate one.
+    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR}`)).not.toBeInTheDocument());
+  });
+
+  /**
+   * The point of #54's requirement 2: hiding a section is not the same as deleting it. The
+   * panel that reorders and hides sections must go on listing a hidden one, or there would
+   * be no way back to it short of guessing it used to exist.
+   */
+  test('a hidden section stays listed, and marked, in the customize panel', async () => {
+    server.use(http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
+      sections: [
+        { code: 'resumeReading', hidden: false },
+        { code: 'counters', hidden: false },
+        { code: 'goal', hidden: true },
+        { code: 'upcoming', hidden: false },
+        { code: 'recentlyRead', hidden: false },
+      ],
+    }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+
+    expect(await screen.findByText('Objectif de lecture annuel')).toBeInTheDocument();
+    expect(screen.getByText('Masquée')).toBeInTheDocument();
+  });
+
+  test('unhiding a section in the panel and saving brings it back on the dashboard', async () => {
+    const saved: unknown[] = [];
+    server.use(
+      http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
+        sections: [
+          { code: 'resumeReading', hidden: false },
+          { code: 'counters', hidden: false },
+          { code: 'goal', hidden: true },
+          { code: 'upcoming', hidden: false },
+          { code: 'recentlyRead', hidden: false },
+        ],
+      }))),
+      http.put('*/api/dashboard/layout', async ({ request }) => {
+        const body = await request.json();
+        saved.push(body);
+        return HttpResponse.json(body);
+      }),
+    );
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR}`)).not.toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+    await userEvent.click(await screen.findByRole('button', {
+      name: "Afficher « Objectif de lecture annuel »",
+    }));
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toMatchObject({
+      sections: expect.arrayContaining([{ code: 'goal', hidden: false }]),
+    });
+    expect(await screen.findByText(`Objectif ${YEAR}`)).toBeInTheDocument();
+  });
+
+  test('moving a section up in the panel changes the order it is saved in', async () => {
+    const saved: { sections?: { code: string }[] }[] = [];
+    server.use(
+      http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout())),
+      http.put('*/api/dashboard/layout', async ({ request }) => {
+        const body = (await request.json()) as { sections?: { code: string }[] };
+        saved.push(body);
+        return HttpResponse.json(body);
+      }),
+    );
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+    // "Compteurs de lecture" is the second row by default order; moving it up swaps it
+    // with "Reprendre la lecture".
+    await userEvent.click(await screen.findByRole('button', {
+      name: "Déplacer « Compteurs de lecture » vers le haut",
+    }));
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0].sections?.map((s) => s.code)).toEqual([
+      'counters', 'resumeReading', 'goal', 'upcoming', 'recentlyRead',
+    ]);
+  });
+
+  test('cancelling the customize panel discards the changes', async () => {
+    let putCalled = false;
+    server.use(http.put('*/api/dashboard/layout', () => {
+      putCalled = true;
+      return HttpResponse.json(dashboardLayout());
+    }));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+    await screen.findByText(/Réordonne les sections/);
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByText(/Réordonne les sections/)).not.toBeInTheDocument();
+    expect(putCalled).toBe(false);
   });
 });

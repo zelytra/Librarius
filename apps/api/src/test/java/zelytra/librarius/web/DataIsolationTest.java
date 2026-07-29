@@ -81,7 +81,7 @@ class DataIsolationTest {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
                 "/api/goals", "/api/stats", "/api/stats/timeline", "/api/series", "/api/genres",
                 "/api/works/00000000-0000-0000-0000-000000000000/editions",
-                "/api/export", "/api/releases/upcoming",
+                "/api/export", "/api/releases/upcoming", "/api/dashboard/layout",
                 "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
@@ -513,6 +513,29 @@ class DataIsolationTest {
                 .when().get("/api/goals")
                 .then().statusCode(200)
                 .body("find { it.year == 2991 }.targetCount", is(22));
+    }
+
+    // ── Dashboard layout ──────────────────────────────────────────────────────
+
+    /**
+     * Alice hiding a section of her own dashboard must never move Bob's. Bob is pinned to
+     * a known state first (an empty PUT resets to the default), so the assertion on him
+     * cannot be explained by something an earlier test left behind in the shared database.
+     */
+    @Test
+    void dashboardLayoutIsIsolatedPerUser() {
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"sections\": [] }")
+                .when().put("/api/dashboard/layout").then().statusCode(200);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"sections\": [ { \"code\": \"goal\", \"hidden\": true } ] }")
+                .when().put("/api/dashboard/layout").then().statusCode(200);
+
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/dashboard/layout")
+                .then().statusCode(200)
+                .body("sections.find { it.code == 'goal' }.hidden", is(false));
     }
 
     // ── Series ────────────────────────────────────────────────────────────────

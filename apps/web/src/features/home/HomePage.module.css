@@ -38,6 +38,26 @@
   gap: 28px;
 }
 
+/* ── Customize dashboard trigger ─────────────────────────────────────────────
+   A plain text-and-icon link rather than a button: it sits above the first
+   section, and giving it the same weight as "Reprendre la lecture" would make
+   it read as the dashboard's own heading instead of an aside above it. */
+
+.customizeButton {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  padding: 4px 0;
+}
+
 /* Horizontal shelf, bleeding out to the edges of the screen. */
 .shelf {
   display: flex;

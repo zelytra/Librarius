@@ -63,7 +63,7 @@ Personal dashboard.
 | Upcoming releases | ✅ | Personalised to the series the reader owns, wishes on or follows, each date labelled with its market (FR/JP/EN) and its precision ([#57](https://github.com/zelytra/Librarius/issues/57)). No stake in anything → invites the reader towards their collection rather than an empty section. 🔜 admin/CSV ingestion of curated dates — entries are seeded by hand for now |
 | Recently read | ✅ | |
 | Empty state | ✅ | Points to Discover |
-| **Reorder / hide sections** | 🔜 | Persisted per user (`dashboard_layout`) |
+| **Reorder / hide sections** | ✅ | "Personnaliser l'accueil" panel: move a section up/down, toggle it hidden — buttons rather than a drag gesture, so the same controls work with a finger, a mouse or a keyboard. A hidden section stays listed there, marked, so it can be found again. Persisted per user (`dashboard_layout`, #54); a fresh account sees the same order the sections used to be hard-coded in, and a section shipped later shows up on its own |
 | **Annual goal** | ✅ | Gauge, what is left, pace to hold; invitation when no goal is set, and the previous year's target offered on 1 January |
 
 ### 4.2 Collection ✅ / 🔜
@@ -155,6 +155,9 @@ something as read — an existing collection carries no reading dates.
 ### 4.7 Settings ✅ / 🔜
 
 - ✅ Booknode / Babelio import (by handle) and CSV import.
+- ✅ **Dashboard** shortcut to Home's own "Personnaliser l'accueil" panel (§ 4.1) — Settings
+  is not where the reordering happens, but a reader would not necessarily think to look on
+  Home for it.
 - ✅ Theme selection: four palettes (Crème, Sauge, Rose, Nuit) plus **Système**, which
   follows the operating system preference and is the default. The choice is kept in
   `localStorage` and applied before the first paint, so a reload never flashes the light
