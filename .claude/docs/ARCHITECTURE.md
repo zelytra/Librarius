@@ -19,8 +19,10 @@ Browser (React 19 PWA)
 ```
 
 On the deployed environment, **a single host** `librarius.zelytra.fr` sits behind Traefik:
-`/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the kubelet probes hit the pod directly. Metrics are meant to be scraped from inside the cluster — but **no Prometheus is deployed there** to do it ([#60](https://github.com/zelytra/Librarius/issues/60)); the one in `infra/docker-compose.yml` only exists locally.
+`/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the kubelet probes hit the pod directly, and **a Prometheus deployed by the chart in the same namespace** scrapes `librarius-api:8080/q/metrics` from inside the cluster — no RBAC, no CRD, one Service DNS name. It evaluates `infra/helm/librarius/files/librarius.rules.yml` and posts to an Alertmanager next to it.
 The front end and the API are therefore *same-origin*: no CORS preflight.
+
+Alerting is deliberately two paths, because they fail differently: the in-cluster pair sees the API's own metrics, and `.github/workflows/uptime.yml` watches the public URL from a GitHub runner — the only one that still works when the cluster is what broke. The in-cluster half **notifies nothing until a webhook Secret exists**, which is why [#60](https://github.com/zelytra/Librarius/issues/60) is still open; `docs/DEPLOYMENT.md` § "Alerting" has the one command. The Prometheus and Grafana in `infra/docker-compose.yml` remain local-only.
 
 > `librarius.zelytra.fr` is a **staging** environment. No production environment is open to
 > date; it is targeted for the v1.0 milestone.
