@@ -1,0 +1,69 @@
+{{- /*
+Horizontal autoscaling for the two stateless components. postgres and keycloak
+are left out on purpose: one PVC and one realm importer do not tolerate a second
+instance, the same reason pdb.yaml skips them.
+
+Off by default. That is a capacity statement, not a preference — the node's CPU
+requests are 3805m of 4000m before anything scales, so a second api pod fits and
+a rolling update on top of it does not. docs/DEPLOYMENT.md § "Scaling out"
+carries the arithmetic and what has to be freed first.
+
+`averageUtilization` is a percentage of the *request*, not of a core, so these
+thresholds only mean what they mean while the requests stay at the measured
+values #64 cut them to. Change one and the other stops making sense.
+*/}}
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-web
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-web
+  minReplicas: {{ .Values.autoscaling.web.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.web.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.web.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleUpStabilizationSeconds }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleDownStabilizationSeconds }}
+{{- if .Values.api.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-api
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-api
+  minReplicas: {{ .Values.autoscaling.api.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.api.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.api.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleUpStabilizationSeconds }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.behavior.scaleDownStabilizationSeconds }}
+{{- end }}
+{{- end }}

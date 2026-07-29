@@ -44,6 +44,12 @@ spec:
       containers:
         - name: postgres
           image: {{ .Values.postgres.image }}
+          # The entrypoint prepends `postgres` to anything starting with a dash,
+          # so this is a server setting rather than a replacement command. It is
+          # the ceiling the api, Keycloak and the backup job carve their pools
+          # out of, and it is stated here so that the budget in
+          # docs/DEPLOYMENT.md § "Scaling out" is not resting on an image default.
+          args: ["-c", "max_connections={{ .Values.postgres.maxConnections }}"]
           ports:
             - containerPort: 5432
           env:

@@ -24,6 +24,8 @@ web:
     repository: ghcr.io/zelytra/librarius-web
     tag: "0.1.0"
     pullPolicy: IfNotPresent
+  # Ignored while autoscaling.enabled is true: the chart then omits the field
+  # entirely so the HPA owns the count. See the autoscaling section below.
   replicas: 1
   # RollingUpdate (maxSurge 1, maxUnavailable 0): the replacement pod has to be
   # Ready before the old one is stopped, so a release drops no request. See
@@ -44,6 +46,7 @@ api:
     repository: ghcr.io/zelytra/librarius-api
     tag: "0.1.0"
     pullPolicy: IfNotPresent
+  # Same as web: ignored while autoscaling.enabled is true.
   replicas: 1
   # RollingUpdate surges a second API pod, so the new one runs its Flyway
   # migrations while the old one still serves traffic: a migration that is not
@@ -58,6 +61,37 @@ api:
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: "1", memory: 768Mi }
+  datasource:
+    # Ceiling of the Agroal pool, per pod. It lives here rather than in
+    # application.properties because it is not a per-pod preference: PostgreSQL
+    # serves the api, Keycloak and the backup job from one `max_connections`, and
+    # only the chart knows how many api pods there will be. The in-repo default of
+    # 50 is right for a compose run where nothing else shares the instance.
+    #
+    # 25 comes from the budget in docs/DEPLOYMENT.md § "Scaling out": 97 usable
+    # connections, minus 15 for Keycloak, 2 for the backup job and 5 left for a
+    # human holding a psql during an incident, over the 3 api pods a rolling
+    # update at 2 replicas transiently produces. It is a ceiling, not a
+    # reservation — Agroal opens nothing until a request needs it.
+    #
+    # Sized against load, it is still generous: 20 req/s spending 200 ms in a
+    # transaction needs 4 connections, plus the 4 a cold catalog fetch may hold
+    # (`librarius.catalog.cache.fetch.concurrency`), so 21 always remain for the
+    # rest of the API.
+    maxSize: 25
+  # Overrides the catalog quota the API ships with (30/minute, 500/day per
+  # caller). Empty means the application's own values.
+  #
+  # The counter is per-instance and in memory (`catalog/RateLimiter.java`), so N
+  # pods enforce it N times and the effective ceiling is multiplied by N. At the
+  # 2 replicas this chart can autoscale to, that is 60/minute and 1000/day —
+  # bounded, known, and still a quota rather than an open door, which is why the
+  # default here is to leave it alone. Set these to the intended ceiling divided
+  # by the replica count to hold the aggregate exactly, at the cost of halving it
+  # while only one pod is running. docs/DEPLOYMENT.md § "Scaling out".
+  catalogRateLimit:
+    perMinute: ""
+    perDay: ""
   # Deleting an account (GDPR art. 17) deletes the Keycloak login too, which needs a
   # service account. Off by default, and no credential is invented: while this is off,
   # DELETE /api/me answers 503 and erases nothing — never the reverse, which would leave
@@ -70,6 +104,47 @@ api:
     # Secret holding its client secret. Created by hand, never by the chart.
     existingSecret: ""
     secretKey: admin-client-secret
+
+# ── Horizontal autoscaling ────────────────────────────────────────────────────
+# Off by default, and that is a statement about the node rather than a
+# preference. `zeserver` has 4000m of allocatable CPU and 3805m of it is already
+# requested, most of it by stacks this repository does not own. A second api pod
+# costs 100m and fits with 95m to spare; a rolling update on top of it needs
+# 100m more and does not. Switching this on before the node has room brings back
+# the failure of #125 — a surge pod sitting Pending and a rollout that never
+# finishes — with the site still up, since maxUnavailable is 0. The full
+# arithmetic, and what has to be freed first, are in docs/DEPLOYMENT.md
+# § "Scaling out".
+#
+# It also needs metrics-server. k3s ships one unless it was started with
+# `--disable=metrics-server`; that has *not* been verified on this cluster. An
+# HPA without it stays at `<unknown>/70%` and never scales — check first, and
+# scale by hand if it is absent (§ "Scaling out").
+autoscaling:
+  enabled: false
+  api:
+    minReplicas: 1
+    # 2, not more: a third api pod does not fit in the node's remaining CPU
+    # requests even standing still.
+    maxReplicas: 2
+    # Percentage of the *request*, which is 100m — so this fires at 70m of real
+    # CPU, roughly ten times the 4-8m measured in steady state. Low enough to
+    # react before latency does, high enough that ordinary traffic never trips it.
+    targetCPUUtilizationPercentage: 70
+  web:
+    minReplicas: 1
+    maxReplicas: 2
+    # 70% of a 25m request is 17m, against the 1m nginx draws serving a static
+    # bundle. web is not the component that saturates; the budget exists so that
+    # it can, not because it is expected to.
+    targetCPUUtilizationPercentage: 70
+  behavior:
+    # A GC pause or a Flyway migration crosses the threshold for a few seconds
+    # and means nothing. Wait a minute before believing a scale-up.
+    scaleUpStabilizationSeconds: 60
+    # The Kubernetes default. Coming down slowly holds 100m of request for five
+    # minutes; coming down fast pays for a scale-up on the next burst.
+    scaleDownStabilizationSeconds: 300
 
 # ── Disruption budget ─────────────────────────────────────────────────────────
 # Keeps an involuntary eviction (a descheduler, a stray `kubectl drain`) from
@@ -95,6 +170,16 @@ postgres:
   existingSecret: ""
   secretKey: postgres-password
   storage: 2Gi
+  # The image's own default, declared so that the number is a decision rather
+  # than an accident: it is the ceiling every pool on this instance is carved out
+  # of, and the api, Keycloak and the backup job all draw from it. PostgreSQL
+  # keeps 3 of them for superusers, so 97 are available to the application roles
+  # — how they are shared is in docs/DEPLOYMENT.md § "Scaling out".
+  #
+  # Raising it is not free: an open connection is a backend process worth several
+  # MiB, and this container has a 512Mi limit. Shrink the pools before raising
+  # this.
+  maxConnections: 100
   resources:
     requests: { cpu: 50m, memory: 128Mi }
     limits: { cpu: 500m, memory: 512Mi }
@@ -108,6 +193,12 @@ keycloak:
   existingSecret: ""
   secretKey: admin-password
   database: keycloak
+  # Keycloak defaults to a pool of 100, which is PostgreSQL's entire
+  # `max_connections` on its own: one component silently claiming the whole
+  # budget is exactly the failure the api's own ceiling is sized to avoid. 15 is
+  # ample for a single Keycloak issuing tokens for 50 concurrent sessions — it
+  # spends its time on JWT signing, not on the database.
+  dbPoolMaxSize: 15
   resources:
     requests: { cpu: 100m, memory: 384Mi }
     limits: { cpu: "1", memory: 768Mi }

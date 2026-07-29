@@ -6,7 +6,13 @@ metadata:
   labels:
     {{- include "librarius.labels" (dict "ctx" . "component" "api") | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.api.replicas }}
+  {{- else }}
+  # replicas is deliberately absent: the HPA owns the count, and a value here
+  # would be reasserted by every `helm upgrade` and undone again by the HPA
+  # moments later — a deployment that resets the scale-out it was deployed into.
+  {{- end }}
   strategy:
     type: {{ .Values.api.strategy }}
     {{- if eq .Values.api.strategy "RollingUpdate" }}
@@ -45,6 +51,14 @@ spec:
               value: "jdbc:postgresql://{{ .Release.Name }}-postgres:5432/{{ .Values.postgres.database }}"
             - name: QUARKUS_DATASOURCE_USERNAME
               value: {{ .Values.postgres.user | quote }}
+            # The pool ceiling is a shared budget, not a per-pod setting: one
+            # PostgreSQL serves the api, Keycloak and the backup job, and the
+            # number of api pods is something only the chart knows. Overrides the
+            # 50 in application.properties, which is sized for a compose run
+            # where nothing else touches the instance. See values.yaml and
+            # docs/DEPLOYMENT.md § "Scaling out".
+            - name: QUARKUS_DATASOURCE_JDBC_MAX_SIZE
+              value: {{ .Values.api.datasource.maxSize | quote }}
             - name: QUARKUS_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -59,6 +73,21 @@ spec:
             # comes back 403.
             - name: CORS_ORIGINS
               value: "https://{{ .Values.domain }}"
+            {{- /*
+            Catalog quota. The counter is per-instance and in memory, so N pods
+            enforce it N times; these exist so the aggregate can be held when the
+            deployment scales out. Absent by default — the API's own 30/500 then
+            applies, multiplied by the replica count. values.yaml says why that
+            is acceptable at 2 replicas.
+            */}}
+            {{- with .Values.api.catalogRateLimit.perMinute }}
+            - name: LIBRARIUS_CATALOG_RATE_LIMIT_PER_MINUTE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.api.catalogRateLimit.perDay }}
+            - name: LIBRARIUS_CATALOG_RATE_LIMIT_PER_DAY
+              value: {{ . | quote }}
+            {{- end }}
             {{- if .Values.api.accountDeletion.enabled }}
             {{- if not .Values.api.accountDeletion.existingSecret }}
             {{- fail "api.accountDeletion.existingSecret is required when api.accountDeletion.enabled is true (see docs/DEPLOYMENT.md § Account deletion)" }}

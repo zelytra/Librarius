@@ -47,10 +47,23 @@ jobs:
           render slack           --set monitoring.alertmanager.existingSecret=librarius-alerting \
                                  --set monitoring.alertmanager.receiverType=slack
           render no-alertmanager --set monitoring.alertmanager.enabled=false
+          # Not an alerting configuration, but this is the only step that compiles
+          # the chart on a pull request, and the HPAs live entirely behind a flag
+          # that ships off — without this line a broken hpa.yaml would reach the
+          # cluster never having been rendered.
+          render autoscaling     --set autoscaling.enabled=true
           # monitoring.enabled=false must leave nothing behind, or turning it off
           # to free the node would still schedule the pods.
           if grep -qE 'librarius-(prometheus|alertmanager)' render/off.yaml; then
             echo '::error::monitoring.enabled=false still renders monitoring objects'
+            exit 1
+          fi
+          # `replicas` has to disappear from the web and api Deployments when the
+          # HPAs own the count, or every helm upgrade resets the scale-out it was
+          # deployed into and the HPA undoes it again moments later.
+          if [ "$(grep -c '^  replicas:' render/autoscaling.yaml)" \
+               -ne "$(( $(grep -c '^  replicas:' render/default.yaml) - 2 ))" ]; then
+            echo '::error::autoscaling.enabled=true must drop replicas from the web and api Deployments'
             exit 1
           fi
 

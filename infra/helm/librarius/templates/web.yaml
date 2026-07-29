@@ -22,7 +22,12 @@ metadata:
   labels:
     {{- include "librarius.labels" (dict "ctx" . "component" "web") | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.web.replicas }}
+  {{- else }}
+  # Left out on purpose while the HPA owns the count — see the same comment on
+  # the api Deployment.
+  {{- end }}
   strategy:
     type: {{ .Values.web.strategy }}
     {{- if eq .Values.web.strategy "RollingUpdate" }}

@@ -47,6 +47,11 @@ An agent picking the project up with no more precise instruction takes, in this 
    § "Alerting") and add the two `--set` lines to `cd.yml`. Nothing an agent can do alone.
 3. **[#59](https://github.com/zelytra/Librarius/issues/59)** — the backup CronJob is
    shipped but off, and no restore has ever been run against the cluster.
+4. **[#187](https://github.com/zelytra/Librarius/issues/187)** — the chart can autoscale
+   now, and the node cannot: 3805m of its 4000m of CPU requests are committed, ~3500m of
+   them by other stacks. **Freeing capacity, adding a node or taking a bigger one** is a
+   decision only the maintainer can make, and until it is made `autoscaling.enabled` stays
+   off. `docs/DEPLOYMENT.md` § "Scaling out".
 
 Already handled: [#36](https://github.com/zelytra/Librarius/issues/36) (front-end coverage)
 and [#39](https://github.com/zelytra/Librarius/issues/39) (data isolation), which now acts as
@@ -136,7 +141,7 @@ alert received when something breaks, deployment without downtime.
 | [#65](https://github.com/zelytra/Librarius/issues/65) | ✅ Persistent catalog cache | — |
 | [#66](https://github.com/zelytra/Librarius/issues/66) | ✅ Harden CI: dependencies and static analysis | — |
 | [#133](https://github.com/zelytra/Librarius/issues/133) | Stage the web toolchain upgrade, and clear the advisories it blocks — both blockers are upstream, see [INVENTORY](INVENTORY.md) debt #20 | — |
-| [#187](https://github.com/zelytra/Librarius/issues/187) | Size and autoscale the api and web deployments for real traffic | #64 |
+| [#187](https://github.com/zelytra/Librarius/issues/187) | 🔴 Size and autoscale api and web — target recorded, HPA and PostgreSQL connection budget shipped, k6 load test written. The HPA ships **off**: the node has 195m of CPU requests left, enough for a second `api` pod but not for a release on top of one. Freeing that capacity is a cluster-sizing decision, and nothing here has been run against the cluster | #64 |
 
 ---
 
