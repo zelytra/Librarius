@@ -65,6 +65,23 @@ held identical content most of the time, and the extra merge bought nothing.
 4. Production is deployed by **tagging** `main`, never by merging. It does not exist yet
    — see [#103](https://github.com/zelytra/Librarius/issues/103), pending a domain.
 
+### When a tag is cut
+
+**A version is tagged when its milestone closes**, and the tag carries the milestone's
+number: `v0.4 — Core product` fully closed → `v0.4.0` on the current `main`. Nothing else
+justifies a tag. A milestone still holding an open issue does not get one, however
+finished it feels.
+
+Two consequences worth knowing before reaching for `git tag`:
+
+- **Never tag retroactively.** GitHub runs the workflow **as it exists at the tag**, so a
+  tag placed on an old commit runs that commit's `release.yml` — or nothing at all, if the
+  workflow did not exist yet. And `main` has moved on: labelling an old point with a
+  version whose work came later publishes a release that lies about what it contains.
+- The alignment pull request is cut from the **current `main`**, not from the tag, on
+  purpose — a branch based on the tag would ask to revert everything that landed in
+  between. `release.yml` says so in its own comments; do not "fix" it.
+
 Because the changelog is generated from the commit subjects, a badly typed subject ends up
 verbatim in a published release: `type(scope): summary`, nothing else.
 
