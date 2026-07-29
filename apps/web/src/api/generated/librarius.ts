@@ -22,6 +22,14 @@ import type {
 } from '@tanstack/react-query';
 
 import { apiClient } from '../../shared/apiClient';
+export interface AccountDeletionDto {
+  libraryItems?: number;
+  wishlistItems?: number;
+  goals?: number;
+  categories?: number;
+  seriesFollows?: number;
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -97,39 +105,11 @@ export interface EditionSwitchDto {
   editionId: Uuid;
 }
 
-export interface GenreCount {
+export interface ExportCategoryDto {
   code?: string;
-  genre?: string;
-  count?: number;
-}
-
-export interface GoalDto {
-  id?: Uuid;
-  year?: number;
-  targetCount?: number;
-  unit?: string;
-}
-
-export type GoalUnit = typeof GoalUnit[keyof typeof GoalUnit];
-
-
-export const GoalUnit = {
-  BOOKS: 'BOOKS',
-  VOLUMES: 'VOLUMES',
-  PAGES: 'PAGES',
-} as const;
-
-export interface GoalUpsertDto {
-  /** @minimum 1 */
-  targetCount: number;
-  unit?: GoalUnit;
-}
-
-export interface ImportResult {
-  source?: string;
-  imported?: number;
-  skipped?: number;
-  total?: number;
+  label?: string;
+  color?: string;
+  sortOrder?: number;
 }
 
 export type Kind = typeof Kind[keyof typeof Kind];
@@ -167,6 +147,105 @@ export const LibraryStatus = {
   READING: 'READING',
   READ: 'READ',
 } as const;
+
+export interface ExportProgressDto {
+  currentPage?: number;
+  percent?: number;
+  startedAt?: LocalDate;
+  finishedAt?: LocalDate;
+}
+
+export interface ExportCollectionItemDto {
+  book: ManualBookDto;
+  status?: LibraryStatus;
+  rating?: number;
+  review?: string;
+  acquiredAt?: LocalDate;
+  rankCode?: string;
+  progress?: ExportProgressDto;
+}
+
+export type OffsetDateTime = string;
+
+export interface ExportUserDto {
+  id?: string;
+  email?: string;
+  displayName?: string;
+  locale?: string;
+}
+
+export type GoalUnit = typeof GoalUnit[keyof typeof GoalUnit];
+
+
+export const GoalUnit = {
+  BOOKS: 'BOOKS',
+  VOLUMES: 'VOLUMES',
+  PAGES: 'PAGES',
+} as const;
+
+export interface ExportGoalDto {
+  year?: number;
+  targetCount?: number;
+  unit?: GoalUnit;
+}
+
+export type WishPriority = typeof WishPriority[keyof typeof WishPriority];
+
+
+export const WishPriority = {
+  PRIORITY: 'PRIORITY',
+  SOON: 'SOON',
+  SOMEDAY: 'SOMEDAY',
+} as const;
+
+export interface ExportWishDto {
+  book: ManualBookDto;
+  priority?: WishPriority;
+  estimatedPrice?: number;
+  note?: string;
+}
+
+export interface ExportSeriesFollowDto {
+  kind?: Kind;
+  title?: string;
+}
+
+export interface ExportDto {
+  schemaVersion?: number;
+  exportedAt?: OffsetDateTime;
+  user?: ExportUserDto;
+  categories?: ExportCategoryDto[];
+  goals?: ExportGoalDto[];
+  collection?: ExportCollectionItemDto[];
+  wishlist?: ExportWishDto[];
+  followedSeries?: ExportSeriesFollowDto[];
+}
+
+export interface GenreCount {
+  code?: string;
+  genre?: string;
+  count?: number;
+}
+
+export interface GoalDto {
+  id?: Uuid;
+  year?: number;
+  targetCount?: number;
+  unit?: string;
+}
+
+export interface GoalUpsertDto {
+  /** @minimum 1 */
+  targetCount: number;
+  unit?: GoalUnit;
+}
+
+export interface ImportResult {
+  source?: string;
+  imported?: number;
+  skipped?: number;
+  total?: number;
+}
 
 export interface LibraryCreateDto {
   book: ManualBookDto;
@@ -322,15 +401,6 @@ export interface TimelineDto {
   byRank?: BreakdownCountDto[];
 }
 
-export type WishPriority = typeof WishPriority[keyof typeof WishPriority];
-
-
-export const WishPriority = {
-  PRIORITY: 'PRIORITY',
-  SOON: 'SOON',
-  SOMEDAY: 'SOMEDAY',
-} as const;
-
 export interface WishlistAcquireDto {
   status?: LibraryStatus;
   rating?: number;
@@ -397,6 +467,10 @@ year?: number;
 export type GetApiCatalogUpcomingParams = {
 kind?: Kind;
 limit?: number;
+};
+
+export type GetApiExportParams = {
+format?: string;
 };
 
 export type GetApiLibraryParams = {
@@ -829,6 +903,215 @@ export const usePostApiCategories = <TError = void,
       return useMutation(getPostApiCategoriesMutationOptions(options), queryClient);
     }
 
+export const getGetApiExportUrl = (params?: GetApiExportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/export?${stringifiedParams}` : `/api/export`
+}
+
+/**
+ * @summary Export
+ */
+export const getApiExport = async (params?: GetApiExportParams, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getGetApiExportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiExportQueryKey = (params?: GetApiExportParams,) => {
+    return [
+    `/api/export`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiExportQueryOptions = <TData = Awaited<ReturnType<typeof getApiExport>>, TError = void>(params?: GetApiExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiExportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiExport>>> = () => getApiExport(params, );
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiExportQueryResult = NonNullable<Awaited<ReturnType<typeof getApiExport>>>
+export type GetApiExportQueryError = void
+
+
+export function useGetApiExport<TData = Awaited<ReturnType<typeof getApiExport>>, TError = void>(
+ params: undefined |  GetApiExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiExport>>,
+          TError,
+          Awaited<ReturnType<typeof getApiExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiExport<TData = Awaited<ReturnType<typeof getApiExport>>, TError = void>(
+ params?: GetApiExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiExport>>,
+          TError,
+          Awaited<ReturnType<typeof getApiExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiExport<TData = Awaited<ReturnType<typeof getApiExport>>, TError = void>(
+ params?: GetApiExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export
+ */
+
+export function useGetApiExport<TData = Awaited<ReturnType<typeof getApiExport>>, TError = void>(
+ params?: GetApiExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiExportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiExportJobIdUrl = (jobId: Uuid,) => {
+
+
+
+
+  return `/api/export/${jobId}`
+}
+
+/**
+ * @summary Job
+ */
+export const getApiExportJobId = async (jobId: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getGetApiExportJobIdUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiExportJobIdQueryKey = (jobId: Uuid,) => {
+    return [
+    `/api/export/${jobId}`
+    ] as const;
+    }
+
+
+export const getGetApiExportJobIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiExportJobId>>, TError = void>(jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiExportJobIdQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiExportJobId>>> = () => getApiExportJobId(jobId, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiExportJobIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiExportJobId>>>
+export type GetApiExportJobIdQueryError = void
+
+
+export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExportJobId>>, TError = void>(
+ jobId: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiExportJobId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiExportJobId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExportJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiExportJobId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiExportJobId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExportJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Job
+ */
+
+export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExportJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiExportJobId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiExportJobIdQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiGenresUrl = () => {
 
 
@@ -1172,6 +1455,77 @@ export const usePostApiImportCsv = <TError = void,
         TContext
       > => {
       return useMutation(getPostApiImportCsvMutationOptions(options), queryClient);
+    }
+
+export const getPostApiImportJsonUrl = () => {
+
+
+
+
+  return `/api/import/json`
+}
+
+/**
+ * @summary Json
+ */
+export const postApiImportJson = async (exportDto: ExportDto, options?: RequestInit): Promise<ImportResult> => {
+
+  return apiClient<ImportResult>(getPostApiImportJsonUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(exportDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiImportJsonMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportJson>>, TError,{data: ExportDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiImportJson>>, TError,{data: ExportDto}, TContext> => {
+
+const mutationKey = ['postApiImportJson'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportJson>>, {data: ExportDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiImportJson(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiImportJsonMutationResult = NonNullable<Awaited<ReturnType<typeof postApiImportJson>>>
+    export type PostApiImportJsonMutationBody = ExportDto
+    export type PostApiImportJsonMutationError = void
+
+    /**
+ * @summary Json
+ */
+export const usePostApiImportJson = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportJson>>, TError,{data: ExportDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiImportJson>>,
+        TError,
+        {data: ExportDto},
+        TContext
+      > => {
+      return useMutation(getPostApiImportJsonMutationOptions(options), queryClient);
     }
 
 export const getPostApiImportSourceUrl = (source: string,) => {
@@ -1985,6 +2339,77 @@ export function useGetApiMe<TData = Awaited<ReturnType<typeof getApiMe>>, TError
 
 
 
+
+export const getDeleteApiMeUrl = () => {
+
+
+
+
+  return `/api/me`
+}
+
+/**
+ * @summary Delete
+ */
+export const deleteApiMe = async ( options?: RequestInit): Promise<AccountDeletionDto> => {
+
+  return apiClient<AccountDeletionDto>(getDeleteApiMeUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiMeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMe>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiMe>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteApiMe'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiMe>>, void> = () => {
+
+
+          return  deleteApiMe()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiMeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiMe>>>
+
+    export type DeleteApiMeMutationError = void
+
+    /**
+ * @summary Delete
+ */
+export const useDeleteApiMe = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMe>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiMe>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
+    }
 
 export const getGetApiSeriesUrl = () => {
 

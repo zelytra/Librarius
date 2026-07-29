@@ -456,4 +456,113 @@ public final class ApiDtos {
     public record SeriesMissingDto(UUID seriesId, String title,
             java.util.List<Integer> volumes) {
     }
+
+    // ── Export & account deletion (GDPR) ──────────────────────────────────────
+
+    /**
+     * A whole account, as {@code GET /api/export?format=json} hands it back and as
+     * {@code POST /api/import/json} takes it in.
+     *
+     * <p>Nothing here carries a database identifier: the document describes what the user
+     * entered, not the rows it happens to be stored in. That is what makes it re-importable
+     * into a fresh account — and readable by another tool, which has no use for our UUIDs.
+     *
+     * <p>Every list is ordered deterministically (see {@code ExportService}), so exporting,
+     * re-importing and exporting again produces the same document but for
+     * {@code exportedAt}. The round trip is therefore checked by comparing two documents
+     * rather than by walking the schema field by field.
+     *
+     * @param schemaVersion shape of this document, bumped when a field changes meaning
+     * @param exportedAt    when the document was produced, the only value that varies
+     *                      between two exports of an unchanged account
+     */
+    public record ExportDto(
+            int schemaVersion,
+            java.time.OffsetDateTime exportedAt,
+            ExportUserDto user,
+            java.util.List<ExportCategoryDto> categories,
+            java.util.List<ExportGoalDto> goals,
+            java.util.List<ExportCollectionItemDto> collection,
+            java.util.List<ExportWishDto> wishlist,
+            java.util.List<ExportSeriesFollowDto> followedSeries) {
+    }
+
+    /** The profile itself. The identifier is the Keycloak subject, no credential exists. */
+    public record ExportUserDto(String id, String email, String displayName, String locale) {
+        public static ExportUserDto of(AppUser u) {
+            return new ExportUserDto(u.id, u.email, u.displayName, u.locale);
+        }
+    }
+
+    /**
+     * A ranking category the user created. The built-ins are shared rows carrying no
+     * {@code user_id}, so they are not the user's data and are not exported; a
+     * {@code rankCode} pointing at one still resolves on import, for every account has them.
+     */
+    public record ExportCategoryDto(String code, String label, String color, int sortOrder) {
+    }
+
+    public record ExportGoalDto(int year, int targetCount, GoalUnit unit) {
+    }
+
+    /**
+     * Where the user stands in a title they own.
+     *
+     * <p>The stored values, not the ones {@link ProgressView} derives: an archive has to
+     * describe what is in the row, so that restoring it puts the same row back. Deriving
+     * here would write a page number the user never entered.
+     */
+    public record ExportProgressDto(Integer currentPage, Integer percent, LocalDate startedAt,
+            LocalDate finishedAt) {
+    }
+
+    /**
+     * One owned title: the book as the user would enter it, plus everything they added on
+     * top of it.
+     *
+     * @param rating   personal rating, 1 to 5
+     * @param review   the private notes on the title — the most personal thing the account
+     *                 holds, and the first thing a portability export would be wrong to drop
+     * @param rankCode code of the rank category the title is filed under, {@code null} when
+     *                 it carries no rank
+     */
+    public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
+            LibraryStatus status, Integer rating, String review, LocalDate acquiredAt,
+            String rankCode, ExportProgressDto progress) {
+    }
+
+    /** One wish, with the note the user attached to it. */
+    public record ExportWishDto(@NotNull @Valid ManualBookDto book, WishPriority priority,
+            BigDecimal estimatedPrice, String note) {
+    }
+
+    /**
+     * A series the user follows, named rather than referenced: {@code (kind, title)} is the
+     * unique key of the shared {@code series} row, so an import resolves it — or creates it
+     * — exactly like adding a volume does.
+     */
+    public record ExportSeriesFollowDto(Kind kind, String title) {
+    }
+
+    /**
+     * A deferred export. Handed back with a {@code 202} when the account is too large to
+     * serialise inside the request, and polled through {@code GET /api/export/{id}}.
+     *
+     * @param id     identifier to poll; it is the caller's, and answers 404 to anyone else
+     * @param status {@code PENDING}, {@code READY} or {@code FAILED}
+     * @param rows   titles the export covers — collection plus wishlist
+     */
+    public record ExportJobDto(UUID id, String status, String format, int rows,
+            java.time.OffsetDateTime createdAt) {
+    }
+
+    /**
+     * What deleting the account actually erased.
+     *
+     * <p>Returned rather than a bare 204 so the confirmation screen can state what has gone,
+     * and so an integration test reads the counts from the API instead of trusting it.
+     */
+    public record AccountDeletionDto(int libraryItems, int wishlistItems, int goals,
+            int categories, int seriesFollows) {
+    }
 }

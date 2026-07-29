@@ -12,5 +12,9 @@ export function useApiAuth() {
     authed: auth.isAuthenticated,
     loading: auth.isLoading,
     login: () => void auth.signinRedirect(),
+    // Drops the local session. Used after an account deletion, where the Keycloak account
+    // is already gone: the token in memory stays cryptographically valid until it expires,
+    // so it has to be thrown away rather than waited out.
+    signOut: () => void auth.removeUser(),
   };
 }

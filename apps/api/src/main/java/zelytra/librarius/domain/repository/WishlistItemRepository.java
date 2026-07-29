@@ -24,6 +24,26 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
     }
 
     /**
+     * The whole wishlist of one user, edition and work fetched along the way, ordered by
+     * title — same contract, and same reason, as
+     * {@link LibraryItemRepository#listForExport(String)}.
+     */
+    public List<WishlistItem> listForExport(String userId) {
+        return getEntityManager()
+                .createQuery("""
+                        select wi from WishlistItem wi
+                          join fetch wi.edition e
+                          join fetch e.work w
+                        where wi.userId = :userId
+                        order by lower(w.title) asc, w.volumeNumber asc nulls first,
+                                 coalesce(e.isbn13, '') asc, lower(coalesce(e.publisher, '')) asc,
+                                 wi.id asc
+                        """, WishlistItem.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /**
      * Scoping-safe lookup: returns the wish only when it belongs to the caller.
      *
      * <p>Callers turn an empty result into a 404 rather than a 403 — confirming that a

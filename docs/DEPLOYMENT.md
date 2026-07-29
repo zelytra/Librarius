@@ -196,6 +196,10 @@ The PWA (`web`) serves the app and **proxies** `/api` to the API (see `apps/web/
 | `OIDC_AUTH_SERVER_URL` | `http://localhost:8081/realms/librarius` | Realm the API validates against |
 | `KC_HOSTNAME` | `http://localhost:8081` | Public host of Keycloak |
 | `WEB_PORT` / `GRAFANA_PORT` | `8088` / `3000` | Exposed ports |
+| `KEYCLOAK_ADMIN_ENABLED` | `false` | Whether the API may delete Keycloak accounts — see § "Account deletion" |
+| `KEYCLOAK_ADMIN_SERVER_URL` | *(empty)* | Base URL of Keycloak **without the realm**, e.g. `http://librarius-keycloak:8081/auth` |
+| `KEYCLOAK_ADMIN_REALM` | `librarius` | Realm the accounts live in |
+| `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET` | *(empty)* | Service account used for the admin API |
 
 ## ⚠️ OIDC gotcha (issuer)
 
@@ -247,6 +251,7 @@ else about them lives in this repository.
 | `librarius-postgres` | `postgres-password` | postgres (`POSTGRES_PASSWORD`), api (`QUARKUS_DATASOURCE_PASSWORD`), keycloak (`KC_DB_PASSWORD`) |
 | `librarius-keycloak` | `admin-password` | keycloak (`KEYCLOAK_ADMIN_PASSWORD`) |
 | `librarius-backup` | `access-key-id`, `secret-access-key`, `encryption-passphrase` | the backup CronJob — **only** when `backup.enabled=true`, see § "Automated backups" |
+| `librarius-keycloak-admin` | `admin-client-secret` | the api, to delete Keycloak accounts — **only** when `api.accountDeletion.enabled=true`, see § "Account deletion" |
 
 Create them once, with values generated locally. The namespace has to exist first — the
 pipeline creates it, but on a fresh cluster the secrets come before the first deployment:
@@ -598,6 +603,88 @@ backup complete
 
 Delete the manual job afterwards (`kubectl -n librarius delete job backup-manual-1`), so it
 does not sit in the history the alerting reads.
+
+## 🗑️ Account deletion (GDPR art. 17)
+
+`DELETE /api/me` deletes the caller's `app_user` row — every foreign key pointing at it is
+`ON DELETE CASCADE`, so the collection, the wishlist, the reading progress, the goals, the
+custom categories and the followed series go with it — **and** the Keycloak account, so
+that signing back in is impossible.
+
+The second half needs a service account, and this repository ships none: a credential
+committed here is a credential published. Account deletion is therefore **off by default**,
+and an instance that has not been configured answers `503` with a message saying that
+nothing was touched. That direction is deliberate and is not a fallback to soften: erasing
+the library while the login survives would hand the user a freshly provisioned empty
+account on their next sign-in, indistinguishable from having lost everything.
+
+### What the maintainer has to provide
+
+A Keycloak client in the `librarius` realm, with a service account allowed to delete users
+in that realm — and nothing else. In the admin console
+(`https://librarius.zelytra.fr/auth/admin`, realm *librarius*):
+
+1. **Clients → Create client.** Client ID `librarius-api-admin`, type *OpenID Connect*.
+   Next.
+2. **Capability config**: *Client authentication* **on**, *Service accounts roles* **on**,
+   *Standard flow* **off**, *Direct access grants* **off**. Next, then Save.
+3. **Credentials tab**: copy the *Client secret*. This is the only value to carry over.
+4. **Service accounts roles tab → Assign role → Filter by clients**: assign
+   **`realm-management` → `manage-users`**, and only that. `realm-admin` would work and
+   grants far more than deleting a user.
+
+Then create the Secret and turn the feature on:
+
+```bash
+kubectl -n librarius create secret generic librarius-keycloak-admin \
+  --from-literal=admin-client-secret='<the client secret>'
+```
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set api.accountDeletion.enabled=true \
+  --set api.accountDeletion.existingSecret=librarius-keycloak-admin \
+  --wait --timeout 8m
+```
+
+`helm upgrade` refuses to render while `api.accountDeletion.existingSecret` is missing, in
+the same way it already refuses without the PostgreSQL Secret.
+
+Check it from the api logs: a successful deletion writes one line, carrying the technical
+identifier and the counters and **no personal data** — no email, no display name, no title.
+
+```text
+Account erased: subject=8b1c… at=2026-07-28T18:41:02Z keycloak=DELETED items=412 wishes=18 …
+```
+
+A `Account deletion requested but no Keycloak service account is configured` warning means
+the feature is still off and the caller got a 503.
+
+### How long the data really survives
+
+This is what the interface tells the user before they confirm, and it has to stay true:
+
+| Where | When it is gone |
+|---|---|
+| `librarius` database | **Immediately** — one `DELETE`, cascaded by the schema, inside the request |
+| Keycloak | **Immediately**, before the rows: the deletion is refused outright if this fails |
+| Application logs | Whatever the cluster keeps. Only the technical identifier is written |
+| **Encrypted backups** | **Up to six months** |
+
+The backups are the honest part. `backup.retention` keeps 7 daily, 4 weekly and 6 monthly
+archives, so a deleted account's rows remain inside the archives taken *before* the
+deletion until the last of them is pruned — up to **six months** for the monthly tier. They
+are encrypted, held outside the cluster, and only ever read to recover from a disaster; but
+they exist, and telling a user their data is gone in five minutes would not be true.
+
+Nothing restores them selectively: a restore brings back the whole database as it was, the
+deleted account included. If that ever happens after a deletion, the deletion has to be
+replayed — the api log line above is what says which subject to delete.
+
+If the retention has to be shortened for a legal request, it is `backup.retention.monthly`
+in `values.yaml`, and the archives already in the bucket have to be pruned by hand.
 
 ## ♻️ Restoring PostgreSQL
 

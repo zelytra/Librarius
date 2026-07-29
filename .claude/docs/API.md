@@ -13,6 +13,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | Method | Path | Role |
 |---|---|---|
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
+| DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
+| GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
+| GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Upcoming releases. `kind` defaults to `MANGA`, `limit` clamped to 1–50 |
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
@@ -43,6 +46,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
 | POST | `/api/import/{source}` | Import by handle (`booknode`, `babelio`) — `{ "handle": "…" }` |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
+| POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
 
 Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the ingress does not route `/q`. Swagger UI is served in dev and test, and absent from the production build.
 
@@ -87,6 +91,23 @@ CategoryCreateDto(String label, String color)
 
 GoalDto(UUID id, int year, int targetCount, String unit)
 GoalUpsertDto(Integer targetCount, GoalUnit unit)
+
+ExportDto(int schemaVersion, OffsetDateTime exportedAt, ExportUserDto user,
+          List<ExportCategoryDto> categories, List<ExportGoalDto> goals,
+          List<ExportCollectionItemDto> collection, List<ExportWishDto> wishlist,
+          List<ExportSeriesFollowDto> followedSeries)
+ExportCollectionItemDto(ManualBookDto book, LibraryStatus status, Integer rating,
+                        String review, LocalDate acquiredAt, String rankCode,
+                        ExportProgressDto progress)
+ExportWishDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
+ExportProgressDto(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt)
+ExportCategoryDto(String code, String label, String color, int sortOrder)
+ExportGoalDto(int year, int targetCount, GoalUnit unit)
+ExportSeriesFollowDto(Kind kind, String title)
+ExportJobDto(UUID id, String status, String format, int rows, OffsetDateTime createdAt)
+
+AccountDeletionDto(int libraryItems, int wishlistItems, int goals, int categories,
+                   int seriesFollows)
 
 SeriesSummaryDto(UUID id, String kind, String title, String coverUrl, Integer totalVolumes,
                  String status, long ownedCount, long readCount, boolean followed)
@@ -343,6 +364,78 @@ the whole filtered set and is identical on every page — a client sums nothing 
 which would only ever describe the pages it happens to have loaded. Priorities no wish
 carries are absent from `byPriority` rather than reported as zero.
 
+## Export
+
+`GET /api/export?format=csv|json` hands the caller everything they entered — right to
+portability, GDPR art. 20. `format` defaults to `json`; anything else than the two values is
+a **400**. Both answers carry a `Content-Disposition: attachment` and a dated filename.
+
+**JSON** is the complete archive and the only one that round-trips. `ExportDto` carries the
+profile, the custom categories, the goals, the collection (status, **rating and private
+review**, acquisition date, rank, reading position with its start and finish dates), the
+wishlist (priority, estimate, note) and the followed series — every table holding a
+`user_id`, plus `reading_progress`, which hangs off `library_item`. What it does **not**
+carry is the row-creation timestamps: they are server metadata rather than something the
+user provided, and an import cannot restore them.
+It holds **no database identifier**: a book is described exactly as a user would type it in,
+which is what makes `POST /api/import/json` able to recreate it in an account — or an
+instance — where none of those rows exist. Ordering is by title rather than by date added,
+for the same reason: an export carries no `created_at`, so ordering on it would make the
+same library serialise differently after a round trip. Two exports of an unchanged account
+are therefore identical but for `exportedAt`, which is what `ExportRoundTripTest` asserts.
+
+The restore is **additive**: nothing is ever deleted, and an entry already present is
+skipped rather than duplicated, so importing the same file twice is harmless. What counts
+as "already present" identifies an **edition**, not a work — title, authors, volume number,
+ISBN, publisher and format. A work can be owned in several editions (#152), and a key
+stopping at the title would bring one of them back and swallow the rest. That is also why
+the export ordering carries on into the ISBN and the publisher: two rows tied on the title
+would otherwise be separated by a generated identifier, which no restore can reproduce.
+
+**CSV** is the flat book list, collection and wishlist together, in the vocabulary of the
+other reading trackers: `Title`, `Author`, `ISBN13`, `My Rating`, `My Review`,
+`Exclusive Shelf` (`read` / `currently-reading` / `to-read`), `Bookshelves`
+(`collection` / `wishlist`), and what has no counterpart elsewhere under a `Librarius`
+prefix. The progress percentage is derived from the page number when the reader entered
+one, since a receiving tool cannot work it out from a page alone. UTF-8 **with a byte-order
+mark**, `;` separator, CRLF, RFC 4180 quoting — the combination Excel opens correctly under
+a French locale, and the separator this API's own CSV importer already prefers. Goals and
+categories are **not** in the CSV: they are not properties of a book, and a flat file that
+changes shape halfway down stops being openable in a spreadsheet.
+
+**Deferred generation.** Past `librarius.export.async-threshold` titles (collection plus
+wishlist, 2000 by default) the request answers **202** with an `ExportJobDto`
+(`id`, `status`, `format`, `rows`) and a `Location`; the file is built on a small pool of its
+own and fetched from `GET /api/export/{jobId}`, which answers 202 while it is pending, the
+file once it is ready, and **404** for a job belonging to somebody else or one that never
+existed. Jobs live in memory, expire after fifteen minutes and die with the pod: an export
+is a copy of data still in the database, so losing one costs a click — where persisting it
+would keep a second copy of a library outside the tables the account deletion promises to
+erase.
+
+## Account deletion
+
+`DELETE /api/me` erases the caller and everything they own — right to erasure, GDPR art. 17.
+No identifier is passed and none is accepted: a caller can only ever delete themselves,
+which is the one shape of this endpoint that cannot be pointed at anybody else.
+
+Two systems have to forget the user, and **the order is the point**:
+
+1. **Keycloak first**, through its admin API. If it refuses, or is not configured, the call
+   answers **503** with a reason and **nothing is erased**. The other ordering loses data on
+   the more likely failure: a library erased while the login survives gives the user a fresh
+   empty account on their next sign-in, indistinguishable from having lost everything.
+2. **The database second**, as a single `DELETE` on `app_user`; the schema cascades from
+   there ([DATA-MODEL](DATA-MODEL.md) § Cascades), `reading_progress` included.
+
+The **shared catalog is untouched** — `work`, `edition`, `series`, `genre` describe books,
+not people, and every other collection is built on the same rows.
+
+The deletion is logged at `INFO` with the technical subject, the instant and the counters,
+and **no personal data**: no email, no display name, no title. The configuration the
+maintainer has to provide, and how long the encrypted backups keep the data afterwards, are
+in [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) § "Account deletion".
+
 ## Pagination
 
 `GET /api/library` and `GET /api/wishlist` return an envelope, never a bare array:
@@ -389,7 +482,7 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 |---|---|---|
 | A1 | ✅ Pagination on `/api/library` and `/api/wishlist` (#38) | Foundations |
 | A2 | No `PATCH /api/me` (display name, language) | Public product |
-| A3 | No `GET /api/export` (CSV/JSON) and no `DELETE /api/me` — **GDPR requirements** | Public product |
+| A3 | ✅ `GET /api/export` (CSV/JSON) and `DELETE /api/me` (#72, #73) | Public product |
 | A4 | ✅ `/api/series` resource — details, volumes, follow (#44) | Core product |
 | A5 | No `DELETE`/`PUT` on `/api/categories/{id}` | Core product |
 | A6 | ✅ `PUT /api/wishlist/{id}` (edit priority/price/note) (#52) | Core product |

@@ -71,6 +71,37 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     }
 
     /**
+     * The whole collection of one user, edition and work fetched along the way, ordered by
+     * title.
+     *
+     * <p>Feeds the export, which is the one place that legitimately reads a collection in
+     * full. The ordering is by title rather than by date added — an export carries no
+     * {@code created_at}, so ordering on it would make the same account serialise
+     * differently after a round trip, and there would be nothing to compare.
+     *
+     * <p>It carries on into the ISBN and the publisher because a work can be owned in
+     * several editions (#152): stopping at the title would leave two rows tied, and a tie
+     * broken on a generated identifier does not survive a restore — the round trip would
+     * then fail on the order rather than on the content.
+     */
+    public List<LibraryItem> listForExport(String userId) {
+        return getEntityManager()
+                .createQuery("""
+                        select li from LibraryItem li
+                          join fetch li.edition e
+                          join fetch e.work w
+                          left join fetch li.rankCategory rc
+                          left join fetch li.progress p
+                        where li.userId = :userId
+                        order by lower(w.title) asc, w.volumeNumber asc nulls first,
+                                 coalesce(e.isbn13, '') asc, lower(coalesce(e.publisher, '')) asc,
+                                 li.id asc
+                        """, LibraryItem.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /**
      * The user's items belonging to a given series, edition and work fetched along the way:
      * the series screen needs the volume number and the title of every one of them.
      */

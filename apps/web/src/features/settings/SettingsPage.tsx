@@ -6,6 +6,8 @@ import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
 import { GoalSection } from './GoalSection';
 import { ImportSection } from './ImportSection';
+import { ExportSection } from './ExportSection';
+import { DeleteAccountSection } from './DeleteAccountSection';
 import styles from './SettingsPage.module.css';
 
 // Stamped at build time by the image build (`VITE_APP_VERSION`, see apps/web/Dockerfile):
@@ -37,6 +39,9 @@ export function SettingsPage() {
       {/* External library import. */}
       <ImportSection />
 
+      {/* Getting the data back out (GDPR art. 20). */}
+      <ExportSection />
+
       {/* Appearance: theme switcher (functional). */}
       <h3 className={styles.sectionTitle}>{t('settings.appearance')}</h3>
       <div className={styles.themes}>
@@ -56,6 +61,9 @@ export function SettingsPage() {
           );
         })}
       </div>
+
+      {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}
+      <DeleteAccountSection />
 
       <div className={styles.version}>{t('settings.version', { version: APP_VERSION })}</div>
     </Screen>

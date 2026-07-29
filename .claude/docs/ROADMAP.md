@@ -155,8 +155,8 @@ their data, in French or in English, with a Lighthouse score ≥ 90.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#72](https://github.com/zelytra/Librarius/issues/72) | Library export (CSV and JSON) | — |
-| [#73](https://github.com/zelytra/Librarius/issues/73) | Account deletion and erasure of all user data | — |
+| ✅ [#72](https://github.com/zelytra/Librarius/issues/72) | Library export (CSV and JSON) | — |
+| [#73](https://github.com/zelytra/Librarius/issues/73) | 🔴 Account deletion and erasure of all user data — API, cascade and UI shipped; the Keycloak side is only exercised against a CDI stand-in, never a live Keycloak. Stays open until the service account is created on the cluster and a real deletion has been exercised, see `docs/DEPLOYMENT.md` § "Account deletion" | — |
 | [#74](https://github.com/zelytra/Librarius/issues/74) | Terms of service, privacy policy and legal notice | #72, #73 |
 | [#75](https://github.com/zelytra/Librarius/issues/75) | User profile: display name, language, time zone | — |
 | [#76](https://github.com/zelytra/Librarius/issues/76) | First-login onboarding | — |

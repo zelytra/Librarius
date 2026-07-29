@@ -82,10 +82,30 @@ jobs:
         working-directory: e2e
         run: pnpm exec playwright install --with-deps chromium
 
-      # Brings the stack up, waits for it, runs the journeys, then tears it down.
+      # Brings the stack up, waits for it, runs the journeys, then tears it down — except
+      # here, where E2E_KEEP_STACK leaves it up so a failure can be read below. Nothing
+      # cleans it up if this job is cancelled mid-run, but the runner itself is destroyed
+      # within minutes either way.
       - name: Run the journeys
         working-directory: e2e
+        env:
+          E2E_KEEP_STACK: '1'
         run: pnpm test
+
+      # global-teardown.ts only skipped for us; the containers are still there. Without
+      # this, a startup failure — the API dying before the first request, as opposed to a
+      # flaky journey — was undiagnosable from GitHub: globalSetup only dumps the stack
+      # when waitForStack() itself times out, and every other failure tore the evidence
+      # down before anyone could look at it.
+      - name: Dump the stack logs
+        if: failure()
+        working-directory: e2e
+        run: docker compose -f docker-compose.e2e.yml logs
+
+      - name: Stop the stack
+        if: always()
+        working-directory: e2e
+        run: docker compose -f docker-compose.e2e.yml down -v
 
       - name: Publish the traces and screenshots
         if: failure()

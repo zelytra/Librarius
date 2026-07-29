@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Locks down data isolation between users.
@@ -62,10 +63,11 @@ class DataIsolationTest {
                 "/api/me", "/api/library", "/api/wishlist", "/api/categories",
                 "/api/goals", "/api/stats", "/api/stats/timeline", "/api/series", "/api/genres",
                 "/api/works/00000000-0000-0000-0000-000000000000/editions",
-                "/api/catalog/search?q=test" }) {
+                "/api/export", "/api/catalog/search?q=test" }) {
             given().when().get(path)
                     .then().statusCode(401);
         }
+        given().when().delete("/api/me").then().statusCode(401);
     }
 
     // ── Library ───────────────────────────────────────────────────────────────
@@ -550,6 +552,52 @@ class DataIsolationTest {
                 .when().get("/api/library")
                 .then().statusCode(200)
                 .body("total", is(0));
+    }
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    /**
+     * The endpoint with the most to lose: an export is an entire library in one response, so
+     * a filter forgotten here does not leak a row, it leaks everything at once. Checked on
+     * both formats — the CSV goes through a different writer.
+     */
+    @Test
+    void anExportNeverContainsAnotherUsersLibrary() {
+        addLibraryItem("alice", "Isolation - exported title", "READ");
+        addWishlistItem("alice", "Isolation - exported wish");
+
+        given().auth().oauth2(token("alice")).queryParam("format", "json")
+                .when().get("/api/export")
+                .then().statusCode(200)
+                .body("collection.book.title", hasItem("Isolation - exported title"))
+                .body("wishlist.book.title", hasItem("Isolation - exported wish"));
+
+        given().auth().oauth2(token("bob")).queryParam("format", "json")
+                .when().get("/api/export")
+                .then().statusCode(200)
+                .body("collection.book.title", not(hasItem("Isolation - exported title")))
+                .body("wishlist.book.title", not(hasItem("Isolation - exported wish")));
+
+        String bobCsv = new String(given().auth().oauth2(token("bob")).queryParam("format", "csv")
+                .when().get("/api/export").then().statusCode(200).extract().asByteArray(),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertFalse(bobCsv.contains("Isolation - exported title"),
+                "Alice's collection leaked into Bob's CSV export");
+        assertFalse(bobCsv.contains("Isolation - exported wish"),
+                "Alice's wishlist leaked into Bob's CSV export");
+    }
+
+    /**
+     * A deferred export is fetched by identifier, which makes it the one export endpoint a
+     * caller could point at somebody else. Unknown identifiers answer 404 whoever asks — the
+     * cross-user case, which needs the deferred path to be taken at all, is in
+     * {@code ExportAsyncTest}.
+     */
+    @Test
+    void anUnknownExportJobIsNotFound() {
+        given().auth().oauth2(token("bob"))
+                .when().get("/api/export/" + java.util.UUID.randomUUID())
+                .then().statusCode(404);
     }
 
     // ── Statistics ────────────────────────────────────────────────────────────
