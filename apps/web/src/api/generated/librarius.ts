@@ -89,6 +89,11 @@ export interface CategoryDto {
   builtin?: boolean;
 }
 
+export interface CategoryUpdateDto {
+  /** @pattern \S */
+  label: string;
+}
+
 export interface EditionDto {
   id?: Uuid;
   isbn13?: string;
@@ -1141,6 +1146,133 @@ export const getGetApiGenresUrl = () => {
   return `/api/genres`
 }
 
+/**
+ * @summary Update
+ */
+export const putApiCategoriesId = (
+    id: Uuid,
+    categoryUpdateDto: CategoryUpdateDto,
+ ) => {
+      
+      
+      return apiClient<CategoryDto>(
+      {url: `/api/categories/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: categoryUpdateDto
+    },
+      );
+    }
+  
+
+
+export const getPutApiCategoriesIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiCategoriesId>>, TError,{id: Uuid;data: CategoryUpdateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiCategoriesId>>, TError,{id: Uuid;data: CategoryUpdateDto}, TContext> => {
+
+const mutationKey = ['putApiCategoriesId'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiCategoriesId>>, {id: Uuid;data: CategoryUpdateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiCategoriesId(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiCategoriesIdMutationResult = NonNullable<Awaited<ReturnType<typeof putApiCategoriesId>>>
+    export type PutApiCategoriesIdMutationBody = CategoryUpdateDto
+    export type PutApiCategoriesIdMutationError = void
+
+    /**
+ * @summary Update
+ */
+export const usePutApiCategoriesId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiCategoriesId>>, TError,{id: Uuid;data: CategoryUpdateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiCategoriesId>>,
+        TError,
+        {id: Uuid;data: CategoryUpdateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPutApiCategoriesIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Delete
+ */
+export const deleteApiCategoriesId = (
+    id: Uuid,
+ ) => {
+      
+      
+      return apiClient<unknown>(
+      {url: `/api/categories/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getDeleteApiCategoriesIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiCategoriesId>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiCategoriesId>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['deleteApiCategoriesId'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiCategoriesId>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiCategoriesId(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiCategoriesIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiCategoriesId>>>
+    
+    export type DeleteApiCategoriesIdMutationError = void
+
+    /**
+ * @summary Delete
+ */
+export const useDeleteApiCategoriesId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiCategoriesId>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiCategoriesId>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteApiCategoriesIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary List
  */
