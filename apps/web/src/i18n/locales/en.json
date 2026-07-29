@@ -26,6 +26,9 @@
   "auth": {
     "signIn": "Sign in",
     "defaultPrompt": "Sign in to open this section.",
+    "welcome": {
+      "opening": "Opening your library…"
+    },
     "prompts": {
       "home": "Sign in to find your library and your reading again.",
       "collection": "Sign in to see your collection.",
