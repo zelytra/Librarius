@@ -229,6 +229,29 @@ when they realise they want another shelf.
 - 🔜 Picking a colour. A custom category gets a neutral one; the built-ins keep the gold,
   silver and bronze of V1.
 
+### 4.10 Waiting, on every screen ✅ / 🔜
+
+Not a screen: what every screen shows while it has nothing yet.
+
+- ✅ **One loading indicator, two formats** — a large one where a screen has nothing to
+  show, a compact one inside the control an action is running from. Both are the same
+  component, so the animated logo that replaces today's placeholder ring lands everywhere
+  at once ([#169](https://github.com/zelytra/Librarius/issues/169)).
+- ✅ **It only shows up when there is something to wait for**: nothing appears under
+  ~400 ms, and once it has appeared it stays about as long. Most calls answer inside that
+  window and therefore flash nothing at all — an indicator that comes and goes inside the
+  blink it was meant to explain reads as a glitch. Motion is dropped entirely for a reader
+  who asks for reduced motion.
+- ✅ **Actions say they are running.** Adding a title by hand, importing a library, editing
+  a wish, and the Detail screen's progress, rank, review and edition switch all surface
+  their wait; the buttons keep their label instead of swapping it for an ellipsis.
+- ✅ **A welcome screen rather than a line of grey text** while the session is being
+  resolved, and while it is missing: the application names itself, says what it is, and
+  then either waits or invites the reader to sign in — the same screen at two moments, not
+  an error ([#170](https://github.com/zelytra/Librarius/issues/170)). It matters most on
+  the mobile shell, which opens straight onto whatever route the router lands on.
+- 🔜 The animated logo itself, in place of the placeholder ring.
+
 ## 5. Key journeys
 
 **P1 — Add a book spotted in a bookshop**
