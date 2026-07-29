@@ -37,7 +37,8 @@ const ALL_SHELVES: ShelfFilter = { kind: 'all' };
 const FAVORITES: ShelfFilter = { kind: 'favorites' };
 
 function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
-  return a.kind === b.kind && (a.kind !== 'rank' || a.code === (b as { code: string }).code);
+  if (a.kind === 'rank' && b.kind === 'rank') return a.code === b.code;
+  return a.kind === b.kind;
 }
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
 type SortBy = 'added' | 'title' | 'author' | 'genre' | 'rating';
