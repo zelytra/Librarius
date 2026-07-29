@@ -76,16 +76,21 @@ function transferSize(file) {
  * The initial payload, read from the built index.html rather than guessed: whatever
  * Vite decided to inline, preload or split, the browser downloads exactly the scripts,
  * stylesheets and module preloads listed there.
+ *
+ * Every pattern is case-insensitive. Vite emits lower case and nothing here is a
+ * security filter — but a tag matcher that only knows one case is the kind of thing
+ * that reads correct and silently stops matching, and a budget that matches nothing
+ * passes for ever.
  */
 function initialAssets(html) {
   const assets = new Set();
-  for (const [tag] of html.matchAll(/<(?:script|link)\b[^>]*>/g)) {
-    const isScript = tag.startsWith('<script');
-    const isRenderPath = /rel="(?:stylesheet|modulepreload)"/.test(tag);
+  for (const [tag] of html.matchAll(/<(?:script|link)\b[^>]*>/gi)) {
+    const isScript = /^<script\b/i.test(tag);
+    const isRenderPath = /rel="(?:stylesheet|modulepreload)"/i.test(tag);
     if (!isScript && !isRenderPath) continue;
-    const href = tag.match(/(?:src|href)="([^"]+)"/)?.[1];
+    const href = tag.match(/(?:src|href)="([^"]+)"/i)?.[1];
     // Third parties (the Google Fonts stylesheet) are not ours to budget.
-    if (href && !/^(?:https?:)?\/\//.test(href)) assets.add(href.replace(/^\//, ''));
+    if (href && !/^(?:https?:)?\/\//i.test(href)) assets.add(href.replace(/^\//, ''));
   }
   return [...assets];
 }
