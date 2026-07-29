@@ -34,6 +34,14 @@
   outline: none;
 }
 
+/* Stands in for the handle row on a source that has no handle path (see ImportSection). */
+.note {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
 .fileButton {
   align-self: flex-start;
   background: none;

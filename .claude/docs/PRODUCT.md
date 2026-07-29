@@ -80,10 +80,14 @@ The full inventory, with a **Books / Manga** toggle.
   bar, an *Incomplète* badge on a run with volumes left to buy, ordering by progress or
   title, and a way into the series screen. The kind switch and the search carry across the
   toggle; the rank and favourites chips apply to a title, not to a run, and are hidden there.
+- ✅ **Text search** inside one's own collection: matched by the database against the
+  title, the authors and the series, one request per pause in the typing.
+- ✅ **Server-side pagination**, with a "voir plus" appending the next page — filtering,
+  sorting and slicing all happen in SQL, so a 5000-title collection costs no more to
+  display than a 50-title one.
 - 🔜 Ordering the Series view by most recently added — `SeriesSummaryDto` carries no date.
-- 🔜 Text search inside one's own collection.
-- 🔜 Extra filters: status, year of acquisition, publisher, language.
-- 🔜 Pagination / infinite scrolling (the API returns everything today).
+- 🔜 Extra filters: status, year of acquisition, publisher, language. The genre filter
+  exists in the API since #56 and is not offered by the screen.
 - 🔜 Multi-selection → bulk action (change status, delete, assign a rank).
 
 ### 4.3 Title detail ✅ / 🔜
