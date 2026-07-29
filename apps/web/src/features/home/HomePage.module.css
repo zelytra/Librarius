@@ -120,68 +120,6 @@
   font-weight: 500;
 }
 
-/* ── Upcoming releases ────────────────────────────────────────────────────── */
-
-.upcomingList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.upcomingRow {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 11px 14px;
-  background: var(--surface);
-  border-radius: var(--radius-card);
-  border: 1px solid var(--line);
-}
-
-.upcomingThumb {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 54px;
-  border-radius: var(--radius-thumb);
-  background: var(--surface-2);
-}
-
-.upcomingBody {
-  flex: 1;
-  min-width: 0;
-}
-
-.upcomingTitle {
-  font-family: var(--font-serif);
-  font-size: var(--fs-15);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.upcomingAuthors {
-  font-size: var(--fs-12);
-  color: var(--muted);
-  margin-top: 1px;
-}
-
-.releaseBadge {
-  flex: 0 0 auto;
-  font-size: var(--fs-10-5);
-  font-weight: 600;
-  color: var(--tint-rose-ink);
-  background: var(--tint-blush);
-  padding: 4px 9px;
-  border-radius: var(--radius-badge);
-}
-
-.footnote {
-  font-size: var(--fs-11);
-  color: var(--faint);
-  margin-top: 8px;
-}
-
 .empty {
   padding: 40px 24px;
 }

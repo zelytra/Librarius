@@ -954,6 +954,51 @@
         "format" : "uuid",
         "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
       },
+      "UpcomingReleaseDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "seriesId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "seriesTitle" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "coverUrl" : {
+            "type" : "string"
+          },
+          "volumeNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "releaseDate" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "datePrecision" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "publisher" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "confidence" : {
+            "type" : "string"
+          }
+        }
+      },
       "WishPriority" : {
         "type" : "string",
         "enum" : [ "PRIORITY", "SOON", "SOMEDAY" ]
@@ -2021,6 +2066,51 @@
         },
         "summary" : "Delete",
         "tags" : [ "Me Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/releases/upcoming" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "kind",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UpcomingReleaseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Upcoming",
+        "tags" : [ "Release Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]

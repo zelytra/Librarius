@@ -13,6 +13,7 @@ import type {
   LibraryItemDto,
   SeriesDetailDto,
   SeriesSummaryDto,
+  UpcomingReleaseDto,
   WishlistItemDto,
 } from '../api/generated/librarius';
 
@@ -41,6 +42,7 @@ export const defaultHandlers = [
   http.get(`${BASE}/goals`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/search`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/upcoming`, () => HttpResponse.json([])),
+  http.get(`${BASE}/releases/upcoming`, () => HttpResponse.json([])),
   http.get(`${BASE}/me`, () =>
     HttpResponse.json({ id: 'alice', displayName: 'alice', email: 'alice@test.fr', locale: 'fr' })),
 
@@ -128,6 +130,11 @@ export function libraryReturns(items: LibraryItemDto[]) {
 /** Serves `/api/series`: the series the user owns a volume of or follows. */
 export function seriesReturns(list: SeriesSummaryDto[]) {
   server.use(http.get(`${BASE}/series`, () => HttpResponse.json(list)));
+}
+
+/** Serves `/api/releases/upcoming`: the announcements still ahead of the caller. */
+export function upcomingReleasesReturn(list: UpcomingReleaseDto[]) {
+  server.use(http.get(`${BASE}/releases/upcoming`, () => HttpResponse.json(list)));
 }
 
 /**

@@ -1,0 +1,84 @@
+/* Personalised "what's coming next": one row per announcement, each linking to its series.
+   Layout adapted from the retired provider-trends block on Home; the row is a button
+   rather than a div, the way SeriesList's row is, since it now goes somewhere. */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 54px;
+  border-radius: var(--radius-thumb);
+  background: var(--surface-2);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.volume {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.regionBadge {
+  flex: 0 0 auto;
+  font-size: var(--fs-10-5);
+  font-weight: 600;
+  color: var(--tint-rose-ink);
+  background: var(--tint-blush);
+  padding: 3px 8px;
+  border-radius: var(--radius-badge);
+}
+
+.date {
+  font-size: var(--fs-11-5);
+  color: var(--ink-soft);
+}
+
+.source {
+  font-size: var(--fs-10-5);
+  color: var(--faint);
+  margin-top: 3px;
+}
+
+.empty {
+  padding: 40px 24px;
+}
