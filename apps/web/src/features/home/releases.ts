@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { UpcomingReleaseDto } from '../../api/generated/librarius';
+import { activeLanguage } from '../../i18n/languages';
 
 /**
  * Pure reading of what `/api/releases/upcoming` returns. Kept out of the component so the
@@ -35,10 +36,10 @@ export function formatReleaseDate(release: UpcomingReleaseDto, t: TFunction): st
 
   switch (datePrecision) {
     case 'DAY':
-      return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      return new Intl.DateTimeFormat(activeLanguage(), { day: 'numeric', month: 'long', year: 'numeric' })
         .format(parsed);
     case 'MONTH':
-      return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(parsed);
+      return new Intl.DateTimeFormat(activeLanguage(), { month: 'long', year: 'numeric' }).format(parsed);
     case 'QUARTER':
       return t('home.upcomingReleases.quarter', {
         quarter: Math.floor(parsed.getMonth() / 3) + 1,

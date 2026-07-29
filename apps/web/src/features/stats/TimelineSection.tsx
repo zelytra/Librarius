@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Segmented } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { toUnit } from '../../shared/goal';
+import { activeLanguage } from '../../i18n/languages';
 import {
   useGetApiStatsTimeline,
   type BreakdownCountDto,
@@ -228,7 +229,7 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
             <p className={styles.total}>
               {t('stats.timeline.total', {
                 books: timeline.data.books ?? 0,
-                pages: (timeline.data.pages ?? 0).toLocaleString('fr-FR'),
+                pages: (timeline.data.pages ?? 0).toLocaleString(activeLanguage()),
                 year,
               })}
             </p>
@@ -243,14 +244,14 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
           <div className={styles.panelTitle}>{t('stats.timeline.paceTitle')}</div>
           <div className={styles.figures}>
             <Figure
-              value={pagesPerDay.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
+              value={pagesPerDay.toLocaleString(activeLanguage(), { maximumFractionDigits: 1 })}
               label={t('stats.timeline.pagesPerDay')}
             />
             <Figure
               value={
                 daysPerBook == null
                   ? t('stats.timeline.noFigure')
-                  : daysPerBook.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
+                  : daysPerBook.toLocaleString(activeLanguage(), { maximumFractionDigits: 1 })
               }
               label={t('stats.timeline.daysPerBook')}
             />

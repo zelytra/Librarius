@@ -18,6 +18,11 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL: BASE_URL,
+    // The journeys assert the French copy (see support/ui.ts), and since #77 the app
+    // follows the browser on a first visit: Chromium advertises `en-US` by default, which
+    // would boot every journey in English. This is the browser of the French reader the
+    // suite describes, not a workaround.
+    locale: 'fr-FR',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',

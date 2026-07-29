@@ -32,6 +32,13 @@ if (typeof globalThis.localStorage?.getItem !== 'function') {
   }
 }
 
+// The screen tests assert the French copy, and jsdom advertises `en-US`: without this the
+// interface would boot in English (src/i18n/languages.ts picks the browser's language on a
+// first visit) and every one of them would fail on a string that is only in the other
+// locale. Storing the choice is the strongest source in that chain, and it is exactly what
+// a returning French user's browser carries. The locale tests set their own language.
+localStorage.setItem('librarius.language', 'fr');
+
 // An unhandled request is an error: it flags a call missing from the handlers, hence a
 // test that does not verify what it thinks it verifies.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

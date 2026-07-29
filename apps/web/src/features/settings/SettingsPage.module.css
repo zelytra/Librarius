@@ -89,6 +89,11 @@
   font-weight: 700;
 }
 
+/* Same rhythm as the theme row above it. */
+.languages {
+  margin-bottom: 26px;
+}
+
 .version {
   text-align: center;
   font-size: var(--fs-11-5);

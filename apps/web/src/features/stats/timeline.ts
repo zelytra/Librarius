@@ -1,4 +1,5 @@
 import type { TimelinePointDto } from '../../api/generated/librarius';
+import { activeLanguage } from '../../i18n/languages';
 
 /**
  * Turning the timeline the API answers with into something chartable.
@@ -54,6 +55,6 @@ export function chartMax(values: number[]): number {
 
 /** Month names of the locale, from its own calendar rather than a hardcoded list. */
 export function monthLabels(style: 'narrow' | 'long'): string[] {
-  const format = new Intl.DateTimeFormat('fr-FR', { month: style });
+  const format = new Intl.DateTimeFormat(activeLanguage(), { month: style });
   return Array.from({ length: 12 }, (_, index) => format.format(new Date(2026, index, 1)));
 }

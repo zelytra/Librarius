@@ -14,8 +14,9 @@ reorderable dashboard, GDPR export and account deletion.
 
 What is missing has moved with it. **Functional depth** is now the long tail the later
 milestones carry — authors as entities, a catalog beyond books and manga, a reading
-workflow with a fourth status, and eventually the social half. **Quality** is a single
-locale, no accessibility pass and no desktop layout. **Operations** is what only the
+workflow with a fourth status, and eventually the social half. **Quality** is no
+accessibility pass and no desktop layout — the single locale left that list on 2026-07-29,
+the interface now shipping in French and English. **Operations** is what only the
 project owner can do: rotating the credentials still readable in the git history, wiring
 the Alertmanager webhook, and running a restore and a rollback for real.
 
@@ -66,10 +67,17 @@ the Alertmanager webhook, and running a restore and a rollback for real.
    `EmptyState` live in `shared/ui/states.tsx` and every screen goes through them, so a
    failed call can no longer render as a silently empty screen.
 4. ~~**Incomplete i18n.**~~ ✅ **Cleared on 2026-07-28**
-   ([#35](https://github.com/zelytra/Librarius/issues/35)): `fr.json` is 432 lines and
-   `react/jsx-no-literals` fails the lint on a user-facing string left in the JSX. One
-   locale still, which is [#77](https://github.com/zelytra/Librarius/issues/77)'s job and
-   not a debt.
+   ([#35](https://github.com/zelytra/Librarius/issues/35)): `fr.json` is 495 lines and
+   `react/jsx-no-literals` fails the lint on a user-facing string left in the JSX.
+   ✅ **A second locale followed on 2026-07-29**
+   ([#77](https://github.com/zelytra/Librarius/issues/77)): `en.json` matches it key for
+   key, and `src/i18n/locales.test.ts` keeps them matched — a key, a plural form or an
+   interpolation slot present in one file and missing from the other fails the `web`
+   workflow. The language follows the browser on a first visit and is chosen in Settings
+   after that; `Intl` reads the same language, so the dates and the thousands separators
+   move with the words. **What is left**: the API is not translated, so the strings it
+   renders (`ImportException`, the built-in category names *Or* / *Argent* / *Bronze*) stay
+   French on an English screen.
 5. ~~**Tests almost non-existent.**~~ ✅ **Cleared on 2026-07-28** ([#36](https://github.com/zelytra/Librarius/issues/36)):
    167 tests across 16 files cover the eight application screens through MSW — nominal
    render, empty state, error state, missing session and the main interactions.
@@ -289,7 +297,7 @@ production opens.*
 | Notifications | Nothing (no preferences, no push, no email) |
 | Series / volumes | ✅ `/series/:id` and the Series view of the collection. Missing: a `wished` flag on a volume (the marker is session-local), volume covers, and ordering the series by most recently added — none of the three exists in the API payloads |
 | Export / account deletion | ✅ `GET /api/export` (CSV/JSON, asynchronous) and `DELETE /api/me`, both exposed in Settings ([#72](https://github.com/zelytra/Librarius/issues/72), [#73](https://github.com/zelytra/Librarius/issues/73)). Left: the Keycloak side of the deletion is only exercised against a CDI stand-in — see debt #21 |
-| Multilingual | i18n plumbing in place, a single locale |
+| Multilingual | ✅ French and English, complete and locked to each other by a test ([#77](https://github.com/zelytra/Librarius/issues/77)). Missing: the API, which has no notion of the caller's language and answers in French |
 | Native mobile | `apps/mobile` bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): a Capacitor shell over the **web bundle**, no duplicated code. Android project committed and built to a debug APK by CI ([#70](https://github.com/zelytra/Librarius/issues/70)); release signing wired but blocked on a keystore nobody has created yet, no iOS project, and **sign-in does not work inside the container** — see [MOBILE](MOBILE.md) |
 
 ## Security — items to address
@@ -313,11 +321,11 @@ production opens.*
 |---|---|
 | Java classes (main) | 91 |
 | Java tests | 42 files |
-| Front-end files (src) | 79 |
-| Front-end tests | 19 files, 210 tests |
+| Front-end files (src) | 83 |
+| Front-end tests | 22 files, 237 tests |
 | Flyway migrations | 10 |
 | REST endpoints exposed | 40 (14 resources) |
-| Locales | 1 (fr) |
+| Locales | 2 (fr, en) |
 | CI workflows | 16 |
 
 > Counted on 2026-07-29 against `feb1a75`, the commit that closed v0.4. The commands

@@ -26,7 +26,9 @@ competitors reason in terms of standalone books.
 | **Marc — the novel reader** | 120 novels, 2 books in progress | Track his progress, hold an annual goal, find again what he enjoyed |
 | **Sarah — the newcomer** | Coming from Booknode/Babelio | Import her existing library without retyping it |
 
-v1.0 target: a **public**, multi-user product, open sign-up, French first.
+v1.0 target: a **public**, multi-user product, open sign-up, French first — and English
+alongside it since [#77](https://github.com/zelytra/Librarius/issues/77), the copy still
+being authored in French and translated.
 
 ## 3. Business objects
 
@@ -170,7 +172,12 @@ something as read — an existing collection carries no reading dates.
   follows the operating system preference and is the default. The choice is kept in
   `localStorage` and applied before the first paint, so a reload never flashes the light
   theme.
-- 🔜 **Profile**: display name, language, time zone.
+- ✅ **Language**: French and English, labelled in their own words (*Français*, *English*)
+  so someone who landed on the wrong one still recognises theirs. A first visit follows the
+  browser; the choice made here overrides it and is kept in `localStorage`, per device.
+- 🔜 **Profile**: display name, language, time zone. The language moves to the profile there
+  and follows the account across devices; the switcher above stays as the way to change it,
+  and the local copy as what the app boots on before the profile has been fetched.
 - ✅ **Library export** (JSON + CSV) — *GDPR art. 20*. The JSON archive holds everything
   and can be re-imported here; the CSV opens in a spreadsheet and carries the column names
   Goodreads and Booknode understand, so a user can leave for another tool.
