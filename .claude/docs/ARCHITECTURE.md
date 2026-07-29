@@ -181,9 +181,12 @@ zelytra/librarius/
   Library and the BnF are both registered for it, and neither the service, the resource nor
   the cache knows there are two. A provider that fails answers no result rather than
   raising, so the aggregate degrades to whatever the others found. `dedupKey` is
-  `title|authors` lowercased, which only merges two catalogues when they spell an author the
-  same way — that is why `BnfProvider` rewrites an authority heading ("Herbert, Frank
-  (1920-1986). Auteur du texte") into the plain name Open Library returns.
+  `title|authors` lowercased, which only merges two catalogues when they spell a title *and*
+  an author the same way — which is why `BnfProvider` normalises both halves of that key: it
+  cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit
+  par…" → "Dune") and rewrites the authority heading ("Herbert, Frank (1920-1986). Auteur du
+  texte") into the plain name Open Library returns, repeats dropped. Skip either and every
+  French novel the two catalogues share is listed twice.
 - **Catalog cache**: two levels behind `CatalogCache`, on the provider call rather than on
   the merged answer. Caffeine first (6 h for a search, 12 h for the releases), then the
   `catalog_cache` table (`CatalogCacheStore`), so a pod that has just started answers from
