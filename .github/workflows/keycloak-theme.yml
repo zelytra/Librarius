@@ -1,0 +1,48 @@
+name: keycloak-theme
+
+# Renders the sign-in page with the programs that will serve it.
+#
+# A login theme has no startup check behind it: Keycloak boots happily on a broken
+# one, and the first sign of it is the first person trying to sign in — on staging,
+# a stranger, on a page that is the only thing standing between them and their
+# library. `helm lint` cannot see it either, since a `.Files.Get` pointing at a
+# file that has moved renders a valid, empty ConfigMap.
+#
+# So this boots the real image on the theme **the chart produces**, asks for the
+# page and reads what comes back.
+on:
+  pull_request:
+    paths:
+      - 'infra/helm/librarius/files/keycloak-theme/**'
+      - 'infra/helm/librarius/templates/keycloak.yaml'
+      - 'infra/keycloak/**'
+      - '.github/workflows/keycloak-theme.yml'
+
+# A newer push on the same pull request supersedes the run in progress.
+concurrency:
+  group: keycloak-theme-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  theme:
+    name: the login page renders
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.17.0
+
+      - name: Shell script parses
+        run: bash -n infra/keycloak/check-theme.sh
+
+      # The same command a maintainer runs locally, so a failure here is
+      # reproducible without reading this file.
+      - name: Render, serve and read the sign-in page
+        run: bash infra/keycloak/check-theme.sh

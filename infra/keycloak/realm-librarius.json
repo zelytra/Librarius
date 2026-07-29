@@ -5,6 +5,10 @@
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "displayName": "Ma Bibliothèque",
+  "loginTheme": "librarius",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr", "en"],
+  "defaultLocale": "fr",
   "roles": {
     "realm": [{ "name": "user", "description": "Utilisateur de Ma Bibliothèque" }]
   },

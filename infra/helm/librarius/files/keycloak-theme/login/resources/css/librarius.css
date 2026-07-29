@@ -1,0 +1,443 @@
+/* ── Librarius login theme ────────────────────────────────────────────────────
+   Loaded after keycloak.v2's own stylesheet (see theme.properties), so this file
+   only has to say what differs from PatternFly 5 — it is not a rewrite of it.
+
+   ⚠️ The values in the two blocks below are a hand-copy of
+   `apps/web/src/shared/styles/tokens.css`. A Keycloak theme is served by a
+   different process, from a different origin at development time, and cannot
+   import anything from the web bundle: there is no build step here and nothing
+   checks the two files against each other. **Change a colour, a radius or a
+   typeface in tokens.css and change it here in the same commit.**
+
+   Only two of the app's four palettes are reproduced, and the reason is that
+   Keycloak cannot see the other two. `creme`, `sauge`, `rose` and `nuit` are
+   chosen in the app and stored in `localStorage` under the app's own origin,
+   which this page has no access to. What it can read is the operating system's
+   own preference, so the theme resolves exactly as the app's *Système* setting
+   does: `creme` normally, `nuit` under `prefers-color-scheme: dark`. Somebody who
+   has picked `sauge` in the app lands on `creme` here — the same family, the
+   wrong shade — instead of on a page that ignores the palette altogether. */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+/* ── creme, the app's default palette ─────────────────────────────────────── */
+:root {
+  --bg: #f3ede3;
+  --surface: #fbf8f3;
+  --surface-2: #f6f0e6;
+  --ink: #332e26;
+  --ink-soft: #574e40;
+  --muted: #6b6359;
+  --accent: #9aab92;
+  --accent-deep: #5f6c57;
+  --accent-soft: #e6ece0;
+  --line: #e4dbcb;
+  --rose: #83635f;
+  --rose-soft: #f3e6e3;
+  --on-accent: #1b2416;
+
+  --shadow: 0 6px 18px -10px rgba(74, 64, 52, 0.25);
+  --shadow-accent-sm: 0 4px 12px -3px rgba(122, 143, 115, 0.5);
+
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+
+  --radius-field: 14px;
+  --radius-button: 15px;
+  --radius-panel: 18px;
+
+  /* The open book of the app's own sign-in gate (`shared/LoginGate.tsx`), drawn
+     rather than fetched: an icon font for a single glyph is a request this page
+     does not need to make. */
+  --book-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 6.2C10.3 5 8.3 4.4 6.2 4.4c-1.1 0-2.2.2-3.3.5-.5.2-.9.6-.9 1.2v11.4c0 .8.8 1.4 1.5 1.2.9-.3 1.8-.4 2.7-.4 1.9 0 3.7.6 5.2 1.7.4.3.9.3 1.2 0 1.5-1.1 3.3-1.7 5.2-1.7.9 0 1.8.1 2.7.4.7.2 1.5-.4 1.5-1.2V6.1c0-.6-.4-1-.9-1.2-1.1-.3-2.2-.5-3.3-.5-2.1 0-4.1.6-5.8 1.8zm-1 12.1c-1.3-.7-2.9-1.1-4.8-1.1-.8 0-1.5.1-2.2.2V6.6c.7-.1 1.4-.2 2.2-.2 1.8 0 3.5.5 4.8 1.4zm2 0V7.8c1.3-.9 3-1.4 4.8-1.4.8 0 1.5.1 2.2.2v10.8c-.7-.1-1.4-.2-2.2-.2-1.9 0-3.5.4-4.8 1.1z'/%3E%3C/svg%3E");
+}
+
+/* ── nuit, for a reader whose system asks for dark ────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #211e1a;
+    --surface: #2c2823;
+    --surface-2: #38332c;
+    --ink: #f3ede3;
+    --ink-soft: #ddd4c6;
+    --muted: #b3a794;
+    --accent: #9aab92;
+    --accent-deep: #b6c4ad;
+    --accent-soft: #3a4335;
+    --line: #443d34;
+    --rose: #dda29b;
+    --rose-soft: #3d312e;
+
+    --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.65);
+    --shadow-accent-sm: 0 4px 12px -3px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* PatternFly paints a good deal through its own custom properties. Setting the
+   handful that carry the typefaces reaches every heading and control at once,
+   including the ones no rule below names. */
+:root {
+  --pf-v5-global--FontFamily--text: var(--font-sans);
+  --pf-v5-global--FontFamily--text--vf: var(--font-sans);
+  --pf-v5-global--FontFamily--heading: var(--font-serif);
+  --pf-v5-global--FontFamily--heading--vf: var(--font-serif);
+}
+
+/* ── The page ─────────────────────────────────────────────────────────────────
+   keycloak.v2 lays its background image over the whole viewport and pins the
+   realm name absolutely above the card. Both are undone here: the page becomes
+   one centred column, which is what the app's own sign-in gate is. */
+
+html.login-pf,
+.login-pf body,
+body#keycloak-bg {
+  height: auto;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+body#keycloak-bg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 100vh;
+  padding: 40px 20px 56px;
+}
+
+#kc-header {
+  position: static;
+  width: 100%;
+}
+
+#kc-header-wrapper {
+  position: static;
+  transform: none;
+  padding: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+/* Decorative, hence a pseudo-element: it carries no meaning the app's name
+   underneath it does not already carry, so a screen reader gains nothing from
+   reaching it. */
+#kc-header-wrapper::before {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 10px;
+  content: '';
+  background-color: var(--accent-deep);
+  -webkit-mask: var(--book-mark) center / contain no-repeat;
+  mask: var(--book-mark) center / contain no-repeat;
+}
+
+/* ── The card ─────────────────────────────────────────────────────────────── */
+
+.pf-v5-c-login {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.pf-v5-c-login__container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pf-v5-c-login__main {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.pf-v5-c-login__main-header,
+.pf-v5-c-login__main-body,
+.pf-v5-c-login__main-footer,
+.pf-v5-c-login__main-footer-band {
+  background: transparent;
+}
+
+.pf-v5-c-login__main-header {
+  align-items: start;
+  gap: 14px;
+}
+
+.pf-v5-c-login__main-header h1,
+.pf-v5-c-login__main-header .pf-v5-c-title {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.pf-v5-c-login__main-footer-band {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+/* Shown when Keycloak already knows who is signing in — a re-authentication, or
+   the second step of a flow. The account it is about is the subject of the page,
+   so it is set in the app's ink rather than left as a bare label. */
+#kc-attempted-username {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ── Fields ───────────────────────────────────────────────────────────────── */
+
+.pf-v5-c-form__label,
+.pf-v5-c-form__label-text,
+label {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* In keycloak.v2 the control is a <span> wrapping the <input>; in the pages that
+   still come from the `base` theme it is the <input> itself. Both are named. */
+.pf-v5-c-form-control,
+input.pf-v5-c-form-control,
+.pf-v5-c-form-control > input,
+.pf-v5-c-form-control > select,
+.pf-v5-c-form-control > textarea {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+.pf-v5-c-form-control > input,
+.pf-v5-c-form-control > select,
+.pf-v5-c-form-control > textarea {
+  padding: 10px 12px;
+}
+
+.pf-v5-c-form-control {
+  padding: 0;
+}
+
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control::before {
+  border: 0;
+}
+
+.pf-v5-c-form-control:focus-within,
+input.pf-v5-c-form-control:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 1px;
+}
+
+.pf-v5-c-form-control.pf-m-error {
+  border-color: var(--rose);
+}
+
+/* The asterisk beside a required label, which PatternFly paints its own red. */
+.pf-v5-c-form__label-required,
+.required {
+  color: var(--rose);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.pf-v5-c-button {
+  border-radius: var(--radius-button);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+.pf-v5-c-button.pf-m-primary,
+#kc-login {
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent-sm);
+  font-size: 15px;
+  padding: 11px 18px;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+#kc-login:hover {
+  background: var(--accent-deep);
+  color: var(--surface);
+}
+
+.pf-v5-c-button.pf-m-primary:focus-visible,
+#kc-login:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* The password-visibility toggle, and the social provider buttons the sign-in
+   issue will add: secondary controls, drawn as an outline rather than a fill. */
+.pf-v5-c-button.pf-m-control,
+.pf-v5-c-login__main-footer-links-item-link {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+.pf-v5-c-button.pf-m-control:hover,
+.pf-v5-c-login__main-footer-links-item-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* PatternFly draws a button's outline on an ::after rather than on the element,
+   so a border set above leaves the original showing through underneath — a bright
+   grey rectangle around the password toggle, glaring on the dark palette. */
+.pf-v5-c-button.pf-m-control::after,
+.pf-v5-c-login__main-footer-links-item-link::after {
+  border-color: var(--line);
+}
+
+.pf-v5-c-button.pf-m-control:hover::after,
+.pf-v5-c-login__main-footer-links-item-link:hover::after {
+  border-color: var(--accent);
+}
+
+/* The password field and its visibility toggle read as one control rather than
+   as a field with a button parked beside it. */
+.pf-v5-c-input-group,
+.pf-v5-c-input-group__item {
+  gap: 6px;
+  background: transparent;
+}
+
+.pf-v5-c-input-group > .pf-v5-c-button.pf-m-control {
+  border-radius: var(--radius-field);
+  padding-inline: 12px;
+}
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+
+a,
+.pf-v5-c-button.pf-m-link {
+  color: var(--accent-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+a:hover,
+.pf-v5-c-button.pf-m-link:hover {
+  color: var(--accent-deep);
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Messages ─────────────────────────────────────────────────────────────────
+   Keycloak's own alert markup, in the app's two message colours: the rose the
+   app uses for anything that went wrong, the sage for everything else. */
+
+.pf-v5-c-alert {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.pf-v5-c-alert.pf-m-danger,
+.pf-v5-c-alert.pf-m-warning {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+}
+
+.pf-v5-c-alert__icon {
+  color: var(--accent-deep);
+}
+
+.pf-v5-c-alert.pf-m-danger .pf-v5-c-alert__icon,
+.pf-v5-c-alert.pf-m-warning .pf-v5-c-alert__icon {
+  color: var(--rose);
+}
+
+.pf-v5-c-alert__title,
+.kc-feedback-text {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.pf-v5-c-helper-text__item.pf-m-error,
+#input-error {
+  color: var(--rose);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ── Language selector ────────────────────────────────────────────────────────
+   Rendered by keycloak.v2 as a <select> in the card's header once the realm
+   declares more than one supported locale. */
+
+.pf-v5-c-login__main-header-utilities select {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 7px 10px;
+}
+
+/* ── Checkbox (“remember me”, and the consent screens) ────────────────────── */
+
+.pf-v5-c-check__input,
+input[type='checkbox'] {
+  accent-color: var(--accent-deep);
+}
+
+/* ── The pages that still come from the `base` theme ──────────────────────────
+   keycloak.v2 overrides five templates; the password reset, the error and the
+   info pages fall through to `base`, which draws its buttons with Bootstrap
+   class names PatternFly 5 knows nothing about. Left unstyled they come out as
+   browser defaults in the middle of a themed card. */
+
+.btn,
+input.btn,
+button.btn {
+  border-radius: var(--radius-button);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+.btn-primary,
+input.btn-primary {
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn-default,
+input.btn-default {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}

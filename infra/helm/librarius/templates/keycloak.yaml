@@ -17,6 +17,10 @@ data:
       "registrationAllowed": true,
       "loginWithEmailAllowed": true,
       "displayName": "Ma Bibliothèque",
+      "loginTheme": "librarius",
+      "internationalizationEnabled": true,
+      "supportedLocales": ["fr", "en"],
+      "defaultLocale": "fr",
       "roles": { "realm": [{ "name": "user" }] },
       "defaultRoles": ["user"],
       "clients": [
@@ -29,6 +33,38 @@ data:
         }
       ]
     }
+---
+# The login theme the realm above asks for. Four files, projected into the theme
+# directory Keycloak reads at runtime — no image is built for it.
+#
+# Why not a custom image, which is how `web` and `api` reach the cluster: a third
+# GHCR package would have to be published, made public by hand and pulled on a node
+# where a slow pull is already how #125 failed, all to carry 13 kB of CSS on top of
+# a 450 MB upstream image. Worse, `cd.yml` stamps the images it builds with the
+# commit sha, so Keycloak — the one component here holding its sessions in memory —
+# would be replaced on every merge into `main`, signing everybody out for a
+# stylesheet that did not change. A ConfigMap costs the node nothing, changes only
+# when the theme does, and leaves `keycloak.image` pinned to the upstream release.
+#
+# The files live under the chart because `.Files.Get` cannot read outside it, and
+# the compose stacks mount that same directory rather than keeping a copy — the
+# arrangement `files/librarius.rules.yml` already uses.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-keycloak-theme
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+data:
+  # A key cannot carry a slash; the volume below maps each one to its path.
+  theme.properties: |
+{{ .Files.Get "files/keycloak-theme/login/theme.properties" | indent 4 }}
+  librarius.css: |
+{{ .Files.Get "files/keycloak-theme/login/resources/css/librarius.css" | indent 4 }}
+  messages_fr.properties: |
+{{ .Files.Get "files/keycloak-theme/login/messages/messages_fr.properties" | indent 4 }}
+  messages_en.properties: |
+{{ .Files.Get "files/keycloak-theme/login/messages/messages_en.properties" | indent 4 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,6 +81,20 @@ spec:
     metadata:
       labels:
         {{- include "librarius.selector" (dict "ctx" . "component" "keycloak") | nindent 8 }}
+      annotations:
+        # Keycloak reads a theme off the disk at boot and caches it. Without this,
+        # editing the theme would update the ConfigMap and change nothing on screen
+        # until somebody restarted the pod by hand — the same silent gap the
+        # Prometheus rules carry a checksum for. The realm is deliberately *not*
+        # part of it: it is imported once, on an empty database, so restarting on a
+        # realm edit would promise an update that does not happen. See
+        # docs/DEPLOYMENT.md § "Changing the realm of a running Keycloak".
+        checksum/theme: {{ printf "%s|%s|%s|%s"
+          (.Files.Get "files/keycloak-theme/login/theme.properties")
+          (.Files.Get "files/keycloak-theme/login/resources/css/librarius.css")
+          (.Files.Get "files/keycloak-theme/login/messages/messages_fr.properties")
+          (.Files.Get "files/keycloak-theme/login/messages/messages_en.properties")
+          | sha256sum }}
     spec:
       containers:
         - name: keycloak
@@ -94,6 +144,11 @@ spec:
           volumeMounts:
             - name: realm
               mountPath: /opt/keycloak/data/import
+            # A subdirectory, not /opt/keycloak/themes itself: mounting the parent
+            # would hide whatever the image ships there. `librarius` extends
+            # `keycloak.v2`, which lives inside a jar and is unaffected either way.
+            - name: theme
+              mountPath: /opt/keycloak/themes/librarius
           readinessProbe:
             httpGet: { port: 8081, path: /auth/realms/librarius }
             initialDelaySeconds: 20
@@ -105,6 +160,20 @@ spec:
         - name: realm
           configMap:
             name: {{ .Release.Name }}-keycloak-realm
+        # `path` is what rebuilds the directory tree a theme has to have: the
+        # ConfigMap keys are flat because a key cannot contain a slash.
+        - name: theme
+          configMap:
+            name: {{ .Release.Name }}-keycloak-theme
+            items:
+              - key: theme.properties
+                path: login/theme.properties
+              - key: librarius.css
+                path: login/resources/css/librarius.css
+              - key: messages_fr.properties
+                path: login/messages/messages_fr.properties
+              - key: messages_en.properties
+                path: login/messages/messages_en.properties
 ---
 apiVersion: v1
 kind: Service

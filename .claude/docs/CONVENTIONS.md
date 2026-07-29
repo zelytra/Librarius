@@ -350,6 +350,12 @@ the evidence in the PR (rendered text, computed styles, no console error).
   key helpers (`getGetApiLibraryQueryKey()`) rather than hand-written strings.
 - New styles: CSS Modules backed by the tokens (`tokens.css`). Inline is reserved for
   genuinely dynamic values.
+- **Changing a token value means changing it twice.** The Keycloak sign-in pages are
+  themed from a hand-copy of the palette, radii and typefaces in
+  `infra/helm/librarius/files/keycloak-theme/login/resources/css/librarius.css`. Keycloak
+  serves those pages from its own process and cannot import anything from the bundle, so
+  no build step and no test relates the two files — a colour changed on one side and not
+  the other simply drifts, and only shows on the one page every visitor sees.
 - User-facing text through `useTranslation()` with keys in `i18n/locales/`.
 - No `eslint-disable` without a comment justifying the exemption.
 

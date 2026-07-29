@@ -34,7 +34,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 | Area | State |
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
-| Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
+| Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging. The sign-in pages now carry the app's own theme (`infra/helm/librarius/files/keycloak-theme/`), in French and English; putting it on the long-lived staging realm is a manual step, see debt #24 |
 | Persistence | PostgreSQL + Panache + Flyway (12 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
@@ -306,6 +306,21 @@ production opens.*
     (`infra/loadtest/librarius-load.js`, which encodes the target as thresholds) has never
     been run. [#187](https://github.com/zelytra/Librarius/issues/187) stays open on all of
     it.
+24. **The login theme is built and shipped; staging has not been told to use it.** The
+    `librarius` login theme is in the chart, mounted from a ConfigMap, and rendered on every
+    pull request that touches it — `.github/workflows/keycloak-theme.yml` serves it from the
+    pinned Keycloak image and reads the page back, in both locales. What reaches an existing
+    environment is the other half: the theme is chosen by the **realm**, the realm is
+    imported once on an empty database, and `librarius.zelytra.fr` was created long before
+    this. So the files are on the cluster and the page is still stock Keycloak until
+    somebody runs the `kcadm` call in `docs/DEPLOYMENT.md`
+    § "Changing the realm of a running Keycloak".
+    Two consequences worth carrying: the same is true of **every** future realm edit — a
+    redirect URI, a locale, a required action — and the sign-in page's palette is a
+    **hand-copy** of `apps/web/src/shared/styles/tokens.css` with nothing checking the two
+    against each other, because a Keycloak theme cannot read the web bundle.
+    [#176](https://github.com/zelytra/Librarius/issues/176) is not met until the page on
+    `librarius.zelytra.fr` is the themed one.
 
 ## Functional gaps vs the vision 📋
 
