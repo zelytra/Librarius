@@ -53,7 +53,7 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 
 | Path | Contents |
 |---|---|
-| `apps/web/` | React 19 + Vite 6 + TS PWA. `features/<screen>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **never edit by hand**) |
+| `apps/web/` | React 19 + Vite 8 + TS PWA. `features/<screen>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **never edit by hand**) |
 | `apps/api/` | Quarkus 3 / Java 21. `domain/` (entities + Panache repositories), `web/` (JAX-RS resources + DTOs), `catalog/` (external providers), `imports/`, `security/` |
 | `apps/mobile/` | Capacitor 7 native shell (Android/iOS). **No application code**: `webDir` points at the `apps/web` build — see [MOBILE](.claude/docs/MOBILE.md) |
 | `openapi/` | **Contract** between the api and the web app: schema produced by the api build, consumed by orval. Belongs to neither application |

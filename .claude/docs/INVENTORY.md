@@ -126,6 +126,22 @@ the public URL from outside — see debt #15.
   column to `WishPriority.rank`. Spotted while adding pagination (#38) and kept as its own
   issue rather than changed silently under an unrelated title.
 
+### Front-end dependencies
+
+19. **Two advisories are left on the toolchain, both blocked upstream.**
+    [#109](https://github.com/zelytra/Librarius/issues/109) and
+    [#133](https://github.com/zelytra/Librarius/issues/133) took `pnpm audit --prod` from
+    one accepted high to nothing at all, with no entry left in
+    `pnpm.auditConfig.ignoreGhsas`, and the dev tree from twelve findings to two. What is
+    left is GHSA-mh99-v99m-4gvg on `brace-expansion` 1.1.16, reached twice through
+    eslint 9 → minimatch 3. It cannot be fixed in place: the patch exists only on the 5.x
+    line, and minimatch 3 pins `^1.1.7`. eslint 10 drops minimatch 3, but
+    `eslint-plugin-react` still peers on `eslint ^9.7` — and that plugin carries
+    `react/jsx-no-literals`, the guard that keeps user-facing copy out of the JSX, so it
+    cannot simply be dropped. Same shape as the `typescript` 7 blocker, which is still
+    waiting on typescript-eslint. Both are pure build-time trees: no advisory reaches the
+    browser bundle.
+
 ### Operations
 
 *Criticality assessed for a staging environment; every line below becomes blocking when
@@ -234,8 +250,8 @@ production opens.*
 |---|---|
 | Java classes (main) | 66 |
 | Java tests | 23 files |
-| Front-end files (src) | 49 |
-| Front-end tests | 8 files, 63 tests |
+| Front-end files (src) | 54 |
+| Front-end tests | 10 files, 108 tests |
 | Flyway migrations | 7 |
 | REST endpoints exposed | 30 (11 resources) |
 | Locales | 1 (fr) |

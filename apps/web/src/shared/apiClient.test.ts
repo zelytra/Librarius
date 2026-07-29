@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { http, HttpResponse, server } from '../test/server';
-import { postApiImportCsv, postApiLibrary } from '../api/generated/librarius';
+import {
+  getApiCatalogSearch,
+  postApiImportCsv,
+  postApiLibrary,
+} from '../api/generated/librarius';
 import { apiClient, ApiError } from './apiClient';
 
 // The call goes through the generated function rather than straight to the mutator:
@@ -62,6 +66,26 @@ describe('apiClient', () => {
     });
 
     expect(contentType).toContain('text/plain');
+  });
+
+  // The query string used to be built here, by the mutator; since orval 8 the generated
+  // code builds it. Both go through URLSearchParams, so a space still travels as `+` and
+  // still arrives as a space — but that is the kind of equivalence that is worth asserting
+  // rather than assuming: the same round trip caught out the API tests in #146, where
+  // RestAssured re-encoded a hand-written query string and `Frank+Herbert` reached the
+  // resource with a literal plus in it.
+  test('a multi-word search criterion survives the query string', async () => {
+    let received: Record<string, string> = {};
+    server.use(
+      http.get('*/api/catalog/search', ({ request }) => {
+        received = Object.fromEntries(new URL(request.url).searchParams);
+        return HttpResponse.json([]);
+      }),
+    );
+
+    await getApiCatalogSearch({ q: 'dune', author: 'Frank Herbert', year: 1965, kind: 'BOOK' });
+
+    expect(received).toEqual({ q: 'dune', author: 'Frank Herbert', year: '1965', kind: 'BOOK' });
   });
 
   test('raises the status of a failed call', async () => {
