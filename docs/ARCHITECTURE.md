@@ -22,7 +22,8 @@ cream `#f3ede3`).
 | API client | orval (OpenAPI → typed hooks) | Frontend and backend types stay in sync, CI gate on the diff |
 | Book catalog | Open Library (no API key) | Title/author search, covers, ISBN |
 | Manga catalog | AniList + Jikan + MangaDex | Best free manga data available |
-| Monorepo | pnpm (web) + Maven (api) | Coexist without friction, kept apart in CI by path filters |
+| Mobile | Capacitor shell (`apps/mobile`) | The native container runs the web build itself: one codebase, no fork |
+| Monorepo | pnpm (web, mobile) + Maven (api) | Coexist without friction, kept apart in CI by path filters |
 
 ## Data model (target)
 

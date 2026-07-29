@@ -133,7 +133,7 @@ release notification actually received.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#67](https://github.com/zelytra/Librarius/issues/67) | Capacitor bootstrap: apps/mobile application | #30, #31 |
+| [#67](https://github.com/zelytra/Librarius/issues/67) | ✅ Capacitor bootstrap: apps/mobile application — shell over the web bundle; native sign-in still blocked, see [MOBILE](MOBILE.md) | #30, #31 |
 | [#68](https://github.com/zelytra/Librarius/issues/68) | ISBN barcode scanning | #67, #53 |
 | [#69](https://github.com/zelytra/Librarius/issues/69) | Push notifications: releases and wishlist | #57, #67 |
 | [#70](https://github.com/zelytra/Librarius/issues/70) | Android build pipeline | #67 |

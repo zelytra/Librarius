@@ -16,7 +16,8 @@ reading and your wishlist; search for works (title / author / date) with covers 
 | Database | PostgreSQL |
 | Auth | Keycloak (OIDC) — *coming in PR #2* |
 | Monitoring | Prometheus + Grafana (Micrometer) — *coming in PR #9* |
-| Monorepo | pnpm workspaces (web) + Maven (api) |
+| Mobile | **Capacitor** shell around the same web build (`apps/mobile`) |
+| Monorepo | pnpm workspaces (web, mobile) + Maven (api) |
 
 ## Monorepo layout
 
@@ -24,6 +25,7 @@ reading and your wishlist; search for works (title / author / date) with covers 
 apps/
   web/        # React + Vite + TS PWA
   api/        # Quarkus API (Maven, mvnw wrapper)
+  mobile/     # Capacitor shell (Android/iOS): runs the web build, holds no code of its own
 packages/     # TS client generated from the OpenAPI schema (coming)
 e2e/          # Playwright suite: the key journeys against the whole stack
 infra/        # docker-compose (postgres, …)
@@ -67,6 +69,7 @@ dashboard "Librarius — Vue d'ensemble" provisioned automatically.
 |---|---|
 | `pnpm web:dev` / `web:build` / `web:test` / `web:lint` | Frontend |
 | `pnpm api:dev` / `api:test` | Backend (through `mvnw`) |
+| `pnpm mobile:build` | Builds the web bundle, then syncs it into the native shell |
 | `pnpm infra:up` / `infra:down` | Local Docker stack |
 | `pnpm e2e:install` then `pnpm e2e` | End-to-end journeys (starts and stops its own stack) |
 

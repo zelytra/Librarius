@@ -23,6 +23,7 @@
     "web:build": "pnpm --filter @librarius/web build",
     "web:test": "pnpm --filter @librarius/web test",
     "web:lint": "pnpm --filter @librarius/web lint",
+    "mobile:build": "pnpm --filter \"@librarius/mobile...\" build",
     "api:dev": "cd apps/api && ./mvnw quarkus:dev",
     "api:test": "cd apps/api && ./mvnw -B test",
     "e2e:install": "cd e2e && pnpm install --ignore-workspace --frozen-lockfile",
