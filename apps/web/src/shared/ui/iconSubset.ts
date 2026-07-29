@@ -43,6 +43,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   book_2: 0xf53e,
   bookmark_add: 0xe598,
   bookmark_added: 0xe599,
+  calendar_month: 0xebcc,
   check_circle: 0xf0be,
   chevron_right: 0xe5cc,
   close: 0xe5cd,
