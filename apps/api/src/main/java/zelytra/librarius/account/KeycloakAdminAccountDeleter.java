@@ -14,6 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -45,18 +46,29 @@ public class KeycloakAdminAccountDeleter implements KeycloakAccountDeleter {
     @ConfigProperty(name = "librarius.keycloak.admin.enabled", defaultValue = "false")
     boolean enabled;
 
+    // These three are genuinely optional, so they are Optional<String> rather than String
+    // with defaultValue = "": application.properties defines the key unconditionally
+    // (${KEYCLOAK_ADMIN_...:}), so on an instance that leaves the environment variable
+    // unset, the key is still *present* with an empty resolved value. SmallRye only falls
+    // back to a @ConfigProperty's own defaultValue when the key is absent — an empty-but-
+    // present value goes straight to the converter instead, and a plain String converter
+    // rejects it. That crashed startup outright wherever the variable was not supplied
+    // (every instance with account deletion off, e2e included), never in a @QuarkusTest,
+    // where RecordingKeycloakAccountDeleter stands in and this bean is never instantiated.
+    // Optional<String> treats that same empty value as "absent", which is what it is.
+
     /** Base URL of Keycloak, without the realm — e.g. {@code http://keycloak:8081/auth}. */
-    @ConfigProperty(name = "librarius.keycloak.admin.server-url", defaultValue = "")
-    String serverUrl;
+    @ConfigProperty(name = "librarius.keycloak.admin.server-url")
+    Optional<String> serverUrl;
 
     @ConfigProperty(name = "librarius.keycloak.admin.realm", defaultValue = "librarius")
     String realm;
 
-    @ConfigProperty(name = "librarius.keycloak.admin.client-id", defaultValue = "")
-    String clientId;
+    @ConfigProperty(name = "librarius.keycloak.admin.client-id")
+    Optional<String> clientId;
 
-    @ConfigProperty(name = "librarius.keycloak.admin.client-secret", defaultValue = "")
-    String clientSecret;
+    @ConfigProperty(name = "librarius.keycloak.admin.client-secret")
+    Optional<String> clientSecret;
 
     @Inject
     ObjectMapper json;
@@ -80,14 +92,21 @@ public class KeycloakAdminAccountDeleter implements KeycloakAccountDeleter {
     }
 
     private boolean configured() {
-        return enabled && !serverUrl.isBlank() && !clientId.isBlank() && !clientSecret.isBlank();
+        return enabled && present(serverUrl) && present(clientId) && present(clientSecret);
+    }
+
+    private static boolean present(Optional<String> value) {
+        return value.isPresent() && !value.get().isBlank();
     }
 
     /** Client-credentials grant. The secret never leaves this method, logs included. */
     private String accessToken() {
+        // configured() has already gated every caller of this method on the three being
+        // present, so orElseThrow() only ever fires on a broken invariant, never in normal
+        // operation.
         String body = "grant_type=client_credentials"
-                + "&client_id=" + form(clientId)
-                + "&client_secret=" + form(clientSecret);
+                + "&client_id=" + form(clientId.orElseThrow())
+                + "&client_secret=" + form(clientSecret.orElseThrow());
         HttpRequest request = HttpRequest.newBuilder(URI.create(
                         base() + "/realms/" + form(realm) + "/protocol/openid-connect/token"))
                 .timeout(REQUEST_TIMEOUT)
@@ -154,7 +173,8 @@ public class KeycloakAdminAccountDeleter implements KeycloakAccountDeleter {
     }
 
     private String base() {
-        return serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = serverUrl.orElseThrow();
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     private static String form(String value) {
