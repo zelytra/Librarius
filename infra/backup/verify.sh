@@ -58,15 +58,39 @@ docker run -d --name lbpg2 --network lbverify -e POSTGRES_USER=librarius \
 docker run -d --name lbminio --network lbverify -e MINIO_ROOT_USER=miniokey \
   -e MINIO_ROOT_PASSWORD=miniosecret minio/minio:RELEASE.2024-06-13T22-53-53Z server /data >/dev/null
 
+# `pg_isready` is not enough: the official image starts a temporary server to
+# run initdb, then shuts it down and starts the real one. Under load the probe
+# catches the temporary one and the first statement dies on "the database
+# system is shutting down". Wait for a query to succeed three times in a row
+# instead — the restart cannot hide inside that.
 for c in lbpg lbpg2; do
-  for _ in $(seq 1 40); do docker exec "$c" pg_isready -U librarius >/dev/null 2>&1 && break; sleep 1; done
+  ok=0
+  for _ in $(seq 1 90); do
+    if docker exec -e PGPASSWORD=pgpass "$c" psql -U librarius -d librarius -tAc 'SELECT 1' >/dev/null 2>&1; then
+      ok=$((ok + 1))
+      [ "$ok" -ge 3 ] && break
+    else
+      ok=0
+    fi
+    sleep 1
+  done
+  [ "$ok" -ge 3 ] || { echo "$c never became ready"; exit 1; }
 done
-sleep 3
 
 docker exec -e PGPASSWORD=pgpass lbpg psql -U librarius -d librarius -c \
   "CREATE TABLE book (id serial primary key, title text); \
    INSERT INTO book(title) SELECT 'Book ' || g FROM generate_series(1,5000) g;" >/dev/null
 echo "source rows: $(docker exec -e PGPASSWORD=pgpass lbpg psql -U librarius -d librarius -tAc 'SELECT count(*) FROM book')"
+
+# The accounts, in their own database next to the library, exactly as the chart
+# lays them out. Without them a restore hands back rows owned by a subject
+# nobody can sign in as — the whole point of dumping both (#155).
+docker exec -e PGPASSWORD=pgpass lbpg psql -U librarius -d postgres -c \
+  "CREATE DATABASE keycloak;" >/dev/null
+docker exec -e PGPASSWORD=pgpass lbpg psql -U librarius -d keycloak -c \
+  "CREATE TABLE user_entity (id text primary key, username text); \
+   INSERT INTO user_entity VALUES ('sub-alice','alice'), ('sub-bob','bob');" >/dev/null
+echo "source accounts: $(docker exec -e PGPASSWORD=pgpass lbpg psql -U librarius -d keycloak -tAc 'SELECT count(*) FROM user_entity')"
 
 echo "verify-only-passphrase" > "$WORK/passphrase"
 
@@ -78,6 +102,7 @@ awscli --endpoint-url http://lbminio:9000 s3 mb s3://librarius-backups >/dev/nul
 echo "=== dump (uid 65532, postgres image) ==="
 docker run --rm --network lbverify --user 65532:65532 \
   -e PGHOST=lbpg -e PGUSER=librarius -e PGDATABASE=librarius -e PGPASSWORD=pgpass \
+  -e KEYCLOAK_DATABASE=keycloak \
   -v "$WORK/scripts:/scripts:ro" -v "$WORK/vol:/work" \
   --entrypoint bash postgres:16-alpine /scripts/dump.sh
 
@@ -131,5 +156,17 @@ docker exec -i -e PGPASSWORD=pgpass lbpg2 psql -v ON_ERROR_STOP=1 -U librarius -
 restored=$(docker exec -e PGPASSWORD=pgpass lbpg2 psql -U librarius -d librarius -tAc 'SELECT count(*) FROM book')
 echo "  restored rows: $restored (expected 5000)"
 [ "$restored" = "5000" ] || { echo "RESTORE FAILED"; exit 1; }
+
+# The target instance never had a keycloak database: the archive has to create
+# it and land the accounts in it, or the 5000 rows above belong to nobody.
+accounts=$(docker exec -e PGPASSWORD=pgpass lbpg2 psql -U librarius -d keycloak -tAc \
+  'SELECT count(*) FROM user_entity' 2>/dev/null || echo "0")
+echo "  restored accounts: $accounts (expected 2)"
+[ "$accounts" = "2" ] || { echo "RESTORE FAILED: the library came back without its accounts"; exit 1; }
+
+owner=$(docker exec -e PGPASSWORD=pgpass lbpg2 psql -U librarius -d keycloak -tAc \
+  "SELECT username FROM user_entity WHERE id = 'sub-alice'")
+echo "  sub-alice resolves to: $owner (expected alice)"
+[ "$owner" = "alice" ] || { echo "RESTORE FAILED: subject identifiers did not survive"; exit 1; }
 
 echo "ALL CHECKS PASSED"
