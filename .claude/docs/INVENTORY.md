@@ -251,7 +251,7 @@ production opens.*
 | Java classes (main) | 66 |
 | Java tests | 23 files |
 | Front-end files (src) | 54 |
-| Front-end tests | 10 files, 108 tests |
+| Front-end tests | 10 files, 114 tests |
 | Flyway migrations | 7 |
 | REST endpoints exposed | 30 (11 resources) |
 | Locales | 1 (fr) |
