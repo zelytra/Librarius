@@ -17,6 +17,17 @@ import styles from './ImportSection.module.css';
 
 type Source = 'booknode' | 'babelio';
 
+/**
+ * Booknode publishes its members' libraries, so one can be fetched from a handle alone.
+ * Babelio does not: it has no API, and a member's shelves need a session, which is why
+ * `BabelioImporter` refuses every handle. The source stays offered — that is where a
+ * reader coming from Babelio looks — but it leads to the CSV export instead of to a
+ * request that could only fail.
+ */
+function importsByHandle(source: Source): boolean {
+  return source !== 'babelio';
+}
+
 function resultMessage(t: TFunction, r: ImportResult): string {
   return t('settings.import.result', { imported: r.imported ?? 0, skipped: r.skipped ?? 0 });
 }
@@ -111,18 +122,22 @@ export function ImportSection() {
               { id: 'babelio', label: t('settings.import.sources.babelio') },
             ]}
           />
-          <div className={styles.handleRow}>
-            <input
-              value={handle}
-              onChange={(e) => setHandle(e.target.value)}
-              placeholder={t(`settings.import.handlePlaceholder.${source}`)}
-              aria-label={t(`settings.import.handlePlaceholder.${source}`)}
-              className={styles.handleInput}
-            />
-            <Button variant="primary" size="compact" onClick={() => void runScrape()} disabled={busy}>
-              {t(busy ? 'common.working' : 'settings.import.submit')}
-            </Button>
-          </div>
+          {importsByHandle(source) ? (
+            <div className={styles.handleRow}>
+              <input
+                value={handle}
+                onChange={(e) => setHandle(e.target.value)}
+                placeholder={t(`settings.import.handlePlaceholder.${source}`)}
+                aria-label={t(`settings.import.handlePlaceholder.${source}`)}
+                className={styles.handleInput}
+              />
+              <Button variant="primary" size="compact" onClick={() => void runScrape()} disabled={busy}>
+                {t(busy ? 'common.working' : 'settings.import.submit')}
+              </Button>
+            </div>
+          ) : (
+            <p className={styles.note}>{t('settings.import.babelioNote')}</p>
+          )}
 
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
