@@ -3,8 +3,19 @@ global:
   evaluation_interval: 15s
 
 # Alert rules are evaluated here and visible under Alerts in the Prometheus UI.
-# No Alertmanager is wired into this stack yet: add an `alerting:` block below
-# once a notification channel exists (docs/DEPLOYMENT.md § "Alerting").
+# The file mounted below is the chart's copy — one source of truth for the
+# compose stack and for the cluster, see infra/compose.prod.yml.
+#
+# This stack runs no Alertmanager: on Kubernetes the chart deploys one
+# (infra/helm/librarius/templates/monitoring.yaml), and to notify from here add
+#
+#   alerting:
+#     alertmanagers:
+#       - static_configs:
+#           - targets: ['alertmanager:9093']
+#
+# plus the service. docs/DEPLOYMENT.md § "Alerting" — and infra/alerting/ if what
+# you want is to see the rules fire rather than to run them.
 rule_files:
   - /etc/prometheus/rules/*.yml
 

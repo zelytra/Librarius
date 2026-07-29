@@ -1,13 +1,18 @@
 # Alert rules for Librarius.
 #
-# Single source of truth: loaded by the compose production stack
-# (infra/compose.prod.yml) and meant to be applied to any Prometheus that
-# scrapes the cluster. Nothing in infra/helm deploys Prometheus today, so these
-# rules are delivered ready to apply rather than installed — see
-# docs/DEPLOYMENT.md § "Alerting" for how to load them and what each one means.
+# Single source of truth, and it lives in the chart on purpose: Helm can only
+# read files under the chart directory, so this is the one copy that both
+# consumers load — the in-cluster Prometheus (templates/monitoring.yaml reads it
+# with .Files.Get into a ConfigMap) and the compose production stack
+# (infra/compose.prod.yml mounts this very path). Editing it changes both, and
+# the pod restarts on the config checksum, so a rule never sits edited and
+# unloaded. See docs/DEPLOYMENT.md § "Alerting".
 #
 # Every group states the exporter it needs. A rule whose metric is absent never
 # fires: an incomplete monitoring stack degrades into silence, not into noise.
+# Which of them can fire on the cluster today is in docs/DEPLOYMENT.md; the
+# short version is that the three API rules can, and the ones that read
+# kube-state-metrics or cert-manager only do once those exporters exist.
 #
 # Every alert carries two annotations, and they are the point of the file:
 #   summary — the symptom, as a human would describe it

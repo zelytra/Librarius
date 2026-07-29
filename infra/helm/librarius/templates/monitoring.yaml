@@ -1,0 +1,318 @@
+{{- if .Values.monitoring.enabled }}
+{{- /*
+  Prometheus + Alertmanager, in the release namespace, deliberately small.
+
+  Why not kube-prometheus-stack: measured on 62.7.0, `helm template` produces 125
+  objects and 640 KB of manifests, it installs 10 CRDs weighing 3.9 MB, five
+  ClusterRoles, two admission webhooks, and it runs six resident pods (operator,
+  Prometheus, Alertmanager, Grafana, kube-state-metrics, a node-exporter
+  DaemonSet) — none of which declares a single resource request, so every one of
+  them lands BestEffort on a node whose CPU requests are already 94% committed.
+  Two pods and no CRD do the job here. docs/DEPLOYMENT.md § "Alerting" carries
+  the arithmetic.
+
+  What this can and cannot see: it scrapes the api Service by DNS, which needs no
+  RBAC at all and therefore cannot break `cd.yml` on a kubeconfig that is not
+  cluster-admin. The price is that the rules reading kube-state-metrics or
+  cert-manager stay silent until those exporters exist — the ingress, the
+  certificate and the public URL are watched from outside instead, by the
+  `uptime` workflow, which sees what a user sees and needs no cluster access.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "prometheus") | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      # 30s rather than 15s: it halves the CPU and the series churn for no loss
+      # here — the shortest `for:` in the rules is 2 minutes, which still gets
+      # four samples, and every expression window is 5 minutes or more.
+      scrape_interval: 30s
+      evaluation_interval: 30s
+      external_labels:
+        environment: {{ .Values.monitoring.environment | quote }}
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ['{{ .Release.Name }}-alertmanager:9093']
+
+    scrape_configs:
+      # The job label is load-bearing: `up{job="librarius-api"}` is what
+      # LibrariusApiDown compares to 0. Renaming it silently disables the rule.
+      - job_name: librarius-api
+        metrics_path: /q/metrics
+        static_configs:
+          - targets: ['{{ .Release.Name }}-api:8080']
+
+      # Scraping itself costs nothing and is the only way to notice that the
+      # scraper is the thing that broke.
+      - job_name: prometheus
+        static_configs:
+          - targets: ['localhost:9090']
+
+  # Verbatim copy of the single source of truth. Editing the file changes the
+  # ConfigMap, the checksum below, and therefore restarts the pod.
+  librarius.rules.yml: |
+{{ .Files.Get "files/librarius.rules.yml" | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "prometheus") | nindent 4 }}
+spec:
+  replicas: 1
+  # Recreate: a single replica writing to an emptyDir has nothing to gain from a
+  # surge, and surging it would ask the node for a second copy of its memory.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "prometheus") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "librarius.selector" (dict "ctx" . "component" "prometheus") | nindent 8 }}
+      annotations:
+        # Without this a rule change updates the ConfigMap and nothing reloads
+        # it: the alert would be edited in git and absent from the process. That
+        # is the exact failure this whole feature exists to prevent, so it is
+        # not left to a manual `kubectl rollout restart`.
+        checksum/config: {{ printf "%s|%s|%s" (toYaml .Values.monitoring) (.Files.Get "files/librarius.rules.yml") .Release.Name | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+        - name: prometheus
+          image: {{ .Values.monitoring.prometheus.image }}
+          args:
+            - --config.file=/etc/prometheus/config/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            # Alerting is a function of the last few minutes, not of history —
+            # see docs/DEPLOYMENT.md for why this is an emptyDir and not a PVC.
+            - --storage.tsdb.retention.time={{ .Values.monitoring.prometheus.retention }}
+            - --storage.tsdb.retention.size={{ .Values.monitoring.prometheus.retentionSize }}
+            - --web.listen-address=:9090
+            # No --web.external-url: nothing routes to it, it is reached with
+            # `kubectl port-forward`.
+          ports:
+            - name: http
+              containerPort: 9090
+          readinessProbe:
+            httpGet: { port: 9090, path: /-/ready }
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet: { port: 9090, path: /-/healthy }
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus/config
+              readOnly: true
+            - name: rules
+              mountPath: /etc/prometheus/rules
+              readOnly: true
+            - name: data
+              mountPath: /prometheus
+          resources:
+            {{- toYaml .Values.monitoring.prometheus.resources | nindent 12 }}
+      volumes:
+        # The same ConfigMap twice, one key each: Prometheus wants its config
+        # file and its rules directory in two different places.
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-prometheus
+            items:
+              - key: prometheus.yml
+                path: prometheus.yml
+        - name: rules
+          configMap:
+            name: {{ .Release.Name }}-prometheus
+            items:
+              - key: librarius.rules.yml
+                path: librarius.rules.yml
+        - name: data
+          emptyDir:
+            sizeLimit: {{ .Values.monitoring.prometheus.storageSize }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "prometheus") | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: 9090
+      targetPort: 9090
+  selector:
+    {{- include "librarius.selector" (dict "ctx" . "component" "prometheus") | nindent 4 }}
+{{- if .Values.monitoring.alertmanager.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-alertmanager
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "alertmanager") | nindent 4 }}
+data:
+  # No URL and no password appears here. Alertmanager reads the destination from
+  # a file (`url_file` / `api_url_file`), and that file is a key of a Secret the
+  # maintainer creates by hand — the same rule the database and Keycloak
+  # credentials already follow. With no Secret configured the route points at a
+  # receiver that holds nothing: alerts are still evaluated, grouped and visible,
+  # they simply leave no notification. docs/DEPLOYMENT.md § "Alerting".
+  {{- $receiver := ternary "notify" "blackhole" (not (empty .Values.monitoring.alertmanager.existingSecret)) }}
+  alertmanager.yml: |
+    route:
+      # One notification per alert name rather than one per series: a pod
+      # restarting in a loop is one message, not one every evaluation.
+      group_by: ['alertname', 'severity']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: {{ .Values.monitoring.alertmanager.repeatInterval.warning }}
+      receiver: {{ $receiver }}
+      routes:
+        # Critical repeats until somebody acts; a warning repeats once a day, so
+        # that a certificate quietly expiring does not train anyone to ignore it.
+        - matchers:
+            - severity="critical"
+          receiver: {{ $receiver }}
+          repeat_interval: {{ .Values.monitoring.alertmanager.repeatInterval.critical }}
+
+    receivers:
+      # Named, empty, and the default until a Secret exists: Alertmanager
+      # requires the route to name a receiver, and this one notifies nothing.
+      - name: blackhole
+    {{- if .Values.monitoring.alertmanager.existingSecret }}
+      - name: notify
+      {{- if eq .Values.monitoring.alertmanager.receiverType "slack" }}
+        # Slack incoming webhook. A Discord webhook works here too, with `/slack`
+        # appended to its URL — Discord accepts Slack-shaped payloads.
+        slack_configs:
+          - api_url_file: /etc/alertmanager/secrets/{{ .Values.monitoring.alertmanager.secretKey }}
+            channel: {{ .Values.monitoring.alertmanager.slackChannel | quote }}
+            # send_resolved is what turns a notification into a state change:
+            # without it nothing ever says the API came back.
+            send_resolved: true
+            title: {{ `"[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"` }}
+            # The runbook travels with the notification, so reading it does not
+            # start with finding a document.
+            text: {{ `"{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.runbook }}\n\n{{ end }}"` }}
+      {{- else }}
+        # Generic JSON POST: ntfy, Gotify, Mattermost, Alertmanager-aware bots.
+        # The payload is Alertmanager's own, annotations and all.
+        webhook_configs:
+          - url_file: /etc/alertmanager/secrets/{{ .Values.monitoring.alertmanager.secretKey }}
+            send_resolved: true
+      {{- end }}
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-alertmanager
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "alertmanager") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" . "component" "alertmanager") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "librarius.selector" (dict "ctx" . "component" "alertmanager") | nindent 8 }}
+      annotations:
+        checksum/config: {{ printf "%s|%s" (toYaml .Values.monitoring.alertmanager) .Release.Name | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+        - name: alertmanager
+          image: {{ .Values.monitoring.alertmanager.image }}
+          args:
+            - --config.file=/etc/alertmanager/config/alertmanager.yml
+            - --storage.path=/alertmanager
+            - --web.listen-address=:9093
+          ports:
+            - name: http
+              containerPort: 9093
+          readinessProbe:
+            httpGet: { port: 9093, path: /-/ready }
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet: { port: 9093, path: /-/healthy }
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager/config
+              readOnly: true
+            {{- if .Values.monitoring.alertmanager.existingSecret }}
+            - name: secrets
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
+            {{- end }}
+            - name: data
+              mountPath: /alertmanager
+          resources:
+            {{- toYaml .Values.monitoring.alertmanager.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-alertmanager
+        {{- if .Values.monitoring.alertmanager.existingSecret }}
+        - name: secrets
+          secret:
+            secretName: {{ .Values.monitoring.alertmanager.existingSecret }}
+            defaultMode: 0400
+        {{- end }}
+        # Silences and the dedup state. Losing them on a restart re-sends a
+        # notification, which is the harmless direction to fail in.
+        - name: data
+          emptyDir:
+            sizeLimit: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-alertmanager
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "alertmanager") | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
+  selector:
+    {{- include "librarius.selector" (dict "ctx" . "component" "alertmanager") | nindent 4 }}
+{{- end }}
+{{- end }}

@@ -63,7 +63,10 @@ services:
     command: ['--config.file=/etc/prometheus/prometheus.yml']
     volumes:
       - ./prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
-      - ./prometheus/rules:/etc/prometheus/rules:ro
+      # The rules live in the Helm chart because Helm can only read files under
+      # the chart directory, and one copy of them is worth more than a tidy path.
+      # This stack mounts that same file rather than keeping a second one.
+      - ./helm/librarius/files/librarius.rules.yml:/etc/prometheus/rules/librarius.rules.yml:ro
     restart: unless-stopped
 
   grafana:

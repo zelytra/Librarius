@@ -92,12 +92,21 @@ API; Grafana (`:3000`) is provisioned as code (Prometheus datasource and the das
 searches). In dev, Prometheus scrapes the host (`host.docker.internal:8080`); in prod,
 the API container.
 
-Alert rules live in `infra/prometheus/rules/librarius.rules.yml` — API down, 5xx rate, p95
-latency, PVC saturation, TLS expiry, backup age, CrashLoopBackOff — each carrying its
-runbook as an annotation. The compose production stack loads them; the Helm chart deploys
-no Prometheus, so on the cluster they are delivered rather than running. Notification goes
-through an Alertmanager the maintainer configures, since its configuration holds a secret
-in clear text. See `docs/DEPLOYMENT.md` § "Alerting".
+Alert rules live in `infra/helm/librarius/files/librarius.rules.yml` — API down, 5xx rate,
+p95 latency, PVC saturation, TLS expiry, backup age, CrashLoopBackOff — each carrying its
+runbook as an annotation. They sit inside the chart because Helm only reads files under the
+chart directory, and one copy is worth more than a tidy path: the same file is mounted by
+the compose production stack and rendered into the cluster's ConfigMap.
+
+Alerting runs on two independent paths, because they fail differently. **Inside** the
+cluster the chart deploys Prometheus and Alertmanager in the `librarius` namespace — two
+pods, no CRD, no cluster-scoped RBAC, ~30 m of CPU requests — which see the API's own
+metrics and notify through a webhook whose URL comes from a Kubernetes Secret. **Outside**,
+`.github/workflows/uptime.yml` probes the public URL, the API through the ingress and the
+TLS certificate every 15 minutes from a GitHub runner, and opens an issue when they stop
+answering; it needs no secret at all, and it is the only path that still works when the
+cluster is what broke. See `docs/DEPLOYMENT.md` § "Alerting", and
+`infra/alerting/fire-drill.sh` to fire the rules on purpose.
 
 ## Backups ✅
 

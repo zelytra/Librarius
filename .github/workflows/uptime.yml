@@ -1,0 +1,108 @@
+name: uptime
+
+# Watch librarius.zelytra.fr from outside the cluster and open an issue when it
+# stops answering.
+#
+# Why here and not in Prometheus: the in-cluster Prometheus can only report on a
+# cluster that is still up, and its Alertmanager can only notify through a
+# credential nobody has created yet. A GitHub runner sits outside every one of
+# those failure domains and already holds the one credential this repository
+# owns — GITHUB_TOKEN — so this path needs no secret and no setup at all. It is
+# the same reflex as `cd.yml`, which opens an issue when a deployment fails.
+#
+# It is a real notification: an opened issue mails whoever watches the
+# repository. Nothing else in this repository can do that today.
+on:
+  schedule:
+    # Every 15 minutes. GitHub queues scheduled runs and drops them when the
+    # runners are busy, so treat the interval as a floor rather than a promise;
+    # it is a "nobody noticed for four weeks" detector, not a pager.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+# A probe that overlaps itself would open two issues for one outage.
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  BASE_URL: https://librarius.zelytra.fr
+  ISSUE_TITLE: librarius.zelytra.fr is not answering
+
+jobs:
+  probe:
+    name: probe the public URL
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Probe
+        id: probe
+        run: |
+          # Not `| tee`: the pipeline would report tee's exit code, and the probe
+          # would always look healthy.
+          set +e
+          bash .github/scripts/uptime-probe.sh "$BASE_URL" > probe.txt 2>&1
+          code=$?
+          set -e
+          cat probe.txt
+          echo "failed=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo '## Uptime probe'
+            echo
+            echo '```text'
+            cat probe.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # One issue per outage, not one per run: the probe fires every 15 minutes
+      # and an outage lasting a night would otherwise open ninety-six of them.
+      - name: Open or update the incident issue
+        if: steps.probe.outputs.failed != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --label infra --search "in:title $ISSUE_TITLE" --json number --jq '.[0].number')
+          {
+            echo "The public URL did not answer as expected."
+            echo
+            echo '```text'
+            cat probe.txt
+            echo '```'
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            echo "First actions — \`docs/DEPLOYMENT.md\` § \"Alerting\":"
+            echo "- \`kubectl -n librarius get pods -l release=librarius\`"
+            echo "- \`kubectl -n librarius logs deploy/librarius-api --tail=100\`"
+            echo "- \`kubectl -n librarius describe certificate librarius-zelytra-fr-tls\` if TLS is what failed"
+          } > body.md
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body-file body.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "$ISSUE_TITLE" --label infra,P0 --body-file body.md
+          fi
+
+      # Closing it is what makes the open issue mean something. An incident
+      # nobody closes trains everyone to ignore the next one.
+      - name: Close the incident issue once it answers again
+        if: steps.probe.outputs.failed == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --label infra --search "in:title $ISSUE_TITLE" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" \
+              --comment "Answering again — $RUN_URL"
+          fi

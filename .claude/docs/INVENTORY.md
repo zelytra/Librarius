@@ -8,8 +8,10 @@
 The project is a **complete and deployed** skeleton: all 7 screens exist, the API exposes
 9 resources, OIDC auth works end to end, and CI/CD ships to k3s. What is missing is
 **functional depth** (series, fine-grained progress, French release dates), **quality**
-(incomplete i18n) and **operations** (credentials still readable in the git history;
-backups and alert rules now exist but neither has been proven on the cluster).
+(incomplete i18n) and **operations** (credentials still readable in the git history; the
+backup CronJob is shipped but off and its restore never exercised). Alerting is no longer
+in that list: the chart deploys Prometheus and Alertmanager, and a GitHub workflow watches
+the public URL from outside — see debt #15.
 
 > **Environment**: `librarius.zelytra.fr` is a **staging** environment, not production.
 > No production environment is open to date. That lowers the immediate criticality of the
@@ -29,7 +31,8 @@ backups and alert rules now exist but neither has been proven on the cluster).
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
 | Screens | Home, Collection, Series, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
-| Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned, "Overview" dashboard, 10 alert rules with runbooks (`infra/prometheus/rules/`) — **not evaluated on the cluster**, see debt #15 |
+| Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned in compose, "Overview" dashboard |
+| Alerting | 10 rules with runbooks (`infra/helm/librarius/files/`), evaluated on the cluster by a Prometheus + Alertmanager the chart deploys, and an `uptime` workflow probing the public URL from outside every 15 min. Notification from the cluster still waits on a webhook Secret, see debt #15 |
 | Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
 | CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
 
@@ -141,12 +144,23 @@ production opens.*
     the cluster, and Keycloak's own database is not in the dump.
     [#59](https://github.com/zelytra/Librarius/issues/59) stays open until a real restore is
     done.
-15. **Alerting: rules written, nothing evaluates them.** Ten rules with runbooks in
-    `infra/prometheus/rules/librarius.rules.yml` (API down, 5xx, p95, PVC, TLS, backups,
-    CrashLoopBackOff), loaded by the compose stack and `promtool`-clean. **The Helm chart
-    deploys no Prometheus**, there is no kube-state-metrics and no Alertmanager, so on the
-    cluster nobody is still being told anything.
-    [#60](https://github.com/zelytra/Librarius/issues/60) stays open.
+15. **Alerting: running, and half of it still needs a Secret.** The chart now deploys
+    **Prometheus + Alertmanager** in the `librarius` namespace (two pods, no CRD, no
+    cluster-scoped RBAC, 30 m of CPU requests measured against 4 m of real use), evaluating
+    the ten rules — which moved to `infra/helm/librarius/files/librarius.rules.yml` so that
+    Helm and the compose stack read the same file. `infra/alerting/fire-drill.sh` runs the
+    chart's own rendered configuration against a fake API and **fires alerts for real**:
+    `LibrariusApiHighErrorRate`, `LibrariusApiSlowResponses` and `LibrariusApiDown` were all
+    delivered to a webhook, runbook annotation included.
+    What is still open: the in-cluster Alertmanager notifies **nothing** until a Secret
+    holding a webhook URL exists — a manual step, procedure in `docs/DEPLOYMENT.md`. Until
+    then the working channel is `.github/workflows/uptime.yml`, which probes the public URL
+    from a GitHub runner every 15 min and opens an issue; it needs no secret, and it is the
+    only path that survives the cluster itself failing. Still absent: kube-state-metrics and
+    cert-manager metrics, so the PVC, CrashLoopBackOff, TLS and backup rules cannot fire
+    in-cluster (both need cluster-scoped RBAC the chart deliberately does not ask for).
+    [#60](https://github.com/zelytra/Librarius/issues/60) stays open until a notification
+    has been received from the cluster and seven quiet days observed.
 16. ~~**Zero-downtime rollout shipped, never exercised.**~~ ✅ **Exercised on 2026-07-28**
     ([#64](https://github.com/zelytra/Librarius/issues/64)). Both deployments roll
     (`maxSurge: 1`, `maxUnavailable: 0`) on requests cut to measured usage, with a

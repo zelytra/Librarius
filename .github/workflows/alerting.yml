@@ -1,0 +1,138 @@
+name: alerting
+
+# Validate the alerting configuration with the programs that will read it.
+#
+# A typo in a rule file or in the Alertmanager routing does not fail loudly: the
+# component starts, the rule never loads, and the stack goes quiet — which looks
+# exactly like everything being fine. That is the failure mode this whole feature
+# exists to prevent, so it is checked on every pull request that touches it.
+on:
+  pull_request:
+    paths:
+      - 'infra/helm/librarius/**'
+      - 'infra/alerting/**'
+      - '.github/scripts/uptime-probe.sh'
+      - '.github/workflows/alerting.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  config:
+    name: chart, rules and routing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.17.0
+
+      - name: helm lint
+        run: |
+          helm lint ./infra/helm/librarius \
+            --set postgres.existingSecret=ci --set keycloak.existingSecret=ci
+
+      # Rendered once per configuration that changes the alerting output, so a
+      # template branch that only exists behind a flag is still compiled.
+      - name: Render every monitoring configuration
+        run: |
+          mkdir -p render
+          base="--set postgres.existingSecret=ci --set keycloak.existingSecret=ci"
+          render() { name=$1; shift; helm template librarius ./infra/helm/librarius -n librarius $base "$@" > "render/$name.yaml"; }
+          render default
+          render off             --set monitoring.enabled=false
+          render webhook         --set monitoring.alertmanager.existingSecret=librarius-alerting
+          render slack           --set monitoring.alertmanager.existingSecret=librarius-alerting \
+                                 --set monitoring.alertmanager.receiverType=slack
+          render no-alertmanager --set monitoring.alertmanager.enabled=false
+          # monitoring.enabled=false must leave nothing behind, or turning it off
+          # to free the node would still schedule the pods.
+          if grep -qE 'librarius-(prometheus|alertmanager)' render/off.yaml; then
+            echo '::error::monitoring.enabled=false still renders monitoring objects'
+            exit 1
+          fi
+
+      - name: Lay the files out the way the pod mounts them
+        run: |
+          python3 -c 'import yaml' 2>/dev/null || pip install --quiet pyyaml
+          python3 - <<'PY'
+          import pathlib, yaml
+          want = {
+              ('librarius-prometheus', 'prometheus.yml'): 'pod/config/prometheus.yml',
+              ('librarius-prometheus', 'librarius.rules.yml'): 'pod/rules/librarius.rules.yml',
+          }
+          docs = list(yaml.safe_load_all(open('render/default.yaml', encoding='utf-8')))
+          for (name, key), dest in want.items():
+              cm = next(d for d in docs if d and d.get('kind') == 'ConfigMap'
+                        and d['metadata']['name'] == name)
+              p = pathlib.Path(dest)
+              p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text(cm['data'][key], encoding='utf-8')
+          for render in ('default', 'webhook', 'slack'):
+              docs = list(yaml.safe_load_all(open(f'render/{render}.yaml', encoding='utf-8')))
+              cm = next(d for d in docs if d and d.get('kind') == 'ConfigMap'
+                        and d['metadata']['name'] == 'librarius-alertmanager')
+              pathlib.Path(f'am-{render}.yml').write_text(
+                  cm['data']['alertmanager.yml'], encoding='utf-8')
+          PY
+
+      # promtool reads the ConfigMap content, not the source file: a rule broken
+      # by the way the chart embeds it would pass a check on the source alone.
+      - name: promtool check config & rules
+        run: |
+          docker run --rm -v "$PWD/pod:/etc/prometheus:ro" \
+            --entrypoint promtool prom/prometheus:v2.53.0 \
+            check config /etc/prometheus/config/prometheus.yml
+          docker run --rm -v "$PWD/pod:/etc/prometheus:ro" \
+            --entrypoint promtool prom/prometheus:v2.53.0 \
+            check rules /etc/prometheus/rules/librarius.rules.yml
+
+      # Every alert carries a runbook, or the notification is a riddle at 3 a.m.
+      - name: Every alert has a summary and a runbook
+        run: |
+          python3 - <<'PY'
+          import sys, yaml
+          groups = yaml.safe_load(open('pod/rules/librarius.rules.yml', encoding='utf-8'))['groups']
+          missing = [r['alert'] for g in groups for r in g['rules']
+                     if not r.get('annotations', {}).get('summary')
+                     or not r.get('annotations', {}).get('runbook')]
+          total = sum(len(g['rules']) for g in groups)
+          print(f'{total} alerts, {len(missing)} without a runbook')
+          if missing:
+              sys.exit('missing summary or runbook: ' + ', '.join(missing))
+          PY
+
+      - name: amtool check-config
+        run: |
+          mkdir -p secrets && echo 'https://example.invalid/hook' > secrets/webhook-url
+          for f in am-default.yml am-webhook.yml am-slack.yml; do
+            echo "── $f"
+            docker run --rm -v "$PWD/$f:/tmp/alertmanager.yml:ro" \
+              -v "$PWD/secrets:/etc/alertmanager/secrets:ro" \
+              --entrypoint amtool prom/alertmanager:v0.27.0 check-config /tmp/alertmanager.yml
+          done
+
+      - name: Shell scripts parse
+        run: bash -n .github/scripts/uptime-probe.sh infra/alerting/fire-drill.sh
+
+  # Runs the real probe against the real staging URL, and reports rather than
+  # blocks: an outage while a pull request is open is worth seeing and is not
+  # that pull request's fault.
+  probe:
+    name: probe staging (report only)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Probe
+        run: |
+          bash .github/scripts/uptime-probe.sh https://librarius.zelytra.fr | tee probe.txt
+          {
+            echo '## Uptime probe (report only)'
+            echo
+            echo '```text'
+            cat probe.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

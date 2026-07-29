@@ -100,6 +100,61 @@ keycloak:
     requests: { cpu: 100m, memory: 384Mi }
     limits: { cpu: "1", memory: 768Mi }
 
+# ── Monitoring & alerting (Prometheus + Alertmanager) ─────────────────────────
+# On by default, because rules that nothing evaluates are what issue #60 is
+# about. Two pods, no CRD, no cluster-scoped RBAC — see the header of
+# templates/monitoring.yaml for why not kube-prometheus-stack, and
+# docs/DEPLOYMENT.md § "Alerting" for the node arithmetic.
+monitoring:
+  enabled: true
+  # Stamped on every series as `environment`, so a notification says which
+  # deployment it came from. Production (#103) will set this to `production`.
+  environment: staging
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    # 24h, on an emptyDir. Alerting reads at most the last 10 minutes, and a
+    # `local-path` PVC here would pin the pod to the node and add a volume worth
+    # backing up that holds nothing anybody would miss. Restarting Prometheus
+    # costs the graphs, not the alerts: every rule is firing again within two
+    # evaluation cycles. Raise both if this ever feeds a Grafana on the cluster.
+    retention: 24h
+    retentionSize: 384MB
+    storageSize: 512Mi
+    # 20m/128Mi: measured, not guessed. Scraping two targets every 30s and
+    # evaluating ten rules drew 2.5m of CPU at startup, under 1m afterwards, and
+    # 36Mi resident after 11 minutes (docs/DEPLOYMENT.md § "Alerting" carries the
+    # measurement). CPU requests are the scarce resource on this node, so the
+    # request is a floor a little above what was measured rather than a
+    # comfortable round number.
+    resources:
+      requests: { cpu: 20m, memory: 128Mi }
+      limits: { cpu: 300m, memory: 384Mi }
+  alertmanager:
+    enabled: true
+    image: prom/alertmanager:v0.27.0
+    # Secret holding the notification destination — a webhook URL is itself a
+    # credential, so it never lands in this file. Empty means alerts are still
+    # evaluated, grouped and visible, and no notification leaves the cluster;
+    # what is watched from outside stays covered by the `uptime` workflow.
+    # Create the Secret, then deploy with
+    # --set monitoring.alertmanager.existingSecret=librarius-alerting
+    existingSecret: ""
+    secretKey: webhook-url
+    # webhook — generic JSON POST (ntfy, Gotify, Mattermost, a bot).
+    # slack   — Slack incoming webhook, and Discord with `/slack` appended.
+    receiverType: webhook
+    slackChannel: "#alerts"
+    repeatInterval:
+      # Repeats while it is still firing. Critical nags, warning does not.
+      critical: 4h
+      warning: 24h
+    # 10m/48Mi: measured at 16m of CPU while it boots and gossips, ~2m and 20Mi
+    # once settled. The request is a scheduling floor, not a cap — the boot
+    # burst is covered by the limit.
+    resources:
+      requests: { cpu: 10m, memory: 48Mi }
+      limits: { cpu: 100m, memory: 128Mi }
+
 # ── PostgreSQL backups (CronJob → S3-compatible storage) ──────────────────────
 # Off by default. The destination bucket, its provider and its credentials are
 # an operator decision: the chart neither invents them nor ships a default, and
