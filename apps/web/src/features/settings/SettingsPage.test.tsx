@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { http, HttpResponse, server } from '../../test/server';
 import { removeUser, resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { changeLanguage } from '../../i18n';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -104,6 +105,36 @@ describe('SettingsPage — export', () => {
     expect(screen.getByText('Se connecter pour exporter')).toBeInTheDocument();
     expect(screen.queryByText('Fichier JSON')).not.toBeInTheDocument();
   });
+});
+
+describe('SettingsPage — language', () => {
+  beforeEach(resetAuth);
+
+  // The rest of the suite asserts the French copy, and i18next is a singleton.
+  afterEach(() => changeLanguage('fr'));
+
+  test('switches the interface and keeps the choice for the next visit', async () => {
+    renderWithProviders(<SettingsPage />);
+    expect(screen.getByRole('heading', { name: 'Réglages' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'English' }));
+
+    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(localStorage.getItem('librarius.language')).toBe('en');
+    // The two strings React does not own: the `lang` a screen reader reads from, and the
+    // tab title `index.html` shipped in French.
+    expect(document.documentElement.lang).toBe('en');
+    expect(document.title).toBe('My Library');
+  });
+
+  test('labels each language in its own words, so it can be found from the other one',
+    async () => {
+      renderWithProviders(<SettingsPage />);
+
+      await userEvent.click(screen.getByRole('button', { name: 'English' }));
+
+      expect(await screen.findByRole('button', { name: 'Français' })).toBeInTheDocument();
+    });
 });
 
 describe('SettingsPage — account deletion', () => {

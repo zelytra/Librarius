@@ -10,6 +10,7 @@ import { colorFor } from '../../shared/ui/coverPalette';
 import { RANK_COLORS, type RankCode } from '../../shared/ui/ranks';
 import { Button } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
+import { activeLanguage } from '../../i18n/languages';
 import {
   getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
@@ -300,7 +301,7 @@ function ReviewSection({
  */
 function languageName(code: string): string {
   try {
-    return new Intl.DisplayNames(['fr'], { type: 'language' }).of(code) ?? code;
+    return new Intl.DisplayNames([activeLanguage()], { type: 'language' }).of(code) ?? code;
   } catch {
     return code;
   }
@@ -310,7 +311,7 @@ function languageName(code: string): string {
 function releaseLabel(date: string): string {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'long' }).format(parsed);
+  return new Intl.DateTimeFormat(activeLanguage(), { year: 'numeric', month: 'long' }).format(parsed);
 }
 
 /** The identity of an edition on one line: who published it, in what language and shape. */

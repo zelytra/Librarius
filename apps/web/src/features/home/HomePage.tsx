@@ -4,6 +4,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { activeLanguage } from '../../i18n/languages';
 import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius';
 import { DashboardSections } from './DashboardSections';
 import styles from './HomePage.module.css';
@@ -52,7 +53,7 @@ function Dashboard() {
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const today = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  const today = new Intl.DateTimeFormat(activeLanguage(), { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   return (
     <Screen>

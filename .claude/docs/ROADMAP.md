@@ -250,7 +250,7 @@ their data, in French or in English, with a Lighthouse score ≥ 90.
 | [#74](https://github.com/zelytra/Librarius/issues/74) | Terms of service, privacy policy and legal notice | #72, #73 |
 | [#75](https://github.com/zelytra/Librarius/issues/75) | User profile: display name, language, time zone | — |
 | [#76](https://github.com/zelytra/Librarius/issues/76) | First-login onboarding | — |
-| [#77](https://github.com/zelytra/Librarius/issues/77) | Complete English locale | #35 |
+| ✅ [#77](https://github.com/zelytra/Librarius/issues/77) | Complete English locale | #35 |
 | [#78](https://github.com/zelytra/Librarius/issues/78) | Accessibility: WCAG 2.1 level AA | #32, #42 |
 | [#79](https://github.com/zelytra/Librarius/issues/79) | ✅ Performance: bundle budget and Lighthouse — first payload shrunk and locked down in CI | — |
 | [#80](https://github.com/zelytra/Librarius/issues/80) | Public landing page | — |

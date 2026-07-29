@@ -9,7 +9,7 @@
 | **Commit messages** and **pull requests** (title and description) | **English** |
 | **Project documentation**, this set included | **English** |
 | Exchanges with the maintainer | **French** |
-| Text shown to the user | **French**, through i18n — never hardcoded |
+| Text shown to the user | **French and English**, through i18n — never hardcoded |
 
 A pull request title becomes the commit subject when it is squashed: it must therefore be
 written like a commit message — English, imperative mood.
@@ -24,14 +24,26 @@ Two deliberate exceptions:
   keep their French comments. Flyway computes the checksum over **the entire file, comments
   included**: touching them would fail validation at startup on every database where the
   migration is already applied. Future migrations are written in English.
-- **Messages rendered to the user** (`ImportException`, the `Or`/`Argent`/`Bronze` labels)
-  stay in French, since the interface is French. Log messages, on the other hand, are in
-  English.
+- **Messages the API renders to the user** (`ImportException`, the `Or`/`Argent`/`Bronze`
+  category names) are still French, because nothing on the API side is translated yet: it
+  has no notion of the caller's language. They are the one place where an English interface
+  still shows French, and closing that gap means moving those strings behind a key the web
+  app owns, or having the API honour `Accept-Language`. Log messages, on the other hand,
+  are in English.
 
-**The application itself stays in French**: `fr` is the only locale, and the user-facing
-copy is written in French in `i18n/locales/fr.json`. English will come with
-[#77](https://github.com/zelytra/Librarius/issues/77); until then, no translation of the
-interface.
+**The application ships in French and in English**
+([#77](https://github.com/zelytra/Librarius/issues/77)). Both locales are complete and stay
+that way: `apps/web/src/i18n/locales.test.ts` fails the build on the first key that exists
+in one file and not the other, so a new key is added to `fr.json` **and** `en.json` in the
+same commit — there is no "translate it later".
+
+- French remains the locale the copy is **authored** in: write the French first, translate
+  it, and let `fallbackLng` point at `fr`.
+- English is **American** spelling (`favorites`, `customize`, `catalog`), the default for
+  software interfaces.
+- Plural keys are not copied from one locale to the other. Each language declares the forms
+  its own CLDR rules ask for, and they disagree: French counts zero as singular
+  (« 0 série »), English does not ("0 series").
 
 ## 2. Git flow
 
@@ -174,9 +186,9 @@ Three budgets, all measured **gzipped** — what nginx puts on the wire:
 
 | Budget | Covers | Ceiling | Measured on 2026-07-29 |
 |---|---|---|---|
-| initial | everything `index.html` loads before the first paint | 155 kB | 137.9 kB |
+| initial | everything `index.html` loads before the first paint | 155 kB | 147.1 kB |
 | deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
-| whole build | every file, i.e. what the service worker precaches | 200 kB | 176.4 kB |
+| whole build | every file, i.e. what the service worker precaches | 230 kB | 199.8 kB |
 
 The rule matters more than the figures: **the measurement plus about 15%**. A budget
 with 60% of slack catches nothing, and one set flush against the current size gets
@@ -192,6 +204,14 @@ it back down, by more than #154 had added; the advanced search (#146) and the
 alternative editions (#152) did not move it at all, because both landed behind the route
 split, in the Discover and Detail chunks. A screen growing is not a reason to raise a
 budget — that is the budget working.
+
+The English locale (#77) moved **whole build** from 200 to 230 kB, and it is worth reading
+why, because the headline figure is misleading: the second locale costs 1.4 kB gzipped
+(198.4 → 199.8 kB), JSON compressing well against the French sitting beside it. The ceiling
+moved because it had not been re-derived since it was set from a 176.4 kB measurement,
+while `main` had quietly drifted to 198.4 kB — the check was one merge from going red on
+whatever landed next. **Re-derive on the way past.** A budget left at 99% for several
+merges is a budget that fails the wrong pull request.
 
 ### Lighthouse
 

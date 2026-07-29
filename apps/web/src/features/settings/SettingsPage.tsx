@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
-import { Screen } from '../../shared/ui/primitives';
+import { Screen, Segmented } from '../../shared/ui/primitives';
 import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
+import { changeLanguage } from '../../i18n';
+import { LANGUAGES, activeLanguage } from '../../i18n/languages';
 import { GoalSection } from './GoalSection';
 import { ImportSection } from './ImportSection';
 import { ExportSection } from './ExportSection';
@@ -69,6 +71,18 @@ export function SettingsPage() {
             </button>
           );
         })}
+      </div>
+
+      {/* Language. The labels are endonyms, never translated: someone who landed on the
+          wrong language has to recognise their own on the screen in front of them. */}
+      <h3 className={styles.sectionTitle}>{t('settings.language')}</h3>
+      <p className={styles.sectionIntro}>{t('settings.languageDescription')}</p>
+      <div className={styles.languages}>
+        <Segmented
+          options={LANGUAGES.map((language) => ({ id: language.id, label: language.label }))}
+          value={activeLanguage()}
+          onChange={changeLanguage}
+        />
       </div>
 
       {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}

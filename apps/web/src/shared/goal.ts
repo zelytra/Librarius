@@ -1,4 +1,5 @@
 import { GoalUnit, type GoalDto } from '../api/generated/librarius';
+import { activeLanguage } from '../i18n/languages';
 
 /**
  * The arithmetic behind the annual reading goal.
@@ -123,5 +124,5 @@ export function lastGoalBefore(goals: GoalDto[] | undefined, year: number): Goal
  * groups the thousands a demanding page target reaches.
  */
 export function formatPace(value: number): string {
-  return value.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+  return value.toLocaleString(activeLanguage(), { maximumFractionDigits: 0 });
 }

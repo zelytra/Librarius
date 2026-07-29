@@ -1,0 +1,495 @@
+{
+  "app": {
+    "name": "My Library",
+    "tagline": "Your personal library of books and manga."
+  },
+  "nav": {
+    "home": "Home",
+    "collection": "Collection",
+    "discover": "Discover",
+    "wishlist": "Wishlist",
+    "stats": "Stats"
+  },
+  "common": {
+    "seeAll": "See all",
+    "back": "Back",
+    "loading": "Loading…",
+    "working": "…",
+    "comingSoon": "Coming soon",
+    "books": "Books",
+    "mangas": "Manga",
+    "search": "Search",
+    "remove": "Remove",
+    "retry": "Try again",
+    "errorWithStatus": "Error {{status}}"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "defaultPrompt": "Sign in to open this section.",
+    "prompts": {
+      "home": "Sign in to find your library and your reading again.",
+      "collection": "Sign in to see your collection.",
+      "discover": "Sign in to search and grow your library.",
+      "wishlist": "Sign in to see your wishlist.",
+      "stats": "Sign in to see your statistics.",
+      "detail": "Sign in to see this title.",
+      "series": "Sign in to see this series.",
+      "categories": "Sign in to manage your categories."
+    }
+  },
+  "errors": {
+    "title": "Something went wrong.",
+    "message": "That data cannot be fetched right now.",
+    "boundary": {
+      "title": "The application hit a problem.",
+      "message": "Reload the page to start from a clean screen.",
+      "reload": "Reload the page"
+    }
+  },
+  "home": {
+    "greeting": "Good evening",
+    "resumeReading": "Resume reading",
+    "resumeCount": "{{reading}} in progress",
+    "progressBadge": "{{percent}}%",
+    "progressLabel": "Progress: {{percent}}%",
+    "recentlyBought": "Latest purchases",
+    "recentlyRead": "Recently read",
+    "counters": {
+      "read": "read",
+      "reading": "in progress",
+      "toRead": "to read"
+    },
+    "upcomingReleases": {
+      "title": "Upcoming releases",
+      "unknownDate": "Date to be confirmed",
+      "quarter": "Q{{quarter}} {{year}}",
+      "region": {
+        "FR": "French edition",
+        "JP": "Original edition",
+        "EN": "English edition",
+        "unknown": "Unknown edition"
+      },
+      "source": {
+        "manual": "Confirmed by the publisher",
+        "catalog": "From our catalog",
+        "estimated": "Estimated date",
+        "provider": "Source: {{provider}}"
+      },
+      "empty": {
+        "title": "No upcoming release for now.",
+        "description": "Follow a series from your collection to see its next volumes show up here.",
+        "action": "See my series"
+      }
+    },
+    "empty": {
+      "title": "Your library is empty.",
+      "description": "Add your first titles from the Discover tab.",
+      "action": "Discover titles"
+    },
+    "error": "Your dashboard could not be loaded.",
+    "customize": {
+      "open": "Customize the home screen",
+      "title": "Customize the home screen",
+      "hint": "Reorder the sections with the arrows, hide the ones you do not care about.",
+      "moveUp": "Move “{{section}}” up",
+      "moveDown": "Move “{{section}}” down",
+      "hide": "Hide “{{section}}”",
+      "show": "Show “{{section}}”",
+      "hiddenBadge": "Hidden",
+      "cancel": "Cancel",
+      "save": "Save",
+      "failed": "The layout could not be saved right now.",
+      "sections": {
+        "counters": "Reading counters",
+        "goal": "Annual reading goal",
+        "recentlyRead": "Recently read"
+      }
+    }
+  },
+  "goal": {
+    "title": "{{year}} goal",
+    "outOf": "/ {{target}}",
+    "gaugeLabel": "{{current}} of {{target}} {{unit}} read in {{year}}",
+    "remaining": "{{remaining}} {{unit}} to go before the end of the year.",
+    "reached": "Goal reached. What a year of reading!",
+    "onTrack": "On track",
+    "behind": "Behind",
+    "edit": "Edit the goal",
+    "units": {
+      "BOOKS_one": "book",
+      "BOOKS_other": "books",
+      "VOLUMES_one": "volume",
+      "VOLUMES_other": "volumes",
+      "PAGES_one": "page",
+      "PAGES_other": "pages"
+    },
+    "pace": {
+      "perMonth": "That is {{value}} {{unit}} a month to keep the pace.",
+      "perDay": "That is {{value}} {{unit}} a day to keep the pace."
+    },
+    "empty": {
+      "title": "Set yourself a reading goal",
+      "description": "Pick a number of books, volumes or pages for {{year}}: your progress will show up here.",
+      "action": "Set a goal"
+    },
+    "rollover": {
+      "title": "New year, new goal",
+      "description": "In {{year}} you were aiming for {{target}} {{unit}}. Start again from there?",
+      "action": "Go with {{target}} {{unit}} again",
+      "other": "Pick another goal"
+    },
+    "settings": {
+      "title": "{{year}} reading goal",
+      "description": "A number of books, volumes or pages to read this year. The gauge on the home screen follows your progress.",
+      "placeholder": "Number to reach",
+      "submit": "Save",
+      "saved": "Goal saved: {{target}} {{unit}}.",
+      "failed": "The goal could not be saved right now.",
+      "signIn": "Sign in to set a reading goal."
+    }
+  },
+  "collection": {
+    "title": "My collection",
+    "sortBy": "Sort",
+    "list": "List",
+    "series": "Series",
+    "searchPlaceholder": "Search my collection…",
+    "loadMore": "Show more ({{loaded}} / {{total}})",
+    "total": "{{total}} titles",
+    "seriesTotal_one": "{{count}} series",
+    "seriesTotal_other": "{{count}} series",
+    "volumeShort": "V.{{number}}",
+    "tag": {
+      "book": "BOOK",
+      "manga": "MANGA"
+    },
+    "sorts": {
+      "added": "Added",
+      "title": "Title",
+      "author": "Author",
+      "genre": "Genre",
+      "rating": "Rating"
+    },
+    "ranks": {
+      "all": "All",
+      "favorites": "My favorites",
+      "manage": "Manage my categories"
+    },
+    "empty": {
+      "title": "Nothing here.",
+      "description": "Add books from the Discover tab.",
+      "action": "Discover titles"
+    },
+    "error": "Your collection could not be loaded."
+  },
+  "categories": {
+    "title": "My categories",
+    "intro": "Categories are there to file your titles however you like. Or, Argent and Bronze ship with the application and cannot be changed; the others are yours alone.",
+    "builtin": "Built-in",
+    "none": "You have not created a category yet.",
+    "namePlaceholder": "Category name",
+    "newName": "New name",
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "renameOf": "Rename {{name}}",
+    "deleteOf": "Delete {{name}}",
+    "confirmDelete": "Yes, delete it",
+    "deleteExplain": "The titles filed under this category stay in your collection: they simply lose that ranking.",
+    "errors": {
+      "duplicate": "You already have a category with that name.",
+      "createFailed": "Cannot create it right now.",
+      "renameFailed": "Cannot rename it right now.",
+      "deleteFailed": "Cannot delete it right now.",
+      "load": "Your categories could not be loaded."
+    }
+  },
+  "series": {
+    "follow": "Follow this series",
+    "following": "✓ Series followed",
+    "volumesOfTotal": "{{owned}} / {{total}} volumes",
+    "volumesOwned_one": "{{count}} volume",
+    "volumesOwned_other": "{{count}} volumes",
+    "readCount_one": "{{count}} read",
+    "readCount_other": "{{count}} read",
+    "volumesTitle": "Volumes",
+    "volume": "Volume {{number}}",
+    "volumeTitle": "{{series}} — Volume {{number}}",
+    "volumeLabel": "Volume {{number}} — {{state}}",
+    "volumeLabelWished": "Volume {{number}} — {{state}} · on my wishlist",
+    "unnumbered": "Special volume",
+    "unnumberedShort": "SP",
+    "unnumberedLabel": "{{title}} — {{state}}",
+    "status": {
+      "ONGOING": "Ongoing series",
+      "COMPLETED": "Completed series",
+      "HIATUS": "Series on hiatus"
+    },
+    "states": {
+      "read": "read",
+      "owned": "owned",
+      "missing": "missing",
+      "upcoming": "upcoming"
+    },
+    "missingList": "You are missing volumes {{volumes}}",
+    "missingListTruncated": "You are missing volumes {{volumes}}…",
+    "addToWishlist": "Add to the wishlist",
+    "addToCollection": "Add to my collection",
+    "addFailed": "Cannot add it right now.",
+    "closeActions": "Close",
+    "incomplete": "Incomplete",
+    "sorts": {
+      "progress": "Progress",
+      "title": "Title"
+    },
+    "notFound": "Series not found.",
+    "error": "This series could not be loaded.",
+    "listError": "Your series could not be loaded.",
+    "emptyVolumes": {
+      "title": "No volume known for this series.",
+      "description": "Add a volume to your collection to start the series."
+    },
+    "empty": {
+      "title": "No series here.",
+      "description": "A series shows up as soon as one of its volumes joins your collection."
+    }
+  },
+  "discover": {
+    "title": "Discover",
+    "searchPlaceholder": "Search a title, an author, an ISBN…",
+    "popularGenres": "Popular genres",
+    "recommended": "Recommended for you",
+    "start": "Run a search to find titles to add.",
+    "noResults": "No title matches this search.",
+    "isbnDetected": "ISBN recognized: searching on ISBN {{isbn}}.",
+    "addToLibrary": "Collection",
+    "addToWishlist": "Wishlist",
+    "addedToLibrary": "✓ Added to the collection",
+    "addedToWishlist": "✓ Added to the wishlist",
+    "advanced": {
+      "open": "Advanced search",
+      "close": "Hide the advanced search",
+      "author": "Author",
+      "year": "Year",
+      "language": "Language",
+      "publisher": "Publisher",
+      "anyLanguage": "All languages",
+      "languages": {
+        "fr": "French",
+        "en": "English",
+        "ja": "Japanese",
+        "de": "German",
+        "es": "Spanish",
+        "it": "Italian"
+      },
+      "coverage": "Books are filtered on all four criteria. Manga only accept the author and the year: AniList knows neither publisher nor language.",
+      "reset": "Reset"
+    },
+    "manual": {
+      "invite": "This title is in no catalog? Add it by hand.",
+      "open": "Add manually",
+      "close": "Cancel",
+      "heading": "Manual entry",
+      "title": "Title",
+      "authors": "Author(s)",
+      "series": "Series",
+      "volume": "Volume",
+      "isbn": "ISBN",
+      "publisher": "Publisher",
+      "pageCount": "Pages",
+      "coverUrl": "Cover URL",
+      "submit": "Add to the collection",
+      "added": "✓ “{{title}}” added to the collection"
+    },
+    "errors": {
+      "unavailable": "Search is unavailable right now.",
+      "rateLimited": "Too many searches in a row. Try again in a minute.",
+      "addFailed": "Cannot add it right now."
+    }
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "summary": "{{total}} titles · est. {{budget}} €",
+    "groupTotal": "{{titles}} title(s) · {{budget}} €",
+    "price": "{{price}} €",
+    "acquire": "I bought it",
+    "priority": {
+      "PRIORITY": "Priority",
+      "SOON": "Soon",
+      "SOMEDAY": "Someday"
+    },
+    "edit": {
+      "action": "Edit",
+      "price": "Estimated price",
+      "pricePlaceholder": "Estimated price (€)",
+      "note": "Note",
+      "notePlaceholder": "Edition, format, where to buy it…",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "empty": {
+      "title": "Your wishlist is empty.",
+      "description": "Add titles from the Discover tab.",
+      "action": "Discover titles"
+    },
+    "error": "Your wishlist could not be loaded.",
+    "errors": {
+      "editFailed": "Cannot save the change right now.",
+      "removeFailed": "Cannot remove it right now.",
+      "acquireFailed": "This title could not be moved to your collection."
+    }
+  },
+  "stats": {
+    "title": "Statistics",
+    "cards": {
+      "read": "Books read",
+      "pages": "Pages read",
+      "series": "Series followed",
+      "reading": "In progress"
+    },
+    "favoriteGenres": "Favorite genres",
+    "noGenres": "No data yet — add titles to your collection.",
+    "unavailable": "Statistics unavailable.",
+    "timeline": {
+      "title": "Reading by month",
+      "chartLabel": {
+        "books": "Titles finished each month in {{year}}",
+        "pages": "Pages read each month in {{year}}"
+      },
+      "total": "{{books}} titles and {{pages}} pages finished in {{year}}.",
+      "empty": "No reading finished in {{year}}. Mark a title as read to start the history.",
+      "unavailable": "Reading history unavailable.",
+      "metrics": {
+        "books": "Titles",
+        "pages": "Pages"
+      },
+      "paceTitle": "Reading pace",
+      "pagesPerDay": "pages a day",
+      "daysPerBook": "days a title",
+      "bestMonth": "best month ({{books}})",
+      "noFigure": "—",
+      "cumulativeTitle": "Running total and goal",
+      "cumulativeLabel": "Running total for the year against the goal of {{target}} {{unit}}",
+      "cumulativeLegend": "The curve is your running total, the dashed line the steady pace that reaches the goal on 31 December.",
+      "breakdownTitle": "What you have read",
+      "noBreakdown": "No data for this period yet.",
+      "breakdowns": {
+        "byAuthor": "Authors",
+        "byPublisher": "Publishers",
+        "byLanguage": "Languages",
+        "byRank": "Ranks"
+      }
+    }
+  },
+  "detail": {
+    "summary": "Summary",
+    "ranking": "Ranking",
+    "pages": "pages",
+    "series": "series",
+    "released": "released",
+    "standalone": "Standalone",
+    "kind": {
+      "book": "Novel",
+      "manga": "Manga"
+    },
+    "notFound": "Title not found.",
+    "error": "This title could not be loaded.",
+    "startReading": "Start reading",
+    "reading": "Currently reading",
+    "markAsRead": "Mark as read",
+    "read": "✓ Read",
+    "progress": {
+      "title": "My progress",
+      "page": "Page",
+      "percent": "Percentage",
+      "percentUnit": "%",
+      "outOf": "/ {{total}}",
+      "summary": "{{percent}}% · page {{page}} of {{total}}",
+      "summaryPercent": "{{percent}}% read",
+      "summaryEmpty": "Not started yet.",
+      "startedAt": "Started on",
+      "finishedAt": "Finished on",
+      "save": "Save my progress"
+    },
+    "review": {
+      "title": "My rating",
+      "star": "Rate {{rating}} out of 5",
+      "clear": "Clear my rating",
+      "placeholder": "What I thought of it…",
+      "private": "Rating and review are strictly private: nobody else sees them."
+    },
+    "editions": {
+      "title": "Other editions",
+      "yours": "You saved the {{edition}} edition.",
+      "unknownPublisher": "Unknown publisher",
+      "pages": "{{pages}} pages",
+      "isbn": "ISBN {{isbn}}",
+      "choose": "This is the edition I own",
+      "chooseAria": "I own the {{edition}} edition",
+      "alreadyOwned": "Already in your collection",
+      "alreadyOwnedError": "You already have this edition in your collection.",
+      "error": "The edition could not be changed.",
+      "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "dashboard": "Dashboard",
+    "dashboardDescription": "Reorder or hide the home screen sections: resume reading, counters, goal, upcoming releases, recently read.",
+    "dashboardAction": "Go to the home screen",
+    "appearance": "Appearance",
+    "language": "Language",
+    "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
+    "notifications": "Notifications",
+    "version": "My Library · version {{version}}",
+    "themes": {
+      "systeme": "System",
+      "creme": "Cream",
+      "sauge": "Sage",
+      "rose": "Rose",
+      "nuit": "Night"
+    },
+    "import": {
+      "title": "Import my library",
+      "description": "From Booknode (by handle) or from an exported CSV file (Babelio, Goodreads…).",
+      "signIn": "Sign in to import",
+      "submit": "Import",
+      "csv": "Import a CSV file",
+      "sources": {
+        "booknode": "Booknode",
+        "babelio": "Babelio"
+      },
+      "handlePlaceholder": {
+        "booknode": "Booknode handle"
+      },
+      "babelioNote": "Babelio does not allow importing by handle: a library there is not public. Export your list from Babelio, then import the CSV file below.",
+      "result": "{{imported}} title(s) imported · {{skipped}} already there.",
+      "unavailable": "Import is unavailable right now.",
+      "unreadableFile": "Unreadable file."
+    },
+    "export": {
+      "title": "Export my data",
+      "description": "Get your whole library back: collection, wishlist, reading, ratings, goals and categories.",
+      "signIn": "Sign in to export",
+      "json": "JSON file",
+      "csv": "CSV file",
+      "hint": "The JSON holds everything and can be imported back here. The CSV opens in a spreadsheet and carries the columns Goodreads and Booknode use.",
+      "done": "Export downloaded.",
+      "failed": "Export is unavailable right now."
+    },
+    "deleteAccount": {
+      "title": "Delete my account",
+      "description": "Permanently erase your account and all your data.",
+      "start": "Delete my account",
+      "warning": "This cannot be undone: your collection, your wishlist, your reading, your goals and your sign-in are deleted, with no way back.",
+      "kept": "The book records (titles, editions, series) stay in the shared catalog: they are not yours and they serve the other readers. Nothing there says you owned them.",
+      "delay": "Erasure in the database is immediate. The encrypted backups of the database, however, are kept for up to six months: your data lives on in them until the last backup holding it expires, and is only restored in the event of a major incident.",
+      "exportFirst": "Export my data first",
+      "confirmLabel": "To confirm, type your username: {{username}}",
+      "cancel": "Cancel",
+      "confirm": "Delete permanently",
+      "done": "Your account and all your data have been deleted. Thank you for using My Library.",
+      "failed": "Cannot delete it right now. Nothing has been deleted."
+    }
+  }
+}
