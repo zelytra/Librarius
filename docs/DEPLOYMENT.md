@@ -490,6 +490,241 @@ it proves the API answered rather than the ingress falling back to the PWA.
 
 Compare with the `Recreate` strategy it replaces: 11 s of outage on `web`, 31 s on `api`.
 
+## 📈 Scaling out
+
+The previous section makes a release invisible at one replica. This one is about the
+replica after that: what the stack is expected to take, what happens when it does not, and
+why the autoscaling the chart now carries is **switched off**.
+
+### The target
+
+There is no real traffic yet, so this is a chosen ceiling rather than a measurement.
+Replace it the day one exists.
+
+| | Load | Pass |
+|---|---|---|
+| Concurrent sessions | 50 | — |
+| `GET /api/library` | **20 req/s sustained**, 5 minutes | p95 < 500 ms, no 5xx |
+| `GET /api/catalog/search` | **2 req/s sustained**, warm cache | p95 < 500 ms, no 5xx |
+
+The library figure is [#187](https://github.com/zelytra/Librarius/issues/187)'s proposal
+unchanged. **The catalog figure is not**, and the reason is worth keeping: a caller is
+capped at 30 catalog calls a minute (`librarius.catalog.rate-limit.per-minute`), so 20 req/s
+would need 40 distinct accounts and would measure the rate limiter rather than the API.
+Above that, a cold miss is bounded by the provider deadline
+(`librarius.catalog.provider.call-timeout`, 12 s) and not by anything this stack controls,
+so only a warm cache says something about the API. 2 req/s over the session pool keeps the
+catalog path represented in the percentile without turning the run into a quota test.
+
+What the target implies, before anything is measured: `/api/library` is one paginated query,
+and the api pod has a **1 CPU limit**. That is the arithmetic that decides when a second pod
+is needed, and the load test below is what turns it into a number.
+
+### What the node has — and does not
+
+Requests are what the scheduler counts. `zeserver` has **4000m allocatable**, of which
+Librarius accounts for 305m and five unrelated stacks in `default` for ~3500m — for well
+under 100m of measured use, but a request is a claim whether or not it is used.
+
+An extra `api` pod costs **100m**, an extra `web` pod **25m**:
+
+| | CPU requests | Free of 4000m |
+|---|---|---|
+| Today, steady | 3805m | 195m |
+| Today, rolling `web` + `api` | 3930m | 70m |
+| `api` at 2, steady | 3905m | 95m |
+| `api` at 2 + `web` at 2, steady | 3930m | 70m |
+| `api` at 2, **rolling `api`** | 4005m | **−5m — does not schedule** |
+| `api` at 2 + `web` at 2, **rolling both** | 4055m | **−55m — does not schedule** |
+| `api` at 3, steady | 4005m | **−5m — does not schedule** |
+
+Read the last three rows before enabling anything. The node **can** hold a second `api` pod
+standing still, and **cannot** hold a deployment while it does: `maxSurge: 1` asks for a
+third, and a third does not fit. The failure is not loud — `maxUnavailable: 0` means the old
+pod keeps serving, so the site stays up while the rollout sits in `Pending` until something
+scales back down. That is [#125](https://github.com/zelytra/Librarius/issues/125) with the
+site still standing, and it is why autoscaling ships **off**:
+
+```bash
+kubectl describe node zeserver | grep -A6 'Allocated resources'
+```
+
+**This is a cluster-sizing decision, not a chart one.** The 3500m that `default` requests
+for under 100m of use is where the room is; freeing it, adding a node or taking a bigger one
+are the three ways forward, and none of them belongs in this repository. Until one happens,
+the honest statement is that Librarius has capacity for **one** extra replica of either
+component and no capacity for a release while it is scaled out.
+
+### The PostgreSQL connection budget
+
+One PostgreSQL instance serves the API, Keycloak and the backup job. Its `max_connections`
+is the ceiling every pool is carved out of, and both defaults were wrong for a stack with
+more than one API pod: Agroal's 50 per pod and **Keycloak's own 100** together exceed the
+server on their own. The chart now states all three numbers rather than inheriting them:
+
+| Consumer | Connections | Set by |
+|---|---|---|
+| `api`, per pod | 25 | `api.datasource.maxSize` → `QUARKUS_DATASOURCE_JDBC_MAX_SIZE` |
+| `api`, worst case | **75** | 3 pods — 2 replicas plus the surge of a rolling update |
+| Keycloak | 15 | `keycloak.dbPoolMaxSize` → `KC_DB_POOL_MAX_SIZE` |
+| Backup CronJob | 2 | `pg_dump`, a couple of minutes a day |
+| A human holding a `psql` | 5 | left free on purpose |
+| **Total** | **97** | `postgres.maxConnections` (100) − 3 reserved for superusers |
+
+The point of making the sum fit is the *shape of the failure*. Pools that overcommit the
+server do not queue: PostgreSQL answers `FATAL: sorry, too many clients already`, which
+reaches the user as a 5xx and — since `/q/metrics` publishes nothing about the pool
+([#132](https://github.com/zelytra/Librarius/issues/132)) — is invisible until
+`LibrariusApiHighErrorRate` fires. Pools that fit **wait**, which is slow and recoverable.
+
+25 is a ceiling, not a reservation: Agroal opens nothing until a request needs it. Sized
+against the target rather than against the server, it is still generous — 20 req/s spending
+200 ms in a transaction needs 4 connections, plus the 4 a cold catalog fetch may hold
+(`librarius.catalog.cache.fetch.concurrency`), leaving 21 for everything else. Note that
+this changes the ratio `application.properties` reasons about out loud: 4 of 25 rather than
+4 of 50, so 21 always remain rather than 46.
+
+Raising `postgres.maxConnections` is the wrong first move. A connection is a backend process
+worth several MiB and the container has a 512Mi limit, so the pools come down before the
+ceiling goes up.
+
+### The catalog rate limiter at two replicas
+
+`catalog/RateLimiter.java` keeps its counters in memory, per instance. At N pods the quota
+is enforced N times and the effective ceiling is multiplied by N — at the 2 replicas this
+chart can reach, **60 calls a minute and 1000 a day per caller** instead of 30 and 500.
+
+That is accepted rather than fixed, and the reasoning is: the limit exists to stop one
+caller from burning the instance's Open Library and AniList quota, not to bill anyone. A
+ceiling that doubles is still a ceiling, it is bounded and known, and the alternative is a
+shared counter — which means Redis, a fourth stateful component, on a node that has no room
+for a second API pod.
+
+What doubles alongside it is the number of concurrent outbound fetches: 4 per pod becomes 8.
+That is the figure that actually reaches the providers, and it is the one to watch.
+
+If the aggregate has to be held exactly, divide it by the replica count — at the cost of
+halving the limit whenever only one pod is running:
+
+```bash
+helm -n librarius upgrade ... \
+  --set api.catalogRateLimit.perMinute=15 \
+  --set api.catalogRateLimit.perDay=250
+```
+
+### Turning autoscaling on
+
+**Check the node first** (table above). Then check that the cluster can measure CPU at all:
+an HPA without metrics-server sits at `<unknown>/70%` and never scales, quietly.
+
+```bash
+kubectl top nodes                                   # the direct answer
+kubectl get apiservice v1beta1.metrics.k8s.io       # must report True
+kubectl -n kube-system get deploy metrics-server
+```
+
+k3s bundles metrics-server unless the server was started with
+`--disable=metrics-server`. **That has not been verified on `zeserver`** — it is an
+assumption, and the three commands above are how it stops being one.
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set autoscaling.enabled=true \
+  --wait --timeout 8m
+
+kubectl -n librarius get hpa
+```
+
+```text
+NAME             REFERENCE                   TARGETS   MINPODS   MAXPODS   REPLICAS
+librarius-api    Deployment/librarius-api    6%/70%    1         2         1
+librarius-web    Deployment/librarius-web    4%/70%    1         2         1
+```
+
+`TARGETS` reading `<unknown>/70%` is the metrics-server answer, not a load answer.
+
+Two consequences of switching it on:
+
+- **`replicas` disappears from both Deployments.** The chart omits it while
+  `autoscaling.enabled` is true, on purpose: a value there would be reasserted by every
+  `helm upgrade` and undone by the HPA moments later, so a deployment would reset the
+  scale-out it was deployed into. `api.replicas` and `web.replicas` stop being read.
+- **The `--set` has to go into `cd.yml`**, next to the two Secret names, or the next merge
+  into `main` removes the HPAs. That is the same trap as `backup.enabled`.
+
+The disruption budgets improve on their own: `minAvailable: 1` against 2 replicas finally
+allows an eviction instead of denying every one, so a `kubectl drain` stops needing
+`--disable-eviction` while the deployment is scaled out.
+
+### Scaling out by hand
+
+The fallback if metrics-server turns out to be absent, and the right tool for a scale-out
+that is planned rather than reactive. Go through Helm, not through `kubectl scale`: with
+autoscaling off the chart templates `replicas`, so a `helm upgrade` would put it straight
+back to 1.
+
+```bash
+helm -n librarius upgrade --install librarius ./infra/helm/librarius \
+  --set postgres.existingSecret=librarius-postgres \
+  --set keycloak.existingSecret=librarius-keycloak \
+  --set api.replicas=2 \
+  --wait --timeout 8m
+```
+
+`kubectl -n librarius scale deploy/librarius-api --replicas=2` is still the fastest thing to
+type in an incident, and it holds until the next deployment. Know which of the two you are
+doing.
+
+Coming back down is the same command with `1`, and it matters: while the deployment is at 2
+replicas, **the next release cannot schedule its surge pod** (table above).
+
+### Running the load test
+
+`infra/loadtest/librarius-load.js` drives the target above with
+[k6](https://k6.io) and encodes it as thresholds, so the run exits non-zero when it is
+missed — a pass or a fail rather than a graph. It is **read-only**, it creates no account
+and writes no row, and it signs in through the direct access grant the `librarius-web`
+client already allows, the same route the e2e suite takes.
+
+Accounts are supplied, never created. Use at least 4 so the catalog scenario stays under the
+per-caller quota, and prefer accounts whose library holds a realistic number of titles — an
+empty collection measures an empty query.
+
+```bash
+k6 run \
+  -e BASE_URL=https://librarius.zelytra.fr \
+  -e ACCOUNTS='loadtest1:<pw>,loadtest2:<pw>,loadtest3:<pw>,loadtest4:<pw>' \
+  infra/loadtest/librarius-load.js
+```
+
+Locally, against `pnpm infra:up` plus `pnpm api:dev`, Keycloak is on its own host:
+
+```bash
+k6 run -e BASE_URL=http://localhost:8080 -e AUTH_URL=http://localhost:8081 \
+  -e ACCOUNTS='alice:alice,bob:bob' infra/loadtest/librarius-load.js
+```
+
+Watch the cluster while it runs — the numbers that matter are not all in k6's output:
+
+```bash
+kubectl -n librarius get hpa -w                 # does it scale, and when
+kubectl -n librarius top pods                   # CPU against the 1 CPU limit
+kubectl -n librarius get pods -w                # a surge pod stuck Pending
+```
+
+Record the result in this section. Three things make it worth reading later: the request
+rate at which p95 crossed 500 ms, the CPU the api pod was drawing at that point, and whether
+the HPA reacted before the latency did.
+
+> **Not yet run.** Nothing in this section has been executed against
+> `librarius.zelytra.fr`: the load test has never been run, no HPA has ever existed on the
+> cluster, metrics-server has not been confirmed present, and no `api` pod has ever been
+> scheduled alongside another. The chart renders and lints, the arithmetic above is derived
+> from the measurements in § "Deploying without downtime" and § "Alerting", and that is all
+> it is. [#187](https://github.com/zelytra/Librarius/issues/187) stays open on it.
+
 ## 💾 Automated backups
 
 PostgreSQL runs on a `local-path` PVC, on a single node, with no redundancy of any kind:

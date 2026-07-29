@@ -246,6 +246,35 @@ production opens.*
     [#73](https://github.com/zelytra/Librarius/issues/73) stays open until the service
     account exists and one real deletion has been run, procedure in `docs/DEPLOYMENT.md`
     § "Account deletion".
+22. 🔴 **The stack cannot scale out: the node has no CPU requests left for it.** The chart
+    now carries a `HorizontalPodAutoscaler` for `web` and `api`
+    (`autoscaling.enabled`, max 2 replicas, 70% of the request), and it ships **off** —
+    which is a statement about `zeserver`, not a preference. Its 4000m of allocatable CPU
+    are 3805m committed before anything scales, most of it by five unrelated stacks in
+    `default` requesting ~3500m for well under 100m of use. A second `api` pod costs 100m
+    and fits with 95m to spare; the surge pod of a release **on top of it** needs 100m more
+    and does not. The site would stay up (`maxUnavailable: 0`) while the rollout sat in
+    `Pending` — [#125](https://github.com/zelytra/Librarius/issues/125) without the outage.
+    Freeing that capacity is a cluster-sizing decision for the maintainer, not something the
+    chart can size around.
+    Sized deliberately alongside it, and shipped **on**: the PostgreSQL connection budget.
+    One instance serves the API, Keycloak and the backup job, and the two defaults
+    overcommitted it on their own — Agroal's 50 per pod and **Keycloak's 100**. The chart
+    now states all three numbers (`api.datasource.maxSize: 25`,
+    `keycloak.dbPoolMaxSize: 15`, `postgres.maxConnections: 100`) so that a pool exhausts by
+    *waiting* rather than by PostgreSQL refusing the connection — a 5xx that is invisible
+    until `LibrariusApiHighErrorRate` fires, since nothing publishes a pool metric
+    ([#132](https://github.com/zelytra/Librarius/issues/132)).
+    Accepted rather than fixed: `catalog/RateLimiter.java` counts in memory per instance, so
+    2 replicas mean 60 calls a minute and 1000 a day per caller instead of 30 and 500, and 8
+    concurrent outbound provider fetches instead of 4. Bounded and known; the alternative is
+    Redis. `api.catalogRateLimit.*` holds the aggregate exactly for whoever disagrees.
+    **Nothing here has been exercised**: no HPA has ever existed on the cluster,
+    metrics-server is assumed present because k3s bundles one and has *not* been confirmed,
+    no second `api` pod has ever been scheduled, and the k6 load test
+    (`infra/loadtest/librarius-load.js`, which encodes the target as thresholds) has never
+    been run. [#187](https://github.com/zelytra/Librarius/issues/187) stays open on all of
+    it.
 
 ## Functional gaps vs the vision 📋
 

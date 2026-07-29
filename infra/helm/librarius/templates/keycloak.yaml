@@ -83,6 +83,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "librarius.postgres.secretName" . }}
                   key: {{ .Values.postgres.secretKey }}
+            # Keycloak's own default is 100, i.e. the whole of PostgreSQL's
+            # `max_connections`. Declared so the api's pools have a budget left
+            # to be sized against — docs/DEPLOYMENT.md § "Scaling out".
+            - name: KC_DB_POOL_MAX_SIZE
+              value: {{ .Values.keycloak.dbPoolMaxSize | quote }}
           ports:
             - containerPort: 8081
             - containerPort: 9000
