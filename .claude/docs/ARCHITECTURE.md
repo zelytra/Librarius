@@ -15,6 +15,7 @@ Browser (React 19 PWA)
    └──────────────► Quarkus 3 / Java 21 API ──► PostgreSQL 16 (Flyway + Panache)
                           │
                           ├──► Open Library  (REST, books)
+                          ├──► BnF           (SRU/XML, books)
                           └──► AniList       (GraphQL, manga)
 ```
 
@@ -154,7 +155,8 @@ zelytra/librarius/
   web/                  # JAX-RS resources + ApiDtos (records) + exception mappers
   catalog/              # CatalogProvider (SPI), CatalogService (aggregation),
                         # CatalogCache + CatalogCacheStore (Caffeine → PostgreSQL)
-    provider/           # OpenLibraryProvider/Client, AniListProvider/Client
+    provider/           # OpenLibraryProvider/Client + BnfProvider/Client (books),
+                        # AniListProvider/Client (manga)
   imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService,
                         # ArchiveImportService (restores a JSON export)
   export/               # ExportService (JSON + CSV), ExportCsv, ExportJobs (deferred)
@@ -175,7 +177,13 @@ zelytra/librarius/
 - **Catalog**: `CatalogProvider` is a CDI SPI (`name()`, `kind()`, `search()`,
   `upcoming()`). `CatalogService` indexes the providers by `Kind`, fans out and deduplicates
   by key (`dedupKey`). **Adding a provider means writing one `@ApplicationScoped implements
-  CatalogProvider` class** — nothing else needs to change.
+  CatalogProvider` class** — nothing else needs to change, and `BOOK` proves it: Open
+  Library and the BnF are both registered for it, and neither the service, the resource nor
+  the cache knows there are two. A provider that fails answers no result rather than
+  raising, so the aggregate degrades to whatever the others found. `dedupKey` is
+  `title|authors` lowercased, which only merges two catalogues when they spell an author the
+  same way — that is why `BnfProvider` rewrites an authority heading ("Herbert, Frank
+  (1920-1986). Auteur du texte") into the plain name Open Library returns.
 - **Catalog cache**: two levels behind `CatalogCache`, on the provider call rather than on
   the merged answer. Caffeine first (6 h for a search, 12 h for the releases), then the
   `catalog_cache` table (`CatalogCacheStore`), so a pod that has just started answers from

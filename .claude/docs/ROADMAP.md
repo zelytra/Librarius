@@ -199,7 +199,7 @@ bibliography and can be followed; a work's editions carry covers the providers k
 | [#178](https://github.com/zelytra/Librarius/issues/178) | Grow the medium taxonomy beyond books and manga | — |
 | [#189](https://github.com/zelytra/Librarius/issues/189) | Catalog search stops requiring a single mandatory kind | #178 |
 | [#194](https://github.com/zelytra/Librarius/issues/194) | Discover: one result feed across every medium | #189 |
-| [#179](https://github.com/zelytra/Librarius/issues/179) | Add Google Books as a second catalog provider | — |
+| [#179](https://github.com/zelytra/Librarius/issues/179) | ✅ A second book catalog provider — the **BnF** over SRU, not Google Books, which the user ruled out in [#9](https://github.com/zelytra/Librarius/pull/9) | — |
 | [#197](https://github.com/zelytra/Librarius/issues/197) | Enrich a work's editions and their covers from its provider | #49, #184 |
 | [#182](https://github.com/zelytra/Librarius/issues/182) | Author catalog entities: author, work_author and author_follow tables | — |
 | [#196](https://github.com/zelytra/Librarius/issues/196) | Author API: bibliography, search and follow | #182 |
