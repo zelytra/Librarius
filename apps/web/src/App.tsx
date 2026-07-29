@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from './app/AppShell';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';

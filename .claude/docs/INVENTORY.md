@@ -23,7 +23,7 @@ the public URL from outside — see debt #15.
 
 | Area | State |
 |---|---|
-| Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 20 / pnpm 9.15.9 / JDK 21 |
+| Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
 | Persistence | PostgreSQL + Panache + Flyway (2 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)) |
@@ -125,6 +125,22 @@ the public URL from outside — see debt #15.
   wishes with no date attached ahead of the next purchases. The ordering now maps the
   column to `WishPriority.rank`. Spotted while adding pagination (#38) and kept as its own
   issue rather than changed silently under an unrelated title.
+
+### Front-end dependencies
+
+19. **Two advisories are left on the toolchain, both blocked upstream.**
+    [#109](https://github.com/zelytra/Librarius/issues/109) and
+    [#133](https://github.com/zelytra/Librarius/issues/133) took `pnpm audit --prod` from
+    one accepted high to nothing at all, with no entry left in
+    `pnpm.auditConfig.ignoreGhsas`, and the dev tree from twelve findings to two. What is
+    left is GHSA-mh99-v99m-4gvg on `brace-expansion` 1.1.16, reached twice through
+    eslint 9 → minimatch 3. It cannot be fixed in place: the patch exists only on the 5.x
+    line, and minimatch 3 pins `^1.1.7`. eslint 10 drops minimatch 3, but
+    `eslint-plugin-react` still peers on `eslint ^9.7` — and that plugin carries
+    `react/jsx-no-literals`, the guard that keeps user-facing copy out of the JSX, so it
+    cannot simply be dropped. Same shape as the `typescript` 7 blocker, which is still
+    waiting on typescript-eslint. Both are pure build-time trees: no advisory reaches the
+    browser bundle.
 
 ### Operations
 
@@ -234,8 +250,8 @@ production opens.*
 |---|---|
 | Java classes (main) | 66 |
 | Java tests | 23 files |
-| Front-end files (src) | 49 |
-| Front-end tests | 8 files, 63 tests |
+| Front-end files (src) | 55 |
+| Front-end tests | 11 files, 116 tests |
 | Flyway migrations | 7 |
 | REST endpoints exposed | 30 (11 resources) |
 | Locales | 1 (fr) |

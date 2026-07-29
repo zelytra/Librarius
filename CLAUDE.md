@@ -25,7 +25,7 @@ Two things stay in French:
 ## Commands
 
 ```bash
-pnpm install            # frontend dependencies (pnpm 9, Node 20)
+pnpm install            # frontend dependencies (pnpm 9, Node 24)
 pnpm infra:up           # postgres :5432 · keycloak :8081 · prometheus :9090 · grafana :3000
 pnpm api:dev            # Quarkus API :8080 (mvnw quarkus:dev)
 pnpm web:dev            # Vite PWA :5173 (proxies /api → 8080)
@@ -53,7 +53,7 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 
 | Path | Contents |
 |---|---|
-| `apps/web/` | React 19 + Vite 6 + TS PWA. `features/<screen>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **never edit by hand**) |
+| `apps/web/` | React 19 + Vite 8 + TS PWA. `features/<screen>/`, `shared/` (ui, theme, styles), `api/generated/` (orval — **never edit by hand**) |
 | `apps/api/` | Quarkus 3 / Java 21. `domain/` (entities + Panache repositories), `web/` (JAX-RS resources + DTOs), `catalog/` (external providers), `imports/`, `security/` |
 | `apps/mobile/` | Capacitor 7 native shell (Android/iOS). **No application code**: `webDir` points at the `apps/web` build — see [MOBILE](.claude/docs/MOBILE.md) |
 | `openapi/` | **Contract** between the api and the web app: schema produced by the api build, consumed by orval. Belongs to neither application |

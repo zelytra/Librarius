@@ -6,7 +6,9 @@ import { server } from './server';
 // Node >= 22 exposes a native `localStorage` that takes precedence over the jsdom one,
 // and whose getItem is unusable without a storage file: any component reading a
 // preference (the theme) then fails to render. We substitute an in-memory storage.
-// No effect on Node 20, the CI version, whose jsdom localStorage works fine.
+// This is now the case everywhere, CI included, since `.nvmrc` moved to Node 24 — the
+// `--localstorage-file was provided without a valid path` warnings in the run output are
+// that same native storage, and this substitution is what keeps it harmless.
 if (typeof globalThis.localStorage?.getItem !== 'function') {
   const entries = new Map<string, string>();
   const memoryStorage: Storage = {

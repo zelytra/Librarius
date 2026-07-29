@@ -43,10 +43,9 @@ jobs:
       # Dependabot pull requests instead of by a hard gate — otherwise a
       # build-tool advisory blocks every unrelated pull request.
       #
-      # Advisories deliberately accepted are listed in `pnpm.auditConfig` in the
-      # root package.json. Currently one: GHSA-qwww-vcr4-c8h2, a CSRF bypass in
-      # React Router's RSC mode. This app is a client-rendered SPA and never
-      # enables RSC; the fix is react-router 8, a major upgrade tracked
-      # separately.
+      # Advisories deliberately accepted would be listed in `pnpm.auditConfig`
+      # in the root package.json. There are none: the only entry there was
+      # GHSA-qwww-vcr4-c8h2, cleared by the react-router 8 upgrade. Keep it that
+      # way — an allowlist entry outlives the reasoning that justified it.
       - name: Audit runtime dependencies
         run: pnpm run web:audit

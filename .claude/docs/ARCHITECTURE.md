@@ -39,7 +39,7 @@ src/
   features/<screen>/           # one page per screen, self-contained
   shared/
     api.ts                     # useApiAuth() → { authed, loading, login }
-    apiClient.ts               # fetch client behind the generated hooks (token, 401 renewal)
+    apiClient.ts               # fetch mutator behind the generated hooks (token, 401 renewal)
     authToken.ts               # session mirrored out of React, read by apiClient
     AuthTokenBridge.tsx        # publishes the OIDC session into authToken
     queryClient.ts             # shared React Query configuration
@@ -53,8 +53,10 @@ src/
 
 ### Current conventions
 
-- **Routing**: `react-router-dom` v7, routes declared in `App.tsx`, all children of
-  `AppShell`. The `*` fallback goes to Home.
+- **Routing**: `react-router` v8, routes declared in `App.tsx`, all children of
+  `AppShell`. The `*` fallback goes to Home. Declarative mode only — `BrowserRouter`
+  plus `<Routes>`, no data router, no loader, no action. Import from `react-router`:
+  the `react-router-dom` re-export package no longer exists in v8.
 - **Authentication**: every screen wraps its content in `<LoginGate>`. The bearer token is
   attached in one place, by `shared/apiClient.ts`; screens never handle it. On a 401 that
   client renews the session and replays the request once before falling back to sign-in.
@@ -236,7 +238,7 @@ The OIDC authority is **baked into the web image at build time**
 | 4 | Generated TS client (orval) + CI gate | Front/back contract always in sync | ✅ Applied |
 | 5 | Rank as a column, not a join table | A title carries at most one rank | ✅ Applied (a simplification vs the initial vision) |
 | 6 | Provider release dates, not French ones | No reliable free API for French publishers | ✅ Accepted, to be revisited |
-| 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing | ✅ Applied |
+| 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing. Since orval 8 the mutator takes `(url, RequestInit)` and the generated code builds the URL and encodes the body, so `apiClient.ts` is down to the session concerns | ✅ Applied |
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🚧 Bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): the shell loads the web bundle; native projects and native sign-in pending |
 | 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library and AniList are stubbed because both providers swallow their own failures: an unavailable third party would look like an empty result set | ✅ Applied |

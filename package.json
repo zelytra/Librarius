@@ -5,16 +5,11 @@
   "description": "Ma Bibliothèque — gestion de bibliothèque personnelle (livres & mangas).",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "pnpm": {
     "overrides": {
-      "vite": "^6.0.5"
-    },
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-qwww-vcr4-c8h2"
-      ]
+      "vite": "^8.1.5"
     }
   },
   "scripts": {
