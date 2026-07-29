@@ -627,6 +627,14 @@
           },
           "genres" : {
             "type" : "string"
+          },
+          "provider" : {
+            "type" : "string",
+            "maxLength" : 32
+          },
+          "providerRef" : {
+            "type" : "string",
+            "maxLength" : 255
           }
         }
       },

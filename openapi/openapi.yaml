@@ -451,6 +451,12 @@ components:
           type: string
         genres:
           type: string
+        provider:
+          type: string
+          maxLength: 32
+        providerRef:
+          type: string
+          maxLength: 255
     MeDto:
       type: object
       properties:

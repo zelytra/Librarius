@@ -84,6 +84,22 @@ describe('DiscoverPage', () => {
     expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
   });
 
+  /**
+   * The card knows which record it is showing, and it is the only place that does: dropped
+   * here, no provider can ever be asked about the title again (#184).
+   */
+  test('carries the provider reference of the result it adds', async () => {
+    const posts = capturedLibraryPosts();
+    searchReturns([catalogResult()]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+    await userEvent.click(await screen.findByText('Collection'));
+
+    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
+  });
+
   test('adds a result to the wishlist', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);

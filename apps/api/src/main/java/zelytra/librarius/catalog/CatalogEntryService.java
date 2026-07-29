@@ -13,13 +13,16 @@ import zelytra.librarius.genre.GenreService;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
 /**
- * Turns a manual entry into catalog rows: the work it describes, and one edition of it.
- * Acts as the single entry point for the library, the wishlist and the imports as long as
- * the external catalog (PR #4) is not wired in; it will then provide other edition
- * factories.
+ * Turns an entry into catalog rows: the work it describes, and one edition of it. The
+ * single entry point for the library, the wishlist, the imports and the restore of an
+ * export.
  *
  * <p>The work is deduplicated, the edition never is. That asymmetry is the whole point of
  * the split: one work, N materialisations of it.
+ *
+ * <p>"Manual" in the method names is a leftover: the same call records a title typed into
+ * the form and one picked off a Discover result. What tells them apart is whether the entry
+ * carries a provider reference — see {@link #hasReference}.
  */
 @ApplicationScoped
 public class CatalogEntryService {
@@ -61,7 +64,10 @@ public class CatalogEntryService {
         edition.coverUrl = dto.coverUrl();
         edition.format = dto.format();
         edition.releaseDate = dto.releaseDate();
-        edition.provider = "manual";
+        if (hasReference(dto)) {
+            edition.provider = dto.provider().trim();
+            edition.providerRef = dto.providerRef().trim();
+        }
         editions.persist(edition);
 
         return edition;
@@ -83,6 +89,10 @@ public class CatalogEntryService {
         work.genresText = dto.genres();
         work.genres = genres.resolve(dto.genres());
         work.originalYear = dto.originalYear();
+        if (hasReference(dto)) {
+            work.provider = dto.provider().trim();
+            work.providerRef = dto.providerRef().trim();
+        }
         works.persist(work);
         return work;
     }
@@ -113,7 +123,37 @@ public class CatalogEntryService {
             work.series = resolveSeries(dto.kind(), dto.seriesTitle());
             work.seriesTitle = work.series != null ? work.series.title : null;
         }
+        // A work founded by a hand-typed entry, or before V12 existed, carries no reference:
+        // the first entry that does know one supplies it. The reverse never happens — an
+        // entry naming another record of the same title does not get to redirect everyone
+        // else's work at it.
+        if (work.provider == null && hasReference(dto)) {
+            work.provider = dto.provider().trim();
+            work.providerRef = dto.providerRef().trim();
+        }
         return work;
+    }
+
+    /**
+     * Whether the entry names a record a provider could be asked about again.
+     *
+     * <p>The provider and the reference are one value: a name with no reference resolves to
+     * nothing, and a reference with no name belongs to no catalog. Half of one is therefore
+     * not stored — {@code ck_work_provider_reference} and {@code ck_edition_provider_reference}
+     * (V12) refuse it — so that a reader can take a non-null {@code provider} to mean "there
+     * is something to ask about", and so that the half-filled row does not sit there blocking
+     * {@link #complete} against a later entry that knows the whole thing.
+     *
+     * <p>Which is not hypothetical: Open Library results carry {@code "openlibrary"} and no
+     * reference at all today, so a book added from Discover still records nothing. The gap is
+     * in the provider, not here — see {@code OpenLibraryProvider.toResult}.
+     */
+    private static boolean hasReference(ManualBookDto dto) {
+        return notBlank(dto.provider()) && notBlank(dto.providerRef());
+    }
+
+    private static boolean notBlank(String value) {
+        return value != null && !value.isBlank();
     }
 
     /**

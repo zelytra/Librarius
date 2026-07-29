@@ -106,7 +106,18 @@ public final class ApiDtos {
     public record EditionSwitchDto(@NotNull UUID editionId) {
     }
 
-    /** Manual entry of a book (before the external catalog is integrated). */
+    /**
+     * A book as the client describes it: everything the server needs to match or create the
+     * work and the edition behind it, and nothing that identifies a row of this instance.
+     *
+     * <p>The name is a leftover. It is what a hand-typed entry sends, but also what a
+     * Discover result is converted into and what an export carries — one shape for the three
+     * paths, so the server never has two ways to record a title.
+     *
+     * @param provider    catalog the entry was picked from, {@code null} for a hand-typed one
+     * @param providerRef identifier of the record in that catalog. Meaningful only next to
+     *                    {@code provider}, and stored only when both are present
+     */
     public record ManualBookDto(
             @NotNull Kind kind,
             @NotBlank String title,
@@ -122,7 +133,9 @@ public final class ApiDtos {
             LocalDate releaseDate,
             Integer originalYear,
             String synopsis,
-            String genres) {
+            String genres,
+            @Size(max = 32) String provider,
+            @Size(max = 255) String providerRef) {
     }
 
     public record LibraryCreateDto(

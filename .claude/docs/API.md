@@ -69,7 +69,8 @@ EditionSwitchDto(UUID editionId)
 ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
               Integer volumeNumber, String isbn13, String publisher, String language,
               Integer pageCount, String coverUrl, String format, LocalDate releaseDate,
-              Integer originalYear, String synopsis, String genres)
+              Integer originalYear, String synopsis, String genres,
+              String provider, String providerRef)   // where the entry came from, or null
 
 LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
 LibraryItemDto(UUID id, String status, Integer rating, String review, LocalDate acquiredAt,
@@ -617,7 +618,15 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 
 - **Adding a title**: the client sends a complete `ManualBookDto`; the server matches or
   creates the `work` + `edition`, then creates the `library_item`. The front end never has
-  to handle a catalog identifier.
+  to handle a catalog identifier **of this instance** — it holds no `workId` or `editionId`
+  when it adds.
+- **Where the entry came from**: `ManualBookDto.provider` / `providerRef` carry the
+  *provider's* identifier, and Discover fills them from the `CatalogResult` it is converting
+  (the manual form has none to send). The server stamps the pair on the `edition` it creates
+  and on the `work` when it founds it, or completes a matched work that had none. **The two
+  are one value**: half a pair is dropped rather than stored, on either row
+  ([DATA-MODEL](DATA-MODEL.md) § 1, V12). Beware that Open Library results carry a provider
+  and no reference today, so a book added from Discover still records neither.
 - **Isolation**: every resource resolves `CurrentUser.id()` and filters on it. An `id`
   belonging to another user must answer **404**, never 403 (no leaking of existence).
 - **Validation**: Jakarta Bean Validation (`@Valid`, `@NotBlank`, `@Min`) on the input DTOs;
@@ -639,4 +648,4 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
-| A12 | No **provider enrichment** of the editions of a work: the list holds what users entered. `work` carries no `provider_ref`, so no provider can be asked "the other editions of *this* work" | Core product |
+| A12 | No **provider enrichment** of the editions of a work: the list still holds only what users entered. `work` now carries `provider` / `provider_ref` (V12, #184) and new entries from Discover fill them, so the question can be asked — but nothing asks it yet (#197), everything stored before V12 has no reference and cannot be given one, and Open Library supplies none at all for now | Core product |
