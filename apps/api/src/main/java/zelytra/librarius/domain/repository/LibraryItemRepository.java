@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem, UUID> {
@@ -99,6 +100,55 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                         """, LibraryItem.class)
                 .setParameter("userId", userId)
                 .getResultList();
+    }
+
+    /**
+     * Series the user owns at least one volume of. Half of the stake that makes an upcoming
+     * release theirs — the other halves being their wishlist and their follows.
+     */
+    public Set<UUID> seriesIdsOwned(String userId) {
+        return new LinkedHashSet<>(getEntityManager()
+                .createQuery("""
+                        select distinct w.series.id from LibraryItem li
+                          join li.edition e
+                          join e.work w
+                        where li.userId = :userId
+                          and w.series is not null
+                        """, UUID.class)
+                .setParameter("userId", userId)
+                .getResultList());
+    }
+
+    /**
+     * One volume of a series present in the user's collection.
+     *
+     * @param volumeNumber never {@code null} — a volume carrying no number cannot be matched
+     *                     against an announcement
+     */
+    public record OwnedVolume(UUID seriesId, Integer volumeNumber) {
+    }
+
+    /**
+     * The numbered volumes the user already owns, per series.
+     *
+     * <p>What keeps an announcement for tome 12 out of the list of somebody who bought it
+     * on release day: "what is coming" means what is coming <em>for them</em>.
+     */
+    public Set<OwnedVolume> ownedVolumes(String userId) {
+        return getEntityManager()
+                .createQuery("""
+                        select distinct w.series.id, w.volumeNumber from LibraryItem li
+                          join li.edition e
+                          join e.work w
+                        where li.userId = :userId
+                          and w.series is not null
+                          and w.volumeNumber is not null
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .getResultList()
+                .stream()
+                .map(row -> new OwnedVolume((UUID) row[0], (Integer) row[1]))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**
