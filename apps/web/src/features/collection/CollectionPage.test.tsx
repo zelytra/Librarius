@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TestProviders, renderWithProviders } from '../../test/utils';
-import { libraryItem, seriesSummary } from '../../test/fixtures';
+import { BUILTIN_CATEGORIES, customCategory, libraryItem, seriesSummary } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, seriesReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -62,10 +62,63 @@ describe('CollectionPage', () => {
 
     expect(await screen.findByText('Titre sans rang')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText('Or'));
+    // The chips are the categories the API returns, so the row appears with them.
+    await userEvent.click(await screen.findByText('Or'));
 
     expect(await screen.findByText('Titre doré')).toBeInTheDocument();
     expect(screen.queryByText('Titre sans rang')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The acceptance criterion of #51: a category created on the management screen becomes a
+   * shelf here, without this screen naming it.
+   */
+  test('turns a custom category into a filter chip', async () => {
+    server.use(http.get('*/api/categories', () =>
+      HttpResponse.json([...BUILTIN_CATEGORIES, customCategory()])));
+    libraryReturns([
+      libraryItem({ id: 'dore-1', rankCode: 'dore', book: { kind: 'BOOK', title: 'Titre classé' } }),
+      libraryItem({ id: 'sans', book: { kind: 'BOOK', title: 'Titre sans rang' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    await userEvent.click(await screen.findByText('Doré'));
+
+    expect(await screen.findByText('Titre classé')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Titre sans rang')).not.toBeInTheDocument());
+  });
+
+  test('sends the code of the selected category to the server', async () => {
+    const ranks: (string | null)[] = [];
+    server.use(
+      http.get('*/api/categories', () =>
+        HttpResponse.json([...BUILTIN_CATEGORIES, customCategory()])),
+      http.get('*/api/library', ({ request }) => {
+        ranks.push(new URL(request.url).searchParams.get('rank'));
+        return HttpResponse.json({ items: [], page: 0, size: 24, total: 0 });
+      }),
+    );
+    renderWithProviders(<CollectionPage />);
+
+    await userEvent.click(await screen.findByText('Doré'));
+
+    await waitFor(() => expect(ranks).toContain('dore'));
+  });
+
+  test('opens the category management screen from the shelf row', async () => {
+    libraryReturns([ROMAN]);
+    render(
+      <TestProviders route="/collection">
+        <Routes>
+          <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/categories" element={<p>écran des catégories</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Gérer mes catégories'));
+
+    expect(await screen.findByText('écran des catégories')).toBeInTheDocument();
   });
 
   /** "My favourites" is the rating filter at four, applied by the server like the rest. */

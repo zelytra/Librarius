@@ -33,7 +33,8 @@
       "wishlist": "Connecte-toi pour voir tes souhaits.",
       "stats": "Connecte-toi pour voir tes statistiques.",
       "detail": "Connecte-toi pour voir ce titre.",
-      "series": "Connecte-toi pour voir cette série."
+      "series": "Connecte-toi pour voir cette série.",
+      "categories": "Connecte-toi pour gérer tes catégories."
     }
   },
   "errors": {
@@ -153,10 +154,8 @@
     },
     "ranks": {
       "all": "Tous",
-      "gold": "Or",
-      "silver": "Argent",
-      "bronze": "Bronze",
-      "favorites": "Mes coups de cœur"
+      "favorites": "Mes coups de cœur",
+      "manage": "Gérer mes catégories"
     },
     "empty": {
       "title": "Aucun titre ici.",
@@ -164,6 +163,28 @@
       "action": "Découvrir des titres"
     },
     "error": "Impossible de charger ta collection."
+  },
+  "categories": {
+    "title": "Mes catégories",
+    "intro": "Les catégories te servent à classer tes titres comme tu veux. Or, Argent et Bronze sont fournies avec l'application et ne se modifient pas ; les autres n'appartiennent qu'à toi.",
+    "builtin": "Intégrée",
+    "none": "Tu n'as pas encore créé de catégorie.",
+    "namePlaceholder": "Nom de la catégorie",
+    "newName": "Nouveau nom",
+    "create": "Créer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "renameOf": "Renommer {{name}}",
+    "deleteOf": "Supprimer {{name}}",
+    "confirmDelete": "Oui, supprimer",
+    "deleteExplain": "Les titres classés dans cette catégorie restent dans ta collection : ils perdent simplement ce classement.",
+    "errors": {
+      "duplicate": "Tu as déjà une catégorie de ce nom.",
+      "createFailed": "Création impossible pour le moment.",
+      "renameFailed": "Renommage impossible pour le moment.",
+      "deleteFailed": "Suppression impossible pour le moment.",
+      "load": "Impossible de charger tes catégories."
+    }
   },
   "series": {
     "follow": "Suivre cette série",

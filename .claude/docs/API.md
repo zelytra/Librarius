@@ -40,7 +40,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/series/{id}/follow` | Stops following the series — 204, idempotent |
 | GET | `/api/genres` | Genres present in the caller's collection, most frequent first (`GenreCount`) — see [Genres](#genres) |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
-| POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) |
+| POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) — 409 on a name already used |
+| PUT | `/api/categories/{id}` | Renames one of the caller's categories (`CategoryUpdateDto`) — see [Categories](#categories) |
+| DELETE | `/api/categories/{id}` | Deletes it and unranks its titles — 204 |
 | GET | `/api/goals` | Reading goals |
 | PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
@@ -89,6 +91,7 @@ WishlistBudgetLineDto(String priority, long count, long pricedCount, BigDecimal 
 
 CategoryDto(UUID id, String code, String label, String color, boolean builtin)
 CategoryCreateDto(String label, String color)
+CategoryUpdateDto(String label)
 
 GoalDto(UUID id, int year, int targetCount, String unit)
 GoalUpsertDto(Integer targetCount, GoalUnit unit)
@@ -295,6 +298,42 @@ exists to remove — `datePrecision` says how much of `releaseDate` is real (a p
 only knows the month must not be shown a day it never announced), and `source`/`confidence`
 say where the date came from and how firm it is. A curated row (`source = manual`) always
 wins over a provider guess, and the refresher never touches one.
+
+## Categories
+
+A category is a **rank**, one per title at most: the shelf the reader files a book on. It is
+not a genre, and the two never mix — a genre describes the book and is shared catalog data,
+a category describes what its owner thinks of it and belongs to that one account. They are
+told apart everywhere: `?genre=` versus `?rank=`, `/api/genres` versus `/api/categories`,
+`work_genre` versus `library_item.rank_category_id`.
+
+`GET /api/categories` returns the three shared built-ins (`or`, `argent`, `bronze`,
+`user_id NULL`, `builtin: true`) followed by the caller's own. A category created by someone
+else is never listed, never assignable, and its identifier answers **404** on every write —
+never 403, which would confirm that it exists.
+
+| Attempt | Answer |
+|---|---|
+| Renaming or deleting a **built-in** | **403** — it is shared by every account, and the caller has just listed it, so denying its existence would be a lie |
+| Renaming or deleting **someone else's** | **404**, like an unknown identifier |
+| A **name the caller already uses** | **409**, built-ins included |
+| Assigning someone else's category to one's own title | **400** |
+
+**The name is unique per user, not per instance**: two accounts may both have a "Coup de
+cœur". The `code` is derived from the label — ligatures expanded, accents folded onto ASCII,
+lower case, anything else collapsed into a hyphen, 32 characters — and **follows a rename**:
+letting them drift would leave a category shown as *Coup de cœur* answering to a filter named
+after whatever it used to be called. The titles keep their rank throughout, since they point
+at the category by identifier. The fold is deliberately not the genre one
+([DATA-MODEL](DATA-MODEL.md) § 1): the genre codes are a shared contract kept in step with
+SQL functions by a parity test, and a private label has no business inside it.
+
+**Deleting a category unranks its titles and deletes none of them.** Of the three ways out —
+cascading onto the titles, refusing while the category is in use, or detaching them — only
+detaching is defensible: a rank is a label stuck on a book, so dropping the label cannot drop
+the book, and refusing would force the user to unrank a hundred titles by hand before being
+allowed to drop a shelf they no longer want. Only the colour set at creation is not editable:
+no screen offers a picker, so `CategoryUpdateDto` carries the label alone.
 
 ## Genres
 
@@ -514,7 +553,7 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A2 | No `PATCH /api/me` (display name, language) | Public product |
 | A3 | ✅ `GET /api/export` (CSV/JSON) and `DELETE /api/me` (#72, #73) | Public product |
 | A4 | ✅ `/api/series` resource — details, volumes, follow (#44) | Core product |
-| A5 | No `DELETE`/`PUT` on `/api/categories/{id}` | Core product |
+| A5 | ✅ `PUT`/`DELETE` on `/api/categories/{id}` (#51) | Core product |
 | A6 | ✅ `PUT /api/wishlist/{id}` (edit priority/price/note) (#52) | Core product |
 | A7 | ✅ One-call conversion from wish to collection (#52) | Core product |
 | A8 | No `/api/dashboard/layout` | Core product |

@@ -152,6 +152,19 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     }
 
     /**
+     * Unfiles every title the user had put in a category, and returns how many were
+     * concerned. Deleting a category must cost the user their ranking, never their books.
+     *
+     * <p>The foreign key is {@code ON DELETE SET NULL} and would do the same on its own; the
+     * statement is here so the intent is readable from the code that deletes the category,
+     * and so the outcome does not depend on a DDL clause nobody reads.
+     */
+    public long clearRank(String userId, UUID categoryId) {
+        return update("set rankCategory = null where rankCategory.id = ?1 and userId = ?2",
+                categoryId, userId);
+    }
+
+    /**
      * The user's items belonging to a given series, edition and work fetched along the way:
      * the series screen needs the volume number and the title of every one of them.
      */

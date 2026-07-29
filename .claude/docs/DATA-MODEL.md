@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -36,7 +36,7 @@ is fine: it runs on one user's wishes, a set small enough for the sort to be fre
 the rank in a column of its own would buy an index the ordering does not need, at the price
 of a denormalised field to keep in step on every write.
 | `reading_goal` | `id UUID` | `user_id` FK, `year`, `target_count`, `unit` (BOOKS\|VOLUMES\|PAGES) | `UNIQUE(user_id, year)` |
-| `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in |
+| `rank_category` | `id UUID` | `user_id` FK **nullable**, `code`, `label`, `color`, `sort_order`, `is_builtin` | `user_id NULL` = shared built-in. `UNIQUE(user_id, code)` (V9) |
 | `catalog_cache` | `(provider, query_hash)` | `payload JSONB`, `fetched_at`, `expires_at` | Owned by no user: it caches provider answers, not data. idx on `expires_at` for the purge |
 | `genre` | `id UUID` | `code` **UNIQUE**, `label` | `code` is the identity, `label` only what a screen shows (V6) |
 | `genre_alias` | `alias VARCHAR(64)` | `code` FK → `genre(code)` | Provider wording → canonical genre. Seed data, never written at runtime (V6) |
@@ -147,11 +147,30 @@ those numbers, being the first version free on `main` at the time it landed. The
 planned entries were renumbered down to keep the roadmap contiguous; neither had been
 implemented yet, so nothing shipped needed to move.
 
+`V9__rank_category_unique_code.sql` makes a category name unique per user. `code` is derived
+from the label and is what `/api/library?rank=` filters on, so two categories sharing one
+code are two shelves a filter cannot tell apart — and nothing stopped `POST /api/categories`
+from creating them, since it never looked at what the user already had. PostgreSQL treats
+NULLs as distinct, so the constraint does not reach the built-ins (`user_id NULL`): those are
+seed data written once by V1. What it cannot express either is a custom code shadowing a
+built-in one, the two rows differing by `user_id`; `CategoryService` covers that by refusing
+a label whose code is already visible to the user, built-ins included.
+
+Rows that were already duplicated are **renamed, not deleted** — a category carries the rank
+of every title filed under it, and dropping the row would unrank them for the sake of a
+constraint. The rewrite suffixes the code with `~n`, a separator no generated code can
+contain (they are `[a-z0-9-]`), so it can collide neither with an existing code nor with
+another rewrite. `idx_rank_category_user` goes away with the same migration: the constraint's
+index leads on `user_id` and covers what it was for.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
 their data — handy for GDPR account deletion.
-`library_item.rank_category_id` is `ON DELETE SET NULL`.
+`library_item.rank_category_id` is `ON DELETE SET NULL`. **Deleting a category detaches the
+titles, it never deletes them**: a rank is a label stuck on a book, so dropping the label
+cannot drop the book. `CategoryService.delete` clears the column itself before removing the
+row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 2. Known limits of the current model
 
@@ -171,7 +190,11 @@ their data — handy for GDPR account deletion.
 
 ## 3. Planned changes
 
-### V9 — Drop the denormalised labels & reading history
+> Numbering: V8 and V9 are taken — V8 by the upcoming releases, V9 by the category
+> constraint above. The plan below therefore starts at **V10**; it used to be written as
+> V8 and V9.
+
+### V10 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -194,7 +217,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V10 — Personalisation & notifications
+### V11 — Personalisation & notifications
 
 `dashboard_layout (user_id PK, sections JSONB)`,
 `notification_pref (user_id PK, prefs JSONB)`. The third table this slot used to reserve,

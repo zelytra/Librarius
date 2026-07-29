@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
-import { RANK_COLORS, RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
+import { RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
 import { Button, Chip, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
@@ -13,7 +13,9 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
   useDeleteApiLibraryId,
+  useGetApiCategories,
   useGetApiSeries,
+  type CategoryDto,
   type GetApiLibraryParams,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
@@ -23,11 +25,21 @@ import styles from './CollectionPage.module.css';
 
 type Kind = 'BOOK' | 'MANGA';
 /**
- * The shelf filter is one chip row, and `favorites` is the odd one out: it narrows on the
- * personal rating rather than on a rank category. It sits here all the same — the user
- * reads the row as "which shelf am I looking at", not as "which column is filtered".
+ * The shelf filter is one chip row: `all`, `favorites`, then the code of any category the
+ * user has — the three built-ins and their own. `favorites` is the odd one out, since it
+ * narrows on the personal rating rather than on a rank category. It sits here all the same
+ * — the user reads the row as "which shelf am I looking at", not as "which column is
+ * filtered".
  */
-type ShelfFilter = 'all' | 'or' | 'argent' | 'bronze' | 'favorites';
+type ShelfFilter = { kind: 'all' } | { kind: 'favorites' } | { kind: 'rank'; code: string };
+
+const ALL_SHELVES: ShelfFilter = { kind: 'all' };
+const FAVORITES: ShelfFilter = { kind: 'favorites' };
+
+function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
+  if (a.kind === 'rank' && b.kind === 'rank') return a.code === b.code;
+  return a.kind === b.kind;
+}
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
 type SortBy = 'added' | 'title' | 'author' | 'genre' | 'rating';
 /** The two ways of reading the collection: title by title, or run by run. */
@@ -51,10 +63,22 @@ const SORTS: { id: SortBy; labelKey: string }[] = [
   { id: 'rating', labelKey: 'collection.sorts.rating' },
 ];
 
-function CoverTile({ item, onDelete, onOpen }: { item: LibraryItemDto; onDelete: () => void; onOpen: () => void }) {
+function CoverTile({
+  item,
+  rankColor,
+  onDelete,
+  onOpen,
+}: {
+  item: LibraryItemDto;
+  /** Colour of the category the title is filed under, absent when it carries no rank. */
+  rankColor?: string;
+  onDelete: () => void;
+  onOpen: () => void;
+}) {
   const { t } = useTranslation();
   const b = item.book!;
-  const rank = isRankCode(item.rankCode) ? item.rankCode : null;
+  // The built-ins own an icon; a custom category gets the generic medal.
+  const rankIcon = isRankCode(item.rankCode) ? RANK_ICONS[item.rankCode] : 'military_tech';
   const tag = b.volumeNumber
     ? t('collection.volumeShort', { number: b.volumeNumber })
     : t(b.kind === 'MANGA' ? 'collection.tag.manga' : 'collection.tag.book');
@@ -67,10 +91,10 @@ function CoverTile({ item, onDelete, onOpen }: { item: LibraryItemDto; onDelete:
       caption={b.authors}
       onClick={onOpen}
     >
-      {rank && (
+      {rankColor && (
         // The medal colour depends on the rank, so it stays on the element.
-        <span className={styles.rankBadge} style={{ background: RANK_COLORS[rank] }}>
-          <Icon name={RANK_ICONS[rank]} size={14} fill color="var(--on-accent)" />
+        <span className={styles.rankBadge} style={{ background: rankColor }}>
+          <Icon name={rankIcon} size={14} fill color="var(--on-accent)" />
         </span>
       )}
       <button
@@ -93,7 +117,7 @@ function CollectionContent() {
   const queryClient = useQueryClient();
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
   const [collType, setCollType] = useState<Kind>('BOOK');
-  const [shelfFilter, setShelfFilter] = useState<ShelfFilter>('all');
+  const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
   const [sortBy, setSortBy] = useState<SortBy>('added');
   const [seriesSort, setSeriesSort] = useState<SeriesSort>('progress');
   const [searchInput, setSearchInput] = useState('');
@@ -115,8 +139,8 @@ function CollectionContent() {
     size: PAGE_SIZE,
     sort: sortBy,
     kind: collType,
-    rank: shelfFilter === 'all' || shelfFilter === 'favorites' ? undefined : shelfFilter,
-    minRating: shelfFilter === 'favorites' ? FAVORITE_RATING : undefined,
+    rank: shelfFilter.kind === 'rank' ? shelfFilter.code : undefined,
+    minRating: shelfFilter.kind === 'favorites' ? FAVORITE_RATING : undefined,
     q: search || undefined,
   };
 
@@ -179,13 +203,25 @@ function CollectionContent() {
   const showError = series ? seriesFailed : isError;
   const isEmpty = !showLoading && !showError && (series ? shelf.length === 0 : items.length === 0);
 
-  const cats: { id: ShelfFilter; name: string; dot?: string }[] = [
-    { id: 'all', name: t('collection.ranks.all') },
-    { id: 'favorites', name: t('collection.ranks.favorites') },
-    { id: 'or', name: t('collection.ranks.gold'), dot: RANK_COLORS.or },
-    { id: 'argent', name: t('collection.ranks.silver'), dot: RANK_COLORS.argent },
-    { id: 'bronze', name: t('collection.ranks.bronze'), dot: RANK_COLORS.bronze },
+  // The shelves are the categories the user actually has, not the three built-ins the
+  // screen used to name itself: a category created on /categories has to become a filter
+  // here without anybody touching this file again. Their labels come from the API, which
+  // is where the French wording of Or / Argent / Bronze lives.
+  const { data: categories = [] } = useGetApiCategories();
+
+  const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string }[] = [
+    { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all') },
+    { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites') },
+    ...categories.map((c: CategoryDto) => ({
+      key: c.id!,
+      filter: { kind: 'rank' as const, code: c.code! },
+      name: c.label ?? '',
+      dot: c.color ?? undefined,
+    })),
   ];
+
+  /** Colour of each category, by code, to draw the medal on a cover. */
+  const rankColors = new Map(categories.map((c: CategoryDto) => [c.code, c.color]));
 
   return (
     <>
@@ -216,11 +252,25 @@ function CollectionContent() {
           restores the shelf the user was on. */}
       {!series && (
         <div className={`scroll-x ${styles.chipRow}`}>
-          {cats.map((c) => (
-            <Chip key={c.id} selected={shelfFilter === c.id} dotColor={c.dot} onClick={() => setShelfFilter(c.id)}>
-              {c.name}
+          {shelves.map((s) => (
+            <Chip
+              key={s.key}
+              selected={sameShelf(shelfFilter, s.filter)}
+              dotColor={s.dot}
+              onClick={() => setShelfFilter(s.filter)}
+            >
+              {s.name}
             </Chip>
           ))}
+          {/* The way out of the row: the shelves are editable, and this is where the user
+              is standing when they realise they want another one. */}
+          <button
+            onClick={() => navigate('/categories')}
+            className={styles.manageShelves}
+          >
+            <Icon name="tune" size={15} color="var(--accent-deep)" />
+            {t('collection.ranks.manage')}
+          </button>
         </div>
       )}
 
@@ -286,7 +336,13 @@ function CollectionContent() {
         items.length > 0 && (
           <div className={styles.grid}>
             {items.map((it) => (
-              <CoverTile key={it.id} item={it} onOpen={() => open(it)} onDelete={() => void remove(it.id!)} />
+              <CoverTile
+                key={it.id}
+                item={it}
+                rankColor={it.rankCode ? rankColors.get(it.rankCode) : undefined}
+                onOpen={() => open(it)}
+                onDelete={() => void remove(it.id!)}
+              />
             ))}
           </div>
         )

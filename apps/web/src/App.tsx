@@ -8,12 +8,15 @@ import { HomePage } from './features/home/HomePage';
 
 // Home is imported eagerly: it is the landing route and the `*` fallback, so making it
 // lazy would only add a round trip to the critical path. The other screens are code
-// split — the first load stops paying for seven screens nobody is looking at, and the
+// split — the first load stops paying for eight screens nobody is looking at, and the
 // service worker precaches their chunks right after, so a later navigation is offline
 // and instant anyway. The Suspense boundary lives in AppShell, which keeps the bottom
 // bar painted while a screen loads.
 const SettingsPage = lazy(() =>
   import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const CategoriesPage = lazy(() =>
+  import('./features/categories/CategoriesPage').then((m) => ({ default: m.CategoriesPage })),
 );
 const CollectionPage = lazy(() =>
   import('./features/collection/CollectionPage').then((m) => ({ default: m.CollectionPage })),
@@ -54,6 +57,7 @@ function App() {
         <Route element={<AppShell />}>
           <Route index element={<HomePage />} />
           <Route path="collection" element={<CollectionPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
           <Route path="discover" element={<DiscoverPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="stats" element={<StatsPage />} />
