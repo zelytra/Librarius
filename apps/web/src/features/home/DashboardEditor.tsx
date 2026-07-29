@@ -13,6 +13,7 @@ import styles from './DashboardEditor.module.css';
 /** Section code → the i18n key of its label in this panel. */
 const SECTION_LABEL_KEY: Record<string, string> = {
   resumeReading: 'home.resumeReading',
+  toRead: 'home.toRead',
   counters: 'home.customize.sections.counters',
   goal: 'home.customize.sections.goal',
   upcoming: 'home.upcoming',

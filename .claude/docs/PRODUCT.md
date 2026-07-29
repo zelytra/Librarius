@@ -61,6 +61,7 @@ Personal dashboard.
 |---|---|---|
 | Header (date, greeting, Settings shortcut) | ✅ | Greeting to be made contextual (morning/evening) |
 | Continue reading | ✅ | Carousel of `READING` titles, each cover carrying its progress |
+| **To-read pile ("PAL")** | ✅ | Carousel of `OWNED` titles — owned and never opened, so neither what is being read nor what was given up on ([#166](https://github.com/zelytra/Librarius/issues/166)). One page of the pile, the header reporting how big the whole of it is; absent, rather than empty, when nothing is waiting |
 | Counters (read / in progress / to read) | ✅ | |
 | Upcoming releases | ✅ | Personalised to the series the reader owns, wishes on or follows, each date labelled with its market (FR/JP/EN) and its precision ([#57](https://github.com/zelytra/Librarius/issues/57)). No stake in anything → invites the reader towards their collection rather than an empty section. 🔜 admin/CSV ingestion of curated dates — entries are seeded by hand for now |
 | Recently read | ✅ | |
