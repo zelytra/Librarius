@@ -132,6 +132,11 @@ final class ExportCsv {
      * Reading status in Goodreads' vocabulary. {@code OWNED} means owned but not started,
      * which has no Goodreads equivalent — {@code to-read} is the closest, and is what the
      * importers understand.
+     *
+     * <p>{@code ABANDONED} has no equivalent either: Goodreads leaves it to a custom shelf,
+     * where {@code abandoned} is the usual name. Writing {@code to-read} instead would turn
+     * a book given up on into one waiting to be read, and the round trip through
+     * {@code /api/import/csv} — which reads this very word back — would drop the status.
      */
     private static String shelf(LibraryStatus status) {
         if (status == null) {
@@ -141,6 +146,7 @@ final class ExportCsv {
             case READ -> "read";
             case READING -> "currently-reading";
             case OWNED -> "to-read";
+            case ABANDONED -> "abandoned";
         };
     }
 

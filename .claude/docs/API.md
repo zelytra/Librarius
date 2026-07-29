@@ -132,8 +132,9 @@ UpcomingReleaseDto(UUID id, UUID seriesId, String seriesTitle, String kind, Stri
                    String datePrecision, String region, String publisher, String source,
                    String confidence)
 
-StatsDto(long read, long reading, long toRead, long pagesRead, long seriesCount,
-         Integer goalTarget, String goalUnit, long goalCurrent, List<GenreCount> byGenre)
+StatsDto(long read, long reading, long toRead, long abandoned, long pagesRead,
+         long seriesCount, Integer goalTarget, String goalUnit, long goalCurrent,
+         List<GenreCount> byGenre)
 GenreCount(String code, String genre, long count)
 
 TimelineDto(LocalDate from, LocalDate to, String granularity, List<TimelinePointDto> points,
@@ -144,7 +145,7 @@ TimelinePointDto(String period, long books, long pages)
 BreakdownCountDto(String label, long count)
 ```
 
-Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ}` ·
+Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
 `ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}`.
@@ -166,11 +167,26 @@ the ratio meaningless, not zero.
 
 | Transition | Effect |
 |---|---|
-| → `READING` | `started_at` set to today **when it is empty** |
+| → `READING` | `started_at` set to today **when it is empty**, `finished_at` cleared |
 | → `READ` | `percent` 100, `current_page` set to the page count when known, `finished_at` set to today unless one was supplied |
+| → `ABANDONED` | `finished_at` set to today unless one was supplied. **The position is not touched** |
+| → `OWNED` | `finished_at` cleared |
 
 A date sent explicitly always wins: marking a book read on the day it was actually finished
-is a normal thing to want.
+is a normal thing to want, and so is recording that a book was given up on last spring.
+
+**Abandoning is not a variety of finishing.** It shares the date and nothing else: a book
+put down at page 120 was read up to page 120, and forcing `percent` to 100 the way `READ`
+does would overwrite the one thing the status exists to record. Nothing special-cases the
+way back either — picking a book up again is the ordinary move to `READING`, which clears
+the date the abandonment left behind, and a title given up on can still be marked `READ`.
+
+The consequence is that `finished_at` **on its own no longer means "read to the end"**, and
+everything counted from that column says so explicitly: the annual goal, the timeline
+buckets, `pagesPerDay`, `daysPerBook` and the four breakdowns all exclude the abandoned. A
+book given up on therefore advances no goal, fills no bucket and enters no average, while
+still carrying the day the reader stopped. `StatsDto` counts it in `abandoned` and in none
+of `read` / `reading` / `toRead`; `pagesRead` covers the titles read to the end only.
 
 `ProgressView` rides on `LibraryItemDto`, so a client never needs a second request to draw
 a progress bar — the "resume reading" carousel on Home reads it off the paginated
@@ -312,10 +328,15 @@ a category describes what its owner thinks of it and belongs to that one account
 told apart everywhere: `?genre=` versus `?rank=`, `/api/genres` versus `/api/categories`,
 `work_genre` versus `library_item.rank_category_id`.
 
-`GET /api/categories` returns the three shared built-ins (`or`, `argent`, `bronze`,
-`user_id NULL`, `builtin: true`) followed by the caller's own. A category created by someone
-else is never listed, never assignable, and its identifier answers **404** on every write —
-never 403, which would confirm that it exists.
+`GET /api/categories` returns the four shared built-ins (`or`, `argent`, `bronze` and
+`abandon`, all `user_id NULL`, `builtin: true`) followed by the caller's own. A category
+created by someone else is never listed, never assignable, and its identifier answers **404**
+on every write — never 403, which would confirm that it exists.
+
+`abandon` is the shelf a title given up on is filed under, and the one the post-abandon
+screen ([#165](https://github.com/zelytra/Librarius/issues/165)) pre-selects. It is a
+category like the three metals and not a status in disguise: filing a title there is a
+separate gesture from marking it `ABANDONED`, and neither implies the other.
 
 | Attempt | Answer |
 |---|---|
@@ -380,11 +401,18 @@ Counting only the titles carrying a `volume_number` under `VOLUMES` was tried an
 it made a "50 volumes" goal quietly ignore every novel read towards it, which is the kind of
 silent subtraction a user has no way to notice.
 
-**"Finished" means `reading_progress.finished_at`**, which
-`PUT /api/library/{id}/progress` stamps when the status becomes `READ` — the business rule
-[PRODUCT](PRODUCT.md) § 6.2 describes. Moving to `READING` stamps `started_at` if it is
-empty and **clears** `finished_at`: a title being read again is not a finished one, and it
-must stop counting towards the year it was first finished in.
+**"Finished" means `reading_progress.finished_at` on a title that is not `ABANDONED`** — the
+business rule [PRODUCT](PRODUCT.md) § 6.2 describes. `PUT /api/library/{id}/progress` stamps
+that column when the status becomes `READ`, and moving to `READING` stamps `started_at` if
+it is empty and **clears** `finished_at`: a title being read again is not a finished one,
+and it must stop counting towards the year it was first finished in.
+
+The status half of the rule matters as much as the column: giving up on a title stamps
+`finished_at` too, so the date alone would credit the goal for a book that was put down.
+That is why the query behind `goalCurrent` — and the timeline, the pace and the breakdowns,
+which read the same column — filters the abandoned out. Abandoning a title that had already
+been finished **takes its credit back**, the date surviving the change of status and the
+count not.
 
 A title added straight in the `READ` state — an import, or a manual add — carries no reading
 date: the application does not know when it was read. It counts in the all-time counters and
@@ -511,12 +539,15 @@ would otherwise be separated by a generated identifier, which no restore can rep
 
 **CSV** is the flat book list, collection and wishlist together, in the vocabulary of the
 other reading trackers: `Title`, `Author`, `ISBN13`, `My Rating`, `My Review`,
-`Exclusive Shelf` (`read` / `currently-reading` / `to-read`), `Bookshelves`
+`Exclusive Shelf` (`read` / `currently-reading` / `to-read` / `abandoned`), `Bookshelves`
 (`collection` / `wishlist`), and what has no counterpart elsewhere under a `Librarius`
 prefix. The progress percentage is derived from the page number when the reader entered
 one, since a receiving tool cannot work it out from a page alone. UTF-8 **with a byte-order
 mark**, `;` separator, CRLF, RFC 4180 quoting — the combination Excel opens correctly under
-a French locale, and the separator this API's own CSV importer already prefers. Goals and
+a French locale, and the separator this API's own CSV importer already prefers. `abandoned`
+is the one shelf with no Goodreads equivalent — it leaves the case to a custom shelf — and
+the importer reads it, along with `dnf` and the French *abandonné*, so the round trip keeps
+the status instead of filing a book given up on back onto the to-read pile. Goals and
 categories are **not** in the CSV: they are not properties of a book, and a flat file that
 changes shape halfway down stops being openable in a spreadsheet.
 
@@ -571,8 +602,8 @@ downloading the collection.
 | `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
 | `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`, `rating` (best first, unrated last). Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
-| `status` | — | collection | `OWNED` \| `READING` \| `READ` |
-| `rank` | — | collection | Rank category code (`or`, `argent`, `bronze` or a custom one) |
+| `status` | — | collection | `OWNED` \| `READING` \| `READ` \| `ABANDONED`. The four are exclusive: a title given up on answers to `ABANDONED` and to none of the three others |
+| `rank` | — | collection | Rank category code (`or`, `argent`, `bronze`, `abandon` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |
 | `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |

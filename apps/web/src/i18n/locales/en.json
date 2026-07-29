@@ -398,9 +398,12 @@
     "notFound": "Title not found.",
     "error": "This title could not be loaded.",
     "startReading": "Start reading",
+    "resumeReading": "Pick it up again",
     "reading": "Currently reading",
     "markAsRead": "Mark as read",
     "read": "✓ Read",
+    "giveUp": "I'm giving up on this book",
+    "abandonedNote": "You gave up on this book. Your progress is kept exactly as it was, and it does not count towards your reading goal.",
     "progress": {
       "title": "My progress",
       "page": "Page",

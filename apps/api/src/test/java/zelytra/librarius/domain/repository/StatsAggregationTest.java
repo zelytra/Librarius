@@ -74,6 +74,11 @@ class StatsAggregationTest {
         assertEquals(expected.read(), totals.read(), "read count");
         assertEquals(expected.reading(), totals.reading(), "reading count");
         assertEquals(expected.toRead(), totals.toRead(), "to-read count");
+        assertEquals(expected.abandoned(), totals.abandoned(), "abandoned count");
+        assertEquals(1, totals.abandoned(), "the dataset holds one abandoned title");
+        // The abandoned title of the dataset declares 480 pages. They are not read pages,
+        // and a `pagesRead` that agreed with the fold only because both were wrong would
+        // not be caught by the comparison above.
         assertEquals(expected.pagesRead(), totals.pagesRead(), "pages read");
         assertEquals(expected.seriesCount(), library.countDistinctSeries(userId), "series count");
     }
@@ -88,7 +93,7 @@ class StatsAggregationTest {
 
         StatusTotals totals = library.statusTotals(userId);
 
-        assertEquals(new StatusTotals(0, 0, 0, 0), totals);
+        assertEquals(new StatusTotals(0, 0, 0, 0, 0), totals);
         assertEquals(0, library.countDistinctSeries(userId));
         assertEquals(List.of(), library.topGenres(userId, TOP_GENRES));
     }
@@ -160,8 +165,8 @@ class StatsAggregationTest {
 
     // ── Reference implementation ──────────────────────────────────────────────
 
-    private record InMemoryStats(long read, long reading, long toRead, long pagesRead,
-            long seriesCount) {
+    private record InMemoryStats(long read, long reading, long toRead, long abandoned,
+            long pagesRead, long seriesCount) {
     }
 
     /**
@@ -176,6 +181,7 @@ class StatsAggregationTest {
         long read = 0;
         long reading = 0;
         long toRead = 0;
+        long abandoned = 0;
         long pagesRead = 0;
         Set<String> series = new HashSet<>();
 
@@ -190,6 +196,9 @@ class StatsAggregationTest {
                 }
                 case READING -> reading++;
                 case OWNED -> toRead++;
+                // The status postdates the fold this mirrors; it counts on its own and
+                // contributes no pages, a book given up on not having been read.
+                case ABANDONED -> abandoned++;
             }
             String seriesTitle = item.edition.work.seriesTitle;
             if (seriesTitle != null && !seriesTitle.isBlank()) {
@@ -197,7 +206,7 @@ class StatsAggregationTest {
             }
         }
 
-        return new InMemoryStats(read, reading, toRead, pagesRead, series.size());
+        return new InMemoryStats(read, reading, toRead, abandoned, pagesRead, series.size());
     }
 
     // ── Dataset ───────────────────────────────────────────────────────────────
@@ -249,6 +258,11 @@ class StatsAggregationTest {
         titles.add(new Title(LibraryStatus.OWNED, null, null, "   "));
         titles.add(new Title(LibraryStatus.READING, 210, null, ""));
         titles.add(new Title(LibraryStatus.READ, 0, "vinland saga", null));
+
+        // A title given up on, carrying pages: it belongs to its own counter, and its pages
+        // are not read pages. Neither a series nor a genre, so the two rankings above stay
+        // determined by the spread alone.
+        titles.add(new Title(LibraryStatus.ABANDONED, 480, null, null));
 
         return List.copyOf(titles);
     }

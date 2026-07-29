@@ -66,8 +66,8 @@ public class StatsService {
         long goalCurrent = progresses.progressTowards(
                 userId, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), unit);
 
-        return new StatsDto(totals.read(), totals.reading(), totals.toRead(), totals.pagesRead(),
-                seriesCount,
+        return new StatsDto(totals.read(), totals.reading(), totals.toRead(), totals.abandoned(),
+                totals.pagesRead(), seriesCount,
                 goal != null ? goal.targetCount : null,
                 goal != null ? goal.unit.name() : null,
                 goalCurrent, byGenre);

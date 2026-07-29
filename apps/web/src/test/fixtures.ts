@@ -178,10 +178,12 @@ export function seriesDetail(overrides: Partial<SeriesDetailDto> = {}): SeriesDe
   };
 }
 
+/** The four shelves `/api/categories` returns to every account, in the API's own order. */
 export const BUILTIN_CATEGORIES: CategoryDto[] = [
   { id: 'cat-or', code: 'or', label: 'Or', color: '#d9b94e', builtin: true },
   { id: 'cat-argent', code: 'argent', label: 'Argent', color: '#b3b7bf', builtin: true },
   { id: 'cat-bronze', code: 'bronze', label: 'Bronze', color: '#c08a5a', builtin: true },
+  { id: 'cat-abandon', code: 'abandon', label: 'Abandon', color: '#8f8579', builtin: true },
 ];
 
 /** One announced release, dated to the day, French edition, confirmed by the publisher. */
@@ -221,6 +223,7 @@ export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
     read: 12,
     reading: 2,
     toRead: 34,
+    abandoned: 0,
     pagesRead: 4200,
     seriesCount: 5,
     goalTarget: undefined,

@@ -97,6 +97,66 @@ describe('DetailPage', () => {
     expect(await screen.findByText('✓ Lu')).toBeInTheDocument();
   });
 
+  // ── Giving up ──────────────────────────────────────────────────────────────
+
+  /**
+   * The action hands the stored position back to the server, which is what keeps the page
+   * the reader stopped on: `PUT /progress` replaces the position as a whole, so a payload
+   * carrying only the status would wipe it.
+   */
+  test('giving up on a title sends the status and the position it was reached at', async () => {
+    const item = servesMutableItem();
+    item.set({ ...READING });
+    const bodies: Record<string, unknown>[] = [];
+    server.use(http.put('*/api/library/:id/progress', async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      bodies.push(body);
+      item.set({ ...item.current(), status: body.status as string });
+      return new HttpResponse(null, { status: 204 });
+    }));
+    renderDetail();
+
+    await userEvent.click(await screen.findByText("J'abandonne ce livre"));
+
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0]).toMatchObject({ status: 'ABANDONED', currentPage: 30, percent: 10 });
+    expect(await screen.findByText(/Tu as abandonné ce livre/)).toBeInTheDocument();
+  });
+
+  /** Once given up on, there is nothing left to give up: the action goes away. */
+  test('offers no way to give up on a title already abandoned or read', async () => {
+    libraryItemReturns({ ...READING, status: 'ABANDONED' });
+    renderDetail();
+
+    expect(await screen.findByText(/Tu as abandonné ce livre/)).toBeInTheDocument();
+    expect(screen.queryByText("J'abandonne ce livre")).not.toBeInTheDocument();
+  });
+
+  test('offers no way to give up on a title already read', async () => {
+    libraryItemReturns({ ...READING, status: 'READ' });
+    renderDetail();
+
+    expect(await screen.findByText('✓ Lu')).toBeInTheDocument();
+    expect(screen.queryByText("J'abandonne ce livre")).not.toBeInTheDocument();
+  });
+
+  /** Coming back to a book given up on is the ordinary move to READING, and says so. */
+  test('invites the reader to pick an abandoned title up again', async () => {
+    const item = servesMutableItem();
+    item.set({ ...READING, status: 'ABANDONED' });
+    server.use(http.put('*/api/library/:id/progress', async ({ request }) => {
+      const body = (await request.json()) as { status?: string };
+      item.set({ ...item.current(), status: body.status });
+      return new HttpResponse(null, { status: 204 });
+    }));
+    renderDetail();
+
+    await userEvent.click(await screen.findByText('Reprendre la lecture'));
+
+    expect(await screen.findByText('Lecture en cours')).toBeInTheDocument();
+    expect(screen.queryByText(/Tu as abandonné ce livre/)).not.toBeInTheDocument();
+  });
+
   /** An unknown identifier answers 404, as does one belonging to another user. */
   test('signals a title that cannot be found', async () => {
     libraryItemReturns(ITEM);

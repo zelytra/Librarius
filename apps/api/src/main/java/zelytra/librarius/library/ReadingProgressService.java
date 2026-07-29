@@ -41,9 +41,18 @@ public class ReadingProgressService {
      *       timeline stay accurate;</li>
      *   <li>{@code READ} finishes the book: 100 %, the last page when the edition has a
      *       page count, and today as the finish date unless one was supplied;</li>
+     *   <li>{@code ABANDONED} stamps the finish date the same way — the day the reader
+     *       stopped is worth recording — and stops there: the position is left exactly
+     *       where the reader got to. Completing it, as {@code READ} does, would overwrite
+     *       the one thing an abandoned title actually has to say, and would claim a book
+     *       was read to the end when it was put down at page 120;</li>
      *   <li>{@code OWNED} clears the finish date — reverting to "not read" cannot leave one
      *       behind.</li>
      * </ul>
+     *
+     * <p>Nothing here special-cases a way back: {@code ABANDONED} is a state like any
+     * other, so picking a book up again is the ordinary move to {@code READING}, which
+     * clears the finish date the abandonment left behind.
      *
      * @param item the caller's item — ownership is checked before this is reached
      * @param dto  the new position, either side of which may be left out
@@ -89,6 +98,12 @@ public class ReadingProgressService {
             if (progress.finishedAt == null) {
                 progress.finishedAt = today;
             }
+        }
+        // Deliberately not a copy of the READ branch: only the date is shared. The page and
+        // the percentage are the record of how far the reader got, and that is the whole
+        // point of the status.
+        if (item.status == LibraryStatus.ABANDONED && progress.finishedAt == null) {
+            progress.finishedAt = today;
         }
         if (item.status == LibraryStatus.OWNED) {
             progress.finishedAt = null;

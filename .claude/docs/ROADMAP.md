@@ -176,7 +176,7 @@ a volume without a confirmation per item.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#163](https://github.com/zelytra/Librarius/issues/163) | Track abandoned titles as a fourth reading status | — |
+| [#163](https://github.com/zelytra/Librarius/issues/163) | ✅ Track abandoned titles as a fourth reading status (V11 migration) — `ABANDONED` keeps the reading position and is excluded from everything counted as "finished" | — |
 | [#164](https://github.com/zelytra/Librarius/issues/164) | Show a rating and shelving screen when a title is finished | #48 |
 | [#165](https://github.com/zelytra/Librarius/issues/165) | Offer the same rating and shelving screen when a title is abandoned | #163, #164 |
 | [#166](https://github.com/zelytra/Librarius/issues/166) | Surface the to-read pile on the Home screen | — |

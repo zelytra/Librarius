@@ -485,9 +485,11 @@ function DetailContent({ id }: { id: string }) {
    * Flips the status, handing the stored position back untouched: the payload replaces
    * the progress as a whole, so dropping it here would wipe the dates the user entered.
    * The server fills in what the transition implies — the start date, or 100 % and the
-   * finish date.
+   * finish date, or, on an abandonment, the date alone. Handing the position back matters
+   * most there: the page the reader stopped on is the whole point of that status, and the
+   * server keeps whatever it is sent rather than completing it.
    */
-  function setStatus(status: 'READING' | 'READ') {
+  function setStatus(status: 'READING' | 'READ' | 'ABANDONED') {
     const p = item?.progress;
     mutateProgress({
       id,
@@ -528,8 +530,20 @@ function DetailContent({ id }: { id: string }) {
   const title = b.title ?? '—';
   const color = colorFor(title);
   const ranks = cats.filter((c) => ['or', 'argent', 'bronze'].includes(c.code ?? ''));
-  // A title nobody has opened has nothing to show yet; the buttons below start it.
+  // A title nobody has opened has nothing to show yet; the buttons below start it. A title
+  // given up on has plenty: the position it was given up at is the point of the status.
   const tracking = item.status !== 'OWNED' || item.progress != null;
+
+  const abandoned = item.status === 'ABANDONED';
+  // Giving up is only ever a move away from a book still in play.
+  const givingUpPossible = item.status === 'OWNED' || item.status === 'READING';
+  // Picking a book up again is the ordinary move to READING, so the primary button is the
+  // same one; only what it is called changes, "commencer" being wrong twice over here.
+  const startLabel = item.status === 'READING'
+    ? 'detail.reading'
+    : abandoned
+      ? 'detail.resumeReading'
+      : 'detail.startReading';
 
   return (
     <div className={styles.page}>
@@ -622,16 +636,28 @@ function DetailContent({ id }: { id: string }) {
           })}
         </div>
 
+        {/* The state itself, said in words: nothing else on the screen distinguishes a
+            title given up on from one being read — the progress bar shows the same 40 %,
+            which is exactly the position the abandonment preserved. */}
+        {abandoned && <p className={styles.abandonedNote}>{t('detail.abandonedNote')}</p>}
+
         <div className={styles.actions}>
           {item.status !== 'READ' && (
             <Button variant="primary" size="lg" onClick={() => setStatus('READING')}>
               <Icon name="auto_stories" size={20} fill color="var(--on-accent)" />
-              {t(item.status === 'READING' ? 'detail.reading' : 'detail.startReading')}
+              {t(startLabel)}
             </Button>
           )}
           <Button variant="secondary" size="block" onClick={() => setStatus('READ')}>
             {t(item.status === 'READ' ? 'detail.read' : 'detail.markAsRead')}
           </Button>
+          {/* Offered on what can still be given up on, and on nothing else: a title read
+              to the end was not abandoned, and one already abandoned has nowhere to go. */}
+          {givingUpPossible && (
+            <Button variant="secondary" size="block" onClick={() => setStatus('ABANDONED')}>
+              {t('detail.giveUp')}
+            </Button>
+          )}
         </div>
       </div>
     </div>

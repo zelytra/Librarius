@@ -398,9 +398,12 @@
     "notFound": "Titre introuvable.",
     "error": "Impossible de charger ce titre.",
     "startReading": "Commencer la lecture",
+    "resumeReading": "Reprendre la lecture",
     "reading": "Lecture en cours",
     "markAsRead": "Marquer comme lu",
     "read": "✓ Lu",
+    "giveUp": "J'abandonne ce livre",
+    "abandonedNote": "Tu as abandonné ce livre. Ta progression est conservée telle quelle, et il ne compte pas dans ton objectif de lecture.",
     "progress": {
       "title": "Ma progression",
       "page": "Page",

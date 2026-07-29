@@ -125,6 +125,21 @@ describe('HomePage', () => {
     expect(screen.queryByText(/Ta bibliothèque est vide/)).not.toBeInTheDocument();
   });
 
+  /**
+   * Nor to one made only of titles the reader gave up on. Abandoned titles are counted
+   * apart from the three others, so a sum that left them out would call this collection
+   * empty and invite the reader to start the one they already have.
+   */
+  test('does not offer to add titles to a library made only of abandoned ones', async () => {
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0, abandoned: 3 }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('à lire');
+    expect(screen.queryByText(/Ta bibliothèque est vide/)).not.toBeInTheDocument();
+  });
+
   /** Each shelf asks the server for its own status rather than for everything. */
   test('fetches only the shelves it displays', async () => {
     const statuses: (string | null)[] = [];

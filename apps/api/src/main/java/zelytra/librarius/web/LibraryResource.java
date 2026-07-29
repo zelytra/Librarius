@@ -79,9 +79,11 @@ public class LibraryResource {
      * @param sort      {@code added} (default), {@code title}, {@code author},
      *                  {@code genre} or {@code rating}
      * @param kind      {@code BOOK} or {@code MANGA}, no filtering when absent
-     * @param status    {@code OWNED}, {@code READING} or {@code READ}
-     * @param rank      code of a rank category ({@code or}, {@code argent}, {@code bronze}
-     *                  or a custom one)
+     * @param status    {@code OWNED}, {@code READING}, {@code READ} or {@code ABANDONED},
+     *                  no filtering when absent — the four are exclusive, so an abandoned
+     *                  title is returned by {@code status=ABANDONED} and by nothing else
+     * @param rank      code of a rank category ({@code or}, {@code argent}, {@code bronze},
+     *                  {@code abandon} or a custom one)
      * @param genre     code of a genre, as {@code /api/genres} returns it
      * @param minRating keeps the titles rated at least that much — 4 is "my favourites"
      * @param q         free text matched against the title, the authors and the series

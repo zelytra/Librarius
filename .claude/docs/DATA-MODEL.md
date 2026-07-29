@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -25,7 +25,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
-| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
+| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ\|ABANDONED, V11), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 
@@ -45,7 +45,8 @@ of a denormalised field to keep in step on every write.
 | `work_genre` | `(work_id, genre_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(genre_id, work_id)` for the reverse walk (V6) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
 
-Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a).
+Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
+(#8f8579) joins them in V11.
 
 `V3__pagination_indexes.sql` adds no column: it only backs the server-side pagination of
 `/api/library` and `/api/wishlist` with the indexes their default ordering (newest first,
@@ -177,6 +178,35 @@ else joins against. No row exists until the first `PUT`: `GET` computes the defa
 in memory when it finds none, so an account that never touches the feature costs this
 table exactly one indexed lookup that finds nothing.
 
+`V11__abandoned_status.sql` opens the fourth reading status,
+[#163](https://github.com/zelytra/Librarius/issues/163), and **changes no structure**.
+`library_item.status` is a bare `VARCHAR(16)` holding the name of the enum — no database
+enum type, no `CHECK` constraint — so `ABANDONED` was storable before the migration existed,
+and `idx_library_user_status` already covers it. What the migration does is say so: a
+`COMMENT ON COLUMN` carrying the four values, because the inline comment `V1__init.sql`
+wrote next to the column names three and cannot be corrected — Flyway checksums the whole
+file, comments included, and that migration has run on every database.
+
+The second half is data: a fourth built-in `rank_category`, `abandon` / *Abandon*, the shelf
+a title given up on is filed under and the one the post-abandon screen
+([#165](https://github.com/zelytra/Librarius/issues/165)) pre-selects. Built-in, i.e.
+`user_id NULL`, for the same reason the three metals are: one shared row every account sees,
+that `CategoryService` refuses to rename or delete, and that `/api/library?rank=abandon`
+turns into a shelf. The identifier continues V1's series, which also makes the insert
+re-runnable through its primary key — `UNIQUE(user_id, code)` from V9 never fires on these
+rows, PostgreSQL treating NULLs as distinct.
+
+**What the status does to `reading_progress` is the part worth knowing.** Abandoning stamps
+`finished_at` — the day tracking stopped is as worth keeping as a finish date — and touches
+neither `percent` nor `current_page`: a book put down at page 120 was read up to page 120,
+and completing the position the way `READ` does would erase the one thing the status has to
+record. The consequence is that `finished_at` alone **no longer means "read to the end"**,
+so the four aggregations counted from it — the annual goal, the timeline buckets, the
+average days per book and the author/publisher/language/rank breakdowns, all in
+`ReadingProgressRepository` — filter the abandoned out through a single shared clause. Left
+out, a book given up on would have advanced the goal and inflated every figure on the Stats
+screen. See [API](API.md#reading-progress).
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -204,11 +234,12 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8, V9 and V10 are taken — the upcoming releases, the category constraint and
-> the dashboard layout, all three shipped by the last of the v0.4 work. The plan below
-> therefore starts at **V11**.
+> Numbering: V8 to V11 are taken — the upcoming releases, the category constraint, the
+> dashboard layout and the abandoned status. The plan below therefore starts at **V12**.
+> Both entries were renumbered up by one when V11 was taken; neither had been implemented,
+> so nothing that shipped had to move.
 
-### V11 — Drop the denormalised labels & reading history
+### V12 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -231,7 +262,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V12 — Notifications
+### V13 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

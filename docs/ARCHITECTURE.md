@@ -38,11 +38,13 @@ their own `library_item`.
   genres[], year)
 - `edition` (work_id, isbn13/10, publisher, language, pages, cover_url, format,
   release_date, provider, provider_ref) — **1 work → N editions**
-- `library_item` (user_id, edition_id, acquired_at, rating, status OWNED|READING|READ,
-  UNIQUE(user, edition))
-- `reading_progress` (library_item_id, current_page, percent, started_at, finished_at)
-- `rank_category` (user_id NULL for the built-in Gold/Silver/Bronze ranks, code, label,
-  color, is_builtin) + `library_item_rank`
+- `library_item` (user_id, edition_id, acquired_at, rating, status
+  OWNED|READING|READ|ABANDONED, UNIQUE(user, edition))
+- `reading_progress` (library_item_id, current_page, percent, started_at, finished_at) —
+  an abandoned title carries a `finished_at` too, so everything counted as "finished"
+  filters on the status as well as on the date
+- `rank_category` (user_id NULL for the built-in Gold/Silver/Bronze/Abandon ranks, code,
+  label, color, is_builtin) + `library_item_rank`
 - `wishlist_item` (user_id, work/edition, priority, estimated_price, note)
 - `reading_goal` (user_id, year, target_count, unit)
 - `dashboard_layout` (user_id, sections JSONB) — reorderable/hideable home screen

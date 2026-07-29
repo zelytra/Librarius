@@ -187,6 +187,37 @@ class StatsTimelineApiTest {
         assertEquals(before, booksIn(bucket), "a title being read again is not a finished one");
     }
 
+    /**
+     * A title given up on carries a {@code finished_at} too — the day tracking stopped — so
+     * every figure counted from that column has to tell it apart from a title read to the
+     * end. It must appear in no bucket, no page total, no author ranking and no average.
+     *
+     * <p>The window holds one abandoned title and one finished one, so a timeline that
+     * ignored the status would report two books rather than one, and 14 days per book
+     * rather than 4 — both plausible enough to go unnoticed on a screen.
+     */
+    @Test
+    void leavesAbandonedTitlesOutOfTheTimeline() {
+        String alice = userId("alice");
+        seed(alice, LocalDate.of(2012, 5, 5), LocalDate.of(2012, 5, 1), 100, "Finished Author");
+        seed(alice, LocalDate.of(2012, 5, 20), LocalDate.of(2012, 5, 1), 500, "Given Up Author",
+                LibraryStatus.ABANDONED);
+
+        float daysPerBook = given().auth().oauth2(token("alice"))
+                .queryParam("from", "2012-05-01").queryParam("to", "2012-05-31")
+                .when().get("/api/stats/timeline")
+                .then().statusCode(200)
+                .body("points.period", contains("2012-05"))
+                .body("points.books", contains(1))
+                .body("points.pages", contains(100))
+                .body("books", is(1))
+                .body("pages", is(100))
+                .body("byAuthor.label", contains("Finished Author"))
+                .extract().jsonPath().getFloat("daysPerBook");
+
+        assertEquals(4.0, daysPerBook, 0.001, "only the finished title enters the average");
+    }
+
     /** Titles the default window reports for one bucket; zero when the bucket is absent. */
     private int booksIn(String bucket) {
         Integer books = given().auth().oauth2(token("alice"))
@@ -206,6 +237,12 @@ class StatsTimelineApiTest {
      */
     private void seed(String userId, LocalDate finishedAt, LocalDate startedAt, Integer pageCount,
             String authors) {
+        seed(userId, finishedAt, startedAt, pageCount, authors, LibraryStatus.READ);
+    }
+
+    /** The same, for a title in a state of the caller's choosing. */
+    private void seed(String userId, LocalDate finishedAt, LocalDate startedAt, Integer pageCount,
+            String authors, LibraryStatus status) {
         QuarkusTransaction.requiringNew().run(() -> {
             Work work = new Work();
             work.kind = Kind.BOOK;
@@ -221,7 +258,7 @@ class StatsTimelineApiTest {
             LibraryItem item = new LibraryItem();
             item.userId = userId;
             item.edition = edition;
-            item.status = LibraryStatus.READ;
+            item.status = status;
             em.persist(item);
 
             ReadingProgress progress = new ReadingProgress();
