@@ -256,14 +256,24 @@ provider call.
 Each provider honours what its own API indexes, and ignores the rest rather than answering
 nothing:
 
-| Criterion | Open Library (`BOOK`) | AniList (`MANGA`) |
-|---|---|---|
-| `q` | ✅ free text | ✅ `media(search:)` |
-| `author` | ✅ `author:` | ✅ resolved through `Staff(search:)`, then that person's works |
-| `year` | ✅ `first_publish_year:` | ✅ `startDate` window |
-| `publisher` | ✅ `publisher:` | ❌ AniList describes works, not editions |
-| `language` | ✅ `language:`, ISO 639-1 mapped to the MARC code (`fr` → `fre`) | ❌ |
-| `isbn` | ✅ `isbn:` | ❌ |
+| Criterion | Open Library (`BOOK`) | BnF (`BOOK`) | AniList (`MANGA`) |
+|---|---|---|---|
+| `q` | ✅ free text | ✅ `bib.anywhere` | ✅ `media(search:)` |
+| `author` | ✅ `author:` | ✅ `bib.author` | ✅ resolved through `Staff(search:)`, then that person's works |
+| `year` | ✅ `first_publish_year:` | ⚠️ applied to the records, not by the catalogue | ✅ `startDate` window |
+| `publisher` | ✅ `publisher:` | ✅ `bib.publisher` | ❌ AniList describes works, not editions |
+| `language` | ✅ `language:`, ISO 639-1 mapped to the MARC code (`fr` → `fre`) | ✅ `bib.language`, same mapping | ❌ |
+| `isbn` | ✅ `isbn:` | ✅ `bib.isbn` | ❌ |
+
+A `BOOK` search asks **both** book providers and merges their answers on the same
+`title|authors` key the rest of the aggregation uses, so a novel both catalogues hold is
+listed once and a novel only one of them holds still surfaces. The BnF's Dublin Core record
+carries no cover image, so a result only it knows reaches the screen without one.
+
+The BnF's publication-date index does not take the plain year a caller supplies, so the
+year is applied to the records that come back instead. A search carrying **only** a year
+therefore never reaches the BnF at all: there is no term to send it, and every book printed
+that year is not an answer. Open Library does index it and answers on its own.
 
 A manga search carrying only criteria AniList cannot honour returns nothing, rather than
 the most popular mangas — an answer that looks like a result and is one by accident.

@@ -15,6 +15,7 @@ Browser (React 19 PWA)
    └──────────────► Quarkus 3 / Java 21 API ──► PostgreSQL 16 (Flyway + Panache)
                           │
                           ├──► Open Library  (REST, books)
+                          ├──► BnF           (SRU/XML, books)
                           └──► AniList       (GraphQL, manga)
 ```
 
@@ -154,7 +155,8 @@ zelytra/librarius/
   web/                  # JAX-RS resources + ApiDtos (records) + exception mappers
   catalog/              # CatalogProvider (SPI), CatalogService (aggregation),
                         # CatalogCache + CatalogCacheStore (Caffeine → PostgreSQL)
-    provider/           # OpenLibraryProvider/Client, AniListProvider/Client
+    provider/           # OpenLibraryProvider/Client + BnfProvider/Client (books),
+                        # AniListProvider/Client (manga)
   imports/              # LibraryImporter (SPI), Booknode, Babelio, CSV, ImportService,
                         # ArchiveImportService (restores a JSON export)
   export/               # ExportService (JSON + CSV), ExportCsv, ExportJobs (deferred)
@@ -175,7 +177,13 @@ zelytra/librarius/
 - **Catalog**: `CatalogProvider` is a CDI SPI (`name()`, `kind()`, `search()`,
   `upcoming()`). `CatalogService` indexes the providers by `Kind`, fans out and deduplicates
   by key (`dedupKey`). **Adding a provider means writing one `@ApplicationScoped implements
-  CatalogProvider` class** — nothing else needs to change.
+  CatalogProvider` class** — nothing else needs to change, and `BOOK` proves it: Open
+  Library and the BnF are both registered for it, and neither the service, the resource nor
+  the cache knows there are two. A provider that fails answers no result rather than
+  raising, so the aggregate degrades to whatever the others found. `dedupKey` is
+  `title|authors` lowercased, which only merges two catalogues when they spell an author the
+  same way — that is why `BnfProvider` rewrites an authority heading ("Herbert, Frank
+  (1920-1986). Auteur du texte") into the plain name Open Library returns.
 - **Catalog cache**: two levels behind `CatalogCache`, on the provider call rather than on
   the merged answer. Caffeine first (6 h for a search, 12 h for the releases), then the
   `catalog_cache` table (`CatalogCacheStore`), so a pod that has just started answers from
@@ -338,6 +346,6 @@ The OIDC authority is **baked into the web image at build time**
 | 7 | React Query for server state, behind a fetch-based orval mutator | Removes hand-rolled cache/retry/invalidation, and attaches the token in one place. Fetch rather than axios: the react-query client defaults to axios, which would add a dependency for nothing. Since orval 8 the mutator takes `(url, RequestInit)` and the generated code builds the URL and encodes the body, so `apiClient.ts` is down to the session concerns | ✅ Applied |
 | 8 | CSS Modules + tokens, no more inline | Dark mode, consistency, reuse | ✅ Applied |
 | 9 | Capacitor for the native mobile app | ISBN scanning + push notifications, shared code | 🚧 Bootstrapped ([#67](https://github.com/zelytra/Librarius/issues/67)): the shell loads the web bundle; native projects and native sign-in pending |
-| 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library and AniList are stubbed because both providers swallow their own failures: an unavailable third party would look like an empty result set | ✅ Applied |
+| 10 | End-to-end suite against the real images, with the external catalogs stubbed | The regressions that reached staging were integration ones (the service worker swallowing the OIDC redirect, a misrouted ingress); only a browser talking to the real stack sees them. Open Library, the BnF and AniList are stubbed because every provider swallows its own failures: an unavailable third party would look like an empty result set. **Every catalog must be stubbed, not just the ones a journey is about** — the two book providers share one result limit, so a catalogue left pointing at the real internet answers a full page of its own editions and pushes the fixtures out of the response | ✅ Applied |
 | 11 | Account deletion goes through Keycloak **first**, and refuses outright when it cannot | The two halves of an account live in two systems that fail independently. Erasing the rows while the login survives gives the user a freshly provisioned empty account on their next sign-in — indistinguishable from data loss, and irreversible. The reverse window (login gone, rows orphaned) is far less likely and is recoverable by hand from the deletion log | ✅ Applied |
 | 12 | The Keycloak admin call is two plain HTTP requests, not the admin-client extension | Token then `DELETE /admin/realms/{realm}/users/{id}`: about sixty lines against a JAX-RS client stack and a build-time configuration nothing else here needs. It also keeps the degradation path — "not configured" as a first-class outcome — under our control rather than the extension's | ✅ Applied |

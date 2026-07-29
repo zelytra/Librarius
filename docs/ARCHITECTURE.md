@@ -20,7 +20,7 @@ cream `#f3ede3`).
 | DB | PostgreSQL + Hibernate Panache + Flyway | Versioned migrations, per-user scoping at the repository level |
 | Auth | Keycloak (OIDC) | No home-grown register/reset/refresh; SSO shared with Grafana |
 | API client | orval (OpenAPI → typed hooks) | Frontend and backend types stay in sync, CI gate on the diff |
-| Book catalog | Open Library (no API key) | Title/author search, covers, ISBN |
+| Book catalog | Open Library + BnF SRU (neither needs an API key) | Title/author search, covers, ISBN; the BnF covers the French publishing Open Library misses |
 | Manga catalog | AniList + Jikan + MangaDex | Best free manga data available |
 | Mobile | Capacitor shell (`apps/mobile`) | The native container runs the web build itself: one codebase, no fork |
 | Monorepo | pnpm (web, mobile) + Maven (api) | Coexist without friction, kept apart in CI by path filters |
