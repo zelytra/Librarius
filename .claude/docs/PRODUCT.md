@@ -37,13 +37,22 @@ being authored in French and translated.
 | **Work** (`work`) | The intellectual content: a novel, or *one volume* of a manga | Shared catalog |
 | **Edition** (`edition`) | One materialisation: ISBN, publisher, language, page count, cover, format | Shared catalog |
 | **Series** (`series`) | An ordered grouping of works ("One Piece", "A Song of Ice and Fire") | Shared catalog |
-| **Follow** (`series_follow`) | The user ↔ series link: "tell me about the next volumes" | User |
+| **Author** (`author`) | A person credited on works, related to a work through `work_author` | Shared catalog |
+| **Follow** (`series_follow`, `author_follow`) | The user ↔ series and user ↔ author links: "tell me about what comes next" | User |
 | **Library item** (`library_item`) | The user ↔ edition link: status, rating, acquisition date, rank | User |
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
 | **Rank** (`rank_category`) | Gold / Silver / Bronze + custom categories | Shared (built-ins) + user |
 | **Reading goal** (`reading_goal`) | Annual target in books, volumes or pages | User |
 | **Upcoming release** (`upcoming_release`) | An announced volume of a series, dated and labelled per market (FR/JP/EN) | Shared catalog |
+
+An author is one row per **spelling that folds alike**
+([#182](https://github.com/zelytra/Librarius/issues/182)): "Isaac Asimov", "isaac asimov" and
+"ISAAC ASIMOV" are one person, and so are "J.R.R. Tolkien" and "J. R. R. Tolkien". Nothing
+goes further than that — two writers of the same name are one row, "A. Damasio" is not
+"Alain Damasio", and a name written "Damasio, Alain" splits on the comma. Saying so matters
+more than the mechanism: the author page ([#199](https://github.com/zelytra/Librarius/issues/199))
+must not read as an identity nobody has established.
 
 **Structural rule**: the catalog is **shared** across all users, ownership is **private**.
 Two users who own the same title point at the same `work` — entries are matched against the

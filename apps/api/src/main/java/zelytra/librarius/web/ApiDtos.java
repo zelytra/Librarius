@@ -69,7 +69,7 @@ public final class ApiDtos {
             Work w = e.work;
             // genresText, not the normalised genres: reading the association here would
             // cost one query per item of a page of the collection.
-            return new BookView(e.id, w.id, w.kind.name(), w.title, w.authors, w.seriesTitle,
+            return new BookView(e.id, w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
                     w.volumeNumber, e.coverUrl, e.pageCount, e.publisher, e.language, e.isbn13,
                     w.originalYear, w.synopsis, w.genresText);
         }

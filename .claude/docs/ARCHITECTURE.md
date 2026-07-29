@@ -172,6 +172,8 @@ zelytra/librarius/
                         # ArchiveImportService (restores a JSON export)
   export/               # ExportService (JSON + CSV), ExportCsv, ExportJobs (deferred)
   account/              # AccountDeletionService, AccountEraser, KeycloakAccountDeleter
+  genre/                # GenreNormalizer + GenreService — free text → the shared genre rows
+  author/               # AuthorNormalizer + AuthorService — free text → the shared author rows
   series/SeriesService  # a series seen through one user's collection
   stats/StatsService    # counters, annual goal and reading timeline
   wishlist/             # WishlistService — the writes spanning two tables

@@ -28,6 +28,10 @@ public class WorkRepository implements PanacheRepositoryBase<Work, UUID> {
      * other. Everything below that — publisher, ISBN, page count, format — is precisely what
      * distinguishes two editions and therefore has no business in the key.
      *
+     * <p>The key still reads the free-text {@code authorsText} and not the {@code author}
+     * rows V13 introduced: two spellings of one name fold to the same author but remain two
+     * works, which is the behaviour that was already there and is not this issue's to change.
+     *
      * @param volumeNumber the volume the entry describes; a null one matches only works that
      *                     carry none, a standalone novel never being a volume of anything
      * @return the matching work, or empty when the catalog does not know it yet
@@ -46,7 +50,7 @@ public class WorkRepository implements PanacheRepositoryBase<Work, UUID> {
                 .createQuery("select w from Work w"
                         + " where w.kind = :kind"
                         + "   and lower(w.title) = :title"
-                        + "   and lower(coalesce(w.authors, '')) = :authors"
+                        + "   and lower(coalesce(w.authorsText, '')) = :authors"
                         + "   and " + volumeClause
                         + " order by w.createdAt asc, w.id asc", Work.class)
                 .setParameter("kind", kind)

@@ -3,13 +3,14 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
            ├─< wishlist_item >──┘             │        ▲
-           ├─< reading_goal                   └─< work_genre >── genre >─< genre_alias
-           ├─< series_follow >─────────────────────────┘
+           ├─< reading_goal                   ├─< work_genre >── genre >─< genre_alias
+           ├─< series_follow >────────────────┼────────┘
+           ├─< author_follow >── author >─────┴─< work_author
            ├─< rank_category (custom)          library_item ──1:1─ reading_progress
            │        ▲                                │
            │  rank_category (built-ins, user_id NULL)┘
@@ -21,7 +22,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
 | `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`) | No credential stored |
-| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
+| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
@@ -43,6 +44,9 @@ of a denormalised field to keep in step on every write.
 | `genre` | `id UUID` | `code` **UNIQUE**, `label` | `code` is the identity, `label` only what a screen shows (V6) |
 | `genre_alias` | `alias VARCHAR(64)` | `code` FK → `genre(code)` | Provider wording → canonical genre. Seed data, never written at runtime (V6) |
 | `work_genre` | `(work_id, genre_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(genre_id, work_id)` for the reverse walk (V6) |
+| `author` | `id UUID` | `name`, `name_key` **UNIQUE**, `photo_url`, `provider`, `provider_ref`, `created_at` | `name_key` (the fold of `name`) is the identity, `name` only what a screen shows. No `kind`. idx on `lower(name)` for the search of [#196](https://github.com/zelytra/Librarius/issues/196). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V13) |
+| `work_author` | `(work_id, author_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(author_id, work_id)` — the bibliography walks it that way (V13) |
+| `author_follow` | `(user_id, author_id)` | `created_at` | No surrogate key: the pair is the identity, exactly like `series_follow` (V13) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
@@ -248,6 +252,64 @@ Neither pair is indexed. Nothing looks a work up *by* its reference: the work is
 (`kind`, `lower(title)`, `lower(authors)`, `volume_number`) as it always was, and whoever
 reads the reference already holds the row.
 
+`V13__author_entities.sql` turns the authors into rows
+([#182](https://github.com/zelytra/Librarius/issues/182)): `author`, `work_author` and
+`author_follow`, the same three shapes the series already had. It is the third time the
+project makes this move, after the series (V4) and the genres (V6), and it follows the same
+plan — add the structure, backfill it from the free-text column, keep that column populated.
+
+**What it reuses from V6, and what it deliberately does not.** Reused: the split of a
+free-text list and a fold of each part into a key, through `author_parts()` and
+`author_key()`, ported verbatim into `AuthorNormalizer` and kept in step by
+`AuthorNormalizerSqlParityTest`. The fold is V6's — ligatures expanded, diacritics mapped
+onto ASCII through an explicit `translate()` table, lower case, every other run of characters
+collapsed into a single hyphen — at the width of `author.name` rather than of `genre.code`,
+and with a longer character table: a genre list is written in French or English, a credit
+line in every language that has a writer, and without the Latin Extended-A rows
+"Stanisław Lem" and "Stanislaw Lem" would be two people. Collapsing punctuation is what earns
+the fold its keep here: the catalogues disagree on the spacing of initials, and
+`J.R.R. Tolkien` and `J. R. R. Tolkien` have to land on one row.
+
+**Not reused: `genre_alias`.** That table works because the genres are a closed vocabulary of
+a few dozen entries somebody can curate; the authors are not, its author counterpart would
+have to hold the world's writers, and a wrong row there does not mis-file a tag — it merges
+two people's bibliographies. Two spellings are therefore related **only** when they fold
+alike, never by curated fiat. Which is worth stating as a list of what this cannot do, rather
+than leaving it to be discovered from the data:
+
+- `Damasio, Alain` splits on the comma into two authors — the accepted cost of splitting on
+  the character the providers join with, the same trade-off V6 made for the genres.
+- `A. Damasio` and `Alain Damasio` are two rows: nothing expands an initial.
+- `Neil Gaiman and Terry Pratchett` is one row: `,` `;` `/` `|` `&` and line breaks separate
+  names, words do not, and a rule cutting on " and " would also cut "Bell and Sons".
+- Two writers sharing a name are one row. `author.provider` / `author.provider_ref` is where
+  the eventual answer lands — a catalogue identifier tells namesakes apart, a spelling never
+  will — and both columns are **empty today**: a name folded out of free text names no
+  record, and `work.provider_ref` (V12) identifies the work, not the person who wrote it.
+  Filling them is a provider change, like the rest of V12's story.
+
+One difference from `genre_code()` in the fold itself: a name the table cannot read at all —
+a script it does not cover — keeps its own trimmed text as the key instead of being dropped.
+An unreadable genre is noise the statistics are better off without; this is somebody's name,
+and it is the only credit that work carries. Such a key can collide with no folded one, those
+being `[a-z0-9-]` and never empty by construction. It is not lower-cased either: `lower()` on
+a script the table ignores is the database's collation talking, which V6 went out of its way
+not to depend on — so two cases of one Cyrillic name are two rows.
+
+The backfill is **re-runnable**, both statements ending on `ON CONFLICT DO NOTHING`, and
+`AuthorBackfillTest` replays them twice on a database seeded with the values the providers
+actually return. `AuthorService` is its runtime counterpart, called by `CatalogEntryService`
+on every entry recorded: without it the backfill would cover the catalog as it stood on
+migration day and `work_author` would stop growing the day it was created.
+
+`work.authors` **stays and stays populated**: `BookView` exposes it, the deployed front end
+and both export formats read it, and — unlike the two other denormalised labels —
+`WorkRepository.findMatch` still deduplicates works on it. It is now the denormalised credit
+line of `work_author`, and is dropped once the front end goes through the author identifiers
+([#199](https://github.com/zelytra/Librarius/issues/199)). `sort=author` still orders on it:
+a work carries several authors, so there is no such thing as "its" author to order on — the
+same reasoning as `sort=genre`.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -263,7 +325,7 @@ row, so the intent is readable from the code and not only from a DDL clause.
 |---|---|---|
 | L1 | ✅ Lifted by V4 — `series` table, `work.series_id`, `series_follow` | — |
 | L2 | ✅ Lifted by V6 — `genre`, `genre_alias`, `work_genre` | — |
-| L3 | **`authors` is a string** | No author page, no grouping, no exact search by author |
+| L3 | ✅ Lifted by V13 — `author`, `work_author`, `author_follow` ([#182](https://github.com/zelytra/Librarius/issues/182)) | — |
 | L4 | **No reading history** | A re-read overwrites `started_at`/`finished_at` |
 | L5 | ✅ Lifted by V5 — `catalog_cache` behind Caffeine | — |
 | L6 | ✅ Lifted by V10 — `dashboard_layout` ([#54](https://github.com/zelytra/Librarius/issues/54)) | — |
@@ -272,16 +334,18 @@ row, so the intent is readable from the code and not only from a DDL clause.
 | L9 | ✅ Lifted by V4 — `series_follow` | — |
 | L10 | **`work.series_title` still duplicates `series.title`** | Two sources of truth for one label until the front end reads `series_id`; dropped in a later migration |
 | L11 | **`work.genres` still duplicates `work_genre`** | Same, for the genres: the raw wording stays until the front end reads the codes |
+| L12 | **`work.authors` still duplicates `work_author`** | Same, for the authors — and one step further behind the two others: `WorkRepository.findMatch` deduplicates works on the raw credit line, so it cannot be dropped on the front end's say-so alone |
+| L13 | **No author is disambiguated beyond their spelling** | Two writers of one name share a row, and an initial never resolves to the name it stands for. `author.provider_ref` is the way out and nothing fills it — see V13 above |
 
 ## 3. Planned changes
 
-> Numbering: V8 to V12 are taken — the upcoming releases, the category constraint, the
-> dashboard layout, the abandoned status and the provider reference. The plan below
-> therefore starts at **V13**. Both entries were renumbered up by one when V12 was taken, as
-> they already had been when V11 was; neither has been implemented, so nothing that shipped
-> had to move.
+> Numbering: V8 to V13 are taken — the upcoming releases, the category constraint, the
+> dashboard layout, the abandoned status, the provider reference and the author entities. The
+> plan below therefore starts at **V14**. Both entries were renumbered up by one when V13 was
+> taken, as they already had been when V12 and V11 were; neither has been implemented, so
+> nothing that shipped had to move.
 
-### V13 — Drop the denormalised labels & reading history
+### V14 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -291,6 +355,11 @@ ALTER TABLE work DROP COLUMN series_title;
 ALTER TABLE work DROP COLUMN genres;
 DROP INDEX idx_work_genres_lower;             -- V3, on the dropped column
 ```
+
+`work.authors` is a third denormalised label and is **not** on that list yet: the front end
+reading author identifiers (#199) is only half of what holds it up, `WorkRepository.findMatch`
+deduplicating works on it being the other half. Dropping it means giving the work match
+another key first.
 
 A re-read stops overwriting the previous one:
 
@@ -304,7 +373,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V14 — Notifications
+### V15 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

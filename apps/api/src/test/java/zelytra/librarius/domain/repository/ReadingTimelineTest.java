@@ -298,7 +298,7 @@ class ReadingTimelineTest {
         Work work = new Work();
         work.kind = read.volumeNumber() == null ? Kind.BOOK : Kind.MANGA;
         work.title = "Timeline " + UUID.randomUUID();
-        work.authors = read.authors();
+        work.authorsText = read.authors();
         work.volumeNumber = read.volumeNumber();
         em.persist(work);
 

@@ -247,7 +247,7 @@ class StatsTimelineApiTest {
             Work work = new Work();
             work.kind = Kind.BOOK;
             work.title = "Timeline " + UUID.randomUUID();
-            work.authors = authors;
+            work.authorsText = authors;
             em.persist(work);
 
             Edition edition = new Edition();

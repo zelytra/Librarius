@@ -102,7 +102,7 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
         PRIORITY(urgencyRank() + " asc, wi.createdAt desc, wi.id desc"),
         ADDED("wi.createdAt desc, wi.id desc"),
         TITLE("lower(w.title) asc, wi.id asc"),
-        AUTHOR("lower(coalesce(w.authors, '')) asc, lower(w.title) asc, wi.id asc"),
+        AUTHOR("lower(coalesce(w.authorsText, '')) asc, lower(w.title) asc, wi.id asc"),
         /** Cheapest first; wishes carrying no estimate are pushed to the end. */
         PRICE("coalesce(wi.estimatedPrice, 1000000) asc, lower(w.title) asc, wi.id asc");
 
@@ -234,7 +234,7 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
         if (filter.search() != null && !filter.search().isBlank()) {
             clauses.add("""
                     (lower(w.title) like :search escape '!'
-                     or lower(coalesce(w.authors, '')) like :search escape '!'
+                     or lower(coalesce(w.authorsText, '')) like :search escape '!'
                      or lower(coalesce(w.seriesTitle, '')) like :search escape '!')""");
             params.put("search", LibraryItemRepository.likePattern(filter.search()));
         }
