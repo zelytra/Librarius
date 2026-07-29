@@ -20,4 +20,25 @@ public class RankCategoryRepository implements PanacheRepositoryBase<RankCategor
     public Optional<RankCategory> findForUser(String userId, UUID id) {
         return find("id = ?1 and (userId is null or userId = ?2)", id, userId).firstResultOptional();
     }
+
+    /**
+     * The categories the user created, and only those: the built-ins carry no
+     * {@code user_id} and belong to nobody, so an export must not hand them back as the
+     * user's data and an import must not try to recreate them.
+     */
+    public List<RankCategory> listCustomForUser(String userId) {
+        return list("userId = ?1 order by code asc", userId);
+    }
+
+    /**
+     * Resolves a rank by the code an export carries: the user's own category first, then the
+     * shared built-in of that code.
+     */
+    public Optional<RankCategory> findForUserByCode(String userId, String code) {
+        if (code == null || code.isBlank()) {
+            return Optional.empty();
+        }
+        return find("code = ?1 and (userId = ?2 or userId is null) order by userId desc nulls last",
+                code.trim(), userId).firstResultOptional();
+    }
 }

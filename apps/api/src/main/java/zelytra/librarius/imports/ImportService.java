@@ -130,6 +130,12 @@ public class ImportService {
         if (s.contains("cours") || s.contains("reading") || s.contains("currently")) {
             return LibraryStatus.READING;
         }
+        // Before the "read" test below, which these three would otherwise satisfy: the
+        // Goodreads shelf a book sits on before it is opened is called `to-read`, and a
+        // library exported from there — or from here — came back entirely marked as read.
+        if (s.contains("to-read") || s.contains("to read") || s.contains("lire")) {
+            return LibraryStatus.OWNED;
+        }
         if (s.equals("lu") || s.contains("read") || s.contains("terminé")) {
             return LibraryStatus.READ;
         }

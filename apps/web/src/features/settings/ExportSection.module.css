@@ -1,0 +1,44 @@
+.title {
+  font-size: var(--fs-16);
+  margin: 0 0 4px;
+}
+
+.intro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: var(--fs-11-5);
+  color: var(--faint);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.success {
+  font-size: var(--fs-13);
+  color: var(--accent-deep);
+  font-weight: 600;
+  margin: 0;
+}
+
+.failure {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  margin: 0;
+}
