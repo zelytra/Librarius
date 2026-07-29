@@ -14,12 +14,37 @@ data:
     #!/bin/bash
     set -euo pipefail
 
-    pg_dump \
-      --host "$PGHOST" \
-      --username "$PGUSER" \
-      --dbname "$PGDATABASE" \
-      --no-owner --no-privileges \
-      | gzip -9 > /work/dump.sql.gz
+    dump_one() {
+      echo "dump: ${1}" >&2
+      pg_dump \
+        --host "$PGHOST" \
+        --username "$PGUSER" \
+        --dbname "$1" \
+        --no-owner --no-privileges
+    }
+
+    # Both databases sit in the same instance, and the archive needs both.
+    # `librarius` holds the library; `keycloak` holds the accounts, and every
+    # application row is keyed on the Keycloak `sub`. Restoring the first
+    # without the second gives back the books owned by a subject nobody can
+    # ever sign in as — a restore that reports success and hands back nothing.
+    #
+    # Roles are deliberately NOT dumped: pg_dumpall would carry the role
+    # passwords as they were at dump time, and restoring them would silently
+    # revert a rotated password, leaving the api unable to reach the database
+    # it had just restored. A blank instance already creates the role from the
+    # Secret, which is the value we want to keep.
+    {
+      # The keycloak database is created by the init script on a first
+      # startup, so it exists on a blank instance. Recreated here too for a
+      # restore into an instance that already lived without it.
+      echo "SELECT 'CREATE DATABASE ${KEYCLOAK_DATABASE}'"
+      echo " WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${KEYCLOAK_DATABASE}')\\gexec"
+      echo "\\connect ${PGDATABASE}"
+      dump_one "$PGDATABASE"
+      echo "\\connect ${KEYCLOAK_DATABASE}"
+      dump_one "$KEYCLOAK_DATABASE"
+    } | gzip -9 > /work/dump.sql.gz
 
     size=$(wc -c < /work/dump.sql.gz)
     echo "dump: ${size} bytes compressed"
@@ -135,6 +160,9 @@ spec:
                   value: {{ .Values.postgres.user | quote }}
                 - name: PGDATABASE
                   value: {{ .Values.postgres.database | quote }}
+                # The accounts every application row is keyed on. See dump.sh.
+                - name: KEYCLOAK_DATABASE
+                  value: {{ .Values.keycloak.database | quote }}
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
