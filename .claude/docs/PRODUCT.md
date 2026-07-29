@@ -275,9 +275,16 @@ Not a screen either: how much of the window the application is allowed to use.
   ([#171](https://github.com/zelytra/Librarius/issues/171)).
 - ✅ **Nothing changes on a phone.** The widths are reasoned from the reader's own content
   — a shelf, a grid of covers — so a cover keeps the size it has today as the layout
-  crosses over: three columns of 124 px at 599 px, four of 127 px at 600 px.
-- 🔜 The screens themselves still lay their content out in one column, and the navigation
-  is still a bottom bar: that is #172 to #175, which the widths above exist to serve.
+  crosses over: three columns of 124 px at 599 px, three of 144 px at 600 px.
+- ✅ **A desktop is navigated from the side, not from the bottom.** From 600 px the tab bar
+  is replaced by a persistent column: a narrow rail of icons and labels up to 1 120 px, a
+  full sidebar past it, both carrying the same five destinations plus a direct entry to
+  Settings — which on a phone is still only reachable from Home's header
+  ([#172](https://github.com/zelytra/Librarius/issues/172)). It stays visible on Detail,
+  Series and Settings, where the bar hides itself: on a wide window nothing is gained by
+  taking it away, and losing it would leave browser-back as the only way out.
+- 🔜 The screens themselves still lay their content out in one column: that is #173 to
+  #175, which the widths and the navigation above exist to serve.
 
 ## 5. Key journeys
 

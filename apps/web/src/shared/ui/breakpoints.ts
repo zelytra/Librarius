@@ -1,3 +1,5 @@
+import { useMemo, useSyncExternalStore } from 'react';
+
 /**
  * The two viewport widths the layout changes at, in pixels.
  *
@@ -25,4 +27,37 @@ export type Breakpoint = keyof typeof BREAKPOINTS;
  */
 export function mediaAtLeast(breakpoint: Breakpoint): string {
   return `(min-width: ${BREAKPOINTS[breakpoint]}px)`;
+}
+
+/**
+ * Whether the viewport is currently at least this wide, kept in step as the window is
+ * resized.
+ *
+ * This is the *render* decision CSS cannot make: hiding a component with `display: none`
+ * still mounts it, still runs its hooks and still leaves it in the accessibility tree, so
+ * "which navigation exists" is a question for JS. How that navigation is drawn stays in
+ * CSS, through the tokens.
+ *
+ * `matchMedia` is guarded, the way `theme/themes.ts` guards it: jsdom does not implement
+ * it, and every component test mounts the shell. Absent, the answer is `false` — the
+ * phone layout, which is the app's own default.
+ */
+export function useViewportAtLeast(breakpoint: Breakpoint): boolean {
+  // Subscribing to a store React re-subscribes to on every render would tear the listener
+  // down and set it up again each time, so both halves are memoised with the query.
+  const store = useMemo(() => {
+    const list =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia(mediaAtLeast(breakpoint))
+        : null;
+    return {
+      subscribe: (onChange: () => void) => {
+        list?.addEventListener('change', onChange);
+        return () => list?.removeEventListener('change', onChange);
+      },
+      getSnapshot: () => list?.matches ?? false,
+    };
+  }, [breakpoint]);
+
+  return useSyncExternalStore(store.subscribe, store.getSnapshot);
 }

@@ -1,0 +1,64 @@
+/* The wide-viewport navigation (#172): a column beside the page, not a bar under it.
+
+   No media query here either — the two forms this draws, the rail and the sidebar, are
+   `--nav-side-*` in tokens.css, redeclared once in the --bp-desktop block. The component
+   is never mounted below --bp-tablet, so what the tokens hold by default is the rail. */
+
+.nav {
+  flex: 0 0 auto;
+  width: var(--nav-side-width);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 8px;
+  /* The frame scrolls the page, never itself: the navigation is what stays put while a
+     screen moves under it. A window too short for six entries scrolls them here. */
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.entry {
+  display: flex;
+  /* Icon over label in the rail, icon beside label in the sidebar. `align-items` centres
+     on the cross axis either way — horizontally in a column, vertically in a row — which
+     is why only the direction has to change. */
+  flex-direction: var(--nav-side-item-direction);
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--nav-side-item-gap);
+  padding: 10px var(--nav-side-item-pad-x);
+  border-radius: var(--radius-control);
+  color: var(--faint);
+  text-decoration: none;
+}
+
+.entry:hover {
+  background: var(--chip);
+}
+
+/* The active destination, keyed on the attribute NavLink sets rather than on a class of
+   its own: the pill and the state a screen reader announces are then the same fact. */
+.entry[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+/* A pointer sees the pill; a keyboard has to see the focus ring. The bar has never had
+   one — this navigation is meant to be walked with Tab. */
+.entry:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: var(--nav-side-label-size);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}

@@ -4,6 +4,7 @@
     "tagline": "Votre bibliothèque personnelle de livres et mangas."
   },
   "nav": {
+    "label": "Navigation principale",
     "home": "Accueil",
     "collection": "Collection",
     "discover": "Découvrir",

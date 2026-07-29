@@ -5,7 +5,7 @@
    rules let it fill the window. No media query here: what changes with the
    viewport is declared once, in tokens.css.
 
-   The internal scroll is kept at every width, deliberately. It is what lets a
+   The internal scroll is kept at every width, deliberately. It is what lets the
    persistent side navigation (#172) stay put while a screen scrolls under it,
    and it is the reason the bottom bar never scrolls away today. */
 .viewport {
@@ -29,8 +29,19 @@
   box-shadow: var(--app-frame-shadow);
 }
 
+/* Set by AppShell when it mounts the side navigation, from the same breakpoint that
+   decided to mount it — still no media query in this file. The bar stacks under the
+   page, the column sits beside it; nothing else about the frame changes. */
+.frameSideNav {
+  flex-direction: row;
+}
+
 .content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  /* A flex item's floor is its content, so without this a wide table or an unbroken
+     title would push the page out rather than scroll inside it, and take the width off
+     the navigation beside it. */
+  min-width: 0;
 }

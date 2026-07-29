@@ -1,21 +1,20 @@
 import { NavLink } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
+import { NAV_DESTINATIONS } from './navigation';
 import styles from './BottomNav.module.css';
 
-const TABS = [
-  { to: '/', icon: 'cottage', labelKey: 'nav.home' },
-  { to: '/collection', icon: 'auto_stories', labelKey: 'nav.collection' },
-  { to: '/discover', icon: 'search', labelKey: 'nav.discover' },
-  { to: '/wishlist', icon: 'favorite', labelKey: 'nav.wishlist' },
-  { to: '/stats', icon: 'insights', labelKey: 'nav.stats' },
-] as const;
-
+/**
+ * The navigation of a phone, and only of a phone: `AppShell` mounts `SideNav` instead
+ * from `--bp-tablet` up. Its five tabs and its markup are what they have always been —
+ * the destinations simply moved to `navigation.ts`, where the side navigation reads the
+ * same list.
+ */
 export function BottomNav() {
   const { t } = useTranslation();
   return (
     <nav className={styles.nav}>
-      {TABS.map((tab) => (
+      {NAV_DESTINATIONS.map((tab) => (
         <NavLink key={tab.to} to={tab.to} end={tab.to === '/'} className={styles.tab}>
           {({ isActive }) => (
             <span

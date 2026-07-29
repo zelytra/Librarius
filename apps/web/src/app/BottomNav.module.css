@@ -1,13 +1,10 @@
-/* The bar keeps the width of the content column rather than stretching five
-   tabs across a window — `--content-max` is `none` on a phone, so this is the
-   full-width bar shipped today. A stopgap: a bottom tab bar is a phone pattern
-   wherever it is centred, and #172 replaces it with a side navigation past the
-   tablet breakpoint. */
+/* The bar is now mounted below --bp-tablet only (#172 replaced it with SideNav
+   above), which is where the frame is already capped at 440px: the `max-width:
+   var(--content-max)` #171 added to stop it stretching across a window is gone
+   with the case it was guarding. Full width of a phone frame, as originally. */
 .nav {
   flex: 0 0 auto;
   width: 100%;
-  max-width: var(--content-max);
-  margin-inline: auto;
   height: 84px;
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(12px);
