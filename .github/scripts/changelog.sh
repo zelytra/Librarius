@@ -58,7 +58,11 @@ while IFS= read -r subject; do
     summary=${BASH_REMATCH[5]}
   fi
 
-  [[ -n ${heading[$type]:-} ]] || type=other
+  # `$type` is empty when the subject matched neither shape, and bash refuses an empty
+  # subscript on an associative array — so it has to be tested before the lookup, not
+  # inside it. Without the first test this line aborts the whole run on the very
+  # commits the "Other" bucket exists for.
+  [[ -n $type && -n ${heading[$type]:-} ]] || type=other
 
   line='- '
   [[ -n $scope ]] && line+="**${scope}**: "

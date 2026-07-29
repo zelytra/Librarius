@@ -1,0 +1,73 @@
+name: release scripts
+
+# `release.yml` only ever runs on a tag, so its scripts were exercised for the first
+# time by the release itself — the worst possible moment to find out one of them
+# aborts. This runs them against the real history, before any tag exists.
+#
+# It fires on pushes to `main` as well as on the pull requests that touch them: the
+# changelog reads commit subjects, so a subject landing on `main` can break it without
+# anyone editing a script.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-scripts.yml'
+
+concurrency:
+  group: release-scripts-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    name: changelog · chart alignment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # A single ref, not `a..b`: that is the shape `release.yml` passes for a first
+      # release, and it covers the whole history — every oddly-worded subject the
+      # repository has accumulated, the initial commit included. `a..b` would exclude
+      # `a` and quietly skip the one commit least likely to follow the convention.
+      - name: Render the notes over the full history
+        run: |
+          bash .github/scripts/changelog.sh "0.0.0-check" "HEAD" \
+            "https://example.invalid/compare" > notes.md
+
+          echo "rendered $(wc -l < notes.md) lines"
+          # An empty render exits 0 just as happily as a good one; a release whose notes
+          # say nothing is the failure this job exists to catch.
+          test -s notes.md
+          grep -q '^## \[0.0.0-check\]' notes.md
+          head -20 notes.md
+
+      # Nothing must be dropped: a changelog that silently loses commits is worse than
+      # an untidy one, which is why the script has an "Other" bucket at all.
+      - name: Account for every commit
+        run: |
+          commits=$(git log --no-merges --oneline | wc -l)
+          listed=$(grep -c '^- ' notes.md)
+          echo "commits=${commits} listed=${listed}"
+          test "$commits" -eq "$listed"
+
+      - name: Align the chart on a version, then check it still renders
+        run: |
+          bash .github/scripts/sync-version.sh "0.0.0"
+          grep -E '^(version|appVersion):' infra/helm/librarius/Chart.yaml
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.17.0
+
+      - name: Lint the aligned chart
+        run: |
+          helm lint infra/helm/librarius \
+            --set postgres.existingSecret=lint \
+            --set keycloak.existingSecret=lint
