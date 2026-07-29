@@ -133,6 +133,16 @@
       "reading": "in progress",
       "toRead": "to read"
     },
+    "bookStack": {
+      "title": "Everything you have read",
+      "books_one": "{{books}} book read",
+      "books_other": "{{books}} books read",
+      "pages_one": "{{pages}} page read",
+      "pages_other": "{{pages}} pages read",
+      "height": "≈ {{height}} of stacked paper",
+      "estimate": "Estimated height: one sheet of paper ≈ {{thickness}} mm, so two pages.",
+      "alt": "A stack of books illustrating {{books}} books read, {{pages}} pages, about {{height}} of paper."
+    },
     "upcomingReleases": {
       "title": "Upcoming releases",
       "unknownDate": "Date to be confirmed",

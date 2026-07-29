@@ -15,6 +15,7 @@ import type {
   WishlistItemDto,
   WishlistPageDto,
 } from '../api/generated/librarius';
+import { defaultLayout } from '../features/home/dashboardLayout';
 
 /** Test data sets, shaped like the real API responses. */
 
@@ -269,17 +270,13 @@ export function goal(overrides: Partial<GoalDto> = {}): GoalDto {
   };
 }
 
-/** The dashboard layout of an account that never reordered or hid anything. */
+/**
+ * The dashboard layout of an account that never reordered or hid anything.
+ *
+ * <p>Built from {@code defaultLayout()} rather than spelled out: the API answers a fresh
+ * account with exactly that list, and a copy written out here goes stale the day a section
+ * ships — silently, since a missing code simply renders nothing.
+ */
 export function dashboardLayout(overrides: Partial<DashboardLayoutDto> = {}): DashboardLayoutDto {
-  return {
-    sections: [
-      { code: 'resumeReading', hidden: false },
-      { code: 'toRead', hidden: false },
-      { code: 'counters', hidden: false },
-      { code: 'goal', hidden: false },
-      { code: 'upcoming', hidden: false },
-      { code: 'recentlyRead', hidden: false },
-    ],
-    ...overrides,
-  };
+  return { sections: defaultLayout(), ...overrides };
 }

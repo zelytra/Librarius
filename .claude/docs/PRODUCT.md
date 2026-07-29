@@ -63,6 +63,7 @@ Personal dashboard.
 | Continue reading | ✅ | Carousel of `READING` titles, each cover carrying its progress |
 | **To-read pile ("PAL")** | ✅ | Carousel of `OWNED` titles — owned and never opened, so neither what is being read nor what was given up on ([#166](https://github.com/zelytra/Librarius/issues/166)). One page of the pile, the header reporting how big the whole of it is; absent, rather than empty, when nothing is waiting |
 | Counters (read / in progress / to read) | ✅ | |
+| **Stack of books read** | ✅ | The "read" counter drawn out ([#181](https://github.com/zelytra/Librarius/issues/181)): a pile built from the design tokens, beside the number of books, the pages and the paper they come to in centimetres or metres. One spine per book up to eight, then one more per doubling and capped at fourteen, so three books and four hundred both read; the height is labelled as an estimate and names the sheet thickness it assumes. Absent, rather than empty, on a library with nothing read yet |
 | Upcoming releases | ✅ | Personalised to the series the reader owns, wishes on or follows, each date labelled with its market (FR/JP/EN) and its precision ([#57](https://github.com/zelytra/Librarius/issues/57)). No stake in anything → invites the reader towards their collection rather than an empty section. 🔜 admin/CSV ingestion of curated dates — entries are seeded by hand for now |
 | Recently read | ✅ | |
 | Empty state | ✅ | Points to Discover |

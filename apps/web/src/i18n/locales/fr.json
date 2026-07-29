@@ -133,6 +133,16 @@
       "reading": "en cours",
       "toRead": "à lire"
     },
+    "bookStack": {
+      "title": "Tout ce que tu as lu",
+      "books_one": "{{books}} livre lu",
+      "books_other": "{{books}} livres lus",
+      "pages_one": "{{pages}} page lue",
+      "pages_other": "{{pages}} pages lues",
+      "height": "≈ {{height}} de papier empilé",
+      "estimate": "Hauteur estimée : une feuille de papier ≈ {{thickness}} mm, soit deux pages.",
+      "alt": "Une pile de livres illustrant {{books}} livres lus, {{pages}} pages, soit environ {{height}} de papier."
+    },
     "upcomingReleases": {
       "title": "Prochaines sorties",
       "unknownDate": "Date à confirmer",
