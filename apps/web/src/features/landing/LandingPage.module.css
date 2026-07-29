@@ -1,0 +1,296 @@
+/* Public landing page (#80).
+
+   It is the one screen that renders outside the application shell, so it owns the two
+   things the shell would otherwise give it: a full-height surface in the palette, and a
+   content column that stops growing. Both come from the same tokens every screen uses —
+   --content-max caps the column, --screen-pad-* steps the padding at the breakpoints —
+   which is why there is not a single media query below. A phone gets one column because
+   --grid-panel-columns is `1fr` under --bp-tablet; a desktop gets three because the same
+   token becomes an auto-fit track list above it.
+
+   The type stays on the app's own scale, --fs-27 at the largest. A landing page is
+   usually where a display size gets invented; here that would mean either a hardcoded
+   px or a new token nothing else consumes, and a 27px serif heading on a narrow measure
+   is the voice this application already speaks in. */
+
+.page {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.inner {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--screen-pad-top) var(--screen-pad-x) var(--screen-pad-bottom);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 26px 0 40px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.title {
+  font-size: var(--fs-27);
+  line-height: 1.2;
+  /* A measure, not a width: past --bp-tablet the column is 1140px wide and a heading
+     running its full length stops being a heading. */
+  max-width: 20ch;
+  margin: 0;
+}
+
+.lead {
+  max-width: 58ch;
+  margin: 0;
+  font-size: var(--fs-16);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.cta {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.note {
+  max-width: 52ch;
+  margin: 0;
+  font-size: var(--fs-12-5);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* The staging warning. Loud enough to be read before an account is created, quiet
+   enough not to be the first thing on the page. */
+.beta {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 62ch;
+  margin: 6px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  background: var(--tint-clay);
+  color: var(--tint-clay-ink);
+  font-size: var(--fs-12-5);
+  line-height: 1.5;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+
+.section {
+  padding: 30px 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionTitle {
+  font-size: var(--fs-22);
+  line-height: 1.25;
+  max-width: 26ch;
+  margin: 0 0 14px;
+}
+
+.sectionLead {
+  max-width: 62ch;
+  margin: 0 0 20px;
+  font-size: var(--fs-15);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* One column on a phone, as many as fit past --bp-tablet — the token does the switch. */
+.cards {
+  display: grid;
+  gap: var(--grid-gap-y) var(--grid-gap-x);
+  grid-template-columns: var(--grid-panel-columns);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.cardTitle {
+  font-size: var(--fs-17);
+  margin: 0;
+}
+
+.cardBody {
+  margin: 0;
+  font-size: var(--fs-13-5);
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ── The differentiator: a run of volumes ─────────────────────────────────── */
+
+.differentiator {
+  /* The section carrying the argument, marked by its surface rather than by a bigger
+     heading — the type scale is deliberately flat here. */
+  background: var(--surface-2);
+  border-radius: var(--radius-panel-lg);
+  padding: 26px 20px;
+  margin-top: 30px;
+  border-top: none;
+}
+
+.run {
+  max-width: 640px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}
+
+.runHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.runCount {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.runBadge {
+  padding: 4px 10px;
+  border-radius: var(--radius-badge);
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  font-size: var(--fs-11);
+  font-weight: 600;
+}
+
+.volumes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+  gap: 8px;
+}
+
+.volume {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-tile);
+  font-size: var(--fs-11);
+  font-weight: 600;
+}
+
+/* The three states of the shipped Series screen, told apart on three channels at once —
+   a fill, an icon and an outline. Colour alone would be lost on a colour-blind reader,
+   and this drawing is the page's whole argument. */
+.read {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1.5px solid var(--accent);
+}
+
+.owned {
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  border: 1.5px solid var(--line);
+}
+
+.missing {
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  border: 1.5px dashed var(--rose);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-bar);
+  flex: 0 0 auto;
+}
+
+/* ── Feature list ─────────────────────────────────────────────────────────── */
+
+.features {
+  display: grid;
+  gap: var(--grid-gap-y) var(--grid-gap-x);
+  grid-template-columns: var(--grid-panel-columns);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ── Closing ──────────────────────────────────────────────────────────────── */
+
+.closing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 30px;
+  padding: 28px 20px;
+  border-radius: var(--radius-panel-lg);
+  background: var(--accent-soft);
+}
+
+.closingTitle {
+  font-size: var(--fs-22);
+  margin: 0;
+}
+
+.closingBody {
+  max-width: 58ch;
+  margin: 0;
+  font-size: var(--fs-14);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}

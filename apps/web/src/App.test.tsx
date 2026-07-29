@@ -24,7 +24,7 @@ function renderAt(path: string) {
 }
 
 test('renders the translated navigation', () => {
-  renderAt('/');
+  renderAt('/collection');
   expect(screen.getByText('Accueil')).toBeInTheDocument();
   expect(screen.getByText('Collection')).toBeInTheDocument();
   expect(screen.getByText('Découvrir')).toBeInTheDocument();
@@ -52,8 +52,22 @@ test('the stats page prompts for sign-in when unauthenticated', async () => {
   expect(await screen.findByText(/Connecte-toi pour voir tes statistiques/)).toBeInTheDocument();
 });
 
-test('the home page renders the header and prompts for sign-in', async () => {
+/**
+ * The front door, and the whole of issue #80: it used to open onto a sign-in gate and
+ * nothing else. What Home itself renders is covered by `features/home/HomePage.test.tsx`;
+ * what is asserted here is the routing decision.
+ *
+ * The landing page is code split, hence `findByText` — the assertion waits for its chunk
+ * as a browser would.
+ */
+test('a signed-out visitor at the root is shown the landing page', async () => {
   renderAt('/');
-  expect(screen.getByText('Bonsoir')).toBeInTheDocument();
-  expect(await screen.findByText(/Connecte-toi pour retrouver ta bibliothèque/)).toBeInTheDocument();
+  expect(await screen.findByText('Ta bibliothèque, tome par tome.')).toBeInTheDocument();
+  // Outside the shell: a public page is not a screen of the application.
+  expect(screen.queryByText('Accueil')).not.toBeInTheDocument();
+});
+
+test('the landing page is reachable at its own address', async () => {
+  renderAt('/welcome');
+  expect(await screen.findByText("Une série n'est pas une pile de livres")).toBeInTheDocument();
 });

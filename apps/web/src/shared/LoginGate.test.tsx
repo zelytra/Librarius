@@ -63,6 +63,21 @@ describe('LoginGate', () => {
     expect(screen.queryByText('contenu protégé')).not.toBeInTheDocument();
   });
 
+  /**
+   * A shared link to a title prompts here rather than on the landing page, so that
+   * signing in lands on the title. Whoever arrived that way still needs a way of finding
+   * out what the application is.
+   */
+  test('offers a way to the landing page when there is no session', () => {
+    setAuthenticated(false);
+    renderGate();
+
+    expect(screen.getByRole('link', { name: "Découvrir l'application" })).toHaveAttribute(
+      'href',
+      '/welcome',
+    );
+  });
+
   test('sends the user to Keycloak from the welcome screen', async () => {
     setAuthenticated(false);
     renderGate();

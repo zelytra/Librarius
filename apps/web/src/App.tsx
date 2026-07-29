@@ -1,9 +1,10 @@
-import { lazy } from 'react';
-import { Routes, Route } from 'react-router';
+import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from './app/AppShell';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
-import { ErrorState } from './shared/ui/states';
+import { ErrorState, Loading } from './shared/ui/states';
+import { useApiAuth } from './shared/api';
 import { HomePage } from './features/home/HomePage';
 
 // Home is imported eagerly: it is the landing route and the `*` fallback, so making it
@@ -36,6 +37,30 @@ const WishlistPage = lazy(() =>
 const StatsPage = lazy(() =>
   import('./features/stats/StatsPage').then((m) => ({ default: m.StatsPage })),
 );
+// The landing page is split like the rest, and for a stronger reason: it is the one
+// screen a reader sees exactly once. Bundling it eagerly would put a marketing page in
+// the payload every returning visitor waits on, which is the opposite of the point.
+const LandingPage = lazy(() =>
+  import('./features/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
+);
+
+/**
+ * What `/` is, which depends on who is asking.
+ *
+ * A reader with a library gets their dashboard; a stranger gets the landing page, because
+ * the front door used to open onto a sign-in gate and nothing else (#80). The redirect
+ * waits for the session to be resolved: until then nothing is known — not even whether
+ * there is one — and jumping early would flash a marketing page at someone who is signed
+ * in. During that moment Home renders, and its own `LoginGate` shows the opening screen.
+ *
+ * Only the root does this. Every other route keeps its gate, so a shared link to a title
+ * still prompts in place and lands on that title after sign-in rather than on a pitch.
+ */
+function RootRoute() {
+  const { authed, loading } = useApiAuth();
+  if (!loading && !authed) return <Navigate to="/welcome" replace />;
+  return <HomePage />;
+}
 
 function App() {
   const { t } = useTranslation();
@@ -54,8 +79,19 @@ function App() {
       }
     >
       <Routes>
+        {/* Outside the shell: no bottom bar, no phone card — a public page is not a
+            screen of the application, and it carries its own layout. Its Suspense
+            boundary lives here for the same reason, AppShell's being out of reach. */}
+        <Route
+          path="welcome"
+          element={
+            <Suspense fallback={<Loading />}>
+              <LandingPage />
+            </Suspense>
+          }
+        />
         <Route element={<AppShell />}>
-          <Route index element={<HomePage />} />
+          <Route index element={<RootRoute />} />
           <Route path="collection" element={<CollectionPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="discover" element={<DiscoverPage />} />

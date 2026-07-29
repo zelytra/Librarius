@@ -39,6 +39,74 @@
       "detail": "Sign in to see this title.",
       "series": "Sign in to see this series.",
       "categories": "Sign in to manage your categories."
+    },
+    "discover": "Discover the app"
+  },
+  "landing": {
+    "hero": {
+      "title": "Your library, volume by volume.",
+      "lead": "What you own down to the volume and the edition, where you are in your reading, and what comes next in the series you follow."
+    },
+    "cta": {
+      "label": "Sign in or create an account",
+      "note": "Sign-up is open.",
+      "beta": "Open beta: this instance is a test environment, and its data can be reset without notice."
+    },
+    "needs": {
+      "title": "Three questions, one answer",
+      "own": {
+        "title": "What I own",
+        "body": "Down to the volume and the edition: publisher, language, pages, ISBN. Enough not to buy a book twice in a bookshop."
+      },
+      "progress": {
+        "title": "Where I am",
+        "body": "Books in progress, the page you reached, dates, a private rating and review, an annual goal and the pace to hold."
+      },
+      "next": {
+        "title": "What is coming",
+        "body": "Announced releases for the series you follow, and a wishlist ordered by urgency with its budget."
+      }
+    },
+    "series": {
+      "title": "A series is not a pile of books",
+      "body": "The deliberate difference: other tools reason in standalone books. Here a run reads at a glance — read, on the shelf, missing — and an absent volume goes to the wishlist in one gesture.",
+      "progress": "{{owned}} / {{total}} volumes",
+      "incomplete": "Incomplete",
+      "alt": "Example: twelve volumes of a series, each marked read, owned or missing.",
+      "states": {
+        "read": "Read",
+        "owned": "Owned",
+        "missing": "Missing"
+      }
+    },
+    "audience": {
+      "title": "It is for you if…",
+      "manga": {
+        "title": "You collect manga",
+        "body": "Twenty-five runs in progress: knowing which volume is missing matters more than the list."
+      },
+      "novels": {
+        "title": "You read novels",
+        "body": "Follow your progress, hold a goal across the year, find again what you enjoyed."
+      },
+      "import": {
+        "title": "You are coming from Booknode",
+        "body": "Import your library from your handle or a CSV file, without retyping a thing."
+      }
+    },
+    "features": {
+      "title": "What is online today",
+      "collection": "Cover grid, series view, search, sorting, categories",
+      "discover": "Search Open Library and AniList, by keyword or by ISBN",
+      "wishlist": "Wishes ordered by urgency, estimated budget, \"I bought it\"",
+      "stats": "Annual goal, pace, breakdown by genre and by author",
+      "import": "Import from a Booknode handle or a CSV file",
+      "export": "JSON and CSV export, account and data deletion",
+      "themes": "Four light and dark themes, in French and English"
+    },
+    "closing": {
+      "title": "Start with one volume.",
+      "body": "Your ratings and reviews stay private, and are never aggregated across users."
     }
   },
   "errors": {

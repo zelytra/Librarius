@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useApiAuth } from './api';
 import { Button } from './ui/primitives';
@@ -47,6 +48,13 @@ export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: 
           <Icon name="login" size={20} fill color="var(--on-accent)" />
           {t('auth.signIn')}
         </Button>
+        {/* The root sends a signed-out visitor to the landing page on its own (see
+            App.tsx), but a shared link to a title does not: it prompts here, so that
+            signing in lands on that title. Without this way out, the visitor who
+            arrived that way would have no way of finding out what any of it is. */}
+        <Link to="/welcome" className={styles.discover}>
+          {t('auth.discover')}
+        </Link>
       </Welcome>
     );
   }
