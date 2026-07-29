@@ -254,7 +254,7 @@ their data, in French or in English, with a Lighthouse score ≥ 90.
 | [#78](https://github.com/zelytra/Librarius/issues/78) | Accessibility: WCAG 2.1 level AA | #32, #42 |
 | [#79](https://github.com/zelytra/Librarius/issues/79) | ✅ Performance: bundle budget and Lighthouse — first payload shrunk and locked down in CI | — |
 | [#80](https://github.com/zelytra/Librarius/issues/80) | Public landing page | — |
-| [#81](https://github.com/zelytra/Librarius/issues/81) | User documentation | — |
+| ✅ [#81](https://github.com/zelytra/Librarius/issues/81) | User documentation — `docs/GUIDE.md` and a sample CSV, in French, linked from the README. The link **from inside the app** is a code change and rides with #80 | — |
 | [#103](https://github.com/zelytra/Librarius/issues/103) | Provision the production environment on librarius.fr — the milestone's own exit condition, and a domain nobody has bought | #58, #59, #63 |
 
 ---
