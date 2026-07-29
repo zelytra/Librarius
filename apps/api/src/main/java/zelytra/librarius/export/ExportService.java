@@ -157,15 +157,21 @@ public class ExportService {
 
     /**
      * The book as the user would type it in, which is exactly what an import takes: the
-     * export deliberately carries no catalog identifier, so that re-importing it creates the
-     * rows it needs instead of pointing at rows that may not exist in the target instance.
+     * export deliberately carries no identifier <em>of this instance</em>, so that
+     * re-importing it creates the rows it needs instead of pointing at rows that may not
+     * exist in the target instance.
+     *
+     * <p>The provider reference is the one identifier it does carry, and for the same
+     * reason: it names a record in a public catalog, which any instance can resolve. Dropping
+     * it would make a backup and a restore lose exactly what #184 set out to stop losing.
      */
     private static ManualBookDto book(Edition edition) {
         Work work = edition.work;
         return new ManualBookDto(work.kind, work.title, work.authors, work.seriesTitle,
                 work.volumeNumber, edition.isbn13, edition.publisher, edition.language,
                 edition.pageCount, edition.coverUrl, edition.format, edition.releaseDate,
-                work.originalYear, work.synopsis, work.genresText);
+                work.originalYear, work.synopsis, work.genresText,
+                edition.provider, edition.providerRef);
     }
 
     private static ExportProgressDto progress(ReadingProgress p) {

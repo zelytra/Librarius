@@ -81,6 +81,20 @@ public class Work {
     @Column(name = "original_year")
     public Integer originalYear;
 
+    /**
+     * Catalog the work was first entered from, {@code null} when it was typed by hand.
+     *
+     * <p>Held together with {@link #providerRef}: the pair names a record a provider can be
+     * asked about again — the other editions of the title, a better cover — and either half
+     * alone answers nothing. {@code ck_work_provider_reference} (V12) enforces that.
+     */
+    @Column(length = 32)
+    public String provider;
+
+    /** Identifier of the work in {@link #provider}'s catalog. Filled with it, or not at all. */
+    @Column(name = "provider_ref", length = 255)
+    public String providerRef;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 }

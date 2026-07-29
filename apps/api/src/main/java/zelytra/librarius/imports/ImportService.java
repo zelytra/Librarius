@@ -69,9 +69,12 @@ public class ImportService {
                 skipped++;
                 continue;
             }
+            // No provider reference: Booknode is a shelf being scraped, not a catalog that
+            // hands out identifiers, and the two trailing nulls say so rather than filing the
+            // import under a provider nothing can query.
             Edition edition = catalog.createManualEdition(new ManualBookDto(Kind.BOOK, book.title(),
                     book.author(), null, null, null, null, null, null, book.coverUrl(), null, null,
-                    null, null, null));
+                    null, null, null, null, null));
             LibraryItem item = new LibraryItem();
             item.userId = userId;
             item.edition = edition;

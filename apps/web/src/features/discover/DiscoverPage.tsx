@@ -86,6 +86,11 @@ function isBlankSearch(params: GetApiCatalogSearchParams): boolean {
     && !params.publisher;
 }
 
+/**
+ * The result as the API takes it. `provider` and `providerRef` say which record the entry
+ * came from: without them the server cannot tell a title picked here from one typed by hand,
+ * and no provider can be asked about it again later.
+ */
 function toBook(r: CatalogResult, fallbackKind: Kind): ManualBookDto {
   return {
     kind: (r.kind as Kind) ?? fallbackKind,
@@ -98,6 +103,8 @@ function toBook(r: CatalogResult, fallbackKind: Kind): ManualBookDto {
     language: r.language,
     originalYear: r.year,
     releaseDate: r.releaseDate,
+    provider: r.provider,
+    providerRef: r.providerRef,
   };
 }
 

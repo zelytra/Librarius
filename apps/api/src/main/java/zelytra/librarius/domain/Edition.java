@@ -49,9 +49,17 @@ public class Edition {
     @Column(name = "release_date")
     public LocalDate releaseDate;
 
+    /**
+     * Catalog this materialisation was entered from, {@code null} when it was typed by hand.
+     *
+     * <p>Same pair rule as {@link Work#provider}, enforced by
+     * {@code ck_edition_provider_reference} (V12). Until then every edition carried
+     * {@code "manual"} whatever it came from, and no reference next to it; V12 cleared those.
+     */
     @Column(length = 32)
     public String provider;
 
+    /** Identifier of the edition in {@link #provider}'s catalog. Filled with it, or not at all. */
     @Column(name = "provider_ref", length = 255)
     public String providerRef;
 

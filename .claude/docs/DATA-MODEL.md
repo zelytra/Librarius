@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -21,10 +21,10 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
 | `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`) | No credential stored |
-| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year` | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4) |
+| `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors`, `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
-| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13` |
+| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ\|ABANDONED, V11), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
@@ -117,8 +117,9 @@ count and the format are precisely what tells two editions apart.
 The lookup rides on `idx_work_title_lower` (V3), which is why it folds `lower(title)` and not
 `lower(trim(title))`: an expression the index does not carry would turn every add into a
 sequential scan over the catalog. A matched work is only ever **completed** with the columns
-it left null (`synopsis`, `original_year`, `genres`, `series_id`), never overwritten: the row
-belongs to everyone owning the title.
+it left null (`synopsis`, `original_year`, `genres`, `series_id`, and since V12 the
+`provider` / `provider_ref` pair), never overwritten: the row belongs to everyone owning the
+title.
 
 Rows created before the change keep the work they founded, duplicates included; nothing
 back-fills them. The lookup returns the **oldest** match, so the editions entered from now on
@@ -207,6 +208,46 @@ average days per book and the author/publisher/language/rank breakdowns, all in
 out, a book given up on would have advanced the goal and inflated every figure on the Stats
 screen. See [API](API.md#reading-progress).
 
+`V12__work_provider_reference.sql` gives `work` the `provider` / `provider_ref` pair
+`edition` has carried since V1 and `series` since V4
+([#184](https://github.com/zelytra/Librarius/issues/184)). The work is the level the
+question is asked at: "the other editions of *this* title" is about the work, not about the
+copy somebody owns, so without it no provider could be queried and
+[API](API.md) gap A12 could not be closed.
+
+**The two columns are one value**, and a `CHECK` on each table says so —
+`(provider IS NULL) = (provider_ref IS NULL)`, the same shape as `ck_upcoming_release_dated`
+(V8). A provider name with no reference resolves to nothing and a reference with no provider
+belongs to no catalog, so half a pair is refused rather than stored: `provider IS NOT NULL`
+can then be read as "there is a record to ask about", with no second column to re-test, and
+a half-filled row cannot sit there blocking `CatalogEntryService.complete` against a later
+entry that knows the whole thing.
+
+The same migration **clears `edition.provider`** wherever it has no reference next to it.
+Every edition row held `'manual'`: `CatalogEntryService` stamped it unconditionally, on
+entries typed into the form *and* on titles picked straight off a live Open Library or
+AniList hit, and never wrote `provider_ref` at all. The value therefore marked nothing — it
+did not say the entry was manual, and it could not be resolved. It is written as "clear
+every half-reference", mirroring the constraint, so it is re-runnable and true whatever a
+database holds.
+
+**Nothing is backfilled, and nothing can be.** An entry recorded which fields the user saw,
+never which search result they came from; re-matching a stored title against a provider
+would be a guess dressed up as data. Every work and every edition that exists today
+therefore reads as "typed by hand", and only entries added from Discover after this
+migration carry a reference — so an absent reference is the normal case for a long while
+yet, not an exception, and [#197](https://github.com/zelytra/Librarius/issues/197) has to
+treat it as such.
+
+A second reason it stays empty longer than one would like: `OpenLibraryProvider` puts
+`"openlibrary"` on its results and **no reference**, so a book added from Discover still
+records neither half. The gap is in the provider — its search does not request the work key
+— and closing it is a provider change, not a schema one.
+
+Neither pair is indexed. Nothing looks a work up *by* its reference: the work is matched on
+(`kind`, `lower(title)`, `lower(authors)`, `volume_number`) as it always was, and whoever
+reads the reference already holds the row.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -234,12 +275,13 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V11 are taken — the upcoming releases, the category constraint, the
-> dashboard layout and the abandoned status. The plan below therefore starts at **V12**.
-> Both entries were renumbered up by one when V11 was taken; neither had been implemented,
-> so nothing that shipped had to move.
+> Numbering: V8 to V12 are taken — the upcoming releases, the category constraint, the
+> dashboard layout, the abandoned status and the provider reference. The plan below
+> therefore starts at **V13**. Both entries were renumbered up by one when V12 was taken, as
+> they already had been when V11 was; neither has been implemented, so nothing that shipped
+> had to move.
 
-### V12 — Drop the denormalised labels & reading history
+### V13 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -262,7 +304,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V13 — Notifications
+### V14 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

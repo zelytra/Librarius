@@ -35,7 +35,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging |
-| Persistence | PostgreSQL + Panache + Flyway (11 migrations), Hibernate in `validate` mode |
+| Persistence | PostgreSQL + Panache + Flyway (12 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
@@ -309,7 +309,7 @@ production opens.*
 
 | Expected (docs/ARCHITECTURE.md) | Reality |
 |---|---|
-| Multiple editions per work | ✅ `GET /api/works/{id}/editions` and the "Autres éditions" section of the Detail screen compare them and switch the collection row onto one. The 1→N only became real when entries started being matched against the catalog instead of founding a work each — before that a work never held two editions. Missing: enriching the list from the providers, which needs a provider reference `work` does not carry ([API](API.md) gap A12) |
+| Multiple editions per work | ✅ `GET /api/works/{id}/editions` and the "Autres éditions" section of the Detail screen compare them and switch the collection row onto one. The 1→N only became real when entries started being matched against the catalog instead of founding a work each — before that a work never held two editions. Missing: enriching the list from the providers ([#197](https://github.com/zelytra/Librarius/issues/197)). `work` now carries the `provider` / `provider_ref` a provider has to be asked with, and an entry added from Discover keeps it ([#184](https://github.com/zelytra/Librarius/issues/184), V12) — but nothing queries it yet, everything entered before V12 has none and cannot be given one, and Open Library returns no reference to store ([API](API.md) gap A12) |
 | Upcoming **French** releases | ✅ `GET /api/releases/upcoming` ([#57](https://github.com/zelytra/Librarius/issues/57)) joins the caller's stake (owned/wished/followed series) against `upcoming_release`, labelling the market (FR/JP/EN), the date precision and the source of every announcement. `GET /api/catalog/upcoming` (generic provider trends) still exists but the Home screen no longer reads it. Curated French dates are still entered by hand — no admin UI or CSV ingestion yet |
 | Reorderable/hideable Home | ✅ "Personnaliser l'accueil" panel on Home, backed by `dashboard_layout` (#54) |
 | Reading progress | ✅ Current page or percentage, each derived from the other, start and finish dates, progress bar on the detail screen and on the "resume reading" carousel |

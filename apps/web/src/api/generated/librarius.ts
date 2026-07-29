@@ -152,6 +152,10 @@ export interface ManualBookDto {
   originalYear?: number;
   synopsis?: string;
   genres?: string;
+  /** @maxLength 32 */
+  provider?: string;
+  /** @maxLength 255 */
+  providerRef?: string;
 }
 
 export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
