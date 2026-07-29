@@ -193,7 +193,7 @@ public class BnfProvider implements CatalogProvider {
     }
 
     private static CatalogResult toResult(Element record) {
-        String title = first(record, "title");
+        String title = isbdTitle(first(record, "title"));
         if (title == null) {
             // A record with no title cannot be shown, and would collide with every other
             // untitled one on the aggregation's title+author key.
@@ -206,13 +206,37 @@ public class BnfProvider implements CatalogProvider {
     }
 
     /**
+     * Drops the ISBD statement of responsibility from a title.
+     *
+     * <p>A BnF title is a full ISBD statement — {@code "Fondation / Isaac Asimov"}, or
+     * {@code "Dune ; [suivi de] Le messie de Dune / Frank Herbert ; traduit de l'américain
+     * par Michel Demuth"} — where Open Library holds plain {@code "Fondation"}. Everything
+     * from the {@code " / "} on is the authorship, which {@code dc:creator} already carries,
+     * so it is cut: it is what makes the title fit a result tile, and what lets a book both
+     * catalogues hold merge on the title+author key instead of being listed twice.
+     */
+    private static String isbdTitle(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        int responsibility = raw.indexOf(" / ");
+        String title = (responsibility > 0 ? raw.substring(0, responsibility) : raw).trim();
+        return title.isEmpty() ? null : title;
+    }
+
+    /**
      * Joins the creators the way Open Library joins its authors, so that a book both
      * catalogues know produces the same aggregation key and is shown once.
+     *
+     * <p>Repeats are dropped: a BnF record routinely carries the same author twice — once
+     * per role it filled — and {@code "Frank Herbert, Frank Herbert"} would match nothing
+     * and read as a mistake.
      */
     private static String creators(Element record) {
         List<String> names = all(record, "creator").stream()
                 .map(BnfProvider::normalizeCreator)
                 .filter(name -> name != null && !name.isEmpty())
+                .distinct()
                 .toList();
         return names.isEmpty() ? null : String.join(", ", names);
     }

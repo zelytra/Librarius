@@ -171,6 +171,59 @@ class BnfProviderTest {
         assertEquals(1975, resultsOf(DUNE, CatalogQuery.of("dune")).get(1).year());
     }
 
+    /**
+     * A record copied from the live API, punctuation and repeats included — the shape the
+     * fixture above is idealised from. Everything asserted against it was observed in an
+     * actual answer to {@code bib.anywhere all "dune herbert"}.
+     */
+    private static final String LIVE_SHAPE = """
+            <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
+              <srw:records><srw:record>
+                <srw:recordSchema>dc</srw:recordSchema>
+                <srw:recordPacking>xml</srw:recordPacking>
+                <srw:recordData>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                             xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:identifier>http://catalogue.bnf.fr/ark:/12148/cb371048193</dc:identifier>
+                    <dc:title>Dune / Frank Herbert ; traduit par Michel Demuth</dc:title>
+                    <dc:creator>Herbert, Frank (1920-1986). Auteur du texte</dc:creator>
+                    <dc:creator>Herbert, Frank (1920-1986). Auteur du texte</dc:creator>
+                    <dc:contributor>Demuth, Michel (1939-2006). Traducteur</dc:contributor>
+                    <dc:publisher>Éd. France loisirs (Paris)</dc:publisher>
+                    <dc:date>1999</dc:date>
+                    <dc:identifier>ISBN 9782266116242</dc:identifier>
+                    <dc:language>fre</dc:language>
+                  </oai_dc:dc>
+                </srw:recordData>
+              </srw:record></srw:records>
+            </srw:searchRetrieveResponse>
+            """;
+
+    @Test
+    void dropsTheStatementOfResponsibilityFromTheTitle() {
+        // Every BnF title is a full ISBD statement. Left whole, "Dune / Frank Herbert ;
+        // traduit par Michel Demuth" would never merge with Open Library's "Dune", and the
+        // result tile would show a paragraph instead of a title.
+        assertEquals("Dune", resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0).title());
+    }
+
+    @Test
+    void namesARepeatedCreatorOnlyOnce() {
+        // The BnF lists an author once per role they filled. "Frank Herbert, Frank Herbert"
+        // would match nothing on the aggregation key and read as a bug.
+        assertEquals("Frank Herbert",
+                resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0).authors());
+    }
+
+    @Test
+    void readsTheIsbnOutOfTheLivePrefixedForm() {
+        // The live catalogue writes "ISBN 9782266116242", not a hyphenated number.
+        CatalogResult result = resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0);
+
+        assertEquals("9782266116242", result.isbn13());
+        assertEquals("ark:/12148/cb371048193", result.providerRef());
+    }
+
     @Test
     void doesNotMistakeAnArkForAnIsbn() {
         // "ark:/12148/cb11934534t" strips down to thirteen digits, exactly an ISBN-13's
