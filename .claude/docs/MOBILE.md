@@ -327,10 +327,12 @@ log the moment a workflow references it.
 
 1. **Generate the keystore once**, on a machine whose backups you trust — it is not
    recoverable if lost, and losing it means every future release needs a new application ID:
+
    ```bash
    keytool -genkeypair -v -keystore librarius-release.jks -alias librarius \
      -keyalg RSA -keysize 2048 -validity 10000
    ```
+
    `keytool` prompts for the store password, the key password (press Enter to reuse the
    store password) and a distinguished name — the name does not need to be accurate, the
    passwords need to be kept.
