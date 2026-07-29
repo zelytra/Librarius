@@ -141,7 +141,10 @@ production opens.*
     **off by default** until a bucket and its credentials exist. The chain is tested end to
     end against a throwaway PostgreSQL and MinIO (`infra/backup/verify.sh`), and the restore
     procedure is written down in `docs/DEPLOYMENT.md` — but it has never been run against
-    the cluster, and Keycloak's own database is not in the dump.
+    the cluster. The archive now covers **both** databases: the library and the Keycloak
+    accounts every row is keyed on ([#155](https://github.com/zelytra/Librarius/issues/155)),
+    and `verify.sh` asserts that a subject identifier still resolves to its account after a
+    restore into a blank instance.
     [#59](https://github.com/zelytra/Librarius/issues/59) stays open until a real restore is
     done.
 15. **Alerting: running, and half of it still needs a Secret.** The chart now deploys

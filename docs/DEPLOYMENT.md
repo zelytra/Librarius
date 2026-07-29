@@ -688,11 +688,20 @@ success after hundreds of errors:
 ```bash
 k scale deploy/librarius-api --replicas=0
 
+The archive holds **both** databases — `librarius` and `keycloak` — so both have to be
+emptied, and the file is piped into `postgres` rather than into either of them: it carries
+its own `\connect` lines and creates `keycloak` if the instance has never had it.
+
+```bash
 k exec deploy/librarius-postgres -- \
   psql -U librarius -d librarius -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
 
+# Skip this one only if the instance has no keycloak database at all.
+k exec deploy/librarius-postgres -- \
+  psql -U librarius -d keycloak -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+
 k exec -i deploy/librarius-postgres -- \
-  psql -v ON_ERROR_STOP=1 -U librarius -d librarius < restore.sql
+  psql -v ON_ERROR_STOP=1 -U librarius -d postgres < restore.sql
 ```
 
 Expected output — a long list of `CREATE TABLE` / `COPY nnn` / `ALTER TABLE`, and **no**
@@ -729,9 +738,23 @@ Then, in a browser: sign in and open the library. **The restore worked** when th
 count on screen matches `n_live_tup` above, and the API log shows Flyway validating rather
 than migrating.
 
-Keycloak lives in the same PostgreSQL instance but in its own `keycloak` database, which
-this dump does **not** contain: after a full node loss, accounts have to be recreated. That
-gap is deliberate for a staging environment and has to be closed before production.
+Keycloak lives in the same PostgreSQL instance, in its own `keycloak` database, and the
+archive carries it. That is not a detail: every application row is owned by the Keycloak
+`sub`, so restoring the library without the accounts would give back the whole collection
+owned by subjects nobody can sign in as — a restore that reports success and hands back
+nothing ([#155](https://github.com/zelytra/Librarius/issues/155)).
+
+Check the accounts came back before letting anyone in:
+
+```bash
+k exec deploy/librarius-postgres -- psql -U librarius -d keycloak -tAc \
+  'SELECT count(*) FROM user_entity;'
+```
+
+Roles are deliberately **not** in the archive. `pg_dumpall` would carry the role passwords
+as they stood at dump time, and loading them would silently revert a rotated password,
+leaving the API locked out of the database it had just restored. The role comes from the
+Secret, which is the value worth keeping.
 
 > **Not yet exercised against the cluster.** The scripts themselves are tested end to end —
 > dump, encryption, upload, retention pruning and a restore into a second database, against
