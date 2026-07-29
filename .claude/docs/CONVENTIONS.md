@@ -174,9 +174,9 @@ Three budgets, all measured **gzipped** — what nginx puts on the wire:
 
 | Budget | Covers | Ceiling | Measured on 2026-07-29 |
 |---|---|---|---|
-| initial | everything `index.html` loads before the first paint | 160 kB | 140.5 kB |
+| initial | everything `index.html` loads before the first paint | 155 kB | 137.9 kB |
 | deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
-| whole build | every file, i.e. what the service worker precaches | 205 kB | 179.4 kB |
+| whole build | every file, i.e. what the service worker precaches | 200 kB | 176.4 kB |
 
 The rule matters more than the figures: **the measurement plus about 15%**. A budget
 with 60% of slack catches nothing, and one set flush against the current size gets
@@ -187,9 +187,11 @@ Raising a budget is a legitimate decision — a dependency has to land somewhere
 happens **in the diff**, in `apps/web/scripts/check-bundle-size.mjs`, with the reason in
 the pull request. Never by deleting the step. And it is re-derived only when the
 **baseline** deliberately changes: `@capacitor/core` (#154) is eager, permanent and
-decided, so it moved the number; the advanced search (#146) and the alternative editions
-(#152) did not, because both landed behind the route split, in the Discover and Detail
-chunks. A screen growing is not a reason to raise a budget — that is the budget working.
+decided, so it moved the number up; the react-router 8 and orval 8 upgrade (#157) moved
+it back down, by more than #154 had added; the advanced search (#146) and the
+alternative editions (#152) did not move it at all, because both landed behind the route
+split, in the Discover and Detail chunks. A screen growing is not a reason to raise a
+budget — that is the budget working.
 
 ### Lighthouse
 

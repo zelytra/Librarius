@@ -29,34 +29,35 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Budgets in kB (1000 bytes, the unit Vite reports), measured on 2026-07-29 against
- * 0309edc, once the routes were code split.
+ * 5069f68, once the routes were code split.
  *
  * The rule, which matters more than the figures: **the measurement plus about 15%**.
  * A budget with 60% of slack catches nothing, and one set flush against the current
  * size gets switched off the first time it goes red.
  *
- * - `initial` — measured 140.5 kB gz, of which react-dom alone is 56.5 kB,
- *   oidc-client-ts 17.4 kB, i18next 14.2 kB, react-router 13.5 kB, query-core 11.6 kB
- *   and @capacitor/core 3.2 kB. Set at 160 kB: 19.5 kB of room, about one medium
- *   dependency. It stays 40 kB clear of the 200 kB gz ceiling issue #79 sets for the
+ * - `initial` — measured 137.9 kB gz. Set at 155 kB: 17.1 kB of room, about one medium
+ *   dependency. It stays 45 kB clear of the 200 kB gz ceiling issue #79 sets for the
  *   product, which leaves somewhere to raise it to on purpose.
- * - `chunk` — measured 5.2 kB gz for the Workbox runtime and 4.1 kB for the heaviest
- *   screen (Detail, after #152). Set at 10 kB: a screen can more than double as it
- *   gains features, but a charting library landing in Stats (~50 kB gz) fails, and it
- *   fails naming Stats.
- * - `total` — measured 179.4 kB. Set at 205 kB, as the backstop for what the other two
+ * - `chunk` — measured 5.2 kB gz for the Workbox runtime and 3.9 kB for the heaviest
+ *   screen (Detail). Set at 10 kB: a screen can more than double as it gains features,
+ *   but a charting library landing in Stats (~50 kB gz) fails, and it fails naming
+ *   Stats.
+ * - `total` — measured 176.4 kB. Set at 200 kB, as the backstop for what the other two
  *   cannot see: an uncompressed image dropped into public/, a locale file, a font.
  *
  * These figures were re-derived on the day they shipped, because the baseline moved:
- * @capacitor/core (#154) is eager, permanent and decided, so it belongs in the
- * baseline. #146 and #152 did **not** move them — both landed behind the route split,
- * in the Discover and Detail chunks. That is the distinction to keep: the budget is
- * re-derived when the baseline deliberately changes, never merely because a screen grew.
+ * the react-router 8 and orval 8 upgrade (#157), pulled in ahead of this branch by the
+ * Node 24 floor, trimmed the initial payload and the whole build by a few kB each —
+ * more than @capacitor/core (#154) had added, which is why both ceilings move down
+ * rather than up this time. #146 and #152 did **not** move them — both landed behind
+ * the route split, in the Discover and Detail chunks. That is the distinction to keep:
+ * the budget is re-derived when the baseline deliberately changes, never merely because
+ * a screen grew.
  */
 const BUDGET_KB = {
-  initial: 160,
+  initial: 155,
   chunk: 10,
-  total: 205,
+  total: 200,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
