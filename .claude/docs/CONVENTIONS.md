@@ -172,11 +172,11 @@ node apps/web/scripts/check-bundle-size.mjs
 
 Three budgets, all measured **gzipped** — what nginx puts on the wire:
 
-| Budget | Covers | Ceiling | Measured on 2026-07-28 |
+| Budget | Covers | Ceiling | Measured on 2026-07-29 |
 |---|---|---|---|
-| initial | everything `index.html` loads before the first paint | 155 kB | 137.0 kB |
+| initial | everything `index.html` loads before the first paint | 155 kB | 137.3 kB |
 | deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
-| whole build | every file, i.e. what the service worker precaches | 200 kB | 172.9 kB |
+| whole build | every file, i.e. what the service worker precaches | 200 kB | 175.3 kB |
 
 The figures come from that measurement plus ~15%, not from a round number: a budget with
 60% of slack catches nothing, and one set flush against the current size gets switched

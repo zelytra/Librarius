@@ -28,20 +28,20 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Budgets in kB (1000 bytes, the unit Vite reports), measured on 2026-07-28 on the
- * branch that introduced them, once the routes were code split.
+ * Budgets in kB (1000 bytes, the unit Vite reports), measured on 2026-07-29 against
+ * 9d1b440, once the routes were code split.
  *
- * - `initial` — measured 137.0 kB gz, of which react-dom alone is 56.5 kB,
+ * - `initial` — measured 137.3 kB gz, of which react-dom alone is 56.5 kB,
  *   oidc-client-ts 17.4 kB, i18next 14.2 kB, react-router 13.5 kB and query-core
  *   11.6 kB. Set at 155 kB: ~13% of room, enough for a shared dependency or for the
  *   shell to grow, not enough to absorb a UI kit unnoticed. It also stays clear of the
  *   200 kB gz ceiling issue #79 sets for the product, which leaves somewhere to raise
  *   it to on purpose.
- * - `chunk` — measured 3.3 kB gz for the heaviest screen (Detail) and 5.2 kB for the
- *   Workbox runtime. Set at 10 kB: a screen can double or triple as it gains features,
- *   but a charting library landing in Stats (~50 kB gz) fails, and it fails naming
- *   Stats.
- * - `total` — measured 172.9 kB. Set at 200 kB, the same ~15% of room, as the backstop
+ * - `chunk` — measured 3.6 kB gz for the heaviest screen (Discover, after #146) and
+ *   5.2 kB for the Workbox runtime. Set at 10 kB: a screen can double or triple as it
+ *   gains features, but a charting library landing in Stats (~50 kB gz) fails, and it
+ *   fails naming Stats.
+ * - `total` — measured 175.3 kB. Set at 200 kB, the same ~15% of room, as the backstop
  *   for what the other two cannot see: an uncompressed image dropped into public/, a
  *   locale file, a second font.
  */
