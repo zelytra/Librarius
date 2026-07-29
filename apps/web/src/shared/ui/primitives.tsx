@@ -6,7 +6,11 @@ function cx(...names: (string | false | undefined)[]): string {
   return names.filter(Boolean).join(' ');
 }
 
-/** Padded page container — every screen sits in one. */
+/**
+ * Padded page container — every screen sits in one. It also owns how wide a
+ * page may get: capped at `--content-max` and centred past the tablet
+ * breakpoint, uncapped below it where the shell frame is already the cap.
+ */
 export function Screen({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cx(styles.screen, className)}>{children}</div>;
 }
@@ -17,6 +21,37 @@ export function Screen({ children, className }: { children: ReactNode; className
  */
 export function ScreenTitle({ children, className }: { children: ReactNode; className?: string }) {
   return <h2 className={cx(styles.screenTitle, className)}>{children}</h2>;
+}
+
+/**
+ * The two column shapes the screens share: `cover` for a grid of covers — the
+ * Collection grid, a series' volumes — and `panel` for a row of cards, each
+ * carrying a heading and a short list.
+ */
+export type GridShape = 'cover' | 'panel';
+
+const GRID_SHAPES: Record<GridShape, string> = {
+  cover: styles.gridCover,
+  panel: styles.gridPanel,
+};
+
+/**
+ * Responsive column grid. The column count is deliberately not a parameter: the
+ * same markup gives a phone the fixed columns it draws today and a desktop as
+ * many as the width holds. Track sizes come from `--grid-*` in `tokens.css`; a
+ * screen needing a different rhythm overrides those through `className` rather
+ * than restating a `grid-template-columns` of its own.
+ */
+export function Grid({
+  shape = 'cover',
+  className,
+  children,
+}: {
+  shape?: GridShape;
+  className?: string;
+  children: ReactNode;
+}) {
+  return <div className={cx(styles.grid, GRID_SHAPES[shape], className)}>{children}</div>;
 }
 
 /** Rounded surface card. */

@@ -264,6 +264,21 @@ Not a screen: what every screen shows while it has nothing yet.
   the mobile shell, which opens straight onto whatever route the router lands on.
 - 🔜 The animated logo itself, in place of the placeholder ring.
 
+### 4.11 Widths, on every screen ✅ / 🔜
+
+Not a screen either: how much of the window the application is allowed to use.
+
+- ✅ **A desktop window is no longer a phone on an empty desk.** Under 600 px the app is
+  what it has always been, a column capped at 440 px. From 600 px it stops being a card
+  floating in the middle of an empty page and fills the window, up to a page of 1 140 px
+  that then stays centred whatever the monitor
+  ([#171](https://github.com/zelytra/Librarius/issues/171)).
+- ✅ **Nothing changes on a phone.** The widths are reasoned from the reader's own content
+  — a shelf, a grid of covers — so a cover keeps the size it has today as the layout
+  crosses over: three columns of 124 px at 599 px, four of 127 px at 600 px.
+- 🔜 The screens themselves still lay their content out in one column, and the navigation
+  is still a bottom bar: that is #172 to #175, which the widths above exist to serve.
+
 ## 5. Key journeys
 
 **P1 — Add a book spotted in a bookshop**

@@ -46,8 +46,8 @@ src/
     LoginGate.tsx              # per-screen authentication guard
     theme/                     # ThemeProvider, themes.ts, context.ts
     styles/                    # tokens.css (CSS variables), global.css
-    ui/                        # Icon, Cover, coverPalette.ts, ranks.ts,
-                               # primitives (Screen, Button, Chip, Segmented, EmptyState…)
+    ui/                        # Icon, Cover, coverPalette.ts, ranks.ts, breakpoints.ts,
+                               # primitives (Screen, Grid, Button, Chip, Segmented, EmptyState…)
   i18n/                        # i18next + locales/fr.json
 ```
 
@@ -91,6 +91,24 @@ src/
   tints (`--tint-*`), screen padding (`--screen-pad-*`). `style={{…}}` is reserved for
   genuinely dynamic values: a colour derived from a title, a computed width, a gauge
   percentage.
+- **Layout and breakpoints** ([#171](https://github.com/zelytra/Librarius/issues/171)):
+  two widths, `--bp-tablet` (600px) and `--bp-desktop` (1120px), both measured against the
+  app's own cover column rather than a device catalogue — the reasoning is written out in
+  the layout block of `tokens.css`. **The two `@media` rules at the end of that file are
+  the only place in `src/` that names a viewport width**: they redeclare layout tokens
+  (`--screen-pad-x`, `--content-max`, `--app-max-*`, `--grid-*-columns`), and every
+  component reads those tokens unconditionally, so adding a screen never means adding a
+  breakpoint. `tokens.css` holds layout, never a palette; a media query redeclaring a
+  themed token would collide with the `[data-theme]` blocks it sits next to.
+  `shared/ui/breakpoints.ts` mirrors the two numbers for the cases only JS can answer —
+  *which* component to render at a width, rather than how to draw it — and
+  `breakpoints.test.ts` fails if the two halves drift apart.
+  `Screen` (`shared/ui/primitives.tsx`) is the container: it owns the page padding, the
+  `--content-max` cap and the centring, so a screen widens without being touched. `Grid`
+  is opt-in, in two shapes — `cover` for a grid of covers, `panel` for a row of cards —
+  and never declares a column count: below the tablet breakpoint the track list is the
+  fixed one each screen already draws, above it the browser fits as many columns as the
+  width holds.
 - **Icons**: `<Icon name="arrow_back" />` (`shared/ui/Icon.tsx`) draws from a self-hosted
   Material Symbols Rounded subset — `shared/ui/iconSubset.ts` maps each name to its
   Private Use Area code point, `shared/styles/fonts/material-symbols-subset.woff2` holds

@@ -201,14 +201,86 @@
   --fs-26: 26px;
   --fs-27: 27px;
 
-  /* ── Screen layout ──────────────────────────────────────────────────────── */
+  /* ── Breakpoints ──────────────────────────────────────────────────────────
+     The two viewport widths the layout changes at. They are measured against
+     this app's own content, not taken from a device catalogue: the unit is the
+     Collection cover column, which at phone width is a 124px tile — the frame
+     is 440px, the screen padding 22px a side, and the grid three columns with a
+     12px gutter, so (440 − 44 − 24) / 3 = 124.
+
+     --bp-tablet    the narrowest viewport whose content column holds a *fourth*
+                    cover column at that size: 4 × 124 + 3 × 12 = 532px of grid
+                    plus 2 × 28px of page padding = 588, rounded to 600. Below
+                    it the extra width buys no column and the phone layout is
+                    already the right answer — which is also why nothing changes
+                    under it.
+     --bp-desktop   the narrowest viewport leaving room for a ~240px side
+                    navigation (#172) beside a content column still wide enough
+                    for six cover columns: 240 + 2 × 32 + (6 × 124 + 5 × 12)
+                    = 1108, rounded to 1120.
+
+     `@media` cannot read a custom property, so these two literals are repeated
+     once each in the responsive blocks at the end of this file — and nowhere
+     else in the tree, since component CSS consumes the values below rather than
+     restating a breakpoint. `shared/ui/breakpoints.ts` mirrors them for the JS
+     side, and its test fails if the two halves ever drift apart. */
+  --bp-tablet: 600px;
+  --bp-desktop: 1120px;
+
+  /* ── Screen layout ────────────────────────────────────────────────────────
+     The page padding grows in two steps with the breakpoints above. Everything
+     else in the block is a value a component reads unconditionally: the
+     responsive blocks at the end of the file are the only place that knows a
+     viewport width. */
   --screen-pad-x: 22px;
   --screen-pad-top: 14px;
   --screen-pad-bottom: 40px;
-  /* Horizontal shelves bleed past the screen padding to reach the edge. */
-  --screen-bleed-x: -22px;
+  /* Horizontal shelves bleed past the screen padding to reach the edge.
+     Derived rather than restated, so a step of the padding carries it along. */
+  --screen-bleed-x: calc(-1 * var(--screen-pad-x));
+
+  /* The phone frame: a card of fixed size, centred on an empty background. Past
+     --bp-tablet all three resolve to `none` and the shell fills the window
+     instead — these caps are what made a desktop browser render a phone. */
   --app-max-width: 440px;
   --app-max-height: 900px;
+  --app-frame-shadow: var(--shadow-frame);
+
+  /* Widest a page ever gets, page padding included. `none` on a phone, where
+     the frame is already the cap; 1140px past --bp-tablet, which is 1076px of
+     content — eight cover columns at their phone size (8 × 124 + 7 × 12) —
+     between 32px margins. Past that the surplus goes to the margins: a cover
+     grid eighteen columns wide on a 2560px monitor is a contact sheet, and a
+     paragraph of Detail running the full width of one is unreadable. */
+  --content-max: none;
+
+  /* ── Grid ─────────────────────────────────────────────────────────────────
+     The two column shapes the screens share. Each is a whole track list rather
+     than a column count, because the two sides of the breakpoint want different
+     kinds of answer.
+
+     On a phone the count is fixed — three covers, one panel — which is what
+     every screen already draws, at every phone width. A minimum track size
+     cannot reproduce that: 124px leaves room for only two columns on a 390px
+     phone. So below --bp-tablet the track list stays a count, and stays exactly
+     what ships today.
+
+     Above it the count is left to the browser: the minimum track size is
+     declared and as many columns as fit are drawn, so the grid keeps filling
+     the window between the breakpoints instead of stretching four covers into
+     posters. --grid-cover-min is the width a cover tile has on a 440px frame,
+     so nothing changes size as the layout crosses over; --grid-panel-min is a
+     card carrying a heading and a short list — the Wishlist buckets, the Stats
+     tiles — narrow enough for two at --bp-tablet and four at --content-max.
+
+     A screen wanting a coarser grid overrides --grid-cover-min on its own
+     element: the substitution happens where the track list is used, not here. */
+  --grid-gap-x: 12px;
+  --grid-gap-y: 14px;
+  --grid-cover-min: 124px;
+  --grid-panel-min: 260px;
+  --grid-cover-columns: repeat(3, 1fr);
+  --grid-panel-columns: 1fr;
 
   /* ── Radii ────────────────────────────────────────────────────────────────
      Named after what they round, not after their value. */
@@ -260,4 +332,45 @@
   --gradient-genre-2: linear-gradient(90deg, #b0857f, #ddb9b3);
   --gradient-genre-3: linear-gradient(90deg, #8c7da0, #cabdd6);
   --gradient-genre-4: linear-gradient(90deg, #c08a5a, #dccfae);
+}
+
+/* ── Responsive steps ─────────────────────────────────────────────────────────
+   The only two rules in the app built on a breakpoint. They redeclare layout
+   tokens, never palette ones, so a component stays free of breakpoints and a
+   theme stays free of layout — and adding a screen never means adding a media
+   query. (One other `@media` carries a width: a `max-width: 380px` tweak in
+   `discover/fields.module.css`, which predates this system and squeezes one
+   field row onto the narrowest phones. It is not a breakpoint.)
+
+   A screen that genuinely changes *shape* rather than size — a column becoming
+   a sidebar — writes its own query, taking the literal from
+   `shared/ui/breakpoints.ts` rather than inventing one. Nothing needs that yet.
+
+   Note what is absent below: nothing a phone renders. Every declaration here
+   either lifts a cap or grows a value, which is what makes the rendering under
+   600px the one shipped today, pixel for pixel. */
+
+@media (min-width: 600px) {
+  :root {
+    --screen-pad-x: 28px;
+
+    /* The frame stops being a card and becomes the window. */
+    --app-max-width: none;
+    --app-max-height: none;
+    --app-frame-shadow: none;
+
+    --content-max: 1140px;
+
+    /* And the grids stop counting their columns: from here the width decides,
+       which is what keeps them filling a window of any size between the two
+       breakpoints. Four covers at 600px, eight at --content-max. */
+    --grid-cover-columns: repeat(auto-fill, minmax(var(--grid-cover-min), 1fr));
+    --grid-panel-columns: repeat(auto-fit, minmax(var(--grid-panel-min), 1fr));
+  }
+}
+
+@media (min-width: 1120px) {
+  :root {
+    --screen-pad-x: 32px;
+  }
 }

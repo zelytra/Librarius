@@ -1,4 +1,13 @@
-/* The app is rendered as a phone-sized frame centered in the viewport. */
+/* The shell is one frame filling the viewport height, with its own scroll.
+
+   On a phone that frame is a card of fixed size centred on an empty background;
+   past --bp-tablet the three tokens below resolve to `none` and the very same
+   rules let it fill the window. No media query here: what changes with the
+   viewport is declared once, in tokens.css.
+
+   The internal scroll is kept at every width, deliberately. It is what lets a
+   persistent side navigation (#172) stay put while a screen scrolls under it,
+   and it is the reason the bottom bar never scrolls away today. */
 .viewport {
   min-height: 100dvh;
   display: flex;
@@ -17,7 +26,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-frame);
+  box-shadow: var(--app-frame-shadow);
 }
 
 .content {
