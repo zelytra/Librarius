@@ -10,12 +10,19 @@ import {
 import { moveSection, toggleHidden, type DashboardSectionPref } from './dashboardLayout';
 import styles from './DashboardEditor.module.css';
 
-/** Section code → the i18n key of its label in this panel. */
+/**
+ * Section code → the i18n key of its label in this panel.
+ *
+ * Where a section already has a heading on the dashboard, this points at that heading
+ * rather than at a second string saying the same thing: the panel is a list of the
+ * sections the user can see, and naming one of them differently there is how a rename
+ * ends up applied in one place only.
+ */
 const SECTION_LABEL_KEY: Record<string, string> = {
   resumeReading: 'home.resumeReading',
   counters: 'home.customize.sections.counters',
   goal: 'home.customize.sections.goal',
-  upcoming: 'home.upcoming',
+  upcoming: 'home.upcomingReleases.title',
   recentlyRead: 'home.customize.sections.recentlyRead',
 };
 

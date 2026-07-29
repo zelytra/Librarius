@@ -187,7 +187,7 @@
   },
   "categories": {
     "title": "Mes catégories",
-    "intro": "Les catégories te servent à classer tes titres comme tu veux. Or, Argent et Bronze sont fournies avec l'application et ne se modifient pas ; les autres n'appartiennent qu'à toi.",
+    "intro": "Les catégories te servent à classer tes titres comme tu veux. Or, Argent, Bronze et Abandon sont fournies avec l'application et ne se modifient pas ; les autres n'appartiennent qu'à toi.",
     "builtin": "Intégrée",
     "none": "Tu n'as pas encore créé de catégorie.",
     "namePlaceholder": "Nom de la catégorie",
