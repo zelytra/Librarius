@@ -428,6 +428,7 @@ the same PR**:
 | New module, dependency, decision | [ARCHITECTURE](ARCHITECTURE.md) |
 | Flyway migration | [DATA-MODEL](DATA-MODEL.md) |
 | Endpoint or DTO | [API](API.md) |
+| A concept, a journey or a file format the **user** meets | [GUIDE](../../docs/GUIDE.md) — written in French, like the interface it quotes |
 | Issue completed | [ROADMAP](ROADMAP.md) |
 | Debt cleared or discovered | [INVENTORY](INVENTORY.md) |
 

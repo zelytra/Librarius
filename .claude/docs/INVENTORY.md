@@ -46,6 +46,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 | Alerting | 10 rules with runbooks (`infra/helm/librarius/files/`), evaluated on the cluster by a Prometheus + Alertmanager the chart deploys, and an `uptime` workflow probing the public URL from outside every 15 min. Notification from the cluster still waits on a webhook Secret, see debt #15 |
 | Backups | Helm CronJob: daily `pg_dump` → gzip → AES-256 → S3-compatible bucket, 7/4/6 retention. **Off by default**, restore procedure documented but never run, see debt #14 |
 | CI/CD | Path-filtered workflows (lint, tests, images, docs) plus CodeQL and a dependency audit; push to `main` → build GHCR images + `helm upgrade` |
+| User documentation | `docs/GUIDE.md` ([#81](https://github.com/zelytra/Librarius/issues/81)), in French, plus `docs/import-example.csv`. Reached from the README; **no entry point inside the app yet** — that is a code change, and it rides with the landing page ([#80](https://github.com/zelytra/Librarius/issues/80)) |
 
 ## Technical debt identified 🔧
 

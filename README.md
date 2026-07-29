@@ -4,8 +4,9 @@ Personal library manager — **books & manga**. Keep track of your collection, y
 reading and your wishlist; search for works (title / author / date) with covers and
 **multiple editions**; browse **upcoming releases** and your reading statistics.
 
-> 🇫🇷 The user interface is in French — `fr` is the only locale so far — but the
-> architecture is ready for more.
+> 🇫🇷 The user interface ships in French and English. French is the locale the copy is
+> authored in, and the user guide follows it — see
+> [`docs/GUIDE.md`](docs/GUIDE.md).
 
 **Try it**: a staging build runs at [librarius.zelytra.fr](https://librarius.zelytra.fr),
 open sign-up, no invitation needed.
@@ -103,6 +104,9 @@ English: code, comments, documentation, commit messages and pull requests alike.
 
 ## Documentation
 
+- **[`docs/GUIDE.md`](docs/GUIDE.md)** 🇫🇷 — the **user** guide: the shared catalog versus
+  your own library, works and editions and volumes, reading statuses, shelves, import and
+  export. The only document here written for the people using the application.
 - **[Developer wiki](https://github.com/zelytra/Librarius/wiki)** — start here if you are
   new to the project: architecture, catalog search, data model, running it locally,
   contributing, deployment.

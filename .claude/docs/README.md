@@ -3,6 +3,8 @@
 Documentation aimed at the **agents** and contributors picking the project up.
 It complements the public documentation (`docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`)
 by describing *what the code actually is*, the working rules and the scope left to build.
+`docs/GUIDE.md` is the odd one out and is not for this audience: it is the guide for the
+people **using** the application, and it is written in French.
 
 ## Recommended reading order
 
