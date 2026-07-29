@@ -46,3 +46,19 @@ export async function openTitle(page: Page, title: string): Promise<void> {
   await page.getByText(title, { exact: true }).first().click();
   await page.getByRole('heading', { name: title }).waitFor();
 }
+
+/**
+ * Marks the open title as read, and leaves the sheet that follows without answering it.
+ *
+ * Finishing a title records the status and then opens the rating-and-shelving sheet over
+ * the screen, which covers everything behind it. A journey that only cares about the
+ * status therefore has to dismiss it, exactly as a reader in a hurry would — and waiting
+ * for it to go is what keeps the next click from landing on the scrim.
+ */
+export async function markAsRead(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Marquer comme lu' }).click();
+  const sheet = page.getByRole('dialog');
+  await sheet.waitFor();
+  await sheet.getByRole('button', { name: 'Plus tard' }).click();
+  await sheet.waitFor({ state: 'hidden' });
+}

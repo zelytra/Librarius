@@ -475,6 +475,20 @@
     "read": "✓ Read",
     "giveUp": "I'm giving up on this book",
     "abandonedNote": "You gave up on this book. Your progress is kept exactly as it was, and it does not count towards your reading goal.",
+    "outcome": {
+      "read": {
+        "title": "Finished!",
+        "subtitle": "“{{title}}” is marked as read. Rate it and shelve it while it is still fresh: both are optional."
+      },
+      "abandoned": {
+        "title": "Given up",
+        "subtitle": "“{{title}}” is marked as abandoned, and your progress stays exactly as it was. You can still rate it and shelve it: both are optional."
+      },
+      "shelfHint": "A title carries a single rank: select the one in force again to remove it.",
+      "confirm": "Save",
+      "skip": "Later",
+      "close": "Close"
+    },
     "progress": {
       "title": "My progress",
       "page": "Page",

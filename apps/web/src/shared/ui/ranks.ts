@@ -4,17 +4,12 @@
  * They used to live in `features/collection/mockData.ts`, a leftover of the
  * mockup phase that three screens still imported.
  *
- * The colours mirror `--gold`, `--silver` and `--bronze` in `tokens.css`, but
- * are kept as literals: the selected rank is drawn with the colour blended at
- * 13% (`${color}22`), an alpha suffix a CSS variable cannot carry.
+ * What is left is the medal drawn on a cover, which is a drawing and not data.
+ * The colours went the other way: a screen that paints a rank now reads
+ * `CategoryDto.color`, the one the server stores, because the row it paints is
+ * no longer three known metals but whatever categories the user has.
  */
 export type RankCode = 'or' | 'argent' | 'bronze';
-
-export const RANK_COLORS: Record<RankCode, string> = {
-  or: '#d9b94e',
-  argent: '#b3b7bf',
-  bronze: '#c08a5a',
-};
 
 export const RANK_ICONS: Record<RankCode, string> = {
   or: 'workspace_premium',

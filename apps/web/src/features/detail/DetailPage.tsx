@@ -7,7 +7,6 @@ import { apiErrorStatus } from '../../shared/apiClient';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { colorFor } from '../../shared/ui/coverPalette';
-import { RANK_COLORS, type RankCode } from '../../shared/ui/ranks';
 import { Button } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { activeLanguage } from '../../i18n/languages';
@@ -30,17 +29,14 @@ import {
   type ReviewDto,
 } from '../../api/generated/librarius';
 import { seriesIdOf } from '../series/series';
+import { CategoryChoice } from './CategoryChoice';
+import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
+import { StarRating } from './StarRating';
 import styles from './DetailPage.module.css';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
 const WASH_FROM = 'aa';
 const WASH_TO = '00';
-
-/** Opacity suffix of the selected rank's background. */
-const RANK_TINT = '22';
-
-/** The rating is out of five, like everywhere the app shows one. */
-const STARS = [1, 2, 3, 4, 5];
 
 /** What the progress form holds while it is being edited — strings, as inputs give them. */
 interface ProgressDraft {
@@ -254,29 +250,12 @@ function ReviewSection({
         {t('detail.review.title')}
         <Loading size="compact" pending={saving} />
       </h3>
-      <div className={styles.stars}>
-        {STARS.map((n) => (
-          <button
-            key={n}
-            type="button"
-            // Clicking the current rating again removes it: there has to be a way back
-            // from a rating given by mistake.
-            onClick={() =>
-              onSave({ rating: n === rating ? undefined : n, review: review || undefined })
-            }
-            aria-label={n === rating ? t('detail.review.clear') : t('detail.review.star', { rating: n })}
-            aria-pressed={n <= rating}
-            className={styles.star}
-          >
-            <Icon
-              name="star"
-              size={30}
-              fill={n <= rating}
-              color={n <= rating ? 'var(--gold)' : 'var(--line)'}
-            />
-          </button>
-        ))}
-      </div>
+      {/* Every click saves. The same five stars are drawn inside the end-of-reading sheet,
+          where they feed a draft instead — hence the shared control. */}
+      <StarRating
+        value={rating}
+        onRate={(next) => onSave({ rating: next, review: review || undefined })}
+      />
 
       <textarea
         value={review}
@@ -424,9 +403,13 @@ function DetailContent({ id }: { id: string }) {
   // title but no identifier, so the link is resolved against their own series.
   const { data: knownSeries = [] } = useGetApiSeries();
   const seriesId = seriesIdOf(knownSeries, item?.book);
+  // The item names its rank by code; the picker and `PUT /rank` both speak identifiers.
+  const filedUnder = cats.find((c) => c.code === item?.rankCode)?.id;
 
   const workId = item?.book?.workId;
   const [editionError, setEditionError] = useState<string | null>(null);
+  /** Which end-of-reading sheet is open, if any. Null is the ordinary state of the screen. */
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   const invalidateLibrary = () => {
     // The item has its own cache entry, whose key is not a prefix of the collection's:
@@ -489,18 +472,49 @@ function DetailContent({ id }: { id: string }) {
    * most there: the page the reader stopped on is the whole point of that status, and the
    * server keeps whatever it is sent rather than completing it.
    */
-  function setStatus(status: 'READING' | 'READ' | 'ABANDONED') {
+  function setStatus(status: 'READING' | 'READ' | 'ABANDONED', onRecorded?: () => void) {
     const p = item?.progress;
-    mutateProgress({
-      id,
-      data: {
-        status,
-        currentPage: p?.currentPage,
-        percent: p?.percent,
-        startedAt: p?.startedAt,
-        finishedAt: p?.finishedAt,
+    mutateProgress(
+      {
+        id,
+        data: {
+          status,
+          currentPage: p?.currentPage,
+          percent: p?.percent,
+          startedAt: p?.startedAt,
+          finishedAt: p?.finishedAt,
+        },
       },
-    });
+      { onSuccess: onRecorded },
+    );
+  }
+
+  /**
+   * Ending a reading: the transition is recorded first, and the sheet asking for a rating
+   * and a shelf opens on top of it once the server has taken it.
+   *
+   * <p>That order is what makes both questions optional. Opening the sheet first and
+   * flipping the status on confirmation would turn "mark as read" into a two-step form,
+   * and a reader who closes it — or the tab — would have marked nothing at all. Waiting
+   * for the round trip also means a failed flip is not celebrated: the sheet appears only
+   * over a status that was really stored.
+   */
+  function endReading(status: Outcome) {
+    setStatus(status, () => setOutcome(status));
+  }
+
+  /**
+   * What the sheet came back with. Each half is written only if it differs from what the
+   * title already carries, so confirming a sheet nobody touched is not two pointless
+   * requests — and skipping it is none at all.
+   */
+  function applyOutcome({ rating, categoryId }: OutcomeChoice) {
+    if (rating !== (item?.rating ?? undefined)) {
+      // The review endpoint replaces both halves, so the text has to be handed back.
+      mutateReview({ id, data: { rating, review: item?.review || undefined } });
+    }
+    if (categoryId !== filedUnder) assignRank(categoryId);
+    setOutcome(null);
   }
 
   if (loading) return <Loading />;
@@ -529,7 +543,6 @@ function DetailContent({ id }: { id: string }) {
   const b = item.book!;
   const title = b.title ?? '—';
   const color = colorFor(title);
-  const ranks = cats.filter((c) => ['or', 'argent', 'bronze'].includes(c.code ?? ''));
   // A title nobody has opened has nothing to show yet; the buttons below start it. A title
   // given up on has plenty: the position it was given up at is the point of the status.
   const tracking = item.status !== 'OWNED' || item.progress != null;
@@ -611,29 +624,15 @@ function DetailContent({ id }: { id: string }) {
           onSave={(data) => mutateReview({ id, data })}
         />
 
-        {/* Three buttons write the rank, so the heading carries the indicator for all of
-            them — the same rule as the review and the editions above. */}
+        {/* Every button in the row writes the same rank, so the heading carries the
+            indicator for all of them — the same rule as the review and the editions
+            above. */}
         <h3 className={styles.rankTitle}>
           {t('detail.ranking')}
           <Loading size="compact" pending={rankSaving} />
         </h3>
-        <div className={styles.rankRow}>
-          {ranks.map((r) => {
-            const on = item.rankCode === r.code;
-            const rc = RANK_COLORS[r.code as RankCode];
-            return (
-              <button
-                key={r.id}
-                onClick={() => assignRank(on ? undefined : r.id)}
-                className={styles.rankButton}
-                // The selected state is painted in the rank's own colour.
-                style={on ? { borderColor: rc, background: `${rc}${RANK_TINT}` } : undefined}
-              >
-                <span className={styles.rankDot} style={{ background: rc }} />
-                {r.label}
-              </button>
-            );
-          })}
+        <div className={styles.rankSection}>
+          <CategoryChoice categories={cats} selectedId={filedUnder} onSelect={assignRank} />
         </div>
 
         {/* The state itself, said in words: nothing else on the screen distinguishes a
@@ -648,18 +647,39 @@ function DetailContent({ id }: { id: string }) {
               {t(startLabel)}
             </Button>
           )}
-          <Button variant="secondary" size="block" onClick={() => setStatus('READ')}>
+          {/* Only the transition opens the sheet. Pressing "✓ Lu" on a title already read
+              re-sends the status, as it always has, and asks nothing: the guided moment
+              belongs to the moment the book is finished, not to every later tap. */}
+          <Button
+            variant="secondary"
+            size="block"
+            onClick={() => (item.status === 'READ' ? setStatus('READ') : endReading('READ'))}
+          >
             {t(item.status === 'READ' ? 'detail.read' : 'detail.markAsRead')}
           </Button>
           {/* Offered on what can still be given up on, and on nothing else: a title read
               to the end was not abandoned, and one already abandoned has nowhere to go. */}
           {givingUpPossible && (
-            <Button variant="secondary" size="block" onClick={() => setStatus('ABANDONED')}>
+            <Button variant="secondary" size="block" onClick={() => endReading('ABANDONED')}>
               {t('detail.giveUp')}
             </Button>
           )}
         </div>
       </div>
+
+      {outcome && (
+        <OutcomeSheet
+          // The draft is seeded on mount. Keying on the transition is what guarantees a
+          // sheet opened for the other one starts from that one's shelf, rather than from
+          // the draft the previous opening left behind.
+          key={outcome}
+          outcome={outcome}
+          item={item}
+          categories={cats}
+          onConfirm={applyOutcome}
+          onSkip={() => setOutcome(null)}
+        />
+      )}
     </div>
   );
 }

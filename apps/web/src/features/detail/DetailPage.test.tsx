@@ -55,13 +55,23 @@ describe('DetailPage', () => {
     expect(screen.getByText('Chronique du tueur de roi')).toBeInTheDocument();
   });
 
-  test('offers the three ranks', async () => {
+  /**
+   * The row used to be narrowed to the three metals, which left the `abandon` shelf and
+   * every category created on the Categories screen assignable from nowhere.
+   */
+  test('offers every category, not only the three metals', async () => {
     libraryItemReturns(ITEM);
+    server.use(http.get('*/api/categories', () => HttpResponse.json([
+      ...BUILTIN_CATEGORIES,
+      { id: 'cat-perso', code: 'coup-de-coeur', label: 'Coup de cœur', color: '#c0577a' },
+    ])));
     renderDetail();
 
     expect(await screen.findByText('Or')).toBeInTheDocument();
     expect(screen.getByText('Argent')).toBeInTheDocument();
     expect(screen.getByText('Bronze')).toBeInTheDocument();
+    expect(screen.getByText('Abandon')).toBeInTheDocument();
+    expect(screen.getByText('Coup de cœur')).toBeInTheDocument();
   });
 
   test('assigning a rank is reflected immediately', async () => {
@@ -83,6 +93,9 @@ describe('DetailPage', () => {
       expect(screen.getByText('Or').closest('button')).toHaveStyle({ borderColor: '#d9b94e' }));
   });
 
+  // The rating-and-shelving sheet opens over the screen at this point; what it then does
+  // is covered by `OutcomeSheet.test.tsx`. What matters here is that the status is already
+  // recorded behind it.
   test('marking as read toggles the label', async () => {
     const item = servesMutableItem();
     server.use(http.put('*/api/library/:id/progress', async ({ request }) => {
