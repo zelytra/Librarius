@@ -162,4 +162,5 @@ class CatalogCacheConnectionTest {
             assertTrue(pool.awaitTermination(30, TimeUnit.SECONDS));
         }
     }
+
 }

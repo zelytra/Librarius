@@ -92,8 +92,8 @@ public class CatalogCacheStore {
 
     /**
      * How many cold fetches may hold a connection at the same time. The ceiling the pool
-     * sees: with the Agroal default of twenty connections, four leaves sixteen for
-     * everything else the API does.
+     * sees: against the fifty connections {@code quarkus.datasource.jdbc.max-size} declares,
+     * four leaves forty-six for everything else the API does.
      */
     @ConfigProperty(name = "librarius.catalog.cache.fetch.concurrency", defaultValue = "4")
     int fetchConcurrency;
