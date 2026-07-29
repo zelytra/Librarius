@@ -897,6 +897,7 @@
     "securitySchemes" : {
       "SecurityScheme" : {
         "type" : "openIdConnect",
+        "openIdConnectUrl" : "http://localhost:8081/realms/librarius/.well-known/openid-configuration",
         "description" : "Authentication"
       }
     }
