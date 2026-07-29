@@ -334,6 +334,83 @@ No account is created by the deployment: sign-up is open, register from the web 
 The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
 plus `infra/keycloak/realm-librarius.json`, bound to localhost).
 
+### 🎨 Changing the realm of a running Keycloak (manual action)
+
+**The realm is imported once, on an empty database, and never again.** Both the chart and
+the compose stacks start Keycloak with `--import-realm`, which is `IGNORE_EXISTING`: it
+creates the realm when it is missing and skips it when it is there. Everything the realm
+carries — clients, redirect URIs, the login theme, the supported locales — therefore
+reaches an *existing* environment only if somebody puts it there.
+
+That is not a limitation of the chart, it is what keeps a deployment from reverting a
+change made in the admin console. It does mean any pull request editing
+`infra/keycloak/realm-librarius.json` or the realm embedded in
+`infra/helm/librarius/templates/keycloak.yaml` has a manual half. A fresh environment
+picks the change up on its own; `librarius.zelytra.fr`, whose realm was created long ago,
+does not.
+
+Two ways to apply one. **The console** —
+`https://librarius.zelytra.fr/auth/admin`, realm *librarius*, *Realm settings*: the
+*Themes* tab for the login theme, the *Localization* tab for the locales. Or **`kcadm`**,
+which is in the image and takes no extra tooling:
+
+```bash
+# The admin password is the one in the librarius-keycloak Secret.
+k() { kubectl -n librarius "$@"; }
+KC=/opt/keycloak/bin/kcadm.sh
+
+k exec deploy/librarius-keycloak -- $KC config credentials \
+  --server http://localhost:8081/auth --realm master \
+  --user admin --password "$(k get secret librarius-keycloak \
+    -o jsonpath='{.data.admin-password}' | base64 -d)"
+
+k exec deploy/librarius-keycloak -- $KC update realms/librarius \
+  -s loginTheme=librarius \
+  -s internationalizationEnabled=true \
+  -s 'supportedLocales=["fr","en"]' \
+  -s defaultLocale=fr
+
+# Read it back rather than trusting the exit code.
+k exec deploy/librarius-keycloak -- $KC get realms/librarius \
+  --fields loginTheme,internationalizationEnabled,supportedLocales,defaultLocale
+```
+
+`kcadm config credentials` writes a token into `~/.keycloak/kcadm.config` **inside the
+pod**, which the next restart throws away — no credential is left behind, and the two
+commands have to be run in that order in the same session.
+
+Then check it from outside, which is the only thing that proves it:
+
+```bash
+curl -s 'https://librarius.zelytra.fr/auth/realms/librarius/protocol/openid-connect/auth?client_id=librarius-web&response_type=code&redirect_uri=https%3A%2F%2Flibrarius.zelytra.fr%2F' \
+  | grep -o 'login/librarius/css/librarius.css'
+```
+
+A hit means the themed stylesheet is on the page. Nothing means Keycloak fell back to its
+own theme, and `k logs deploy/librarius-keycloak | grep -i theme` says why — most often
+that the ConfigMap did not mount, so the directory the realm names is not there.
+
+> **Not yet applied to the cluster.** The theme itself is checked on every pull request
+> that touches it (`.github/workflows/keycloak-theme.yml` renders the chart's own
+> ConfigMap, serves it from the pinned Keycloak image and reads the page back), and the
+> chart mounts it. What has never been done is the `kcadm` call above, on
+> `librarius.zelytra.fr`, against its long-lived realm — so until somebody runs it once
+> and corrects this section with what actually happened, the acceptance criterion of
+> [#176](https://github.com/zelytra/Librarius/issues/176) that staging shows the themed
+> page is **unmet**, and staging keeps rendering stock Keycloak however green the CI is.
+
+### The theme itself
+
+`infra/helm/librarius/files/keycloak-theme/` — four files, projected into
+`/opt/keycloak/themes/librarius` by a ConfigMap the chart renders, and bind-mounted from
+that same directory by the three compose stacks. No image is built for it: see the comment
+above the ConfigMap in `templates/keycloak.yaml` for why not, and
+`.claude/docs/ARCHITECTURE.md` for the palette it can and cannot follow.
+
+Editing it restarts the Keycloak pod, through the `checksum/theme` annotation — a theme is
+read off the disk at boot and cached, so without that the ConfigMap would change and the
+page would not.
+
 ## 🚦 Deploying without downtime
 
 Both deployments roll: `maxSurge: 1`, `maxUnavailable: 0`. The replacement pod has to

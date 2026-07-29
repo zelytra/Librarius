@@ -88,6 +88,17 @@ src/
   light base falls through to a light value on a dark background. The boot script in
   `index.html` applies the palette before the first paint and must stay in step with
   `shared/theme/themes.ts`.
+- **The sign-in page is themed from a copy of those values**
+  ([#176](https://github.com/zelytra/Librarius/issues/176)). Signing in navigates the whole
+  browser to Keycloak, which serves its own pages from its own process and cannot read a
+  line of the web bundle, so `infra/helm/librarius/files/keycloak-theme/` restates the
+  colours, radii and typefaces it needs. **Nothing checks the two against each other:
+  change a value in `tokens.css` and change it there in the same commit**, or the sign-in
+  page keeps last year's palette. Its own header says so.
+  Two of the four palettes are reproduced, not four: `creme`, `sauge`, `rose` and `nuit`
+  are stored in `localStorage` under the app's origin, which Keycloak has no access to.
+  What it can read is `prefers-color-scheme`, so it resolves exactly as the *Système*
+  setting does — `creme`, or `nuit` on a system asking for dark.
 - **Styling**: one `.module.css` per screen and per shared component, always through the
   tokens — type scale (`--fs-*`), radii (`--radius-*`), shadows (`--shadow-*`), decorative
   tints (`--tint-*`), screen padding (`--screen-pad-*`). `style={{…}}` is reserved for

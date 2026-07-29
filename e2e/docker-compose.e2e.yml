@@ -47,6 +47,12 @@ services:
       - '8081:8081'
     volumes:
       - ../infra/keycloak:/opt/keycloak/data/import:ro
+      # The realm asks for the `librarius` login theme, so this stack carries it
+      # too. The suite signs in over the direct access grant and never renders the
+      # form, so nothing here would catch a broken theme — that is what
+      # `.github/workflows/keycloak-theme.yml` is for. What this mount buys is a
+      # stack that is still a faithful copy of the other three.
+      - ../infra/helm/librarius/files/keycloak-theme:/opt/keycloak/themes/librarius:ro
 
   # Stands in for Open Library (GET /search.json) and AniList (POST /).
   catalog-stub:
