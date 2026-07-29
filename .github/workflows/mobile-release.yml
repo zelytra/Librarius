@@ -1,0 +1,152 @@
+name: mobile-release
+
+# A `vX.Y.Z` tag on `main` — the same tag release.yml reacts to — builds a signed,
+# installable Android release APK and publishes it as a workflow artifact. Play Store
+# publishing itself (an .aab, a store listing, a privacy policy) is not part of this: #70
+# only asks for a signed APK, and .claude/docs/MOBILE.md § 1 tracks what is still open.
+#
+# The keystore is never in the repository. It has to be decoded from ANDROID_KEYSTORE_BASE64,
+# a repository secret nobody has created yet — .claude/docs/MOBILE.md § 8 has the exact
+# procedure, deliberately left for the project owner rather than guessed at here. Until it
+# and the three secrets beside it exist, the `build` job below explains what is missing and
+# exits successfully: that is a pending manual step, not a broken build, so the job stays
+# green rather than teaching everyone to ignore a red `mobile-release`. Unsigned debug builds
+# that need none of this are mobile.yml's `android-debug` job, on every push and pull request.
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Tags are not meant to move, so this mostly guards against a rare double-trigger. Nothing
+# here is a stateful deployment worth letting finish once superseded, unlike cd.yml.
+concurrency:
+  group: mobile-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build & sign
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Only needed for the ancestry check below.
+          fetch-depth: 0
+
+      # Same property release.yml checks before it publishes anything: a tag on a commit
+      # that never reached main would produce a release whose content cannot be found
+      # again from the published history.
+      - name: Check the tag sits on main
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "::error::${GITHUB_REF_NAME} points at a commit that is not contained in main"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Matches apps/api's JDK (.claude/docs/CONVENTIONS.md) and mobile.yml's android-debug.
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      # Reused rather than reimplemented: it only parses the tag into a version, nothing
+      # about it is specific to the Docker images release.yml builds from the same output.
+      - name: Resolve the version from the tag
+        id: version
+        run: bash .github/scripts/release-version.sh "$GITHUB_REF_NAME" "$GITHUB_SHA" | tee -a "$GITHUB_OUTPUT"
+
+      # Play requires versionCode to be a single increasing integer, not a semver string.
+      # 1_000_000 per major and 1_000 per minor leaves room for 999 patches per minor and
+      # 999 minors per major before two releases could ever collide — far more than this
+      # product will realistically cut. A prerelease suffix (rc.1) is dropped: it plays no
+      # part in the integer.
+      - name: Derive the Android version code
+        id: android-version
+        env:
+          MAJOR: ${{ steps.version.outputs.major }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          core=${VERSION%%-*}
+          minor=${core#*.}; minor=${minor%%.*}
+          patch=${core##*.}
+          echo "code=$(( MAJOR * 1000000 + minor * 1000 + patch ))" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the web bundle and sync it
+        run: pnpm mobile:build
+
+      # Everything from here on is skipped, not failed, when the secrets are absent — see
+      # the file header.
+      - name: Check the signing secrets are configured
+        id: signing
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ] && \
+             [ -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ] && \
+             [ -n "${{ secrets.ANDROID_KEY_ALIAS }}" ] && \
+             [ -n "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::${GITHUB_REF_NAME} was not published as a signed APK — ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and/or ANDROID_KEY_PASSWORD are not set on this repository yet. Procedure to create them: .claude/docs/MOBILE.md § 8."
+          fi
+
+      # Decoded into $RUNNER_TEMP, outside the checkout: it cannot end up in a commit, a
+      # workflow artifact or a cache by accident, and the runner discards it with the rest
+      # of the VM once the job ends — the explicit removal below is belt and braces.
+      - name: Decode the keystore
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          keystore_path="$RUNNER_TEMP/librarius-release.keystore"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$keystore_path"
+          chmod 600 "$keystore_path"
+          echo "KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
+
+      # The four LIBRARIUS_RELEASE_* properties feed apps/mobile/android/app/build.gradle's
+      # signingConfigs.release; the two LIBRARIUS_VERSION_* ones feed defaultConfig. Passed
+      # as -P rather than committed anywhere, including gradle.properties.
+      - name: Build the signed release APK
+        if: steps.signing.outputs.configured == 'true'
+        working-directory: apps/mobile/android
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION_NAME: ${{ steps.version.outputs.version }}
+          VERSION_CODE: ${{ steps.android-version.outputs.code }}
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -PLIBRARIUS_RELEASE_STORE_FILE="$KEYSTORE_PATH" \
+            -PLIBRARIUS_RELEASE_STORE_PASSWORD="$STORE_PASSWORD" \
+            -PLIBRARIUS_RELEASE_KEY_ALIAS="$KEY_ALIAS" \
+            -PLIBRARIUS_RELEASE_KEY_PASSWORD="$KEY_PASSWORD" \
+            -PLIBRARIUS_VERSION_CODE="$VERSION_CODE" \
+            -PLIBRARIUS_VERSION_NAME="$VERSION_NAME"
+
+      - name: Remove the decoded keystore
+        if: always() && steps.signing.outputs.configured == 'true'
+        run: rm -f "$KEYSTORE_PATH"
+
+      - name: Upload the signed APK
+        if: steps.signing.outputs.configured == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: librarius-release-${{ steps.version.outputs.version }}
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 90

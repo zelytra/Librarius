@@ -136,7 +136,7 @@ release notification actually received.
 | [#67](https://github.com/zelytra/Librarius/issues/67) | ✅ Capacitor bootstrap: apps/mobile application — shell over the web bundle; native sign-in still blocked, see [MOBILE](MOBILE.md) | #30, #31 |
 | [#68](https://github.com/zelytra/Librarius/issues/68) | ISBN barcode scanning | #67, #53 |
 | [#69](https://github.com/zelytra/Librarius/issues/69) | Push notifications: releases and wishlist | #57, #67 |
-| [#70](https://github.com/zelytra/Librarius/issues/70) | Android build pipeline | #67 |
+| [#70](https://github.com/zelytra/Librarius/issues/70) | 🔴 Android build pipeline: CI builds and publishes a debug APK on every push and pull request; release signing is wired but blocked on a keystore only the project owner can create, see [MOBILE](MOBILE.md) § 8 | #67 |
 | [#71](https://github.com/zelytra/Librarius/issues/71) | iOS build and publishing procedure | #67, #70 |
 
 ---

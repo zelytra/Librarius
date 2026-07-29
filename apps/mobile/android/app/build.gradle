@@ -1,0 +1,80 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "fr.zelytra.librarius"
+    compileSdk rootProject.ext.compileSdkVersion
+
+    // Release signing. The four LIBRARIUS_RELEASE_* project properties are passed on the
+    // command line by .github/workflows/mobile-release.yml, itself reading them from repo
+    // secrets — a keystore never sits in this file, in git, or in a build log. mobile-release
+    // only ever invokes `assembleRelease` once all four are set (its `signing` job guard), so
+    // in practice this stays incomplete only on a manual, local `assembleRelease` — which is
+    // exactly when it should stop the build: buildTypes.release below assigns this signing
+    // config unconditionally, so an incomplete one (no storeFile) fails Gradle's own signing
+    // validation instead of quietly producing an unsigned, uninstallable app-release.apk.
+    // Procedure to create the secrets these properties come from: .claude/docs/MOBILE.md § 8.
+    signingConfigs {
+        release {
+            if (project.hasProperty('LIBRARIUS_RELEASE_STORE_FILE')) {
+                storeFile file(LIBRARIUS_RELEASE_STORE_FILE)
+                storePassword LIBRARIUS_RELEASE_STORE_PASSWORD
+                keyAlias LIBRARIUS_RELEASE_KEY_ALIAS
+                keyPassword LIBRARIUS_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId "fr.zelytra.librarius"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // Overridden from the Git tag by mobile-release.yml (release-version.sh resolves
+        // the tag, the workflow derives an integer versionCode from it). The fallback below
+        // is what every debug and PR build gets and is never meant to be published.
+        versionCode project.hasProperty('LIBRARIUS_VERSION_CODE') ? LIBRARIUS_VERSION_CODE.toInteger() : 1
+        versionName project.hasProperty('LIBRARIUS_VERSION_NAME') ? LIBRARIUS_VERSION_NAME : "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    buildTypes {
+        release {
+            // Assigned unconditionally on purpose — see the comment on signingConfigs above.
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

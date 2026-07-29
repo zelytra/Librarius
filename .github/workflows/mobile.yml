@@ -1,10 +1,16 @@
 name: mobile
 
 # The native shell holds no application code, so what can break is its link to the web
-# bundle: `webDir`, the workspace dependency, the Capacitor configuration. Building the
-# web app and syncing it exercises exactly that link — `cap sync` fails when the bundle
-# is missing — and needs neither the Android SDK nor an emulator. The signed APK is
-# #70's job.
+# bundle: `webDir`, the workspace dependency, the Capacitor configuration. `sync` exercises
+# exactly that link — `cap sync` fails when the bundle is missing — and needs neither the
+# Android SDK nor an emulator.
+#
+# `android-debug` goes one step further and actually compiles the native project committed
+# at apps/mobile/android, into an unsigned debug APK anyone can sideload. ubuntu-latest
+# ships the Android SDK components this needs out of the box (see the job for details), so
+# unlike `sync` it does need a real SDK — just not one this workflow has to install.
+#
+# The signed release APK is a separate, tag-triggered workflow: mobile-release.yml.
 on:
   push:
     branches: [main]
@@ -43,8 +49,8 @@ jobs:
 
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
 
-      # Node 20, as everywhere else. @capacitor/cli 8 would need Node 22, hence the
-      # 7.x pin in apps/mobile/package.json — see .claude/docs/MOBILE.md § 4.
+      # .nvmrc, as everywhere else. apps/mobile/package.json still pins @capacitor/cli to
+      # 7.x, but only because nobody has tried 8 yet — see .claude/docs/MOBILE.md § 4.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
@@ -60,3 +66,51 @@ jobs:
       # dist into the native projects.
       - name: Build the web bundle and sync it
         run: pnpm mobile:build
+
+  android-debug:
+    name: android debug build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Matches apps/api's JDK (.claude/docs/CONVENTIONS.md). capacitor.build.gradle, which
+      # `cap sync` regenerates below, sets source/targetCompatibility to the same 21.
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Caches ~/.gradle between runs, and validates the committed gradle-wrapper.jar
+      # against Gradle's published checksums — the wrapper is a binary this repository did
+      # not build, the same property gitleaks buys for secrets (secrets.yml).
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The same chain the `sync` job checks, run again here because this job needs the
+      # resulting apps/mobile/android/app/src/main/assets on disk, not just its exit code.
+      - name: Build the web bundle and sync it
+        run: pnpm mobile:build
+
+      # ubuntu-latest ships the SDK platforms and build-tools this project needs
+      # (compileSdk/targetSdk 35, minSdk 23 — apps/mobile/android/variables.gradle) out of
+      # the box, so there is no setup-android step here. No debug signing config either:
+      # Gradle signs debug builds with its own auto-generated, non-secret debug keystore.
+      - name: Build the debug APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload the debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: librarius-debug-apk
+          path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
