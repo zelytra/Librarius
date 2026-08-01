@@ -190,6 +190,30 @@
       }
     }
   },
+  "onboarding": {
+    "eyebrow": "First steps",
+    "close": "Close",
+    "skip": "Skip the tour",
+    "next": "Next",
+    "done": "Finish",
+    "steps": {
+      "import": {
+        "title": "Already have a library?",
+        "description": "Import it from Booknode or a CSV file: your titles arrive in one click, nothing to retype.",
+        "action": "Import my library"
+      },
+      "discover": {
+        "title": "Find your first titles",
+        "description": "Search our catalog for a book or a manga and add it to your collection or your wishlist.",
+        "action": "Discover titles"
+      },
+      "goal": {
+        "title": "Set a goal (optional)",
+        "description": "A number of books, volumes or pages to read this year: the gauge on Home follows your progress.",
+        "action": "Set a goal"
+      }
+    }
+  },
   "goal": {
     "title": "{{year}} goal",
     "outOf": "/ {{target}}",
@@ -539,6 +563,7 @@
     "dashboard": "Dashboard",
     "dashboardDescription": "Reorder or hide the home screen sections: resume reading, counters, goal, upcoming releases, recently read.",
     "dashboardAction": "Go to the home screen",
+    "onboardingAction": "Replay the guided tour",
     "appearance": "Appearance",
     "language": "Language",
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",

@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router';
+import { lazy, Suspense, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
@@ -6,8 +7,16 @@ import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius';
+import { markOnboardingSeen, shouldShowOnboarding } from '../onboarding/onboarding';
 import { DashboardSections } from './DashboardSections';
 import styles from './HomePage.module.css';
+
+// Same reasoning as DashboardEditor: a returning user with any library never triggers
+// `shouldShowOnboarding`, so the common case pays nothing for this bundle — only an
+// empty account, or an explicit "replay the tour" from Settings, fetches it.
+const OnboardingFlow = lazy(() =>
+  import('../onboarding/OnboardingFlow').then((m) => ({ default: m.OnboardingFlow })),
+);
 
 /** Shelves shown on the dashboard, and how many covers each of them holds. */
 const READING_SHELF_SIZE = 12;
@@ -15,6 +24,7 @@ const READ_SHELF_SIZE = 8;
 
 function Dashboard() {
   const { t } = useTranslation();
+  const location = useLocation();
   // The queries run in parallel and are cached independently: coming back to Home after
   // browsing no longer refetches anything. Each shelf asks the server for its own status
   // rather than downloading the collection to filter it here.
@@ -25,6 +35,19 @@ function Dashboard() {
   const reading = readingQuery.data?.items ?? [];
   const read = readQuery.data?.items ?? [];
   const stats = statsQuery.data;
+
+  // "Restart from Settings" (#76) is a deliberate request to see the tour again, carried
+  // as router state on the navigation that brought the reader back here — it is read once
+  // and dismissed the same way the automatic trigger is, never re-armed by a later visit
+  // to Home. Guarded to `dismissed` alone rather than mixed into `shouldShowOnboarding`,
+  // which stays about the *automatic* first-login case and does not need to know a manual
+  // restart exists.
+  const restartRequested = (location.state as { showOnboarding?: boolean } | null)?.showOnboarding === true;
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const dismissOnboarding = () => {
+    markOnboardingSeen();
+    setOnboardingDismissed(true);
+  };
 
   // The dashboard is made of the user's own data: as long as none of it has arrived,
   // there is nothing worth rendering. The upcoming releases and the section layout are
@@ -47,8 +70,18 @@ function Dashboard() {
   const libraryEmpty = stats != null
     && (stats.read ?? 0) + (stats.reading ?? 0) + (stats.toRead ?? 0) + (stats.abandoned ?? 0) === 0;
 
+  const showOnboarding = !onboardingDismissed
+    && (restartRequested || shouldShowOnboarding(libraryEmpty));
+
   return (
-    <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />
+    <>
+      <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />
+      {showOnboarding && (
+        <Suspense fallback={null}>
+          <OnboardingFlow onDismiss={dismissOnboarding} />
+        </Suspense>
+      )}
+    </>
   );
 }
 

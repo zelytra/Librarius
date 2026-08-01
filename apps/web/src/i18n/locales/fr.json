@@ -190,6 +190,30 @@
       }
     }
   },
+  "onboarding": {
+    "eyebrow": "Premiers pas",
+    "close": "Fermer",
+    "skip": "Passer la visite guidée",
+    "next": "Suivant",
+    "done": "Terminer",
+    "steps": {
+      "import": {
+        "title": "Tu as déjà une bibliothèque ?",
+        "description": "Importe-la depuis Booknode ou un fichier CSV : tes titres arrivent en un clic, sans rien retaper.",
+        "action": "Importer ma bibliothèque"
+      },
+      "discover": {
+        "title": "Trouve tes premiers titres",
+        "description": "Cherche un livre ou un manga dans notre catalogue et ajoute-le à ta collection ou à tes souhaits.",
+        "action": "Découvrir des titres"
+      },
+      "goal": {
+        "title": "Fixe-toi un objectif (facultatif)",
+        "description": "Un nombre de livres, de tomes ou de pages à lire cette année : la jauge de l'accueil suit ta progression.",
+        "action": "Définir un objectif"
+      }
+    }
+  },
   "goal": {
     "title": "Objectif {{year}}",
     "outOf": "/ {{target}}",
@@ -539,6 +563,7 @@
     "dashboard": "Tableau de bord",
     "dashboardDescription": "Réordonne ou masque les sections de l'accueil : reprise de lecture, compteurs, objectif, prochaines sorties, derniers lus.",
     "dashboardAction": "Aller à l'accueil",
+    "onboardingAction": "Revoir la visite guidée",
     "appearance": "Apparence",
     "language": "Langue",
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",

@@ -51,6 +51,18 @@ export function SettingsPage() {
         {t('settings.dashboardAction')}
       </button>
 
+      {/* The first-run tour (#76) is skippable and never re-appears on its own once it
+          has been — this is the only way back to it, for someone who skipped it too
+          fast or wants to point a friend at the import step again. Router state rather
+          than a query string: it carries no meaning to bookmark or share. */}
+      <button
+        className={styles.dashboardLink}
+        onClick={() => navigate('/', { state: { showOnboarding: true } })}
+      >
+        <Icon name="auto_stories" size={16} color="var(--accent-deep)" />
+        {t('settings.onboardingAction')}
+      </button>
+
       {/* External library import. */}
       <ImportSection />
 

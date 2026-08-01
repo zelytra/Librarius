@@ -78,6 +78,7 @@ Personal dashboard.
 | Empty state | ✅ | Points to Discover |
 | **Reorder / hide sections** | ✅ | "Personnaliser l'accueil" panel: move a section up/down, toggle it hidden — buttons rather than a drag gesture, so the same controls work with a finger, a mouse or a keyboard. A hidden section stays listed there, marked, so it can be found again. Persisted per user (`dashboard_layout`, #54); a fresh account sees the same order the sections used to be hard-coded in, and a section shipped later shows up on its own |
 | **Annual goal** | ✅ | Gauge, what is left, pace to hold; invitation when no goal is set, and the previous year's target offered on 1 January |
+| **First-login onboarding** | ✅ | A short, three-step, dismissible tour ([#76](https://github.com/zelytra/Librarius/issues/76)): import an existing library, discover titles, set a reading goal — each step's action leaves the tour for the screen it names. Shown once, to a **new** account only — an empty collection with the local "seen" flag unset — and never again once dismissed, skipped or finished, whichever comes first. A returning user with any library never sees it. Replayable on purpose from Settings, which bypasses the emptiness check: that trigger is a deliberate request, not the automatic first-login one |
 
 ### 4.2 Collection ✅ / 🔜
 
@@ -203,6 +204,9 @@ something as read — an existing collection carries no reading dates.
 - ✅ **Dashboard** shortcut to Home's own "Personnaliser l'accueil" panel (§ 4.1) — Settings
   is not where the reordering happens, but a reader would not necessarily think to look on
   Home for it.
+- ✅ **Replay the first-login tour** ([#76](https://github.com/zelytra/Librarius/issues/76)):
+  a link back to the onboarding flow (§ 4.1) for whoever skipped it too fast, regardless of
+  whether the collection is still empty.
 - ✅ Theme selection: four palettes (Crème, Sauge, Rose, Nuit) plus **Système**, which
   follows the operating system preference and is the default. The choice is kept in
   `localStorage` and applied before the first paint, so a reload never flashes the light
