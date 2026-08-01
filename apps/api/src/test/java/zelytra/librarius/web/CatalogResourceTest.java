@@ -11,8 +11,10 @@ import zelytra.librarius.catalog.CatalogService;
 import zelytra.librarius.domain.Kind;
 
 import java.util.List;
+import java.util.Set;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 
 /** Checks the search endpoint (auth and payload shape) with a mocked CatalogService. */
@@ -31,7 +33,7 @@ class CatalogResourceTest {
 
     @Test
     void searchReturnsMappedResults() {
-        Mockito.when(catalog.search(Kind.BOOK, CatalogQuery.of("wing"), 20)).thenReturn(List.of(
+        Mockito.when(catalog.search(Set.of(Kind.BOOK), CatalogQuery.of("wing"), 20)).thenReturn(List.of(
                 new CatalogResult("BOOK", "Fourth Wing", "Rebecca Yarros", 2023,
                         "https://cover", "synopsis", "9781234567890", "Piatkus", "fr", null,
                         "openlibrary", "ref-1")));
@@ -44,10 +46,40 @@ class CatalogResourceTest {
     }
 
     @Test
+    void searchWithoutAKindSpansEveryMedium() {
+        // No kind on the request: the resource asks the service for every registered kind
+        // (an empty set) and returns the merged, cross-medium answer.
+        Mockito.when(catalog.search(Set.of(), CatalogQuery.of("mixed"), 20)).thenReturn(List.of(
+                new CatalogResult("BOOK", "Fourth Wing", "Rebecca Yarros", 2023, null, null,
+                        null, null, null, null, "openlibrary", null),
+                new CatalogResult("MANGA", "One Piece", "Eiichiro Oda", 1997, null, null,
+                        null, null, null, null, "anilist", null)));
+
+        given().auth().oauth2(keycloak.getAccessToken("alice"))
+                .when().get("/api/catalog/search?q=mixed")
+                .then().statusCode(200)
+                .body("title", hasItems("Fourth Wing", "One Piece"))
+                .body("kind", hasItems("BOOK", "MANGA"));
+    }
+
+    @Test
+    void searchNarrowsToTheKindsNamed() {
+        // Two kinds named on one call: the repeatable kind param carries both to the service.
+        Mockito.when(catalog.search(Set.of(Kind.BOOK, Kind.MANGA), CatalogQuery.of("mixed"), 20))
+                .thenReturn(List.of(new CatalogResult("MANGA", "One Piece", "Eiichiro Oda", 1997,
+                        null, null, null, null, null, null, "anilist", null)));
+
+        given().auth().oauth2(keycloak.getAccessToken("alice"))
+                .when().get("/api/catalog/search?q=mixed&kind=BOOK&kind=MANGA")
+                .then().statusCode(200)
+                .body("[0].title", is("One Piece"));
+    }
+
+    @Test
     void searchCarriesTheAdvancedCriteria() {
         CatalogQuery expected =
                 new CatalogQuery("dune", "Frank Herbert", 1965, "fr", "Pocket", null);
-        Mockito.when(catalog.search(Kind.BOOK, expected, 20)).thenReturn(List.of(
+        Mockito.when(catalog.search(Set.of(Kind.BOOK), expected, 20)).thenReturn(List.of(
                 new CatalogResult("BOOK", "Dune", "Frank Herbert", 1965, null, null,
                         null, "Pocket", "fre", null, "openlibrary", null)));
 
@@ -71,7 +103,7 @@ class CatalogResourceTest {
         // Scanning or pasting an ISBN is a search on its own, not a keyword.
         CatalogQuery expected =
                 new CatalogQuery(null, null, null, null, null, "9780441013593");
-        Mockito.when(catalog.search(Kind.BOOK, expected, 20)).thenReturn(List.of(
+        Mockito.when(catalog.search(Set.of(Kind.BOOK), expected, 20)).thenReturn(List.of(
                 new CatalogResult("BOOK", "Dune", "Frank Herbert", 1965, null, null,
                         "9780441013593", null, null, null, "openlibrary", null)));
 

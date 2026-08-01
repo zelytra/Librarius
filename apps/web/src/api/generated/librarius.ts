@@ -540,7 +540,7 @@ q?: string;
 export type GetApiCatalogSearchParams = {
 author?: string;
 isbn?: string;
-kind?: Kind;
+kind?: Kind[];
 language?: string;
 limit?: number;
 publisher?: string;
@@ -959,6 +959,14 @@ export const getGetApiCatalogSearchUrl = (params?: GetApiCatalogSearchParams,) =
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["kind"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
 
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : String(value))

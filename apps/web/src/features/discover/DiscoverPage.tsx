@@ -70,7 +70,7 @@ function searchParams(query: string, advanced: Advanced, kind: Kind): GetApiCata
   const isbn = detectIsbn(query);
   const year = Number(advanced.year.trim());
   return {
-    kind,
+    kind: [kind],
     q: isbn ? undefined : trimmed(query),
     isbn: isbn ?? undefined,
     author: trimmed(advanced.author),

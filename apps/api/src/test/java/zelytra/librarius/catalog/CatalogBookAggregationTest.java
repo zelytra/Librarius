@@ -12,6 +12,7 @@ import zelytra.librarius.catalog.provider.OpenLibraryClient;
 import zelytra.librarius.domain.Kind;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -76,7 +77,7 @@ class CatalogBookAggregationTest {
     }
 
     private List<String> titlesFor(String text) {
-        return catalog.search(Kind.BOOK, CatalogQuery.of(text), 10).stream()
+        return catalog.search(Set.of(Kind.BOOK), CatalogQuery.of(text), 10).stream()
                 .map(CatalogResult::title)
                 .toList();
     }
@@ -86,7 +87,7 @@ class CatalogBookAggregationTest {
         openLibraryAnswers("Fourth Wing", "Rebecca Yarros");
         bnfAnswers(sru("La Horde du Contrevent", "Damasio, Alain (1969-....). Auteur du texte"));
 
-        List<CatalogResult> results = catalog.search(Kind.BOOK, CatalogQuery.of("merge both"), 10);
+        List<CatalogResult> results = catalog.search(Set.of(Kind.BOOK), CatalogQuery.of("merge both"), 10);
 
         assertEquals(List.of("bnf", "openlibrary"),
                 results.stream().map(CatalogResult::provider).sorted().toList());

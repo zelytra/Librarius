@@ -172,6 +172,11 @@ Search across the external catalog (Open Library for books, AniList for manga).
   or an order number still goes through as an ordinary search.
 - ✅ **Manual entry** for a title absent from the catalogs — self-published, an old
   edition, a fanzine. Offered from both empty states, which is where the user meets it.
+- ✅ **Cross-medium search** at the API: `kind` is now optional and repeatable, so one call
+  can reach every registered provider — books and manga today, comics, graphic novels and
+  audiobooks as they are wired in — and return the answers merged, each result still badged
+  with its own `kind`. The Book / Manga toggle still scopes the screen to one medium; the
+  single unified Discover feed that drops the toggle is [#194](https://github.com/zelytra/Librarius/issues/194).
 - 🔜 **ISBN barcode scanning** (camera) — the key feature in a bookshop, native through
   Capacitor. The ISBN search it feeds already exists.
 - 🔜 A catalog page before adding: pick the *edition* and the initial *status*.

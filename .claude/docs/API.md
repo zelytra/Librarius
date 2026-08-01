@@ -17,7 +17,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
-| GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` defaults to `BOOK`, `limit` clamped to 1–40 |
+| GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Generic provider trends, same answer to every caller. `kind` defaults to `MANGA`, `limit` clamped to 1–50. No longer read by the Home screen — see `/api/releases/upcoming` |
 | GET | `/api/releases/upcoming?kind=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
@@ -295,6 +295,15 @@ no page count either — the page is left alone, being the only thing the reader
 text), `author`, `year`, `language`, `publisher` and `isbn`. A call with none of them
 answers an empty list without charging the rate limit — an empty field must not cost a
 provider call.
+
+`kind` is a **repeatable, optional** filter over the mediums to reach. Omitting it searches
+**every registered provider** across every medium and merges the answers into one list;
+naming one or several (`kind=BOOK`, or `kind=BOOK&kind=MANGA`) narrows to just those. A
+kind-scoped call behaves exactly as before — a lone `kind=BOOK` still asks only the two book
+providers. Each result carries its own `kind` (`CatalogResult.kind`), so a mixed list stays
+groupable client-side. The fan-out is wider when no kind is named, but the per-call rate
+limit charges one request regardless and the two-level cache absorbs repeats, so nothing
+about the quota or the cache changes.
 
 Each provider honours what its own API indexes, and ignores the rest rather than answering
 nothing:
