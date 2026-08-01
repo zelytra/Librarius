@@ -533,6 +533,19 @@
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",
     "notifications": "Notifications",
     "version": "Ma Bibliothèque · version {{version}}",
+    "profile": {
+      "title": "Profil",
+      "description": "Ton nom affiché, ta langue et ton fuseau horaire. La langue suit ton compte d'un appareil à l'autre.",
+      "signIn": "Connecte-toi pour modifier ton profil.",
+      "displayName": "Nom affiché",
+      "displayNamePlaceholder": "Ton nom",
+      "language": "Langue",
+      "timeZone": "Fuseau horaire",
+      "timeZoneAuto": "Suivre cet appareil",
+      "submit": "Enregistrer",
+      "saved": "Profil enregistré.",
+      "failed": "Impossible d'enregistrer le profil pour le moment."
+    },
     "themes": {
       "systeme": "Système",
       "creme": "Crème",

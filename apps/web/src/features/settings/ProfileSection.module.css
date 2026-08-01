@@ -1,0 +1,63 @@
+/* Editable profile: display name, language, time zone. Same visual language as the
+   goal editor above it — one label per field, one field glued to its Save button. */
+
+.title {
+  font-size: var(--fs-16);
+  margin: 0 0 4px;
+}
+
+.intro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 11px 14px;
+  font-size: var(--fs-13-5);
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.submit {
+  align-self: flex-start;
+}
+
+.success {
+  font-size: var(--fs-13);
+  color: var(--accent-deep);
+  font-weight: 600;
+  margin: 0;
+}
+
+.failure {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  margin: 0;
+}

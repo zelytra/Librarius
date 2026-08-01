@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import zelytra.librarius.domain.AppUser;
@@ -35,10 +36,27 @@ public final class ApiDtos {
     private ApiDtos() {
     }
 
-    public record MeDto(String id, String email, String displayName, String locale) {
+    public record MeDto(String id, String email, String displayName, String locale,
+                        String timeZone) {
         public static MeDto of(AppUser u) {
-            return new MeDto(u.id, u.email, u.displayName, u.locale);
+            return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone);
         }
+    }
+
+    /**
+     * Editable profile fields (#75). A full replacement of the three the user owns, not a
+     * sparse patch: the profile form always sends every one, so a field left out is a mistake
+     * rather than "leave it as it was".
+     *
+     * <p>{@code locale} is one of the two the interface ships. {@code timeZone} is optional —
+     * blank clears it, back to the device's zone — and when present must parse as a
+     * {@link java.time.ZoneId}, which the resource checks: Bean Validation cannot, and a bad
+     * identifier is a 400 like any other malformed input.
+     */
+    public record UpdateMeDto(
+            @NotBlank @Size(max = 255) String displayName,
+            @NotBlank @Pattern(regexp = "fr|en") String locale,
+            @Size(max = 64) String timeZone) {
     }
 
     /**

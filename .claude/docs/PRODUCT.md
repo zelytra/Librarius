@@ -201,9 +201,12 @@ something as read — an existing collection carries no reading dates.
 - ✅ **Language**: French and English, labelled in their own words (*Français*, *English*)
   so someone who landed on the wrong one still recognises theirs. A first visit follows the
   browser; the choice made here overrides it and is kept in `localStorage`, per device.
-- 🔜 **Profile**: display name, language, time zone. The language moves to the profile there
-  and follows the account across devices; the switcher above stays as the way to change it,
-  and the local copy as what the app boots on before the profile has been fetched.
+- ✅ **Profile**: display name, language and time zone, saved to the account through
+  `PATCH /api/me` (#75). The language moves to the profile and follows the account across
+  devices — a save applies it at once and stores it as this device's boot value; the switcher
+  below stays as the quick, device-local toggle the app boots on before the profile has been
+  fetched, and the one a signed-out visitor still has. The time zone is an IANA identifier, or
+  blank to follow the device.
 - ✅ **Library export** (JSON + CSV) — *GDPR art. 20*. The JSON archive holds everything
   and can be re-imported here; the CSV opens in a spreadsheet and carries the column names
   Goodreads and Booknode understand, so a user can leave for another tool.

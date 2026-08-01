@@ -308,6 +308,7 @@ export interface MeDto {
   email?: string;
   displayName?: string;
   locale?: string;
+  timeZone?: string;
 }
 
 export interface ProgressDto {
@@ -436,6 +437,18 @@ export interface UpcomingReleaseDto {
   publisher?: string;
   source?: string;
   confidence?: string;
+}
+
+export interface UpdateMeDto {
+  /**
+     * @maxLength 255
+     * @pattern \S
+     */
+  displayName: string;
+  /** @pattern fr|en */
+  locale: string;
+  /** @maxLength 64 */
+  timeZone?: string;
 }
 
 export interface WishlistAcquireDto {
@@ -2594,6 +2607,77 @@ export const usePutApiLibraryIdReview = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiLibraryIdReviewMutationOptions(options), queryClient);
+    }
+
+export const getPatchApiMeUrl = () => {
+
+
+
+
+  return `/api/me`
+}
+
+/**
+ * @summary Update
+ */
+export const patchApiMe = async (updateMeDto: UpdateMeDto, options?: RequestInit): Promise<MeDto> => {
+
+  return apiClient<MeDto>(getPatchApiMeUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateMeDto)
+  }
+);}
+
+
+
+
+
+export const getPatchApiMeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMe>>, TError,{data: UpdateMeDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof patchApiMe>>, TError,{data: UpdateMeDto}, TContext> => {
+
+const mutationKey = ['patchApiMe'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchApiMe>>, {data: UpdateMeDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  patchApiMe(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchApiMeMutationResult = NonNullable<Awaited<ReturnType<typeof patchApiMe>>>
+    export type PatchApiMeMutationBody = UpdateMeDto
+    export type PatchApiMeMutationError = void
+
+    /**
+ * @summary Update
+ */
+export const usePatchApiMe = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMe>>, TError,{data: UpdateMeDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchApiMe>>,
+        TError,
+        {data: UpdateMeDto},
+        TContext
+      > => {
+      return useMutation(getPatchApiMeMutationOptions(options), queryClient);
     }
 
 export const getGetApiMeUrl = () => {
