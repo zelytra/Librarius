@@ -22,7 +22,7 @@ ingress:
 web:
   image:
     repository: ghcr.io/zelytra/librarius-web
-    tag: "0.4.0"
+    tag: "0.8.0"
     pullPolicy: IfNotPresent
   # Ignored while autoscaling.enabled is true: the chart then omits the field
   # entirely so the HPA owns the count. See the autoscaling section below.
@@ -44,7 +44,7 @@ api:
   enabled: true
   image:
     repository: ghcr.io/zelytra/librarius-api
-    tag: "0.4.0"
+    tag: "0.8.0"
     pullPolicy: IfNotPresent
   # Same as web: ignored while autoscaling.enabled is true.
   replicas: 1
