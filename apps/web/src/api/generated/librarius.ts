@@ -35,6 +35,33 @@ export interface AccountDeletionDto {
  */
 export type Uuid = string;
 
+export interface AuthorWorkDto {
+  workId?: Uuid;
+  kind?: string;
+  title?: string;
+  authors?: string;
+  seriesTitle?: string;
+  volumeNumber?: number;
+  originalYear?: number;
+  coverUrl?: string;
+}
+
+export interface AuthorDetailDto {
+  id?: Uuid;
+  name?: string;
+  photoUrl?: string;
+  followed?: boolean;
+  works?: AuthorWorkDto[];
+}
+
+export interface AuthorSummaryDto {
+  id?: Uuid;
+  name?: string;
+  photoUrl?: string;
+  workCount?: number;
+  followed?: boolean;
+}
+
 export interface BookView {
   editionId?: Uuid;
   workId?: Uuid;
@@ -506,6 +533,10 @@ export interface WishlistUpdateDto {
   note?: string;
 }
 
+export type GetApiAuthorsParams = {
+q?: string;
+};
+
 export type GetApiCatalogSearchParams = {
 author?: string;
 isbn?: string;
@@ -572,6 +603,357 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/authors?${stringifiedParams}` : `/api/authors`
+}
+
+/**
+ * @summary Search
+ */
+export const getApiAuthors = async (params?: GetApiAuthorsParams, options?: RequestInit): Promise<AuthorSummaryDto[]> => {
+
+  return apiClient<AuthorSummaryDto[]>(getGetApiAuthorsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAuthorsQueryKey = (params?: GetApiAuthorsParams,) => {
+    return [
+    `/api/authors`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAuthorsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAuthors>>, TError = void>(params?: GetApiAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAuthorsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAuthors>>> = () => getApiAuthors(params, );
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAuthorsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAuthors>>>
+export type GetApiAuthorsQueryError = void
+
+
+export function useGetApiAuthors<TData = Awaited<ReturnType<typeof getApiAuthors>>, TError = void>(
+ params: undefined |  GetApiAuthorsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthors>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthors>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthors<TData = Awaited<ReturnType<typeof getApiAuthors>>, TError = void>(
+ params?: GetApiAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthors>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthors>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthors<TData = Awaited<ReturnType<typeof getApiAuthors>>, TError = void>(
+ params?: GetApiAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search
+ */
+
+export function useGetApiAuthors<TData = Awaited<ReturnType<typeof getApiAuthors>>, TError = void>(
+ params?: GetApiAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAuthorsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiAuthorsIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/authors/${id}`
+}
+
+/**
+ * @summary Get
+ */
+export const getApiAuthorsId = async (id: Uuid, options?: RequestInit): Promise<AuthorDetailDto> => {
+
+  return apiClient<AuthorDetailDto>(getGetApiAuthorsIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAuthorsIdQueryKey = (id: Uuid,) => {
+    return [
+    `/api/authors/${id}`
+    ] as const;
+    }
+
+
+export const getGetApiAuthorsIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiAuthorsId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAuthorsIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAuthorsId>>> = () => getApiAuthorsId(id, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAuthorsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAuthorsId>>>
+export type GetApiAuthorsIdQueryError = void
+
+
+export function useGetApiAuthorsId<TData = Awaited<ReturnType<typeof getApiAuthorsId>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthorsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthorsId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthorsId<TData = Awaited<ReturnType<typeof getApiAuthorsId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthorsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthorsId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthorsId<TData = Awaited<ReturnType<typeof getApiAuthorsId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get
+ */
+
+export function useGetApiAuthorsId<TData = Awaited<ReturnType<typeof getApiAuthorsId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthorsId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAuthorsIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteApiAuthorsIdFollowUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/authors/${id}/follow`
+}
+
+/**
+ * @summary Unfollow
+ */
+export const deleteApiAuthorsIdFollow = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiAuthorsIdFollowUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiAuthorsIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['deleteApiAuthorsIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiAuthorsIdFollow(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiAuthorsIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>>
+
+    export type DeleteApiAuthorsIdFollowMutationError = void
+
+    /**
+ * @summary Unfollow
+ */
+export const useDeleteApiAuthorsIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiAuthorsIdFollow>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+      return useMutation(getDeleteApiAuthorsIdFollowMutationOptions(options), queryClient);
+    }
+
+export const getPutApiAuthorsIdFollowUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/authors/${id}/follow`
+}
+
+/**
+ * @summary Follow
+ */
+export const putApiAuthorsIdFollow = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiAuthorsIdFollowUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getPutApiAuthorsIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['putApiAuthorsIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAuthorsIdFollow>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  putApiAuthorsIdFollow(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAuthorsIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAuthorsIdFollow>>>
+
+    export type PutApiAuthorsIdFollowMutationError = void
+
+    /**
+ * @summary Follow
+ */
+export const usePutApiAuthorsIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAuthorsIdFollow>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAuthorsIdFollow>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+      return useMutation(getPutApiAuthorsIdFollowMutationOptions(options), queryClient);
+    }
 
 export const getGetApiCatalogSearchUrl = (params?: GetApiCatalogSearchParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import zelytra.librarius.domain.AppUser;
+import zelytra.librarius.domain.Author;
 import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.GoalUnit;
 import zelytra.librarius.domain.Kind;
@@ -499,6 +500,61 @@ public final class ApiDtos {
      */
     public record SeriesMissingDto(UUID seriesId, String title,
             java.util.List<Integer> volumes) {
+    }
+
+    // ── Authors ─────────────────────────────────────────────────────────────
+
+    /**
+     * An author as the name search lists them: the shared catalog row, how many works of the
+     * shared catalog credit them, and the caller's own follow flag.
+     *
+     * <p>Unlike a series summary, this carries no ownership counter: {@code /api/authors} is a
+     * catalog browser open to anyone, so what it says about an author is the same for every
+     * caller but for {@code followed}, which is private to each user.
+     *
+     * @param photoUrl portrait, {@code null} until a provider supplies one
+     * @param workCount works of the shared catalog crediting the author, whoever owns them
+     * @param followed  whether the caller follows the author; private to each user
+     */
+    public record AuthorSummaryDto(UUID id, String name, String photoUrl, long workCount,
+            boolean followed) {
+        public static AuthorSummaryDto of(Author a, long workCount, boolean followed) {
+            return new AuthorSummaryDto(a.id, a.name, a.photoUrl, workCount, followed);
+        }
+    }
+
+    /**
+     * One work of an author's bibliography: enough of {@link BookView}'s shape to link into
+     * the title, drawn from the shared catalog rather than from any one collection.
+     *
+     * <p>The cover is that of a representative edition of the work — the catalog holds covers
+     * on editions, not on works — so a work nobody has entered a cover for carries a
+     * {@code null} one. {@code authors} is the whole credit line, so the bibliography can show
+     * an author's co-writers on each title.
+     *
+     * @param coverUrl cover of a representative edition, {@code null} when none carries one
+     */
+    public record AuthorWorkDto(UUID workId, String kind, String title, String authors,
+            String seriesTitle, Integer volumeNumber, Integer originalYear, String coverUrl) {
+        public static AuthorWorkDto of(Work w, String coverUrl) {
+            return new AuthorWorkDto(w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
+                    w.volumeNumber, w.originalYear, coverUrl);
+        }
+    }
+
+    /**
+     * An author opened by identifier: the shared catalog row, the full bibliography reachable
+     * through {@code work_author}, and the caller's own follow flag.
+     *
+     * <p>The whole catalog is visible — an author is meant to be found, not recognised only
+     * once owned — so the only user-scoped field is {@code followed}.
+     */
+    public record AuthorDetailDto(UUID id, String name, String photoUrl, boolean followed,
+            java.util.List<AuthorWorkDto> works) {
+        public static AuthorDetailDto of(Author a, boolean followed,
+                java.util.List<AuthorWorkDto> works) {
+            return new AuthorDetailDto(a.id, a.name, a.photoUrl, followed, works);
+        }
     }
 
     // ── Export & account deletion (GDPR) ──────────────────────────────────────

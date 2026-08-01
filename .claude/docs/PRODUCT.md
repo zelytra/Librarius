@@ -54,6 +54,14 @@ goes further than that — two writers of the same name are one row, "A. Damasio
 more than the mechanism: the author page ([#199](https://github.com/zelytra/Librarius/issues/199))
 must not read as an identity nobody has established.
 
+The API that page will read is live ([#196](https://github.com/zelytra/Librarius/issues/196)):
+`/api/authors` searches authors by name and opens any of them by id — bibliography, photo and
+a per-user **Follow**, exactly the pair the series already has. Unlike a series, an author is
+a **catalog browser**: they can be found and opened whether or not the reader owns anything of
+theirs, because an author is meant to be discovered, not recognised only once collected. The
+bibliography lists what Librarius's own catalog credits them with; the fuller list a provider
+knows is a later, on-demand enrichment.
+
 **Structural rule**: the catalog is **shared** across all users, ownership is **private**.
 Two users who own the same title point at the same `work` — entries are matched against the
 catalog before a work is created — but keep two distinct `library_item` rows. They point at
