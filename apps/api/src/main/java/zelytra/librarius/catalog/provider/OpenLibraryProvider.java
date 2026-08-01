@@ -13,6 +13,7 @@ import zelytra.librarius.domain.Kind;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /** Book catalog provider backed by Open Library (no API key needed). */
 @ApplicationScoped
@@ -73,6 +74,33 @@ public class OpenLibraryProvider implements CatalogProvider {
     }
 
     /**
+     * The other editions of a work, from {@code /works/{ref}/editions.json}. Each entry is one
+     * printing — its own ISBN, publisher, language and cover — so the detail screen surfaces
+     * the printings, and their covers with them, that no user of this instance ever entered.
+     */
+    @Override
+    public List<CatalogResult> editionsOf(String workRef, int limit) {
+        if (workRef == null || workRef.isBlank()) {
+            return List.of();
+        }
+        try {
+            OpenLibraryClient.EditionsResponse res =
+                    client.editions(workRef.trim(), Math.min(limit, 40)).await().atMost(callTimeout);
+            if (res == null || res.entries() == null) {
+                return List.of();
+            }
+            return res.entries().stream()
+                    .map(OpenLibraryProvider::toEdition)
+                    .filter(Objects::nonNull)
+                    .limit(limit)
+                    .toList();
+        } catch (Exception e) {
+            Log.warnf("Open Library editions failed for %s: %s", workRef, e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
      * Renders the criteria as the Solr query {@code /search.json} expects: free text stays
      * bare, every advanced criterion becomes a fielded term. Open Library therefore filters
      * on all of them itself — narrowing the answers here would cost a page of results to
@@ -126,5 +154,51 @@ public class OpenLibraryProvider implements CatalogProvider {
         String language = d.language() == null || d.language().isEmpty() ? null : d.language().get(0);
         return new CatalogResult("BOOK", d.title(), authors, d.firstPublishYear(), cover, null,
                 isbn13, publisher, language, null, "openlibrary", null);
+    }
+
+    /**
+     * Maps one edition record. A record with no ISBN and no cover carries nothing the section
+     * can show or deduplicate on, so it is dropped rather than listed as an empty row.
+     */
+    private static CatalogResult toEdition(OpenLibraryClient.EditionEntry e) {
+        String isbn13 = e.isbn13() == null ? null
+                : e.isbn13().stream().filter(s -> s != null && s.length() == 13).findFirst().orElse(null);
+        Long coverId = e.covers() == null ? null
+                : e.covers().stream().filter(id -> id != null && id > 0).findFirst().orElse(null);
+        String cover = coverId != null
+                ? "https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg"
+                : null;
+        if (isbn13 == null && cover == null) {
+            return null;
+        }
+        String publisher = e.publishers() == null || e.publishers().isEmpty() ? null : e.publishers().get(0);
+        String language = marcLanguage(e.languages());
+        String ref = editionKey(e.key());
+        return new CatalogResult("BOOK", null, null, null, cover, null, isbn13, publisher,
+                language, null, "openlibrary", ref);
+    }
+
+    /** The MARC code of the first language, read out of a {@code /languages/fre} key. */
+    private static String marcLanguage(List<OpenLibraryClient.LanguageRef> languages) {
+        if (languages == null || languages.isEmpty() || languages.get(0) == null) {
+            return null;
+        }
+        String key = languages.get(0).key();
+        if (key == null) {
+            return null;
+        }
+        int slash = key.lastIndexOf('/');
+        String code = (slash >= 0 ? key.substring(slash + 1) : key).trim();
+        return code.isEmpty() ? null : code;
+    }
+
+    /** The edition id out of a {@code /books/OL…M} key, the part that identifies the record. */
+    private static String editionKey(String key) {
+        if (key == null) {
+            return null;
+        }
+        int slash = key.lastIndexOf('/');
+        String id = (slash >= 0 ? key.substring(slash + 1) : key).trim();
+        return id.isEmpty() ? null : id;
     }
 }

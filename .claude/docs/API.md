@@ -240,6 +240,21 @@ and answers 404 on anything else — the same answer an unknown identifier gets,
 [Series](#series). Each entry carries `owned`, which describes the caller's own collection
 and nobody else's: two readers of the same title see the same editions and different flags.
 
+**Provider enrichment (#197).** When the work carries a `provider`/`provider_ref` (V12), the
+listing also asks that provider for the other printings of *this* work and merges them in,
+the way [Catalog search](#catalog-search) merges hits — deduplicated on the ISBN-13, then the
+provider's own reference. A merged entry is catalog data only: it carries its own `coverUrl`
+but no `id`, since nothing is persisted until a user enters it, and so it is shown but not
+offered as a switch target (a switch moves onto an edition that exists as a row). The call is
+served through the same `CatalogCache` and charged against the same per-caller `RateLimiter`
+as a search — browsing a detail screen is still an outbound provider call — but the
+enrichment is **best-effort**: a work with no reference (a hand-typed entry, or one predating
+V12) is answered from the stored editions alone, exactly as before, and a provider that
+returns nothing, is over quota or is down leaves that same list rather than failing the read.
+`GET /api/works/{id}/editions` never answers a 429 or a 5xx on the enrichment. In practice
+Open Library still hands out no usable work reference, so the merge stays dormant for its
+works until its provider is taught to store one — the guarded path is what #197 shipped.
+
 **Switching.** `PUT /api/library/{id}/edition` moves the ownership row onto another edition
 of the same work.
 
@@ -676,4 +691,4 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
-| A12 | No **provider enrichment** of the editions of a work: the list still holds only what users entered. `work` now carries `provider` / `provider_ref` (V12, #184) and new entries from Discover fill them, so the question can be asked — but nothing asks it yet (#197), everything stored before V12 has no reference and cannot be given one, and Open Library supplies none at all for now | Core product |
+| A12 | **Provider enrichment** of a work's editions is wired but mostly dormant (#197). `GET /api/works/{id}/editions` now asks the work's provider for its other printings and merges them in, cached and rate-limited, degrading to the stored list when there is no reference or the provider is down. What is left: **no shipped provider actually feeds it**. Open Library still returns no usable work key to store on add, and the merge only fires on `openlibrary` works; BnF stores an ark but exposes no per-work edition list, and AniList describes works, not editions. So the path exists and is tested against a stubbed provider, but a real work is enriched only once a provider both stores a reference and answers `editionsOf` — the remaining half of #184's Open Library note. Entries stored before V12 carry no reference and never will | Core product |

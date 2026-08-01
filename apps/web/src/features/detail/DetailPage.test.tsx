@@ -426,6 +426,34 @@ describe('DetailPage', () => {
     expect(await screen.findByText(/déjà cette édition dans ta collection/)).toBeInTheDocument();
   });
 
+  /**
+   * A provider-enriched work lists printings nobody here entered (#197). They come with no
+   * `id` — they are catalog data, not rows — so they are shown for the printing they add,
+   * with no "I own this" action, which only moves the collection onto an edition that exists.
+   */
+  test('lists a provider edition without offering to own it', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn([
+      TWO_EDITIONS[0],
+      {
+        publisher: 'Gollancz',
+        language: 'en',
+        isbn13: '9780575081406',
+        coverUrl: 'https://covers/1.jpg',
+        owned: false,
+      },
+    ]);
+    renderDetail();
+
+    expect(await screen.findByText('Autres éditions')).toBeInTheDocument();
+    expect(screen.getByText(/Gollancz · anglais/)).toBeInTheDocument();
+    // Shown as a catalog suggestion, not as a switch target.
+    expect(screen.getByText('Proposée par le catalogue')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Je possède l'édition Gollancz/ }),
+    ).not.toBeInTheDocument();
+  });
+
   /** What a change of edition does to the position is not obvious, so the screen says it. */
   test('states what a change of edition does to the reading progress', async () => {
     libraryItemReturns(MULTI_EDITION);

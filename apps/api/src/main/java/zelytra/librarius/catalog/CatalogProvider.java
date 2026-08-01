@@ -26,4 +26,19 @@ public interface CatalogProvider {
 
     /** Known upcoming releases (best-effort, depending on the provider's data). */
     List<CatalogResult> upcoming(int limit);
+
+    /**
+     * The other editions the provider knows of one of its works, keyed by the reference the
+     * work was stored with ({@code work.provider_ref}). Best-effort catalog data: the results
+     * are one materialisation each — publisher, ISBN, language, cover — and nothing is
+     * persisted here.
+     *
+     * <p>The default answers nothing, which is the honest answer for a provider that exposes
+     * no per-work edition list, or that hands out no usable reference to key one on — Open
+     * Library and AniList as they stand. A caller merges what it gets, and a work with no
+     * reference never reaches this method at all.
+     */
+    default List<CatalogResult> editionsOf(String workRef, int limit) {
+        return List.of();
+    }
 }

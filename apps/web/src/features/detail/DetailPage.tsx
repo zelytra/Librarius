@@ -311,6 +311,11 @@ function editionLabel(edition: EditionDto, unknown: string): string {
  * An edition already in the collection is named as such instead of being offered: owning
  * the same edition twice is what `UNIQUE(user, edition)` forbids, and a button the server
  * would refuse is worse than no button.
+ *
+ * <p>A work sourced from a provider also lists the printings that provider knows and nobody
+ * here entered (#197). Those are catalog data, not rows: they carry no `id`, so they are
+ * shown for what they add — another printing, another cover — without the "I own this"
+ * action, which moves the collection onto an edition that exists as a row.
  */
 function EditionsSection({
   item,
@@ -350,7 +355,7 @@ function EditionsSection({
       )}
 
       <ul className={styles.editionList}>
-        {others.map((edition) => {
+        {others.map((edition, index) => {
           const label = editionLabel(edition, unknown);
           const meta = [
             edition.pageCount != null
@@ -361,12 +366,14 @@ function EditionsSection({
           ].filter(Boolean);
 
           return (
-            <li key={edition.id} className={styles.edition}>
+            // A provider edition has no `id`, so it falls back to its ISBN or its position for
+            // a stable key — several may share the empty publisher label.
+            <li key={edition.id ?? edition.isbn13 ?? `provider-${index}`} className={styles.edition}>
               <div className={styles.editionLabel}>{label}</div>
               {meta.length > 0 && <div className={styles.editionMeta}>{meta.join(' · ')}</div>}
               {edition.owned ? (
                 <div className={styles.editionOwned}>{t('detail.editions.alreadyOwned')}</div>
-              ) : (
+              ) : edition.id ? (
                 <Button
                   variant="secondary"
                   size="block"
@@ -375,6 +382,8 @@ function EditionsSection({
                 >
                   {t('detail.editions.choose')}
                 </Button>
+              ) : (
+                <div className={styles.editionFromCatalog}>{t('detail.editions.fromCatalog')}</div>
               )}
             </li>
           );

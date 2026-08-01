@@ -527,6 +527,7 @@
       "isbn": "ISBN {{isbn}}",
       "choose": "This is the edition I own",
       "chooseAria": "I own the {{edition}} edition",
+      "fromCatalog": "Suggested by the catalog",
       "alreadyOwned": "Already in your collection",
       "alreadyOwnedError": "You already have this edition in your collection.",
       "error": "The edition could not be changed.",
