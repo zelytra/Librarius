@@ -37,11 +37,12 @@ class MeApiTest {
         return keycloak.getAccessToken(user);
     }
 
-    /** Restores Bob to a known profile so the shared database cannot explain an assertion. */
+    /** Restores an account to a known profile so the shared database cannot explain an assertion. */
     private void resetProfile(String user, String displayName, String locale, String timeZone) {
         String zone = timeZone == null ? "null" : "\"" + timeZone + "\"";
         given().auth().oauth2(token(user)).contentType("application/json")
-                .body("{ \"displayName\": \"%s\", \"locale\": \"%s\", \"timeZone\": %s }"
+                .body(("{ \"displayName\": \"%s\", \"locale\": \"%s\", \"timeZone\": %s, "
+                        + "\"publicAccount\": false }")
                         .formatted(displayName, locale, zone))
                 .when().patch("/api/me")
                 .then().statusCode(200);
@@ -61,7 +62,7 @@ class MeApiTest {
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("""
                         { "displayName": "Alice Liddell", "locale": "en",
-                          "timeZone": "Europe/Paris" }
+                          "timeZone": "Europe/Paris", "publicAccount": false }
                         """)
                 .when().patch("/api/me")
                 .then().statusCode(200)
@@ -84,13 +85,13 @@ class MeApiTest {
     @Test
     void aBlankTimeZoneClearsThePreference() {
         given().auth().oauth2(token("alice")).contentType("application/json")
-                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"timeZone\": \"Asia/Tokyo\" }")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"timeZone\": \"Asia/Tokyo\", \"publicAccount\": false }")
                 .when().patch("/api/me")
                 .then().statusCode(200)
                 .body("timeZone", is("Asia/Tokyo"));
 
         given().auth().oauth2(token("alice")).contentType("application/json")
-                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"timeZone\": \"\" }")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"timeZone\": \"\", \"publicAccount\": false }")
                 .when().patch("/api/me")
                 .then().statusCode(200)
                 .body("timeZone", is(nullValue()));
@@ -136,6 +137,7 @@ class MeApiTest {
         String id = given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("""
                         { "displayName": "alice", "locale": "fr", "timeZone": null,
+                          "publicAccount": false,
                           "trusted": true, "trustedAt": "2000-01-01T00:00:00Z" }
                         """)
                 .when().patch("/api/me")
@@ -197,7 +199,7 @@ class MeApiTest {
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("""
                         { "displayName": "Alice change tout", "locale": "en",
-                          "timeZone": "America/New_York" }
+                          "timeZone": "America/New_York", "publicAccount": true }
                         """)
                 .when().patch("/api/me")
                 .then().statusCode(200);
@@ -208,8 +210,55 @@ class MeApiTest {
                 .body("id", notNullValue())
                 .body("displayName", is("bob"))
                 .body("locale", is("fr"))
-                .body("timeZone", is(nullValue()));
+                .body("timeZone", is(nullValue()))
+                // Alice turned her own account public above; Bob's preference is untouched.
+                .body("publicAccount", is(false));
 
         resetProfile("alice", "alice", "fr", null);
+    }
+
+    /**
+     * The visibility preference (#201) round-trips like the other profile fields: it defaults to
+     * false, comes back on the PATCH answer and on the next GET, and clears again on reset.
+     */
+    @Test
+    void publicAccountPreferenceRoundTrips() {
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/me")
+                .then().statusCode(200)
+                .body("publicAccount", is(false));
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "displayName": "alice", "locale": "fr", "timeZone": null,
+                          "publicAccount": true }
+                        """)
+                .when().patch("/api/me")
+                .then().statusCode(200)
+                .body("publicAccount", is(true));
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/me")
+                .then().statusCode(200)
+                .body("publicAccount", is(true));
+
+        resetProfile("alice", "alice", "fr", null);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/me")
+                .then().statusCode(200)
+                .body("publicAccount", is(false));
+    }
+
+    /**
+     * The profile form is a full replacement, so the preference is a required field: a body
+     * that omits it is a 400, not a silent "leave it as it was".
+     */
+    @Test
+    void aMissingPublicAccountIsRejected() {
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"timeZone\": null }")
+                .when().patch("/api/me")
+                .then().statusCode(400);
     }
 }

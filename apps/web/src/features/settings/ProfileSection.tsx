@@ -136,7 +136,15 @@ export function ProfileSection() {
           disabled={!valid || isPending}
           onClick={() =>
             saveProfile({
-              data: { displayName: trimmed, locale, timeZone: timeZone || undefined },
+              data: {
+                displayName: trimmed,
+                locale,
+                timeZone: timeZone || undefined,
+                // #201: the visibility preference is a required field of the full-replacement
+                // form. Its own toggle control lands with the profile screens (#202); until
+                // then a profile save preserves whatever the account already chose.
+                publicAccount: me?.publicAccount ?? false,
+              },
             })
           }
         >

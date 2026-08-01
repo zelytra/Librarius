@@ -50,4 +50,14 @@ public class AppUser {
     /** When {@link #trusted} was first earned; {@code null} while the account is not trusted. */
     @Column(name = "trusted_at")
     public OffsetDateTime trustedAt;
+
+    /**
+     * Whether the account waived the default private visibility (V20, #201). When {@code true}
+     * the account's shared content is readable by any signed-in member; when {@code false} —
+     * the default — it is readable only through a mutual follow. The account's own choice, set
+     * through {@code PATCH /api/me}, and the sole per-account input to
+     * {@link zelytra.librarius.social.VisibilityGate}. Defaults to {@code false}.
+     */
+    @Column(name = "public_account", nullable = false)
+    public boolean publicAccount = false;
 }

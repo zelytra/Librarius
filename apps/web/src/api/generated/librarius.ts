@@ -340,6 +340,7 @@ export interface MeDto {
   locale?: string;
   timeZone?: string;
   trusted?: boolean;
+  publicAccount?: boolean;
 }
 
 export interface MemberSummaryDto {
@@ -513,6 +514,7 @@ export interface UpdateMeDto {
   locale: string;
   /** @maxLength 64 */
   timeZone?: string;
+  publicAccount: boolean;
 }
 
 export interface WishlistAcquireDto {

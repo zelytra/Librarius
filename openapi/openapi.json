@@ -733,6 +733,9 @@
           },
           "trusted" : {
             "type" : "boolean"
+          },
+          "publicAccount" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1170,7 +1173,7 @@
       },
       "UpdateMeDto" : {
         "type" : "object",
-        "required" : [ "displayName", "locale" ],
+        "required" : [ "displayName", "locale", "publicAccount" ],
         "properties" : {
           "displayName" : {
             "type" : "string",
@@ -1184,6 +1187,9 @@
           "timeZone" : {
             "type" : "string",
             "maxLength" : 64
+          },
+          "publicAccount" : {
+            "type" : "boolean"
           }
         }
       },

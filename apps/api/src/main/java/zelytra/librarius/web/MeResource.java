@@ -75,6 +75,8 @@ public class MeResource {
      * <p>{@code displayName} and {@code locale} are validated by Bean Validation; the time
      * zone is optional and, when given, must parse as a {@link ZoneId} — a value that does
      * not is a 400. A blank time zone clears it, back to the client's own zone.
+     * {@code publicAccount} is the visibility preference (#201): a required boolean the caller
+     * sets on their own account, never on anyone else's.
      */
     @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
@@ -84,6 +86,7 @@ public class MeResource {
         user.displayName = dto.displayName().trim();
         user.locale = dto.locale();
         user.timeZone = parseZone(dto.timeZone());
+        user.publicAccount = dto.publicAccount();
         return MeDto.of(user);
     }
 

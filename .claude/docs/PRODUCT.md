@@ -82,6 +82,21 @@ relationship and its API exist; the follow button they carry is all the interfac
 list never exposes more than a member's display name — never their email — and each member
 only ever sees their own two lists.
 
+**Who may see whose content** (v1.2, [#201](https://github.com/zelytra/Librarius/issues/201)):
+the follow relationship above now decides visibility. By default an account is **private** —
+another member sees its shared reviews, reading activity and library **only when the two follow
+each other** (a mutual follow; a one-way follow reveals nothing). A member who prefers to be open
+can turn their account **public** — a single opt-in preference, off by default, set in Settings
+alongside the display name and language — and then any signed-in member can see their shared
+content, no follow needed either way. Two things never depend on this: a member's display name
+and trusted badge are visible to anyone signed in (the minimal surface a find-people search
+needs), and a member's email, locale, time zone and *private* rating/review are visible to no
+one but themselves. An account a caller may not see behaves as if it does not exist — the same
+answer whether the id is unknown or simply out of reach — so the product confirms nothing about
+who has an account. This step ships the **preference and the rule** only; the screens that let a
+member *browse* other people (#202) and the places that actually surface a member's reviews
+(#205) and reading feed (#209) are their own issues, each reusing this one rule.
+
 ## 4. Screens
 
 ### 4.1 Home ✅ / 🔜
@@ -285,6 +300,11 @@ something as read — an existing collection carries no reading dates.
   Series volume grid follows below (§ 4.8). Display-only: no screen or form can set it, and
   this is the one place it appears today, since Settings is the only screen showing a
   display name before the v1.2 follow lists and profiles grow one.
+- 🔜 **Public account** ([#201](https://github.com/zelytra/Librarius/issues/201)): a single
+  opt-in toggle in the profile section deciding whether the account is public (its shared
+  content visible to any signed-in member) or private (visible only through a mutual follow).
+  The preference and the `PATCH /api/me` field ship now, defaulting to off; the toggle control
+  itself is the front-end follow-up that lands with the profile screens (#202).
 - ✅ **Library export** (JSON + CSV) — *GDPR art. 20*. The JSON archive holds everything
   and can be re-imported here; the CSV opens in a spreadsheet and carries the column names
   Goodreads and Booknode understand, so a user can leave for another tool.

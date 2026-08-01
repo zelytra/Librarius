@@ -41,15 +41,20 @@ public final class ApiDtos {
     }
 
     /**
-     * @param trusted the server-computed trust flag (V16, #180), read straight off
-     *                {@link AppUser#trusted} — never client input, and there is no field on
-     *                {@link UpdateMeDto} that can set it. Surfaced here so the Settings screen
-     *                can show the badge next to the caller's own name (#186)
+     * @param trusted       the server-computed trust flag (V16, #180), read straight off
+     *                      {@link AppUser#trusted} — never client input, and there is no field on
+     *                      {@link UpdateMeDto} that can set it. Surfaced here so the Settings
+     *                      screen can show the badge next to the caller's own name (#186)
+     * @param publicAccount the account's own visibility preference (V20, #201): when {@code true}
+     *                      its shared content is readable by any signed-in member, otherwise only
+     *                      through a mutual follow. Unlike {@code trusted} this one <em>is</em>
+     *                      editable, through {@link UpdateMeDto}
      */
     public record MeDto(String id, String email, String displayName, String locale,
-                        String timeZone, boolean trusted) {
+                        String timeZone, boolean trusted, boolean publicAccount) {
         public static MeDto of(AppUser u) {
-            return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted);
+            return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
+                    u.publicAccount);
         }
     }
 
@@ -77,11 +82,17 @@ public final class ApiDtos {
      * blank clears it, back to the device's zone — and when present must parse as a
      * {@link java.time.ZoneId}, which the resource checks: Bean Validation cannot, and a bad
      * identifier is a 400 like any other malformed input.
+     *
+     * <p>{@code publicAccount} is the visibility preference (V20, #201). It is a required
+     * boolean, not an optional one: the form is a full replacement, so a missing value is a 400
+     * rather than "leave it as it was". {@code true} opens the account's shared content to any
+     * signed-in member; {@code false} keeps it behind a mutual follow.
      */
     public record UpdateMeDto(
             @NotBlank @Size(max = 255) String displayName,
             @NotBlank @Pattern(regexp = "fr|en") String locale,
-            @Size(max = 64) String timeZone) {
+            @Size(max = 64) String timeZone,
+            @NotNull Boolean publicAccount) {
     }
 
     /**

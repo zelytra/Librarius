@@ -22,7 +22,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
-| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`), `time_zone` **nullable** (V14), `trusted BOOLEAN NOT NULL DEFAULT false` + `trusted_at TIMESTAMPTZ` **nullable** (V16) | No credential stored. `time_zone` is an IANA id (`Europe/Paris`); NULL falls back to the client zone. `trusted` is **server-computed** (V16, #180), never client input |
+| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`), `time_zone` **nullable** (V14), `trusted BOOLEAN NOT NULL DEFAULT false` + `trusted_at TIMESTAMPTZ` **nullable** (V16), `public_account BOOLEAN NOT NULL DEFAULT false` (V20) | No credential stored. `time_zone` is an IANA id (`Europe/Paris`); NULL falls back to the client zone. `trusted` is **server-computed** (V16, #180), never client input. `public_account` is the caller's own visibility preference (V20, #201), set through `PATCH /api/me` |
 | `work` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
@@ -406,6 +406,22 @@ The threshold and the window are configuration (`librarius.trust.max-upheld-repo
 `TrustEvaluator.qualifies` — grant and revocation are the two directions of one verdict, not two
 criteria. Revocation is a state, not a ban: an account whose upheld reports age out of the window
 or are dismissed earns the flag back on a later run through the very same gate.
+
+`V20__app_user_public_account.sql` adds the **per-account visibility preference**
+([#201](https://github.com/zelytra/Librarius/issues/201)): `app_user.public_account BOOLEAN NOT
+NULL DEFAULT false`. It is the first time one account's content becomes readable by another, and
+this column is the opt-out of the default rule. A **private** account — the default — is visible
+only through a *mutual* `user_follow` (V18): another member sees the caller's shared reviews,
+reading activity and library when, and only when, both directions of the follow exist. A
+**public** account waives that entirely: its shared content is visible to any signed-in member,
+no follow required either way. The column is only the per-account input; the rule itself lives in
+one place, the `VisibilityGate` service (`social.VisibilityGate.canView(viewerId, targetId)`),
+which every cross-account endpoint in the milestone calls rather than re-deriving it — and which
+is the single site the block check ([#203](https://github.com/zelytra/Librarius/issues/203)) will
+be added to. It defaults to `false`, so every existing account stays private with no backfill,
+and it is the account's own choice, set through `PATCH /api/me` alongside the display name and
+locale. What the gate *reveals* — reviews, the reading feed — is other issues; this migration and
+service are the mechanism only.
 
 ### Cascades
 

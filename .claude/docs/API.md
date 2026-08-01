@@ -13,7 +13,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | Method | Path | Role |
 |---|---|---|
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
-| PATCH | `/api/me` | Updates the caller's own profile (`UpdateMeDto`) — display name, language, time zone. See [Profile](#profile) |
+| PATCH | `/api/me` | Updates the caller's own profile (`UpdateMeDto`) — display name, language, time zone, visibility preference. See [Profile](#profile) |
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
@@ -68,8 +68,8 @@ Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the 
 ## Main DTOs
 
 ```java
-MeDto(String id, String email, String displayName, String locale, String timeZone, boolean trusted)
-UpdateMeDto(String displayName, String locale, String timeZone)   // locale in {fr,en}; timeZone an IANA id or blank
+MeDto(String id, String email, String displayName, String locale, String timeZone, boolean trusted, boolean publicAccount)
+UpdateMeDto(String displayName, String locale, String timeZone, Boolean publicAccount)   // locale in {fr,en}; timeZone an IANA id or blank; publicAccount required
 MemberSummaryDto(String id, String displayName, boolean trusted)   // another member in a follow list — no email nor any reach-them field
 
 BookView(/* read projection of an edition and its work; carries editionId and workId */)
@@ -179,18 +179,25 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}`
 ## Profile
 
 `GET /api/me` returns the caller's profile and provisions the `app_user` on the first
-authenticated call; `PATCH /api/me` edits the three fields the user owns — `displayName`,
-`locale` and `timeZone`. Like `DELETE /api/me`, it takes **no identifier and accepts none**:
-a caller only ever edits their own row, which is the one shape of the endpoint that cannot be
-pointed at anybody else. The isolation guarantee is therefore not an id answering 404 but that
-one account's edit never reaches another's — `MeApiTest` pins it down with two accounts.
+authenticated call; `PATCH /api/me` edits the fields the user owns — `displayName`, `locale`,
+`timeZone` and `publicAccount`. Like `DELETE /api/me`, it takes **no identifier and accepts
+none**: a caller only ever edits their own row, which is the one shape of the endpoint that
+cannot be pointed at anybody else. The isolation guarantee is therefore not an id answering 404
+but that one account's edit never reaches another's — `MeApiTest` pins it down with two accounts.
 
-`UpdateMeDto` is a full replacement of the three fields, not a sparse patch: the profile form
+`UpdateMeDto` is a full replacement of those fields, not a sparse patch: the profile form
 always sends every one, so a field left out is a mistake rather than "leave it as it was".
 `locale` must be one of the two the interface ships (`fr` \| `en`); `timeZone` is optional — a
 blank value clears it, back to the client's own zone — and when present must parse as a
-`java.time.ZoneId`. Bean Validation covers the first two; the resource checks the zone and a
-bad identifier is a **400**, like any other malformed input.
+`java.time.ZoneId`; `publicAccount` is a **required** boolean (a missing value is a 400, not a
+silent no-op). Bean Validation covers the name, the locale and the presence of the preference;
+the resource checks the zone, and a bad identifier is a **400**, like any other malformed input.
+
+`publicAccount` is the account's own **visibility preference** (V20, #201): `true` opens the
+caller's shared content to any signed-in member, `false` — the default — keeps it behind a
+mutual follow. It is the one per-account input the visibility gate below reads; toggling it is
+the only writable path, and it never affects another account. `MeApiTest` pins the round-trip,
+the default-false, and the required-field 400.
 
 **The trust flag is read-only everywhere (#180, #186).** `app_user.trusted` is a private,
 server-computed signal filled off the request path by `TrustEvaluator` (see
@@ -234,6 +241,38 @@ one member's follow never surfaces in a third's lists.
 Following immediately unlocks nothing on its own here — what a mutual follow *reveals* is #201,
 and the find-people screens are [#202](https://github.com/zelytra/Librarius/issues/202); this
 is the relationship and its API only.
+
+## Visibility gate
+
+The one authorization primitive that decides **"may this caller read that member's shared
+content?"** ([#201](https://github.com/zelytra/Librarius/issues/201)) — the rule the whole v1.2
+social milestone leans on. It lives in one place, `social.VisibilityGate`, exposed as
+`boolean canView(viewerId, targetId)`, and **every** cross-account endpoint in the milestone
+calls it rather than re-deriving the rule locally (grep-able: the rule has a single home). It is
+also the single site the block check ([#203](https://github.com/zelytra/Librarius/issues/203))
+will be added to — one line, no caller touched a second time.
+
+The rule, top to bottom:
+
+- a caller always sees their **own** content, whatever the preference or the follow state;
+- a **public** account (`app_user.public_account = true`, V20) is visible to any signed-in
+  member — no follow required either way;
+- a **private** account (the default) is visible only through a **mutual** follow: the caller
+  follows the target **and** the target follows the caller back. A one-way follow reveals
+  nothing;
+- an id that is **nobody**, or a null on either side, is not visible.
+
+`canView` returns a boolean; a caller turns a `false` into a **404**, never a 403 — the
+404-not-403 convention (see [Conventions](#conventions)), so an endpoint confirms nothing about
+who exists. Always visible **regardless** of the gate, to anyone signed in: the display name and
+the trusted badge (#186) — the minimal surface a find-people screen searches on. Never visible
+to anyone but the account itself: email, locale, time zone and the private rating/review.
+
+This issue ships the **preference and the gate mechanism only**. What the gate actually reveals
+— another member's reviews ([#205](https://github.com/zelytra/Librarius/issues/205)), the
+reading feed ([#209](https://github.com/zelytra/Librarius/issues/209)) — is other issues, and
+each will call `canView` and apply the 404 at its own read endpoint. `VisibilityGateTest`
+covers the full matrix (self, public, mutual, one-way, none, unknown, null).
 
 ## Reading progress
 
