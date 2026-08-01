@@ -37,4 +37,17 @@ public class AppUser {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
+
+    /**
+     * Server-computed trust flag (V16, #180): the account's catalog contributions can be
+     * trusted. Never set by a user — neither on themselves nor on anyone else. The only writer
+     * is {@link zelytra.librarius.trust.TrustEvaluator}, off the request path, and no endpoint
+     * accepts it as input. Defaults to {@code false}.
+     */
+    @Column(nullable = false)
+    public boolean trusted = false;
+
+    /** When {@link #trusted} was first earned; {@code null} while the account is not trusted. */
+    @Column(name = "trusted_at")
+    public OffsetDateTime trustedAt;
 }

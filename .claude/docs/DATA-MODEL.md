@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -21,7 +21,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
-| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`), `time_zone` **nullable** (V14) | No credential stored. `time_zone` is an IANA id (`Europe/Paris`); NULL falls back to the client zone |
+| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`), `time_zone` **nullable** (V14), `trusted BOOLEAN NOT NULL DEFAULT false` + `trusted_at TIMESTAMPTZ` **nullable** (V16) | No credential stored. `time_zone` is an IANA id (`Europe/Paris`); NULL falls back to the client zone. `trusted` is **server-computed** (V16, #180), never client input |
 | `work` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
@@ -317,6 +317,29 @@ is left NULL for everyone who never sets one — a null zone means "use the devi
 right default, so there is nothing to backfill. It joins the `display_name` and `locale` the
 row already held, completing the three editable profile fields the Settings screen now owns.
 
+`V16__app_user_trust_flag.sql` adds the server-computed trust flag
+([#180](https://github.com/zelytra/Librarius/issues/180)): `app_user.trusted BOOLEAN NOT NULL
+DEFAULT false` and `app_user.trusted_at TIMESTAMPTZ` (NULL until the flag is first earned).
+Trust is a private signal — "this account's catalog contributions can be trusted" — and it is
+**never** set by a user, on themselves or on anyone else: only the application decides, from the
+account's own activity. So it lives entirely off the request path. `TrustEvaluator` is the one
+writer, run from a daily `@Scheduled` job, and **no endpoint accepts `trusted` as input** —
+`PATCH /api/me` ignores a body that carries it, which a test pins down. The default is `false`
+and there is nothing to backfill: an account earns the flag the first time an evaluation finds
+it over the criteria, and `trusted_at` records that day.
+
+**Why the criteria are a single method, not a column.** What counts as trustworthy is an open
+product question — a blend of tenure, of how much the account has finished reading, and of a
+record clean of upheld reports — meant to be retuned. It lives in `TrustEvaluator.qualifies`
+behind thresholds read from `application.properties`
+(`librarius.trust.min-account-months`, `librarius.trust.min-read-titles`), so retuning it moves
+a number rather than touching an endpoint or the schema. The evaluation **only ever grants**:
+an account that already earned the flag is left alone. Showing the flag as a badge
+([#186](https://github.com/zelytra/Librarius/issues/186)) and revoking it on an upheld report
+([#195](https://github.com/zelytra/Librarius/issues/195)) — which is what would feed a non-zero
+`upheldReports` signal — are their own issues; the second is why the `MeDto` is deliberately
+**not** extended here.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -346,13 +369,14 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V15 are taken — the upcoming releases, the category constraint, the
+> Numbering: V8 to V16 are taken — the upcoming releases, the category constraint, the
 > dashboard layout, the abandoned status, the provider reference, the author entities, the
-> user time zone and the medium taxonomy (V15, #178). The plan below therefore starts at
-> **V16**. Both entries were renumbered up by one again when V15 was taken, as they had been
-> at V14, V13, V12 and V11; neither has been implemented, so nothing that shipped had to move.
+> user time zone, the medium taxonomy (V15, #178) and the trust flag (V16, #180). The plan
+> below therefore starts at **V17**. Both entries were renumbered up by one again when V16 was
+> taken, as they had been at V15, V14, V13, V12 and V11; neither has been implemented, so
+> nothing that shipped had to move.
 
-### V16 — Drop the denormalised labels & reading history
+### V17 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -380,7 +404,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V17 — Notifications
+### V18 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

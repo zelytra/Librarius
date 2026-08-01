@@ -179,6 +179,14 @@ blank value clears it, back to the client's own zone — and when present must p
 `java.time.ZoneId`. Bean Validation covers the first two; the resource checks the zone and a
 bad identifier is a **400**, like any other malformed input.
 
+**The trust flag is not part of any request or response (#180).** `app_user.trusted` is a
+private, server-computed signal filled off the request path by `TrustEvaluator` (see
+[DATA-MODEL](DATA-MODEL.md) § 1). **No endpoint accepts it as input** — `UpdateMeDto` carries
+only the three fields above, and `PATCH /api/me` silently ignores a body that adds `trusted`,
+which `MeApiTest` verifies leaves the row untrusted. It is deliberately **not** on `MeDto`
+either: showing it is [#186](https://github.com/zelytra/Librarius/issues/186), so this milestone
+step is storage and evaluation only.
+
 ## Reading progress
 
 `PUT /api/library/{id}/progress` replaces the whole position — it is a PUT, not a patch, so
