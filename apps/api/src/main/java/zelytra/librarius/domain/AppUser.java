@@ -27,6 +27,14 @@ public class AppUser {
     @Column(length = 16)
     public String locale = "fr";
 
+    /**
+     * IANA time-zone identifier the greeting and the date formatting follow, e.g.
+     * {@code Europe/Paris}. Nullable: an account that never set one keeps the client's own
+     * zone (V14, #75).
+     */
+    @Column(name = "time_zone", length = 64)
+    public String timeZone;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 }

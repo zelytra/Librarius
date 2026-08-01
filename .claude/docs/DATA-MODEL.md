@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -21,7 +21,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 
 | Table | Key | Notable columns | Constraints |
 |---|---|---|---|
-| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`) | No credential stored |
+| `app_user` | `id VARCHAR(255)` = Keycloak `sub` | `email`, `display_name`, `locale` (defaults to `fr`), `time_zone` **nullable** (V14) | No credential stored. `time_zone` is an IANA id (`Europe/Paris`); NULL falls back to the client zone |
 | `work` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
@@ -310,6 +310,13 @@ line of `work_author`, and is dropped once the front end goes through the author
 a work carries several authors, so there is no such thing as "its" author to order on — the
 same reasoning as `sort=genre`.
 
+`V14__user_time_zone.sql` adds one nullable column, `app_user.time_zone`
+([#75](https://github.com/zelytra/Librarius/issues/75)). It carries an IANA identifier
+(`Europe/Paris`), which `PATCH /api/me` validates as a `java.time.ZoneId` before storing, and
+is left NULL for everyone who never sets one — a null zone means "use the device's", the
+right default, so there is nothing to backfill. It joins the `display_name` and `locale` the
+row already held, completing the three editable profile fields the Settings screen now owns.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -339,13 +346,13 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V13 are taken — the upcoming releases, the category constraint, the
-> dashboard layout, the abandoned status, the provider reference and the author entities. The
-> plan below therefore starts at **V14**. Both entries were renumbered up by one when V13 was
-> taken, as they already had been when V12 and V11 were; neither has been implemented, so
-> nothing that shipped had to move.
+> Numbering: V8 to V14 are taken — the upcoming releases, the category constraint, the
+> dashboard layout, the abandoned status, the provider reference, the author entities and the
+> user time zone. The plan below therefore starts at **V15**. Both entries were renumbered up
+> by one again when V14 was taken, as they had been at V13, V12 and V11; neither has been
+> implemented, so nothing that shipped had to move.
 
-### V14 — Drop the denormalised labels & reading history
+### V15 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -373,7 +380,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V15 — Notifications
+### V16 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

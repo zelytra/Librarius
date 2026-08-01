@@ -113,11 +113,16 @@ describe('SettingsPage — language', () => {
   // The rest of the suite asserts the French copy, and i18next is a singleton.
   afterEach(() => changeLanguage('fr'));
 
+  // The Profile section (#75) carries its own language control, so the standalone switcher
+  // is the last one in the page — targeting it keeps this about the quick toggle.
+  const standaloneSwitch = (name: string) =>
+    screen.getAllByRole('button', { name }).at(-1) as HTMLElement;
+
   test('switches the interface and keeps the choice for the next visit', async () => {
     renderWithProviders(<SettingsPage />);
     expect(screen.getByRole('heading', { name: 'Réglages' })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'English' }));
+    await userEvent.click(standaloneSwitch('English'));
 
     expect(await screen.findByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     expect(localStorage.getItem('librarius.language')).toBe('en');
@@ -131,9 +136,9 @@ describe('SettingsPage — language', () => {
     async () => {
       renderWithProviders(<SettingsPage />);
 
-      await userEvent.click(screen.getByRole('button', { name: 'English' }));
+      await userEvent.click(standaloneSwitch('English'));
 
-      expect(await screen.findByRole('button', { name: 'Français' })).toBeInTheDocument();
+      expect(await screen.findAllByRole('button', { name: 'Français' })).not.toHaveLength(0);
     });
 });
 

@@ -13,6 +13,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | Method | Path | Role |
 |---|---|---|
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
+| PATCH | `/api/me` | Updates the caller's own profile (`UpdateMeDto`) — display name, language, time zone. See [Profile](#profile) |
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
@@ -58,7 +59,8 @@ Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the 
 ## Main DTOs
 
 ```java
-MeDto(String id, String email, String displayName, String locale)
+MeDto(String id, String email, String displayName, String locale, String timeZone)
+UpdateMeDto(String displayName, String locale, String timeZone)   // locale in {fr,en}; timeZone an IANA id or blank
 
 BookView(/* read projection of an edition and its work; carries editionId and workId */)
 
@@ -150,6 +152,22 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}`
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
 `ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}`.
+
+## Profile
+
+`GET /api/me` returns the caller's profile and provisions the `app_user` on the first
+authenticated call; `PATCH /api/me` edits the three fields the user owns — `displayName`,
+`locale` and `timeZone`. Like `DELETE /api/me`, it takes **no identifier and accepts none**:
+a caller only ever edits their own row, which is the one shape of the endpoint that cannot be
+pointed at anybody else. The isolation guarantee is therefore not an id answering 404 but that
+one account's edit never reaches another's — `MeApiTest` pins it down with two accounts.
+
+`UpdateMeDto` is a full replacement of the three fields, not a sparse patch: the profile form
+always sends every one, so a field left out is a mistake rather than "leave it as it was".
+`locale` must be one of the two the interface ships (`fr` \| `en`); `timeZone` is optional — a
+blank value clears it, back to the client's own zone — and when present must parse as a
+`java.time.ZoneId`. Bean Validation covers the first two; the resource checks the zone and a
+bad identifier is a **400**, like any other malformed input.
 
 ## Reading progress
 
@@ -648,7 +666,7 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | # | Gap | Target milestone |
 |---|---|---|
 | A1 | ✅ Pagination on `/api/library` and `/api/wishlist` (#38) | Foundations |
-| A2 | No `PATCH /api/me` (display name, language) | Public product |
+| A2 | ✅ `PATCH /api/me` (display name, language, time zone) (#75) | Public product |
 | A3 | ✅ `GET /api/export` (CSV/JSON) and `DELETE /api/me` (#72, #73) | Public product |
 | A4 | ✅ `/api/series` resource — details, volumes, follow (#44) | Core product |
 | A5 | ✅ `PUT`/`DELETE` on `/api/categories/{id}` (#51) | Core product |

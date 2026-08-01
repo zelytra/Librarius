@@ -543,6 +543,19 @@
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
     "notifications": "Notifications",
     "version": "My Library · version {{version}}",
+    "profile": {
+      "title": "Profile",
+      "description": "Your display name, language and time zone. The language follows your account from one device to the next.",
+      "signIn": "Sign in to edit your profile.",
+      "displayName": "Display name",
+      "displayNamePlaceholder": "Your name",
+      "language": "Language",
+      "timeZone": "Time zone",
+      "timeZoneAuto": "Follow this device",
+      "submit": "Save",
+      "saved": "Profile saved.",
+      "failed": "The profile could not be saved right now."
+    },
     "themes": {
       "systeme": "System",
       "creme": "Cream",

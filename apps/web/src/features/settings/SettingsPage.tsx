@@ -6,6 +6,7 @@ import { useTheme } from '../../shared/theme/context';
 import { THEMES } from '../../shared/theme/themes';
 import { changeLanguage } from '../../i18n';
 import { LANGUAGES, activeLanguage } from '../../i18n/languages';
+import { ProfileSection } from './ProfileSection';
 import { GoalSection } from './GoalSection';
 import { ImportSection } from './ImportSection';
 import { ExportSection } from './ExportSection';
@@ -34,6 +35,9 @@ export function SettingsPage() {
         </button>
         <h2 className={styles.title}>{t('settings.title')}</h2>
       </div>
+
+      {/* Identity: display name, language and time zone, persisted to the account (#75). */}
+      <ProfileSection />
 
       {/* Annual reading goal, which the Home gauge is drawn from. */}
       <GoalSection />

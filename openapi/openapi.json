@@ -652,6 +652,9 @@
           },
           "locale" : {
             "type" : "string"
+          },
+          "timeZone" : {
+            "type" : "string"
           }
         }
       },
@@ -1043,6 +1046,25 @@
           },
           "confidence" : {
             "type" : "string"
+          }
+        }
+      },
+      "UpdateMeDto" : {
+        "type" : "object",
+        "required" : [ "displayName", "locale" ],
+        "properties" : {
+          "displayName" : {
+            "type" : "string",
+            "pattern" : "\\S",
+            "maxLength" : 255
+          },
+          "locale" : {
+            "type" : "string",
+            "pattern" : "fr|en"
+          },
+          "timeZone" : {
+            "type" : "string",
+            "maxLength" : 64
           }
         }
       },
@@ -2211,6 +2233,41 @@
       }
     },
     "/api/me" : {
+      "patch" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateMeDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MeDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Update",
+        "tags" : [ "Me Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "get" : {
         "responses" : {
           "200" : {
