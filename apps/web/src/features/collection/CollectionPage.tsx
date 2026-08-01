@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueries, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
 import { useViewportAtLeast } from '../../shared/ui/breakpoints';
 import {
+  Kind,
   getApiLibrary,
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
@@ -24,7 +25,36 @@ import { SeriesList } from '../series/SeriesList';
 import { SERIES_SORTS, filterSeries, type SeriesSort } from '../series/series';
 import styles from './CollectionPage.module.css';
 
-type Kind = 'BOOK' | 'MANGA';
+/**
+ * The whole taxonomy, in the order the shelf switch offers it — same order as the API's
+ * `Kind` enum, so the tie-break of "which shelf opens by default" ({@link bestKind}) reads
+ * the same top-to-bottom. Growing the taxonomy again only means adding a value here and to
+ * the two label maps below; nothing else in this screen names a kind.
+ */
+const ALL_KINDS: Kind[] = [Kind.BOOK, Kind.MANGA, Kind.COMIC, Kind.GRAPHIC_NOVEL, Kind.AUDIOBOOK];
+
+/** i18n key of the segmented-control label for each kind. */
+const KIND_LABEL_KEY: Record<Kind, string> = {
+  BOOK: 'collection.kinds.book',
+  MANGA: 'collection.kinds.manga',
+  COMIC: 'collection.kinds.comic',
+  GRAPHIC_NOVEL: 'collection.kinds.graphicNovel',
+  AUDIOBOOK: 'collection.kinds.audiobook',
+};
+
+/** i18n key of the short cover tag for each kind. */
+const KIND_TAG_KEY: Record<Kind, string> = {
+  BOOK: 'collection.tag.book',
+  MANGA: 'collection.tag.manga',
+  COMIC: 'collection.tag.comic',
+  GRAPHIC_NOVEL: 'collection.tag.graphicNovel',
+  AUDIOBOOK: 'collection.tag.audiobook',
+};
+
+/** Narrows a free-form kind coming from the API to a known one, `BOOK` when it is not. */
+function knownKind(kind: string | undefined): Kind {
+  return (ALL_KINDS as string[]).includes(kind ?? '') ? (kind as Kind) : Kind.BOOK;
+}
 /**
  * The shelf filter is one chip row: `all`, `favorites`, then the code of any category the
  * user has — the three built-ins and their own. `favorites` is the odd one out, since it
@@ -82,7 +112,7 @@ function CoverTile({
   const rankIcon = isRankCode(item.rankCode) ? RANK_ICONS[item.rankCode] : 'military_tech';
   const tag = b.volumeNumber
     ? t('collection.volumeShort', { number: b.volumeNumber })
-    : t(b.kind === 'MANGA' ? 'collection.tag.manga' : 'collection.tag.book');
+    : t(KIND_TAG_KEY[knownKind(b.kind)]);
   return (
     <Cover
       variant="tile"
@@ -117,7 +147,42 @@ function CollectionContent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
-  const [collType, setCollType] = useState<Kind>('BOOK');
+
+  // One lightweight request per kind, `size: 1` so only the `total` of the envelope is
+  // paid for — no dedicated endpoint exists to ask "which kinds does this user own", the
+  // answer is derived from data `/api/library` already exposes, one filter at a time.
+  const kindCounts = useQueries({
+    queries: ALL_KINDS.map((kind) => ({
+      queryKey: getGetApiLibraryQueryKey({ kind, size: 1 }),
+      queryFn: () => getApiLibrary({ kind, size: 1 }),
+    })),
+  });
+  const totalOf = (kind: Kind) => kindCounts[ALL_KINDS.indexOf(kind)]?.data?.total ?? 0;
+
+  // The shelf the user owns the most of; the first kind of the taxonomy wins a tie, and is
+  // also what an account that owns nothing yet lands on — never a hardcoded 'BOOK'.
+  let bestKind: Kind = ALL_KINDS[0];
+  let bestCount = -1;
+  for (const kind of ALL_KINDS) {
+    const count = totalOf(kind);
+    if (count > bestCount) {
+      bestCount = count;
+      bestKind = kind;
+    }
+  }
+
+  // Once the counts resolve they may move the default shelf under the user's feet — unless
+  // the user has already picked one by hand, in which case that choice wins.
+  const [manualKind, setManualKind] = useState<Kind | null>(null);
+  const collType = manualKind ?? bestKind;
+  const setCollType = (kind: Kind) => setManualKind(kind);
+
+  // Only the kinds the user actually owns become shelf options, so a Books/Manga-only
+  // account never sees the three newer ones. An empty account still needs a shelf to land
+  // on, so it falls back to the first kind of the taxonomy.
+  const presentKinds = ALL_KINDS.filter((kind) => totalOf(kind) > 0);
+  const kindOptions = presentKinds.length > 0 ? presentKinds : [ALL_KINDS[0]];
+
   const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
   const [sortBy, setSortBy] = useState<SortBy>('added');
   const [seriesSort, setSeriesSort] = useState<SeriesSort>('progress');
@@ -236,10 +301,7 @@ function CollectionContent() {
         <Segmented<Kind>
           value={collType}
           onChange={setCollType}
-          options={[
-            { id: 'BOOK', label: t('common.books') },
-            { id: 'MANGA', label: t('common.mangas') },
-          ]}
+          options={kindOptions.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) }))}
         />
       </div>
 
