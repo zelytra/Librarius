@@ -83,7 +83,7 @@ describe('apiClient', () => {
       }),
     );
 
-    await getApiCatalogSearch({ q: 'dune', author: 'Frank Herbert', year: 1965, kind: 'BOOK' });
+    await getApiCatalogSearch({ q: 'dune', author: 'Frank Herbert', year: 1965, kind: ['BOOK'] });
 
     expect(received).toEqual({ q: 'dune', author: 'Frank Herbert', year: '1965', kind: 'BOOK' });
   });

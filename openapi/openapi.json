@@ -1448,7 +1448,10 @@
           "name" : "kind",
           "in" : "query",
           "schema" : {
-            "$ref" : "#/components/schemas/Kind"
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Kind"
+            }
           }
         }, {
           "name" : "language",

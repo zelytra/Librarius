@@ -18,7 +18,10 @@ import zelytra.librarius.catalog.RateLimiter;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.security.CurrentUser;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /** External catalog search and upcoming releases. */
 @Path("/api/catalog")
@@ -42,6 +45,10 @@ public class CatalogResource {
      * Searches the external catalogs. {@code q} is the free text; the other criteria are the
      * advanced form, and each provider honours the ones its own API indexes — see
      * {@link zelytra.librarius.catalog.CatalogQuery}.
+     *
+     * <p>{@code kind} is repeatable and optional: naming one or several narrows the search to
+     * those mediums, omitting it altogether searches every registered provider and merges the
+     * results into one list.
      */
     @GET
     @Path("/search")
@@ -51,7 +58,7 @@ public class CatalogResource {
             @QueryParam("language") String language,
             @QueryParam("publisher") String publisher,
             @QueryParam("isbn") String isbn,
-            @QueryParam("kind") Kind kind,
+            @QueryParam("kind") List<Kind> kinds,
             @QueryParam("limit") @DefaultValue("20") int limit) {
         CatalogQuery criteria = new CatalogQuery(query, author, year, language, publisher, isbn);
         if (criteria.isEmpty()) {
@@ -60,10 +67,22 @@ public class CatalogResource {
         // Checked after the blank guard: an empty query never reaches a provider, so
         // charging it against the quota would penalise a stray keystroke.
         enforceQuota();
-        Kind target = kind != null ? kind : Kind.BOOK;
-        // Business metric: number of catalog searches per kind.
-        meters.counter("librarius.catalog.search", "kind", target.name()).increment();
+        Set<Kind> target = kinds.isEmpty() ? Set.of() : EnumSet.copyOf(kinds);
+        // Business metric: number of catalog searches per kind, "any" for a cross-medium one.
+        meters.counter("librarius.catalog.search", "kind", metricTag(target)).increment();
         return catalog.search(target, criteria, Math.clamp(limit, 1, 40));
+    }
+
+    /**
+     * The {@code kind} tag of the search counter: a single kind's name, {@code any} for a
+     * cross-medium search, and the kinds sorted and joined when several are named — a bounded,
+     * stable value in every case.
+     */
+    private static String metricTag(Set<Kind> kinds) {
+        if (kinds.isEmpty()) {
+            return "any";
+        }
+        return kinds.stream().map(Kind::name).sorted().collect(Collectors.joining("+"));
     }
 
     @GET

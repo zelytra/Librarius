@@ -107,9 +107,9 @@ class CatalogServiceTest {
                 passThroughCache());
 
         assertEquals("Fourth Wing",
-                service.search(Kind.BOOK, CatalogQuery.of("wing"), 10).get(0).title());
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("wing"), 10).get(0).title());
         assertEquals("One Piece",
-                service.search(Kind.MANGA, CatalogQuery.of("piece"), 10).get(0).title());
+                service.search(Set.of(Kind.MANGA), CatalogQuery.of("piece"), 10).get(0).title());
     }
 
     @Test
@@ -118,7 +118,54 @@ class CatalogServiceTest {
                 new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing"))),
                 passThroughCache());
 
-        assertTrue(service.search(Kind.MANGA, CatalogQuery.of("piece"), 10).isEmpty());
+        assertTrue(service.search(Set.of(Kind.MANGA), CatalogQuery.of("piece"), 10).isEmpty());
+    }
+
+    @Test
+    void searchesEveryRegisteredKindWhenNoneIsNamed() {
+        // No kind at all: one call must reach every registered provider, across mediums, and
+        // return their answers merged into a single list.
+        CatalogService service = new CatalogService(List.of(
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
+                new FakeProvider(Kind.MANGA, result("MANGA", "One Piece"))),
+                passThroughCache());
+
+        List<String> titles = service.search(Set.of(), CatalogQuery.of("anything"), 10).stream()
+                .map(CatalogResult::title).toList();
+
+        assertTrue(titles.contains("Fourth Wing"), titles.toString());
+        assertTrue(titles.contains("One Piece"), titles.toString());
+    }
+
+    @Test
+    void narrowsToTheNamedKindsWhenSeveralAreGiven() {
+        // Two of three mediums named: the third provider is left out entirely.
+        CatalogService service = new CatalogService(List.of(
+                new FakeProvider(Kind.BOOK, result("BOOK", "Fourth Wing")),
+                new FakeProvider(Kind.MANGA, result("MANGA", "One Piece")),
+                new FakeProvider(Kind.COMIC, result("COMIC", "Watchmen"))),
+                passThroughCache());
+
+        List<String> titles = service
+                .search(Set.of(Kind.BOOK, Kind.MANGA), CatalogQuery.of("anything"), 10).stream()
+                .map(CatalogResult::title).toList();
+
+        assertEquals(Set.of("Fourth Wing", "One Piece"), new HashSet<>(titles));
+    }
+
+    @Test
+    void aProviderBeingDownDegradesToTheOthersInACrossMediumSearch() {
+        // No kind named, so every provider is reached; one returning nothing (down, or
+        // off-topic) costs only its own results, the rest of the mediums still surface.
+        CatalogService service = new CatalogService(List.of(
+                new VerboseProvider("openlibrary", Kind.BOOK, 0),
+                new FakeProvider(Kind.MANGA, result("MANGA", "One Piece"))),
+                passThroughCache());
+
+        List<String> titles = service.search(Set.of(), CatalogQuery.of("anything"), 10).stream()
+                .map(CatalogResult::title).toList();
+
+        assertEquals(List.of("One Piece"), titles);
     }
 
     @Test
@@ -130,7 +177,7 @@ class CatalogServiceTest {
                 passThroughCache());
 
         // The duplicate (same title/author) is merged into a single entry.
-        assertEquals(1, service.search(Kind.BOOK, CatalogQuery.of("wing"), 10).size());
+        assertEquals(1, service.search(Set.of(Kind.BOOK), CatalogQuery.of("wing"), 10).size());
     }
 
     @Test
@@ -142,7 +189,7 @@ class CatalogServiceTest {
                 new VerboseProvider("bnf", Kind.BOOK, 20)),
                 passThroughCache());
 
-        List<CatalogResult> results = service.search(Kind.BOOK, CatalogQuery.of("wing"), 10);
+        List<CatalogResult> results = service.search(Set.of(Kind.BOOK), CatalogQuery.of("wing"), 10);
 
         assertEquals(10, results.size());
         long fromOpenLibrary = results.stream()
@@ -161,7 +208,7 @@ class CatalogServiceTest {
                 new VerboseProvider("bnf", Kind.BOOK, 20)),
                 passThroughCache());
 
-        List<CatalogResult> results = service.search(Kind.BOOK, CatalogQuery.of("wing"), 10);
+        List<CatalogResult> results = service.search(Set.of(Kind.BOOK), CatalogQuery.of("wing"), 10);
 
         assertEquals(10, results.size());
         assertTrue(results.stream().allMatch(r -> r.title().startsWith("bnf")));
@@ -173,7 +220,7 @@ class CatalogServiceTest {
         CatalogService service = new CatalogService(List.of(provider), passThroughCache());
         CatalogQuery query = new CatalogQuery("dune", "herbert", 1965, "fr", "pocket", null);
 
-        service.search(Kind.BOOK, query, 10);
+        service.search(Set.of(Kind.BOOK), query, 10);
 
         // The service aggregates and caches; narrowing is the provider's job, and it can
         // only do it if the criteria reach it untouched.
@@ -194,8 +241,8 @@ class CatalogServiceTest {
         CatalogService service = new CatalogService(
                 List.of(new FakeProvider(Kind.BOOK, result("BOOK", "Dune"))), recordingCache);
 
-        service.search(Kind.BOOK, CatalogQuery.of("dune"), 10);
-        service.search(Kind.BOOK, new CatalogQuery("dune", "herbert", null, null, null, null), 10);
+        service.search(Set.of(Kind.BOOK), CatalogQuery.of("dune"), 10);
+        service.search(Set.of(Kind.BOOK), new CatalogQuery("dune", "herbert", null, null, null, null), 10);
 
         // Same text, one extra criterion: the second search must not be served the first
         // one's answer.
