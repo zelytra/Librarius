@@ -25,6 +25,7 @@ import {
   type SeriesDetailDto,
   type SeriesVolumeDto,
 } from '../../api/generated/librarius';
+import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import styles from './SeriesPage.module.css';
 
@@ -291,6 +292,12 @@ function SeriesContent({ id }: { id: string }) {
             </div>
           </div>
         )}
+
+        {/* A series is shared catalog data, so an error in it is worth flagging — the
+            report targets this very `series` row. */}
+        <div className={styles.reportRow}>
+          <ReportButton targetType="SERIES" targetId={id} />
+        </div>
       </div>
     </div>
   );

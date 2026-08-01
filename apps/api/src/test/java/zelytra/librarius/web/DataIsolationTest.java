@@ -87,6 +87,11 @@ class DataIsolationTest {
                     .then().statusCode(401);
         }
         given().when().delete("/api/me").then().statusCode(401);
+        // Reports are write-only, so the anonymous check is on the POST rather than a GET.
+        given().contentType("application/json")
+                .body("{ \"targetType\": \"WORK\", \"targetId\": "
+                        + "\"00000000-0000-0000-0000-000000000000\", \"reason\": \"OTHER\" }")
+                .when().post("/api/reports").then().statusCode(401);
     }
 
     // ── Library ───────────────────────────────────────────────────────────────

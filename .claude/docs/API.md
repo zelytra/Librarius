@@ -57,6 +57,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
+| POST | `/api/reports` | Flags an error in a shared catalog object (`ReportCreateDto`) — write-only, see [Reports](#reports). 201 with the created report, **400** on an unknown target |
 
 Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the ingress does not route `/q`. Swagger UI is served in dev and test, and absent from the production build.
 
@@ -107,6 +108,10 @@ GoalUpsertDto(Integer targetCount, GoalUnit unit)
 
 DashboardSectionDto(String code, boolean hidden)
 DashboardLayoutDto(List<DashboardSectionDto> sections)
+
+ReportCreateDto(ReportTargetType targetType, UUID targetId, ReportReason reason, String comment)
+ReportDto(UUID id, ReportTargetType targetType, UUID targetId, ReportReason reason,
+          String comment, ReportStatus status, OffsetDateTime createdAt)   // echoed on create
 
 ExportDto(int schemaVersion, OffsetDateTime exportedAt, ExportUserDto user,
           List<ExportCategoryDto> categories, List<ExportGoalDto> goals,
@@ -161,7 +166,9 @@ BreakdownCountDto(String label, long count)
 Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
-`ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}`.
+`ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}` ·
+`ReportTargetType {WORK, EDITION, SERIES}` ·
+`ReportReason {WRONG_COVER, WRONG_INFO, DUPLICATE, OTHER}` · `ReportStatus {OPEN, DISMISSED}`.
 
 ## Profile
 
@@ -681,6 +688,31 @@ The deletion is logged at `INFO` with the technical subject, the instant and the
 and **no personal data**: no email, no display name, no title. The configuration the
 maintainer has to provide, and how long the encrypted backups keep the data afterwards, are
 in [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) § "Account deletion".
+
+## Reports
+
+`POST /api/reports` lets **any** authenticated member flag an error in a shared catalog
+object — a swapped cover, a wrong author, a duplicate work
+([#192](https://github.com/zelytra/Librarius/issues/192)). The body names what to flag
+(`targetType` ∈ {`WORK`, `EDITION`, `SERIES`} plus `targetId`), a `reason` from a short closed
+picklist, and an optional free-text `comment`. The reporter is never in the body: it is always
+`CurrentUser.id()`, stamped server-side.
+
+It is **write-only**. A report is a private signal from a user to the application, consumed by
+the automatic trust revocation ([#195](https://github.com/zelytra/Librarius/issues/195)); **no
+endpoint reads one back** in this issue — there is no `GET`, no listing, no per-id read. That
+is what makes the isolation guarantee structural rather than a filter: one member cannot
+discover a report another filed, because there is nothing to read. The response to the `POST`
+is the created report echoed to its own author (`ReportDto`), which carries no `reporterId` —
+it is the resource just created, not a way back into the store.
+
+The target is validated before a row is written: `report.target_id` points at one of three
+tables depending on `target_type`, so no foreign key can guard it, and `ReportService` resolves
+it against the matching table instead. **An unknown target is a 400**, not a silent success —
+a report against nothing is a bug, not a report. `status` is `OPEN` on creation and nothing in
+this issue moves it; the column is there for what consumes a report later (the revocation logic,
+a possible admin view), and neither an admin review screen nor the revocation consumer is in
+scope here. See [DATA-MODEL](DATA-MODEL.md#cascades) for the table and its cascade.
 
 ## Pagination
 

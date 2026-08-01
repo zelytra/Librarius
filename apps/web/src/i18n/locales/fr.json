@@ -666,5 +666,28 @@
       "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Ma Bibliothèque.",
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     }
+  },
+  "report": {
+    "trigger": "Signaler une erreur",
+    "title": "Signaler une erreur",
+    "subtitle": "Cette fiche appartient au catalogue partagé. Dis-nous ce qui ne va pas : ton signalement reste privé.",
+    "reasonLegend": "Motif du signalement",
+    "reasons": {
+      "WRONG_COVER": "Mauvaise couverture",
+      "WRONG_INFO": "Informations erronées",
+      "DUPLICATE": "Doublon",
+      "OTHER": "Autre"
+    },
+    "commentLabel": "Commentaire (facultatif)",
+    "commentPlaceholder": "Précise le problème si besoin.",
+    "submit": "Envoyer le signalement",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "error": "Envoi impossible pour le moment. Réessaie plus tard.",
+    "sent": {
+      "title": "Signalement envoyé",
+      "body": "Merci : ton signalement nous aidera à corriger cette fiche.",
+      "close": "Fermer"
+    }
   }
 }

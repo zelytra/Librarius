@@ -358,6 +358,33 @@ export interface RankAssignDto {
   categoryId?: Uuid;
 }
 
+export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];
+
+
+export const ReportTargetType = {
+  WORK: 'WORK',
+  EDITION: 'EDITION',
+  SERIES: 'SERIES',
+} as const;
+
+export type ReportReason = typeof ReportReason[keyof typeof ReportReason];
+
+
+export const ReportReason = {
+  WRONG_COVER: 'WRONG_COVER',
+  WRONG_INFO: 'WRONG_INFO',
+  DUPLICATE: 'DUPLICATE',
+  OTHER: 'OTHER',
+} as const;
+
+export interface ReportCreateDto {
+  targetType: ReportTargetType;
+  targetId: Uuid;
+  reason: ReportReason;
+  /** @maxLength 2000 */
+  comment?: string;
+}
+
 export interface ReviewDto {
   /**
      * @minimum 1
@@ -3352,6 +3379,77 @@ export function useGetApiReleasesUpcoming<TData = Awaited<ReturnType<typeof getA
 
 
 
+
+export const getPostApiReportsUrl = () => {
+
+
+
+
+  return `/api/reports`
+}
+
+/**
+ * @summary Create
+ */
+export const postApiReports = async (reportCreateDto: ReportCreateDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiReportsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reportCreateDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiReportsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiReports>>, TError,{data: ReportCreateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiReports>>, TError,{data: ReportCreateDto}, TContext> => {
+
+const mutationKey = ['postApiReports'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiReports>>, {data: ReportCreateDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiReports(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiReportsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiReports>>>
+    export type PostApiReportsMutationBody = ReportCreateDto
+    export type PostApiReportsMutationError = void
+
+    /**
+ * @summary Create
+ */
+export const usePostApiReports = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiReports>>, TError,{data: ReportCreateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiReports>>,
+        TError,
+        {data: ReportCreateDto},
+        TContext
+      > => {
+      return useMutation(getPostApiReportsMutationOptions(options), queryClient);
+    }
 
 export const getGetApiSeriesUrl = () => {
 
