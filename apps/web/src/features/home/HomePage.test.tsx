@@ -1,14 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders, TestProviders } from '../../test/utils';
+import { createTestQueryClient, renderWithProviders, TestProviders } from '../../test/utils';
+import { ThemeProvider } from '../../shared/theme/ThemeProvider';
 import { dashboardLayout, goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 import { getGetApiStatsQueryKey } from '../../api/generated/librarius';
 import { MAX_SPINES } from './readingStack';
+import { STORAGE_KEY as ONBOARDING_STORAGE_KEY, markOnboardingSeen } from '../onboarding/onboarding';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -32,7 +34,10 @@ function StatsInvalidator() {
 }
 
 describe('HomePage', () => {
-  beforeEach(resetAuth);
+  beforeEach(() => {
+    resetAuth();
+    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+  });
 
   test('renders the library counters', async () => {
     server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ read: 12, reading: 2, toRead: 34 }))));
@@ -548,6 +553,72 @@ describe('HomePage', () => {
     expect(saved[0].sections?.map((s) => s.code)).toEqual([
       'resumeReading', 'counters', 'toRead', 'bookStack', 'goal', 'upcoming', 'recentlyRead',
     ]);
+  });
+
+  // ── First-login onboarding (#76) ────────────────────────────────────────────
+
+  test('greets a new account with the tour: empty library, never seen it before', async () => {
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Tu as déjà une bibliothèque ?')).toBeInTheDocument();
+  });
+
+  test('never shows the tour to a returning user who already has a library', async () => {
+    libraryReturns([libraryItem({ status: 'READ' })]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 1, reading: 0, toRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    expect(screen.queryByText('Tu as déjà une bibliothèque ?')).not.toBeInTheDocument();
+  });
+
+  test('does not come back once dismissed, on an account that stays empty', async () => {
+    markOnboardingSeen();
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText(/Ta bibliothèque est vide/);
+    expect(screen.queryByText('Tu as déjà une bibliothèque ?')).not.toBeInTheDocument();
+  });
+
+  test('skipping the tour leaves the dashboard usable and does not reopen it', async () => {
+    libraryReturns([]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    await userEvent.click(await screen.findByText('Passer la visite guidée'));
+
+    expect(screen.queryByText('Tu as déjà une bibliothèque ?')).not.toBeInTheDocument();
+    expect(await screen.findByText(/Ta bibliothèque est vide/)).toBeInTheDocument();
+    expect(localStorage.getItem(ONBOARDING_STORAGE_KEY)).not.toBeNull();
+  });
+
+  /** The way back from Settings (#76): "restart" ignores the emptiness check on purpose. */
+  test('reopens the tour on request, even for an account that already has a library', async () => {
+    markOnboardingSeen();
+    libraryReturns([libraryItem({ status: 'READ' })]);
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 1, reading: 0, toRead: 0 }))));
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={[{ pathname: '/', state: { showOnboarding: true } }]}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('Tu as déjà une bibliothèque ?')).toBeInTheDocument();
   });
 
   test('cancelling the customize panel discards the changes', async () => {

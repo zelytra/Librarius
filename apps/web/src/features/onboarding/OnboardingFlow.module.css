@@ -1,0 +1,115 @@
+/* Same shape as the end-of-reading sheet (OutcomeSheet.module.css): fixed rather than
+   absolute so the shell frame's own scroll never carries it away, and a dark scrim
+   that is not a token because it has to dim both palettes alike. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(28, 24, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  box-shadow: var(--shadow-strong);
+  padding: 26px 22px 22px;
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.eyebrow {
+  font-size: var(--fs-11);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+  margin: 0 0 14px;
+}
+
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: var(--radius-round);
+  background: var(--tint-sage);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-19);
+  margin: 0 0 8px;
+}
+
+.description {
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+/* Progress through the three steps, without naming a number a screen reader would have
+   to make sense of on its own — `aria-hidden`, the step itself already says where it
+   stands through its own heading. */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-round);
+  background: var(--line);
+}
+
+.dotActive {
+  background: var(--accent-deep);
+  width: 16px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skip {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--fs-12);
+  color: var(--faint);
+  font-family: inherit;
+}
