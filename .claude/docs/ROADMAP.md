@@ -197,14 +197,14 @@ bibliography and can be followed; a work's editions carry covers the providers k
 |---|---|---|
 | [#184](https://github.com/zelytra/Librarius/issues/184) | ✅ Catalog entries stop losing their provider reference on add — the prerequisite for enriching anything (V12). Nothing is backfilled: only entries added from Discover after it carry a reference, and Open Library returns none to store until its provider is taught to ask for the work key | — |
 | [#178](https://github.com/zelytra/Librarius/issues/178) | ✅ Grow the medium taxonomy beyond books and manga: `Kind` gains `COMIC`, `GRAPHIC_NOVEL` and `AUDIOBOOK` next to `BOOK`/`MANGA`, documented on the live columns by V15. Additive — the `kind` column already accepted them, existing rows are untouched, and the binary Books/Manga toggle stays as it is until a follow-up (#189/#194/#183) reworks it | — |
-| [#189](https://github.com/zelytra/Librarius/issues/189) | Catalog search stops requiring a single mandatory kind | #178 |
-| [#194](https://github.com/zelytra/Librarius/issues/194) | Discover: one result feed across every medium | #189 |
+| [#189](https://github.com/zelytra/Librarius/issues/189) | ✅ Catalog search stops requiring a single mandatory kind — `GET /api/catalog/search` takes a repeatable `kind` with no default; the unified feed in Discover is #194 | #178 |
+| [#194](https://github.com/zelytra/Librarius/issues/194) | ✅ Discover: one result feed across every medium — the Book/Manga toggle is gone, each result carries its own medium badge, and the advanced panel gained a multi-select medium filter | #189 |
 | [#179](https://github.com/zelytra/Librarius/issues/179) | ✅ A second book catalog provider — the **BnF** over SRU, not Google Books, which the user ruled out in [#9](https://github.com/zelytra/Librarius/pull/9) | — |
 | [#239](https://github.com/zelytra/Librarius/issues/239) | ✅ `CatalogService` merges the two book providers round-robin instead of first-come-first-served, so the faster/more verbose one can no longer fill the whole page alone | #179 |
 | [#197](https://github.com/zelytra/Librarius/issues/197) | ✅ Enrich a work's editions and their covers from its provider: `GET /api/works/{id}/editions` merges the provider's other printings next to the stored ones, cached and rate-limited, best-effort. Wired and tested against a stubbed provider but dormant in practice — no shipped provider feeds it yet (Open Library stores no usable work key), see [API](API.md) gap A12 | #49, #184 |
 | [#182](https://github.com/zelytra/Librarius/issues/182) | ✅ Author catalog entities: `author`, `work_author` and `author_follow` (V13), backfilled from the free-text credit lines. Spellings that fold alike are one person and nothing more is claimed — no alias table, no initial expansion, no namesake disambiguation | — |
-| [#196](https://github.com/zelytra/Librarius/issues/196) | Author API: bibliography, search and follow | #182 |
-| [#199](https://github.com/zelytra/Librarius/issues/199) | Author page: portrait, bibliography and follow | #196 |
+| [#196](https://github.com/zelytra/Librarius/issues/196) | ✅ Author API: bibliography, search and follow — `/api/authors` search, detail with bibliography, and follow/unfollow; enriching the bibliography from a provider is left to a later issue (gap A13) | #182 |
+| [#199](https://github.com/zelytra/Librarius/issues/199) | ✅ Author page: portrait, bibliography and follow — `/authors/:id`, plus name resolution on the Detail screen's credit line and a minimal author search in Discover | #196 |
 
 ---
 
@@ -222,11 +222,11 @@ signing in shows something branded; loading and empty states stop flashing.
 | [#170](https://github.com/zelytra/Librarius/issues/170) | ✅ Authentication gate: a branded waiting screen instead of plain text | #169 |
 | [#171](https://github.com/zelytra/Librarius/issues/171) | ✅ Desktop layout foundation: breakpoints and a real grid | — |
 | [#172](https://github.com/zelytra/Librarius/issues/172) | ✅ Desktop navigation: a side nav for wide viewports | #171 |
-| [#173](https://github.com/zelytra/Librarius/issues/173) | Desktop layout: Home and Collection | #171, #172 |
-| [#174](https://github.com/zelytra/Librarius/issues/174) | Desktop layout: Discover, Wishlist and Stats | #171, #172 |
-| [#175](https://github.com/zelytra/Librarius/issues/175) | Desktop layout: Detail, Series and Settings | #171, #172 |
+| [#173](https://github.com/zelytra/Librarius/issues/173) | ✅ Desktop layout: Home and Collection | #171, #172 |
+| [#174](https://github.com/zelytra/Librarius/issues/174) | ✅ Desktop layout: Discover, Wishlist and Stats | #171, #172 |
+| [#175](https://github.com/zelytra/Librarius/issues/175) | ✅ Desktop layout: Detail, Series and Settings | #171, #172 |
 | [#181](https://github.com/zelytra/Librarius/issues/181) | ✅ Home screen: a book stack visualizing total books and pages read | — |
-| [#183](https://github.com/zelytra/Librarius/issues/183) | Library screen: separate shelves by support type | #178 |
+| [#183](https://github.com/zelytra/Librarius/issues/183) | ✅ Library screen: separate shelves by support type | #178 |
 | [#176](https://github.com/zelytra/Librarius/issues/176) | A Keycloak login theme matching the application | — |
 | [#177](https://github.com/zelytra/Librarius/issues/177) | Social sign-in with Google and Apple | #176 |
 
@@ -270,9 +270,9 @@ trust flag is computed, shown, and revoked automatically when reports are upheld
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#180](https://github.com/zelytra/Librarius/issues/180) | Trust flag: automatic evaluation and storage on app_user | — |
-| [#186](https://github.com/zelytra/Librarius/issues/186) | Trusted badge next to a member's display name | #180 |
-| [#192](https://github.com/zelytra/Librarius/issues/192) | Report button: flag catalog errors | — |
+| [#180](https://github.com/zelytra/Librarius/issues/180) | ✅ Trust flag: automatic evaluation and storage on app_user — a daily job grants `app_user.trusted` from tenure, read count and a clean report record (V16); nothing revokes it yet, that is #195 | — |
+| [#186](https://github.com/zelytra/Librarius/issues/186) | ✅ Trusted badge next to a member's display name — `trusted` on `MeDto`/`MemberSummaryDto`, shown next to the display name in Settings | #180 |
+| [#192](https://github.com/zelytra/Librarius/issues/192) | ✅ Report button: flag catalog errors — `POST /api/reports`, write-only, plus a report affordance on the Detail and Series screens; feeding automatic revocation is #195 | — |
 | [#195](https://github.com/zelytra/Librarius/issues/195) | Automatic trust revocation from upheld reports | #180, #192 |
 | [#198](https://github.com/zelytra/Librarius/issues/198) | Trusted contribution: missing covers and unlisted catalog entries | #180, #197 |
 
@@ -289,7 +289,7 @@ public.
 
 | Issue | Topic | Depends on |
 |---|---|---|
-| [#200](https://github.com/zelytra/Librarius/issues/200) | Follow relationship: data model and API | — |
+| [#200](https://github.com/zelytra/Librarius/issues/200) | ✅ Follow relationship: data model and API — `user_follow` (V18) and `PUT`/`DELETE /api/users/{id}/follow`, plus the caller's own following/followers lists; what a mutual follow unlocks is #201, the find-people screens are #202 | — |
 | [#201](https://github.com/zelytra/Librarius/issues/201) | Public account preference and the mutual-follow visibility gate | #200 |
 | [#202](https://github.com/zelytra/Librarius/issues/202) | Find people: search, follow and followers screens | #200, #201 |
 | [#203](https://github.com/zelytra/Librarius/issues/203) | Block a user and hide their content | #200 |
