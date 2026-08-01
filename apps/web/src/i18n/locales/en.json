@@ -38,7 +38,8 @@
       "stats": "Sign in to see your statistics.",
       "detail": "Sign in to see this title.",
       "series": "Sign in to see this series.",
-      "categories": "Sign in to manage your categories."
+      "categories": "Sign in to manage your categories.",
+      "author": "Sign in to see this author."
     },
     "discover": "Discover the app"
   },
@@ -360,6 +361,23 @@
     "empty": {
       "title": "No series here.",
       "description": "A series shows up as soon as one of its volumes joins your collection."
+    }
+  },
+  "author": {
+    "follow": "Follow this author",
+    "following": "✓ Author followed",
+    "workCount_one": "{{count}} work",
+    "workCount_other": "{{count}} works",
+    "bibliography": "Bibliography",
+    "emptyWorks": "No work known for this author in your library.",
+    "notFound": "Author not found.",
+    "error": "This author could not be loaded.",
+    "search": {
+      "title": "Look up an author",
+      "placeholder": "Search for an author…",
+      "noResults": "No author matches this search.",
+      "workCount_one": "{{count}} work",
+      "workCount_other": "{{count}} works"
     }
   },
   "discover": {

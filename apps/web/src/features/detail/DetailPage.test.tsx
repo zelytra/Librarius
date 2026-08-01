@@ -56,6 +56,44 @@ describe('DetailPage', () => {
   });
 
   /**
+   * A name with no match in the shared catalog — a work recorded before the author
+   * entities landed (#182), or a spelling the local search does not fold onto — stays
+   * plain text: a link that would 404 is worse than no link at all.
+   */
+  test('leaves an author name as plain text when it resolves to nobody', async () => {
+    libraryItemReturns(ITEM);
+    renderDetail();
+
+    const name = await screen.findByText('Patrick Rothfuss');
+    expect(name.closest('a')).toBeNull();
+  });
+
+  /** A name that resolves to a known author becomes a way into their page. */
+  test('links an author name that resolves to a known author', async () => {
+    libraryItemReturns(ITEM);
+    server.use(http.get('*/api/authors', ({ request }) => {
+      const q = (new URL(request.url).searchParams.get('q') ?? '').trim().toLowerCase();
+      return q === 'patrick rothfuss'
+        ? HttpResponse.json([{ id: 'author-1', name: 'Patrick Rothfuss', workCount: 1, followed: false }])
+        : HttpResponse.json([]);
+    }));
+    render(
+      <TestProviders route="/detail/item-1">
+        <Routes>
+          <Route path="/detail/:id" element={<DetailPage />} />
+          <Route path="/authors/:id" element={<p>écran de l'auteur</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    // Plain text first, a link once the name search round-trips: waiting for the role is
+    // what actually waits for that, rather than matching the text either way.
+    await userEvent.click(await screen.findByRole('link', { name: 'Patrick Rothfuss' }));
+
+    expect(await screen.findByText("écran de l'auteur")).toBeInTheDocument();
+  });
+
+  /**
    * The row used to be narrowed to the three metals, which left the `abandon` shelf and
    * every category created on the Categories screen assignable from nowhere.
    */

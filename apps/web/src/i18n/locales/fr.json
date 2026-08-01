@@ -38,7 +38,8 @@
       "stats": "Connecte-toi pour voir tes statistiques.",
       "detail": "Connecte-toi pour voir ce titre.",
       "series": "Connecte-toi pour voir cette série.",
-      "categories": "Connecte-toi pour gérer tes catégories."
+      "categories": "Connecte-toi pour gérer tes catégories.",
+      "author": "Connecte-toi pour voir cet auteur."
     },
     "discover": "Découvrir l'application"
   },
@@ -360,6 +361,23 @@
     "empty": {
       "title": "Aucune série ici.",
       "description": "Les séries apparaissent dès qu'un de leurs tomes rejoint ta collection."
+    }
+  },
+  "author": {
+    "follow": "Suivre cet auteur",
+    "following": "✓ Auteur suivi",
+    "workCount_one": "{{count}} œuvre",
+    "workCount_other": "{{count}} œuvres",
+    "bibliography": "Bibliographie",
+    "emptyWorks": "Aucune œuvre connue pour cet auteur dans ta bibliothèque.",
+    "notFound": "Auteur introuvable.",
+    "error": "Impossible de charger cet auteur.",
+    "search": {
+      "title": "Chercher un auteur",
+      "placeholder": "Rechercher un auteur…",
+      "noResults": "Aucun auteur ne correspond à cette recherche.",
+      "workCount_one": "{{count}} œuvre",
+      "workCount_other": "{{count}} œuvres"
     }
   },
   "discover": {

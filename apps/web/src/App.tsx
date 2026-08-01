@@ -31,6 +31,9 @@ const DiscoverPage = lazy(() =>
 const SeriesPage = lazy(() =>
   import('./features/series/SeriesPage').then((m) => ({ default: m.SeriesPage })),
 );
+const AuthorPage = lazy(() =>
+  import('./features/author/AuthorPage').then((m) => ({ default: m.AuthorPage })),
+);
 const WishlistPage = lazy(() =>
   import('./features/wishlist/WishlistPage').then((m) => ({ default: m.WishlistPage })),
 );
@@ -99,6 +102,7 @@ function App() {
           <Route path="stats" element={<StatsPage />} />
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
+          <Route path="authors/:id" element={<AuthorPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>

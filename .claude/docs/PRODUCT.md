@@ -238,7 +238,7 @@ something as read — an existing collection carries no reading dates.
 - 🔜 Notification preferences.
 - 🔜 Legal notice, terms of service, privacy policy.
 
-Category management lives on its own screen (§ 4.9) rather than here: it is reached from
+Category management lives on its own screen (§ 4.10) rather than here: it is reached from
 the Collection, where the categories are used, and not from a settings list nobody visits
 while looking at their shelves.
 
@@ -268,7 +268,39 @@ collection.
 - 🔜 Volume covers and titles: the grid shows numbers, since `/api/series/{id}` only names
   the volumes present in the shared catalog.
 
-### 4.9 Categories ✅ / 🔜
+### 4.9 Author ✅ / 🔜
+
+`/authors/:id`, reachable from any resolvable author name on the Detail screen, and from a
+minimal search local to Discover ([#199](https://github.com/zelytra/Librarius/issues/199)).
+
+- ✅ Header: portrait — the photo the shared catalog carries, or a coloured block of the
+  author's initials when it has none, the same spirit as `Cover`'s fallback for a title
+  with no image — name, the count of works the local catalog credits them with, and a
+  **Follow** toggle in the same visual language as Series's. The toggle's state comes from
+  re-reading the author after the mutation, not from a local flip, and so survives a
+  reload.
+- ✅ **Bibliography**, in the shared cover grid Collection draws its own titles in. Unlike
+  Series's volume grid, a tile here opens nothing: the author page is a catalog browser,
+  and a title on it is not necessarily one the caller owns.
+- ✅ **A known author is never "not found."** Unlike a series, an author is shared-catalog
+  data with no ownership gate (see [API](API.md) § Authors): a 404 only ever means the
+  identifier itself is unknown.
+- ✅ **Author search**, local to Discover: `GET /api/authors?q=` behind one field, each hit
+  leading into its page. Deliberately minimal — this issue does not redesign navigation or
+  the bottom nav, [#57](https://github.com/zelytra/Librarius/issues/57) is where a proper
+  discovery surface is planned.
+- ✅ **Linked from Detail**: `BookView.authors` is a free-text credit line, not a list of
+  identifiers, so each name is resolved against the same local search and rendered as a
+  link only when it matches — a name the shared catalog does not know (a work recorded
+  before #182 backfilled it, or a spelling the fold does not fit) stays plain text rather
+  than a link that would 404.
+- 🔜 **"Tell me about what comes next"**: following an author records the relationship, but
+  nothing reads it yet — the upcoming-releases feed (#57) still keys only on a followed
+  series. Extending it to authors is a follow-up, not part of this issue.
+- 🔜 A provider's fuller bibliography — [API](API.md) gap A13, the same shape of gap as the
+  editions enrichment (#197).
+
+### 4.10 Categories ✅ / 🔜
 
 `/categories`, reached from the shelf row of the Collection — where the user is standing
 when they realise they want another shelf.
@@ -286,7 +318,7 @@ when they realise they want another shelf.
 - 🔜 Picking a colour. A custom category gets a neutral one; the built-ins keep the gold,
   silver and bronze of V1, and the muted grey V11 gave *Abandon*.
 
-### 4.10 Waiting, on every screen ✅ / 🔜
+### 4.11 Waiting, on every screen ✅ / 🔜
 
 Not a screen: what every screen shows while it has nothing yet.
 
@@ -309,7 +341,7 @@ Not a screen: what every screen shows while it has nothing yet.
   the mobile shell, which opens straight onto whatever route the router lands on.
 - 🔜 The animated logo itself, in place of the placeholder ring.
 
-### 4.11 Widths, on every screen ✅ / 🔜
+### 4.12 Widths, on every screen ✅ / 🔜
 
 Not a screen either: how much of the window the application is allowed to use.
 

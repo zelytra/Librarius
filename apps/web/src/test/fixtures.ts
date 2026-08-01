@@ -1,4 +1,7 @@
 import type {
+  AuthorDetailDto,
+  AuthorSummaryDto,
+  AuthorWorkDto,
   CatalogResult,
   CategoryDto,
   DashboardLayoutDto,
@@ -175,6 +178,42 @@ export function seriesDetail(overrides: Partial<SeriesDetailDto> = {}): SeriesDe
     readCount: 1,
     followed: false,
     volumes: seriesVolumes({ total: 5, owned: [1, 2, 4], read: [1] }),
+    ...overrides,
+  };
+}
+
+export function authorSummary(overrides: Partial<AuthorSummaryDto> = {}): AuthorSummaryDto {
+  return {
+    id: 'author-1',
+    name: 'Patrick Rothfuss',
+    photoUrl: undefined,
+    workCount: 1,
+    followed: false,
+    ...overrides,
+  };
+}
+
+export function authorWork(overrides: Partial<AuthorWorkDto> = {}): AuthorWorkDto {
+  return {
+    workId: 'work-1',
+    kind: 'BOOK',
+    title: 'Le Nom du vent',
+    authors: 'Patrick Rothfuss',
+    seriesTitle: 'Chronique du tueur de roi',
+    volumeNumber: 1,
+    originalYear: 2007,
+    coverUrl: undefined,
+    ...overrides,
+  };
+}
+
+export function authorDetail(overrides: Partial<AuthorDetailDto> = {}): AuthorDetailDto {
+  return {
+    id: 'author-1',
+    name: 'Patrick Rothfuss',
+    photoUrl: undefined,
+    followed: false,
+    works: [authorWork()],
     ...overrides,
   };
 }

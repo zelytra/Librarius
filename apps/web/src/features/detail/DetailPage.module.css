@@ -75,6 +75,18 @@
   margin-top: 4px;
 }
 
+/* A name that resolves to a known author (see AuthorNames.tsx) reads as a link, the rest
+   stays plain text — same colour so the line does not read as half a form. */
+.authors :global(a) {
+  color: var(--accent-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.authors :global(a:hover) {
+  text-decoration: underline;
+}
+
 .genres {
   font-size: var(--fs-12-5);
   color: var(--accent-deep);
