@@ -161,7 +161,7 @@ src/
 
 ```text
 zelytra/librarius/
-  domain/               # Panache entities + enums (Kind, LibraryStatus, WishPriority, GoalUnit)
+  domain/               # Panache entities + enums (Kind {BOOK,MANGA,COMIC,GRAPHIC_NOVEL,AUDIOBOOK}, LibraryStatus, WishPriority, GoalUnit)
     repository/         # PanacheRepositoryBase, every query scoped to the user
   web/                  # JAX-RS resources + ApiDtos (records) + exception mappers
   catalog/              # CatalogProvider (SPI), CatalogService (aggregation),
@@ -205,7 +205,10 @@ zelytra/librarius/
   cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit
   par…" → "Dune") and rewrites the authority heading ("Herbert, Frank (1920-1986). Auteur du
   texte") into the plain name Open Library returns, repeats dropped. Skip either and every
-  French novel the two catalogues share is listed twice.
+  French novel the two catalogues share is listed twice. `Kind` grew past `BOOK`/`MANGA` to
+  `COMIC`, `GRAPHIC_NOVEL` and `AUDIOBOOK` (V15/#178), but only the first two have a provider
+  registered: a title of a new medium is entered by hand and stored, and Discover simply
+  finds nothing for it until a provider or the generic search (#189/#194) lands.
 - **Catalog cache**: two levels behind `CatalogCache`, on the provider call rather than on
   the merged answer. Caffeine first (6 h for a search, 12 h for the releases), then the
   `catalog_cache` table (`CatalogCacheStore`), so a pod that has just started answers from

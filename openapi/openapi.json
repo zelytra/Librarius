@@ -490,7 +490,7 @@
       },
       "Kind" : {
         "type" : "string",
-        "enum" : [ "BOOK", "MANGA" ]
+        "enum" : [ "BOOK", "MANGA", "COMIC", "GRAPHIC_NOVEL", "AUDIOBOOK" ]
       },
       "LibraryCreateDto" : {
         "type" : "object",

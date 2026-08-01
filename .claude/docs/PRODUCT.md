@@ -34,7 +34,7 @@ being authored in French and translated.
 
 | Object | Definition | Owned by |
 |---|---|---|
-| **Work** (`work`) | The intellectual content: a novel, or *one volume* of a manga | Shared catalog |
+| **Work** (`work`) | The intellectual content: a novel, *one volume* of a manga, a comic (BD), a graphic novel or an audiobook — its `kind` (V15/#178) | Shared catalog |
 | **Edition** (`edition`) | One materialisation: ISBN, publisher, language, page count, cover, format | Shared catalog |
 | **Series** (`series`) | An ordered grouping of works ("One Piece", "A Song of Ice and Fire") | Shared catalog |
 | **Author** (`author`) | A person credited on works, related to a work through `work_author` | Shared catalog |

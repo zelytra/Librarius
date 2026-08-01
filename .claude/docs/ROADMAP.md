@@ -196,7 +196,7 @@ bibliography and can be followed; a work's editions carry covers the providers k
 | Issue | Topic | Depends on |
 |---|---|---|
 | [#184](https://github.com/zelytra/Librarius/issues/184) | ✅ Catalog entries stop losing their provider reference on add — the prerequisite for enriching anything (V12). Nothing is backfilled: only entries added from Discover after it carry a reference, and Open Library returns none to store until its provider is taught to ask for the work key | — |
-| [#178](https://github.com/zelytra/Librarius/issues/178) | Grow the medium taxonomy beyond books and manga | — |
+| [#178](https://github.com/zelytra/Librarius/issues/178) | ✅ Grow the medium taxonomy beyond books and manga: `Kind` gains `COMIC`, `GRAPHIC_NOVEL` and `AUDIOBOOK` next to `BOOK`/`MANGA`, documented on the live columns by V15. Additive — the `kind` column already accepted them, existing rows are untouched, and the binary Books/Manga toggle stays as it is until a follow-up (#189/#194/#183) reworks it | — |
 | [#189](https://github.com/zelytra/Librarius/issues/189) | Catalog search stops requiring a single mandatory kind | #178 |
 | [#194](https://github.com/zelytra/Librarius/issues/194) | Discover: one result feed across every medium | #189 |
 | [#179](https://github.com/zelytra/Librarius/issues/179) | ✅ A second book catalog provider — the **BnF** over SRU, not Google Books, which the user ruled out in [#9](https://github.com/zelytra/Librarius/pull/9) | — |
