@@ -67,6 +67,17 @@
   padding: 2px var(--screen-pad-x) 6px;
 }
 
+/* Past --bp-tablet the carousel a thumb could drag becomes a row a mouse would otherwise
+   have to drag sideways for nothing: DashboardSections swaps this in for `.shelf` once
+   `useViewportAtLeast('tablet')` says the width is there, the same width the Grid
+   primitive starts filling multiple columns at. Same cover size, same gap, no scrollbar —
+   covers wrap onto a second row instead of running off the first. */
+.shelfWide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
 /* ── Reading progress on a shelf cover ────────────────────────────────────────
    Drawn on the cover rather than under it: the shelf is a row of covers and
    adding a line below each of them would push the counters off the first

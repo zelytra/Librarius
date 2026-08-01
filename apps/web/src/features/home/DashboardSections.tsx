@@ -5,6 +5,7 @@ import { Cover } from '../../shared/ui/Cover';
 import { Icon } from '../../shared/ui/Icon';
 import { Button, SectionHeader } from '../../shared/ui/primitives';
 import { EmptyState } from '../../shared/ui/states';
+import { useViewportAtLeast } from '../../shared/ui/breakpoints';
 import {
   useGetApiDashboardLayout,
   type LibraryItemDto,
@@ -45,6 +46,11 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
   const { data } = useGetApiDashboardLayout();
   const sections = data?.sections ?? defaultLayout();
   const isHidden = (code: string) => sections.find((s) => s.code === code)?.hidden ?? false;
+  // Same decision AppShell makes for the navigation: whether a shelf scrolls or wraps is
+  // a shape change no track-size token can express, so it is read once from the shared
+  // breakpoint rather than duplicated as a media query here.
+  const wide = useViewportAtLeast('tablet');
+  const shelfClass = wide ? styles.shelfWide : `scroll-x ${styles.shelf}`;
 
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
 
@@ -107,7 +113,7 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
                 title={t('home.resumeReading')}
                 action={t('home.resumeCount', { reading: reading.length })}
               />
-              <div className={`scroll-x ${styles.shelf}`}>{reading.map(readingCover)}</div>
+              <div className={shelfClass}>{reading.map(readingCover)}</div>
             </section>
           )
         );
@@ -159,7 +165,7 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
           read.length > 0 && (
             <section key={code}>
               <SectionHeader title={t('home.recentlyRead')} />
-              <div className={`scroll-x ${styles.shelf}`}>{read.map(cover)}</div>
+              <div className={shelfClass}>{read.map(cover)}</div>
             </section>
           )
         );

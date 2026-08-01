@@ -25,6 +25,30 @@ export function createTestQueryClient(): QueryClient {
   });
 }
 
+/**
+ * Stubs `window.matchMedia` against a fixed viewport width — the same shim
+ * `AppShell.test.tsx` uses to choose which navigation mounts, lifted here so any screen
+ * that reads `useViewportAtLeast` (Home's shelves, Collection's chip rows) can assert its
+ * desktop layout without redeclaring the stub. jsdom implements no `matchMedia` at all, so
+ * every test that never calls this gets the phone layout for free — callers that do should
+ * restore it (`delete (window as { matchMedia?: unknown }).matchMedia`) in an `afterEach`.
+ */
+export function mockViewportWidth(width: number) {
+  window.matchMedia = (query: string): MediaQueryList => {
+    const minWidth = /\(\s*min-width:\s*(\d+)px\s*\)/.exec(query);
+    return {
+      matches: minWidth != null && width >= Number(minWidth[1]),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    } as unknown as MediaQueryList;
+  };
+}
+
 export function TestProviders({ children, route = '/' }: { children: ReactNode; route?: string }) {
   return (
     <QueryClientProvider client={createTestQueryClient()}>

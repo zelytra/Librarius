@@ -89,15 +89,21 @@
   flex: 0 0 auto;
 }
 
+/* Past --bp-tablet, applied alongside `.chipRow` / `.sortRow`: once the row's own content
+   fits the available width, dragging it sideways is a scrollbar with nothing behind it —
+   CollectionPage swaps this in once `useViewportAtLeast('tablet')` says there is room, and
+   whatever does not fit wraps onto a second line instead of a scrollbar appearing. */
+.rowWide {
+  overflow-x: visible;
+  flex-wrap: wrap;
+}
+
 .empty {
   padding: 50px 24px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px 12px;
-}
+/* The flat view's cover grid is the shared `Grid` primitive (`shared/ui/primitives.tsx`):
+   nothing left to declare here past what the tokens already give it. */
 
 /* ── Overlays drawn on a cover ────────────────────────────────────────────── */
 

@@ -5,9 +5,10 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { RANK_ICONS, isRankCode } from '../../shared/ui/ranks';
-import { Button, Chip, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
+import { Button, Chip, Grid, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { useViewportAtLeast } from '../../shared/ui/breakpoints';
 import {
   getApiLibrary,
   getGetApiLibraryQueryKey,
@@ -124,6 +125,12 @@ function CollectionContent() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<View>('flat');
   const series = view === 'series';
+  // Same shape decision as the Home shelves: whether the chip rows scroll or wrap is not
+  // something a track-size token can answer, so it is read once from the shared breakpoint
+  // rather than declared as a media query here.
+  const wide = useViewportAtLeast('tablet');
+  const chipRowClass = wide ? `${styles.chipRow} ${styles.rowWide}` : `scroll-x ${styles.chipRow}`;
+  const sortRowClass = wide ? `${styles.sortRow} ${styles.rowWide}` : `scroll-x ${styles.sortRow}`;
 
   // One request per pause in the typing rather than one per keystroke.
   useEffect(() => {
@@ -251,7 +258,7 @@ function CollectionContent() {
           filter nothing in the Series view. They keep their state so switching back
           restores the shelf the user was on. */}
       {!series && (
-        <div className={`scroll-x ${styles.chipRow}`}>
+        <div className={chipRowClass}>
           {shelves.map((s) => (
             <Chip
               key={s.key}
@@ -292,7 +299,7 @@ function CollectionContent() {
         </div>
       </div>
 
-      <div className={`scroll-x ${styles.sortRow}`}>
+      <div className={sortRowClass}>
         <span className={styles.sortLabel}>{t('collection.sortBy')}</span>
         {series
           ? SERIES_SORTS.map((s) => (
@@ -334,7 +341,10 @@ function CollectionContent() {
         shelf.length > 0 && <SeriesList series={shelf} />
       ) : (
         items.length > 0 && (
-          <div className={styles.grid}>
+          // The shared cover grid (shared/ui/primitives.tsx): three fixed columns on a
+          // phone, as many as the width holds past --bp-tablet — see the Grid block of
+          // tokens.css for the reasoning behind the track sizes.
+          <Grid>
             {items.map((it) => (
               <CoverTile
                 key={it.id}
@@ -344,7 +354,7 @@ function CollectionContent() {
                 onDelete={() => void remove(it.id!)}
               />
             ))}
-          </div>
+          </Grid>
         )
       )}
 
