@@ -13,17 +13,19 @@ import {
   usePostApiWishlist,
   type CatalogResult,
   type GetApiCatalogSearchParams,
+  type Kind,
   type ManualBookDto,
 } from '../../api/generated/librarius';
 
 import { Icon } from '../../shared/ui/Icon';
-import { Button, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
+import { Button, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import { AuthorSearch } from '../author/AuthorSearch';
-import { Field, FieldGrid, SelectField } from './fields';
+import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
+import { ALL_KINDS, KIND_LABEL_KEY, knownKind } from './medium';
 import styles from './DiscoverPage.module.css';
 
 /** The provider is reachable but refused: show the status, it is actionable. */
@@ -36,8 +38,6 @@ function searchFailureMessage(t: TFunction, error: unknown): string {
   }
   return t('discover.errors.unavailable');
 }
-
-type Kind = 'BOOK' | 'MANGA';
 
 /** Size of the thumbnail shown next to a catalogue result. */
 const RESULT_COVER = { width: 58, height: 84, radius: 8 };
@@ -54,9 +54,11 @@ interface Advanced {
   year: string;
   language: string;
   publisher: string;
+  /** Narrows the search to these mediums; empty reaches every registered provider. */
+  medium: Kind[];
 }
 
-const NO_ADVANCED: Advanced = { author: '', year: '', language: '', publisher: '' };
+const NO_ADVANCED: Advanced = { author: '', year: '', language: '', publisher: '', medium: [] };
 
 function trimmed(value: string): string | undefined {
   return value.trim() === '' ? undefined : value.trim();
@@ -65,13 +67,15 @@ function trimmed(value: string): string | undefined {
 /**
  * Turns what the form holds into the query the API takes. An ISBN recognised in the plain
  * field is sent as one instead of as keywords: the catalogs index it on its own field, so
- * searching the digits as text finds nothing.
+ * searching the digits as text finds nothing. `kind` is left out entirely when the medium
+ * filter is empty, which is what makes the search reach every registered provider instead
+ * of just one.
  */
-function searchParams(query: string, advanced: Advanced, kind: Kind): GetApiCatalogSearchParams {
+function searchParams(query: string, advanced: Advanced): GetApiCatalogSearchParams {
   const isbn = detectIsbn(query);
   const year = Number(advanced.year.trim());
   return {
-    kind: [kind],
+    kind: advanced.medium.length > 0 ? advanced.medium : undefined,
     q: isbn ? undefined : trimmed(query),
     isbn: isbn ?? undefined,
     author: trimmed(advanced.author),
@@ -90,11 +94,12 @@ function isBlankSearch(params: GetApiCatalogSearchParams): boolean {
 /**
  * The result as the API takes it. `provider` and `providerRef` say which record the entry
  * came from: without them the server cannot tell a title picked here from one typed by hand,
- * and no provider can be asked about it again later.
+ * and no provider can be asked about it again later. The kind is the result's own — a mixed
+ * feed carries no screen-wide default to fall back on any more.
  */
-function toBook(r: CatalogResult, fallbackKind: Kind): ManualBookDto {
+function toBook(r: CatalogResult): ManualBookDto {
   return {
-    kind: (r.kind as Kind) ?? fallbackKind,
+    kind: knownKind(r.kind),
     title: r.title ?? '—',
     authors: r.authors,
     coverUrl: r.coverUrl,
@@ -113,7 +118,6 @@ function DiscoverContent() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
-  const [kind, setKind] = useState<Kind>('BOOK');
   const [advanced, setAdvanced] = useState<Advanced>(NO_ADVANCED);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -138,7 +142,7 @@ function DiscoverContent() {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const params = searchParams(query, advanced, kind);
+    const params = searchParams(query, advanced);
     if (isBlankSearch(params)) return;
     setAdded({});
     setAddError(null);
@@ -157,7 +161,7 @@ function DiscoverContent() {
   }
 
   async function add(r: CatalogResult, key: string, target: 'library' | 'wishlist') {
-    const book = toBook(r, kind);
+    const book = toBook(r);
     try {
       if (target === 'library') await addToLibrary({ data: { book, status: 'OWNED' } });
       else await addToWishlist({ data: { book, priority: 'SOON' } });
@@ -184,17 +188,6 @@ function DiscoverContent() {
           tablet breakpoint they settle at a reading-form measure instead of stretching the
           full content width — see `.searchColumn` in the module CSS. */}
       <div className={styles.searchColumn}>
-        <div className={styles.kindSwitch}>
-          <Segmented<Kind>
-            value={kind}
-            onChange={setKind}
-            options={[
-              { id: 'BOOK', label: t('common.books') },
-              { id: 'MANGA', label: t('common.mangas') },
-            ]}
-          />
-        </div>
-
         <form onSubmit={onSubmit} className={styles.searchForm}>
           <div className={styles.searchBar}>
             <Icon name="search" size={21} color="var(--faint)" />
@@ -256,6 +249,12 @@ function DiscoverContent() {
                     })),
                   ]}
                 />
+                <MultiSelectField<Kind>
+                  label={t('discover.advanced.medium')}
+                  values={advanced.medium}
+                  onChange={(medium) => setAdvanced((a) => ({ ...a, medium }))}
+                  options={ALL_KINDS.map((k) => ({ value: k, label: t(KIND_LABEL_KEY[k]) }))}
+                />
               </FieldGrid>
               {/* Saying which criteria a provider honours beats silently dropping them. */}
               <p className={styles.coverage}>{t('discover.advanced.coverage')}</p>
@@ -268,7 +267,6 @@ function DiscoverContent() {
 
         {manualOpen && (
           <ManualAddForm
-            kind={kind}
             onCancel={() => setManualOpen(false)}
             onAdded={(title) => {
               setManualOpen(false);
@@ -304,6 +302,7 @@ function DiscoverContent() {
         {results.map((r, i) => {
           const key = keyOf(r, i);
           const state = added[key];
+          const meta = [r.authors, r.year].filter(Boolean).join(' · ');
           return (
             <div key={key} className={styles.result}>
               <BookCover
@@ -316,7 +315,12 @@ function DiscoverContent() {
               />
               <div className={styles.resultBody}>
                 <div className={styles.resultTitle}>{r.title}</div>
-                <div className={styles.resultMeta}>{[r.authors, r.year].filter(Boolean).join(' · ')}</div>
+                {/* A mixed feed no longer says what a result is through a screen-wide
+                    toggle, so each one names its own medium here. */}
+                <div className={styles.resultMeta}>
+                  <span className={styles.kindBadge}>{t(KIND_LABEL_KEY[knownKind(r.kind)])}</span>
+                  {meta && <span>{meta}</span>}
+                </div>
                 {state ? (
                   <div className={styles.added}>
                     {t(state === 'library' ? 'discover.addedToLibrary' : 'discover.addedToWishlist')}

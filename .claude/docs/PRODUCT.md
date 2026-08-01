@@ -173,22 +173,30 @@ The full inventory, one shelf per support type.
 
 ### 4.4 Discover ✅ / 🔜
 
-Search across the external catalog (Open Library for books, AniList for manga).
+Search across the external catalog (Open Library and the BnF for books, AniList for manga).
 
-- ✅ Keyword search, Book / Manga toggle, direct add to the collection or the wishlist.
+- ✅ **One result feed across every medium**
+  ([#194](https://github.com/zelytra/Librarius/issues/194)): the plain search box, and the
+  ISBN auto-detection sitting behind it, query every registered provider at once — no
+  up-front Books/Manga toggle to clear before typing a word. Each hit names its own medium
+  next to its author and year, since a mixed feed no longer says it implicitly through a
+  screen-wide toggle. "Add to library" and "add to wishlist" send that result's own kind,
+  never a screen default.
 - ✅ **Advanced search**: author, year, language, publisher, folded away behind a toggle.
   The criteria a provider does not index are ignored rather than faked, and the panel says
-  so — see [API](API.md#catalog-search) for what each one honours.
+  so — see [API](API.md#catalog-search) for what each one honours. The same panel carries an
+  optional **medium filter**, a multi-select over the whole taxonomy next to the language
+  field: left untouched, the search still reaches every medium; naming one or several
+  narrows it, sending the same repeatable `kind` the API takes. Filtering to a medium with
+  no provider registered yet (comic, graphic novel, audiobook) is a legal choice that
+  answers nothing, same as any other criterion no provider currently honours.
 - ✅ **ISBN recognised in the search field**: pasting the number off a back cover searches
   the ISBN rather than the digits as keywords. The check digit is verified, so a barcode
   or an order number still goes through as an ordinary search.
 - ✅ **Manual entry** for a title absent from the catalogs — self-published, an old
-  edition, a fanzine. Offered from both empty states, which is where the user meets it.
-- ✅ **Cross-medium search** at the API: `kind` is now optional and repeatable, so one call
-  can reach every registered provider — books and manga today, comics, graphic novels and
-  audiobooks as they are wired in — and return the answers merged, each result still badged
-  with its own `kind`. The Book / Manga toggle still scopes the screen to one medium; the
-  single unified Discover feed that drops the toggle is [#194](https://github.com/zelytra/Librarius/issues/194).
+  edition, a fanzine. Offered from both empty states, which is where the user meets it, and
+  picks its own medium explicitly: the form no longer inherits an ambient screen-level kind,
+  since #194 removed the toggle it used to read one from.
 - 🔜 **ISBN barcode scanning** (camera) — the key feature in a bookshop, native through
   Capacitor. The ISBN search it feeds already exists.
 - 🔜 A catalog page before adding: pick the *edition* and the initial *status*.

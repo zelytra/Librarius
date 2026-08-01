@@ -74,6 +74,33 @@ describe('DiscoverPage', () => {
     expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
   });
 
+  /**
+   * A mixed feed no longer says what a result is through a screen-wide toggle (#194): each
+   * one has to name its own medium instead.
+   */
+  test('labels each result with its own medium', async () => {
+    searchReturns([
+      catalogResult({ kind: 'BOOK', title: 'Fourth Wing' }),
+      catalogResult({
+        kind: 'MANGA',
+        title: 'One Piece',
+        authors: 'Eiichiro Oda',
+        year: 1997,
+        provider: 'anilist',
+        providerRef: 'AL1',
+      }),
+    ]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+
+    // Each title is rendered twice: in the card, and on the fallback cover.
+    expect((await screen.findAllByText('Fourth Wing')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('One Piece')).length).toBeGreaterThan(0);
+    expect(screen.getByText('Livre')).toBeInTheDocument();
+    expect(screen.getByText('Manga')).toBeInTheDocument();
+  });
+
   // ── Desktop layout (#174) ────────────────────────────────────────────────────
 
   test('opts the search field into the reading-measure column and the results into the panel grid', async () => {
@@ -231,6 +258,64 @@ describe('DiscoverPage', () => {
     });
   });
 
+  describe('medium filter (#194)', () => {
+    test('reaches every registered provider when no medium is chosen', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await search('dune');
+
+      expect(calls[0].getAll('kind')).toEqual([]);
+    });
+
+    test('narrows the search to the medium selected', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.click(screen.getByText('Manga'));
+      await search('dune');
+
+      expect(calls[0].getAll('kind')).toEqual(['MANGA']);
+    });
+
+    test('sends every medium selected, repeatably', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.click(screen.getByText('Livre'));
+      await userEvent.click(screen.getByText('Manga'));
+      await search('dune');
+
+      expect(calls[0].getAll('kind')).toEqual(['BOOK', 'MANGA']);
+    });
+
+    test('clicking a selected medium again removes it from the query', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.click(screen.getByText('Manga'));
+      await userEvent.click(screen.getByText('Manga'));
+      await search('dune');
+
+      expect(calls[0].getAll('kind')).toEqual([]);
+    });
+
+    test('reset clears the medium filter along with the rest of the panel', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await openAdvanced();
+      await userEvent.click(screen.getByText('Manga'));
+      await userEvent.click(screen.getByText('Réinitialiser'));
+      await search('dune');
+
+      expect(calls[0].getAll('kind')).toEqual([]);
+    });
+  });
+
   describe('manual add', () => {
     test('offers the manual entry when a search comes back empty', async () => {
       searchReturns([]);
@@ -275,12 +360,14 @@ describe('DiscoverPage', () => {
       });
     });
 
-    test('records the kind the screen is set to', async () => {
+    test('defaults to book, and records the medium chosen instead', async () => {
       const posts = capturedLibraryPosts();
       renderWithProviders(<DiscoverPage />);
 
-      await userEvent.click(screen.getByText('Mangathèque'));
       await openManualForm();
+      expect(screen.getByLabelText('Support')).toHaveValue('BOOK');
+
+      await userEvent.selectOptions(screen.getByLabelText('Support'), 'MANGA');
       await userEvent.type(screen.getByLabelText('Titre'), 'Un doujinshi');
       await userEvent.click(screen.getByText('Ajouter à la collection'));
 

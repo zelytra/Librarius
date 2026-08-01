@@ -144,6 +144,10 @@ export function Chip({
 }) {
   return (
     <button
+      // Explicit, same reason as `Segmented`: a button inside a form submits it by
+      // default, and toggling a chip is a choice, never the validation of a form it
+      // might sit in (the discover medium filter is the first one that does).
+      type="button"
       onClick={onClick}
       className={cx(styles.chip, onClick && styles.chipClickable, selected && styles.chipSelected)}
     >
