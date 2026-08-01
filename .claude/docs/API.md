@@ -173,7 +173,8 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}`
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
 `ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}` ·
 `ReportTargetType {WORK, EDITION, SERIES}` ·
-`ReportReason {WRONG_COVER, WRONG_INFO, DUPLICATE, OTHER}` · `ReportStatus {OPEN, DISMISSED}`.
+`ReportReason {WRONG_COVER, WRONG_INFO, DUPLICATE, OTHER}` ·
+`ReportStatus {OPEN, DISMISSED, UPHELD}`.
 
 ## Profile
 
@@ -199,6 +200,13 @@ which `MeApiTest` verifies leaves the row untrusted. `MeDto.trusted` and
 `MemberSummaryDto.trusted` read the same column straight off `AppUser` and exist only to be
 displayed: the Settings screen shows a small badge next to the caller's own display name when
 it is `true`, and nothing — no placeholder — when it is not.
+
+`TrustEvaluator` both grants and, since [#195](https://github.com/zelytra/Librarius/issues/195),
+revokes: one verdict recomputed daily off the request path, promoting an account that clears the
+bar and taking the flag back from one that no longer does — too many `UPHELD` reports against its
+contributions over a rolling window (see [Reports](#reports)). Grant and revocation share the one
+`qualifies` method, so retuning either is a number in configuration, never an endpoint. Still no
+request or response carries `trusted`.
 
 ## Following members
 
@@ -742,10 +750,19 @@ it is the resource just created, not a way back into the store.
 The target is validated before a row is written: `report.target_id` points at one of three
 tables depending on `target_type`, so no foreign key can guard it, and `ReportService` resolves
 it against the matching table instead. **An unknown target is a 400**, not a silent success —
-a report against nothing is a bug, not a report. `status` is `OPEN` on creation and nothing in
-this issue moves it; the column is there for what consumes a report later (the revocation logic,
-a possible admin view), and neither an admin review screen nor the revocation consumer is in
-scope here. See [DATA-MODEL](DATA-MODEL.md#cascades) for the table and its cascade.
+a report against nothing is a bug, not a report. `status` is `OPEN` on creation and no endpoint
+moves it: the two further values, `DISMISSED` and `UPHELD`, are set by a moderation review, and
+the surface that performs it — behind a Keycloak-gated admin role — is deliberately **not** built
+yet. See [DATA-MODEL](DATA-MODEL.md#cascades) for the table and its cascade.
+
+The revocation consumer now exists off the request path (#195): `TrustEvaluator` counts the
+`UPHELD` reports against an account's contributions (`report.contributor_id`) over a rolling
+window and takes the trust flag back when they cross a configurable threshold — see the trust
+note under [Profile](#profile). It reads reports in aggregate; it adds no endpoint, and none of
+this is visible in the API. Because nothing writes `UPHELD` until the moderation surface exists,
+and nothing stamps `contributor_id` until the contribution attribution
+([#198](https://github.com/zelytra/Librarius/issues/198)) does, the revocation is wired and
+tested but stays dormant in production for now — it only grants, exactly as #180 shipped.
 
 ## Pagination
 

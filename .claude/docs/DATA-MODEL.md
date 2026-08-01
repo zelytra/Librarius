@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -50,7 +50,7 @@ of a denormalised field to keep in step on every write.
 | `author_follow` | `(user_id, author_id)` | `created_at` | No surrogate key: the pair is the identity, exactly like `series_follow` (V13) |
 | `user_follow` | `(follower_id, followee_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (follower_id <> followee_id)` — no self-follow. PK doubles as the "who this user follows" index; separate idx on `followee_id` for "who follows this user" (V18/#200) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
-| `report` | `id UUID` | `reporter_id` FK `app_user`, `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED, default OPEN), `created_at` | idx `(target_type, target_id)` and `(reporter_id)`. No FK on `target_id`: it spans three tables, resolved in the service (V17/#192) |
+| `report` | `id UUID` | `reporter_id` FK `app_user`, `contributor_id` FK `app_user` **nullable** (V19), `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED\|UPHELD, default OPEN), `created_at` | idx `(target_type, target_id)`, `(reporter_id)` and `(contributor_id)` (V19). No FK on `target_id`: it spans three tables, resolved in the service (V17/#192). `contributor_id` `ON DELETE SET NULL`, read by the trust revocation (V19/#195) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
 (#8f8579) joins them in V11.
@@ -378,12 +378,45 @@ refuses a self-follow in the schema, backing the 400 the API returns; the primar
 "who this user follows", and a separate index on `followee_id` covers the reverse, "who
 follows this user".
 
+`V19__report_contributor.sql` closes the loop between the report table (V17) and the trust flag
+(V16): it lets `TrustEvaluator` **revoke** and not only grant
+([#195](https://github.com/zelytra/Librarius/issues/195)). A trusted account that repeatedly
+contributes bad data used to keep its badge forever; now an account carrying too many *upheld*
+reports against its contributions, over a rolling window, loses it. Two things the report table
+lacked feed that verdict:
+
+- **`contributor_id`** — who a report reflects on. `report` already carried `reporter_id` (who
+  filed it); the revocation needs the other side, the account that contributed the flagged
+  object. It is **nullable** and stays NULL until the contribution attribution
+  ([#198](https://github.com/zelytra/Librarius/issues/198)) records who contributed a catalog
+  object and stamps it at report time — so **no real row triggers a revocation yet**, and the
+  mechanism is exercised by tests that set it directly. `ON DELETE SET NULL`, not `CASCADE` like
+  `reporter_id`: erasing the contributor's account forgets who a report was against, it does not
+  erase catalog feedback about the object. Indexed for the per-contributor count.
+- **`UPHELD`** joins the `status` picklist (`domain.ReportStatus`). `status` is a `VARCHAR` with
+  no `CHECK`, so the new value needs no column change — only the enum in code. A report counts
+  against a contributor **only once it is `UPHELD`**, never while `OPEN`, so filing reports is
+  not a way to strip a stranger of their trust. Nothing writes `UPHELD` yet: that is a
+  moderation action behind an admin surface a maintainer must set up (a Keycloak-gated role,
+  deliberately **not** built here). Until it exists the count stays zero and the evaluator only
+  grants, exactly as V16 shipped it.
+
+The threshold and the window are configuration (`librarius.trust.max-upheld-reports`,
+`librarius.trust.report-window-days`), read alongside the grant thresholds in the same single
+`TrustEvaluator.qualifies` — grant and revocation are the two directions of one verdict, not two
+criteria. Revocation is a state, not a ban: an account whose upheld reports age out of the window
+or are dismissed earns the flag back on a later run through the very same gate.
+
 ### Cascades
 
-Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
-their data — handy for GDPR account deletion. `user_follow` points at `app_user` **twice**, so
+Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all
+of their data — handy for GDPR account deletion. `user_follow` points at `app_user` **twice**, so
 deleting an account removes both the follows it issued (`follower_id`) and the follows aimed at
-it (`followee_id`) in the same statement, leaving no dangling edge behind (#200).
+it (`followee_id`) in the same statement, leaving no dangling edge behind (#200). The one
+deliberate exception is `report.contributor_id` (V19), `ON DELETE SET NULL`: a report is feedback
+about a shared catalog object that outlives its contributor's account, so erasing that account
+forgets who the report was against rather than erasing the report. `report.reporter_id`, on the
+same table, stays `CASCADE` — erasing an account still erases the reports it *filed*.
 `library_item.rank_category_id` is `ON DELETE SET NULL`. **Deleting a category detaches the
 titles, it never deletes them**: a rank is a label stuck on a book, so dropping the label
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
@@ -409,15 +442,15 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V16 are taken — the upcoming releases, the category constraint, the
+> Numbering: V8 to V19 are taken — the upcoming releases, the category constraint, the
 > dashboard layout, the abandoned status, the provider reference, the author entities, the
-> user time zone, the medium taxonomy (V15, #178), the trust flag (V16, #180) and the report
-> table (V17, #192); the member follow (V18, #200) is landing alongside this. The plan below
-> therefore starts at **V19**. Both planned entries have been renumbered up as each migration
-> landed — as they were at V16, V15, V14, V13, V12 and V11 — and since neither is implemented,
-> nothing that shipped had to move.
+> user time zone, the medium taxonomy (V15, #178), the trust flag (V16, #180), the report
+> table (V17, #192), the member follow (V18, #200) and the report contributor (V19, #195). The
+> plan below therefore starts at **V20**. Both planned entries have been renumbered up as each
+> migration landed — as they were at V19, V16, V15, V14, V13, V12 and V11 — and since neither is
+> implemented, nothing that shipped had to move.
 
-### V19 — Drop the denormalised labels & reading history
+### V20 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -445,7 +478,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V20 — Notifications
+### V21 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

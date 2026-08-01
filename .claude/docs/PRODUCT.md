@@ -188,8 +188,11 @@ The full inventory, one shelf per support type.
   information, duplicate, other — and an optional comment. It flags the shared **work** the
   title belongs to, not the caller's private copy, since an error in the data is everyone's.
   The report is a private signal: it is sent and confirmed, never shown back to anyone, and
-  feeds the automatic trust revocation planned for this milestone
-  ([#195](https://github.com/zelytra/Librarius/issues/195)). There is no moderation screen yet.
+  feeds the automatic trust revocation now wired for this milestone
+  ([#195](https://github.com/zelytra/Librarius/issues/195)): an account that collects too many
+  *upheld* reports against its contributions loses its trusted standing. A report only weighs
+  once a moderator upholds it, and the moderation screen that does so is not built yet — so the
+  revocation waits on it before it can act on real reports.
 - 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 
@@ -500,16 +503,24 @@ year 🔜.
    carries over as a **percentage** — the only measure that survives a change of pagination —
    and the page is recomputed from the new page count. A user cannot own the same edition
    twice, so a switch onto one already in their collection is refused with a message.
-9. **Trust is earned, never granted** ([#180](https://github.com/zelytra/Librarius/issues/180)).
-   An account carries a private "trusted" standing that the application computes on its own,
-   from the account's own activity — enough tenure, enough titles actually finished, and a
-   record clean of upheld reports. A user never sets it on themselves and no user grants it to
-   another: it is decided off the request path by a scheduled evaluation, and no screen or
-   endpoint can flip it. What "trustworthy" precisely means is a threshold meant to be retuned,
-   not a fixed line. The flag is now surfaced as a badge next to the caller's own display
-   name in Settings ([#186](https://github.com/zelytra/Librarius/issues/186), § 4.7); losing
-   it when a report is upheld ([#195](https://github.com/zelytra/Librarius/issues/195)) is
-   still ahead.
+9. **Trust is earned, never granted — and can be lost**
+   ([#180](https://github.com/zelytra/Librarius/issues/180),
+   [#195](https://github.com/zelytra/Librarius/issues/195)). An account carries a private
+   "trusted" standing that the application computes on its own, from the account's own activity —
+   enough tenure, enough titles actually finished, and a record clear of upheld reports. A user
+   never sets it on themselves and no user grants it to another: it is decided off the request
+   path by a scheduled evaluation, and no screen or endpoint can flip it. The same evaluation now
+   also **takes the flag back**: an account that collects too many upheld reports against what it
+   contributed loses its standing, and earns it back later if the reports age out or are
+   dismissed — revocation is a state, not a ban. What "trustworthy" precisely means, and how many
+   upheld reports is "too many", are thresholds meant to be retuned, not fixed lines. The flag is
+   surfaced as a badge next to the caller's own display name in Settings
+   ([#186](https://github.com/zelytra/Librarius/issues/186), § 4.7). **One piece is still
+   maintainer-gated**: a report only counts once a moderator marks it *upheld*, and the
+   moderation surface that does so lives behind an admin role that is not built yet — so today the
+   evaluation grants in practice and the revocation path, though wired and tested, waits on that
+   surface (and on the contribution attribution of
+   [#198](https://github.com/zelytra/Librarius/issues/198)) to have real reports to act on.
 
 ## 7. Out of scope (explicit decisions)
 
