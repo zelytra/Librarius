@@ -15,6 +15,10 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
 | PATCH | `/api/me` | Updates the caller's own profile (`UpdateMeDto`) — display name, language, time zone. See [Profile](#profile) |
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
+| GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
+| GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
+| PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 404 on an unknown id |
+| DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
@@ -66,6 +70,7 @@ Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the 
 ```java
 MeDto(String id, String email, String displayName, String locale, String timeZone)
 UpdateMeDto(String displayName, String locale, String timeZone)   // locale in {fr,en}; timeZone an IANA id or blank
+MemberSummaryDto(String id, String displayName)   // another member in a follow list — no email nor any reach-them field
 
 BookView(/* read projection of an edition and its work; carries editionId and workId */)
 
@@ -193,6 +198,33 @@ only the three fields above, and `PATCH /api/me` silently ignores a body that ad
 which `MeApiTest` verifies leaves the row untrusted. It is deliberately **not** on `MeDto`
 either: showing it is [#186](https://github.com/zelytra/Librarius/issues/186), so this milestone
 step is storage and evaluation only.
+
+## Following members
+
+The **social** follow (#200), distinct from the series and author follows: those link a
+caller to a catalog entity, this links a caller to another member. It is the first endpoint
+that touches another `app_user`.
+
+`PUT /api/users/{id}/follow` and `DELETE /api/users/{id}/follow` start and stop following the
+member `{id}`, always as the caller (`CurrentUser.id()`) — a caller cannot follow on anybody
+else's behalf. Both are **idempotent** and answer **204**: a repeated `PUT`, or a `DELETE` of
+a follow that is not there, is a no-op, not an error. Following **yourself** is refused with a
+**400** — the `user_follow` row is impossible to store anyway, a `CHECK` in the schema — and
+an id that is **nobody** is a **404**, never a 403: an unknown account and an unreachable one
+give the same answer, so the endpoint confirms nothing about who exists.
+
+`GET /api/me/following` and `GET /api/me/followers` return the caller's own two lists as
+`MemberSummaryDto` — `id` and `displayName`, and deliberately no email or other reach-them
+field: a follow list says *who*, not how to contact them. These are relationship metadata
+about the caller's **own** account, not another member's content, so they are **not** gated by
+the mutual-follow visibility rule [#201](https://github.com/zelytra/Librarius/issues/201)
+adds — a caller always sees who they follow and who follows them. `UserFollowApiTest` pins the
+round-trip, idempotence, self-refusal, the unknown-id 404, and the alice/bob/carol isolation:
+one member's follow never surfaces in a third's lists.
+
+Following immediately unlocks nothing on its own here — what a mutual follow *reveals* is #201,
+and the find-people screens are [#202](https://github.com/zelytra/Librarius/issues/202); this
+is the relationship and its API only.
 
 ## Reading progress
 

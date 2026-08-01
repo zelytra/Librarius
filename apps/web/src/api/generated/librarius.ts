@@ -341,6 +341,11 @@ export interface MeDto {
   timeZone?: string;
 }
 
+export interface MemberSummaryDto {
+  id?: string;
+  displayName?: string;
+}
+
 export interface ProgressDto {
   /** @minimum 0 */
   currentPage?: number;
@@ -3272,6 +3277,208 @@ export const useDeleteApiMe = <TError = void,
       return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
     }
 
+export const getGetApiMeFollowersUrl = () => {
+
+
+
+
+  return `/api/me/followers`
+}
+
+/**
+ * @summary Followers
+ */
+export const getApiMeFollowers = async ( options?: RequestInit): Promise<MemberSummaryDto[]> => {
+
+  return apiClient<MemberSummaryDto[]>(getGetApiMeFollowersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiMeFollowersQueryKey = () => {
+    return [
+    `/api/me/followers`
+    ] as const;
+    }
+
+
+export const getGetApiMeFollowersQueryOptions = <TData = Awaited<ReturnType<typeof getApiMeFollowers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMeFollowersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMeFollowers>>> = () => getApiMeFollowers();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMeFollowersQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMeFollowers>>>
+export type GetApiMeFollowersQueryError = void
+
+
+export function useGetApiMeFollowers<TData = Awaited<ReturnType<typeof getApiMeFollowers>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeFollowers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeFollowers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeFollowers<TData = Awaited<ReturnType<typeof getApiMeFollowers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeFollowers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeFollowers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeFollowers<TData = Awaited<ReturnType<typeof getApiMeFollowers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Followers
+ */
+
+export function useGetApiMeFollowers<TData = Awaited<ReturnType<typeof getApiMeFollowers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMeFollowersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiMeFollowingUrl = () => {
+
+
+
+
+  return `/api/me/following`
+}
+
+/**
+ * @summary Following
+ */
+export const getApiMeFollowing = async ( options?: RequestInit): Promise<MemberSummaryDto[]> => {
+
+  return apiClient<MemberSummaryDto[]>(getGetApiMeFollowingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiMeFollowingQueryKey = () => {
+    return [
+    `/api/me/following`
+    ] as const;
+    }
+
+
+export const getGetApiMeFollowingQueryOptions = <TData = Awaited<ReturnType<typeof getApiMeFollowing>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMeFollowingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMeFollowing>>> = () => getApiMeFollowing();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMeFollowingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMeFollowing>>>
+export type GetApiMeFollowingQueryError = void
+
+
+export function useGetApiMeFollowing<TData = Awaited<ReturnType<typeof getApiMeFollowing>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeFollowing>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeFollowing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeFollowing<TData = Awaited<ReturnType<typeof getApiMeFollowing>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeFollowing>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeFollowing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeFollowing<TData = Awaited<ReturnType<typeof getApiMeFollowing>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Following
+ */
+
+export function useGetApiMeFollowing<TData = Awaited<ReturnType<typeof getApiMeFollowing>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeFollowing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMeFollowingQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiReleasesUpcomingUrl = (params?: GetApiReleasesUpcomingParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -4104,6 +4311,148 @@ export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiS
 
 
 
+
+export const getDeleteApiUsersIdFollowUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/follow`
+}
+
+/**
+ * @summary Unfollow
+ */
+export const deleteApiUsersIdFollow = async (id: string, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiUsersIdFollowUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiUsersIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdFollow>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdFollow>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteApiUsersIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiUsersIdFollow>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiUsersIdFollow(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiUsersIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiUsersIdFollow>>>
+
+    export type DeleteApiUsersIdFollowMutationError = void
+
+    /**
+ * @summary Unfollow
+ */
+export const useDeleteApiUsersIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdFollow>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiUsersIdFollow>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteApiUsersIdFollowMutationOptions(options), queryClient);
+    }
+
+export const getPutApiUsersIdFollowUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/follow`
+}
+
+/**
+ * @summary Follow
+ */
+export const putApiUsersIdFollow = async (id: string, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiUsersIdFollowUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getPutApiUsersIdFollowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollow>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollow>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['putApiUsersIdFollow'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiUsersIdFollow>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  putApiUsersIdFollow(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiUsersIdFollowMutationResult = NonNullable<Awaited<ReturnType<typeof putApiUsersIdFollow>>>
+
+    export type PutApiUsersIdFollowMutationError = void
+
+    /**
+ * @summary Follow
+ */
+export const usePutApiUsersIdFollow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollow>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiUsersIdFollow>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPutApiUsersIdFollowMutationOptions(options), queryClient);
+    }
 
 export const getGetApiWishlistUrl = (params?: GetApiWishlistParams,) => {
   const normalizedParams = new URLSearchParams();
