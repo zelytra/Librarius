@@ -110,11 +110,29 @@ the Alertmanager webhook, and running a restore and a rollback for real.
     primitive the screens can opt into.
     [#172](https://github.com/zelytra/Librarius/issues/172) then retired the bottom bar
     above 600px in favour of a persistent side navigation — a rail, then a 240px sidebar
-    past `--bp-desktop` — mounted by width rather than hidden by CSS. What is left is the
-    screens themselves, which still lay their content out in one column
-    ([#173](https://github.com/zelytra/Librarius/issues/173),
-    [#174](https://github.com/zelytra/Librarius/issues/174),
-    [#175](https://github.com/zelytra/Librarius/issues/175)).
+    past `--bp-desktop` — mounted by width rather than hidden by CSS.
+    [#175](https://github.com/zelytra/Librarius/issues/175) closed the gap on Detail,
+    Series and Settings on 2026-08-01: Detail's hero and stat strip stop stretching past a
+    640px reading measure, Series keeps that same measure for its identity block but lets
+    the volume grid use the full `--content-max` column the way Collection's grid is meant
+    to, and Settings' sections lay out in the `Grid` `panel` shape instead of one stacked
+    column. None of the three added a breakpoint of their own — `--content-max` and the
+    existing grid tokens did the work. One thing #175 found and did **not** fix: the
+    `Grid` doc comment in `primitives.tsx` claims "a screen wanting a coarser grid
+    overrides `--grid-cover-min` on its own element" — verified false in Chromium for a
+    token declared only at `:root`. `--grid-panel-columns` is resolved (`var()`
+    substituted) once, at `:root`, against `:root`'s own `--grid-panel-min`; a later
+    override on a descendant changes what that descendant reads back for
+    `--grid-panel-min` itself, but not the already-substituted token list it inherited, so
+    the column count silently keeps using the 260px/124px default. Nobody had exercised
+    the override before — Landing's `.cards`/`.features` never call for one. Settings
+    ships on the untouched default rather than a value that looked correct in review and
+    did nothing in the browser; the doc comment still describes the trick as working and
+    should be corrected the day something needs a genuine coarser grid. What is left is
+    Home and Collection
+    ([#173](https://github.com/zelytra/Librarius/issues/173)) and Discover, Wishlist and
+    Stats ([#174](https://github.com/zelytra/Librarius/issues/174)), still a single
+    phone-width column each.
 
 ### Back-end — moderate
 

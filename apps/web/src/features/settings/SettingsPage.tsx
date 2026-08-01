@@ -36,73 +36,96 @@ export function SettingsPage() {
         <h2 className={styles.title}>{t('settings.title')}</h2>
       </div>
 
-      {/* Identity: display name, language and time zone, persisted to the account (#75). */}
-      <ProfileSection />
+      {/* Below the tablet breakpoint this is the single stacked column shipped today;
+          past it, the sections that fit lay out side by side rather than running the
+          whole width of a wide window one at a time — see `.sections` in the module
+          CSS for how the column count follows the grid tokens without a media query
+          of its own. */}
+      <div className={styles.sections}>
+        {/* Identity: display name, language and time zone, persisted to the account (#75). */}
+        <div className={styles.sectionBlock}>
+          <ProfileSection />
+        </div>
 
-      {/* Annual reading goal, which the Home gauge is drawn from. */}
-      <GoalSection />
+        {/* Annual reading goal, which the Home gauge is drawn from. */}
+        <div className={styles.sectionBlock}>
+          <GoalSection />
+        </div>
 
-      {/* Reordering and hiding sections happens on Home itself (#54) — this is only the
-          way there for someone who would not otherwise think to look on the dashboard. */}
-      <h3 className={styles.sectionTitle}>{t('settings.dashboard')}</h3>
-      <p className={styles.sectionIntro}>{t('settings.dashboardDescription')}</p>
-      <button className={styles.dashboardLink} onClick={() => navigate('/')}>
-        <Icon name="tune" size={16} color="var(--accent-deep)" />
-        {t('settings.dashboardAction')}
-      </button>
+        {/* Reordering and hiding sections happens on Home itself (#54) — this is only the
+            way there for someone who would not otherwise think to look on the dashboard. */}
+        <div className={styles.sectionBlock}>
+          <h3 className={styles.sectionTitle}>{t('settings.dashboard')}</h3>
+          <p className={styles.sectionIntro}>{t('settings.dashboardDescription')}</p>
+          <button className={styles.dashboardLink} onClick={() => navigate('/')}>
+            <Icon name="tune" size={16} color="var(--accent-deep)" />
+            {t('settings.dashboardAction')}
+          </button>
 
-      {/* The first-run tour (#76) is skippable and never re-appears on its own once it
-          has been — this is the only way back to it, for someone who skipped it too
-          fast or wants to point a friend at the import step again. Router state rather
-          than a query string: it carries no meaning to bookmark or share. */}
-      <button
-        className={styles.dashboardLink}
-        onClick={() => navigate('/', { state: { showOnboarding: true } })}
-      >
-        <Icon name="auto_stories" size={16} color="var(--accent-deep)" />
-        {t('settings.onboardingAction')}
-      </button>
+          {/* The first-run tour (#76) is skippable and never re-appears on its own once it
+              has been — this is the only way back to it, for someone who skipped it too
+              fast or wants to point a friend at the import step again. Router state rather
+              than a query string: it carries no meaning to bookmark or share. */}
+          <button
+            className={styles.dashboardLink}
+            onClick={() => navigate('/', { state: { showOnboarding: true } })}
+          >
+            <Icon name="auto_stories" size={16} color="var(--accent-deep)" />
+            {t('settings.onboardingAction')}
+          </button>
+        </div>
 
-      {/* External library import. */}
-      <ImportSection />
+        {/* External library import. */}
+        <div className={styles.sectionBlock}>
+          <ImportSection />
+        </div>
 
-      {/* Getting the data back out (GDPR art. 20). */}
-      <ExportSection />
+        {/* Getting the data back out (GDPR art. 20). */}
+        <div className={styles.sectionBlock}>
+          <ExportSection />
+        </div>
 
-      {/* Appearance: theme switcher (functional). */}
-      <h3 className={styles.sectionTitle}>{t('settings.appearance')}</h3>
-      <div className={styles.themes}>
-        {THEMES.map((th) => {
-          const active = th.id === theme;
-          return (
-            <button key={th.id} onClick={() => setTheme(th.id)} className={styles.theme}>
-              {/* The swatch shows the theme's own background colour. */}
-              <div
-                className={`${styles.swatch} ${active ? styles.swatchActive : ''}`}
-                style={{ background: th.swatch }}
-              />
-              <div className={`${styles.themeLabel} ${active ? styles.themeLabelActive : ''}`}>
-                {t(th.labelKey)}
-              </div>
-            </button>
-          );
-        })}
+        {/* Appearance: theme switcher (functional). */}
+        <div className={styles.sectionBlock}>
+          <h3 className={styles.sectionTitle}>{t('settings.appearance')}</h3>
+          <div className={styles.themes}>
+            {THEMES.map((th) => {
+              const active = th.id === theme;
+              return (
+                <button key={th.id} onClick={() => setTheme(th.id)} className={styles.theme}>
+                  {/* The swatch shows the theme's own background colour. */}
+                  <div
+                    className={`${styles.swatch} ${active ? styles.swatchActive : ''}`}
+                    style={{ background: th.swatch }}
+                  />
+                  <div className={`${styles.themeLabel} ${active ? styles.themeLabelActive : ''}`}>
+                    {t(th.labelKey)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Language. The labels are endonyms, never translated: someone who landed on the
+            wrong language has to recognise their own on the screen in front of them. */}
+        <div className={styles.sectionBlock}>
+          <h3 className={styles.sectionTitle}>{t('settings.language')}</h3>
+          <p className={styles.sectionIntro}>{t('settings.languageDescription')}</p>
+          <div className={styles.languages}>
+            <Segmented
+              options={LANGUAGES.map((language) => ({ id: language.id, label: language.label }))}
+              value={activeLanguage()}
+              onChange={changeLanguage}
+            />
+          </div>
+        </div>
+
+        {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}
+        <div className={styles.sectionBlock}>
+          <DeleteAccountSection />
+        </div>
       </div>
-
-      {/* Language. The labels are endonyms, never translated: someone who landed on the
-          wrong language has to recognise their own on the screen in front of them. */}
-      <h3 className={styles.sectionTitle}>{t('settings.language')}</h3>
-      <p className={styles.sectionIntro}>{t('settings.languageDescription')}</p>
-      <div className={styles.languages}>
-        <Segmented
-          options={LANGUAGES.map((language) => ({ id: language.id, label: language.label }))}
-          value={activeLanguage()}
-          onChange={changeLanguage}
-        />
-      </div>
-
-      {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}
-      <DeleteAccountSection />
 
       <div className={styles.version}>{t('settings.version', { version: APP_VERSION })}</div>
     </Screen>

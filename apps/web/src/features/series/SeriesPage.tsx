@@ -172,49 +172,51 @@ function SeriesContent({ id }: { id: string }) {
           </button>
         </div>
 
-        <div className={styles.coverRow}>
-          <Cover variant="hero" title={title} imageUrl={series.coverUrl} />
-        </div>
-
-        <div className={styles.heading}>
-          <h2 className={styles.title}>{title}</h2>
-          <div className={styles.meta}>
-            <span className={styles.status}>{statusLabel(series, t)}</span>
+        <div className={styles.intro}>
+          <div className={styles.coverRow}>
+            <Cover variant="hero" title={title} imageUrl={series.coverUrl} />
           </div>
-        </div>
 
-        <div className={styles.progress}>
-          <div className={styles.progressHead}>
-            <span className={styles.progressValue}>
-              {total > 0
-                ? t('series.volumesOfTotal', { owned, total })
-                : t('series.volumesOwned', { count: owned })}
-            </span>
-            <span className={styles.progressRead}>{t('series.readCount', { count: read })}</span>
+          <div className={styles.heading}>
+            <h2 className={styles.title}>{title}</h2>
+            <div className={styles.meta}>
+              <span className={styles.status}>{statusLabel(series, t)}</span>
+            </div>
           </div>
-          <div className={styles.track}>
-            {/* The width is the progress itself. */}
-            <div className={styles.bar} style={{ width: `${percent}%` }} />
+
+          <div className={styles.progress}>
+            <div className={styles.progressHead}>
+              <span className={styles.progressValue}>
+                {total > 0
+                  ? t('series.volumesOfTotal', { owned, total })
+                  : t('series.volumesOwned', { count: owned })}
+              </span>
+              <span className={styles.progressRead}>{t('series.readCount', { count: read })}</span>
+            </div>
+            <div className={styles.track}>
+              {/* The width is the progress itself. */}
+              <div className={styles.bar} style={{ width: `${percent}%` }} />
+            </div>
           </div>
-        </div>
 
-        <div className={styles.followRow}>
-          <Button
-            variant={series.followed ? 'secondary' : 'primary'}
-            size="block"
-            onClick={() => (series.followed ? unfollow({ id }) : follow({ id }))}
-          >
-            <Icon
-              name={series.followed ? 'bookmark_added' : 'bookmark_add'}
-              size={20}
-              fill={series.followed}
-              color={series.followed ? 'var(--accent-deep)' : 'var(--on-accent)'}
-            />
-            {t(series.followed ? 'series.following' : 'series.follow')}
-          </Button>
-        </div>
+          <div className={styles.followRow}>
+            <Button
+              variant={series.followed ? 'secondary' : 'primary'}
+              size="block"
+              onClick={() => (series.followed ? unfollow({ id }) : follow({ id }))}
+            >
+              <Icon
+                name={series.followed ? 'bookmark_added' : 'bookmark_add'}
+                size={20}
+                fill={series.followed}
+                color={series.followed ? 'var(--accent-deep)' : 'var(--on-accent)'}
+              />
+              {t(series.followed ? 'series.following' : 'series.follow')}
+            </Button>
+          </div>
 
-        {series.synopsis && <p className={styles.synopsis}>{series.synopsis}</p>}
+          {series.synopsis && <p className={styles.synopsis}>{series.synopsis}</p>}
+        </div>
 
         <h3 className={styles.sectionTitle}>{t('series.volumesTitle')}</h3>
 
