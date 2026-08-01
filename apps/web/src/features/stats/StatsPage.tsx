@@ -46,9 +46,16 @@ function StatsContent() {
   const maxGenre = Math.max(1, ...byGenre.map((g) => g.count ?? 0));
 
   return (
-    <>
+    // Below --bp-tablet `--grid-panel-columns` is `1fr`, a single column with no row
+    // gap — every block below keeps its own margin, so this is pixel-identical to the
+    // plain stack it replaces. Past the breakpoint the same token turns into an
+    // auto-fit track list, so the goal, the counters, the genre breakdown and the
+    // timeline panels tile into a dashboard instead of each running the full width of
+    // a wide window in turn — see `.dashboard` in the module CSS.
+    <div className={styles.dashboard}>
       {/* No goal means an invitation, not a ring stuck at zero: the two look the same
-          and only one of them tells the user what to do about it. */}
+          and only one of them tells the user what to do about it. Spans every column:
+          the annual goal is the one panel meant to stay a banner rather than tile. */}
       <div className={styles.goal}>
         {target > 0 && (
           <GoalGauge
@@ -114,7 +121,7 @@ function StatsContent() {
       {/* Reading over time: the counters above say where the user stands, these say
           whether they are reading more than they used to. */}
       <TimelineSection stats={stats} />
-    </>
+    </div>
   );
 }
 

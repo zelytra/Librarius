@@ -72,6 +72,16 @@ describe('StatsPage', () => {
     expect(await screen.findByText('Statistiques indisponibles.')).toBeInTheDocument();
   });
 
+  // ── Desktop layout (#174) ────────────────────────────────────────────────────
+
+  test('lays the goal, the counters and the genre breakdown out in the shared dashboard grid', async () => {
+    statsReturns(stats());
+    renderWithProviders(<StatsPage />);
+
+    const readCard = await screen.findByText('Livres lus');
+    expect(readCard.closest('[class*="dashboard"]')).toBeInTheDocument();
+  });
+
   // ── Reading over time ──────────────────────────────────────────────────────
 
   test('charts what was read month by month, and what it adds up to', async () => {

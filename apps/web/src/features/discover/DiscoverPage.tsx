@@ -179,103 +179,108 @@ function DiscoverContent() {
 
   return (
     <>
-      <div className={styles.kindSwitch}>
-        <Segmented<Kind>
-          value={kind}
-          onChange={setKind}
-          options={[
-            { id: 'BOOK', label: t('common.books') },
-            { id: 'MANGA', label: t('common.mangas') },
-          ]}
-        />
-      </div>
-
-      <form onSubmit={onSubmit} className={styles.searchForm}>
-        <div className={styles.searchBar}>
-          <Icon name="search" size={21} color="var(--faint)" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('discover.searchPlaceholder')}
-            aria-label={t('discover.searchPlaceholder')}
-            className={styles.searchInput}
+      {/* Search field, ISBN hint and advanced panel are a form, not a collection: past the
+          tablet breakpoint they settle at a reading-form measure instead of stretching the
+          full content width — see `.searchColumn` in the module CSS. */}
+      <div className={styles.searchColumn}>
+        <div className={styles.kindSwitch}>
+          <Segmented<Kind>
+            value={kind}
+            onChange={setKind}
+            options={[
+              { id: 'BOOK', label: t('common.books') },
+              { id: 'MANGA', label: t('common.mangas') },
+            ]}
           />
-          <button type="submit" aria-label={t('common.search')} className={styles.submit}>
-            <Icon name="arrow_forward" size={20} color="var(--accent-deep)" />
-          </button>
         </div>
 
-        {detectedIsbn && (
-          <p className={styles.isbnHint}>{t('discover.isbnDetected', { isbn: detectedIsbn })}</p>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setAdvancedOpen((open) => !open)}
-          aria-expanded={advancedOpen}
-          className={styles.advancedToggle}
-        >
-          <Icon name={advancedOpen ? 'expand_less' : 'tune'} size={18} color="var(--accent-deep)" />
-          {t(advancedOpen ? 'discover.advanced.close' : 'discover.advanced.open')}
-        </button>
-
-        {advancedOpen && (
-          <div className={styles.advanced}>
-            <FieldGrid>
-              <Field
-                label={t('discover.advanced.author')}
-                value={advanced.author}
-                onChange={(author) => setAdvanced((a) => ({ ...a, author }))}
-              />
-              <Field
-                label={t('discover.advanced.year')}
-                value={advanced.year}
-                onChange={(year) => setAdvanced((a) => ({ ...a, year }))}
-                type="number"
-                inputMode="numeric"
-              />
-              <Field
-                label={t('discover.advanced.publisher')}
-                value={advanced.publisher}
-                onChange={(publisher) => setAdvanced((a) => ({ ...a, publisher }))}
-              />
-              <SelectField
-                label={t('discover.advanced.language')}
-                value={advanced.language}
-                onChange={(language) => setAdvanced((a) => ({ ...a, language }))}
-                options={[
-                  { value: '', label: t('discover.advanced.anyLanguage') },
-                  ...LANGUAGES.map((code) => ({
-                    value: code,
-                    label: t(`discover.advanced.languages.${code}`),
-                  })),
-                ]}
-              />
-            </FieldGrid>
-            {/* Saying which criteria a provider honours beats silently dropping them. */}
-            <p className={styles.coverage}>{t('discover.advanced.coverage')}</p>
-            <Button type="button" variant="ghost" onClick={() => setAdvanced(NO_ADVANCED)}>
-              {t('discover.advanced.reset')}
-            </Button>
+        <form onSubmit={onSubmit} className={styles.searchForm}>
+          <div className={styles.searchBar}>
+            <Icon name="search" size={21} color="var(--faint)" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('discover.searchPlaceholder')}
+              aria-label={t('discover.searchPlaceholder')}
+              className={styles.searchInput}
+            />
+            <button type="submit" aria-label={t('common.search')} className={styles.submit}>
+              <Icon name="arrow_forward" size={20} color="var(--accent-deep)" />
+            </button>
           </div>
+
+          {detectedIsbn && (
+            <p className={styles.isbnHint}>{t('discover.isbnDetected', { isbn: detectedIsbn })}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((open) => !open)}
+            aria-expanded={advancedOpen}
+            className={styles.advancedToggle}
+          >
+            <Icon name={advancedOpen ? 'expand_less' : 'tune'} size={18} color="var(--accent-deep)" />
+            {t(advancedOpen ? 'discover.advanced.close' : 'discover.advanced.open')}
+          </button>
+
+          {advancedOpen && (
+            <div className={styles.advanced}>
+              <FieldGrid>
+                <Field
+                  label={t('discover.advanced.author')}
+                  value={advanced.author}
+                  onChange={(author) => setAdvanced((a) => ({ ...a, author }))}
+                />
+                <Field
+                  label={t('discover.advanced.year')}
+                  value={advanced.year}
+                  onChange={(year) => setAdvanced((a) => ({ ...a, year }))}
+                  type="number"
+                  inputMode="numeric"
+                />
+                <Field
+                  label={t('discover.advanced.publisher')}
+                  value={advanced.publisher}
+                  onChange={(publisher) => setAdvanced((a) => ({ ...a, publisher }))}
+                />
+                <SelectField
+                  label={t('discover.advanced.language')}
+                  value={advanced.language}
+                  onChange={(language) => setAdvanced((a) => ({ ...a, language }))}
+                  options={[
+                    { value: '', label: t('discover.advanced.anyLanguage') },
+                    ...LANGUAGES.map((code) => ({
+                      value: code,
+                      label: t(`discover.advanced.languages.${code}`),
+                    })),
+                  ]}
+                />
+              </FieldGrid>
+              {/* Saying which criteria a provider honours beats silently dropping them. */}
+              <p className={styles.coverage}>{t('discover.advanced.coverage')}</p>
+              <Button type="button" variant="ghost" onClick={() => setAdvanced(NO_ADVANCED)}>
+                {t('discover.advanced.reset')}
+              </Button>
+            </div>
+          )}
+        </form>
+
+        {manualOpen && (
+          <ManualAddForm
+            kind={kind}
+            onCancel={() => setManualOpen(false)}
+            onAdded={(title) => {
+              setManualOpen(false);
+              setManualAdded(title);
+              refreshAfterAdd();
+            }}
+          />
         )}
-      </form>
 
-      {manualOpen && (
-        <ManualAddForm
-          kind={kind}
-          onCancel={() => setManualOpen(false)}
-          onAdded={(title) => {
-            setManualOpen(false);
-            setManualAdded(title);
-            refreshAfterAdd();
-          }}
-        />
-      )}
-
-      {manualAdded && (
-        <p className={styles.manualAdded}>{t('discover.manual.added', { title: manualAdded })}</p>
-      )}
+        {manualAdded && (
+          <p className={styles.manualAdded}>{t('discover.manual.added', { title: manualAdded })}</p>
+        )}
+      </div>
 
       {loading && <Loading />}
       {addError && <ErrorState message={addError} />}

@@ -19,9 +19,10 @@ schema level ([#182](https://github.com/zelytra/Librarius/issues/182), V13): the
 now, followable and linked to their works, with no API and no page on them yet (#196, #199). The fourth
 status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
 a title can be given up on, it keeps the page it was given up at, and it counts towards no
-goal. **Quality** is no accessibility pass, and a desktop layout whose foundations are laid
-but whose screens are still a phone column (debt #23) — the single locale left that list on
-2026-07-29, the interface now shipping in French and English. **Operations** is what only
+goal. **Quality** is no accessibility pass — the desktop layout that used to sit beside it on
+this list (debt #23) is cleared, all eight screens now reading the available width past
+`--bp-tablet`, the same way the single locale left it on 2026-07-29, the interface shipping
+in French and English. **Operations** is what only
 the project owner can do: rotating the credentials still readable in the git history, wiring
 the Alertmanager webhook, and running a restore and a rollback for real.
 
@@ -100,7 +101,8 @@ the Alertmanager webhook, and running a restore and a rollback for real.
    to `shared/ui/ranks.ts` and the file was deleted. The cover palette now has one
    definition (`shared/ui/coverPalette.ts`), so a title keeps the same colour on every
    screen.
-23. **No desktop layout: shell and navigation done on 2026-07-29, screens still to come.**
+23. ~~**No desktop layout: shell and navigation done on 2026-07-29, screens still to come.**~~
+    ✅ **All eight screens closed on 2026-08-01.**
     The whole `src/` tree used to hold **one** `@media` query — a 380px tweak in
     `discover/fields.module.css` — and `AppShell` framed the app in a 440 × 900 card on
     every viewport, so a 1440px browser rendered a phone on an empty desk.
@@ -132,9 +134,20 @@ the Alertmanager webhook, and running a restore and a rollback for real.
     default. Nobody had exercised the override before — Landing's `.cards`/`.features` never
     call for one. Settings ships on the untouched default; the doc comment still describes
     the trick as working and should be corrected the day something needs a genuine coarser
-    grid. What is left is Discover, Wishlist and Stats
-    ([#174](https://github.com/zelytra/Librarius/issues/174)), still a single phone-width
-    column each.
+    grid.
+    [#174](https://github.com/zelytra/Librarius/issues/174) closed the remaining three the
+    same way: Discover's search field and advanced panel settle at the same 640px reading
+    measure as Detail's hero, left-aligned above a results list that turns into an auto-fit
+    `--grid-panel-columns` track past `--bp-tablet`; Wishlist's three priority buckets tile
+    the same way instead of running the full window one at a time; and Stats wraps the
+    annual goal, the counters, the genre breakdown and every timeline panel in one grid,
+    the goal alone spanning every column as the banner it is meant to stay. None of the
+    three declared `--grid-gap-y`/`--grid-gap-x` on `.results`/`.groups`/`.dashboard`
+    directly, for the same reason Settings' `.sections` does not: `--grid-panel-columns` is
+    only ever declared at `:root`, so a screen whose phone spacing predates the token (12px
+    on Discover's results, 24px on Wishlist's buckets) sets its own flat `gap` instead of
+    inheriting one that would have nudged it. No screen in the app added a breakpoint of its
+    own to get here — eight for eight now read the available width past `--bp-tablet`.
 
 ### Back-end — moderate
 

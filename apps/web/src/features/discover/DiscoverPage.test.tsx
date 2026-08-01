@@ -74,6 +74,21 @@ describe('DiscoverPage', () => {
     expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
   });
 
+  // ── Desktop layout (#174) ────────────────────────────────────────────────────
+
+  test('opts the search field into the reading-measure column and the results into the panel grid', async () => {
+    searchReturns([catalogResult()]);
+    renderWithProviders(<DiscoverPage />);
+
+    const searchInput = screen.getByPlaceholderText(/Rechercher un titre/);
+    expect(searchInput.closest('[class*="searchColumn"]')).toBeInTheDocument();
+
+    await search();
+
+    const resultTitle = (await screen.findAllByText('Fourth Wing'))[0];
+    expect(resultTitle.closest('[class*="results"]')).toBeInTheDocument();
+  });
+
   test('adds a result to the collection', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);

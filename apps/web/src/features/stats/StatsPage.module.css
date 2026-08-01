@@ -2,6 +2,22 @@
   margin-bottom: 20px;
 }
 
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+
+/* Below --bp-tablet `--grid-panel-columns` is `1fr`, so `row-gap: 0` costs nothing: the
+   panels below keep the same margins they always drew their own spacing from, and the
+   rendering stays pixel-identical to the plain stack this replaces. Past it the same
+   token turns into an auto-fit track list, the way Wishlist's buckets and Settings'
+   sections pick up columns without a media query of their own — `column-gap` only ever
+   matters once there is more than one column to separate. */
+.dashboard {
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
+  column-gap: var(--grid-gap-x);
+  row-gap: 0;
+  align-items: start;
+}
+
 /* ── Annual goal ──────────────────────────────────────────────────────────── */
 
 .goal {
@@ -13,6 +29,8 @@
   padding: 20px;
   border: 1px solid var(--line);
   margin-bottom: 18px;
+  /* The one panel that stays a banner rather than tiling with the others. */
+  grid-column: 1 / -1;
 }
 
 .goalBody {
@@ -52,6 +70,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 22px;
+  min-width: 0;
 }
 
 .tile {
@@ -97,6 +116,7 @@
   border-radius: var(--radius-panel-lg);
   padding: 20px;
   border: 1px solid var(--line);
+  min-width: 0;
 }
 
 .panelTitle {

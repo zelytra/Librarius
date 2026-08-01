@@ -8,6 +8,7 @@
   padding: 20px;
   border: 1px solid var(--line);
   margin-top: 18px;
+  min-width: 0;
 }
 
 .panelHead {
