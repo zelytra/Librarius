@@ -27,9 +27,17 @@
 }
 
 .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--fs-13);
   font-weight: 600;
   color: var(--ink);
+}
+
+/* The trusted badge next to the display-name label (#186). */
+.trustBadge {
+  font-weight: 700;
 }
 
 .input {

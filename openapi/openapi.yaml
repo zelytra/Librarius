@@ -523,6 +523,8 @@ components:
           type: string
         timeZone:
           type: string
+        trusted:
+          type: boolean
     MemberSummaryDto:
       type: object
       properties:
@@ -530,6 +532,8 @@ components:
           type: string
         displayName:
           type: string
+        trusted:
+          type: boolean
     OffsetDateTime:
       type: string
       format: date-time

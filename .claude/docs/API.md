@@ -68,9 +68,9 @@ Outside `/api`: `/q/health` and `/q/metrics`, **cluster-internal only** — the 
 ## Main DTOs
 
 ```java
-MeDto(String id, String email, String displayName, String locale, String timeZone)
+MeDto(String id, String email, String displayName, String locale, String timeZone, boolean trusted)
 UpdateMeDto(String displayName, String locale, String timeZone)   // locale in {fr,en}; timeZone an IANA id or blank
-MemberSummaryDto(String id, String displayName)   // another member in a follow list — no email nor any reach-them field
+MemberSummaryDto(String id, String displayName, boolean trusted)   // another member in a follow list — no email nor any reach-them field
 
 BookView(/* read projection of an edition and its work; carries editionId and workId */)
 
@@ -191,13 +191,14 @@ blank value clears it, back to the client's own zone — and when present must p
 `java.time.ZoneId`. Bean Validation covers the first two; the resource checks the zone and a
 bad identifier is a **400**, like any other malformed input.
 
-**The trust flag is not part of any request or response (#180).** `app_user.trusted` is a
-private, server-computed signal filled off the request path by `TrustEvaluator` (see
+**The trust flag is read-only everywhere (#180, #186).** `app_user.trusted` is a private,
+server-computed signal filled off the request path by `TrustEvaluator` (see
 [DATA-MODEL](DATA-MODEL.md) § 1). **No endpoint accepts it as input** — `UpdateMeDto` carries
 only the three fields above, and `PATCH /api/me` silently ignores a body that adds `trusted`,
-which `MeApiTest` verifies leaves the row untrusted. It is deliberately **not** on `MeDto`
-either: showing it is [#186](https://github.com/zelytra/Librarius/issues/186), so this milestone
-step is storage and evaluation only.
+which `MeApiTest` verifies leaves the row untrusted. `MeDto.trusted` and
+`MemberSummaryDto.trusted` read the same column straight off `AppUser` and exist only to be
+displayed: the Settings screen shows a small badge next to the caller's own display name when
+it is `true`, and nothing — no placeholder — when it is not.
 
 ## Following members
 
@@ -214,8 +215,8 @@ an id that is **nobody** is a **404**, never a 403: an unknown account and an un
 give the same answer, so the endpoint confirms nothing about who exists.
 
 `GET /api/me/following` and `GET /api/me/followers` return the caller's own two lists as
-`MemberSummaryDto` — `id` and `displayName`, and deliberately no email or other reach-them
-field: a follow list says *who*, not how to contact them. These are relationship metadata
+`MemberSummaryDto` — `id`, `displayName` and `trusted` (#186), and deliberately no email or
+other reach-them field: a follow list says *who*, not how to contact them. These are relationship metadata
 about the caller's **own** account, not another member's content, so they are **not** gated by
 the mutual-follow visibility rule [#201](https://github.com/zelytra/Librarius/issues/201)
 adds — a caller always sees who they follow and who follows them. `UserFollowApiTest` pins the

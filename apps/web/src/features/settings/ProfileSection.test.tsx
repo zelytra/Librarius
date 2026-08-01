@@ -15,6 +15,7 @@ function profileReturns(me: {
   displayName?: string;
   locale?: string;
   timeZone?: string;
+  trusted?: boolean;
 }) {
   server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', ...me })));
 }
@@ -114,6 +115,21 @@ describe('ProfileSection', () => {
 
     expect(await screen.findByText(/Impossible d'enregistrer le profil/)).toBeInTheDocument();
     expect(screen.queryByText('Profil enregistré.')).not.toBeInTheDocument();
+  });
+
+  test('shows the trusted badge next to the display name for a trusted account', async () => {
+    profileReturns({ displayName: 'alice', locale: 'fr', trusted: true });
+    renderWithProviders(<ProfileSection />);
+
+    expect(await screen.findByText('De confiance')).toBeInTheDocument();
+  });
+
+  test('shows no badge, and no placeholder, for a regular account', async () => {
+    profileReturns({ displayName: 'alice', locale: 'fr', trusted: false });
+    renderWithProviders(<ProfileSection />);
+
+    await screen.findByLabelText('Nom affiché');
+    expect(screen.queryByText('De confiance')).not.toBeInTheDocument();
   });
 
   test('asks for a session instead of a form when there is none', async () => {

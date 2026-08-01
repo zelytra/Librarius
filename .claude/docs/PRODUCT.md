@@ -275,6 +275,13 @@ something as read — an existing collection carries no reading dates.
   below stays as the quick, device-local toggle the app boots on before the profile has been
   fetched, and the one a signed-out visitor still has. The time zone is an IANA identifier, or
   blank to follow the device.
+- ✅ **Trusted badge** ([#186](https://github.com/zelytra/Librarius/issues/186)): a small
+  pill next to the display-name field, shown only when the account's server-computed
+  `trusted` flag (#180) is `true` — nothing renders otherwise, no "not yet trusted"
+  messaging. Icon and text together, never colour alone, the same state-encoding rule the
+  Series volume grid follows below (§ 4.8). Display-only: no screen or form can set it, and
+  this is the one place it appears today, since Settings is the only screen showing a
+  display name before the v1.2 follow lists and profiles grow one.
 - ✅ **Library export** (JSON + CSV) — *GDPR art. 20*. The JSON archive holds everything
   and can be re-imported here; the CSV opens in a spreadsheet and carries the column names
   Goodreads and Booknode understand, so a user can leave for another tool.
@@ -499,10 +506,10 @@ year 🔜.
    record clean of upheld reports. A user never sets it on themselves and no user grants it to
    another: it is decided off the request path by a scheduled evaluation, and no screen or
    endpoint can flip it. What "trustworthy" precisely means is a threshold meant to be retuned,
-   not a fixed line. This milestone step only **stores and computes** the flag; showing it as a
-   badge next to the name ([#186](https://github.com/zelytra/Librarius/issues/186)) and losing
-   it when a report is upheld ([#195](https://github.com/zelytra/Librarius/issues/195)) come
-   next.
+   not a fixed line. The flag is now surfaced as a badge next to the caller's own display
+   name in Settings ([#186](https://github.com/zelytra/Librarius/issues/186), § 4.7); losing
+   it when a report is upheld ([#195](https://github.com/zelytra/Librarius/issues/195)) is
+   still ahead.
 
 ## 7. Out of scope (explicit decisions)
 

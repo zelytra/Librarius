@@ -730,6 +730,9 @@
           },
           "timeZone" : {
             "type" : "string"
+          },
+          "trusted" : {
+            "type" : "boolean"
           }
         }
       },
@@ -741,6 +744,9 @@
           },
           "displayName" : {
             "type" : "string"
+          },
+          "trusted" : {
+            "type" : "boolean"
           }
         }
       },

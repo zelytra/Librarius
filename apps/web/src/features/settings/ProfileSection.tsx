@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
+import { TrustBadge } from '../../shared/ui/TrustBadge';
 import { useApiAuth } from '../../shared/api';
 import { changeLanguage } from '../../i18n';
 import { LANGUAGES, isLanguageId, type LanguageId } from '../../i18n/languages';
@@ -76,7 +77,11 @@ export function ProfileSection() {
 
       <div className={styles.form}>
         <label className={styles.field}>
-          <span className={styles.label}>{t('settings.profile.displayName')}</span>
+          <span className={styles.label}>
+            {t('settings.profile.displayName')}
+            {/* #186: server-computed, display-only — nothing renders for a regular account. */}
+            {me?.trusted && <TrustBadge className={styles.trustBadge} />}
+          </span>
           <input
             type="text"
             value={displayName}
