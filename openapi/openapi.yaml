@@ -20,6 +20,56 @@ components:
         seriesFollows:
           type: integer
           format: int32
+    AuthorDetailDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+        photoUrl:
+          type: string
+        followed:
+          type: boolean
+        works:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorWorkDto"
+    AuthorSummaryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+        photoUrl:
+          type: string
+        workCount:
+          type: integer
+          format: int64
+        followed:
+          type: boolean
+    AuthorWorkDto:
+      type: object
+      properties:
+        workId:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        originalYear:
+          type: integer
+          format: int32
+        coverUrl:
+          type: string
     BookView:
       type: object
       properties:
@@ -869,6 +919,100 @@ components:
       openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
       description: Authentication
 paths:
+  /api/authors:
+    get:
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuthorSummaryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search
+      tags:
+      - Author Resource
+      security:
+      - SecurityScheme: []
+  /api/authors/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorDetailDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      tags:
+      - Author Resource
+      security:
+      - SecurityScheme: []
+  /api/authors/{id}/follow:
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Unfollow
+      tags:
+      - Author Resource
+      security:
+      - SecurityScheme: []
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Follow
+      tags:
+      - Author Resource
+      security:
+      - SecurityScheme: []
   /api/catalog/search:
     get:
       parameters:

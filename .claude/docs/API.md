@@ -39,6 +39,10 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/series/{id}/missing` | Holes in the owned run (`SeriesMissingDto`) |
 | PUT | `/api/series/{id}/follow` | Starts following the series — 204, idempotent |
 | DELETE | `/api/series/{id}/follow` | Stops following the series — 204, idempotent |
+| GET | `/api/authors?q=` | Local author search over the shared catalog (`AuthorSummaryDto`) — see [Authors](#authors). A blank `q` returns nothing |
+| GET | `/api/authors/{id}` | An author, their bibliography and the caller's `followed` flag (`AuthorDetailDto`) — 404 on an unknown id |
+| PUT | `/api/authors/{id}/follow` | Starts following the author — 204, idempotent |
+| DELETE | `/api/authors/{id}/follow` | Stops following the author — 204, idempotent |
 | GET | `/api/genres` | Genres present in the caller's collection, most frequent first (`GenreCount`) — see [Genres](#genres) |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
 | POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) — 409 on a name already used |
@@ -129,6 +133,12 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
                 String synopsis, Integer totalVolumes, String status, long ownedCount,
                 long readCount, boolean followed, List<SeriesVolumeDto> volumes)
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
+
+AuthorSummaryDto(UUID id, String name, String photoUrl, long workCount, boolean followed)
+AuthorWorkDto(UUID workId, String kind, String title, String authors, String seriesTitle,
+              Integer volumeNumber, Integer originalYear, String coverUrl)
+AuthorDetailDto(UUID id, String name, String photoUrl, boolean followed,
+                List<AuthorWorkDto> works)
 
 UpcomingReleaseDto(UUID id, UUID seriesId, String seriesTitle, String kind, String coverUrl,
                    Integer volumeNumber, String title, LocalDate releaseDate,
@@ -340,6 +350,33 @@ volume is also an owned one:
 and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded without one)
 are appended after the numbered ones with a null `volumeNumber`; they count towards
 `ownedCount` but are never reported as missing.
+
+## Authors
+
+An `author` row is shared catalog data like `series`, but `/api/authors` **is** a catalog
+browser, and deliberately so: an author is meant to be found, not recognised only once
+owned. `GET /api/authors?q=` and `GET /api/authors/{id}` answer over the whole shared
+catalog — the same to every caller but for the private `followed` flag — and a known
+identifier is never a 404 whatever the caller collects. This is the one place the
+shared-catalog-plus-private-follow shape drops the ownership-gated visibility `/api/series`
+keeps.
+
+`GET /api/authors?q=` searches the **local** `author` table by name, case-insensitively and
+on any substring (the caller's own `%`/`_` are searched literally); a blank or absent `q`
+returns nothing rather than the whole table. It is a different feature from
+`GET /api/catalog/search?author=`, which queries the **external** providers for new titles —
+this one searches authors Librarius already knows. Each hit carries `workCount`, the number
+of shared-catalog works crediting the author.
+
+`GET /api/authors/{id}` returns the author and their **bibliography**: every work reachable
+through `work_author`, series grouped and volumes in order, each with enough of `BookView`'s
+shape (`workId`, `title`, `kind`, `seriesTitle`, `volumeNumber`, `authors`, cover) to link
+into the title. Covers live on editions, not works, so `coverUrl` is that of a
+representative edition and is `null` when none carries one. `followed` is the caller's own.
+
+Fetching an author's *full* bibliography live from a provider when the local catalog only
+holds a subset is out of scope here, the same shape of gap as A12 for editions — a later,
+on-demand enrichment (gap A13).
 
 ## Upcoming releases
 
@@ -692,3 +729,4 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
 | A12 | **Provider enrichment** of a work's editions is wired but mostly dormant (#197). `GET /api/works/{id}/editions` now asks the work's provider for its other printings and merges them in, cached and rate-limited, degrading to the stored list when there is no reference or the provider is down. What is left: **no shipped provider actually feeds it**. Open Library still returns no usable work key to store on add, and the merge only fires on `openlibrary` works; BnF stores an ark but exposes no per-work edition list, and AniList describes works, not editions. So the path exists and is tested against a stubbed provider, but a real work is enriched only once a provider both stores a reference and answers `editionsOf` — the remaining half of #184's Open Library note. Entries stored before V12 carry no reference and never will | Core product |
+| A13 | **Live author bibliography.** `GET /api/authors/{id}` lists only the works of the *local* shared catalog crediting an author; a provider (AniList's `Staff`, Open Library's `/authors/{id}/works.json`) knows the rest. Same shape as A12 for editions, deliberately deferred to an on-demand enrichment issue rather than bundled into #196 | Universal search, authors & editions |
