@@ -32,6 +32,14 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         return find("id = ?1 and userId = ?2", id, userId).firstResultOptional();
     }
 
+    /**
+     * How many of the user's titles carry a given reading status. The volume half of the trust
+     * criteria (#180) reads it at {@code READ}: how much this account has actually finished.
+     */
+    public long countByStatus(String userId, LibraryStatus status) {
+        return count("userId = ?1 and status = ?2", userId, status);
+    }
+
     public boolean deleteOwned(String userId, UUID id) {
         return delete("id = ?1 and userId = ?2", id, userId) > 0;
     }

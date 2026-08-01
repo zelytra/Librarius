@@ -467,6 +467,16 @@ year 🔜.
    carries over as a **percentage** — the only measure that survives a change of pagination —
    and the page is recomputed from the new page count. A user cannot own the same edition
    twice, so a switch onto one already in their collection is refused with a message.
+9. **Trust is earned, never granted** ([#180](https://github.com/zelytra/Librarius/issues/180)).
+   An account carries a private "trusted" standing that the application computes on its own,
+   from the account's own activity — enough tenure, enough titles actually finished, and a
+   record clean of upheld reports. A user never sets it on themselves and no user grants it to
+   another: it is decided off the request path by a scheduled evaluation, and no screen or
+   endpoint can flip it. What "trustworthy" precisely means is a threshold meant to be retuned,
+   not a fixed line. This milestone step only **stores and computes** the flag; showing it as a
+   badge next to the name ([#186](https://github.com/zelytra/Librarius/issues/186)) and losing
+   it when a report is upheld ([#195](https://github.com/zelytra/Librarius/issues/195)) come
+   next.
 
 ## 7. Out of scope (explicit decisions)
 

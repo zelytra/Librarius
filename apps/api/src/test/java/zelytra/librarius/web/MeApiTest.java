@@ -1,13 +1,17 @@
 package zelytra.librarius.web;
 
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.keycloak.client.KeycloakTestClient;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import zelytra.librarius.domain.repository.AppUserRepository;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * The editable profile (#75): {@code PATCH /api/me} over display name, interface language and
@@ -22,6 +26,9 @@ import static org.hamcrest.Matchers.nullValue;
 class MeApiTest {
 
     private final KeycloakTestClient keycloak = new KeycloakTestClient();
+
+    @Inject
+    AppUserRepository users;
 
     private String token(String user) {
         return keycloak.getAccessToken(user);
@@ -113,6 +120,30 @@ class MeApiTest {
                 .body("{ \"displayName\": \"   \", \"locale\": \"fr\", \"timeZone\": null }")
                 .when().patch("/api/me")
                 .then().statusCode(400);
+    }
+
+    /**
+     * The trust flag is server-computed and no endpoint accepts it (#180). {@code PATCH
+     * /api/me} is the one writable {@code app_user} endpoint, so a request crafted to carry
+     * {@code trusted} is where the guarantee is tested: the field is ignored and never reaches
+     * the row, which stays untrusted whatever the body claims.
+     */
+    @Test
+    void aCraftedRequestCannotFlipTheTrustFlag() {
+        String id = given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "displayName": "alice", "locale": "fr", "timeZone": null,
+                          "trusted": true, "trustedAt": "2000-01-01T00:00:00Z" }
+                        """)
+                .when().patch("/api/me")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        boolean trusted = QuarkusTransaction.requiringNew()
+                .call(() -> users.findById(id).trusted);
+        assertFalse(trusted, "a request body may not grant trust");
+
+        resetProfile("alice", "alice", "fr", null);
     }
 
     /**
