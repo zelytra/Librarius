@@ -48,6 +48,17 @@ public final class ApiDtos {
     }
 
     /**
+     * Another member as it appears in a follow list (#200): the identifier a follow is issued
+     * against and the display name a screen shows. It deliberately carries no email nor any
+     * other personal field — a follow list exposes who, not how to reach them.
+     */
+    public record MemberSummaryDto(String id, String displayName) {
+        public static MemberSummaryDto of(AppUser u) {
+            return new MemberSummaryDto(u.id, u.displayName);
+        }
+    }
+
+    /**
      * Editable profile fields (#75). A full replacement of the three the user owns, not a
      * sparse patch: the profile form always sends every one, so a field left out is a mistake
      * rather than "leave it as it was".

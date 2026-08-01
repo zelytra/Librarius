@@ -39,6 +39,7 @@ being authored in French and translated.
 | **Series** (`series`) | An ordered grouping of works ("One Piece", "A Song of Ice and Fire") | Shared catalog |
 | **Author** (`author`) | A person credited on works, related to a work through `work_author` | Shared catalog |
 | **Follow** (`series_follow`, `author_follow`) | The user ↔ series and user ↔ author links: "tell me about what comes next" | User |
+| **Member follow** (`user_follow`) | The user ↔ user link: "I want to keep an eye on this member". One-directional; a mutual pair is what "friends" means. Distinct from the two follows above — those point at the catalog, this points at another account ([#200](https://github.com/zelytra/Librarius/issues/200)) | User |
 | **Library item** (`library_item`) | The user ↔ edition link: status, rating, acquisition date, rank | User |
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
@@ -67,6 +68,19 @@ Two users who own the same title point at the same `work` — entries are matche
 catalog before a work is created — but keep two distinct `library_item` rows. They point at
 the same `edition` only when they entered the same one; two printings of one novel are two
 `edition` rows under one `work`, which is what the Detail screen lets a user choose between.
+
+**Members follow each other** (v1.2, [#200](https://github.com/zelytra/Librarius/issues/200)):
+a member can follow another member and unfollow them, and read the two lists of their own
+account — who they follow, and who follows them. Following is **immediate and
+one-directional** (no request to accept), and a "friend" is simply the case where both sides
+follow each other. It is the first link the product draws between two accounts, and on its own
+it unlocks nothing: what a **mutual** follow reveals — a member's collection, ranks and
+reviews, once they have opted their account public — is
+[#201](https://github.com/zelytra/Librarius/issues/201), and the screens to **find people**
+and browse these lists are [#202](https://github.com/zelytra/Librarius/issues/202). Today the
+relationship and its API exist; the follow button they carry is all the interface #200 adds. A
+list never exposes more than a member's display name — never their email — and each member
+only ever sees their own two lists.
 
 ## 4. Screens
 
@@ -492,7 +506,9 @@ year 🔜.
 
 ## 7. Out of scope (explicit decisions)
 
-- Social network (friends, library sharing, public comments).
+- Social network beyond the v1.2 follow: member-to-member following ships (#200), and
+  mutual-follow visibility of a public account is #201 — but library sharing at large,
+  messaging and public comments stay out.
 - Lending books between users.
 - Reading content (the app manages *ownership*, not files).
 - Marketplace / built-in purchasing: prices are **entered** by the user, not fetched.

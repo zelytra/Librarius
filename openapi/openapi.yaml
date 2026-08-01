@@ -523,6 +523,13 @@ components:
           type: string
         timeZone:
           type: string
+    MemberSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
     OffsetDateTime:
       type: string
       format: date-time
@@ -1787,6 +1794,46 @@ paths:
       - Me Resource
       security:
       - SecurityScheme: []
+  /api/me/followers:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberSummaryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Followers
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+  /api/me/following:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberSummaryDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Following
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
   /api/releases/upcoming:
     get:
       parameters:
@@ -2003,6 +2050,51 @@ paths:
       summary: Timeline
       tags:
       - Stats Resource
+      security:
+      - SecurityScheme: []
+  /api/users/{id}/follow:
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Unfollow
+      tags:
+      - User Resource
+      security:
+      - SecurityScheme: []
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Follow
+      tags:
+      - User Resource
       security:
       - SecurityScheme: []
   /api/wishlist:

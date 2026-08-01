@@ -16,12 +16,15 @@ import zelytra.librarius.account.AccountDeletionService;
 import zelytra.librarius.account.AccountEraser.Erased;
 import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.social.UserFollowService;
 import zelytra.librarius.web.ApiDtos.AccountDeletionDto;
 import zelytra.librarius.web.ApiDtos.MeDto;
+import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 import zelytra.librarius.web.ApiDtos.UpdateMeDto;
 
 import java.time.DateTimeException;
 import java.time.ZoneId;
+import java.util.List;
 
 /** Profile of the authenticated user (provisioned on the fly when needed). */
 @Path("/api/me")
@@ -35,9 +38,30 @@ public class MeResource {
     @Inject
     AccountDeletionService deletion;
 
+    @Inject
+    UserFollowService follows;
+
     @GET
     public MeDto me() {
         return MeDto.of(currentUser.require());
+    }
+
+    /**
+     * The members the caller follows (#200). This is relationship metadata about the caller's
+     * own account, not another user's content, so it is not gated by the mutual-follow
+     * visibility rule #201 adds — a caller always sees who they themselves follow.
+     */
+    @GET
+    @Path("/following")
+    public List<MemberSummaryDto> following() {
+        return follows.following(currentUser.id());
+    }
+
+    /** The members that follow the caller (#200). Same reasoning as {@link #following()}. */
+    @GET
+    @Path("/followers")
+    public List<MemberSummaryDto> followers() {
+        return follows.followers(currentUser.id());
     }
 
     /**

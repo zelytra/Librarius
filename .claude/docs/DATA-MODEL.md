@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -11,6 +11,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
            ├─< reading_goal                   ├─< work_genre >── genre >─< genre_alias
            ├─< series_follow >────────────────┼────────┘
            ├─< author_follow >── author >─────┴─< work_author
+           ├─< user_follow >──── app_user (self, #200)
            ├─< rank_category (custom)          library_item ──1:1─ reading_progress
            │        ▲                                │
            │  rank_category (built-ins, user_id NULL)┘
@@ -47,6 +48,7 @@ of a denormalised field to keep in step on every write.
 | `author` | `id UUID` | `name`, `name_key` **UNIQUE**, `photo_url`, `provider`, `provider_ref`, `created_at` | `name_key` (the fold of `name`) is the identity, `name` only what a screen shows. No `kind`. idx on `lower(name)` for the search of [#196](https://github.com/zelytra/Librarius/issues/196). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V13) |
 | `work_author` | `(work_id, author_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(author_id, work_id)` — the bibliography walks it that way (V13) |
 | `author_follow` | `(user_id, author_id)` | `created_at` | No surrogate key: the pair is the identity, exactly like `series_follow` (V13) |
+| `user_follow` | `(follower_id, followee_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (follower_id <> followee_id)` — no self-follow. PK doubles as the "who this user follows" index; separate idx on `followee_id` for "who follows this user" (V18/#200) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
 | `report` | `id UUID` | `reporter_id` FK `app_user`, `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED, default OPEN), `created_at` | idx `(target_type, target_id)` and `(reporter_id)`. No FK on `target_id`: it spans three tables, resolved in the service (V17/#192) |
 
@@ -361,10 +363,27 @@ two indexes serve the two ways a report is reached: `(target_type, target_id)` f
 on this object" (the revocation consumer), `(reporter_id)` for the account-deletion cascade and
 a future "who filed the most reports" view.
 
+`V18__user_follow.sql` draws the **first link between two accounts**
+([#200](https://github.com/zelytra/Librarius/issues/200)). Until it, no row pointed one
+`app_user` at another — `CurrentUser` only ever reads the caller's own id, and every table is
+scoped by a single `user_id`. `user_follow` adds the missing edge: `(follower_id,
+followee_id)`, both FK `app_user` `ON DELETE CASCADE`, `created_at`, the identity-is-the-key
+shape `series_follow` (V4) already uses. It is the **social** follow, deliberately distinct
+from `series_follow` and `author_follow`: those link a user to a catalog entity, this links a
+user to another user. Following is one-directional and immediate — no request/accept step —
+and "friends" is simply the case where both sides did it (the mutual-follow visibility gate is
+[#201](https://github.com/zelytra/Librarius/issues/201), and reads off that pair; this
+migration is silent on what following *unlocks*). A `CHECK (follower_id <> followee_id)`
+refuses a self-follow in the schema, backing the 400 the API returns; the primary key indexes
+"who this user follows", and a separate index on `followee_id` covers the reverse, "who
+follows this user".
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
-their data — handy for GDPR account deletion.
+their data — handy for GDPR account deletion. `user_follow` points at `app_user` **twice**, so
+deleting an account removes both the follows it issued (`follower_id`) and the follows aimed at
+it (`followee_id`) in the same statement, leaving no dangling edge behind (#200).
 `library_item.rank_category_id` is `ON DELETE SET NULL`. **Deleting a category detaches the
 titles, it never deletes them**: a rank is a label stuck on a book, so dropping the label
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
