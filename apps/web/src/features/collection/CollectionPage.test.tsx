@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TestProviders, renderWithProviders } from '../../test/utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { TestProviders, mockViewportWidth, renderWithProviders } from '../../test/utils';
 import { BUILTIN_CATEGORIES, customCategory, libraryItem, seriesSummary } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, seriesReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
@@ -339,5 +339,47 @@ describe('CollectionPage', () => {
     await userEvent.click(await screen.findByText('Réessayer'));
 
     expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+  });
+
+  // ── Desktop layout (#173) ────────────────────────────────────────────────────
+
+  describe('the chip and sort rows', () => {
+    afterEach(() => {
+      Reflect.deleteProperty(window, 'matchMedia');
+    });
+
+    test('below the tablet breakpoint they stay the horizontal scrollers they ship today', async () => {
+      mockViewportWidth(390);
+      libraryReturns([ROMAN]);
+      renderWithProviders(<CollectionPage />);
+
+      const chipRow = (await screen.findByText('Or')).closest('[class*="chipRow"]');
+      const sortRow = screen.getByText('Trier').closest('[class*="sortRow"]');
+      expect(chipRow?.className).toMatch(/\bscroll-x\b/);
+      expect(chipRow?.className).not.toMatch(/rowWide/);
+      expect(sortRow?.className).toMatch(/\bscroll-x\b/);
+      expect(sortRow?.className).not.toMatch(/rowWide/);
+    });
+
+    test('at the tablet breakpoint they wrap instead of scrolling', async () => {
+      mockViewportWidth(600);
+      libraryReturns([ROMAN]);
+      renderWithProviders(<CollectionPage />);
+
+      const chipRow = (await screen.findByText('Or')).closest('[class*="chipRow"]');
+      const sortRow = screen.getByText('Trier').closest('[class*="sortRow"]');
+      expect(chipRow?.className).toMatch(/rowWide/);
+      expect(chipRow?.className).not.toMatch(/\bscroll-x\b/);
+      expect(sortRow?.className).toMatch(/rowWide/);
+      expect(sortRow?.className).not.toMatch(/\bscroll-x\b/);
+    });
+  });
+
+  test('the flat view opts into the shared cover grid', async () => {
+    libraryReturns([ROMAN]);
+    renderWithProviders(<CollectionPage />);
+
+    const cover = await screen.findByText('Le Nom du vent');
+    expect(cover.closest('[class*="gridCover"]')).toBeInTheDocument();
   });
 });

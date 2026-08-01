@@ -328,8 +328,18 @@ Not a screen either: how much of the window the application is allowed to use.
   ([#172](https://github.com/zelytra/Librarius/issues/172)). It stays visible on Detail,
   Series and Settings, where the bar hides itself: on a wide window nothing is gained by
   taking it away, and losing it would leave browser-back as the only way out.
-- 🔜 The screens themselves still lay their content out in one column: that is #173 to
-  #175, which the widths and the navigation above exist to serve.
+- ✅ **Home and Collection use the width they are given.** ([#173](https://github.com/zelytra/Librarius/issues/173)).
+  Both opt into the shared `Grid` primitive rather than a screen-specific layout: Collection's
+  flat view draws the same cover grid past 600 px that it always has, just with as many
+  columns as the width holds instead of three; its Series view turns its single-column list
+  of runs into a multi-column one, `--grid-panel-min` sizing the cards. Home's two shelves
+  ("Reprendre la lecture", "Derniers lus") stop being a scroller a mouse has to drag once
+  the width holds more than one row's worth of covers, and wrap instead — the same reasoning
+  #172 used for the navigation: which layout to *render* is a JS decision
+  (`useViewportAtLeast('tablet')`), how it is *drawn* stays in the tokens. Nothing changes
+  under 600 px in either screen.
+- 🔜 Discover and the remaining screens still lay their content out in one column: that is
+  #174 and #175, which the widths and the navigation above exist to serve.
 
 ## 5. Key journeys
 

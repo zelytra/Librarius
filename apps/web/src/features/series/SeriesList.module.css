@@ -1,8 +1,13 @@
-/* Series view of the collection: a list of runs rather than a wall of covers. */
-
+/* Series view of the collection: a list of runs rather than a wall of covers. Below
+   --bp-tablet a single-column grid is a column, pixel for pixel — `--grid-panel-columns`
+   is `1fr` there, so nothing changes; past it the same track list opens onto
+   `--grid-panel-min`-wide columns, which is what turns the vertical list into the
+   two-to-four-column layout a run's card (title, progress bar, one badge) fits well in.
+   The gap stays a value of its own rather than `--grid-gap-*`: those are tuned for a wall
+   of covers, tighter than a row this tall reads well at. */
 .list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
   gap: 10px;
 }
 

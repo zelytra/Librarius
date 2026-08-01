@@ -116,13 +116,20 @@ src/
   `shared/ui/breakpoints.ts` mirrors the two numbers for the cases only JS can answer —
   *which* component to render at a width, rather than how to draw it — and
   `breakpoints.test.ts` fails if the two halves drift apart. `useViewportAtLeast()` there
-  is that decision as a hook, and `AppShell` is its only caller so far.
+  is that decision as a hook: `AppShell` was its first caller (which navigation to mount),
+  and Home and Collection followed for the same reason applied to a shelf or a chip row
+  ([#173](https://github.com/zelytra/Librarius/issues/173)) — a horizontal scroller
+  becoming a wrapping row is a shape change no track-size token can express, so it stays a
+  render decision rather than a media query added to the component.
   `Screen` (`shared/ui/primitives.tsx`) is the container: it owns the page padding, the
   `--content-max` cap and the centring, so a screen widens without being touched. `Grid`
   is opt-in, in two shapes — `cover` for a grid of covers, `panel` for a row of cards —
   and never declares a column count: below the tablet breakpoint the track list is the
   fixed one each screen already draws, above it the browser fits as many columns as the
-  width holds.
+  width holds. Collection's flat view and `SeriesList` (its Series view) are its first
+  adopters: `cover` for the tile grid, `panel` for the run cards, both keeping their own
+  gap value where the shared `--grid-gap-*` rhythm is tuned for covers rather than a
+  taller card.
 - **Navigation** ([#172](https://github.com/zelytra/Librarius/issues/172)): exactly one
   navigation is mounted, chosen by width rather than hidden by CSS — `BottomNav` below
   `--bp-tablet`, `SideNav` from it up. Both read `app/navigation.ts`, so a destination is

@@ -2,8 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createTestQueryClient, renderWithProviders, TestProviders } from '../../test/utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createTestQueryClient, mockViewportWidth, renderWithProviders, TestProviders } from '../../test/utils';
 import { ThemeProvider } from '../../shared/theme/ThemeProvider';
 import { dashboardLayout, goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
@@ -76,6 +76,49 @@ describe('HomePage', () => {
 
     expect(await screen.findByText('Derniers lus')).toBeInTheDocument();
     expect(screen.queryByText('Reprendre la lecture')).not.toBeInTheDocument();
+  });
+
+  // ── Desktop shelf layout (#173) ──────────────────────────────────────────────
+
+  describe('the shelf layout', () => {
+    afterEach(() => {
+      Reflect.deleteProperty(window, 'matchMedia');
+    });
+
+    /** The row carrying the covers, whichever of the two classes it is drawn with. */
+    async function shelfRow(heading: string) {
+      const title = await screen.findByText(heading);
+      return title.closest('section')?.querySelector<HTMLElement>('[class*="shelf"]');
+    }
+
+    test('below the tablet breakpoint the shelf stays the horizontal scroller it ships today', async () => {
+      mockViewportWidth(390);
+      libraryReturns([libraryItem({ id: 'en-cours', status: 'READING' })]);
+      renderWithProviders(<HomePage />);
+
+      const row = await shelfRow('Reprendre la lecture');
+      expect(row?.className).toMatch(/\bscroll-x\b/);
+      expect(row?.className).not.toMatch(/shelfWide/);
+    });
+
+    test('at the tablet breakpoint the shelf wraps instead of scrolling', async () => {
+      mockViewportWidth(600);
+      libraryReturns([libraryItem({ id: 'en-cours', status: 'READING' })]);
+      renderWithProviders(<HomePage />);
+
+      const row = await shelfRow('Reprendre la lecture');
+      expect(row?.className).toMatch(/shelfWide/);
+      expect(row?.className).not.toMatch(/\bscroll-x\b/);
+    });
+
+    test('the "recently read" shelf follows the same rule', async () => {
+      mockViewportWidth(600);
+      libraryReturns([libraryItem({ id: 'lu', status: 'READ' })]);
+      renderWithProviders(<HomePage />);
+
+      const row = await shelfRow('Derniers lus');
+      expect(row?.className).toMatch(/shelfWide/);
+    });
   });
 
   // ── To-read pile (#166) ─────────────────────────────────────────────────────
