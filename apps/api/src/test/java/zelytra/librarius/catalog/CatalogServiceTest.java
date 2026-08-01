@@ -36,6 +36,28 @@ class CatalogServiceTest {
         }
     }
 
+    /** Answers with as many distinct, tagged results as the caller asks for. */
+    private record VerboseProvider(String name, Kind kind, int available)
+            implements CatalogProvider {
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return titled(Math.min(available, limit));
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return titled(Math.min(available, limit));
+        }
+
+        private List<CatalogResult> titled(int count) {
+            List<CatalogResult> results = new java.util.ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                results.add(result("BOOK", name + "-title-" + i));
+            }
+            return results;
+        }
+    }
+
     /** Keeps the criteria it was handed, to check they survive the trip to the provider. */
     private static final class RecordingProvider implements CatalogProvider {
 
@@ -109,6 +131,40 @@ class CatalogServiceTest {
 
         // The duplicate (same title/author) is merged into a single entry.
         assertEquals(1, service.search(Kind.BOOK, CatalogQuery.of("wing"), 10).size());
+    }
+
+    @Test
+    void givesEachProviderAFairShareOfTheLimitWhenBothReturnAFullPage() {
+        // Both providers could each fill the whole limit on their own; the faster/more
+        // verbose one must not crowd the other out of the merged page.
+        CatalogService service = new CatalogService(List.of(
+                new VerboseProvider("openlibrary", Kind.BOOK, 20),
+                new VerboseProvider("bnf", Kind.BOOK, 20)),
+                passThroughCache());
+
+        List<CatalogResult> results = service.search(Kind.BOOK, CatalogQuery.of("wing"), 10);
+
+        assertEquals(10, results.size());
+        long fromOpenLibrary = results.stream()
+                .filter(r -> r.title().startsWith("openlibrary")).count();
+        long fromBnf = results.stream().filter(r -> r.title().startsWith("bnf")).count();
+        assertEquals(5, fromOpenLibrary);
+        assertEquals(5, fromBnf);
+    }
+
+    @Test
+    void aSilentProviderLeavesTheWholeLimitToTheOther() {
+        // A provider returning nothing (down, or off-topic) must not halve what the
+        // other one is allowed to contribute.
+        CatalogService service = new CatalogService(List.of(
+                new VerboseProvider("openlibrary", Kind.BOOK, 0),
+                new VerboseProvider("bnf", Kind.BOOK, 20)),
+                passThroughCache());
+
+        List<CatalogResult> results = service.search(Kind.BOOK, CatalogQuery.of("wing"), 10);
+
+        assertEquals(10, results.size());
+        assertTrue(results.stream().allMatch(r -> r.title().startsWith("bnf")));
     }
 
     @Test

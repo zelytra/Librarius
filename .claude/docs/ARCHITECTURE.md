@@ -193,7 +193,13 @@ zelytra/librarius/
   CatalogProvider` class** — nothing else needs to change, and `BOOK` proves it: Open
   Library and the BnF are both registered for it, and neither the service, the resource nor
   the cache knows there are two. A provider that fails answers no result rather than
-  raising, so the aggregate degrades to whatever the others found. `dedupKey` is
+  raising, so the aggregate degrades to whatever the others found. The merge is
+  round-robin, one rank at a time across the registered providers, rather than exhausting
+  the first one before touching the next — with a shared `limit` a provider that simply
+  answers with more results (or answers first) would otherwise fill the whole page and
+  crowd the other one out, however good its answers were. A provider with fewer results,
+  including none, just drops out of later rounds and the unused share goes to the others.
+  `dedupKey` is
   `title|authors` lowercased, which only merges two catalogues when they spell a title *and*
   an author the same way — which is why `BnfProvider` normalises both halves of that key: it
   cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit

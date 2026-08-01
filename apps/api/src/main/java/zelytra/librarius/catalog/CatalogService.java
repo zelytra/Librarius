@@ -53,12 +53,41 @@ public class CatalogService {
                 () -> provider.upcoming(limit)));
     }
 
+    /**
+     * Merges every provider's results round-robin, one rank at a time, rather than
+     * exhausting the first provider before touching the next: with a shared limit that
+     * used to let whichever provider answered first (or simply returned more) fill the
+     * whole page, crowding out a catalogue that may hold the only copy of a title.
+     *
+     * <p>A provider that returns fewer results (including none, e.g. down or off-topic)
+     * simply drops out of later rounds, and the limit it leaves unused goes to the
+     * others — nobody is penalized for another provider's silence. Dedup on
+     * {@link #dedupKey} still happens as entries are merged, so two catalogues holding
+     * the same title spend a single slot, not two.
+     */
     private List<CatalogResult> aggregate(Kind kind, int limit,
             Function<CatalogProvider, List<CatalogResult>> call) {
+        List<CatalogProvider> providers = byKind.getOrDefault(kind, List.of());
+        List<List<CatalogResult>> perProvider = new ArrayList<>(providers.size());
+        for (CatalogProvider provider : providers) {
+            perProvider.add(call.apply(provider));
+        }
+
         Map<String, CatalogResult> merged = new LinkedHashMap<>();
-        for (CatalogProvider provider : byKind.getOrDefault(kind, List.of())) {
-            for (CatalogResult result : call.apply(provider)) {
-                merged.putIfAbsent(dedupKey(result), result);
+        for (int rank = 0; merged.size() < limit; rank++) {
+            boolean anyProviderHadThisRank = false;
+            for (List<CatalogResult> results : perProvider) {
+                if (rank >= results.size()) {
+                    continue;
+                }
+                anyProviderHadThisRank = true;
+                merged.putIfAbsent(dedupKey(results.get(rank)), results.get(rank));
+                if (merged.size() >= limit) {
+                    break;
+                }
+            }
+            if (!anyProviderHadThisRank) {
+                break;
             }
         }
         return merged.values().stream().limit(limit).toList();

@@ -200,6 +200,7 @@ bibliography and can be followed; a work's editions carry covers the providers k
 | [#189](https://github.com/zelytra/Librarius/issues/189) | Catalog search stops requiring a single mandatory kind | #178 |
 | [#194](https://github.com/zelytra/Librarius/issues/194) | Discover: one result feed across every medium | #189 |
 | [#179](https://github.com/zelytra/Librarius/issues/179) | ✅ A second book catalog provider — the **BnF** over SRU, not Google Books, which the user ruled out in [#9](https://github.com/zelytra/Librarius/pull/9) | — |
+| [#239](https://github.com/zelytra/Librarius/issues/239) | ✅ `CatalogService` merges the two book providers round-robin instead of first-come-first-served, so the faster/more verbose one can no longer fill the whole page alone | #179 |
 | [#197](https://github.com/zelytra/Librarius/issues/197) | Enrich a work's editions and their covers from its provider | #49, #184 |
 | [#182](https://github.com/zelytra/Librarius/issues/182) | ✅ Author catalog entities: `author`, `work_author` and `author_follow` (V13), backfilled from the free-text credit lines. Spellings that fold alike are one person and nothing more is claimed — no alias table, no initial expansion, no namesake disambiguation | — |
 | [#196](https://github.com/zelytra/Librarius/issues/196) | Author API: bibliography, search and follow | #182 |
