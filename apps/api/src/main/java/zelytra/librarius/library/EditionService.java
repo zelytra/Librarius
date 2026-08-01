@@ -1,15 +1,22 @@
 package zelytra.librarius.library;
 
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import zelytra.librarius.catalog.CatalogResult;
+import zelytra.librarius.catalog.CatalogService;
+import zelytra.librarius.catalog.RateLimiter;
 import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.ReadingProgress;
+import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.EditionRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.ReadingProgressRepository;
 import zelytra.librarius.web.ApiDtos.EditionDto;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +42,15 @@ public class EditionService {
 
     @Inject
     ReadingProgressRepository progresses;
+
+    @Inject
+    CatalogService catalog;
+
+    @Inject
+    RateLimiter rateLimiter;
+
+    /** How many provider editions to merge in at most, so a large work cannot flood the list. */
+    private static final int PROVIDER_EDITION_LIMIT = 40;
 
     /** Why a switch was refused, so the resource can answer with the right status. */
     public enum Refusal {
@@ -68,7 +84,15 @@ public class EditionService {
     }
 
     /**
-     * The editions of a work, marking the ones the caller already owns.
+     * The editions of a work: the ones users of this instance entered, marked with whether the
+     * caller owns them, and — when the work came from a provider — the other printings that
+     * provider knows of it, merged in and deduplicated.
+     *
+     * <p>The enrichment is best-effort. A work with no provider reference (a hand-typed entry,
+     * or one predating V12) is answered from the stored editions alone, exactly as before; and
+     * a provider that returns nothing, is over quota or is down leaves the same stored list
+     * rather than failing the read. The provider editions are catalog data only — they carry
+     * no {@code id}, and nothing is persisted here.
      *
      * @return empty when the caller owns nothing of that work, which the resource turns into
      *         a 404 — the same answer an unknown identifier gets
@@ -78,9 +102,81 @@ public class EditionService {
             return Optional.empty();
         }
         Set<UUID> owned = items.ownedEditionIds(userId, workId);
-        return Optional.of(editions.listByWork(workId).stream()
+        List<Edition> stored = editions.listByWork(workId);
+        List<EditionDto> result = new ArrayList<>(stored.stream()
                 .map(edition -> EditionDto.of(edition, owned.contains(edition.id)))
                 .toList());
+        enrichFromProvider(userId, stored, result);
+        return Optional.of(result);
+    }
+
+    /**
+     * Appends the printings the work's provider knows and that no user of this instance
+     * entered. The work is read off the stored editions — ownership guarantees at least one —
+     * so its {@code provider}/{@code providerRef} decide whether there is anything to ask.
+     *
+     * <p>The call is charged against the same per-caller quota as a search and served through
+     * the same catalog cache: browsing to a detail screen is still an outbound provider call,
+     * not an exemption from the quota. Over the limit, the enrichment is simply skipped — a
+     * detail screen must not answer 429.
+     */
+    private void enrichFromProvider(String userId, List<Edition> stored, List<EditionDto> result) {
+        Work work = stored.isEmpty() ? null : stored.get(0).work;
+        if (work == null || work.provider == null || work.providerRef == null) {
+            return;
+        }
+        if (!rateLimiter.check(userId).allowed()) {
+            return;
+        }
+        List<CatalogResult> fromProvider;
+        try {
+            fromProvider = catalog.editionsOf(work.provider, work.providerRef, PROVIDER_EDITION_LIMIT);
+        } catch (RuntimeException e) {
+            Log.warnf("Edition enrichment failed for work %s: %s", work.id, e.getMessage());
+            return;
+        }
+        Set<String> seen = new HashSet<>();
+        for (Edition edition : stored) {
+            String isbn = normalizeIsbn(edition.isbn13);
+            if (isbn != null) {
+                seen.add("isbn:" + isbn);
+            }
+        }
+        for (CatalogResult candidate : fromProvider) {
+            if (seen.add(dedupKey(candidate))) {
+                result.add(providerEdition(candidate));
+            }
+        }
+    }
+
+    /**
+     * The identity a provider edition is deduplicated on: its ISBN-13 when it has one — the
+     * same printing on two catalogues shares it — then its own reference, then the little the
+     * record still carries. Kept in step with the {@code isbn:} keys the stored editions seed.
+     */
+    private static String dedupKey(CatalogResult candidate) {
+        String isbn = normalizeIsbn(candidate.isbn13());
+        if (isbn != null) {
+            return "isbn:" + isbn;
+        }
+        if (candidate.providerRef() != null && !candidate.providerRef().isBlank()) {
+            return "ref:" + candidate.providerRef();
+        }
+        return "sig:" + candidate.publisher() + '|' + candidate.language() + '|' + candidate.releaseDate();
+    }
+
+    private static String normalizeIsbn(String isbn13) {
+        if (isbn13 == null) {
+            return null;
+        }
+        String digits = isbn13.replaceAll("[^0-9Xx]", "");
+        return digits.isEmpty() ? null : digits;
+    }
+
+    /** A provider printing as an unowned, unpersisted edition — no {@code id}, its own cover. */
+    private static EditionDto providerEdition(CatalogResult candidate) {
+        return new EditionDto(null, candidate.isbn13(), candidate.publisher(), candidate.language(),
+                null, null, candidate.releaseDate(), candidate.coverUrl(), false);
     }
 
     /**

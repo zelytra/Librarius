@@ -204,6 +204,14 @@
   font-weight: 600;
 }
 
+/* A printing the provider knows and nobody here entered (#197): catalog data, not a row,
+   so it is shown for the cover and the printing it adds, without an "I own this" action. */
+.editionFromCatalog {
+  font-size: var(--fs-12-5);
+  color: var(--faint);
+  font-style: italic;
+}
+
 .editionsError {
   font-size: var(--fs-12-5);
   color: var(--rose);

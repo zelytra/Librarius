@@ -136,9 +136,17 @@ The full inventory, with a **Books / Manga** toggle.
   edition already in the collection is named as such instead of being offered. Switching
   keeps status, rating, review and rank, and re-anchors the reading position on its
   percentage (see [API](API.md) § Editions).
-- 🔜 **Enriching the editions from the providers**: the list holds what users entered.
-  `work` carries no provider reference, so no provider can be asked for "the other editions
-  of *this* work" — see [API](API.md) gap A12.
+- ✅ / 🔜 **Enriching the editions from the providers**
+  ([#197](https://github.com/zelytra/Librarius/issues/197)): when a work carries a provider
+  reference (V12), the section also lists the other printings that provider knows and nobody
+  here entered — each with its own cover — merged next to the stored editions and
+  deduplicated on the ISBN. A provider printing is a catalog suggestion, not a row: it is
+  shown for the printing it adds, without the *"C'est l'édition que je possède"* action, which
+  moves the collection onto an edition that exists. The call is cached and rate-limited like a
+  search, and is best-effort — a work with no reference, or a provider that answers nothing or
+  is down, shows the stored editions exactly as before, never an error. 🔜 It is dormant in
+  practice until a provider stores a usable reference: Open Library returns none yet, so no
+  real work is enriched for now — see [API](API.md) gap A12.
 - 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 

@@ -39,7 +39,8 @@ public class CatalogCache {
     /** Request type: picks the first-level cache and the time-to-live. */
     public enum Scope {
         SEARCH,
-        UPCOMING
+        UPCOMING,
+        EDITIONS
     }
 
     @Inject
@@ -49,6 +50,10 @@ public class CatalogCache {
     @Inject
     @CacheName("catalog-upcoming")
     Cache upcomingCache;
+
+    @Inject
+    @CacheName("catalog-editions")
+    Cache editionsCache;
 
     @Inject
     CatalogCacheStore store;
@@ -66,6 +71,9 @@ public class CatalogCache {
 
     @ConfigProperty(name = "librarius.catalog.cache.upcoming.ttl", defaultValue = "12H")
     Duration upcomingTtl;
+
+    @ConfigProperty(name = "librarius.catalog.cache.editions.ttl", defaultValue = "12H")
+    Duration editionsTtl;
 
     /**
      * Returns the cached answer for {@code key}, calling {@code loader} only when neither
@@ -123,10 +131,18 @@ public class CatalogCache {
     }
 
     private Cache level1(Scope scope) {
-        return scope == Scope.SEARCH ? searchCache : upcomingCache;
+        return switch (scope) {
+            case SEARCH -> searchCache;
+            case UPCOMING -> upcomingCache;
+            case EDITIONS -> editionsCache;
+        };
     }
 
     private Duration ttl(Scope scope) {
-        return scope == Scope.SEARCH ? searchTtl : upcomingTtl;
+        return switch (scope) {
+            case SEARCH -> searchTtl;
+            case UPCOMING -> upcomingTtl;
+            case EDITIONS -> editionsTtl;
+        };
     }
 }

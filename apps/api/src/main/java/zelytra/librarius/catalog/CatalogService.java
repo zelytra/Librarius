@@ -7,6 +7,7 @@ import zelytra.librarius.domain.Kind;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class CatalogService {
 
     private final Map<Kind, List<CatalogProvider>> byKind = new EnumMap<>(Kind.class);
 
+    private final Map<String, CatalogProvider> byName = new HashMap<>();
+
     private final CatalogCache cache;
 
     @Inject
@@ -38,6 +41,7 @@ public class CatalogService {
         this.cache = cache;
         for (CatalogProvider provider : providers) {
             byKind.computeIfAbsent(provider.kind(), k -> new ArrayList<>()).add(provider);
+            byName.putIfAbsent(provider.name(), provider);
         }
     }
 
@@ -51,6 +55,26 @@ public class CatalogService {
         return aggregate(kind, limit, provider -> cache.get(CatalogCache.Scope.UPCOMING,
                 provider.name(), "upcoming|" + kind + '|' + limit,
                 () -> provider.upcoming(limit)));
+    }
+
+    /**
+     * The other editions a provider knows of one of its works. Routed by name — the pair
+     * {@code (provider, ref)} names a single record in a single catalogue — and cached like
+     * every other outbound call.
+     *
+     * @param provider the catalogue the work was stored from ({@code work.provider})
+     * @param ref      its reference for the work ({@code work.provider_ref})
+     * @return the editions, or an empty list when the provider is unknown, holds no reference
+     *         to key on, or simply knows no others
+     */
+    public List<CatalogResult> editionsOf(String provider, String ref, int limit) {
+        CatalogProvider target = byName.get(provider);
+        if (target == null || ref == null || ref.isBlank()) {
+            return List.of();
+        }
+        return cache.get(CatalogCache.Scope.EDITIONS, target.name(),
+                "editions|" + ref + '|' + limit,
+                () -> target.editionsOf(ref, limit));
     }
 
     /**
