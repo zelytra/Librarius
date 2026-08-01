@@ -16,6 +16,7 @@ import zelytra.librarius.account.AccountDeletionService;
 import zelytra.librarius.account.AccountEraser.Erased;
 import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.social.UserBlockService;
 import zelytra.librarius.social.UserFollowService;
 import zelytra.librarius.web.ApiDtos.AccountDeletionDto;
 import zelytra.librarius.web.ApiDtos.MeDto;
@@ -41,6 +42,9 @@ public class MeResource {
     @Inject
     UserFollowService follows;
 
+    @Inject
+    UserBlockService blocks;
+
     @GET
     public MeDto me() {
         return MeDto.of(currentUser.require());
@@ -62,6 +66,17 @@ public class MeResource {
     @Path("/followers")
     public List<MemberSummaryDto> followers() {
         return follows.followers(currentUser.id());
+    }
+
+    /**
+     * The members the caller blocks (#203). Whether an account is blocked is visible only to
+     * the blocker, so this list is the caller's own and nobody else's — the blocked party is
+     * never told. Relationship metadata about the caller's account, like the two follow lists.
+     */
+    @GET
+    @Path("/blocked")
+    public List<MemberSummaryDto> blocked() {
+        return blocks.blocked(currentUser.id());
     }
 
     /**

@@ -604,6 +604,13 @@
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
     "notifications": "Notifications",
     "version": "My Library · version {{version}}",
+    "blocked": {
+      "title": "Blocked members",
+      "description": "Blocked members cannot see your shared content or follow you, and you cannot see theirs. They are not told.",
+      "signIn": "Sign in to manage the members you block.",
+      "empty": "You have not blocked anyone.",
+      "unblock": "Unblock"
+    },
     "profile": {
       "title": "Profile",
       "description": "Your display name, language and time zone. The language follows your account from one device to the next.",

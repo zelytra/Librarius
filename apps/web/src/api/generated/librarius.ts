@@ -3283,6 +3283,107 @@ export const useDeleteApiMe = <TError = void,
       return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
     }
 
+export const getGetApiMeBlockedUrl = () => {
+
+
+
+
+  return `/api/me/blocked`
+}
+
+/**
+ * @summary Blocked
+ */
+export const getApiMeBlocked = async ( options?: RequestInit): Promise<MemberSummaryDto[]> => {
+
+  return apiClient<MemberSummaryDto[]>(getGetApiMeBlockedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiMeBlockedQueryKey = () => {
+    return [
+    `/api/me/blocked`
+    ] as const;
+    }
+
+
+export const getGetApiMeBlockedQueryOptions = <TData = Awaited<ReturnType<typeof getApiMeBlocked>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMeBlockedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMeBlocked>>> = () => getApiMeBlocked();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMeBlockedQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMeBlocked>>>
+export type GetApiMeBlockedQueryError = void
+
+
+export function useGetApiMeBlocked<TData = Awaited<ReturnType<typeof getApiMeBlocked>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeBlocked>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeBlocked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeBlocked<TData = Awaited<ReturnType<typeof getApiMeBlocked>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMeBlocked>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMeBlocked>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiMeBlocked<TData = Awaited<ReturnType<typeof getApiMeBlocked>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Blocked
+ */
+
+export function useGetApiMeBlocked<TData = Awaited<ReturnType<typeof getApiMeBlocked>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMeBlocked>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMeBlockedQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiMeFollowersUrl = () => {
 
 
@@ -4317,6 +4418,148 @@ export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiS
 
 
 
+
+export const getDeleteApiUsersIdBlockUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/block`
+}
+
+/**
+ * @summary Unblock
+ */
+export const deleteApiUsersIdBlock = async (id: string, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiUsersIdBlockUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiUsersIdBlockMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdBlock>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdBlock>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteApiUsersIdBlock'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiUsersIdBlock>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiUsersIdBlock(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiUsersIdBlockMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiUsersIdBlock>>>
+
+    export type DeleteApiUsersIdBlockMutationError = void
+
+    /**
+ * @summary Unblock
+ */
+export const useDeleteApiUsersIdBlock = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiUsersIdBlock>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiUsersIdBlock>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteApiUsersIdBlockMutationOptions(options), queryClient);
+    }
+
+export const getPutApiUsersIdBlockUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/block`
+}
+
+/**
+ * @summary Block
+ */
+export const putApiUsersIdBlock = async (id: string, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiUsersIdBlockUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getPutApiUsersIdBlockMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdBlock>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdBlock>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['putApiUsersIdBlock'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiUsersIdBlock>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  putApiUsersIdBlock(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiUsersIdBlockMutationResult = NonNullable<Awaited<ReturnType<typeof putApiUsersIdBlock>>>
+
+    export type PutApiUsersIdBlockMutationError = void
+
+    /**
+ * @summary Block
+ */
+export const usePutApiUsersIdBlock = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdBlock>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiUsersIdBlock>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPutApiUsersIdBlockMutationOptions(options), queryClient);
+    }
 
 export const getDeleteApiUsersIdFollowUrl = (id: string,) => {
 

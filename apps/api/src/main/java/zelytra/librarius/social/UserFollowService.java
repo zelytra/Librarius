@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import zelytra.librarius.domain.repository.AppUserRepository;
+import zelytra.librarius.domain.repository.UserBlockRepository;
 import zelytra.librarius.domain.repository.UserFollowRepository;
 import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 
@@ -27,18 +28,27 @@ public class UserFollowService {
     UserFollowRepository follows;
 
     @Inject
+    UserBlockRepository blocks;
+
+    @Inject
     AppUserRepository users;
 
     /**
      * The caller starts following {@code targetId}. Idempotent.
      *
-     * @throws BadRequestException when a user tries to follow themselves
+     * @throws BadRequestException when a user tries to follow themselves, or when a block
+     *                             stands between the two accounts in either direction — a
+     *                             block overrides a follow (#203), so neither the blocker nor
+     *                             the blocked party can open a new follow while it stands
      * @throws NotFoundException   when no such user exists — an unknown id is a 404, never a
      *                             403 that would confirm the account is simply out of reach
      */
     @Transactional
     public void follow(String followerId, String targetId) {
         requireDistinctExistingTarget(followerId, targetId);
+        if (blocks.isBlockBetween(followerId, targetId)) {
+            throw new BadRequestException("A block stands between the two accounts.");
+        }
         follows.follow(followerId, targetId);
     }
 

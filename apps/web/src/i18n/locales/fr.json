@@ -604,6 +604,13 @@
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",
     "notifications": "Notifications",
     "version": "Ma Bibliothèque · version {{version}}",
+    "blocked": {
+      "title": "Membres bloqués",
+      "description": "Un membre bloqué ne voit plus ton contenu partagé et ne peut plus te suivre, et tu ne vois plus le sien. Il n'en est pas averti.",
+      "signIn": "Connecte-toi pour gérer les membres que tu bloques.",
+      "empty": "Tu n'as bloqué personne.",
+      "unblock": "Débloquer"
+    },
     "profile": {
       "title": "Profil",
       "description": "Ton nom affiché, ta langue et ton fuseau horaire. La langue suit ton compte d'un appareil à l'autre.",

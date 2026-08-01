@@ -1,0 +1,52 @@
+/* The blocked-members list: one row per member, their name on the left and an unblock
+   button on the right — the same visual language as the other Settings sections. */
+
+.title {
+  font-size: var(--fs-16);
+  margin: 0 0 4px;
+}
+
+.intro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.empty {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13-5);
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trustBadge {
+  font-weight: 700;
+}
