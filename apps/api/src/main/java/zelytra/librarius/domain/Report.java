@@ -32,6 +32,15 @@ public class Report {
     @Column(name = "reporter_id", nullable = false, length = 255)
     public String reporterId;
 
+    /**
+     * The account whose contribution this report reflects on — the other side of
+     * {@code reporterId}. NULL until the contribution attribution (#198) records who contributed
+     * a catalog object and stamps it here at report time. Read by the automatic trust revocation
+     * (#195) to count the upheld reports against an account, never client input.
+     */
+    @Column(name = "contributor_id", length = 255)
+    public String contributorId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, length = 16)
     public ReportTargetType targetType;
