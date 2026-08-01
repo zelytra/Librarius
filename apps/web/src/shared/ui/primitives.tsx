@@ -38,9 +38,18 @@ const GRID_SHAPES: Record<GridShape, string> = {
 /**
  * Responsive column grid. The column count is deliberately not a parameter: the
  * same markup gives a phone the fixed columns it draws today and a desktop as
- * many as the width holds. Track sizes come from `--grid-*` in `tokens.css`; a
- * screen needing a different rhythm overrides those through `className` rather
- * than restating a `grid-template-columns` of its own.
+ * many as the width holds. Track sizes come from `--grid-*` in `tokens.css`.
+ *
+ * <p>Overriding `--grid-cover-min` / `--grid-panel-min` through `className` does
+ * **not** change the columns drawn: `--grid-cover-columns` / `--grid-panel-columns`
+ * are declared once, at `:root` in the two breakpoint blocks of `tokens.css`, and
+ * their own `var(--grid-*-min)` is substituted there, against `:root`'s value —
+ * that already-resolved track list is what every consumer inherits, and a later
+ * override changes what the descendant reads back for `--grid-*-min` itself, not
+ * the token list it already inherited (verified against a live render, #175). A
+ * screen wanting a coarser grid has to redeclare `grid-template-columns` of its
+ * own past the breakpoint, or a new `--grid-*` pair belongs in `tokens.css`
+ * itself, inside the two existing blocks, the way `--nav-side-width` does.
  */
 export function Grid({
   shape = 'cover',

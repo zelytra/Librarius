@@ -18,9 +18,25 @@
   opacity: var(--wash-opacity);
 }
 
+/* Unlike Detail, this page ends in a grid — the volumes — which is meant to use the
+   same width the Collection grid does, so the column is capped at --content-max
+   rather than a reading measure: the phone rendering is unaffected either way, since
+   --content-max is `none` below the tablet breakpoint. */
 .body {
   position: relative;
   padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+/* The identity block above the grid — cover, heading, progress, synopsis — is prose
+   and a hero, not a grid: left at the width of `.body` it would stretch the same way
+   Detail's did, so it keeps its own reading measure and stays centred inside the
+   wider column the volumes below it are free to use. Below the tablet breakpoint the
+   column is already narrower than the cap, so nothing here changes. */
+.intro {
+  max-width: 640px;
+  margin-inline: auto;
 }
 
 .backRow {

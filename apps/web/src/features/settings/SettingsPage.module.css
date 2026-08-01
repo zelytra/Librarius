@@ -5,6 +5,34 @@
   margin-bottom: 24px;
 }
 
+/* Below the tablet breakpoint this is a single column: `--grid-panel-columns` is
+   `1fr` there, and the row gap is 0 so each section keeps the bottom margin it
+   already draws with — pixel-identical to the plain stack this replaces. Past it
+   the same token turns into an auto-fit track list, so the sections that fit two
+   or three across do, without a column count declared here.
+
+   `--grid-panel-min` is deliberately left at its 260px default rather than
+   overridden here: it reads as an override on `.sections` itself, but
+   `--grid-panel-columns` is only ever *declared* at `:root`, inside the two
+   breakpoint blocks of tokens.css — its `var(--grid-panel-min)` is substituted
+   once there, against `:root`'s own value, and it is that already-resolved
+   string that every consumer inherits. A later `--grid-panel-min` on a
+   descendant changes what that descendant reads back for the custom property
+   itself, but not the token list it inherited already substituted, so it has no
+   effect on the columns actually drawn — confirmed against a live render before
+   settling on the shared minimum instead of a value that silently did nothing. */
+.sections {
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
+  column-gap: var(--grid-gap-x);
+  row-gap: 0;
+  align-items: start;
+}
+
+.sectionBlock {
+  min-width: 0;
+}
+
 .backButton {
   width: 40px;
   height: 40px;

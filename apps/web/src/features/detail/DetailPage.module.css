@@ -19,9 +19,19 @@
   opacity: var(--wash-opacity);
 }
 
+/* A single title, read top to bottom: past the tablet breakpoint the column stops
+   growing at a comfortable reading measure and centres in the window, rather than
+   stretching a hero and a stat strip meant for a 440px frame across it — the same
+   640px the landing page's own demo panel is capped at. Below the breakpoint the
+   frame is already narrower than the cap, so nothing here changes: max-width has
+   nothing to clip and centring a full-width block moves it nowhere. The wash
+   behind it (`.wash`) is untouched by the cap and keeps bleeding to the frame's
+   edge as a backdrop. */
 .body {
   position: relative;
   padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
+  max-width: 640px;
+  margin-inline: auto;
 }
 
 .backRow {
