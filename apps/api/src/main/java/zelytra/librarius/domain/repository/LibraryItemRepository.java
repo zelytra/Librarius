@@ -210,7 +210,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         /** Most recently added first — the default. */
         ADDED("li.createdAt desc, li.id desc"),
         TITLE("lower(w.title) asc, li.id asc"),
-        AUTHOR("lower(coalesce(w.authors, '')) asc, lower(w.title) asc, li.id asc"),
+        AUTHOR("lower(coalesce(w.authorsText, '')) asc, lower(w.title) asc, li.id asc"),
         // Still the free-text value: a work now carries several genres, so there is no such
         // thing as "its" genre to order on. The shelf keeps the ordering it had.
         GENRE("lower(coalesce(w.genresText, '')) asc, lower(w.title) asc, li.id asc"),
@@ -314,7 +314,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         if (filter.search() != null && !filter.search().isBlank()) {
             clauses.add("""
                     (lower(w.title) like :search escape '!'
-                     or lower(coalesce(w.authors, '')) like :search escape '!'
+                     or lower(coalesce(w.authorsText, '')) like :search escape '!'
                      or lower(coalesce(w.seriesTitle, '')) like :search escape '!')""");
             params.put("search", likePattern(filter.search()));
         }

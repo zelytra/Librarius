@@ -33,8 +33,30 @@ public class Work {
     @Column(nullable = false, length = 512)
     public String title;
 
-    @Column(length = 512)
-    public String authors;
+    /**
+     * Free-text credit line as the provider or the manual form wrote it, e.g.
+     * {@code "Isaac Asimov, Robert Silverberg"}.
+     *
+     * <p>Denormalised label list of {@link #authors}, kept for the clients that still read it
+     * through {@code BookView} and for both export formats — and, unlike the two other
+     * denormalised labels, still part of the key {@code WorkRepository.findMatch}
+     * deduplicates works on. Dropped once the front end goes through the author identifiers —
+     * see V13.
+     */
+    @Column(name = "authors", length = 512)
+    public String authorsText;
+
+    /**
+     * The people credited on the work — what the bibliography of an author is read from.
+     *
+     * <p>Lazy, and deliberately never read by {@code BookView}: touching it while rendering
+     * a page of the collection would cost one query per item, exactly as for {@link #genres}.
+     */
+    @ManyToMany
+    @JoinTable(name = "work_author",
+            joinColumns = @JoinColumn(name = "work_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id"))
+    public Set<Author> authors = new LinkedHashSet<>();
 
     /**
      * Denormalised label of {@link #series}, kept for the clients that still read it.

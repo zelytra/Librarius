@@ -167,7 +167,7 @@ public class ExportService {
      */
     private static ManualBookDto book(Edition edition) {
         Work work = edition.work;
-        return new ManualBookDto(work.kind, work.title, work.authors, work.seriesTitle,
+        return new ManualBookDto(work.kind, work.title, work.authorsText, work.seriesTitle,
                 work.volumeNumber, edition.isbn13, edition.publisher, edition.language,
                 edition.pageCount, edition.coverUrl, edition.format, edition.releaseDate,
                 work.originalYear, work.synopsis, work.genresText,

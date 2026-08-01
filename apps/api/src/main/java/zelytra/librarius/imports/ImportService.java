@@ -56,7 +56,7 @@ public class ImportService {
     ImportResult persist(String userId, String source, List<ImportedBook> books) {
         Set<String> existing = new HashSet<>();
         for (LibraryItem it : items.listByUser(userId)) {
-            existing.add(key(it.edition.work.title, it.edition.work.authors));
+            existing.add(key(it.edition.work.title, it.edition.work.authorsText));
         }
 
         int imported = 0;

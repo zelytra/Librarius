@@ -13,8 +13,10 @@ that totals a budget, custom categories, personalised French release dates, a
 reorderable dashboard, GDPR export and account deletion.
 
 What is missing has moved with it. **Functional depth** is now the long tail the later
-milestones carry — authors as entities, a catalog beyond books and manga, the screens a
-finished or abandoned title should lead to, and eventually the social half. The fourth
+milestones carry — a catalog beyond books and manga, the screens a finished or abandoned
+title should lead to, and eventually the social half. Authors have left that list at the
+schema level ([#182](https://github.com/zelytra/Librarius/issues/182), V13): they are rows
+now, followable and linked to their works, with no API and no page on them yet (#196, #199). The fourth
 status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
 a title can be given up on, it keeps the page it was given up at, and it counts towards no
 goal. **Quality** is no accessibility pass, and a desktop layout whose foundations are laid
@@ -35,7 +37,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
 | Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging. The sign-in pages now carry the app's own theme (`infra/helm/librarius/files/keycloak-theme/`), in French and English; putting it on the long-lived staging realm is a manual step, see debt #24 |
-| Persistence | PostgreSQL + Panache + Flyway (12 migrations), Hibernate in `validate` mode |
+| Persistence | PostgreSQL + Panache + Flyway (13 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library **and the BnF** (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A book search merges the two catalogues and survives either being down; a cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
@@ -151,6 +153,19 @@ the Alertmanager webhook, and running a restore and a rollback for real.
     ~~`dashboard_layout`~~ ✅ **Created on 2026-07-29** ([#54](https://github.com/zelytra/Librarius/issues/54)):
     `V10__dashboard_layout.sql`, read through `GET /api/dashboard/layout`.
 12. ~~**`HelloResource` is unauthenticated**~~ ✅ **Resolved on 2026-07-28** ([#41](https://github.com/zelytra/Librarius/issues/41)): the demo endpoint is gone, every resource is now authenticated.
+25. ~~**`authors` is a `VARCHAR(512)`**: nothing links two works by the same person~~
+    ✅ **Resolved on 2026-07-29** ([#182](https://github.com/zelytra/Librarius/issues/182)):
+    `V13__author_entities.sql` adds `author`, `work_author` and `author_follow`, backfilled by
+    splitting and folding the credit lines already stored, with `AuthorService` doing the same
+    for every entry recorded afterwards. **Left behind**, the same debt the two moves before
+    it left: `work.authors` still carries the raw credit line and `sort=author` still orders
+    on it — one notch worse here, since `WorkRepository.findMatch` deduplicates works on that
+    column, so dropping it needs another key for the work match and not merely a front end
+    that has moved on. **Not attempted, deliberately**: relating two spellings that do not
+    fold alike ("A. Damasio" / "Alain Damasio"), keeping "Damasio, Alain" in one piece, or
+    telling two writers of one name apart. `author.provider` / `provider_ref` is where that
+    would land and nothing fills it — `work.provider_ref` (V12) identifies the work, not the
+    person who wrote it.
 
 ### Defects fixed since the audit ✅
 

@@ -2,6 +2,7 @@ package zelytra.librarius.catalog;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import zelytra.librarius.author.AuthorService;
 import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.Series;
@@ -38,6 +39,9 @@ public class CatalogEntryService {
 
     @Inject
     GenreService genres;
+
+    @Inject
+    AuthorService authors;
 
     /**
      * Records an entry: the work it describes, and the edition of it the user handled.
@@ -78,7 +82,10 @@ public class CatalogEntryService {
         Work work = new Work();
         work.kind = dto.kind();
         work.title = dto.title();
-        work.authors = dto.authors();
+        // The raw credit line is kept for the clients still reading it, and split into the
+        // people a bibliography is read from.
+        work.authorsText = dto.authors();
+        work.authors = authors.resolve(dto.authors());
         work.series = resolveSeries(dto.kind(), dto.seriesTitle());
         // Denormalised label of the series, still read by the clients that predate it.
         work.seriesTitle = work.series != null ? work.series.title : null;
@@ -123,6 +130,10 @@ public class CatalogEntryService {
             work.series = resolveSeries(dto.kind(), dto.seriesTitle());
             work.seriesTitle = work.series != null ? work.series.title : null;
         }
+        // Nothing to complete for the authors: the credit line is part of the key
+        // `findMatch` matched on, so a matched work already names these people and already
+        // holds their links — created here when it was recorded, or by the backfill of V13
+        // when it predates the migration.
         // A work founded by a hand-typed entry, or before V12 existed, carries no reference:
         // the first entry that does know one supplies it. The reverse never happens — an
         // entry naming another record of the same title does not get to redirect everyone

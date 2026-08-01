@@ -306,7 +306,7 @@ public class ArchiveImportService {
         Work work = edition.work;
         return String.join("|",
                 trimmed(work.title),
-                trimmed(work.authors),
+                trimmed(work.authorsText),
                 work.volumeNumber == null ? "" : work.volumeNumber.toString(),
                 trimmed(edition.isbn13),
                 trimmed(edition.publisher),

@@ -82,7 +82,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
 
     /** Dimensions the finished titles can be broken down by, beyond the genres. */
     public enum Breakdown {
-        AUTHOR("w.authors", ""),
+        AUTHOR("w.authorsText", ""),
         PUBLISHER("e.publisher", ""),
         LANGUAGE("e.language", ""),
         /** The rank category the title is filed under; an inner join drops the unranked. */
