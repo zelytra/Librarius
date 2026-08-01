@@ -1,0 +1,139 @@
+/* A quiet, low-emphasis entry point: reporting an error is a rare, secondary action, so it
+   reads as a muted text link rather than a call to action competing with the buttons above
+   it on the screen. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px auto 0;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  color: var(--faint);
+  font-size: var(--fs-13);
+  cursor: pointer;
+}
+
+.trigger:hover {
+  color: var(--ink-soft);
+}
+
+/* The dialog reuses the end-of-reading sheet's shape — see OutcomeSheet.module.css for why
+   the scrim is a fixed dark rather than a themed token, and why the panel caps at the phone
+   frame's own width instead of stretching across a desktop window. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(28, 24, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  box-shadow: var(--shadow-strong);
+  padding: 22px 20px 20px;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title {
+  font-size: var(--fs-19);
+  padding-right: 36px;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: var(--fs-13);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+/* The reasons are a single choice, laid out as a wrapping row of pills that echo the Chip
+   idiom — selected pill filled, the rest outlined. */
+.reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.reason {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-chip);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: var(--fs-13);
+  cursor: pointer;
+}
+
+.reasonOn {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.comment {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13);
+  margin-bottom: 16px;
+}
+
+.error {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  margin: 0 0 12px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The confirmation that replaces the form once the report is sent. */
+.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 12px 0 4px;
+}
+
+.sent .subtitle {
+  margin-bottom: 16px;
+}

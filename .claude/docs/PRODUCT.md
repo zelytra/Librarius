@@ -168,6 +168,14 @@ The full inventory, one shelf per support type.
   is down, shows the stored editions exactly as before, never an error. 🔜 It is dormant in
   practice until a provider stores a usable reference: Open Library returns none yet, so no
   real work is enriched for now — see [API](API.md) gap A12.
+- ✅ **Report an error** (*"Signaler une erreur"*)
+  ([#192](https://github.com/zelytra/Librarius/issues/192)): a quiet entry point at the foot of
+  the screen opens a small dialog with a short reason picklist — wrong cover, wrong
+  information, duplicate, other — and an optional comment. It flags the shared **work** the
+  title belongs to, not the caller's private copy, since an error in the data is everyone's.
+  The report is a private signal: it is sent and confirmed, never shown back to anyone, and
+  feeds the automatic trust revocation planned for this milestone
+  ([#195](https://github.com/zelytra/Librarius/issues/195)). There is no moderation screen yet.
 - 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 
@@ -288,6 +296,10 @@ collection.
 - ✅ A volume already owned opens its detail screen; a missing or upcoming one opens the
   two ways of getting it — **wishlist** or **collection** — in one gesture. The holes in
   the run are named under the grid.
+- ✅ **Report an error** (*"Signaler une erreur"*)
+  ([#192](https://github.com/zelytra/Librarius/issues/192)): the same dialog as the title
+  detail, here flagging the shared **series** — a wrong cover or title, a duplicated run.
+  Write-only and private, exactly as on the detail screen.
 - 🔜 Marking a volume as wished survives a reload: `SeriesVolumeDto` has no `wished` flag,
   so the marker is session-local for now.
 - 🔜 Volume covers and titles: the grid shows numbers, since `/api/series/{id}` only names

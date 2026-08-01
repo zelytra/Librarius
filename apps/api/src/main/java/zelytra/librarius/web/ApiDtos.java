@@ -18,6 +18,9 @@ import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingGoal;
 import zelytra.librarius.domain.ReadingProgress;
+import zelytra.librarius.domain.ReportReason;
+import zelytra.librarius.domain.ReportStatus;
+import zelytra.librarius.domain.ReportTargetType;
 import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.WishPriority;
 import zelytra.librarius.domain.WishlistItem;
@@ -721,5 +724,37 @@ public final class ApiDtos {
      * next {@code GET} adds it back in, visible.
      */
     public record DashboardLayoutDto(@NotNull @Valid java.util.List<DashboardSectionDto> sections) {
+    }
+
+    /**
+     * A member's report that a shared catalog object carries an error (#192).
+     *
+     * <p>Write-only input: the caller names what to flag ({@code targetType} + {@code targetId}),
+     * why ({@code reason}, a closed picklist), and optionally the specifics ({@code comment}).
+     * The reporter is never in the body — it is always {@code CurrentUser.id()}. Reporting an
+     * unknown {@code targetId} is a 400, checked by {@code ReportService} since no single
+     * foreign key can span the three target tables.
+     */
+    public record ReportCreateDto(
+            @NotNull ReportTargetType targetType,
+            @NotNull UUID targetId,
+            @NotNull ReportReason reason,
+            @Size(max = 2000) String comment) {
+    }
+
+    /**
+     * The report just created, echoed back to its author on the {@code POST}.
+     *
+     * <p>This is not a way to read a report back — there is no {@code GET} — it is the created
+     * resource returned to the one person who filed it. It carries nothing about anybody else:
+     * {@code reporterId} is the caller and therefore left off.
+     */
+    public record ReportDto(UUID id, ReportTargetType targetType, UUID targetId,
+            ReportReason reason, String comment, ReportStatus status,
+            java.time.OffsetDateTime createdAt) {
+        public static ReportDto of(zelytra.librarius.domain.Report r) {
+            return new ReportDto(r.id, r.targetType, r.targetId, r.reason, r.comment, r.status,
+                    r.createdAt);
+        }
     }
 }

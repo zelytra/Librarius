@@ -380,3 +380,9 @@
   flex-direction: column;
   gap: 10px;
 }
+
+.reportRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}

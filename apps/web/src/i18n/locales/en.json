@@ -666,5 +666,28 @@
       "done": "Your account and all your data have been deleted. Thank you for using My Library.",
       "failed": "Cannot delete it right now. Nothing has been deleted."
     }
+  },
+  "report": {
+    "trigger": "Report an error",
+    "title": "Report an error",
+    "subtitle": "This record belongs to the shared catalog. Tell us what is wrong: your report stays private.",
+    "reasonLegend": "Reason for the report",
+    "reasons": {
+      "WRONG_COVER": "Wrong cover",
+      "WRONG_INFO": "Wrong information",
+      "DUPLICATE": "Duplicate",
+      "OTHER": "Other"
+    },
+    "commentLabel": "Comment (optional)",
+    "commentPlaceholder": "Add details if needed.",
+    "submit": "Send report",
+    "cancel": "Cancel",
+    "close": "Close",
+    "error": "Cannot send it right now. Please try again later.",
+    "sent": {
+      "title": "Report sent",
+      "body": "Thank you: your report will help us fix this record.",
+      "close": "Close"
+    }
   }
 }

@@ -30,6 +30,7 @@ import {
 } from '../../api/generated/librarius';
 import { seriesIdOf } from '../series/series';
 import { AuthorNames } from '../author/AuthorNames';
+import { ReportButton } from '../report/ReportButton';
 import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
@@ -677,6 +678,15 @@ function DetailContent({ id }: { id: string }) {
             </Button>
           )}
         </div>
+
+        {/* Flagging a data error is about the shared work, not the private ownership row:
+            the report targets the catalog `work`, which every reader of this title shares.
+            A payload predating `workId` simply shows nothing to report. */}
+        {b.workId && (
+          <div className={styles.reportRow}>
+            <ReportButton targetType="WORK" targetId={b.workId} />
+          </div>
+        )}
       </div>
 
       {outcome && (

@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -48,6 +48,7 @@ of a denormalised field to keep in step on every write.
 | `work_author` | `(work_id, author_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(author_id, work_id)` — the bibliography walks it that way (V13) |
 | `author_follow` | `(user_id, author_id)` | `created_at` | No surrogate key: the pair is the identity, exactly like `series_follow` (V13) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
+| `report` | `id UUID` | `reporter_id` FK `app_user`, `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED, default OPEN), `created_at` | idx `(target_type, target_id)` and `(reporter_id)`. No FK on `target_id`: it spans three tables, resolved in the service (V17/#192) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
 (#8f8579) joins them in V11.
@@ -340,6 +341,26 @@ an account that already earned the flag is left alone. Showing the flag as a bad
 `upheldReports` signal — are their own issues; the second is why the `MeDto` is deliberately
 **not** extended here.
 
+`V17__report_catalog_errors.sql` adds `report`, letting any member flag an error in a shared
+catalog object — a swapped cover, a wrong author, a duplicate work
+([#192](https://github.com/zelytra/Librarius/issues/192)). It is the write-only foundation the
+automatic trust revocation ([#195](https://github.com/zelytra/Librarius/issues/195)) consumes:
+a report is created and **never read back through the API**, so nothing here needs a read index
+per caller. `reporter_id` carries its author, `ON DELETE CASCADE` like every other row hanging
+off `app_user`, so erasing an account erases the reports it filed.
+
+**`target_id` has no foreign key, on purpose.** It points at `work`, `edition` or `series`
+depending on `target_type`, and a single column cannot reference three tables — so `report`
+resolves the target against the matching table in `ReportService` before inserting, and an
+unknown target is a **400** rather than a report filed against nothing. That is the one
+integrity check a real FK would have given for free, moved into the service. `status` is
+`OPEN` for every row this issue writes; the column exists for what a report feeds later — the
+revocation logic and a possible admin view — not for a screen #192 builds, and `DISMISSED` is
+declared alongside it as the one transition that milestone names, written by no code yet. The
+two indexes serve the two ways a report is reached: `(target_type, target_id)` for "the reports
+on this object" (the revocation consumer), `(reporter_id)` for the account-deletion cascade and
+a future "who filed the most reports" view.
+
 ### Cascades
 
 Every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all of
@@ -371,12 +392,13 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 > Numbering: V8 to V16 are taken — the upcoming releases, the category constraint, the
 > dashboard layout, the abandoned status, the provider reference, the author entities, the
-> user time zone, the medium taxonomy (V15, #178) and the trust flag (V16, #180). The plan
-> below therefore starts at **V17**. Both entries were renumbered up by one again when V16 was
-> taken, as they had been at V15, V14, V13, V12 and V11; neither has been implemented, so
+> user time zone, the medium taxonomy (V15, #178), the trust flag (V16, #180) and the report
+> table (V17, #192); the member follow (V18, #200) is landing alongside this. The plan below
+> therefore starts at **V19**. Both planned entries have been renumbered up as each migration
+> landed — as they were at V16, V15, V14, V13, V12 and V11 — and since neither is implemented,
 > nothing that shipped had to move.
 
-### V17 — Drop the denormalised labels & reading history
+### V19 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -404,7 +426,7 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V18 — Notifications
+### V20 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and

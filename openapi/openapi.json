@@ -790,6 +790,33 @@
           }
         }
       },
+      "ReportCreateDto" : {
+        "type" : "object",
+        "required" : [ "targetType", "targetId", "reason" ],
+        "properties" : {
+          "targetType" : {
+            "$ref" : "#/components/schemas/ReportTargetType"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "reason" : {
+            "$ref" : "#/components/schemas/ReportReason"
+          },
+          "comment" : {
+            "type" : "string",
+            "maxLength" : 2000
+          }
+        }
+      },
+      "ReportReason" : {
+        "type" : "string",
+        "enum" : [ "WRONG_COVER", "WRONG_INFO", "DUPLICATE", "OTHER" ]
+      },
+      "ReportTargetType" : {
+        "type" : "string",
+        "enum" : [ "WORK", "EDITION", "SERIES" ]
+      },
       "ReviewDto" : {
         "type" : "object",
         "properties" : {
@@ -2573,6 +2600,44 @@
         },
         "summary" : "Upcoming",
         "tags" : [ "Release Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/reports" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReportCreateDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Create",
+        "tags" : [ "Report Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
