@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Chip } from '../../shared/ui/primitives';
 import styles from './fields.module.css';
 
 /**
@@ -56,6 +57,44 @@ export function SelectField({ label, value, onChange, options }: SelectFieldProp
         ))}
       </select>
     </label>
+  );
+}
+
+interface MultiSelectFieldProps<T extends string> {
+  label: string;
+  values: T[];
+  onChange: (values: T[]) => void;
+  options: { value: T; label: string }[];
+}
+
+/**
+ * A field the caller can narrow to zero, one or several values at once — the medium filter
+ * is currently the only user. Wrapped in the same `.field` shape `Field` and `SelectField`
+ * use, so it reads as one more labelled criterion in the grid, but the control itself is a
+ * row of toggleable chips rather than a native element: a `<select multiple>` renders as a
+ * scrollable listbox, worse than a row the eye takes in at once for five short, independent
+ * options none of which excludes another.
+ */
+export function MultiSelectField<T extends string>({
+  label,
+  values,
+  onChange,
+  options,
+}: MultiSelectFieldProps<T>) {
+  function toggle(value: T) {
+    onChange(values.includes(value) ? values.filter((v) => v !== value) : [...values, value]);
+  }
+  return (
+    <div className={`${styles.field} ${styles.wide}`}>
+      <span className={styles.label}>{label}</span>
+      <div className={styles.chipRow}>
+        {options.map((o) => (
+          <Chip key={o.value} selected={values.includes(o.value)} onClick={() => toggle(o.value)}>
+            {o.label}
+          </Chip>
+        ))}
+      </div>
+    </div>
   );
 }
 

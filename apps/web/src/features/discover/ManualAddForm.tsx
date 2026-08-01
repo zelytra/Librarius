@@ -2,19 +2,22 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
-import { usePostApiLibrary, type Kind, type ManualBookDto } from '../../api/generated/librarius';
-import { Field, FieldGrid } from './fields';
+import { Kind, usePostApiLibrary, type ManualBookDto } from '../../api/generated/librarius';
+import { Field, FieldGrid, SelectField } from './fields';
+import { ALL_KINDS, KIND_LABEL_KEY } from './medium';
 import styles from './ManualAddForm.module.css';
 
 /**
  * Manual entry of a title the catalogs do not carry — self-published, an old edition, a
  * fanzine. It posts the same `ManualBookDto` a catalog result is turned into, so a book
  * typed by hand lands in the collection with the same shape as one that was found.
+ *
+ * The form picks its own medium: Discover no longer has a screen-wide toggle to read one
+ * from, and a title typed by hand can be any medium the taxonomy carries, not just the two
+ * a catalogue provider currently answers for.
  */
 
 interface ManualAddFormProps {
-  /** Books or mangas, as the screen's toggle is set: the API needs a kind. */
-  kind: Kind;
   onCancel: () => void;
   onAdded: (title: string) => void;
 }
@@ -29,8 +32,9 @@ function optionalText(value: string): string | undefined {
   return value.trim() === '' ? undefined : value.trim();
 }
 
-export function ManualAddForm({ kind, onCancel, onAdded }: ManualAddFormProps) {
+export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
   const { t } = useTranslation();
+  const [kind, setKind] = useState<Kind>(Kind.BOOK);
   const [title, setTitle] = useState('');
   const [authors, setAuthors] = useState('');
   const [seriesTitle, setSeriesTitle] = useState('');
@@ -72,6 +76,12 @@ export function ManualAddForm({ kind, onCancel, onAdded }: ManualAddFormProps) {
       <h3 className={styles.heading}>{t('discover.manual.heading')}</h3>
 
       <Field label={t('discover.manual.title')} value={title} onChange={setTitle} required />
+      <SelectField
+        label={t('discover.manual.kind')}
+        value={kind}
+        onChange={(value) => setKind(value as Kind)}
+        options={ALL_KINDS.map((k) => ({ value: k, label: t(KIND_LABEL_KEY[k]) }))}
+      />
       <FieldGrid>
         <Field label={t('discover.manual.authors')} value={authors} onChange={setAuthors} />
         <Field label={t('discover.manual.series')} value={seriesTitle} onChange={setSeriesTitle} />

@@ -2,10 +2,6 @@
   margin-bottom: 16px;
 }
 
-.kindSwitch {
-  margin-bottom: 12px;
-}
-
 /* Past --bp-tablet the search field and the advanced panel stop stretching across the
    full content width and settle at a reading-form measure — the same 640px Detail's hero
    and Series' identity block are capped at — instead of a search box the width of a
@@ -141,9 +137,30 @@
   line-height: 1.1;
 }
 
+/* Holds the medium badge and the author/year line; wraps on a narrow result card rather
+   than clipping the badge or the text. */
 .resultMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   font-size: var(--fs-12-5);
   color: var(--muted);
+}
+
+/* Names a result's own medium — the only way to tell one apart from another now that the
+   screen searches every medium in one request instead of scoping itself with a toggle. */
+.kindBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-badge);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: var(--fs-11-5);
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 .added {

@@ -39,3 +39,15 @@
   outline: none;
   border-color: var(--accent);
 }
+
+/* Spans both columns of `.grid`: a row of chips reads better across the full width than
+   competing for the half a text field is happy with. */
+.wide {
+  grid-column: 1 / -1;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

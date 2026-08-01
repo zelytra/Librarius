@@ -17,8 +17,6 @@
     "loading": "Loading…",
     "working": "…",
     "comingSoon": "Coming soon",
-    "books": "Books",
-    "mangas": "Manga",
     "search": "Search",
     "remove": "Remove",
     "retry": "Try again",
@@ -409,6 +407,7 @@
       "year": "Year",
       "language": "Language",
       "publisher": "Publisher",
+      "medium": "Medium",
       "anyLanguage": "All languages",
       "languages": {
         "fr": "French",
@@ -421,12 +420,20 @@
       "coverage": "Books are filtered on all four criteria. Manga only accept the author and the year: AniList knows neither publisher nor language.",
       "reset": "Reset"
     },
+    "kinds": {
+      "book": "Book",
+      "manga": "Manga",
+      "comic": "Comic",
+      "graphicNovel": "Graphic novel",
+      "audiobook": "Audiobook"
+    },
     "manual": {
       "invite": "This title is in no catalog? Add it by hand.",
       "open": "Add manually",
       "close": "Cancel",
       "heading": "Manual entry",
       "title": "Title",
+      "kind": "Medium",
       "authors": "Author(s)",
       "series": "Series",
       "volume": "Volume",
