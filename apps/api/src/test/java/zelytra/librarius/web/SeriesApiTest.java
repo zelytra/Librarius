@@ -267,5 +267,113 @@ class SeriesApiTest {
                 .then().statusCode(404);
         given().auth().oauth2(token("alice")).when().delete("/api/series/" + unknown + "/follow")
                 .then().statusCode(404);
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + unknown + "/review")
+                .then().statusCode(404);
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 5 }")
+                .when().put("/api/series/" + unknown + "/review")
+                .then().statusCode(404);
+        given().auth().oauth2(token("alice")).when().delete("/api/series/" + unknown + "/review")
+                .then().statusCode(404);
+    }
+
+    // ── Review (#190) ─────────────────────────────────────────────────────────
+
+    /** A series the caller has neither owned nor followed has no review to write either. */
+    @Test
+    void aSeriesTheCallerHasNoStakeInCannotBeReviewed() {
+        String title = "Series Test - review no stake";
+        // Bob owns a volume so the series row exists, but Alice never touches it.
+        addVolume("bob", title, 1, "OWNED");
+        String id = seriesId("bob", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 4 }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(404);
+    }
+
+    /** The whole lifecycle: nothing yet, written, read back, updated, then removed. */
+    @Test
+    void aReviewCanBeWrittenReadUpdatedAndDeleted() {
+        String title = "Series Test - review lifecycle";
+        addVolume("alice", title, 1, "OWNED");
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + id + "/review")
+                .then().statusCode(404);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 4, \"review\": \"Un bon départ.\" }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(200)
+                .body("rating", is(4))
+                .body("review", is("Un bon départ."))
+                .body("seriesId", is(id));
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + id + "/review")
+                .then().statusCode(200)
+                .body("rating", is(4))
+                .body("review", is("Un bon départ."));
+
+        // A second PUT updates the same row rather than creating another one.
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 5, \"review\": \"Encore mieux au tome 2.\" }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(200)
+                .body("rating", is(5))
+                .body("review", is("Encore mieux au tome 2."));
+
+        given().auth().oauth2(token("alice")).when().delete("/api/series/" + id + "/review")
+                .then().statusCode(204);
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + id + "/review")
+                .then().statusCode(404);
+
+        // Deleting again is idempotent, like every other follow-shaped delete here.
+        given().auth().oauth2(token("alice")).when().delete("/api/series/" + id + "/review")
+                .then().statusCode(204);
+    }
+
+    /** An empty text area is the absence of a review text, not a row holding an empty string. */
+    @Test
+    void aBlankReviewTextIsStoredAsNothing() {
+        String title = "Series Test - review blank text";
+        addVolume("alice", title, 1, "OWNED");
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 3, \"review\": \"   \" }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(200)
+                .body("review", nullValue());
+    }
+
+    @Test
+    void aReviewWithoutARatingIsRejected() {
+        String title = "Series Test - review no rating";
+        addVolume("alice", title, 1, "OWNED");
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"review\": \"Pas de note.\" }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(400);
+    }
+
+    @Test
+    void anOutOfRangeSeriesRatingIsRejected() {
+        String title = "Series Test - review range";
+        addVolume("alice", title, 1, "OWNED");
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 0 }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(400);
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 6 }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(400);
     }
 }

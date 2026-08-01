@@ -350,6 +350,11 @@
     },
     "missingList": "You are missing volumes {{volumes}}",
     "missingListTruncated": "You are missing volumes {{volumes}}…",
+    "review": {
+      "title": "My review of the series",
+      "placeholder": "What you thought of it…",
+      "private": "Rating and review are strictly private: nobody else sees them."
+    },
     "addToWishlist": "Add to the wishlist",
     "addToCollection": "Add to my collection",
     "addFailed": "Cannot add it right now.",

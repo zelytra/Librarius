@@ -673,6 +673,35 @@ components:
           items:
             type: integer
             format: int32
+    SeriesReviewDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    SeriesReviewUpsertDto:
+      type: object
+      required:
+      - rating
+      properties:
+        rating:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        review:
+          type: string
+          maxLength: 5000
     SeriesSummaryDto:
       type: object
       properties:
@@ -2032,6 +2061,82 @@ paths:
         "403":
           description: Not Allowed
       summary: Missing
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+  /api/series/{id}/review:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeriesReviewUpsertDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Put Review
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesReviewDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Review
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Review
       tags:
       - Series Resource
       security:

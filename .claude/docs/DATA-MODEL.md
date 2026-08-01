@@ -3,13 +3,14 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19 + V20 + V21)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19 + V20 + V21 + V22)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
            ├─< wishlist_item >──┘             │        ▲
            ├─< reading_goal                   ├─< work_genre >── genre >─< genre_alias
            ├─< series_follow >────────────────┼────────┘
+           ├─< series_review >─────────────────────────┘
            ├─< author_follow >── author >─────┴─< work_author
            ├─< user_follow >──── app_user (self, #200)
            ├─< user_block >───── app_user (self, #203)
@@ -27,6 +28,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `work` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
+| `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating INT NOT NULL` (1–5), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ\|ABANDONED, V11), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
@@ -451,6 +453,28 @@ clause the specification also names — a blocked author barred from reviewing a
 is **out of scope** until an account can be tied to an author identity (the v0.8 milestone);
 this migration ships the generic block only.
 
+`V22__series_review.sql` adds `series_review`, letting a member rate and review a series as a
+whole ([#190](https://github.com/zelytra/Librarius/issues/190)), on top of the per-title review
+`library_item.rating`/`review` already carry (V7, #48). The two never mix: a title review sits on
+one owned edition and a series review sits on the run as a whole, so a reader with three volumes
+of a series in the collection still has only one opinion of the series, independent of the three
+they may hold of each volume. Kept exactly as private as the title review — returned to nobody
+but its author, scoped by `CurrentUser.id()` on every read and write, and never aggregated into
+anything the title review reports on. Making a review visible to other members and rolling
+reviews up into a public score are both explicitly out of scope here —
+[#205](https://github.com/zelytra/Librarius/issues/205) and
+[#206](https://github.com/zelytra/Librarius/issues/206) respectively — so the migration and the
+API built on it only ever read and write the caller's own row.
+
+A surrogate `id` is the primary key here, unlike `series_follow`'s `(user_id, series_id)`: a
+follow is a flag with nothing else to carry, where a review is edited and deleted as a row in
+its own right, which reads better against an identifier of its own.
+`UNIQUE(user_id, series_id)` keeps the "one opinion per reader per series" rule the follow table
+gets for free from its composite key. `rating` is `NOT NULL` — unlike
+`library_item.rating`, which can sit unrated on an owned title that exists regardless — because
+the row itself only exists once the caller has chosen to leave one; removing the opinion is a
+`DELETE`, not a `PUT` carrying a null rating.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all
@@ -489,16 +513,13 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V21 are taken — the upcoming releases, the category constraint, the
-> dashboard layout, the abandoned status, the provider reference, the author entities, the
-> user time zone, the medium taxonomy (V15, #178), the trust flag (V16, #180), the report
 > table (V17, #192), the member follow (V18, #200), the report contributor (V19, #195), the
-> visibility gate (V20, #201) and the member block (V21, #203). The plan below therefore starts
-> at **V22**. Both planned entries have been renumbered up as each migration landed — as they
-> were at V21, V20, V19, V16, V15, V14, V13, V12 and V11 — and since neither is implemented,
-> nothing that shipped had to move.
+> visibility gate (V20, #201), the member block (V21, #203) and the series review (V22, #190).
+> The plan below therefore starts at **V23**. Both planned entries have been renumbered up as
+> each migration landed — as they were at V22, V21, V20, V19, V16, V15, V14, V13, V12 and V11 —
+> and since neither is implemented, nothing that shipped had to move.
 
-### V22 — Drop the denormalised labels & reading history
+### V23 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -526,12 +547,13 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V23 — Notifications
+### V24 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and
-`dashboard_layout` as V10 (#54) — see § 1. It moved from V21 to V23 as the visibility gate
-(V20, #201) and the member block (V21, #203) each took a real number ahead of it.
+`dashboard_layout` as V10 (#54) — see § 1. It moved from V21 to V24 as the visibility gate
+(V20, #201), the member block (V21, #203) and the series review (V22, #190) each took a real
+number ahead of it.
 
 ## 4. Rules for writing migrations
 

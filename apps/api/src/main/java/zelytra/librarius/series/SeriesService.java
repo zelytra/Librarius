@@ -6,16 +6,20 @@ import jakarta.transaction.Transactional;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.Series;
+import zelytra.librarius.domain.SeriesReview;
 import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.SeriesFollowRepository;
 import zelytra.librarius.domain.repository.SeriesRepository;
 import zelytra.librarius.domain.repository.SeriesRepository.OwnershipCounters;
+import zelytra.librarius.domain.repository.SeriesReviewRepository;
 import zelytra.librarius.web.ApiDtos.SeriesDetailDto;
 import zelytra.librarius.web.ApiDtos.SeriesMissingDto;
+import zelytra.librarius.web.ApiDtos.SeriesReviewDto;
 import zelytra.librarius.web.ApiDtos.SeriesSummaryDto;
 import zelytra.librarius.web.ApiDtos.SeriesVolumeDto;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -53,6 +57,9 @@ public class SeriesService {
 
     @Inject
     LibraryItemRepository items;
+
+    @Inject
+    SeriesReviewRepository reviews;
 
     /**
      * The series the user has a stake in: those they own at least one volume of, plus those
@@ -139,6 +146,61 @@ public class SeriesService {
         return series.findById(seriesId) != null
                 && (!items.listBySeries(userId, seriesId).isEmpty()
                         || follows.isFollowing(userId, seriesId));
+    }
+
+    /**
+     * The caller's own review of a series (#190): a rating out of five and free-text notes,
+     * exactly as private as the per-title review (#48) — see {@link SeriesReview}.
+     *
+     * @return empty when the series is not visible to the caller, or when they have not
+     *         written a review yet; the resource turns either into a 404
+     */
+    public Optional<SeriesReviewDto> review(String userId, UUID seriesId) {
+        if (!isVisible(userId, seriesId)) {
+            return Optional.empty();
+        }
+        return reviews.findOwn(userId, seriesId).map(SeriesReviewDto::of);
+    }
+
+    /**
+     * Writes the caller's own review, creating it on the first call and updating it on every
+     * one after — a {@code PUT} of the whole thing, like
+     * {@link zelytra.librarius.web.LibraryResource#setReview}.
+     *
+     * @return empty when the series is not visible to the caller, turned into a 404
+     */
+    @Transactional
+    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, int rating, String text) {
+        if (!isVisible(userId, seriesId)) {
+            return Optional.empty();
+        }
+        SeriesReview entity = reviews.findOwn(userId, seriesId).orElseGet(() -> {
+            SeriesReview created = new SeriesReview();
+            created.userId = userId;
+            created.seriesId = seriesId;
+            return created;
+        });
+        entity.rating = rating;
+        entity.review = text;
+        entity.updatedAt = OffsetDateTime.now();
+        if (entity.id == null) {
+            reviews.persist(entity);
+        }
+        return Optional.of(SeriesReviewDto.of(entity));
+    }
+
+    /**
+     * Deletes the caller's own review. Idempotent, like {@link #unfollow}.
+     *
+     * @return false when the series is not visible to the caller, turned into a 404
+     */
+    @Transactional
+    public boolean deleteReview(String userId, UUID seriesId) {
+        if (!isVisible(userId, seriesId)) {
+            return false;
+        }
+        reviews.deleteOwn(userId, seriesId);
+        return true;
     }
 
     /**

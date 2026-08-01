@@ -16,6 +16,7 @@ import type {
   DashboardLayoutDto,
   LibraryItemDto,
   SeriesDetailDto,
+  SeriesReviewDto,
   SeriesSummaryDto,
   UpcomingReleaseDto,
   WishlistItemDto,
@@ -40,6 +41,10 @@ export const defaultHandlers = [
   http.get(`${BASE}/series/:id`, () => new HttpResponse(null, { status: 404 })),
   http.put(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
   http.delete(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
+  // No review by default — the same absence a series never rated answers (#190).
+  http.get(`${BASE}/series/:id/review`, () => new HttpResponse(null, { status: 404 })),
+  http.put(`${BASE}/series/:id/review`, () => HttpResponse.json({ id: 'review-1', rating: 0 })),
+  http.delete(`${BASE}/series/:id/review`, () => new HttpResponse(null, { status: 204 })),
   // A blank `q` is what the name-resolving links on Detail fire with nothing to search yet;
   // `/api/authors` answers nothing rather than the whole table either way.
   http.get(`${BASE}/authors`, () => HttpResponse.json([])),
@@ -163,6 +168,17 @@ export function upcomingReleasesReturn(list: UpcomingReleaseDto[]) {
 export function seriesDetailReturns(detail: SeriesDetailDto) {
   server.use(http.get(`${BASE}/series/:id`, ({ params }) =>
     params.id === detail.id ? HttpResponse.json(detail) : new HttpResponse(null, { status: 404 })));
+}
+
+/**
+ * Serves the caller's own review on `/api/series/{id}/review` (#190); any other identifier,
+ * or a `null` review, answers 404 — the same answer an unreviewed series gets.
+ */
+export function seriesReviewReturns(seriesId: string, review: SeriesReviewDto | null) {
+  server.use(http.get(`${BASE}/series/:id/review`, ({ params }) =>
+    params.id === seriesId && review
+      ? HttpResponse.json(review)
+      : new HttpResponse(null, { status: 404 })));
 }
 
 /**

@@ -623,6 +623,50 @@ class DataIsolationTest {
                 .body("ownedCount", is(1));
     }
 
+    /**
+     * A series review is as private as the per-title one (#190): two readers of the same
+     * run each keep their own opinion, and neither can read, overwrite nor delete the
+     * other's — the {@code GET}, the {@code PUT} and the {@code DELETE} all fall back to
+     * "the caller has none", which answers exactly like an unknown series would.
+     */
+    @Test
+    void seriesReviewsStayPrivateOnASharedSeries() {
+        String title = "Isolation - series review";
+        addSeriesVolume("alice", title, 1);
+        addSeriesVolume("bob", title, 1);
+        String shared = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 5, \"review\": \"Avis privé d'Alice.\" }")
+                .when().put("/api/series/" + shared + "/review")
+                .then().statusCode(200);
+
+        // Bob has written nothing on the same series: his own read answers 404, not
+        // Alice's row, and writing or deleting there only ever touches his own.
+        given().auth().oauth2(token("bob")).when().get("/api/series/" + shared + "/review")
+                .then().statusCode(404);
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"rating\": 1, \"review\": \"Avis de Bob.\" }")
+                .when().put("/api/series/" + shared + "/review")
+                .then().statusCode(200)
+                .body("rating", is(1))
+                .body("review", is("Avis de Bob."));
+
+        given().auth().oauth2(token("bob")).when().delete("/api/series/" + shared + "/review")
+                .then().statusCode(204);
+
+        // Alice's own review came through every one of Bob's calls untouched.
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + shared + "/review")
+                .then().statusCode(200)
+                .body("rating", is(5))
+                .body("review", is("Avis privé d'Alice."));
+
+        // And Bob's own delete really did remove what he wrote, not Alice's row.
+        given().auth().oauth2(token("bob")).when().get("/api/series/" + shared + "/review")
+                .then().statusCode(404);
+    }
+
     // ── Upcoming releases ─────────────────────────────────────────────────────
 
     /** Stores an announcement on a series, the way the refresher writes one. */

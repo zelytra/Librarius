@@ -350,6 +350,11 @@
     },
     "missingList": "Il te manque les tomes {{volumes}}",
     "missingListTruncated": "Il te manque les tomes {{volumes}}…",
+    "review": {
+      "title": "Mon avis sur la série",
+      "placeholder": "Ce que tu en penses…",
+      "private": "Note et avis strictement privés : personne d'autre ne les voit."
+    },
     "addToWishlist": "Ajouter aux souhaits",
     "addToCollection": "Ajouter à ma collection",
     "addFailed": "Ajout impossible pour le moment.",

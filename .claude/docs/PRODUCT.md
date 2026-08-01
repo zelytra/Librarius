@@ -42,6 +42,7 @@ being authored in French and translated.
 | **Member follow** (`user_follow`) | The user ↔ user link: "I want to keep an eye on this member". One-directional; a mutual pair is what "friends" means. Distinct from the two follows above — those point at the catalog, this points at another account ([#200](https://github.com/zelytra/Librarius/issues/200)) | User |
 | **Member block** (`user_block`) | The user ↔ user link that *hides*: "I don't want this member to see me, or to see them". Stored one way but hides content both ways, and overrides a follow ([#203](https://github.com/zelytra/Librarius/issues/203)) | User |
 | **Library item** (`library_item`) | The user ↔ edition link: status, rating, acquisition date, rank | User |
+| **Series review** (`series_review`) | The user's own rating (1–5) and text review of a series as a whole, distinct from the per-title rating on `library_item` ([#190](https://github.com/zelytra/Librarius/issues/190)) | User |
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
 | **Rank** (`rank_category`) | Gold / Silver / Bronze + custom categories | Shared (built-ins) + user |
@@ -355,6 +356,16 @@ collection.
 - ✅ A volume already owned opens its detail screen; a missing or upcoming one opens the
   two ways of getting it — **wishlist** or **collection** — in one gesture. The holes in
   the run are named under the grid.
+- ✅ **Rating and review of the series** ([#190](https://github.com/zelytra/Librarius/issues/190)):
+  the same star control and text area as the title detail's own review, here about the run
+  as a whole rather than one owned edition. Clicking the star already in force removes the
+  whole review rather than only clearing the number — there is no owned title underneath it
+  to keep it attached to. Exactly as private as the per-title review (#48): saved to the
+  caller's own row, never shown to anyone else, and never mixed with the per-title one —
+  a reader with three volumes of a series in the collection still holds only one opinion of
+  the series, independent of the three they may hold of each volume. Making a series review
+  visible to other members and rolling reviews up into a public score are both deliberately
+  out of scope here — see § 7.
 - ✅ **Report an error** (*"Signaler une erreur"*)
   ([#192](https://github.com/zelytra/Librarius/issues/192)): the same dialog as the title
   detail, here flagging the shared **series** — a wrong cover or title, a duplicated run.
@@ -533,7 +544,13 @@ year 🔜.
    the same list.
 6. Ownership data is **strictly private**: no resource ever returns another user's data.
    The rating and the review are the sharpest case: they live on the user's own
-   `library_item`, are never shared, and are never folded into a score across accounts.
+   `library_item`, are never shared, and are never folded into a score across accounts. The
+   series-level rating and review ([#190](https://github.com/zelytra/Librarius/issues/190),
+   § 4.8) are a second, separate case of the same rule: they live on the caller's own
+   `series_review` row, are equally never shared nor aggregated, and neither review ever
+   feeds the other — a reader's opinion of a series and their opinion of one volume of it
+   stay two different pieces of data even when both concern the same account and the same
+   run.
 7. An import never creates a duplicate: matching by ISBN13, then by title + author.
 8. Correcting the **edition** of an owned title changes the object, not the reading of it:
    status, rating, review, rank and the reading dates carry over untouched. The position
@@ -564,6 +581,11 @@ year 🔜.
 - Social network beyond the v1.2 follow: member-to-member following ships (#200), blocking
   ships (#203), and mutual-follow visibility of a public account is #201 — but library sharing
   at large, messaging and public comments stay out.
+- Sharing a series review with other members ([#205](https://github.com/zelytra/Librarius/issues/205))
+  and aggregating series reviews into a public score
+  ([#206](https://github.com/zelytra/Librarius/issues/206)): the series review shipped in
+  #190 (§ 4.8) is private to its author, exactly like the per-title review, until either of
+  those lands.
 - Lending books between users.
 - Reading content (the app manages *ownership*, not files).
 - Marketplace / built-in purchasing: prices are **entered** by the user, not fetched.

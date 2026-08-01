@@ -13,18 +13,23 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import {
   getGetApiLibraryQueryKey,
   getGetApiSeriesIdQueryKey,
+  getGetApiSeriesIdReviewQueryKey,
   getGetApiSeriesQueryKey,
   getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   useDeleteApiSeriesIdFollow,
+  useDeleteApiSeriesIdReview,
   useGetApiSeriesId,
+  useGetApiSeriesIdReview,
   usePostApiLibrary,
   usePostApiWishlist,
   usePutApiSeriesIdFollow,
+  usePutApiSeriesIdReview,
   type ManualBookDto,
   type SeriesDetailDto,
   type SeriesVolumeDto,
 } from '../../api/generated/librarius';
+import { StarRating } from '../detail/StarRating';
 import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import styles from './SeriesPage.module.css';
@@ -54,6 +59,83 @@ const LEGEND: VolumeState[] = ['read', 'owned', 'missing', 'upcoming'];
 
 /** Where an "add" lands. The wording differs, the payload does not. */
 type AddTarget = 'library' | 'wishlist';
+
+/**
+ * The caller's own opinion of the series as a whole (#190): a rating out of five and
+ * free-text notes, kept exactly as private as the per-title review on Detail
+ * (`ReviewSection`, #48) — this is not the same review, and never feeds the same score.
+ *
+ * <p>Unlike the per-title review, the row only exists once the caller has actually rated
+ * the series: a {@code GET} answering 404 means "not reviewed yet", not an outage, so it is
+ * read here rather than surfaced as an error. Clicking the star already in force clears the
+ * rating exactly as it does on Detail, except here that removes the whole review — there is
+ * no bare title to keep it attached to.
+ */
+function SeriesReviewSection({ seriesId }: { seriesId: string }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const { data, isError } = useGetApiSeriesIdReview(seriesId);
+  // React Query keeps the last successful `data` around through a failed background
+  // refetch, so a 404 turning the review into "deleted" would otherwise still read back
+  // the stale row it just removed — `isError` alone, ignoring which status it carries,
+  // is what a 404 ("never reviewed") and a genuine outage both have to clear here.
+  const review = isError ? null : (data ?? null);
+
+  const invalidate = () =>
+    void queryClient.invalidateQueries({ queryKey: getGetApiSeriesIdReviewQueryKey(seriesId) });
+
+  const { mutate: putReview, isPending: saving } = usePutApiSeriesIdReview({
+    mutation: { onSuccess: invalidate },
+  });
+  const { mutate: removeReview, isPending: deleting } = useDeleteApiSeriesIdReview({
+    mutation: { onSuccess: invalidate },
+  });
+
+  const stored = review?.review ?? '';
+  const [text, setText] = useState(stored);
+  const [synced, setSynced] = useState(stored);
+  if (synced !== stored) {
+    setSynced(stored);
+    setText(stored);
+  }
+
+  function rate(next: number | undefined) {
+    if (next == null) {
+      removeReview({ id: seriesId });
+    } else {
+      putReview({ id: seriesId, data: { rating: next, review: text || undefined } });
+    }
+  }
+
+  function saveText() {
+    // A rating has to exist before there is a row to attach the text to; the star above
+    // is what creates one.
+    if (review?.rating != null && text !== stored) {
+      putReview({ id: seriesId, data: { rating: review.rating, review: text || undefined } });
+    }
+  }
+
+  return (
+    <section className={styles.review}>
+      <h3 className={styles.sectionTitle}>
+        {t('series.review.title')}
+        <Loading size="compact" pending={saving || deleting} />
+      </h3>
+      <StarRating value={review?.rating ?? 0} onRate={rate} />
+      <textarea
+        value={text}
+        rows={4}
+        placeholder={t('series.review.placeholder')}
+        aria-label={t('series.review.title')}
+        className={styles.reviewInput}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={saveText}
+      />
+      <p className={styles.privateNote}>{t('series.review.private')}</p>
+    </section>
+  );
+}
 
 function SeriesContent({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -292,6 +374,8 @@ function SeriesContent({ id }: { id: string }) {
             </div>
           </div>
         )}
+
+        <SeriesReviewSection seriesId={id} />
 
         {/* A series is shared catalog data, so an error in it is worth flagging — the
             report targets this very `series` row. */}
