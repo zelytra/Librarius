@@ -90,8 +90,20 @@ Personal dashboard.
 
 ### 4.2 Collection ✅ / 🔜
 
-The full inventory, with a **Books / Manga** toggle.
+The full inventory, one shelf per support type.
 
+- ✅ **A shelf switch per kind the catalog exposes**
+  ([#183](https://github.com/zelytra/Librarius/issues/183)): the two-option Books / Manga
+  toggle became a segmented control offering one option per kind the caller actually owns
+  something of — comics, graphic novels and audiobooks join book and manga once a title of
+  that kind exists. A hard separator, as before: switching kind replaces the shelf rather
+  than filtering within a mixed one. No dedicated endpoint backs this — the client asks
+  `GET /api/library?kind=` once per kind of the taxonomy (`size: 1`, only the `total` of
+  the envelope matters) and keeps only the ones with something in them; an account that
+  owns nothing yet falls back to the first kind. The shelf that opens first is the one the
+  user owns the most of, resolved from those same counts, a tie or an empty collection
+  falling back to the first kind of the taxonomy — never a hardcoded `'BOOK'`. Each kind
+  gets its own cover tag through i18n.
 - ✅ Cover grid, rank badge — in the colour of the category the title is filed under —,
   quick removal.
 - ✅ Sorting: date added, title, author, genre, rating. Filter by rank, and "my favourites"

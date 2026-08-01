@@ -270,7 +270,17 @@
     "volumeShort": "V.{{number}}",
     "tag": {
       "book": "BOOK",
-      "manga": "MANGA"
+      "manga": "MANGA",
+      "comic": "COMIC",
+      "graphicNovel": "GRAPHIC NOVEL",
+      "audiobook": "AUDIOBOOK"
+    },
+    "kinds": {
+      "book": "Books",
+      "manga": "Manga",
+      "comic": "Comics",
+      "graphicNovel": "Graphic novels",
+      "audiobook": "Audiobooks"
     },
     "sorts": {
       "added": "Added",

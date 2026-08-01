@@ -46,6 +46,64 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
   });
 
+  /** #183: the kind switch is driven by the taxonomy, not a hardcoded Books/Manga pair. */
+  test('offers a shelf for every kind the user owns, comics and audiobooks included', async () => {
+    libraryReturns([
+      ROMAN,
+      libraryItem({ id: 'comic-1', book: { kind: 'COMIC', title: 'Le Chat du rabbin' } }),
+      libraryItem({ id: 'graphic-1', book: { kind: 'GRAPHIC_NOVEL', title: 'Watchmen' } }),
+      libraryItem({ id: 'audio-1', book: { kind: 'AUDIOBOOK', title: 'Dune' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Bibliothèque')).toBeInTheDocument();
+    expect(await screen.findByText('Bandes dessinées')).toBeInTheDocument();
+    expect(await screen.findByText('Romans graphiques')).toBeInTheDocument();
+    expect(await screen.findByText('Livres audio')).toBeInTheDocument();
+    // Nothing owned of this kind: no shelf offered for it.
+    expect(screen.queryByText('Mangathèque')).not.toBeInTheDocument();
+  });
+
+  /**
+   * #183 acceptance criterion: the shelf that opens by default is the one the user owns
+   * the most of, not a hardcoded 'BOOK' — here two comics against one book and one manga.
+   */
+  test('defaults to the kind the user owns the most of', async () => {
+    libraryReturns([
+      ROMAN,
+      MANGA,
+      libraryItem({ id: 'comic-1', book: { kind: 'COMIC', title: 'Le Chat du rabbin' } }),
+      libraryItem({ id: 'comic-2', book: { kind: 'COMIC', title: 'Corto Maltese' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Le Chat du rabbin')).toBeInTheDocument();
+    expect(screen.getByText('Corto Maltese')).toBeInTheDocument();
+    expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
+    expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument();
+  });
+
+  /** A tie falls back to the first kind of the taxonomy — 'BOOK', same as an empty library. */
+  test('falls back to the first kind of the taxonomy on a tie', async () => {
+    libraryReturns([ROMAN, MANGA]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
+    expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument();
+  });
+
+  /** Every kind gets its own cover tag, no generic fallback for the three newer ones. */
+  test('tags each cover with the label of its own kind', async () => {
+    libraryReturns([
+      libraryItem({ id: 'comic-1', book: { kind: 'COMIC', title: 'Le Chat du rabbin', volumeNumber: undefined } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    await userEvent.click(await screen.findByText('Bandes dessinées'));
+
+    expect(await screen.findByText('BD')).toBeInTheDocument();
+  });
+
   test('counts the displayed titles', async () => {
     libraryReturns([ROMAN, libraryItem({ id: 'roman-2', book: { kind: 'BOOK', title: 'La Peur du sage' } })]);
     renderWithProviders(<CollectionPage />);
@@ -238,13 +296,18 @@ describe('CollectionPage', () => {
 
   // ── Series view ────────────────────────────────────────────────────────────
 
-  /** Switches to the Series tab, the manga shelf being where the runs live. */
+  /**
+   * Switches to the Series tab, the manga shelf being where the runs live. The kind switch
+   * only offers a shelf the user owns something of, so every caller needs at least one
+   * manga item in the library — {@link MANGA} unless the test seeds its own.
+   */
   async function openSeriesView() {
-    await userEvent.click(screen.getByText('Mangathèque'));
+    await userEvent.click(await screen.findByText('Mangathèque'));
     await userEvent.click(screen.getByText('Séries'));
   }
 
   test('lists the series of the collection with their progress', async () => {
+    libraryReturns([MANGA]);
     seriesReturns([SAGA, COMPLETE]);
     renderWithProviders(<CollectionPage />);
     await openSeriesView();
@@ -256,6 +319,7 @@ describe('CollectionPage', () => {
 
   /** The acceptance criterion of #46: an incomplete run stands out from a finished one. */
   test('flags the incomplete series only', async () => {
+    libraryReturns([MANGA]);
     seriesReturns([SAGA, COMPLETE]);
     renderWithProviders(<CollectionPage />);
     await openSeriesView();
@@ -267,6 +331,7 @@ describe('CollectionPage', () => {
   });
 
   test('orders by progress, then by title', async () => {
+    libraryReturns([MANGA]);
     seriesReturns([SAGA, COMPLETE]);
     renderWithProviders(<CollectionPage />);
     await openSeriesView();
@@ -303,6 +368,7 @@ describe('CollectionPage', () => {
   });
 
   test('opens the series screen when a row is clicked', async () => {
+    libraryReturns([MANGA]);
     seriesReturns([SAGA]);
     render(
       <TestProviders route="/collection">
@@ -320,6 +386,7 @@ describe('CollectionPage', () => {
   });
 
   test('invites the user to fill an empty series shelf', async () => {
+    libraryReturns([MANGA]);
     seriesReturns([]);
     renderWithProviders(<CollectionPage />);
     await openSeriesView();
@@ -328,6 +395,7 @@ describe('CollectionPage', () => {
   });
 
   test('offers a retry when the series cannot be loaded', async () => {
+    libraryReturns([MANGA]);
     let attempts = 0;
     server.use(http.get('*/api/series', () => {
       attempts += 1;
