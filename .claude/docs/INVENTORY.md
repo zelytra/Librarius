@@ -16,7 +16,9 @@ What is missing has moved with it. **Functional depth** is now the long tail the
 milestones carry — a catalog beyond books and manga, the screens a finished or abandoned
 title should lead to, and eventually the social half. Authors have left that list at the
 schema level ([#182](https://github.com/zelytra/Librarius/issues/182), V13): they are rows
-now, followable and linked to their works, with no API and no page on them yet (#196, #199). The fourth
+now, followable and linked to their works, with an API (#196) and a page (#199) — portrait
+or initials, bibliography, follow toggle, reached from a resolvable author name on Detail
+and from a minimal search in Discover. The fourth
 status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
 a title can be given up on, it keeps the page it was given up at, and it counts towards no
 goal. **Quality** is no accessibility pass — the desktop layout that used to sit beside it on
@@ -42,7 +44,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 | Catalog | `CatalogService` aggregates Open Library **and the BnF** (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A book search merges the two catalogues and survives either being down; a cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV, exposed in Settings |
 | API contract | OpenAPI generated at build time → orval TS client, `openapi-sync` CI gate |
-| Screens | Home, Collection, Series, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
+| Screens | Home, Collection, Series, Author, Detail, Discover, Wishlist, Stats, Settings — **all wired to the live API** |
 | PWA | `vite-plugin-pwa`, icons, `/auth` `/api` `/q` excluded from the navigation fallback |
 | Mobile shell | `apps/mobile`: Capacitor 7 loading the `apps/web` build (`webDir`). Android project committed, built to a debug APK on every push/PR (`mobile` workflow) and to a signed release APK on tags once a keystore exists (`mobile-release`, not yet configured). No iOS project, no native sign-in ([MOBILE](MOBILE.md)) |
 | Monitoring | Micrometer → `/q/metrics`, Prometheus + Grafana provisioned in compose, "Overview" dashboard |

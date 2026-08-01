@@ -1,0 +1,109 @@
+/* Author screen. Same anatomy as Series and Detail — wash, back button, an identity block
+   above a grid — so that moving from a title to its author does not feel like leaving the
+   app. */
+
+.notFound {
+  padding: 40px var(--screen-pad-x);
+}
+
+.page {
+  position: relative;
+}
+
+.wash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  opacity: var(--wash-opacity);
+}
+
+/* The bibliography ends in a grid, meant to use the same width as the Collection grid, so
+   the column is capped at --content-max rather than a reading measure — same reasoning as
+   Series's `.body`. */
+.body {
+  position: relative;
+  padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+/* The identity block — portrait, name, follow — stays at reading width even when the grid
+   below it is free to use the wider desktop column. */
+.intro {
+  max-width: 640px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.backRow {
+  padding: 14px 0 18px;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.portraitRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+/* Round portrait, the same "coloured block from the seed" fallback `Cover` draws for a
+   title with no image — here initials rather than a printed title, since a person's face
+   has nothing in common with a book cover. */
+.portrait {
+  width: 128px;
+  height: 128px;
+  border-radius: var(--radius-round);
+  border: 4px solid var(--surface);
+  box-shadow: var(--shadow-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portraitInitials {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  font-weight: 600;
+  color: var(--cover-ink);
+}
+
+.name {
+  font-size: var(--fs-24);
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.workCount {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.followRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.sectionTitle {
+  font-size: var(--fs-17);
+  margin: 0 0 10px;
+}
+
+.emptyWorks {
+  padding: 30px var(--screen-pad-x);
+}

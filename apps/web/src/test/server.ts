@@ -10,6 +10,8 @@ import {
   wishlistPage,
 } from './fixtures';
 import type {
+  AuthorDetailDto,
+  AuthorSummaryDto,
   BookView,
   DashboardLayoutDto,
   LibraryItemDto,
@@ -38,6 +40,12 @@ export const defaultHandlers = [
   http.get(`${BASE}/series/:id`, () => new HttpResponse(null, { status: 404 })),
   http.put(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
   http.delete(`${BASE}/series/:id/follow`, () => new HttpResponse(null, { status: 204 })),
+  // A blank `q` is what the name-resolving links on Detail fire with nothing to search yet;
+  // `/api/authors` answers nothing rather than the whole table either way.
+  http.get(`${BASE}/authors`, () => HttpResponse.json([])),
+  http.get(`${BASE}/authors/:id`, () => new HttpResponse(null, { status: 404 })),
+  http.put(`${BASE}/authors/:id/follow`, () => new HttpResponse(null, { status: 204 })),
+  http.delete(`${BASE}/authors/:id/follow`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
   http.get(`${BASE}/stats/timeline`, () => HttpResponse.json(timeline())),
@@ -153,6 +161,27 @@ export function upcomingReleasesReturn(list: UpcomingReleaseDto[]) {
  */
 export function seriesDetailReturns(detail: SeriesDetailDto) {
   server.use(http.get(`${BASE}/series/:id`, ({ params }) =>
+    params.id === detail.id ? HttpResponse.json(detail) : new HttpResponse(null, { status: 404 })));
+}
+
+/**
+ * Serves `/api/authors` the way the API does: a case-insensitive substring match on the
+ * name, with a blank `q` answering nothing at all.
+ */
+export function authorSearchReturns(list: AuthorSummaryDto[]) {
+  server.use(http.get(`${BASE}/authors`, ({ request }) => {
+    const q = (new URL(request.url).searchParams.get('q') ?? '').trim().toLowerCase();
+    if (!q) return HttpResponse.json([]);
+    return HttpResponse.json(list.filter((a) => (a.name ?? '').toLowerCase().includes(q)));
+  }));
+}
+
+/**
+ * Serves one author on `/api/authors/{id}`; any other identifier answers 404 — the answer
+ * an unknown author gets. Unlike a series, a known id never 404s regardless of ownership.
+ */
+export function authorDetailReturns(detail: AuthorDetailDto) {
+  server.use(http.get(`${BASE}/authors/:id`, ({ params }) =>
     params.id === detail.id ? HttpResponse.json(detail) : new HttpResponse(null, { status: 404 })));
 }
 

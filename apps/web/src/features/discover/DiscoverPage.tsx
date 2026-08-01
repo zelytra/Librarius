@@ -20,6 +20,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Button, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
+import { AuthorSearch } from '../author/AuthorSearch';
 import { Field, FieldGrid, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
@@ -343,6 +344,10 @@ function DiscoverContent() {
           );
         })}
       </div>
+
+      {/* A different discovery flow from the catalog search above: this looks for a
+          person already in the shared catalog, not a title in an external one. */}
+      <AuthorSearch />
     </>
   );
 }

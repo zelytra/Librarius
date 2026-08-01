@@ -29,6 +29,7 @@ import {
   type ReviewDto,
 } from '../../api/generated/librarius';
 import { seriesIdOf } from '../series/series';
+import { AuthorNames } from '../author/AuthorNames';
 import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
@@ -587,7 +588,9 @@ function DetailContent({ id }: { id: string }) {
 
         <div className={styles.heading}>
           <h2 className={styles.title}>{title}</h2>
-          <div className={styles.authors}>{b.authors}</div>
+          <div className={styles.authors}>
+            <AuthorNames text={b.authors} />
+          </div>
           <div className={styles.genres}>
             {b.genres || t(b.kind === 'MANGA' ? 'detail.kind.manga' : 'detail.kind.book')}
           </div>
