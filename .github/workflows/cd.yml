@@ -127,6 +127,10 @@ jobs:
       # The two Secrets below are created by hand on the cluster and never by the
       # CI: no credential transits through this repository. Procedure in
       # docs/DEPLOYMENT.md. A missing Secret makes the chart fail to render.
+      # The node this deploys to is CPU-saturated at times, and a rollout that is
+      # merely slow — not stuck — has intermittently blown past helm's `--wait`
+      # window with "context deadline exceeded" (#187). 15m/420s give a slow-but-
+      # healthy rollout enough room without changing anything else about the deploy.
       - name: Helm upgrade --install
         run: |
           helm upgrade --install librarius ./infra/helm/librarius \
@@ -136,12 +140,12 @@ jobs:
             --set api.image.tag=${{ github.sha }} \
             --set postgres.existingSecret=librarius-postgres \
             --set keycloak.existingSecret=librarius-keycloak \
-            --wait --timeout 8m
+            --wait --timeout 15m
 
       - name: Verify rollout
         run: |
-          kubectl -n "$NAMESPACE" rollout status deployment/librarius-web --timeout=180s
-          kubectl -n "$NAMESPACE" rollout status deployment/librarius-api --timeout=240s
+          kubectl -n "$NAMESPACE" rollout status deployment/librarius-web --timeout=420s
+          kubectl -n "$NAMESPACE" rollout status deployment/librarius-api --timeout=420s
           kubectl -n "$NAMESPACE" get pods,ingress -l release=librarius
 
       # A failed `--wait` says "timed out waiting for the condition" and nothing
