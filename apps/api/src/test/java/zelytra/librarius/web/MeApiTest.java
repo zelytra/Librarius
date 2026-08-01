@@ -5,7 +5,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.keycloak.client.KeycloakTestClient;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.domain.repository.AppUserRepository;
+
+import java.time.OffsetDateTime;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
@@ -144,6 +147,41 @@ class MeApiTest {
         assertFalse(trusted, "a request body may not grant trust");
 
         resetProfile("alice", "alice", "fr", null);
+    }
+
+    /**
+     * {@code MeDto} now carries the trust flag (#186): false for the ordinary test account,
+     * and true once the row is stamped trusted directly — {@code GET /api/me} reads it
+     * straight off the entity, never derives or caches it. The write path stays #180's:
+     * nothing here goes through {@code PATCH /api/me}, only a direct row update the way
+     * {@link zelytra.librarius.trust.TrustEvaluator} itself performs one.
+     */
+    @Test
+    void meReflectsTheStoredTrustFlag() {
+        String id = given().auth().oauth2(token("alice"))
+                .when().get("/api/me")
+                .then().statusCode(200)
+                .body("trusted", is(false))
+                .extract().path("id");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = users.findById(id);
+            user.trusted = true;
+            user.trustedAt = OffsetDateTime.now();
+        });
+
+        try {
+            given().auth().oauth2(token("alice"))
+                    .when().get("/api/me")
+                    .then().statusCode(200)
+                    .body("trusted", is(true));
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                AppUser user = users.findById(id);
+                user.trusted = false;
+                user.trustedAt = null;
+            });
+        }
     }
 
     /**

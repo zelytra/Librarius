@@ -689,5 +689,11 @@
       "body": "Merci : ton signalement nous aidera à corriger cette fiche.",
       "close": "Fermer"
     }
+  },
+  "trust": {
+    "badge": {
+      "label": "De confiance",
+      "tooltip": "Ce compte est de confiance : assez d'ancienneté, assez de titres réellement terminés, et aucun signalement retenu contre lui."
+    }
   }
 }

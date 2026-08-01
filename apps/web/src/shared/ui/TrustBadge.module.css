@@ -1,0 +1,17 @@
+/* Trusted member badge (#186): a pill next to a display name, the same shape as the
+   incomplete-run badge on the Series list (`features/series/SeriesList.module.css`) —
+   icon + text on a tint, never colour alone. */
+
+.badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: var(--radius-badge);
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  font-size: var(--fs-10);
+  font-weight: 700;
+  white-space: nowrap;
+}

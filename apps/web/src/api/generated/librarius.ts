@@ -339,11 +339,13 @@ export interface MeDto {
   displayName?: string;
   locale?: string;
   timeZone?: string;
+  trusted?: boolean;
 }
 
 export interface MemberSummaryDto {
   id?: string;
   displayName?: string;
+  trusted?: boolean;
 }
 
 export interface ProgressDto {

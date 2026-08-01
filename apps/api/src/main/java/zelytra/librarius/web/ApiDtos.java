@@ -40,10 +40,16 @@ public final class ApiDtos {
     private ApiDtos() {
     }
 
+    /**
+     * @param trusted the server-computed trust flag (V16, #180), read straight off
+     *                {@link AppUser#trusted} — never client input, and there is no field on
+     *                {@link UpdateMeDto} that can set it. Surfaced here so the Settings screen
+     *                can show the badge next to the caller's own name (#186)
+     */
     public record MeDto(String id, String email, String displayName, String locale,
-                        String timeZone) {
+                        String timeZone, boolean trusted) {
         public static MeDto of(AppUser u) {
-            return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone);
+            return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted);
         }
     }
 
@@ -51,10 +57,14 @@ public final class ApiDtos {
      * Another member as it appears in a follow list (#200): the identifier a follow is issued
      * against and the display name a screen shows. It deliberately carries no email nor any
      * other personal field — a follow list exposes who, not how to reach them.
+     *
+     * @param trusted same server-computed flag as {@link MeDto#trusted()} (#180), so a follow
+     *                list can show the trusted badge next to a member's name exactly as the
+     *                caller's own profile does (#186)
      */
-    public record MemberSummaryDto(String id, String displayName) {
+    public record MemberSummaryDto(String id, String displayName, boolean trusted) {
         public static MemberSummaryDto of(AppUser u) {
-            return new MemberSummaryDto(u.id, u.displayName);
+            return new MemberSummaryDto(u.id, u.displayName, u.trusted);
         }
     }
 

@@ -689,5 +689,11 @@
       "body": "Thank you: your report will help us fix this record.",
       "close": "Close"
     }
+  },
+  "trust": {
+    "badge": {
+      "label": "Trusted",
+      "tooltip": "This account is trusted: enough tenure, enough titles actually finished, and a record clean of upheld reports."
+    }
   }
 }
