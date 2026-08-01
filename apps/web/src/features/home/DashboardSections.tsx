@@ -10,6 +10,7 @@ import {
   type LibraryItemDto,
   type StatsDto,
 } from '../../api/generated/librarius';
+import { BookStack } from './BookStack';
 import { GoalCard } from './GoalCard';
 import { ToReadPile } from './ToReadPile';
 import { UpcomingReleases } from './UpcomingReleases';
@@ -130,6 +131,11 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
             </div>
           </section>
         );
+
+      case 'bookStack':
+        // Self-contained, heading included: it hides itself, section and all, on a library
+        // with nothing read yet — a stack of zero books is a caption under a blank (#181).
+        return <BookStack key={code} stats={stats} />;
 
       case 'goal':
         // The annual goal, or the invitation to set one — never a gauge at zero, and

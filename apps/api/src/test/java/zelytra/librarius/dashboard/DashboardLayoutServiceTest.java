@@ -47,7 +47,8 @@ class DashboardLayoutServiceTest {
 
         List<DashboardSectionDto> normalized = DashboardLayoutService.normalize(stored);
 
-        assertEquals(List.of("recentlyRead", "goal", "resumeReading", "toRead", "counters", "upcoming"),
+        assertEquals(
+                List.of("recentlyRead", "goal", "resumeReading", "toRead", "counters", "bookStack", "upcoming"),
                 codes(normalized));
         assertTrue(normalized.get(0).hidden(), "the user's own choice to hide it survives");
         assertFalse(normalized.get(2).hidden(), "a section appended for the first time is visible");
@@ -81,6 +82,7 @@ class DashboardLayoutServiceTest {
                 new DashboardSectionDto("counters", false),
                 new DashboardSectionDto("upcoming", true),
                 new DashboardSectionDto("resumeReading", false),
+                new DashboardSectionDto("bookStack", false),
                 new DashboardSectionDto("toRead", false),
                 new DashboardSectionDto("recentlyRead", false),
                 new DashboardSectionDto("goal", false));

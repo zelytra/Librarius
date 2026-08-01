@@ -224,7 +224,7 @@ signing in shows something branded; loading and empty states stop flashing.
 | [#173](https://github.com/zelytra/Librarius/issues/173) | Desktop layout: Home and Collection | #171, #172 |
 | [#174](https://github.com/zelytra/Librarius/issues/174) | Desktop layout: Discover, Wishlist and Stats | #171, #172 |
 | [#175](https://github.com/zelytra/Librarius/issues/175) | Desktop layout: Detail, Series and Settings | #171, #172 |
-| [#181](https://github.com/zelytra/Librarius/issues/181) | Home screen: a book stack visualizing total books and pages read | — |
+| [#181](https://github.com/zelytra/Librarius/issues/181) | ✅ Home screen: a book stack visualizing total books and pages read | — |
 | [#183](https://github.com/zelytra/Librarius/issues/183) | Library screen: separate shelves by support type | #178 |
 | [#176](https://github.com/zelytra/Librarius/issues/176) | A Keycloak login theme matching the application | — |
 | [#177](https://github.com/zelytra/Librarius/issues/177) | Social sign-in with Google and Apple | #176 |

@@ -1,11 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders, TestProviders } from '../../test/utils';
 import { dashboardLayout, goal, libraryItem, stats, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, server, upcomingReleasesReturn } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { getGetApiStatsQueryKey } from '../../api/generated/librarius';
+import { MAX_SPINES } from './readingStack';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -13,6 +16,20 @@ const { HomePage } = await import('./HomePage');
 
 /** The goal is set per calendar year, so the fixtures follow the clock. */
 const YEAR = new Date().getFullYear();
+
+/**
+ * Stands in for the Detail screen, which invalidates exactly this key after a status or a
+ * progress change (`invalidateLibrary`). Rendered beside Home so the two share one query
+ * client, which is the whole point: the dashboard has to follow without being remounted.
+ */
+function StatsInvalidator() {
+  const queryClient = useQueryClient();
+  return (
+    <button onClick={() => void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() })}>
+      relire les statistiques
+    </button>
+  );
+}
 
 describe('HomePage', () => {
   beforeEach(resetAuth);
@@ -294,6 +311,104 @@ describe('HomePage', () => {
     });
   });
 
+  // ── The stack of books read (#181) ─────────────────────────────────────────
+
+  test('draws what has been read, in books, in pages and in paper', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 12, pagesRead: 4200 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Tout ce que tu as lu')).toBeInTheDocument();
+    expect(screen.getByText('12 livres lus')).toBeInTheDocument();
+    // French groups thousands with a narrow no-break space whose code point moves between
+    // ICU versions, so the assertion is on the digits and not on the separator.
+    expect(screen.getByText(/^4\s?200 pages lues$/)).toBeInTheDocument();
+    // 4 200 pages = 2 100 sheets = 210 mm. Under a metre, so centimetres.
+    expect(screen.getByText(/21\s?cm de papier/)).toBeInTheDocument();
+  });
+
+  /** The conversion is an estimate and the card has to say so, not imply a measurement. */
+  test('labels the height as an estimate and names the thickness it assumes', async () => {
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/^Hauteur estimée/)).toBeInTheDocument();
+    expect(screen.getByText(/une feuille de papier ≈ 0,1\s?mm/)).toBeInTheDocument();
+  });
+
+  /**
+   * A pile of rectangles conveys nothing without one: the drawing is a single image to
+   * assistive technology, labelled with the figures it stands for.
+   */
+  test('gives the drawing a text equivalent carrying the actual figures', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 12, pagesRead: 4200 }))));
+    renderWithProviders(<HomePage />);
+
+    const drawing = await screen.findByRole('img', { name: /12 livres lus/ });
+    expect(drawing).toHaveAccessibleName(/4\s?200 pages/);
+    expect(drawing).toHaveAccessibleName(/21\s?cm/);
+  });
+
+  /**
+   * Léa's 400 volumes (PRODUCT.md § 2). The drawing is capped, so a collector's shelf
+   * stays on the screen instead of becoming an illustration four hundred units tall.
+   */
+  test('caps the drawing rather than growing it with a collection', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 400, pagesRead: 76_000 }))));
+    renderWithProviders(<HomePage />);
+
+    const drawing = await screen.findByRole('img', { name: /400 livres lus/ });
+    expect(drawing.childElementCount).toBe(MAX_SPINES);
+    // 76 000 pages = 38 000 sheets = 3 800 mm, which reads in metres.
+    expect(screen.getByText(/3,8\s?m de papier/)).toBeInTheDocument();
+  });
+
+  /** Sarah the newcomer: three books read still draw three books, not a smear. */
+  test('draws a small shelf one book at a time', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 3, pagesRead: 900 }))));
+    renderWithProviders(<HomePage />);
+
+    const drawing = await screen.findByRole('img', { name: /3 livres lus/ });
+    expect(drawing.childElementCount).toBe(3);
+    expect(screen.getByText(/4,5\s?cm de papier/)).toBeInTheDocument();
+  });
+
+  test('hides the section entirely on a library with nothing read yet', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 0, reading: 0, toRead: 7, pagesRead: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('à lire');
+    expect(screen.queryByText('Tout ce que tu as lu')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Marking a title read invalidates `/api/stats` from the Detail screen, and the stack is
+   * drawn from that same query: the figures have to follow without the dashboard being
+   * reloaded. #181's acceptance criterion, and the reason the section takes no copy of its
+   * own of the statistics.
+   */
+  test('redraws itself when the statistics are invalidated, without a reload', async () => {
+    let read = 12;
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read, pagesRead: 4200 }))));
+    renderWithProviders(
+      <>
+        <HomePage />
+        <StatsInvalidator />
+      </>,
+    );
+
+    expect(await screen.findByText('12 livres lus')).toBeInTheDocument();
+
+    read = 13;
+    await userEvent.click(screen.getByRole('button', { name: 'relire les statistiques' }));
+
+    expect(await screen.findByText('13 livres lus')).toBeInTheDocument();
+  });
+
   test('prompts for sign-in when there is no session', async () => {
     setAuthenticated(false);
     renderWithProviders(<HomePage />);
@@ -431,7 +546,7 @@ describe('HomePage', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0].sections?.map((s) => s.code)).toEqual([
-      'resumeReading', 'counters', 'toRead', 'goal', 'upcoming', 'recentlyRead',
+      'resumeReading', 'counters', 'toRead', 'bookStack', 'goal', 'upcoming', 'recentlyRead',
     ]);
   });
 

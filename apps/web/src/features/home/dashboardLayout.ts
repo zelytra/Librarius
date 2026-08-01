@@ -26,6 +26,7 @@ export const DEFAULT_SECTION_ORDER = [
   'resumeReading',
   'toRead',
   'counters',
+  'bookStack',
   'goal',
   'upcoming',
   'recentlyRead',

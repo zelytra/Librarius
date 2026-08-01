@@ -4,6 +4,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.keycloak.client.KeycloakTestClient;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
@@ -20,6 +22,15 @@ import static org.hamcrest.Matchers.is;
  */
 @QuarkusTest
 class DashboardLayoutApiTest {
+
+    /**
+     * Every section the API knows, mirroring {@code DashboardLayoutService.DEFAULT_ORDER}.
+     * Named once rather than spelled out in each assertion: a section shipping later then
+     * moves this test by one line instead of by five, which is how a code ends up added on
+     * one side of the contract and not the other.
+     */
+    private static final List<String> EVERY_SECTION = List.of(
+            "resumeReading", "toRead", "counters", "bookStack", "goal", "upcoming", "recentlyRead");
 
     private final KeycloakTestClient keycloak = new KeycloakTestClient();
 
@@ -40,8 +51,7 @@ class DashboardLayoutApiTest {
         given().auth().oauth2(token())
                 .when().get("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"));
+                .body("sections.code", containsInAnyOrder(EVERY_SECTION.toArray()));
     }
 
     /** An empty body resets to the default order, all sections visible — see #54. */
@@ -51,8 +61,7 @@ class DashboardLayoutApiTest {
                 .body("{ \"sections\": [] }")
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code",
-                        is(java.util.List.of("resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead")))
+                .body("sections.code", is(EVERY_SECTION))
                 .body("sections.hidden", everyItem(is(false)));
     }
 
@@ -64,6 +73,7 @@ class DashboardLayoutApiTest {
                         { "sections": [
                             { "code": "goal", "hidden": true },
                             { "code": "counters", "hidden": false },
+                            { "code": "bookStack", "hidden": false },
                             { "code": "resumeReading", "hidden": false },
                             { "code": "toRead", "hidden": false },
                             { "code": "upcoming", "hidden": true },
@@ -72,14 +82,14 @@ class DashboardLayoutApiTest {
                         """)
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code", is(java.util.List.of(
-                        "goal", "counters", "resumeReading", "toRead", "upcoming", "recentlyRead")));
+                .body("sections.code", is(List.of(
+                        "goal", "counters", "bookStack", "resumeReading", "toRead", "upcoming", "recentlyRead")));
 
         given().auth().oauth2(token())
                 .when().get("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code", is(java.util.List.of(
-                        "goal", "counters", "resumeReading", "toRead", "upcoming", "recentlyRead")))
+                .body("sections.code", is(List.of(
+                        "goal", "counters", "bookStack", "resumeReading", "toRead", "upcoming", "recentlyRead")))
                 .body("sections.find { it.code == 'goal' }.hidden", is(true))
                 .body("sections.find { it.code == 'upcoming' }.hidden", is(true))
                 .body("sections.find { it.code == 'counters' }.hidden", is(false));
@@ -96,8 +106,7 @@ class DashboardLayoutApiTest {
                 .body("{ \"sections\": [ { \"code\": \"recentlyRead\", \"hidden\": false } ] }")
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"))
+                .body("sections.code", containsInAnyOrder(EVERY_SECTION.toArray()))
                 .body("sections[0].code", is("recentlyRead"));
     }
 
@@ -108,8 +117,7 @@ class DashboardLayoutApiTest {
                 .body("{ \"sections\": [ { \"code\": \"retiredSection\", \"hidden\": false } ] }")
                 .when().put("/api/dashboard/layout")
                 .then().statusCode(200)
-                .body("sections.code", containsInAnyOrder(
-                        "resumeReading", "toRead", "counters", "goal", "upcoming", "recentlyRead"));
+                .body("sections.code", containsInAnyOrder(EVERY_SECTION.toArray()));
     }
 
     @Test
