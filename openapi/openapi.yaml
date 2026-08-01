@@ -347,6 +347,9 @@ components:
       enum:
       - BOOK
       - MANGA
+      - COMIC
+      - GRAPHIC_NOVEL
+      - AUDIOBOOK
     LibraryCreateDto:
       type: object
       required:

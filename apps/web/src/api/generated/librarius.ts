@@ -133,6 +133,9 @@ export type Kind = typeof Kind[keyof typeof Kind];
 export const Kind = {
   BOOK: 'BOOK',
   MANGA: 'MANGA',
+  COMIC: 'COMIC',
+  GRAPHIC_NOVEL: 'GRAPHIC_NOVEL',
+  AUDIOBOOK: 'AUDIOBOOK',
 } as const;
 
 export interface ManualBookDto {
