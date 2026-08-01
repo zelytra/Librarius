@@ -6,6 +6,16 @@
   margin-bottom: 12px;
 }
 
+/* Past --bp-tablet the search field and the advanced panel stop stretching across the
+   full content width and settle at a reading-form measure — the same 640px Detail's hero
+   and Series' identity block are capped at — instead of a search box the width of a
+   desktop window. Left-aligned rather than centred: it sits directly above `.results`,
+   which does use the full width, and the two keep the same left edge. Below the
+   breakpoint the column is already narrower than the cap, so nothing here changes. */
+.searchColumn {
+  max-width: 640px;
+}
+
 /* The search bar, the ISBN hint and the advanced panel are one block. */
 .searchForm {
   display: flex;
@@ -90,10 +100,19 @@
   padding: 0;
 }
 
+/* Below --bp-tablet `--grid-panel-columns` is `1fr`, a single column with a 12px row
+   gap — pixel-identical to the plain stack this replaces. Past it the same token turns
+   into an auto-fit track list, so results that fit two or more across do, the same way
+   Wishlist's buckets and Settings' sections pick up columns from the token without a
+   media query of their own. The gap stays a flat 12px in both directions rather than the
+   shared `--grid-gap-y` (14px): the token was derived from the Collection cover grid, not
+   from this list, and switching it would nudge the phone spacing this depends on staying
+   put. */
 .results {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
   gap: 12px;
+  align-items: start;
 }
 
 .result {
@@ -103,6 +122,7 @@
   background: var(--surface);
   border-radius: var(--radius-card);
   border: 1px solid var(--line);
+  min-width: 0;
 }
 
 .resultBody {

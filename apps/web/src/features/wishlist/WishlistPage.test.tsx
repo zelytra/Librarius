@@ -39,6 +39,16 @@ describe('WishlistPage', () => {
     expect(await screen.findByText(/Ta liste de souhaits est vide/)).toBeInTheDocument();
   });
 
+  // ── Desktop layout (#174) ────────────────────────────────────────────────────
+
+  test('lays the priority buckets out in the shared panel grid', async () => {
+    wishlistReturns([wishlistItem()]);
+    renderWithProviders(<WishlistPage />);
+
+    const bucket = await screen.findByText('Priorité');
+    expect(bucket.closest('[class*="groups"]')).toBeInTheDocument();
+  });
+
   test('removing a wish drops it from the list', async () => {
     // The list is re-read after the mutation, so the handler applies the deletion.
     let items = [wishlistItem()];

@@ -12,9 +12,22 @@
   color: var(--muted);
 }
 
+/* Below --bp-tablet `--grid-panel-columns` is `1fr`, so this is a single column and the
+   24px gap lands exactly where `.group + .group { margin-top: 24px }` used to put it —
+   pixel-identical to the stack this replaces, since `gap` never adds space before the
+   first item either. Past the breakpoint the same token turns into an auto-fit track
+   list, so the buckets that fit lay out side by side, evenly spaced in both directions
+   rather than only the ones that used to be visually "below" another. */
+.groups {
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
+  gap: 24px var(--grid-gap-x);
+  align-items: start;
+}
+
 /* One priority bucket: its header, then its wishes. */
-.group + .group {
-  margin-top: 24px;
+.group {
+  min-width: 0;
 }
 
 .groupHeader {
@@ -44,6 +57,7 @@
   background: var(--surface);
   border-radius: var(--radius-card);
   border: 1px solid var(--line);
+  min-width: 0;
 }
 
 .thumb {

@@ -234,22 +234,28 @@ function WishlistContent() {
 
       {actionError && <ErrorState message={actionError} />}
 
-      {groups.map((group) => (
-        <section key={group.priority} className={styles.group}>
-          <div className={styles.groupHeader}>
-            <span className={`${styles.priority} ${PRIO[group.priority]}`}>
-              {t(`wishlist.priority.${group.priority}`)}
-            </span>
-            <span className={styles.groupTotal}>
-              {t('wishlist.groupTotal', {
-                titles: group.line?.count ?? group.wishes.length,
-                budget: money(group.line?.total ?? 0),
-              })}
-            </span>
-          </div>
+      {/* Below --bp-tablet this is the single stacked column shipped today, one bucket
+          under the next; past it the buckets that fit lay out side by side instead of
+          each one running the whole width of a wide window — see `.groups` in the
+          module CSS for how the column count follows the grid tokens without a media
+          query of its own. */}
+      <div className={styles.groups}>
+        {groups.map((group) => (
+          <section key={group.priority} className={styles.group}>
+            <div className={styles.groupHeader}>
+              <span className={`${styles.priority} ${PRIO[group.priority]}`}>
+                {t(`wishlist.priority.${group.priority}`)}
+              </span>
+              <span className={styles.groupTotal}>
+                {t('wishlist.groupTotal', {
+                  titles: group.line?.count ?? group.wishes.length,
+                  budget: money(group.line?.total ?? 0),
+                })}
+              </span>
+            </div>
 
-          <div className={styles.list}>
-            {group.wishes.map((w) => {
+            <div className={styles.list}>
+              {group.wishes.map((w) => {
               const title = w.book?.title ?? '—';
               return (
                 <div key={w.id} className={styles.row}>
@@ -309,9 +315,10 @@ function WishlistContent() {
                 </div>
               );
             })}
-          </div>
-        </section>
-      ))}
+            </div>
+          </section>
+        ))}
+      </div>
 
       {hasNextPage && (
         <div className={styles.loadMore}>
