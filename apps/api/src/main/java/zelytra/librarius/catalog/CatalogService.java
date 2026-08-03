@@ -5,14 +5,19 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import zelytra.librarius.domain.Kind;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.stream.Stream;
 
 /**
  * Aggregates the catalog providers: for a set of kinds (or every registered one when
@@ -57,7 +62,7 @@ public class CatalogService {
     public List<CatalogResult> search(Set<Kind> kinds, CatalogQuery query, int limit) {
         return aggregate(providersFor(kinds), limit, provider -> cache.get(CatalogCache.Scope.SEARCH,
                 provider.name(), "search|" + provider.kind() + '|' + query.cacheKey() + '|' + limit,
-                () -> provider.search(query, limit)));
+                () -> provider.search(query, limit)), relevanceScorer(query));
     }
 
     public List<CatalogResult> upcoming(Kind kind, int limit) {
@@ -116,34 +121,94 @@ public class CatalogService {
      */
     private List<CatalogResult> aggregate(List<CatalogProvider> providers, int limit,
             Function<CatalogProvider, List<CatalogResult>> call) {
+        return aggregate(providers, limit, call, null);
+    }
+
+    /**
+     * As above, but re-ranks the merged page by {@code relevance} before trimming it to the
+     * limit: the results that actually match the query rise to the top, whatever provider or
+     * rank they came in at, while the round-robin order survives as the tie-break between
+     * equally-relevant entries. The whole candidate pool is ranked, not just the first
+     * {@code limit} the round-robin happened to reach, so a strong match sitting deep in one
+     * provider's answer is no longer dropped for a weak one another returned early. A
+     * {@code null} ranker (upcoming, editions) leaves the round-robin order untouched.
+     */
+    private List<CatalogResult> aggregate(List<CatalogProvider> providers, int limit,
+            Function<CatalogProvider, List<CatalogResult>> call,
+            ToIntFunction<CatalogResult> relevance) {
         List<List<CatalogResult>> perProvider = new ArrayList<>(providers.size());
+        int rounds = 0;
         for (CatalogProvider provider : providers) {
-            perProvider.add(call.apply(provider));
+            List<CatalogResult> results = call.apply(provider);
+            perProvider.add(results);
+            rounds = Math.max(rounds, results.size());
         }
 
         Map<String, CatalogResult> merged = new LinkedHashMap<>();
-        for (int rank = 0; merged.size() < limit; rank++) {
-            boolean anyProviderHadThisRank = false;
+        for (int rank = 0; rank < rounds; rank++) {
             for (List<CatalogResult> results : perProvider) {
-                if (rank >= results.size()) {
-                    continue;
+                if (rank < results.size()) {
+                    merged.putIfAbsent(dedupKey(results.get(rank)), results.get(rank));
                 }
-                anyProviderHadThisRank = true;
-                merged.putIfAbsent(dedupKey(results.get(rank)), results.get(rank));
-                if (merged.size() >= limit) {
-                    break;
-                }
-            }
-            if (!anyProviderHadThisRank) {
-                break;
             }
         }
-        return merged.values().stream().limit(limit).toList();
+
+        Stream<CatalogResult> ordered = merged.values().stream();
+        if (relevance != null) {
+            ordered = ordered.sorted(Comparator.comparingInt(relevance).reversed());
+        }
+        return ordered.limit(limit).toList();
     }
 
+    /**
+     * Scores a result against the free-text query so the merge can promote a genuine match:
+     * an exact title first, then a title carrying every word of the query, then some of them,
+     * then the rest. Only the text criterion drives it — an author, ISBN or year search leaves
+     * every result equal, so the providers' own order (and the round-robin fairness) stands.
+     */
+    private static ToIntFunction<CatalogResult> relevanceScorer(CatalogQuery query) {
+        String needle = normalize(query.text());
+        if (needle.isEmpty()) {
+            return result -> 0;
+        }
+        List<String> words = List.of(needle.split(" "));
+        return result -> {
+            String title = normalize(result.title());
+            if (title.equals(needle)) {
+                return 3;
+            }
+            if (title.startsWith(needle)) {
+                return 2;
+            }
+            long present = words.stream().filter(title::contains).count();
+            if (present == words.size()) {
+                return 2;
+            }
+            return present > 0 ? 1 : 0;
+        };
+    }
+
+    /**
+     * Deduplication key: title and author, accents folded, case dropped and every run of
+     * punctuation or spacing reduced to one space, so "Astérix — Tome 1" and "Asterix, tome 1"
+     * key alike and the same title from two catalogues spends a single slot. The BnF puts its
+     * authority heading back in reading order for exactly this reason (see
+     * CatalogBookAggregationTest).
+     */
     private static String dedupKey(CatalogResult r) {
-        String title = r.title() == null ? "" : r.title();
-        String authors = r.authors() == null ? "" : r.authors();
-        return (title + '|' + authors).toLowerCase();
+        return normalize(r.title()) + '|' + normalize(r.authors());
+    }
+
+    /** Folds a label to its bare alphanumerics: NFD-stripped accents, lowercase, single spaces. */
+    private static String normalize(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String expanded = value.replace("Œ", "oe").replace("œ", "oe")
+                .replace("Æ", "ae").replace("æ", "ae").replace("ß", "ss");
+        String folded = Normalizer.normalize(expanded, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT);
+        return folded.replaceAll("[^a-z0-9]+", " ").trim();
     }
 }

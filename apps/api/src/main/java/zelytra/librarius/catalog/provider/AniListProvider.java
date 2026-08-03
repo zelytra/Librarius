@@ -94,9 +94,12 @@ public class AniListProvider implements CatalogProvider {
     private List<CatalogResult> byTitle(CatalogQuery query, int limit) {
         boolean withYear = query.year() != null;
         String sort = query.text() != null ? "SEARCH_MATCH" : "POPULARITY_DESC";
+        // format_not_in drops the light novels AniList files under type: MANGA — they polluted
+        // a manga search with prose editions of the same franchise. Manga and one-shots stay.
         String gql = "query ($q: String, $n: Int"
                 + (withYear ? ", $from: FuzzyDateInt, $to: FuzzyDateInt" : "")
-                + ") { Page(perPage: $n) { media(type: MANGA, search: $q, sort: " + sort
+                + ") { Page(perPage: $n) { media(type: MANGA, format_not_in: [NOVEL], search: $q, sort: "
+                + sort
                 + ", isAdult: false"
                 + (withYear ? ", startDate_greater: $from, startDate_lesser: $to" : "")
                 + ") { " + FIELDS + " } } }";
