@@ -114,31 +114,36 @@ function CoverTile({
     ? t('collection.volumeShort', { number: b.volumeNumber })
     : t(KIND_TAG_KEY[knownKind(b.kind)]);
   return (
-    <Cover
-      variant="tile"
-      title={b.title ?? '—'}
-      imageUrl={b.coverUrl}
-      tag={tag}
-      caption={b.authors}
-      onClick={onOpen}
-    >
-      {rankColor && (
-        // The medal colour depends on the rank, so it stays on the element.
-        <span className={styles.rankBadge} style={{ background: rankColor }}>
-          <Icon name={rankIcon} size={14} fill color="var(--on-accent)" />
-        </span>
-      )}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        aria-label={t('common.remove')}
-        className={styles.removeButton}
+    // The actual grid item: a plain wrapper rather than a prop on Cover, so it can carry
+    // the min-width the grid track needs without Cover knowing it sits in one. See `.cell`
+    // in CollectionPage.module.css for why that matters below --bp-tablet.
+    <div className={styles.cell}>
+      <Cover
+        variant="tile"
+        title={b.title ?? '—'}
+        imageUrl={b.coverUrl}
+        tag={tag}
+        caption={b.authors}
+        onClick={onOpen}
       >
-        <Icon name="delete" size={14} color="var(--rose)" />
-      </button>
-    </Cover>
+        {rankColor && (
+          // The medal colour depends on the rank, so it stays on the element.
+          <span className={styles.rankBadge} style={{ background: rankColor }}>
+            <Icon name={rankIcon} size={14} fill color="var(--on-accent)" />
+          </span>
+        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          aria-label={t('common.remove')}
+          className={styles.removeButton}
+        >
+          <Icon name="delete" size={14} color="var(--rose)" />
+        </button>
+      </Cover>
+    </div>
   );
 }
 

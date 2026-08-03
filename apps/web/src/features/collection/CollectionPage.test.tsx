@@ -450,4 +450,28 @@ describe('CollectionPage', () => {
     const cover = await screen.findByText('Le Nom du vent');
     expect(cover.closest('[class*="gridCover"]')).toBeInTheDocument();
   });
+
+  /**
+   * Below --bp-tablet the grid's track list is `repeat(3, 1fr)` (tokens.css): a grid
+   * item's *automatic* minimum width otherwise defaults to its own content, so a long,
+   * unbreakable author line (`.caption` is `white-space: nowrap` in Cover.module.css) is
+   * enough to stretch its column past its 1fr share while the others shrink to compensate
+   * — the covers stop being the same size, and the grid can outgrow the viewport. Every
+   * tile carries its own wrapper for exactly this: see `.cell` in
+   * CollectionPage.module.css.
+   */
+  test('wraps every cover of the flat grid in the min-width guard that keeps columns uniform', async () => {
+    libraryReturns([ROMAN, libraryItem({ id: 'roman-2', book: { kind: 'BOOK', title: 'La Peur du sage' } })]);
+    renderWithProviders(<CollectionPage />);
+
+    const firstCell = (await screen.findByText('Le Nom du vent')).closest('[class*="cell"]');
+    const secondCell = screen.getByText('La Peur du sage').closest('[class*="cell"]');
+
+    expect(firstCell).toBeInTheDocument();
+    expect(secondCell).toBeInTheDocument();
+    // Direct children of the shared grid: the min-width guard has to sit where the grid
+    // actually reads an automatic minimum from, not one level further down.
+    expect(firstCell?.parentElement?.className).toMatch(/gridCover/);
+    expect(secondCell?.parentElement?.className).toMatch(/gridCover/);
+  });
 });
