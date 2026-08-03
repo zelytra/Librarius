@@ -3,6 +3,7 @@ package zelytra.librarius.imports;
 import org.junit.jupiter.api.Test;
 import zelytra.librarius.domain.LibraryStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,5 +70,20 @@ class ImportCsvTest {
         for (ImportedBook book : books) {
             assertEquals(LibraryStatus.ABANDONED, book.status(), book.title());
         }
+    }
+
+    @Test
+    void readsTheRatingAndTheDate() {
+        String csv = """
+                Title,Author,Exclusive Shelf,My Rating,Date Read
+                Fourth Wing,Rebecca Yarros,read,4,2024-03-12
+                Iron Flame,Rebecca Yarros,read,5,12/04/2024
+                """;
+        List<ImportedBook> books = ImportService.parseCsv(csv);
+
+        assertEquals(Integer.valueOf(4), books.get(0).rating());
+        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).acquiredAt());
+        assertEquals(Integer.valueOf(5), books.get(1).rating());
+        assertEquals(LocalDate.of(2024, 4, 12), books.get(1).acquiredAt());
     }
 }

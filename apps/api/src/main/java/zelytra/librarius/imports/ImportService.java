@@ -10,13 +10,18 @@ import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.domain.RankCategory;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
+import zelytra.librarius.domain.repository.RankCategoryRepository;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /** Import orchestration: scraping or CSV -> creation of the owned titles. */
@@ -31,6 +36,9 @@ public class ImportService {
 
     @Inject
     LibraryItemRepository items;
+
+    @Inject
+    RankCategoryRepository ranks;
 
     @Inject
     MeterRegistry meters;
@@ -59,6 +67,15 @@ public class ImportService {
             existing.add(key(it.edition.work.title, it.edition.work.authorsText));
         }
 
+        // Reuse the user's existing custom categories and order new ones after them, so a second
+        // import does not duplicate a shelf and the categories keep a stable order.
+        Map<String, RankCategory> categories = new HashMap<>();
+        int[] nextOrder = {0};
+        for (RankCategory c : ranks.listCustomForUser(userId)) {
+            categories.put(c.code, c);
+            nextOrder[0] = Math.max(nextOrder[0], c.sortOrder + 1);
+        }
+
         int imported = 0;
         int skipped = 0;
         for (ImportedBook book : books) {
@@ -69,6 +86,7 @@ public class ImportService {
                 skipped++;
                 continue;
             }
+            LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.OWNED;
             // No provider reference: Booknode is a shelf being scraped, not a catalog that
             // hands out identifiers, and the two trailing nulls say so rather than filing the
             // import under a provider nothing can query.
@@ -78,7 +96,10 @@ public class ImportService {
             LibraryItem item = new LibraryItem();
             item.userId = userId;
             item.edition = edition;
-            item.status = book.status() != null ? book.status() : LibraryStatus.OWNED;
+            item.status = status;
+            item.rating = book.rating();
+            item.acquiredAt = book.acquiredAt();
+            item.rankCategory = categoryFor(userId, book.shelf(), status, categories, nextOrder);
             items.persist(item);
             imported++;
         }
@@ -104,6 +125,8 @@ public class ImportService {
         int titleCol = indexOf(header, "titre", "title", "nom", "name");
         int authorCol = indexOf(header, "auteur", "author", "auteurs", "authors");
         int statusCol = indexOf(header, "statut", "status", "etagere", "étagère", "shelf", "exclusive shelf");
+        int ratingCol = indexOf(header, "note", "rating", "my rating", "note moyenne");
+        int dateCol = indexOf(header, "date", "date read", "date added", "date de lecture", "date d'ajout");
         boolean hasHeader = titleCol >= 0;
         int start = hasHeader ? 1 : 0;
         if (!hasHeader) {
@@ -119,10 +142,73 @@ public class ImportService {
             if (title == null || title.isBlank()) {
                 continue;
             }
-            books.add(new ImportedBook(title, cell(cols, authorCol), null,
-                    mapCsvStatus(cell(cols, statusCol))));
+            String shelf = cell(cols, statusCol);
+            books.add(new ImportedBook(title, cell(cols, authorCol), null, mapCsvStatus(shelf),
+                    shelf, parseRating(cell(cols, ratingCol)), ImportDates.parse(cell(cols, dateCol))));
         }
         return books;
+    }
+
+    /**
+     * A rating scaled to the 1–5 the application stores. A value above five is taken to be out
+     * of a larger scale — Babelio rates out of twenty — and divided down.
+     */
+    private static Integer parseRating(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            double v = Double.parseDouble(raw.trim().replace(',', '.'));
+            if (v <= 0) {
+                return null;
+            }
+            int scaled = v > 5 ? (int) Math.round(v / 4.0) : (int) Math.round(v);
+            return Math.max(1, Math.min(5, scaled));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The category an imported shelf maps to, creating it on first sight — but only for a shelf
+     * that is not a plain reading state: "Lu", "En cours" and "Abandonné" are the status, not a
+     * category, and would only duplicate it. A custom list, or "À lire" and its kin, becomes one.
+     */
+    private RankCategory categoryFor(String userId, String shelf, LibraryStatus status,
+            Map<String, RankCategory> cache, int[] nextOrder) {
+        if (shelf == null || shelf.isBlank() || status == LibraryStatus.READ
+                || status == LibraryStatus.READING || status == LibraryStatus.ABANDONED) {
+            return null;
+        }
+        String code = categoryCode(shelf);
+        if (code.isEmpty()) {
+            return null;
+        }
+        RankCategory cached = cache.get(code);
+        if (cached != null) {
+            return cached;
+        }
+        RankCategory resolved = ranks.findForUserByCode(userId, code).orElseGet(() -> {
+            RankCategory created = new RankCategory();
+            created.userId = userId;
+            created.code = code;
+            String label = shelf.trim();
+            created.label = label.length() > 64 ? label.substring(0, 64) : label;
+            created.sortOrder = nextOrder[0]++;
+            created.builtin = false;
+            ranks.persist(created);
+            return created;
+        });
+        cache.put(code, resolved);
+        return resolved;
+    }
+
+    /** A shelf label folded to a short code: accents stripped, lowercased, non-alphanumerics dashed. */
+    private static String categoryCode(String shelf) {
+        String folded = Normalizer.normalize(shelf, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+        return folded.length() > 32 ? folded.substring(0, 32) : folded;
     }
 
     private static LibraryStatus mapCsvStatus(String raw) {

@@ -114,7 +114,8 @@ public class BooknodeImporter implements LibraryImporter {
             String author = textOf(row, ".author-name");
             String shelf = textOf(row, ".list-name");
             String cover = coverNear(row);
-            books.add(new ImportedBook(title, emptyToNull(author), cover, mapStatus(shelf)));
+            books.add(new ImportedBook(title, emptyToNull(author), cover, mapStatus(shelf),
+                    shelf, null, ImportDates.parse(textOf(row, ".date-added"))));
         }
         return books;
     }

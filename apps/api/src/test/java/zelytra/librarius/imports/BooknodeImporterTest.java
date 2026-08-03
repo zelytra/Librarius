@@ -7,6 +7,7 @@ import zelytra.librarius.domain.LibraryStatus;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,5 +54,14 @@ class BooknodeImporterTest {
                         + "<li><a href='/x?page=97'>97</a></li></ul>");
 
         assertEquals(97, BooknodeImporter.highestPage(doc));
+    }
+
+    @Test
+    void readsTheShelfAndTheAcquisitionDate() throws Exception {
+        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
+
+        assertEquals("Lu", books.get(0).shelf());
+        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).acquiredAt());   // "12 mars 2024"
+        assertEquals(LocalDate.of(2025, 1, 3), books.get(1).acquiredAt());    // "3 janvier 2025"
     }
 }
