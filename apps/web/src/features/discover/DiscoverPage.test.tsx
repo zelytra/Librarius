@@ -142,6 +142,27 @@ describe('DiscoverPage', () => {
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
   });
 
+  /**
+   * The series, tome number and page count the enriched catalog result now carries have to
+   * reach the collection, so a title added from a search lands in its series and knows its
+   * length instead of showing "—".
+   */
+  test('carries the series, volume and page count of the result it adds', async () => {
+    const posts = capturedLibraryPosts();
+    searchReturns([catalogResult({ seriesTitle: 'Vinland Saga', volumeNumber: 3, pageCount: 456 })]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+    await userEvent.click(await screen.findByText('Collection'));
+
+    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(posts[0].book).toMatchObject({
+      seriesTitle: 'Vinland Saga',
+      volumeNumber: 3,
+      pageCount: 456,
+    });
+  });
+
   test('adds a result to the wishlist', async () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);

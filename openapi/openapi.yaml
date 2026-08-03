@@ -142,6 +142,14 @@ components:
           type: string
         releaseDate:
           $ref: "#/components/schemas/LocalDate"
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
         provider:
           type: string
         providerRef:

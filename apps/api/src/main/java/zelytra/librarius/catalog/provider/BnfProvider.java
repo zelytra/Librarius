@@ -16,6 +16,7 @@ import org.xml.sax.SAXParseException;
 import zelytra.librarius.catalog.CatalogProvider;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
+import zelytra.librarius.catalog.VolumeParser;
 import zelytra.librarius.domain.Kind;
 
 import javax.xml.XMLConstants;
@@ -200,9 +201,11 @@ public class BnfProvider implements CatalogProvider {
             return null;
         }
         List<String> identifiers = all(record, "identifier");
+        VolumeParser.Parsed volume = VolumeParser.parse(title);
         return new CatalogResult("BOOK", title, creators(record), year(first(record, "date")),
                 null, null, isbn13(identifiers), first(record, "publisher"),
-                first(record, "language"), null, "bnf", ark(identifiers));
+                first(record, "language"), null, volume.seriesTitle(), volume.volumeNumber(),
+                null, "bnf", ark(identifiers));
     }
 
     /**

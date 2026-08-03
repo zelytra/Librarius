@@ -100,6 +100,9 @@ export interface CatalogResult {
   publisher?: string;
   language?: string;
   releaseDate?: LocalDate;
+  seriesTitle?: string;
+  volumeNumber?: number;
+  pageCount?: number;
   provider?: string;
   providerRef?: string;
 }

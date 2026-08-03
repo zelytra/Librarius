@@ -475,6 +475,13 @@ whatever a provider indexes belongs to the provider.
 Every criterion takes part in the cache key, so two searches differing by a single field
 are never served the same answer.
 
+Beyond its own `kind`, each result carries three enrichment fields so a title added from a
+search lands complete rather than bare: `pageCount` (from Open Library's
+`number_of_pages_median`), and `seriesTitle` / `volumeNumber` parsed from a book title that
+spells its volume — "Astérix - Tome 1", "Naruto, Vol. 5", "One Piece #12". A title with no
+such marker, and every AniList result, leaves those two null and stays a standalone work; the
+add path (`POST /api/library`) then files it under its series at its tome number.
+
 ## Series
 
 A `series` row is shared catalog data, but `/api/series` is not a catalog browser: a series
