@@ -438,10 +438,11 @@ is visible to a caller only once they **own a volume of it or follow it**. Anyth
 answers 404, the same as an unknown identifier — a 403 would tell the caller that a series
 exists in someone else's collection.
 
-The volume list of `GET /api/series/{id}` runs from volume 1 to the furthest volume anyone
-knows about: the announced `total_volumes`, the last volume present in the shared catalog,
-or the last one the caller owns. Each entry carries four non-exclusive flags — a read
-volume is also an owned one:
+The volume list of `GET /api/series/{id}` runs from volume 1 — or from a lower volume when
+the series carries one, a prologue numbered 0 being the usual case — to the furthest volume
+anyone knows about: the announced `total_volumes`, the last volume present in the shared
+catalog, or the last one the caller owns. Each entry carries four non-exclusive flags — a
+read volume is also an owned one:
 
 | Flag | Meaning |
 |---|---|

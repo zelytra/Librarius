@@ -149,6 +149,52 @@ class SeriesApiTest {
                 .body("volumes", empty());
     }
 
+    /**
+     * A volume numbered 0 — a prologue, a "tome 0" — is a volume like any other: owning it
+     * must put it in the grid. The run once opened on volume 1 and dropped it, though the
+     * counters still counted it, so a series whose only volume was a tome 0 showed an empty
+     * grid next to an ownership of one.
+     */
+    @Test
+    void aVolumeZeroTheUserOwnsIsListed() {
+        String title = "Series Test - prologue";
+        addVolume("alice", title, 0, "OWNED");
+        addVolume("alice", title, 1, "READ");
+
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/series/" + id)
+                .then().statusCode(200)
+                .body("ownedCount", is(2))
+                // Both the tome 0 and volume 1 are there, in order, each owned.
+                .body("volumes.size()", is(2))
+                .body("volumes[0].volumeNumber", is(0))
+                .body("volumes[0].owned", is(true))
+                .body("volumes[1].volumeNumber", is(1))
+                .body("volumes[1].read", is(true));
+    }
+
+    /**
+     * A series whose whole ownership sits at volume 0 must still list that volume rather
+     * than the empty grid the volume-1 floor used to produce.
+     */
+    @Test
+    void aSeriesMadeOnlyOfAVolumeZeroIsNotEmpty() {
+        String title = "Series Test - only prologue";
+        addVolume("alice", title, 0, "OWNED");
+
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/series/" + id)
+                .then().statusCode(200)
+                .body("ownedCount", is(1))
+                .body("volumes.size()", is(1))
+                .body("volumes[0].volumeNumber", is(0))
+                .body("volumes[0].owned", is(true));
+    }
+
     // ── Follow ────────────────────────────────────────────────────────────────
 
     /** Following and unfollowing are both idempotent: a retried request must not fail. */
