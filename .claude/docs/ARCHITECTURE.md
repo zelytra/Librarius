@@ -212,12 +212,18 @@ zelytra/librarius/
   reached — before it is trimmed, so a genuine title match rises to the top whatever provider
   or rank it came in at; the round-robin order above survives only as the tie-break between
   equally-relevant entries. `upcoming` and `editionsOf` carry no query and keep the plain
-  round-robin order. `dedupKey` folds both halves — accents stripped, case dropped, every run
-  of punctuation or spacing reduced to one space — so "Astérix — Tome 1" and "Asterix, tome 1"
-  key alike; it still carries the author, which is why `BnfProvider` normalises its side too:
-  it cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit
-  par…" → "Dune") and rewrites the authority heading ("Herbert, Frank (1920-1986). Auteur du
-  texte") into the plain name Open Library returns, repeats dropped. Skip either and every
+  round-robin order. Entries fold on an **`aggregationKey`**: a result carrying a series and a
+  volume — book catalogues parse both out of the title (`VolumeParser`), so every printing of
+  "One Piece Tome 1" does, the BnF's ISBD "One Piece. 1, …" form included — keys on that series
+  and volume, so every edition of it across providers collapses onto one slot, its fields
+  combined by `mergeResults` (best cover, an ISBN, the largest page count) under a uniform
+  "Series - Tome N" title. A volume-less result falls back to `dedupKey`, which folds both halves
+  — accents stripped, case dropped, every run of punctuation or spacing reduced to one space — so
+  "Astérix — Tome 1" and "Asterix, tome 1" key alike; it still carries the author, so two
+  different books sharing a title are not merged, and this is why `BnfProvider` normalises its
+  side too: it cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ;
+  traduit par…" → "Dune") and rewrites the authority heading ("Herbert, Frank (1920-1986). Auteur
+  du texte") into the plain name Open Library returns, repeats dropped. Skip either and every
   French novel the two catalogues share is listed twice. The manga search also drops AniList's
   light-novel entries (`format_not_in: [NOVEL]`), which otherwise crowd a title search with
   prose editions of the same franchise. `Kind` grew past `BOOK`/`MANGA` to

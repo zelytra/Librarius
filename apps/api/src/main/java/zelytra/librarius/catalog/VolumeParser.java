@@ -23,7 +23,11 @@ public final class VolumeParser {
      * two capture groups are the number for the word form and for the {@code #} form.
      */
     private static final Pattern MARKER = Pattern.compile(
-            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})\\b|#\\s*(\\d{1,4})\\b");
+            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})\\b|#\\s*(\\d{1,4})\\b"
+                    // The BnF ISBD form "Série. N, sous-titre": a number after the title's period,
+                    // followed by a comma. The comma (and the 3-digit cap) keep "Catch. 22" and
+                    // "Foundation. 1951, …" from reading as volumes.
+                    + "|\\.\\s+(\\d{1,3})(?=\\s*,)");
 
     private static final Pattern TRAILING_SEPARATORS = Pattern.compile("[\\s,;:.()\\-—]+$");
 
@@ -43,7 +47,8 @@ public final class VolumeParser {
         if (!matcher.find()) {
             return Parsed.NONE;
         }
-        String digits = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+        String digits = matcher.group(1) != null ? matcher.group(1)
+                : matcher.group(2) != null ? matcher.group(2) : matcher.group(3);
         int volume;
         try {
             volume = Integer.parseInt(digits);
