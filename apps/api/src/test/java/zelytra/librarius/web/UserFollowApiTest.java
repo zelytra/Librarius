@@ -4,11 +4,18 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.keycloak.client.KeycloakTestClient;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The user-to-user follow resource (#200): {@code PUT}/{@code DELETE
@@ -70,6 +77,44 @@ class UserFollowApiTest {
                 .when().get("/api/me/followers")
                 .then().statusCode(200)
                 .body("id", not(hasItem(alice)));
+    }
+
+    /**
+     * Two duplicate {@code PUT}s racing each other must both come back 204, never a 500 from
+     * the composite primary key: the insert has to be atomic, not a check followed by a
+     * separate persist that another request can slip between.
+     */
+    @Test
+    void concurrentDuplicateFollowsBothSucceed() throws Exception {
+        String alice = id("alice");
+        String bob = id("bob");
+        String aliceToken = token("alice");
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Callable<Integer> put = () -> given().auth().oauth2(aliceToken)
+                    .when().put("/api/users/" + bob + "/follow")
+                    .then().extract().statusCode();
+
+            List<Future<Integer>> results = pool.invokeAll(List.of(put, put));
+            for (Future<Integer> result : results) {
+                assertTrue(result.get() == 204,
+                        "a concurrent duplicate follow must stay idempotent, got "
+                                + result.get());
+            }
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(10, TimeUnit.SECONDS);
+        }
+
+        given().auth().oauth2(aliceToken)
+                .when().get("/api/me/following")
+                .then().statusCode(200)
+                .body("id", hasItem(bob));
+
+        // Leave the shared account state as it was found.
+        given().auth().oauth2(aliceToken).when().delete("/api/users/" + bob + "/follow")
+                .then().statusCode(204);
     }
 
     /** A user cannot follow themselves: refused with 400, on both verbs. */

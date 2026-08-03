@@ -21,16 +21,19 @@ public class UserFollowRepository
 
     /**
      * Starts following another user. Idempotent: a {@code PUT} repeated by a client that lost
-     * the response must not fail on the primary key.
+     * the response must not fail on the primary key — including two concurrent duplicate
+     * requests racing each other, which a plain "check then persist" cannot rule out since the
+     * check and the insert are not atomic. The insert itself carries the atomicity: a native
+     * upsert that is a no-op when the pair already exists, rather than a separate {@code COUNT}
+     * followed by a {@code persist()} in another round-trip.
      */
     public void follow(String followerId, String followeeId) {
-        if (isFollowing(followerId, followeeId)) {
-            return;
-        }
-        UserFollow follow = new UserFollow();
-        follow.followerId = followerId;
-        follow.followeeId = followeeId;
-        persist(follow);
+        getEntityManager()
+                .createNativeQuery("insert into user_follow (follower_id, followee_id) "
+                        + "values (?1, ?2) on conflict (follower_id, followee_id) do nothing")
+                .setParameter(1, followerId)
+                .setParameter(2, followeeId)
+                .executeUpdate();
     }
 
     /** Stops following another user. Idempotent as well. */
