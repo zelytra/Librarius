@@ -23,6 +23,12 @@ class CatalogServiceTest {
                 "fake", "ref");
     }
 
+    private static CatalogResult result(String kind, String title, String author, String series,
+            Integer volume) {
+        return new CatalogResult(kind, title, author, null, null, null, null, null, null, null,
+                series, volume, null, "fake", "ref");
+    }
+
     private record FakeProvider(Kind kind, CatalogResult canned) implements CatalogProvider {
         @Override
         public String name() {
@@ -298,5 +304,26 @@ class CatalogServiceTest {
                 .stream().map(CatalogResult::title).toList();
 
         assertEquals("The Hobbit", titles.get(0));
+    }
+
+    @Test
+    void collapsesEveryEditionOfOneSeriesVolumeIntoASingleResult() {
+        // Three spellings of "One Piece, tome 1" — different subtitles and author romanisations —
+        // but the same parsed series and volume: one result, under a canonical title.
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, List.of(
+                        result("BOOK", "One Piece - Édition originale, Tome 1", "Eiichiro Oda",
+                                "One Piece", 1),
+                        result("BOOK", "One Piece. 1, À l'aube d'une grande aventure",
+                                "Oda, Eiichirō", "One Piece", 1),
+                        result("BOOK", "One Piece Tome 1 : Romance Dawn", "Eiichirō Oda",
+                                "One Piece", 1)))),
+                passThroughCache());
+
+        List<CatalogResult> results =
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("one piece tome 1"), 10);
+
+        assertEquals(1, results.size());
+        assertEquals("One Piece - Tome 1", results.get(0).title());
     }
 }

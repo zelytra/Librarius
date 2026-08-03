@@ -115,9 +115,10 @@ public class CatalogService {
      *
      * <p>A provider that returns fewer results (including none, e.g. down or off-topic)
      * simply drops out of later rounds, and the limit it leaves unused goes to the
-     * others — nobody is penalized for another provider's silence. Dedup on
-     * {@link #dedupKey} still happens as entries are merged, so two catalogues holding
-     * the same title spend a single slot, not two.
+     * others — nobody is penalized for another provider's silence. Entries are folded on
+     * {@link #aggregationKey} as they are merged, so every edition of one series+volume —
+     * and any title two catalogues both hold — spends a single slot, its fields combined by
+     * {@link #mergeResults}.
      */
     private List<CatalogResult> aggregate(List<CatalogProvider> providers, int limit,
             Function<CatalogProvider, List<CatalogResult>> call) {
@@ -148,7 +149,8 @@ public class CatalogService {
         for (int rank = 0; rank < rounds; rank++) {
             for (List<CatalogResult> results : perProvider) {
                 if (rank < results.size()) {
-                    merged.putIfAbsent(dedupKey(results.get(rank)), results.get(rank));
+                    CatalogResult r = results.get(rank);
+                    merged.merge(aggregationKey(r), r, CatalogService::mergeResults);
                 }
             }
         }
@@ -197,6 +199,57 @@ public class CatalogService {
      */
     private static String dedupKey(CatalogResult r) {
         return normalize(r.title()) + '|' + normalize(r.authors());
+    }
+
+    /**
+     * Aggregation key: a result that carries a series and a volume — book catalogues parse both
+     * out of the title (see {@link VolumeParser}), so every printing of "One Piece Tome 1" does,
+     * whatever subtitle or author spelling it arrived with — keys on that series and volume, so
+     * every edition of it collapses onto one slot. A volume-less result falls back to
+     * {@link #dedupKey}, which keeps the author so two different books sharing a title stay apart.
+     */
+    private static String aggregationKey(CatalogResult r) {
+        if (r.volumeNumber() != null && r.seriesTitle() != null && !r.seriesTitle().isBlank()) {
+            return "series:" + normalize(r.seriesTitle()) + '#' + r.volumeNumber();
+        }
+        return dedupKey(r);
+    }
+
+    /**
+     * Folds a duplicate edition into the one already kept. The incumbent is the round-robin
+     * winner and stays the anchor — its provider reference, and so its "other editions" lookup —
+     * but every field it lacks is filled from the newcomer and the larger page count wins. A
+     * series+volume result takes a uniform "Series - Tome N" title, so the ranker scores it as the
+     * clean match the reader typed rather than one catalogue's noisier wording.
+     */
+    private static CatalogResult mergeResults(CatalogResult kept, CatalogResult other) {
+        String seriesTitle = firstNonBlank(kept.seriesTitle(), other.seriesTitle());
+        Integer volume = kept.volumeNumber() != null ? kept.volumeNumber() : other.volumeNumber();
+        String title = seriesTitle != null && volume != null
+                ? seriesTitle + " - Tome " + volume
+                : kept.title();
+        return new CatalogResult(kept.kind(), title,
+                firstNonBlank(kept.authors(), other.authors()),
+                kept.year() != null ? kept.year() : other.year(),
+                firstNonBlank(kept.coverUrl(), other.coverUrl()),
+                firstNonBlank(kept.synopsis(), other.synopsis()),
+                firstNonBlank(kept.isbn13(), other.isbn13()),
+                firstNonBlank(kept.publisher(), other.publisher()),
+                firstNonBlank(kept.language(), other.language()),
+                kept.releaseDate() != null ? kept.releaseDate() : other.releaseDate(),
+                seriesTitle, volume, maxPageCount(kept.pageCount(), other.pageCount()),
+                kept.provider(), kept.providerRef());
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        return a != null && !a.isBlank() ? a : b;
+    }
+
+    private static Integer maxPageCount(Integer a, Integer b) {
+        if (a == null) {
+            return b;
+        }
+        return b == null ? a : Math.max(a, b);
     }
 
     /** Folds a label to its bare alphanumerics: NFD-stripped accents, lowercase, single spaces. */

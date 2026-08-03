@@ -37,4 +37,15 @@ class VolumeParserTest {
         assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse(null));
         assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("   "));
     }
+
+    @Test
+    void readsTheBnfIsbdSeriesDotVolumeForm() {
+        assertEquals(new VolumeParser.Parsed("One Piece", 1),
+                VolumeParser.parse("One Piece. 1, À l'aube d'une grande aventure"));
+        // The comma is required, so a bare "Catch. 22" and a year in "Foundation. 1951, …" do
+        // not read as volumes.
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Catch. 22"));
+        assertEquals(new VolumeParser.Parsed(null, null),
+                VolumeParser.parse("Foundation. 1951, a novel"));
+    }
 }

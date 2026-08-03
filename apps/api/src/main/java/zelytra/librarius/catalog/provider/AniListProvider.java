@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zelytra.librarius.catalog.CatalogProvider;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
+import zelytra.librarius.catalog.VolumeParser;
 import zelytra.librarius.domain.Kind;
 
 import java.time.Duration;
@@ -190,8 +191,10 @@ public class AniListProvider implements CatalogProvider {
                 : null;
         Integer year = m.startDate() != null ? m.startDate().year() : null;
         String cover = m.coverImage() != null ? m.coverImage().large() : null;
+        VolumeParser.Parsed volume = VolumeParser.parse(title);
         return new CatalogResult("MANGA", title, author, year, cover, m.description(), null, null,
-                null, releaseDate(m.startDate()), "anilist", String.valueOf(m.id()));
+                null, releaseDate(m.startDate()), volume.seriesTitle(), volume.volumeNumber(), null,
+                "anilist", String.valueOf(m.id()));
     }
 
     private static LocalDate releaseDate(AniListClient.FuzzyDate d) {
