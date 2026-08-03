@@ -53,7 +53,7 @@ describe('AuthorPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Patrick Rothfuss' })).toBeInTheDocument();
     expect(screen.getByText('0 œuvre')).toBeInTheDocument();
-    expect(screen.getByText('Aucune œuvre connue pour cet auteur dans ta bibliothèque.')).toBeInTheDocument();
+    expect(screen.getByText('Aucune œuvre connue pour cet auteur.')).toBeInTheDocument();
   });
 
   test('following the author flips the button and survives a reload', async () => {
