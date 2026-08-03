@@ -2,6 +2,7 @@
    on Home, the grid tile in Collection, the hero on Detail. */
 
 .art {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -103,4 +104,59 @@
    it wins over the per-variant padding above. */
 .withImage {
   padding: 0;
+}
+
+/* ── Loading state of a real cover ────────────────────────────────────────── */
+
+/* The `<img>` itself: transparent until it has actually decoded, so the
+   coloured block underneath (and the skeleton on top of that) show through
+   rather than a blank flash of whatever the browser paints an unloaded image
+   as. */
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.mediaLoaded {
+  opacity: 1;
+}
+
+/* Shimmering placeholder shown from the moment a cover URL is known until the
+   image has actually decoded — the abrupt pop the fix addresses. Sits over the
+   coloured block, and fades out itself once `.media` reports `onLoad`. */
+.skeleton {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--surface) 50%,
+    transparent 70%
+  );
+  background-color: var(--surface-2);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/* A motion-averse reader gets a plain, static placeholder rather than the
+   sweeping highlight — same as the spinner in states.module.css. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
 }
