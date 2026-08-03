@@ -202,6 +202,26 @@ class CatalogCacheTest {
     }
 
     @Test
+    void doesNotRetainAnEmptyResultInMemory() {
+        // The providers turn a failure into an empty list. Retaining that in the
+        // in-memory level would keep the search empty for the whole time-to-live, long
+        // after the provider recovered — the same reasoning as
+        // doesNotPersistAnEmptyResult, but for the level that guard does not cover.
+        CountingProvider provider = CountingProvider.returning("Piranesi");
+        String key = "search|BOOK|memory-provider-down|20";
+        Supplier<List<CatalogResult>> failing = List::of;
+
+        List<CatalogResult> empty = cache.get(CatalogCache.Scope.SEARCH, PROVIDER, key, failing);
+        assertTrue(empty.isEmpty());
+
+        List<CatalogResult> second =
+                cache.get(CatalogCache.Scope.SEARCH, PROVIDER, key, provider);
+        assertEquals(1, provider.calls().get(),
+                "an empty result must not be pinned in memory: the next lookup must retry");
+        assertEquals("Piranesi", second.get(0).title());
+    }
+
+    @Test
     void rewritesAnEntryThatIsFetchedAgain() {
         // Two writes on the same key must upsert rather than collide on the primary key,
         // which is what happens when two pods miss at the same moment.
