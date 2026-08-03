@@ -187,6 +187,11 @@ postgres:
 # ── Keycloak (auth) ───────────────────────────────────────────────────────────
 keycloak:
   enabled: true
+  # RollingUpdate by default, like the api; the resource-tight staging node cannot
+  # surge a second Keycloak JVM, so its deploy sets `--set keycloak.strategy=Recreate`
+  # to stop the old pod before starting the new one. Safe since sessions persist in
+  # Postgres now — see templates/keycloak.yaml.
+  strategy: RollingUpdate
   image: quay.io/keycloak/keycloak:25.0.6
   admin: admin
   # Admin console password: same rule as postgres above, Secret only.

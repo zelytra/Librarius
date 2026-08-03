@@ -136,11 +136,18 @@ jobs:
       # converge (the Report step adds the pod events).
       - name: Helm upgrade --install
         run: |
+          # Recreate for the two JVM pods: this single node has no CPU headroom to
+          # surge a second api or keycloak replica, so a RollingUpdate leaves the new
+          # pod Pending and the release never converges (issue #187). Stopping the old
+          # pod first trades a few seconds of downtime — acceptable on staging, and
+          # keycloak sessions now survive it in Postgres — for a rollout that fits.
           helm upgrade --install librarius ./infra/helm/librarius \
             --namespace "$NAMESPACE" \
             --create-namespace \
             --set web.image.tag=${{ github.sha }} \
             --set api.image.tag=${{ github.sha }} \
+            --set api.strategy=Recreate \
+            --set keycloak.strategy=Recreate \
             --set postgres.existingSecret=librarius-postgres \
             --set keycloak.existingSecret=librarius-keycloak
 

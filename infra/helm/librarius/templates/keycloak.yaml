@@ -74,6 +74,19 @@ metadata:
     {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
 spec:
   replicas: 1
+  # A single replica cannot roll without a gap anyway, and the default surge asks
+  # the node for a second Keycloak JVM it does not have room for — the release then
+  # sits with the new pod Pending while the old one keeps serving. Recreate
+  # (set on the resource-tight node, see the api's strategy) stops the old pod
+  # first; user sessions survive it since V<persistent-user-sessions> moved them
+  # into Postgres, so the restart is no longer the logout it once was.
+  strategy:
+    type: {{ .Values.keycloak.strategy }}
+    {{- if eq .Values.keycloak.strategy "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    {{- end }}
   selector:
     matchLabels:
       {{- include "librarius.selector" (dict "ctx" . "component" "keycloak") | nindent 6 }}
