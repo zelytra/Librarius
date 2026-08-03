@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
@@ -257,15 +257,30 @@ describe('DiscoverPage', () => {
       expect(calls[0].get('q')).toBeNull();
     });
 
-    test('never searches on a keystroke, only on submit', async () => {
-      // Each miss costs a call to a rate-limited third-party provider.
+    test('searches as the keyword settles, without waiting for the button', async () => {
+      const calls = capturedSearches();
+      renderWithProviders(<DiscoverPage />);
+
+      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'dune');
+
+      // The debounce folds the keystrokes into a single query, fired on its own once the
+      // typing settles — no button press.
+      await waitFor(() => expect(calls).toHaveLength(1), { timeout: 2000 });
+      expect(calls[0].get('q')).toBe('dune');
+    });
+
+    test('holds the auto-search back until a real keyword is typed', async () => {
+      // A lone letter or two, or an advanced criterion with no keyword, must not spend a call
+      // to a rate-limited provider — those stay on the button.
       const calls = capturedSearches();
       renderWithProviders(<DiscoverPage />);
 
       await openAdvanced();
-      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'dune');
+      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'du');
       await userEvent.type(screen.getByLabelText('Auteur'), 'Herbert');
 
+      // Past the debounce window, and still nothing fired on its own.
+      await new Promise((resolve) => setTimeout(resolve, 700));
       expect(calls).toHaveLength(0);
     });
 
