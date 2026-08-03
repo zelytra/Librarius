@@ -9,7 +9,8 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^8.1.5"
+      "vite": "^8.1.5",
+      "brace-expansion@<1.1.17": "^1.1.17"
     }
   },
   "scripts": {
