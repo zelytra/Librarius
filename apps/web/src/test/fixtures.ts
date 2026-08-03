@@ -203,6 +203,8 @@ export function authorWork(overrides: Partial<AuthorWorkDto> = {}): AuthorWorkDt
     volumeNumber: 1,
     originalYear: 2007,
     coverUrl: undefined,
+    libraryItemId: undefined,
+    seriesId: undefined,
     ...overrides,
   };
 }

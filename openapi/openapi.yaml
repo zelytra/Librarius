@@ -70,6 +70,10 @@ components:
           format: int32
         coverUrl:
           type: string
+        libraryItemId:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
     BookView:
       type: object
       properties:

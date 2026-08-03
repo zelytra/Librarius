@@ -208,7 +208,7 @@
       },
       "goal": {
         "title": "Set a goal (optional)",
-        "description": "A number of books, volumes or pages to read this year: the gauge on Home follows your progress.",
+        "description": "A number of books or pages to read this year: the gauge on Home follows your progress.",
         "action": "Set a goal"
       }
     }
@@ -236,7 +236,7 @@
     },
     "empty": {
       "title": "Set yourself a reading goal",
-      "description": "Pick a number of books, volumes or pages for {{year}}: your progress will show up here.",
+      "description": "Pick a number of books or pages for {{year}}: your progress will show up here.",
       "action": "Set a goal"
     },
     "rollover": {
@@ -247,7 +247,7 @@
     },
     "settings": {
       "title": "{{year}} reading goal",
-      "description": "A number of books, volumes or pages to read this year. The gauge on the home screen follows your progress.",
+      "description": "A number of books or pages to read this year. The gauge on the home screen follows your progress.",
       "placeholder": "Number to reach",
       "submit": "Save",
       "saved": "Goal saved: {{target}} {{unit}}.",

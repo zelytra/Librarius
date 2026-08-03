@@ -44,6 +44,8 @@ export interface AuthorWorkDto {
   volumeNumber?: number;
   originalYear?: number;
   coverUrl?: string;
+  libraryItemId?: Uuid;
+  seriesId?: Uuid;
 }
 
 export interface AuthorDetailDto {

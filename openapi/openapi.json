@@ -99,6 +99,12 @@
           },
           "coverUrl" : {
             "type" : "string"
+          },
+          "libraryItemId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "seriesId" : {
+            "$ref" : "#/components/schemas/UUID"
           }
         }
       },

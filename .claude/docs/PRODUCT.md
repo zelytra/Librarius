@@ -44,7 +44,7 @@ being authored in French and translated.
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
 | **Rank** (`rank_category`) | Gold / Silver / Bronze + custom categories | Shared (built-ins) + user |
-| **Reading goal** (`reading_goal`) | Annual target in books, volumes or pages | User |
+| **Reading goal** (`reading_goal`) | Annual target in books or pages | User |
 | **Upcoming release** (`upcoming_release`) | An announced volume of a series, dated and labelled per market (FR/JP/EN) | Shared catalog |
 
 An author is one row per **spelling that folds alike**
@@ -360,9 +360,11 @@ minimal search local to Discover ([#199](https://github.com/zelytra/Librarius/is
   **Follow** toggle in the same visual language as Series's. The toggle's state comes from
   re-reading the author after the mutation, not from a local flip, and so survives a
   reload.
-- ✅ **Bibliography**, in the shared cover grid Collection draws its own titles in. Unlike
-  Series's volume grid, a tile here opens nothing: the author page is a catalog browser,
-  and a title on it is not necessarily one the caller owns.
+- ✅ **Bibliography**, in the shared cover grid Collection draws its own titles in. A tile
+  opens the caller's own item on Detail when they own the work, the series page otherwise
+  when the work belongs to one, and stays a plain, unclickable tile only for a standalone
+  title the caller does not own — the author page is a catalog browser, and such a title
+  has nothing of the caller's to open.
 - ✅ **A known author is never "not found."** Unlike a series, an author is shared-catalog
   data with no ownership gate (see [API](API.md) § Authors): a 404 only ever means the
   identifier itself is unknown.

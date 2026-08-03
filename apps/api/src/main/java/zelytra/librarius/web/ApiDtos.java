@@ -567,13 +567,22 @@ public final class ApiDtos {
      * {@code null} one. {@code authors} is the whole credit line, so the bibliography can show
      * an author's co-writers on each title.
      *
-     * @param coverUrl cover of a representative edition, {@code null} when none carries one
+     * <p>{@code libraryItemId} and {@code seriesId} are what a tile navigates on: the caller's
+     * own item when they own the work, the series screen otherwise when the work belongs to
+     * one. A standalone work the caller does not own carries neither, and a tile for it stays
+     * unclickable — there is nothing of the caller's to open.
+     *
+     * @param coverUrl      cover of a representative edition, {@code null} when none carries one
+     * @param libraryItemId the caller's own item for this work, {@code null} when not owned
+     * @param seriesId      the run this work belongs to, {@code null} for a standalone title
      */
     public record AuthorWorkDto(UUID workId, String kind, String title, String authors,
-            String seriesTitle, Integer volumeNumber, Integer originalYear, String coverUrl) {
-        public static AuthorWorkDto of(Work w, String coverUrl) {
+            String seriesTitle, Integer volumeNumber, Integer originalYear, String coverUrl,
+            UUID libraryItemId, UUID seriesId) {
+        public static AuthorWorkDto of(Work w, String coverUrl, UUID libraryItemId) {
             return new AuthorWorkDto(w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
-                    w.volumeNumber, w.originalYear, coverUrl);
+                    w.volumeNumber, w.originalYear, coverUrl, libraryItemId,
+                    w.series != null ? w.series.id : null);
         }
     }
 

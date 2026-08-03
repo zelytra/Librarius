@@ -46,6 +46,7 @@ public class AuthorRepository implements PanacheRepositoryBase<Author, UUID> {
         return getEntityManager()
                 .createQuery("""
                         select w from Work w
+                          left join fetch w.series
                           join w.authors a
                         where a.id = :authorId
                         order by lower(coalesce(w.seriesTitle, w.title)) asc,

@@ -339,6 +339,36 @@ describe('HomePage', () => {
     server.use(
       http.get('*/api/stats', () => HttpResponse.json(stats({ goalTarget: undefined }))),
       http.get('*/api/goals', () =>
+        HttpResponse.json([goal({ year: YEAR - 1, targetCount: 24, unit: 'PAGES' })])),
+      http.put('*/api/goals/:year', async ({ params, request }) => {
+        saved.push({ year: String(params.year), body: await request.json() });
+        return HttpResponse.json({ id: 'goal-1' });
+      }),
+    );
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Nouvelle année, nouvel objectif')).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`En ${YEAR - 1}, tu visais 24 pages`))).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('Reprendre 24 pages'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toEqual({
+      year: String(YEAR),
+      body: { targetCount: 24, unit: 'PAGES' },
+    });
+  });
+
+  /**
+   * VOLUMES is no longer offered — it counted the same as BOOKS — but a previous year's
+   * goal stored with it still has to carry over into something the form still speaks:
+   * Livres.
+   */
+  test('carries a goal stored as VOLUMES over as Livres', async () => {
+    const saved: { year: string; body: unknown }[] = [];
+    server.use(
+      http.get('*/api/stats', () => HttpResponse.json(stats({ goalTarget: undefined }))),
+      http.get('*/api/goals', () =>
         HttpResponse.json([goal({ year: YEAR - 1, targetCount: 24, unit: 'VOLUMES' })])),
       http.put('*/api/goals/:year', async ({ params, request }) => {
         saved.push({ year: String(params.year), body: await request.json() });
@@ -348,14 +378,14 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText('Nouvelle année, nouvel objectif')).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`En ${YEAR - 1}, tu visais 24 tomes`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`En ${YEAR - 1}, tu visais 24 livres`))).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText('Reprendre 24 tomes'));
+    await userEvent.click(screen.getByText('Reprendre 24 livres'));
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0]).toEqual({
       year: String(YEAR),
-      body: { targetCount: 24, unit: 'VOLUMES' },
+      body: { targetCount: 24, unit: 'BOOKS' },
     });
   });
 

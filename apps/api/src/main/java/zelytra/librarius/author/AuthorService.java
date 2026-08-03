@@ -7,6 +7,7 @@ import zelytra.librarius.domain.Author;
 import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.AuthorFollowRepository;
 import zelytra.librarius.domain.repository.AuthorRepository;
+import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.web.ApiDtos.AuthorDetailDto;
 import zelytra.librarius.web.ApiDtos.AuthorSummaryDto;
 import zelytra.librarius.web.ApiDtos.AuthorWorkDto;
@@ -31,7 +32,8 @@ import java.util.UUID;
  * <p><strong>Scoping.</strong> Unlike {@code SeriesService}, this is a catalog browser: an
  * author is visible to anyone authenticated, on the whole shared catalog, whether or not the
  * caller owns anything of theirs. An unknown identifier is a 404; a known one never is. Only
- * the {@code followed} flag is user-scoped, always through {@code CurrentUser.id()}.
+ * the {@code followed} flag and the {@code libraryItemId} carried on each work of the
+ * bibliography are user-scoped, both always read through {@code CurrentUser.id()}.
  */
 @ApplicationScoped
 public class AuthorService {
@@ -44,6 +46,9 @@ public class AuthorService {
 
     @Inject
     AuthorFollowRepository follows;
+
+    @Inject
+    LibraryItemRepository items;
 
     /**
      * Resolves a free-text credit line, creating the authors nobody has credited yet.
@@ -108,9 +113,11 @@ public class AuthorService {
             return Optional.empty();
         }
         List<Work> works = authors.bibliography(authorId);
-        Map<UUID, String> covers = authors.coverByWork(works.stream().map(w -> w.id).toList());
+        List<UUID> workIds = works.stream().map(w -> w.id).toList();
+        Map<UUID, String> covers = authors.coverByWork(workIds);
+        Map<UUID, UUID> ownedItems = items.itemIdsByWork(userId, workIds);
         List<AuthorWorkDto> bibliography = works.stream()
-                .map(w -> AuthorWorkDto.of(w, covers.get(w.id)))
+                .map(w -> AuthorWorkDto.of(w, covers.get(w.id), ownedItems.get(w.id)))
                 .toList();
         return Optional.of(AuthorDetailDto.of(author, follows.isFollowing(userId, authorId),
                 bibliography));
