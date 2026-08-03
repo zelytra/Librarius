@@ -28,6 +28,9 @@ const DetailPage = lazy(() =>
 const DiscoverPage = lazy(() =>
   import('./features/discover/DiscoverPage').then((m) => ({ default: m.DiscoverPage })),
 );
+const CatalogDetailPage = lazy(() =>
+  import('./features/catalog/CatalogDetailPage').then((m) => ({ default: m.CatalogDetailPage })),
+);
 const SeriesPage = lazy(() =>
   import('./features/series/SeriesPage').then((m) => ({ default: m.SeriesPage })),
 );
@@ -98,6 +101,9 @@ function App() {
           <Route path="collection" element={<CollectionPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="discover" element={<DiscoverPage />} />
+          {/* The catalog fiche of an unowned title, opened from a search result with the
+              result carried in navigation state — a page to read before owning. */}
+          <Route path="catalog/:provider/:ref" element={<CatalogDetailPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="stats" element={<StatsPage />} />
           <Route path="detail/:id" element={<DetailPage />} />

@@ -55,8 +55,15 @@ import { fileURLToPath } from 'node:url';
  * sharing most of its vocabulary with the French it sits next to. What the move actually
  * reflects is that the ceiling had not been re-derived since it was set from a 176.4 kB
  * measurement, while `main` had drifted to 198.4 kB: the check was one merge away from
- * going red on whatever landed next, locale or not. 230 kB is the measurement plus the
+ * going red on whatever landed next, locale or not. 230 kB was the measurement plus the
  * usual ~15%.
+ *
+ * `total` moves again to 245 kB for the catalog detail page: an unowned search result now
+ * opens its own fiche (route + chunk), a permanent precached screen, and the whole build
+ * measured 233.3 kB gz once it landed — the accumulated growth since 199.8 kB (the Author
+ * bibliography's eager API hooks among it) had already spent the old ceiling's slack, and
+ * this route crossed it. Re-derived to the new measurement with headroom, still far under
+ * the eager `initial` ceiling that is the figure the reader actually waits on.
  *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
@@ -67,7 +74,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 162,
   chunk: 10,
-  total: 230,
+  total: 245,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */

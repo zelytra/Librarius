@@ -130,11 +130,24 @@
   gap: 2px;
 }
 
+/* A button so it opens the fiche and stays keyboard-reachable, stripped back to read as the
+   plain title it replaced; the accent on hover is the only hint that it is now a way in. */
 .resultTitle {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
   font-family: var(--font-serif);
   font-size: var(--fs-15-5);
   font-weight: 600;
   line-height: 1.1;
+}
+.resultTitle:hover {
+  color: var(--accent-deep);
 }
 
 /* Holds the medium badge and the author/year line; wraps on a narrow result card rather
