@@ -52,10 +52,14 @@ i18n.on('languageChanged', applyDocumentLocale);
  * preference of [#75](https://github.com/zelytra/Librarius/issues/75) will go through the
  * same call once loaded, rather than reaching for `i18n.changeLanguage` and leaving the
  * stored value behind.
+ *
+ * Resolves once the switch has actually been applied. Fire-and-forget callers stay
+ * unaffected; a caller that needs the interface to be on the new locale before it
+ * continues — a test resetting the shared singleton between cases, for one — can await it.
  */
-export function changeLanguage(language: LanguageId): void {
+export async function changeLanguage(language: LanguageId): Promise<void> {
   storeLanguage(language);
-  void i18n.changeLanguage(language);
+  await i18n.changeLanguage(language);
 }
 
 export default i18n;
