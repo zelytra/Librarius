@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { colorFor } from './coverPalette';
 import styles from './Cover.module.css';
@@ -45,10 +46,41 @@ export function Cover({
   onClick,
   children,
 }: CoverProps) {
-  // Background and dimensions are the only genuinely dynamic parts: the colour
-  // comes from the title, the size from the caller.
-  const background = imageUrl ? `center/cover no-repeat url(${imageUrl})` : colorFor(title);
+  // Loading state of the real cover, tracked through the `<img>` itself so the
+  // skeleton can fade out on `onLoad` and give up on `onError` — a background-image
+  // has neither event, which is why a real `<img>` sits on top of the coloured block
+  // instead. Reset whenever the URL changes: a title swapped for another mid-session
+  // (an edit, a re-match against the catalog) starts a fresh load, not a stale one.
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  useEffect(() => {
+    setLoaded(false);
+    setErrored(false);
+  }, [imageUrl]);
+
+  // The coloured block stays underneath even when a cover image is expected: it is
+  // both the no-cover rendering and the backdrop the skeleton and the fading-in
+  // image sit on.
+  const background = colorFor(title);
   const withImage = imageUrl ? styles.withImage : '';
+  const showSkeleton = Boolean(imageUrl) && !loaded && !errored;
+
+  const media = imageUrl && (
+    <>
+      <img
+        src={imageUrl}
+        // Decorative: the title is already printed on the placeholder underneath and read
+        // from the surrounding caption, so there is nothing here for i18n to own — an empty
+        // alt is the correct value, not a stand-in for one.
+        // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+        alt=""
+        className={`${styles.media} ${loaded ? styles.mediaLoaded : ''}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setErrored(true)}
+      />
+      {showSkeleton && <div className={styles.skeleton} aria-hidden="true" />}
+    </>
+  );
 
   if (variant === 'hero') {
     return (
@@ -58,6 +90,7 @@ export function Cover({
         onClick={onClick}
       >
         {!imageUrl && <div className={styles.heroTitle}>{title}</div>}
+        {media}
       </div>
     );
   }
@@ -79,6 +112,7 @@ export function Cover({
               <div className={styles.tileTitle}>{title}</div>
             </>
           )}
+          {media}
           {children}
         </div>
         <div className={styles.caption}>{caption}</div>
@@ -94,6 +128,7 @@ export function Cover({
         style={{ background, width: shelfWidth, height: shelfWidth * SHELF_RATIO }}
       >
         {!imageUrl && <div className={styles.shelfTitle}>{title}</div>}
+        {media}
         {children}
       </div>
       <div className={styles.caption}>{caption}</div>
