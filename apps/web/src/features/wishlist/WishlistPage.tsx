@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
@@ -13,11 +13,14 @@ import {
   getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   useDeleteApiWishlistId,
+  useGetApiSeries,
   usePostApiWishlistIdAcquire,
   usePutApiWishlistId,
   type WishlistItemDto,
   type WishlistUpdateDto,
 } from '../../api/generated/librarius';
+import { AuthorNames } from '../author/AuthorNames';
+import { seriesIdOf } from '../series/series';
 import styles from './WishlistPage.module.css';
 
 /** Number of wishes fetched per request. */
@@ -140,6 +143,12 @@ function WishlistContent() {
     },
   });
 
+  // The series the reader already tracks, so a wish that is the next volume of one — the
+  // common shape of a wishlist, owning tomes 1–5 and wanting the sixth — links back to it.
+  // A wish that matches no known series (a standalone, or the first volume of a run not yet
+  // started) simply stays unlinked.
+  const { data: seriesList = [] } = useGetApiSeries();
+
   const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
   const count = data?.pages[0]?.total ?? 0;
   // The budget covers the whole wishlist, not the loaded pages: it rides on the envelope
@@ -257,17 +266,23 @@ function WishlistContent() {
             <div className={styles.list}>
               {group.wishes.map((w) => {
               const title = w.book?.title ?? '—';
+              // Either the real cover, or a colour derived from the title.
+              const thumbStyle = {
+                background: w.book?.coverUrl
+                  ? `center/cover no-repeat url(${w.book.coverUrl})`
+                  : colorFor(title),
+              };
+              // Resolved only when the wish is the next volume of a series already followed;
+              // then the cover and the title lead to it, like every other title in the app.
+              const seriesId = seriesIdOf(seriesList, w.book);
+              const seriesLink = seriesId ? `/series/${seriesId}` : undefined;
               return (
                 <div key={w.id} className={styles.row}>
-                  <div
-                    className={styles.thumb}
-                    // Either the real cover, or a colour derived from the title.
-                    style={{
-                      background: w.book?.coverUrl
-                        ? `center/cover no-repeat url(${w.book.coverUrl})`
-                        : colorFor(title),
-                    }}
-                  />
+                  {seriesLink ? (
+                    <Link to={seriesLink} aria-label={title} className={styles.thumb} style={thumbStyle} />
+                  ) : (
+                    <div className={styles.thumb} style={thumbStyle} />
+                  )}
                   {editing === w.id ? (
                     <WishEditor
                       wish={w}
@@ -278,14 +293,18 @@ function WishlistContent() {
                   ) : (
                     <div className={styles.body}>
                       <div className={styles.headline}>
-                        <span className={styles.bookTitle}>{title}</span>
+                        {seriesLink ? (
+                          <Link to={seriesLink} className={styles.bookTitle}>{title}</Link>
+                        ) : (
+                          <span className={styles.bookTitle}>{title}</span>
+                        )}
                         {w.estimatedPrice != null && (
                           <span className={styles.price}>
                             {t('wishlist.price', { price: money(w.estimatedPrice) })}
                           </span>
                         )}
                       </div>
-                      <div className={styles.authors}>{w.book?.authors}</div>
+                      <div className={styles.authors}><AuthorNames text={w.book?.authors} /></div>
                       {w.note && <p className={styles.note}>{w.note}</p>}
 
                       <div className={styles.rowActions}>

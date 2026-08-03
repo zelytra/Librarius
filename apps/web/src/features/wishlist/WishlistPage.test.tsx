@@ -1,9 +1,10 @@
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders } from '../../test/utils';
-import { wishlistItem, wishlistPage } from '../../test/fixtures';
-import { http, HttpResponse, server, wishlistReturns } from '../../test/server';
+import { renderWithProviders, TestProviders } from '../../test/utils';
+import { seriesSummary, wishlistItem, wishlistPage } from '../../test/fixtures';
+import { http, HttpResponse, seriesReturns, server, wishlistReturns } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -37,6 +38,36 @@ describe('WishlistPage', () => {
     renderWithProviders(<WishlistPage />);
 
     expect(await screen.findByText(/Ta liste de souhaits est vide/)).toBeInTheDocument();
+  });
+
+  /**
+   * A wish that continues a series the reader already follows leads back to it — owning the
+   * first volumes and wanting the next is the common shape of a wishlist, and the title is the
+   * way in. The cover carries the same link; the title is the one asserted here since it is
+   * the element that holds the text.
+   */
+  test('links a wish to the series it continues', async () => {
+    wishlistReturns([wishlistItem({
+      book: {
+        kind: 'MANGA',
+        title: 'Vinland Saga — Tome 27',
+        seriesTitle: 'Vinland Saga',
+        authors: 'Makoto Yukimura',
+      },
+    })]);
+    seriesReturns([seriesSummary({ id: 'series-1', kind: 'MANGA', title: 'Vinland Saga' })]);
+    render(
+      <TestProviders route="/wishlist">
+        <Routes>
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/series/:id" element={<p>page de la série</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Vinland Saga — Tome 27'));
+
+    expect(await screen.findByText('page de la série')).toBeInTheDocument();
   });
 
   // ── Desktop layout (#174) ────────────────────────────────────────────────────

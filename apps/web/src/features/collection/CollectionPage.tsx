@@ -21,6 +21,7 @@ import {
   type GetApiLibraryParams,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
+import { AuthorNames } from '../author/AuthorNames';
 import { SeriesList } from '../series/SeriesList';
 import { SERIES_SORTS, filterSeries, type SeriesSort } from '../series/series';
 import styles from './CollectionPage.module.css';
@@ -123,7 +124,7 @@ function CoverTile({
         title={b.title ?? '—'}
         imageUrl={b.coverUrl}
         tag={tag}
-        caption={b.authors}
+        caption={<AuthorNames text={b.authors} />}
         onClick={onOpen}
       >
         {rankColor && (

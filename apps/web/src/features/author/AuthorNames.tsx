@@ -17,7 +17,16 @@ function AuthorNameLink({ name }: { name: string }) {
   const needle = name.trim().toLowerCase();
   const match = matches.find((a) => (a.name ?? '').trim().toLowerCase() === needle);
   if (!match?.id) return <>{name}</>;
-  return <Link to={`/authors/${match.id}`}>{name}</Link>;
+  // A credit line often sits in the caption of a clickable cover, whose own `onClick` opens
+  // the title. Stopping the click here — not preventing it — lets the link reach the author
+  // page without the cover underneath also firing and winning the navigation. Where there is
+  // no such parent (the Author page's own header), stopping a click that bubbles nowhere is
+  // harmless.
+  return (
+    <Link to={`/authors/${match.id}`} onClick={(e) => e.stopPropagation()}>
+      {name}
+    </Link>
+  );
 }
 
 /** A credit line, each name linked to its author page when it resolves to a known one. */
