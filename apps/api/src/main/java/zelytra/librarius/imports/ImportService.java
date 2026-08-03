@@ -48,12 +48,20 @@ public class ImportService {
     }
 
     public ImportResult importFromSource(String userId, String source, String handle) {
+        return persist(userId, source, fetchBooks(source, handle));
+    }
+
+    /**
+     * Reads the source's library into memory — the network-bound half of a scrape, kept apart
+     * from {@link #persist} so a deferred import can walk the pages off the request thread
+     * without a database transaction open across the outbound calls.
+     */
+    List<ImportedBook> fetchBooks(String source, String handle) {
         LibraryImporter importer = importers.stream()
                 .filter(i -> i.source().equalsIgnoreCase(source))
                 .findFirst()
                 .orElseThrow(() -> new ImportException("Source d'import inconnue : " + source));
-        List<ImportedBook> books = importer.fetch(handle);
-        return persist(userId, source, books);
+        return importer.fetch(handle);
     }
 
     public ImportResult importFromCsv(String userId, String csv) {

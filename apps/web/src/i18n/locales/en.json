@@ -662,6 +662,7 @@
       },
       "babelioNote": "Babelio does not allow importing by handle: a library there is not public. Export your list from Babelio, then import the CSV file below.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
+      "running": "Import in progress… {{imported}} title(s) added.",
       "unavailable": "Import is unavailable right now.",
       "unreadableFile": "Unreadable file."
     },

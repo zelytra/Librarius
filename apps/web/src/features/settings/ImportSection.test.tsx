@@ -10,19 +10,28 @@ vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 const { ImportSection } = await import('./ImportSection');
 
 /**
- * Records every import the screen asks for, whichever route it takes. The CSV handler
- * comes first: `:source` would otherwise swallow `/api/import/csv` too.
+ * Records every import the screen starts, and answers the poll that follows: the import runs
+ * as a background job now, so a POST hands back a RUNNING job and the screen reads its outcome
+ * from `GET /api/import/jobs/{id}`. The CSV handler comes first: `:source` would otherwise
+ * swallow `/api/import/csv` too.
  */
 function captureImports() {
   const calls: { route: string; body: string }[] = [];
   server.use(
     http.post('*/api/import/csv', async ({ request }) => {
       calls.push({ route: 'csv', body: await request.text() });
-      return HttpResponse.json({ imported: 2, skipped: 0 });
+      return HttpResponse.json({ id: 'job-csv', status: 'RUNNING', total: 0, imported: 0, skipped: 0 });
     }),
     http.post('*/api/import/:source', async ({ params, request }) => {
       calls.push({ route: String(params.source), body: await request.text() });
-      return HttpResponse.json({ imported: 3, skipped: 1 });
+      return HttpResponse.json({ id: `job-${params.source}`, status: 'RUNNING', total: 0, imported: 0, skipped: 0 });
+    }),
+    // The job is already finished when first polled — the counts are those of whatever started it.
+    http.get('*/api/import/jobs/:id', ({ params }) => {
+      const done = String(params.id) === 'job-csv'
+        ? { imported: 2, skipped: 0 }
+        : { imported: 3, skipped: 1 };
+      return HttpResponse.json({ id: params.id, status: 'DONE', total: done.imported + done.skipped, ...done });
     }),
   );
   return calls;
@@ -46,7 +55,25 @@ describe('ImportSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
 
     await waitFor(() => expect(calls).toEqual([{ route: 'booknode', body: '{"handle":"alice"}' }]));
+    // The result is read from the job, once the poll sees it finish.
     expect(await screen.findByText('3 titre(s) importé(s) · 1 déjà présent(s).')).toBeInTheDocument();
+  });
+
+  /** A job that ends in failure surfaces the reader-facing message the API put on it. */
+  test('shows the message when an import fails', async () => {
+    server.use(
+      http.post('*/api/import/:source', () =>
+        HttpResponse.json({ id: 'job-x', status: 'RUNNING', total: 0, imported: 0, skipped: 0 })),
+      http.get('*/api/import/jobs/:id', () =>
+        HttpResponse.json({ id: 'job-x', status: 'FAILED', total: 0, imported: 0, skipped: 0,
+          error: 'Profil Booknode introuvable.' })),
+    );
+    renderWithProviders(<ImportSection />);
+
+    await userEvent.type(screen.getByLabelText('Pseudo Booknode'), 'fantome');
+    await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
+
+    expect(await screen.findByText('Profil Booknode introuvable.')).toBeInTheDocument();
   });
 
   /**
