@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Lenient date parsing for imports: an ISO date, {@code dd/MM/yyyy}, or the French
@@ -24,6 +26,9 @@ final class ImportDates {
             DateTimeFormatter.ofPattern("dd/MM/uuuu"),
             DateTimeFormatter.ofPattern("uuuu/MM/dd")};
 
+    /** An ISO date sitting inside a larger string — Booknode's "2021-12-02 22:51:48" timestamp. */
+    private static final Pattern ISO_DATE = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})");
+
     private ImportDates() {
     }
 
@@ -32,6 +37,16 @@ final class ImportDates {
             return null;
         }
         String s = raw.trim();
+        // A source that renders a full timestamp carries the date in an ISO run inside it;
+        // take that before the whole-string formatters, which want a bare date.
+        Matcher iso = ISO_DATE.matcher(s);
+        if (iso.find()) {
+            try {
+                return LocalDate.parse(iso.group(1));
+            } catch (RuntimeException ignored) {
+                // A run of digits shaped like a date but out of range; fall through.
+            }
+        }
         for (DateTimeFormatter fmt : NUMERIC) {
             try {
                 return LocalDate.parse(s, fmt);

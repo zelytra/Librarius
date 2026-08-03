@@ -9,35 +9,88 @@
         <div class="header-item book-name">Nom</div>
         <div class="header-item author-name">Auteur(s)</div>
         <div class="header-item list-name">Liste</div>
+        <div class="header-item group-name">Groupe</div>
         <div class="header-item date-added">Date d'ajout</div>
       </div>
 
+      <!-- Read, rated gold (4/5), filed under a custom "romance" list. The status lives in the
+           badge's class, not its text — the real markup a naive scrape got wrong. -->
       <div class="book-item">
         <div class="book-cover"><div><a href="https://booknode.com/abysses_tome_1_03607293">
           <img data-src="https://cdn1.booknode.com/book_cover/5675/mod11/abysses_tome_1.webp"
                alt="" class="media lazyload"></a></div></div>
         <div class="book-name"><a href="https://booknode.com/abysses_tome_1_03607293">Abysses, Tome 1</a></div>
         <div class="author-name"><a href="https://booknode.com/auteur/c-s-quill">C. S. Quill</a></div>
-        <div class="list-name"><div>Lu</div></div>
-        <div class="date-added">12 mars 2024</div>
+        <div class="list-name"><div><label class="listebadge or">or</label></div></div>
+        <div class="group-name"><span class="group-label">romance</span></div>
+        <div class="date-added">
+          <span class="visible-xs-inline">Ajouté le</span>
+          <span class="momentjs-format" data-format="LL">2024-03-12 09:15:00</span>
+        </div>
       </div>
 
+      <!-- Read, but untiered: "lu aussi". Read status, no rating. Custom list "jeunesse". -->
+      <div class="book-item">
+        <div class="book-cover"><div><a href="https://booknode.com/les_miserables_tome_1_054092">
+          <img data-src="https://cdn1.booknode.com/book_cover/5940/mod11/les_miserables.webp"
+               alt="" class="media lazyload"></a></div></div>
+        <div class="book-name"><a href="https://booknode.com/les_miserables_tome_1_054092">Les Misérables, Tome 1 : Fantine</a></div>
+        <div class="author-name"><a href="https://booknode.com/auteur/victor-hugo">Victor Hugo</a></div>
+        <div class="list-name"><div><label class="listebadge luaussi">lu aussi</label></div></div>
+        <div class="group-name"><span class="group-label">jeunesse</span></div>
+        <div class="date-added">
+          <span class="momentjs-format" data-format="LL">2021-12-02 22:51:48</span>
+        </div>
+      </div>
+
+      <!-- Currently reading. -->
       <div class="book-item">
         <div class="book-cover"><div><a href="https://booknode.com/un_jour_je_taimerai_4242">
           <img data-src="https://cdn1.booknode.com/book_cover/9999/mod11/un_jour.webp"
                alt="" class="media lazyload"></a></div></div>
         <div class="book-name"><a href="https://booknode.com/un_jour_je_taimerai_4242">Un jour je t'aimerai</a></div>
         <div class="author-name"><a href="https://booknode.com/auteur/lynn-painter">Lynn Painter</a></div>
-        <div class="list-name"><div>En train de lire</div></div>
-        <div class="date-added">3 janvier 2025</div>
+        <div class="list-name"><div><label class="listebadge encours">en cours de lecture</label></div></div>
+        <div class="group-name"><span class="group-label"></span></div>
+        <div class="date-added">
+          <span class="momentjs-format" data-format="LL">2025-01-03 18:40:12</span>
+        </div>
       </div>
 
+      <!-- Given up on. -->
       <div class="book-item">
         <div class="book-cover"></div>
         <div class="book-name"><a href="https://booknode.com/le_dernier_tome_7777">Le Dernier Tome</a></div>
         <div class="author-name"><a href="https://booknode.com/auteur/jane-doe">Jane Doe</a></div>
-        <div class="list-name"><div>Abandonné</div></div>
-        <div class="date-added">1 février 2023</div>
+        <div class="list-name"><div><label class="listebadge abandonne">abandonné</label></div></div>
+        <div class="group-name"><span class="group-label"></span></div>
+        <div class="date-added">
+          <span class="momentjs-format" data-format="LL">2023-02-01 08:00:00</span>
+        </div>
+      </div>
+
+      <!-- A want, not a title in the library: skipped by the importer. -->
+      <div class="book-item">
+        <div class="book-cover"></div>
+        <div class="book-name"><a href="https://booknode.com/tome_a_venir_5555">Le Tome à venir</a></div>
+        <div class="author-name"><a href="https://booknode.com/auteur/anon">Anon</a></div>
+        <div class="list-name"><div><label class="listebadge envies">envies</label></div></div>
+        <div class="group-name"><span class="group-label"></span></div>
+        <div class="date-added">
+          <span class="momentjs-format" data-format="LL">2025-05-20 12:00:00</span>
+        </div>
+      </div>
+
+      <!-- On the to-read pile: owned, unread. Same custom "jeunesse" list as the second title. -->
+      <div class="book-item">
+        <div class="book-cover"></div>
+        <div class="book-name"><a href="https://booknode.com/a_lire_bientot_6666">À lire bientôt</a></div>
+        <div class="author-name"><a href="https://booknode.com/auteur/author-x">Author X</a></div>
+        <div class="list-name"><div><label class="listebadge alire">à lire</label></div></div>
+        <div class="group-name"><span class="group-label">jeunesse</span></div>
+        <div class="date-added">
+          <span class="momentjs-format" data-format="LL">2025-06-01 10:00:00</span>
+        </div>
       </div>
     </div>
 

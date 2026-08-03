@@ -52,11 +52,17 @@ public interface CatalogProvider {
     }
 
     /**
-     * Every work the provider credits to an author, by name — AniList resolves the name to its
-     * staff and lists their manga; a provider with no author index answers nothing (the default).
-     * Best-effort catalog data, merged with what the local catalog already holds.
+     * Every work the provider credits to an author, by name. The default runs the provider's
+     * own search on the author term alone — Open Library and the BnF both index works by
+     * author, so their bibliography <em>is</em> that search, which is why a book author page
+     * would otherwise show only the volumes already owned. AniList overrides this with a
+     * staff-linked lookup, its author index being a first-class one. Best-effort catalog data,
+     * merged with what the local catalog already holds.
      */
     default List<CatalogResult> worksOfAuthor(String authorName, int limit) {
-        return List.of();
+        if (authorName == null || authorName.isBlank()) {
+            return List.of();
+        }
+        return search(new CatalogQuery(null, authorName, null, null, null, null), limit);
     }
 }
