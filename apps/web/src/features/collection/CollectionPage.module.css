@@ -105,6 +105,22 @@
 /* The flat view's cover grid is the shared `Grid` primitive (`shared/ui/primitives.tsx`):
    nothing left to declare here past what the tokens already give it. */
 
+/* One CoverTile's wrapper — the actual child the grid lays out. Below --bp-tablet the
+   track list is `repeat(3, 1fr)` (see the Grid block of tokens.css): `1fr` still leaves
+   every item its *automatic* minimum width, which defaults to that item's own content
+   unless the item opts out. Cover.module.css's `.caption` is a `white-space: nowrap`
+   author line, so without this, one title with a long byline is enough to stretch its
+   whole column past its 1fr share — the other columns shrink to compensate instead of
+   staying equal, and once every column has done that the grid can outgrow the viewport.
+   `min-width: 0` is what lets `.caption`'s own `text-overflow: ellipsis` do its job
+   instead, and is why every cover in the row comes out the same size. Past --bp-tablet
+   `--grid-cover-columns` switches to `minmax(var(--grid-cover-min), 1fr)`, an *explicit*
+   minimum that already ignores the item's content — this rule only ever matters below the
+   breakpoint it is guarding. */
+.cell {
+  min-width: 0;
+}
+
 /* ── Overlays drawn on a cover ────────────────────────────────────────────── */
 
 /* Inside the cover, not straddling its corner: the cover clips its overflow, so
