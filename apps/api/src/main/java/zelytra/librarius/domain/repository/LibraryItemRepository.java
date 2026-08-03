@@ -10,6 +10,7 @@ import zelytra.librarius.genre.GenreNormalizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,6 +78,30 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     /** The user's item on a given edition, if they own it. */
     public Optional<LibraryItem> findByEdition(String userId, UUID editionId) {
         return find("userId = ?1 and edition.id = ?2", userId, editionId).firstResultOptional();
+    }
+
+    /**
+     * The user's item for each of these works, keyed by work identifier — what an author's
+     * bibliography (shared catalog data) links out to when the caller happens to own the
+     * title. A work owned in several editions keeps whichever item the query returns first;
+     * any one of them opens the same work on Detail.
+     */
+    public Map<UUID, UUID> itemIdsByWork(String userId, Collection<UUID> workIds) {
+        if (workIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, UUID> items = new LinkedHashMap<>();
+        getEntityManager()
+                .createQuery("""
+                        select li.edition.work.id, li.id from LibraryItem li
+                        where li.userId = :userId
+                          and li.edition.work.id in :workIds
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .setParameter("workIds", workIds)
+                .getResultList()
+                .forEach(row -> items.putIfAbsent((UUID) row[0], (UUID) row[1]));
+        return items;
     }
 
     /**

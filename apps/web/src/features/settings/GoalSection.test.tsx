@@ -58,12 +58,26 @@ describe('GoalSection', () => {
 
   /** Opening the form after the fact shows what was chosen, not an empty field. */
   test('starts from the goal already set for the year', async () => {
+    goalsReturn([goal({ year: YEAR, targetCount: 24, unit: 'PAGES' })]);
+    renderWithProviders(<GoalSection />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Nombre à atteindre')).toHaveValue(24));
+    expect(screen.getByText('pages')).toHaveClass(/segmentOn/);
+  });
+
+  /**
+   * VOLUMES is no longer offered — it counted the same as BOOKS — but a goal stored with
+   * it before the unit was retired still has to make sense: it reads as Livres.
+   */
+  test('shows a goal stored as VOLUMES as Livres', async () => {
     goalsReturn([goal({ year: YEAR, targetCount: 24, unit: 'VOLUMES' })]);
     renderWithProviders(<GoalSection />);
 
     await waitFor(() =>
       expect(screen.getByLabelText('Nombre à atteindre')).toHaveValue(24));
-    expect(screen.getByText('tomes')).toHaveClass(/segmentOn/);
+    expect(screen.getByText('livres')).toHaveClass(/segmentOn/);
+    expect(screen.queryByText('tomes')).not.toBeInTheDocument();
   });
 
   /** A goal from a year already over is history: it must not fill this year's form. */

@@ -584,7 +584,10 @@ rather than a gauge at zero.
 manga is a `work` of its own in this model, so a title read is a title read either way.
 Counting only the titles carrying a `volume_number` under `VOLUMES` was tried and dropped —
 it made a "50 volumes" goal quietly ignore every novel read towards it, which is the kind of
-silent subtraction a user has no way to notice.
+silent subtraction a user has no way to notice. Because of that, the web client no longer
+offers `VOLUMES` when setting a goal — only `BOOKS` and `PAGES` — but the enum value stays
+on the API so a goal already stored with it keeps working; the client folds it onto `BOOKS`
+for display.
 
 **"Finished" means `reading_progress.finished_at` on a title that is not `ABANDONED`** — the
 business rule [PRODUCT](PRODUCT.md) § 6.2 describes. `PUT /api/library/{id}/progress` stamps

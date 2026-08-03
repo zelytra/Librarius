@@ -8,12 +8,22 @@ import { activeLanguage } from '../i18n/languages';
  * one figure they act on, and a frozen date is the only way to lock it down.
  */
 
-/** The three units a goal can be expressed in, as the API spells them. */
+/** The units a goal can be expressed in, as the API spells them. */
 export type Unit = (typeof GoalUnit)[keyof typeof GoalUnit];
 
-const UNITS: Unit[] = [GoalUnit.BOOKS, GoalUnit.VOLUMES, GoalUnit.PAGES];
+/**
+ * The units offered to the user. {@link GoalUnit.VOLUMES} stays out of this list on
+ * purpose: it counts identically to {@link GoalUnit.BOOKS} today, so it added a choice
+ * without adding a distinction. The enum value itself is kept on the API for the goals
+ * already stored with it — {@link toUnit} folds them back onto books below.
+ */
+const UNITS: Unit[] = [GoalUnit.BOOKS, GoalUnit.PAGES];
 
-/** Reads the unit off a payload where it is typed as a bare string. */
+/**
+ * Reads the unit off a payload where it is typed as a bare string. A goal stored as
+ * {@code VOLUMES} before the unit was retired reads as {@code BOOKS}, the same as any
+ * other value this build does not offer.
+ */
 export function toUnit(value: string | undefined): Unit {
   return UNITS.find((unit) => unit === value) ?? GoalUnit.BOOKS;
 }

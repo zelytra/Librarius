@@ -208,7 +208,7 @@
       },
       "goal": {
         "title": "Fixe-toi un objectif (facultatif)",
-        "description": "Un nombre de livres, de tomes ou de pages à lire cette année : la jauge de l'accueil suit ta progression.",
+        "description": "Un nombre de livres ou de pages à lire cette année : la jauge de l'accueil suit ta progression.",
         "action": "Définir un objectif"
       }
     }
@@ -236,7 +236,7 @@
     },
     "empty": {
       "title": "Fixe-toi un objectif de lecture",
-      "description": "Choisis un nombre de livres, de tomes ou de pages pour {{year}} : ta progression s'affichera ici.",
+      "description": "Choisis un nombre de livres ou de pages pour {{year}} : ta progression s'affichera ici.",
       "action": "Définir un objectif"
     },
     "rollover": {
@@ -247,7 +247,7 @@
     },
     "settings": {
       "title": "Objectif de lecture {{year}}",
-      "description": "Un nombre de livres, de tomes ou de pages à lire cette année. La jauge de l'accueil suit ta progression.",
+      "description": "Un nombre de livres ou de pages à lire cette année. La jauge de l'accueil suit ta progression.",
       "placeholder": "Nombre à atteindre",
       "submit": "Enregistrer",
       "saved": "Objectif enregistré : {{target}} {{unit}}.",

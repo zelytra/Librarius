@@ -22,11 +22,22 @@ import styles from './AuthorPage.module.css';
 const WASH_FROM = 'aa';
 const WASH_TO = '00';
 
-/** One title of the bibliography — a read-only tile, the shared cover grid of Collection. */
+/**
+ * One title of the bibliography — the shared cover grid of Collection. It opens the
+ * caller's own item when they own the work, the series when the work belongs to one they
+ * do not own, and stays a plain, unclickable tile when neither exists: a standalone title
+ * nobody here has entered yet has nothing to open.
+ */
 function WorkTile({ work }: { work: AuthorWorkDto }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const title = work.title ?? '—';
   const tag = t(work.kind === 'MANGA' ? 'collection.tag.manga' : 'collection.tag.book');
+  const target = work.libraryItemId
+    ? `/detail/${work.libraryItemId}`
+    : work.seriesId
+      ? `/series/${work.seriesId}`
+      : undefined;
   return (
     <Cover
       variant="tile"
@@ -34,6 +45,7 @@ function WorkTile({ work }: { work: AuthorWorkDto }) {
       imageUrl={work.coverUrl}
       tag={tag}
       caption={workCaption(work, tag)}
+      onClick={target ? () => navigate(target) : undefined}
     />
   );
 }

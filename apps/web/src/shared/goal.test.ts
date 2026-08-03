@@ -108,6 +108,11 @@ describe('unit and goal lookup', () => {
     expect(toUnit('CHAPTERS')).toBe('BOOKS');
   });
 
+  /** VOLUMES is no longer offered — a goal stored with it before reads as books. */
+  test('folds a goal stored as VOLUMES onto books', () => {
+    expect(toUnit('VOLUMES')).toBe('BOOKS');
+  });
+
   test('finds this year among the goals', () => {
     const goals = [{ year: 2025, targetCount: 20 }, { year: 2026, targetCount: 30 }];
 

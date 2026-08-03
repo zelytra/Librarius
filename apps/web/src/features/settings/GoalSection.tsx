@@ -13,8 +13,12 @@ import {
 } from '../../api/generated/librarius';
 import styles from './GoalSection.module.css';
 
-/** The units offered, in the order they read: a novel, a volume of a run, a page. */
-const UNITS: Unit[] = [GoalUnit.BOOKS, GoalUnit.VOLUMES, GoalUnit.PAGES];
+/**
+ * The units offered, in the order they read: a novel, a page. {@code VOLUMES} is not
+ * offered — it counts identically to {@code BOOKS} today (see {@code shared/goal.ts}) —
+ * but the enum value stays on the API for goals stored with it before it was retired.
+ */
+const UNITS: Unit[] = [GoalUnit.BOOKS, GoalUnit.PAGES];
 
 /**
  * Where the annual reading goal is set.

@@ -79,6 +79,9 @@ class AuthorApiTest {
                 .body("works.title", hasItem("Author Test - Left Hand"))
                 .body("works.find { it.title == 'Author Test - Left Hand' }.coverUrl", is(cover))
                 .body("works.find { it.title == 'Author Test - Left Hand' }.workId",
+                        notNullValue())
+                // Alice owns both titles, so each carries her own item to open on Detail.
+                .body("works.find { it.title == 'Author Test - Left Hand' }.libraryItemId",
                         notNullValue());
     }
 
@@ -147,12 +150,13 @@ class AuthorApiTest {
                 .body("followed", is(true));
 
         // Bob owns nothing of this author, yet the catalog row is his to open — and Alice's
-        // follow never leaks into his view of it.
+        // follow never leaks into his view of it, nor does her library item.
         given().auth().oauth2(token("bob"))
                 .when().get("/api/authors/" + id)
                 .then().statusCode(200)
                 .body("name", is(author))
-                .body("followed", is(false));
+                .body("followed", is(false))
+                .body("works[0].libraryItemId", is((Object) null));
 
         // Bob's own search of the same author reports no follow either.
         given().auth().oauth2(token("bob")).queryParam("q", "Author Test - Isolation")
