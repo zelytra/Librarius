@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Cover } from '../../shared/ui/Cover';
+import { AuthorNames } from '../author/AuthorNames';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { useGetApiLibrary, type LibraryItemDto } from '../../api/generated/librarius';
 import styles from './HomePage.module.css';
@@ -53,7 +54,7 @@ export function ToReadPile() {
             key={it.id}
             title={it.book?.title ?? '—'}
             imageUrl={it.book?.coverUrl}
-            caption={it.book?.authors}
+            caption={<AuthorNames text={it.book?.authors} />}
             onClick={() => open(it)}
           />
         ))}

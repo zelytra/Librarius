@@ -32,6 +32,36 @@ describe('CollectionPage', () => {
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
   });
 
+  /**
+   * The author under a tile is a link into their page. That caption sits inside the tile's
+   * own click target — the cover that opens the book — so clicking the name has to reach the
+   * author and nothing else: without stopping the event, the tile underneath would fire too
+   * and its navigation to the book would win.
+   */
+  test('opens the author, not the book, when the caption name is clicked', async () => {
+    libraryReturns([ROMAN]);
+    server.use(http.get('*/api/authors', ({ request }) => {
+      const q = (new URL(request.url).searchParams.get('q') ?? '').trim().toLowerCase();
+      return q === 'patrick rothfuss'
+        ? HttpResponse.json([{ id: 'author-1', name: 'Patrick Rothfuss', workCount: 1, followed: false }])
+        : HttpResponse.json([]);
+    }));
+    render(
+      <TestProviders route="/collection">
+        <Routes>
+          <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/authors/:id" element={<p>écran de l'auteur</p>} />
+          <Route path="/detail/:id" element={<p>fiche du livre</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Patrick Rothfuss' }));
+
+    expect(await screen.findByText("écran de l'auteur")).toBeInTheDocument();
+    expect(screen.queryByText('fiche du livre')).not.toBeInTheDocument();
+  });
+
   test('shows only the selected kind and switches to the manga shelf', async () => {
     libraryReturns([ROMAN, MANGA]);
     renderWithProviders(<CollectionPage />);
