@@ -207,13 +207,20 @@ zelytra/librarius/
   answers with more results (or answers first) would otherwise fill the whole page and
   crowd the other one out, however good its answers were. A provider with fewer results,
   including none, just drops out of later rounds and the unused share goes to the others.
-  `dedupKey` is
-  `title|authors` lowercased, which only merges two catalogues when they spell a title *and*
-  an author the same way — which is why `BnfProvider` normalises both halves of that key: it
-  cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit
+  A **search** is then re-ranked by relevance to the free-text query over the whole
+  candidate pool — every provider's answers, not just the first `limit` the round-robin
+  reached — before it is trimmed, so a genuine title match rises to the top whatever provider
+  or rank it came in at; the round-robin order above survives only as the tie-break between
+  equally-relevant entries. `upcoming` and `editionsOf` carry no query and keep the plain
+  round-robin order. `dedupKey` folds both halves — accents stripped, case dropped, every run
+  of punctuation or spacing reduced to one space — so "Astérix — Tome 1" and "Asterix, tome 1"
+  key alike; it still carries the author, which is why `BnfProvider` normalises its side too:
+  it cuts the ISBD statement of responsibility off the title ("Dune / Frank Herbert ; traduit
   par…" → "Dune") and rewrites the authority heading ("Herbert, Frank (1920-1986). Auteur du
   texte") into the plain name Open Library returns, repeats dropped. Skip either and every
-  French novel the two catalogues share is listed twice. `Kind` grew past `BOOK`/`MANGA` to
+  French novel the two catalogues share is listed twice. The manga search also drops AniList's
+  light-novel entries (`format_not_in: [NOVEL]`), which otherwise crowd a title search with
+  prose editions of the same franchise. `Kind` grew past `BOOK`/`MANGA` to
   `COMIC`, `GRAPHIC_NOVEL` and `AUDIOBOOK` (V15/#178), but only the first two have a provider
   registered: a title of a new medium is entered by hand and stored, and Discover simply
   finds nothing for it until a provider or the generic search (#189/#194) lands.

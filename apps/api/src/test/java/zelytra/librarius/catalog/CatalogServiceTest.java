@@ -15,7 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CatalogServiceTest {
 
     private static CatalogResult result(String kind, String title) {
-        return new CatalogResult(kind, title, null, null, null, null, null, null, null, null,
+        return result(kind, title, null);
+    }
+
+    private static CatalogResult result(String kind, String title, String author) {
+        return new CatalogResult(kind, title, author, null, null, null, null, null, null, null,
                 "fake", "ref");
     }
 
@@ -55,6 +59,24 @@ class CatalogServiceTest {
                 results.add(result("BOOK", name + "-title-" + i));
             }
             return results;
+        }
+    }
+
+    /** Answers with a fixed, ordered list — lets a test control rank and content exactly. */
+    private record ListProvider(Kind kind, List<CatalogResult> canned) implements CatalogProvider {
+        @Override
+        public String name() {
+            return "list-" + kind;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return canned.stream().limit(limit).toList();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return canned;
         }
     }
 
@@ -247,5 +269,34 @@ class CatalogServiceTest {
         // Same text, one extra criterion: the second search must not be served the first
         // one's answer.
         assertEquals(2, keys.size());
+    }
+
+    @Test
+    void deduplicatesAcrossAccentAndPunctuationVariants() {
+        // The same title and author from two catalogues, spelled with different accents and
+        // punctuation, must merge into a single entry rather than read as a duplicate.
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, List.of(
+                        result("BOOK", "Astérix — Tome 1", "Goscinny"),
+                        result("BOOK", "Asterix, tome 1", "Goscinny")))),
+                passThroughCache());
+
+        assertEquals(1, service.search(Set.of(Kind.BOOK), CatalogQuery.of("asterix"), 10).size());
+    }
+
+    @Test
+    void ranksResultsMatchingTheQueryAboveOnesThatDoNot() {
+        // A provider that returns in its own, non-relevance order: the genuine match must
+        // still surface first once the merge re-ranks the page on the query.
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, List.of(
+                        result("BOOK", "An Unrelated Title"),
+                        result("BOOK", "The Hobbit")))),
+                passThroughCache());
+
+        List<String> titles = service.search(Set.of(Kind.BOOK), CatalogQuery.of("hobbit"), 10)
+                .stream().map(CatalogResult::title).toList();
+
+        assertEquals("The Hobbit", titles.get(0));
     }
 }
