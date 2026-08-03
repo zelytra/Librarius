@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests routing and aggregation, without CDI or network (fake providers). */
@@ -378,5 +379,22 @@ class CatalogServiceTest {
                 .stream().map(CatalogResult::title).toList();
 
         assertEquals(List.of("Naruto", "Boruto"), titles);
+    }
+
+    /**
+     * A book provider carries no dedicated author index, only the search one — Open Library and
+     * the BnF as they stand — so the default worksOfAuthor routes the name through search. This
+     * is what stops a book author's page from showing only the volumes already owned.
+     */
+    @Test
+    void worksOfAuthorFallsBackToSearchingTheAuthorTerm() {
+        RecordingProvider provider = new RecordingProvider();
+        CatalogService service = new CatalogService(List.of(provider), passThroughCache());
+
+        service.worksOfAuthor(Set.of(Kind.BOOK), "Rebecca Yarros", 10);
+
+        // The author name reached the provider as an author term, not as free text.
+        assertEquals("Rebecca Yarros", provider.received.author());
+        assertNull(provider.received.text());
     }
 }

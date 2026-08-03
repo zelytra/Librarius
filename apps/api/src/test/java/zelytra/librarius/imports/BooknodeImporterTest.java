@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /** Booknode parsing tested against an HTML fixture (without network access). */
 class BooknodeImporterTest {
@@ -22,11 +23,12 @@ class BooknodeImporterTest {
     }
 
     @Test
-    void parsesEveryRowAndSkipsTheColumnHeader() throws Exception {
+    void parsesEveryRowSkipsTheHeaderAndDropsWants() throws Exception {
         List<ImportedBook> books = new BooknodeImporter().parse(fixture());
 
-        // Three data rows — the `.book-header` "Nom / Auteur(s) / Liste" row is not a book.
-        assertEquals(3, books.size());
+        // Six data rows, minus the "Envies" want, which is not a library title: five imported.
+        // The `.book-header` row is not a `.book-item`, so it never counted.
+        assertEquals(5, books.size());
 
         assertEquals("Abysses, Tome 1", books.get(0).title());
         assertEquals("C. S. Quill", books.get(0).author());
@@ -34,13 +36,49 @@ class BooknodeImporterTest {
                 books.get(0).coverUrl());
     }
 
+    /**
+     * The status is read from the badge's CSS class — Booknode's rating tiers (or, argent,
+     * diamant, bronze) and "lu aussi" are all read, which a naive scrape of the badge text
+     * missed, filing every read title as merely owned.
+     */
     @Test
-    void mapsEachShelfToAReadingStatus() throws Exception {
+    void mapsEachBadgeToItsReadingStatus() throws Exception {
         List<ImportedBook> books = new BooknodeImporter().parse(fixture());
 
-        assertEquals(LibraryStatus.READ, books.get(0).status());       // "Lu"
-        assertEquals(LibraryStatus.READING, books.get(1).status());    // "En train de lire"
-        assertEquals(LibraryStatus.ABANDONED, books.get(2).status());  // "Abandonné"
+        assertEquals(LibraryStatus.READ, books.get(0).status());       // "or" tier
+        assertEquals(LibraryStatus.READ, books.get(1).status());       // "lu aussi"
+        assertEquals(LibraryStatus.READING, books.get(2).status());    // "en cours de lecture"
+        assertEquals(LibraryStatus.ABANDONED, books.get(3).status());  // "abandonné"
+        assertEquals(LibraryStatus.OWNED, books.get(4).status());      // "à lire"
+    }
+
+    /** A read book's tier becomes a rating out of five; an untiered "lu aussi" carries none. */
+    @Test
+    void readsTheRatingTierOfAReadBook() throws Exception {
+        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
+
+        assertEquals(Integer.valueOf(4), books.get(0).rating());  // gold
+        assertNull(books.get(1).rating());                        // read, untiered
+        assertNull(books.get(2).rating());                        // reading
+    }
+
+    /** The category comes from the custom list (`.group-name`), never from the rating badge. */
+    @Test
+    void takesTheCategoryFromTheCustomListNotTheBadge() throws Exception {
+        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
+
+        assertEquals("romance", books.get(0).shelf());
+        assertEquals("jeunesse", books.get(1).shelf());
+        assertNull(books.get(2).shelf());  // no custom list
+    }
+
+    /** Booknode renders the acquisition date as an ISO timestamp; only the date is kept. */
+    @Test
+    void readsTheAcquisitionDate() throws Exception {
+        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
+
+        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).acquiredAt());
+        assertEquals(LocalDate.of(2021, 12, 2), books.get(1).acquiredAt());
     }
 
     @Test
@@ -54,14 +92,5 @@ class BooknodeImporterTest {
                         + "<li><a href='/x?page=97'>97</a></li></ul>");
 
         assertEquals(97, BooknodeImporter.highestPage(doc));
-    }
-
-    @Test
-    void readsTheShelfAndTheAcquisitionDate() throws Exception {
-        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
-
-        assertEquals("Lu", books.get(0).shelf());
-        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).acquiredAt());   // "12 mars 2024"
-        assertEquals(LocalDate.of(2025, 1, 3), books.get(1).acquiredAt());    // "3 janvier 2025"
     }
 }

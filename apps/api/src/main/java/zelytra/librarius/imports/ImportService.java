@@ -76,6 +76,19 @@ public class ImportService {
             nextOrder[0] = Math.max(nextOrder[0], c.sortOrder + 1);
         }
 
+        // How many titles each list groups, and the floor a list has to clear to earn a
+        // category. A big library — Booknode exports run to thousands — carries one-off lists
+        // (a single author, a passing whim) that would otherwise each become a shelf and bury
+        // the useful ones; a small CSV keeps every list, its floor being one. Roughly "a
+        // noticeable share of the import": ~8 titles on a 2400-title library, one on a handful.
+        Map<String, Long> shelfCounts = new HashMap<>();
+        for (ImportedBook b : books) {
+            if (b.shelf() != null && !b.shelf().isBlank()) {
+                shelfCounts.merge(b.shelf().trim(), 1L, Long::sum);
+            }
+        }
+        long minForCategory = Math.max(1, books.size() / 300);
+
         int imported = 0;
         int skipped = 0;
         for (ImportedBook book : books) {
@@ -99,7 +112,8 @@ public class ImportService {
             item.status = status;
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();
-            item.rankCategory = categoryFor(userId, book.shelf(), status, categories, nextOrder);
+            item.rankCategory = categoryFor(userId, book.shelf(), shelfCounts, minForCategory,
+                    categories, nextOrder);
             items.persist(item);
             imported++;
         }
@@ -170,14 +184,19 @@ public class ImportService {
     }
 
     /**
-     * The category an imported shelf maps to, creating it on first sight — but only for a shelf
-     * that is not a plain reading state: "Lu", "En cours" and "Abandonné" are the status, not a
-     * category, and would only duplicate it. A custom list, or "À lire" and its kin, becomes one.
+     * The category an imported title's list maps to, created on first sight. A category is a
+     * genuine custom list ("romance", "favorites") — never a reading state, which is the item's
+     * status and would only be duplicated as a shelf, and never a list too small to be worth
+     * one. The decision is on the list itself, not the reading status, so a title that has been
+     * read still lands in the list it was filed under (a read book can sit in "romance").
      */
-    private RankCategory categoryFor(String userId, String shelf, LibraryStatus status,
-            Map<String, RankCategory> cache, int[] nextOrder) {
-        if (shelf == null || shelf.isBlank() || status == LibraryStatus.READ
-                || status == LibraryStatus.READING || status == LibraryStatus.ABANDONED) {
+    private RankCategory categoryFor(String userId, String shelf, Map<String, Long> counts,
+            long minForCategory, Map<String, RankCategory> cache, int[] nextOrder) {
+        if (shelf == null || shelf.isBlank() || isReadingStateWord(shelf)) {
+            return null;
+        }
+        // Below the floor: a one-off list, not a shelf. The title still imports, uncategorised.
+        if (counts.getOrDefault(shelf.trim(), 0L) < minForCategory) {
             return null;
         }
         String code = categoryCode(shelf);
@@ -201,6 +220,25 @@ public class ImportService {
         });
         cache.put(code, resolved);
         return resolved;
+    }
+
+    /** The default reading shelves, whatever a source calls them — a status, not a category. */
+    private static final Set<String> READING_STATE_WORDS = Set.of(
+            "lu", "lus", "read", "terminé", "termine", "to-read", "to read", "à lire", "a lire",
+            "pal", "reading", "currently-reading", "currently reading", "en cours",
+            "en train de lire", "abandoned", "abandonné", "abandonne", "dnf", "envies", "envie",
+            "wishlist");
+
+    /**
+     * Whether a list label is one of the reading states rather than a real list: those are the
+     * item's status, and a category built from one would only duplicate it. Matches the default
+     * names exactly, plus the few fragments — "lire", "cours", "abandon" — that only a status
+     * carries, so a custom list ("romance", "jeunesse", "favorites") is never taken for one.
+     */
+    private static boolean isReadingStateWord(String shelf) {
+        String s = shelf.toLowerCase(Locale.FRENCH).trim();
+        return READING_STATE_WORDS.contains(s) || s.contains("lire") || s.contains("cours")
+                || s.contains("abandon");
     }
 
     /** A shelf label folded to a short code: accents stripped, lowercased, non-alphanumerics dashed. */

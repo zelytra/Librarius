@@ -8,9 +8,11 @@ import org.jsoup.nodes.Element;
 import zelytra.librarius.domain.LibraryStatus;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,11 +113,25 @@ public class BooknodeImporter implements LibraryImporter {
             if (title == null || title.isBlank()) {
                 continue;
             }
-            String author = textOf(row, ".author-name");
-            String shelf = textOf(row, ".list-name");
-            String cover = coverNear(row);
-            books.add(new ImportedBook(title, emptyToNull(author), cover, mapStatus(shelf),
-                    shelf, null, ImportDates.parse(textOf(row, ".date-added"))));
+            // The `.list-name` cell is not a shelf name but a badge whose CSS class carries the
+            // reading status, and — for a read book — Booknode's rating tier (diamant, or,
+            // argent, bronze). What a naive scrape read as the shelf ("lu aussi", "or", …) was
+            // therefore never a status word, which is why every read title came back "to read".
+            Element badge = row.selectFirst(".list-name .listebadge");
+            Set<String> badgeClasses = badge != null ? badge.classNames() : Set.of();
+            String badgeText = badge != null ? badge.text() : textOf(row, ".list-name");
+            LibraryStatus status = statusFromBadge(badgeClasses, badgeText);
+            if (status == null) {
+                // A Booknode "Envie" is a want, not a title in the library: skipped rather than
+                // imported as owned, which would inflate the collection with books not held.
+                continue;
+            }
+            // The list a title was filed under — `.group-name`, a genuine custom shelf — is the
+            // one that becomes a category, not the rating tier the badge above encodes.
+            String list = emptyToNull(textOf(row, ".group-name"));
+            LocalDate acquiredAt = ImportDates.parse(textOf(row, ".date-added"));
+            books.add(new ImportedBook(title, emptyToNull(textOf(row, ".author-name")),
+                    coverNear(row), status, list, ratingFromBadge(badgeClasses), acquiredAt));
         }
         return books;
     }
@@ -143,26 +159,52 @@ public class BooknodeImporter implements LibraryImporter {
         return src.isBlank() ? null : src;
     }
 
+    /** Booknode's read-rating tiers, best to worst: any of them means the book has been read. */
+    private static final Set<String> READ_TIERS = Set.of("diamant", "or", "argent", "bronze");
+
     /**
-     * Maps a Booknode shelf name to a reading status. The default shelves are "Lu",
-     * "En train de lire", "À lire", "Pense-bête" and "Abandonné"; a custom list, having no
-     * reading meaning of its own, is treated as simply owned.
+     * The reading status a Booknode badge stands for, read from its CSS class first (the class
+     * is stable; the visible text is localised and decorated) and its text as a fallback. The
+     * rating tiers and "lu aussi" are all read; "en cours" is being read; "abandonné" given up
+     * on; a want ("Envies") is not a library title at all and answers {@code null} so the
+     * caller can drop it; everything else — "À lire" and its kin — is owned but unread.
      */
-    private static LibraryStatus mapStatus(String shelf) {
-        if (shelf == null) {
-            return LibraryStatus.OWNED;
-        }
-        String s = shelf.toLowerCase(Locale.FRENCH).trim();
-        if (s.contains("abandon")) {
+    private static LibraryStatus statusFromBadge(Set<String> classes, String text) {
+        String t = text == null ? "" : text.toLowerCase(Locale.FRENCH).trim();
+        // Abandoned first: "lecture abandonnée" contains "lecture", which the reading test
+        // below would otherwise claim.
+        if (classes.contains("abandonne") || t.contains("abandon")) {
             return LibraryStatus.ABANDONED;
         }
-        if (s.contains("train de lire") || s.contains("en cours") || s.contains("cours de lecture")) {
+        if (classes.contains("encours") || t.contains("en cours") || t.contains("train de lire")
+                || t.contains("cours de lecture")) {
             return LibraryStatus.READING;
         }
-        if (s.equals("lu") || s.equals("lus") || s.contains("livres lus") || s.contains("terminé")) {
+        if (classes.contains("luaussi") || t.startsWith("lu") || t.contains("coup de c")
+                || classes.stream().anyMatch(READ_TIERS::contains)) {
             return LibraryStatus.READ;
         }
+        if (classes.contains("envies") || t.contains("envie")) {
+            return null;
+        }
         return LibraryStatus.OWNED;
+    }
+
+    /** The rating a read book's tier badge stands for, out of five; null when it carries none. */
+    private static Integer ratingFromBadge(Set<String> classes) {
+        if (classes.contains("diamant")) {
+            return 5;
+        }
+        if (classes.contains("or")) {
+            return 4;
+        }
+        if (classes.contains("argent")) {
+            return 3;
+        }
+        if (classes.contains("bronze")) {
+            return 2;
+        }
+        return null;
     }
 
     private static String emptyToNull(String v) {
