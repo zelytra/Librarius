@@ -86,6 +86,29 @@ class CatalogServiceTest {
         }
     }
 
+    /** Reports a fixed volume count, to check the series-volume routing. */
+    private record VolumeProvider(Kind kind, int volumes) implements CatalogProvider {
+        @Override
+        public String name() {
+            return "volumes-" + kind;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public java.util.OptionalInt seriesVolumes(String title) {
+            return java.util.OptionalInt.of(volumes);
+        }
+    }
+
     /** Keeps the criteria it was handed, to check they survive the trip to the provider. */
     private static final class RecordingProvider implements CatalogProvider {
 
@@ -325,5 +348,17 @@ class CatalogServiceTest {
 
         assertEquals(1, results.size());
         assertEquals("One Piece - Tome 1", results.get(0).title());
+    }
+
+    @Test
+    void seriesVolumesRoutesToTheProviderOfTheKindThatKnows() {
+        CatalogService service = new CatalogService(List.of(
+                new FakeProvider(Kind.BOOK, result("BOOK", "a book")),
+                new VolumeProvider(Kind.MANGA, 20)),
+                passThroughCache());
+
+        assertEquals(20, service.seriesVolumes(Kind.MANGA, "One Piece").getAsInt());
+        // A book catalogue reports no series total, so the kind with no such provider is empty.
+        assertTrue(service.seriesVolumes(Kind.BOOK, "Any Book").isEmpty());
     }
 }

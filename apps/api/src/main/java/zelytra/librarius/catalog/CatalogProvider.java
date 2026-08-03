@@ -41,4 +41,13 @@ public interface CatalogProvider {
     default List<CatalogResult> editionsOf(String workRef, int limit) {
         return List.of();
     }
+
+    /**
+     * The number of volumes a series runs to, by title — AniList knows it for a manga; a book
+     * catalogue does not, hence the default. Read off the request path to fill
+     * {@code series.total_volumes}, never on a render.
+     */
+    default java.util.OptionalInt seriesVolumes(String title) {
+        return java.util.OptionalInt.empty();
+    }
 }

@@ -108,6 +108,22 @@ public class CatalogService {
     }
 
     /**
+     * The number of volumes a series is expected to run to, from whichever provider covers the
+     * kind and knows — AniList for a manga; a book catalogue reports none. Off the request path
+     * (the series-volume refresher), so it is not cached: a total is fetched once a day and
+     * written to {@code series.total_volumes}, not read on every render.
+     */
+    public java.util.OptionalInt seriesVolumes(Kind kind, String title) {
+        for (CatalogProvider provider : providersFor(kind == null ? Set.of() : Set.of(kind))) {
+            java.util.OptionalInt volumes = provider.seriesVolumes(title);
+            if (volumes.isPresent()) {
+                return volumes;
+            }
+        }
+        return java.util.OptionalInt.empty();
+    }
+
+    /**
      * Merges every provider's results round-robin, one rank at a time, rather than
      * exhausting the first provider before touching the next: with a shared limit that
      * used to let whichever provider answered first (or simply returned more) fill the

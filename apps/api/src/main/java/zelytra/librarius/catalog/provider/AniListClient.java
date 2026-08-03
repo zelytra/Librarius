@@ -52,7 +52,7 @@ public interface AniListClient {
     }
 
     record Media(int id, Title title, FuzzyDate startDate, Cover coverImage, String description,
-            Boolean isAdult, Staff staff) {
+            Boolean isAdult, Integer volumes, Staff staff) {
     }
 
     record Title(String romaji, String english) {

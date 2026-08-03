@@ -32,7 +32,7 @@ public class AniListProvider implements CatalogProvider {
 
     private static final String FIELDS = """
             id title { romaji english } startDate { year month day }
-            coverImage { large } description(asHtml: false) isAdult
+            coverImage { large } description(asHtml: false) isAdult volumes
             staff(perPage: 1) { edges { role node { name { full } } } }
             """;
 
@@ -82,6 +82,26 @@ public class AniListProvider implements CatalogProvider {
         return fetch(gql, Map.of("n", limit), AniListProvider::mediaOfPage).stream()
                 .map(this::toResult)
                 .toList();
+    }
+
+    /**
+     * The number of volumes AniList knows a manga runs to — the {@code volumes} field of the top
+     * match for the title. Used off the request path to fill {@code series.total_volumes}; a run
+     * still ongoing (or that AniList has not counted) reports {@code 0}, which is left as unknown.
+     */
+    @Override
+    public java.util.OptionalInt seriesVolumes(String title) {
+        if (title == null || title.isBlank()) {
+            return java.util.OptionalInt.empty();
+        }
+        String gql = "query ($q: String) { Page(perPage: 1) { media("
+                + "type: MANGA, format_not_in: [NOVEL], search: $q, sort: SEARCH_MATCH,"
+                + " isAdult: false) { volumes } } }";
+        List<AniListClient.Media> media = fetch(gql, Map.of("q", title), AniListProvider::mediaOfPage);
+        Integer volumes = media.isEmpty() ? null : media.get(0).volumes();
+        return volumes != null && volumes > 0
+                ? java.util.OptionalInt.of(volumes)
+                : java.util.OptionalInt.empty();
     }
 
     /**
