@@ -49,7 +49,8 @@ public interface OpenLibraryClient {
             @JsonProperty("cover_i") Long coverId,
             List<String> isbn,
             List<String> publisher,
-            List<String> language) {
+            List<String> language,
+            @JsonProperty("number_of_pages_median") Integer numberOfPagesMedian) {
     }
 
     record EditionsResponse(List<EditionEntry> entries) {

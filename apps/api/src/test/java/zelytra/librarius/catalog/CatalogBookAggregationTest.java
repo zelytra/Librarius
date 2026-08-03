@@ -61,7 +61,7 @@ class CatalogBookAggregationTest {
 
     private void openLibraryAnswers(String title, String author) {
         OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc(title, List.of(author), 2023, 42L,
-                List.of("9781234567890"), List.of("Piatkus"), List.of("eng"));
+                List.of("9781234567890"), List.of("Piatkus"), List.of("eng"), 300);
         Mockito.when(openLibrary.search(anyString(), anyInt(), anyString()))
                 .thenReturn(Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of(doc))));
     }
@@ -134,5 +134,18 @@ class CatalogBookAggregationTest {
         bnfIsDown();
 
         assertTrue(titlesFor("both providers down").isEmpty());
+    }
+
+    @Test
+    void carriesTheOpenLibraryPageCount() {
+        // Open Library's number_of_pages_median now travels through to the result, so a title
+        // added from a search finally knows how many pages it has.
+        openLibraryAnswers("Fourth Wing", "Rebecca Yarros");
+        bnfIsDown();
+
+        CatalogResult result =
+                catalog.search(Set.of(Kind.BOOK), CatalogQuery.of("page count"), 10).get(0);
+
+        assertEquals(Integer.valueOf(300), result.pageCount());
     }
 }

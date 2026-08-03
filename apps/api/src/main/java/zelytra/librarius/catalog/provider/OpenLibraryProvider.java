@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zelytra.librarius.catalog.CatalogProvider;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
+import zelytra.librarius.catalog.VolumeParser;
 import zelytra.librarius.domain.Kind;
 
 import java.time.Duration;
@@ -20,7 +21,8 @@ import java.util.Objects;
 public class OpenLibraryProvider implements CatalogProvider {
 
     private static final String FIELDS =
-            "title,author_name,first_publish_year,cover_i,isbn,publisher,language";
+            "title,author_name,first_publish_year,cover_i,isbn,publisher,language,"
+                    + "number_of_pages_median";
 
     /**
      * Open Library indexes languages as MARC codes ({@code fre}, {@code eng}), while a client
@@ -152,8 +154,10 @@ public class OpenLibraryProvider implements CatalogProvider {
                 : d.isbn().stream().filter(s -> s != null && s.length() == 13).findFirst().orElse(null);
         String publisher = d.publisher() == null || d.publisher().isEmpty() ? null : d.publisher().get(0);
         String language = d.language() == null || d.language().isEmpty() ? null : d.language().get(0);
+        VolumeParser.Parsed volume = VolumeParser.parse(d.title());
         return new CatalogResult("BOOK", d.title(), authors, d.firstPublishYear(), cover, null,
-                isbn13, publisher, language, null, "openlibrary", null);
+                isbn13, publisher, language, null, volume.seriesTitle(), volume.volumeNumber(),
+                d.numberOfPagesMedian(), "openlibrary", null);
     }
 
     /**
