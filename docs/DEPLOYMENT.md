@@ -334,6 +334,19 @@ No account is created by the deployment: sign-up is open, register from the web 
 The `alice` / `bob` test accounts only exist in the local stack (`infra/docker-compose.yml`
 plus `infra/keycloak/realm-librarius.json`, bound to localhost).
 
+### 🔒 User sessions survive a restart
+
+Keycloak starts with `--features=persistent-user-sessions` (`templates/keycloak.yaml`), so
+online sessions are written to the `keycloak` PostgreSQL database rather than an in-memory
+Infinispan cache. A pod restart — a `helm upgrade`, a theme change (the `checksum/theme`
+annotation forces one), a manual `rollout restart` — reloads them instead of signing every
+user out; with a single replica and no failover, this is the only thing that keeps a session
+across a redeploy. It is a **preview** feature on the pinned 25.x image (the default from
+Keycloak 26); the `keycloak` database's own Liquibase changelog creates the tables it needs on
+the next boot, so there is no manual migration. Persistent sessions add write volume, not
+concurrent connections — leave `keycloak.dbPoolMaxSize` at its value and watch
+`pg_stat_activity` if the shared pool is ever under pressure (§ "Scaling out").
+
 ### 🎨 Changing the realm of a running Keycloak (manual action)
 
 **The realm is imported once, on an empty database, and never again.** Both the chart and

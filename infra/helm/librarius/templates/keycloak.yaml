@@ -99,7 +99,13 @@ spec:
       containers:
         - name: keycloak
           image: {{ .Values.keycloak.image }}
-          args: ["start", "--import-realm"]
+          # persistent-user-sessions writes online sessions to the keycloak PostgreSQL database
+          # instead of the in-memory Infinispan cache, so a pod restart — a helm upgrade, a theme
+          # change (the checksum annotation below forces one), a manual rollout — reloads them
+          # rather than logging every signed-in user out. A single replica has no failover, so
+          # this is the only thing that keeps a session across a redeploy. Preview feature on the
+          # pinned 25.x image; the default from Keycloak 26.
+          args: ["start", "--import-realm", "--features=persistent-user-sessions"]
           env:
             - name: KEYCLOAK_ADMIN
               value: {{ .Values.keycloak.admin | quote }}
