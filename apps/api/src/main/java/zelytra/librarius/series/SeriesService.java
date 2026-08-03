@@ -153,11 +153,12 @@ public class SeriesService {
         /**
          * Lays the run out.
          *
-         * <p>The list runs from volume 1 to the highest volume anyone knows about — the
-         * announced total, the last volume in the catalog, or the last one the user owns,
-         * whichever is furthest. A volume the user does not own is {@code missing} when it
-         * sits below the highest one they own (a hole in the run) and {@code upcoming}
-         * above it (what is still ahead of them).
+         * <p>The list runs from volume 1 — or from a lower volume when the series carries
+         * one, a prologue numbered 0 being the usual case — to the highest volume anyone
+         * knows about: the announced total, the last volume in the catalog, or the last one
+         * the user owns, whichever is furthest. A volume the user does not own is
+         * {@code missing} when it sits below the highest one they own (a hole in the run) and
+         * {@code upcoming} above it (what is still ahead of them).
          *
          * <p>Works carrying no volume number cannot be placed in that sequence; the ones
          * the user owns are appended at the end so that they are neither lost from the
@@ -197,8 +198,22 @@ public class SeriesService {
                     Math.max(highestKnown, series.totalVolumes != null ? series.totalVolumes : 0));
             last = Math.min(last, MAX_LISTED_VOLUMES);
 
+            // Where the sequence opens. Volume 1 for an ordinary run, but a series can carry
+            // a volume 0 — a prologue, a "tome 0" — that the reader owns, and a loop starting
+            // at 1 would drop it: it is numbered, so it never reaches the unnumbered tail
+            // below, yet the counters still count it. Opening on the lowest numbered volume
+            // anyone knows about, capped at 1, keeps it in the grid. The floor bounds the
+            // span so that a stray number cannot ask for an unbounded response.
+            int lowestOwned = ownedByVolume.keySet().stream().mapToInt(Integer::intValue)
+                    .min().orElse(Integer.MAX_VALUE);
+            int lowestKnown = catalogByVolume.keySet().stream().mapToInt(Integer::intValue)
+                    .min().orElse(Integer.MAX_VALUE);
+            int lowest = Math.min(lowestOwned, lowestKnown);
+            int first = lowest == Integer.MAX_VALUE ? 1
+                    : Math.max(Math.min(1, lowest), last - MAX_LISTED_VOLUMES + 1);
+
             List<SeriesVolumeDto> volumes = new ArrayList<>();
-            for (int volume = 1; volume <= last; volume++) {
+            for (int volume = first; volume <= last; volume++) {
                 LibraryItem item = ownedByVolume.get(volume);
                 Work work = catalogByVolume.get(volume);
                 boolean isOwned = item != null;
@@ -211,6 +226,18 @@ public class SeriesService {
                         isOwned && item.status == LibraryStatus.READ,
                         !isOwned && volume < highestOwned,
                         !isOwned && volume > highestOwned));
+            }
+            // A numbered volume the span could not reach — only a stray number puts an owned
+            // one outside [first, last] — is still listed, so ownership is never dropped.
+            for (Map.Entry<Integer, LibraryItem> entry : ownedByVolume.entrySet()) {
+                int volume = entry.getKey();
+                if (volume < first || volume > last) {
+                    LibraryItem item = entry.getValue();
+                    Work work = catalogByVolume.get(volume);
+                    volumes.add(new SeriesVolumeDto(volume, work != null ? work.title : null,
+                            work != null ? work.id : null, item.id, true,
+                            item.status == LibraryStatus.READ, false, false));
+                }
             }
             for (LibraryItem item : unnumbered) {
                 Work work = item.edition.work;
