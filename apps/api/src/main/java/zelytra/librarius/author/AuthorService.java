@@ -3,7 +3,11 @@ package zelytra.librarius.author;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import zelytra.librarius.catalog.CatalogResult;
+import zelytra.librarius.catalog.CatalogService;
 import zelytra.librarius.domain.Author;
+import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.Work;
 import zelytra.librarius.domain.repository.AuthorFollowRepository;
 import zelytra.librarius.domain.repository.AuthorRepository;
@@ -12,13 +16,16 @@ import zelytra.librarius.web.ApiDtos.AuthorDetailDto;
 import zelytra.librarius.web.ApiDtos.AuthorSummaryDto;
 import zelytra.librarius.web.ApiDtos.AuthorWorkDto;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The authors of the shared catalog, read through one user's follows.
@@ -49,6 +56,16 @@ public class AuthorService {
 
     @Inject
     LibraryItemRepository items;
+
+    @Inject
+    CatalogService catalog;
+
+    /** Whether the author page's bibliography is enriched from the providers (off in tests). */
+    @ConfigProperty(name = "librarius.author.enrich-bibliography", defaultValue = "true")
+    boolean enrichBibliography;
+
+    /** Provider works pulled onto an author page: enough for a full bibliography, bounded. */
+    private static final int MAX_PROVIDER_WORKS = 40;
 
     /**
      * Resolves a free-text credit line, creating the authors nobody has credited yet.
@@ -116,11 +133,32 @@ public class AuthorService {
         List<UUID> workIds = works.stream().map(w -> w.id).toList();
         Map<UUID, String> covers = authors.coverByWork(workIds);
         Map<UUID, UUID> ownedItems = items.itemIdsByWork(userId, workIds);
-        List<AuthorWorkDto> bibliography = works.stream()
+        List<AuthorWorkDto> bibliography = new ArrayList<>(works.stream()
                 .map(w -> AuthorWorkDto.of(w, covers.get(w.id), ownedItems.get(w.id)))
-                .toList();
+                .toList());
+
+        // Add the works a provider credits to the author but the local catalog does not hold
+        // yet: they carry no workId, which the page renders as a title nobody here owns. Behind
+        // a flag, and off the transaction path, so the suite never reaches out to a provider and
+        // no database connection is held across the outbound call.
+        if (enrichBibliography) {
+            Set<String> known = works.stream().map(w -> normalizeTitle(w.title))
+                    .collect(Collectors.toCollection(java.util.HashSet::new));
+            Set<Kind> kinds = works.stream().map(w -> w.kind)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            for (CatalogResult r : catalog.worksOfAuthor(kinds, author.name, MAX_PROVIDER_WORKS)) {
+                if (r.title() != null && known.add(normalizeTitle(r.title()))) {
+                    bibliography.add(new AuthorWorkDto(null, r.kind(), r.title(), r.authors(),
+                            r.seriesTitle(), r.volumeNumber(), r.year(), r.coverUrl(), null, null));
+                }
+            }
+        }
         return Optional.of(AuthorDetailDto.of(author, follows.isFollowing(userId, authorId),
                 bibliography));
+    }
+
+    private static String normalizeTitle(String title) {
+        return title == null ? "" : title.toLowerCase(Locale.ROOT).trim();
     }
 
     /**

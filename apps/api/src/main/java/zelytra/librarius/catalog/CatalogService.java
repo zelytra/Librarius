@@ -124,6 +124,21 @@ public class CatalogService {
     }
 
     /**
+     * Every work the providers credit to an author, by name — AniList lists a manga author's
+     * works — merged and deduplicated like a search, and cached at the search level (keyed apart)
+     * so repeat views of one author page cost nothing.
+     */
+    public List<CatalogResult> worksOfAuthor(Set<Kind> kinds, String name, int limit) {
+        if (name == null || name.isBlank()) {
+            return List.of();
+        }
+        String key = name.toLowerCase(Locale.ROOT).trim();
+        return aggregate(providersFor(kinds), limit, provider -> cache.get(CatalogCache.Scope.SEARCH,
+                provider.name(), "authorworks|" + key + '|' + limit,
+                () -> provider.worksOfAuthor(name, limit)));
+    }
+
+    /**
      * Merges every provider's results round-robin, one rank at a time, rather than
      * exhausting the first provider before touching the next: with a shared limit that
      * used to let whichever provider answered first (or simply returned more) fill the

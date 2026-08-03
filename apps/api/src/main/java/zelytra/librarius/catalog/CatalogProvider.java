@@ -50,4 +50,13 @@ public interface CatalogProvider {
     default java.util.OptionalInt seriesVolumes(String title) {
         return java.util.OptionalInt.empty();
     }
+
+    /**
+     * Every work the provider credits to an author, by name — AniList resolves the name to its
+     * staff and lists their manga; a provider with no author index answers nothing (the default).
+     * Best-effort catalog data, merged with what the local catalog already holds.
+     */
+    default List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+        return List.of();
+    }
 }

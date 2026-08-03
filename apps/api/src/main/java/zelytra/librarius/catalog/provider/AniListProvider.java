@@ -75,6 +75,16 @@ public class AniListProvider implements CatalogProvider {
     }
 
     @Override
+    public List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+        if (authorName == null || authorName.isBlank()) {
+            return List.of();
+        }
+        // The staff resolution and the manga listing are exactly the author search, minus the
+        // narrowing by a title or a year — the whole bibliography rather than one title of it.
+        return byAuthor(new CatalogQuery(null, authorName, null, null, null, null), limit);
+    }
+
+    @Override
     public List<CatalogResult> upcoming(int limit) {
         String gql = "query ($n: Int) { Page(perPage: $n) { media("
                 + "type: MANGA, status: NOT_YET_RELEASED, sort: START_DATE, isAdult: false) { "
