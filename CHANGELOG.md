@@ -15,6 +15,65 @@ versioning pipeline lands before the first release is cut.
 
 <!-- releases:start -->
 
+## [0.8.0] - 2026-08-01
+
+### Features
+
+- **infra**: autoscale api and web, and budget the DB connections (#221)
+- **web**: share one loading indicator and brand the login gate (#223)
+- **web**: ship the interface in English as well as French (#224)
+- **api,web**: track abandoned titles as a fourth reading status (#228)
+- **web**: replace the phone frame with breakpoints and a grid (#227)
+- **web,api**: shelve the to-read pile on the Home dashboard (#232)
+- **web**: navigate from the side on wide viewports (#233)
+- **api,web**: keep the provider reference an entry came from (#234)
+- **web**: explain the product before asking for an account (#236)
+- **web**: rate and shelve a title when a reading ends (#231)
+- **api**: add the BnF as a second book catalog provider (#235)
+- **infra**: dress the Keycloak sign-in pages like the app (#237)
+- **api,db**: make authors catalog entities, not a string (#241)
+- **web**: draw the reading as a stack of books on Home (#240)
+- **api,web**: editable profile with name, language, time zone (#245)
+- **api,web**: enrich a work's editions from its provider (#246)
+- **web**: add a dismissible first-login onboarding tour (#244)
+- **api,db**: grow the medium taxonomy beyond books and manga (#243)
+- **api**: expose author search, bibliography and follow (#249)
+- **web**: desktop layout for Detail, Series and Settings (#251)
+- **web**: desktop layout for Home and Collection (#250)
+- **api**: let catalog search span every medium when no kind is given (#252)
+- **web**: desktop layout for Discover, Wishlist and Stats (#253)
+- **web**: add the author page — portrait, bibliography, follow (#254)
+- **web**: separate collection shelves by support type (#255)
+- **web**: unify Discover into one result feed across every medium (#256)
+- **api**: compute and store a trust flag on app_user (#257)
+- report errors in shared catalog entries (#259)
+- **api**: add the member-to-member follow relationship (#258)
+- **web**: show a trusted badge next to a member's display name (#260)
+- **api**: revoke trust automatically on upheld reports (#261)
+
+### Fixes
+
+- **web**: stop offering Babelio import by handle (#220)
+- **web**: translate the key #223 added while #224 was in flight (#226)
+- **web**: stop printing an i18n key at the user, and catch the next one (#230)
+- **api**: read a BnF record the way the catalogue really writes one (#238)
+- **api**: give each book catalog provider a fair share of the limit (#242)
+
+### Documentation
+
+- a user guide built on the ideas, not the buttons (#229)
+- tick the roadmap for the issues closed in waves 3-6 (#262)
+
+### CI
+
+- **deploy**: raise helm and rollout-status timeouts (#248)
+
+### Chores
+
+- **release**: align the chart and changelog with v0.4.0 (#219)
+
+[Full comparison](https://github.com/zelytra/Librarius/compare/v0.4.0...v0.8.0)
+
 ## [0.4.0] - 2026-07-29
 
 ### Features
