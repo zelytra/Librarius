@@ -89,13 +89,23 @@ public class CatalogCache {
         // a first-level miss. Caffeine loads a given key once even under concurrent callers,
         // so a burst of identical searches inside a pod produces a single provider call.
         AtomicBoolean missed = new AtomicBoolean();
-        List<CatalogResult> value = level1(scope)
-                .<String, List<CatalogResult>>get(provider + '|' + key, ignored -> {
+        String cacheKey = provider + '|' + key;
+        Cache level1 = level1(scope);
+        List<CatalogResult> value = level1
+                .<String, List<CatalogResult>>get(cacheKey, ignored -> {
                     missed.set(true);
                     return throughStore(scope, provider, key, loader);
                 })
                 .await().indefinitely();
         count("memory", !missed.get());
+        if (missed.get() && value.isEmpty()) {
+            // Mirrors the DB level's "never store empty" guard: the providers turn a
+            // failure into an empty list, and Caffeine's expire-after-write would
+            // otherwise pin that empty answer for the whole time-to-live. Dropping the
+            // key here makes the next identical search miss again and retry the
+            // provider, instead of quietly hiding its results for hours.
+            level1.invalidate(cacheKey).await().indefinitely();
+        }
         return value;
     }
 
