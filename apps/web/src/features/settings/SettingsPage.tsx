@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
-import { Screen, Segmented } from '../../shared/ui/primitives';
+import { Button, Screen, Segmented } from '../../shared/ui/primitives';
 import { useTheme } from '../../shared/theme/context';
+import { useApiAuth } from '../../shared/api';
 import { THEMES } from '../../shared/theme/themes';
 import { changeLanguage } from '../../i18n';
 import { LANGUAGES, activeLanguage } from '../../i18n/languages';
@@ -23,6 +24,7 @@ export function SettingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { authed, signOutFully } = useApiAuth();
 
   return (
     <Screen>
@@ -122,6 +124,17 @@ export function SettingsPage() {
         <div className={styles.sectionBlock}>
           <BlockedMembersSection />
         </div>
+
+        {/* Ending the current session. A full sign-out — the Keycloak session included, so
+            the persistent SSO session does not sign the user straight back in. */}
+        {authed && (
+          <div className={styles.sectionBlock}>
+            <h3 className={styles.sectionTitle}>{t('settings.session')}</h3>
+            <Button variant="secondary" size="compact" onClick={signOutFully}>
+              {t('settings.logout')}
+            </Button>
+          </div>
+        )}
 
         {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}
         <div className={styles.sectionBlock}>

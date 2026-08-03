@@ -604,6 +604,8 @@
     "dashboardDescription": "Reorder or hide the home screen sections: resume reading, counters, goal, upcoming releases, recently read.",
     "dashboardAction": "Go to the home screen",
     "onboardingAction": "Replay the guided tour",
+    "session": "Session",
+    "logout": "Sign out",
     "appearance": "Appearance",
     "language": "Language",
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",

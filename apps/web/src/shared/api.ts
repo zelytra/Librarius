@@ -16,5 +16,8 @@ export function useApiAuth() {
     // is already gone: the token in memory stays cryptographically valid until it expires,
     // so it has to be thrown away rather than waited out.
     signOut: () => void auth.removeUser(),
+    // A full RP-initiated sign-out: it ends the Keycloak session too, not just the local
+    // token, so the persistent SSO session does not sign the user straight back in.
+    signOutFully: () => void auth.signoutRedirect(),
   };
 }
