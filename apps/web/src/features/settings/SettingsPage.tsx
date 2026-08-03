@@ -10,6 +10,7 @@ import { ProfileSection } from './ProfileSection';
 import { GoalSection } from './GoalSection';
 import { ImportSection } from './ImportSection';
 import { ExportSection } from './ExportSection';
+import { BlockedMembersSection } from './BlockedMembersSection';
 import { DeleteAccountSection } from './DeleteAccountSection';
 import styles from './SettingsPage.module.css';
 
@@ -115,6 +116,11 @@ export function SettingsPage() {
               onChange={changeLanguage}
             />
           </div>
+        </div>
+
+        {/* Members the caller has blocked, with a way to take it back (#203). */}
+        <div className={styles.sectionBlock}>
+          <BlockedMembersSection />
         </div>
 
         {/* Last, and behind a confirmation: erasing the account (GDPR art. 17). */}

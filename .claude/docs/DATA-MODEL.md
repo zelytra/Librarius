@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19 + V20 + V21)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -12,6 +12,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
            ├─< series_follow >────────────────┼────────┘
            ├─< author_follow >── author >─────┴─< work_author
            ├─< user_follow >──── app_user (self, #200)
+           ├─< user_block >───── app_user (self, #203)
            ├─< rank_category (custom)          library_item ──1:1─ reading_progress
            │        ▲                                │
            │  rank_category (built-ins, user_id NULL)┘
@@ -49,6 +50,7 @@ of a denormalised field to keep in step on every write.
 | `work_author` | `(work_id, author_id)` | — | Both FKs `ON DELETE CASCADE`. idx `(author_id, work_id)` — the bibliography walks it that way (V13) |
 | `author_follow` | `(user_id, author_id)` | `created_at` | No surrogate key: the pair is the identity, exactly like `series_follow` (V13) |
 | `user_follow` | `(follower_id, followee_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (follower_id <> followee_id)` — no self-follow. PK doubles as the "who this user follows" index; separate idx on `followee_id` for "who follows this user" (V18/#200) |
+| `user_block` | `(blocker_id, blocked_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (blocker_id <> blocked_id)` — no self-block. Stored one-directionally but read symmetrically. PK doubles as the "who this user blocks" index; separate idx on `blocked_id` for the reverse half of the block-between predicate (V21/#203) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
 | `report` | `id UUID` | `reporter_id` FK `app_user`, `contributor_id` FK `app_user` **nullable** (V19), `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED\|UPHELD, default OPEN), `created_at` | idx `(target_type, target_id)`, `(reporter_id)` and `(contributor_id)` (V19). No FK on `target_id`: it spans three tables, resolved in the service (V17/#192). `contributor_id` `ON DELETE SET NULL`, read by the trust revocation (V19/#195) |
 
@@ -423,13 +425,42 @@ and it is the account's own choice, set through `PATCH /api/me` alongside the di
 locale. What the gate *reveals* — reviews, the reading feed — is other issues; this migration and
 service are the mechanism only.
 
+`V21__user_block.sql` draws the **second** link between two accounts
+([#203](https://github.com/zelytra/Librarius/issues/203)), the block, on the same shape as the
+follow (V18): `(blocker_id, blocked_id)`, both FK `app_user` `ON DELETE CASCADE`, `created_at`,
+the pair-is-the-key form, and a `CHECK (blocker_id <> blocked_id)` refusing a self-block in the
+schema behind the 400 the API returns. It **takes V21**, right after the visibility gate's V20
+above (#201) — the two land in that order, gate then block, with no gap between them.
+
+**Stored one-directionally, read symmetrically.** Only the blocker's row exists — alice blocking
+bob writes `(alice, bob)` and nothing else, so only alice ever learns of the block — but a block
+hides content **both ways**. Whoever gates one member's content on another therefore reads the
+table through `UserBlockRepository.isBlockBetween(a, b)`, which tests *either* ordering, never
+`isBlocking`: the blocked party is as cut off from the blocker's shared content as the reverse.
+That predicate is the reusable one the visibility gate ([#201](https://github.com/zelytra/Librarius/issues/201))
+and later the feed and reviews consult, and it runs **before** #201's own rule and
+short-circuits it.
+
+**A block overrides a follow, without touching the follow rows.** Existing `user_follow` edges
+are left as-is — no silent unfollow — and `UserFollowService.follow` refuses a **new** follow
+with 400 for as long as a block stands between the two accounts, in either direction. Unblocking
+removes the one row and restores whatever the follow and (future) public-account rules would
+otherwise grant. The primary key indexes "who this user blocks"; the separate index on
+`blocked_id` covers the reverse ordering the symmetric predicate needs. The author-specific
+clause the specification also names — a blocked author barred from reviewing a book about them —
+is **out of scope** until an account can be tied to an author identity (the v0.8 milestone);
+this migration ships the generic block only.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all
 of their data — handy for GDPR account deletion. `user_follow` points at `app_user` **twice**, so
 deleting an account removes both the follows it issued (`follower_id`) and the follows aimed at
-it (`followee_id`) in the same statement, leaving no dangling edge behind (#200). The one
-deliberate exception is `report.contributor_id` (V19), `ON DELETE SET NULL`: a report is feedback
+it (`followee_id`) in the same statement, leaving no dangling edge behind (#200). `user_block`
+(V21) points at `app_user` **twice** the same way, so erasing an account removes both the blocks
+it issued (`blocker_id`) and the blocks aimed at it (`blocked_id`), leaving nothing dangling
+either (#203). The one deliberate exception is `report.contributor_id` (V19),
+`ON DELETE SET NULL`: a report is feedback
 about a shared catalog object that outlives its contributor's account, so erasing that account
 forgets who the report was against rather than erasing the report. `report.reporter_id`, on the
 same table, stays `CASCADE` — erasing an account still erases the reports it *filed*.
@@ -458,15 +489,16 @@ row, so the intent is readable from the code and not only from a DDL clause.
 
 ## 3. Planned changes
 
-> Numbering: V8 to V19 are taken — the upcoming releases, the category constraint, the
+> Numbering: V8 to V21 are taken — the upcoming releases, the category constraint, the
 > dashboard layout, the abandoned status, the provider reference, the author entities, the
 > user time zone, the medium taxonomy (V15, #178), the trust flag (V16, #180), the report
-> table (V17, #192), the member follow (V18, #200) and the report contributor (V19, #195). The
-> plan below therefore starts at **V20**. Both planned entries have been renumbered up as each
-> migration landed — as they were at V19, V16, V15, V14, V13, V12 and V11 — and since neither is
-> implemented, nothing that shipped had to move.
+> table (V17, #192), the member follow (V18, #200), the report contributor (V19, #195), the
+> visibility gate (V20, #201) and the member block (V21, #203). The plan below therefore starts
+> at **V22**. Both planned entries have been renumbered up as each migration landed — as they
+> were at V21, V20, V19, V16, V15, V14, V13, V12 and V11 — and since neither is implemented,
+> nothing that shipped had to move.
 
-### V20 — Drop the denormalised labels & reading history
+### V22 — Drop the denormalised labels & reading history
 
 `work.series_title` and `work.genres` go away as soon as the front end reads `series_id`
 (#45, #46) and the genre codes:
@@ -494,11 +526,12 @@ CREATE TABLE reading_session (
 );
 ```
 
-### V21 — Notifications
+### V23 — Notifications
 
 `notification_pref (user_id PK, prefs JSONB)`, the last table this slot still reserves.
 The two others it used to hold have shipped ahead of it: `upcoming_release` as V8 (#57) and
-`dashboard_layout` as V10 (#54) — see § 1.
+`dashboard_layout` as V10 (#54) — see § 1. It moved from V21 to V23 as the visibility gate
+(V20, #201) and the member block (V21, #203) each took a real number ahead of it.
 
 ## 4. Rules for writing migrations
 

@@ -56,6 +56,7 @@ export const defaultHandlers = [
   http.get(`${BASE}/dashboard/layout`, () => HttpResponse.json(dashboardLayout())),
   http.get(`${BASE}/me`, () =>
     HttpResponse.json({ id: 'alice', displayName: 'alice', email: 'alice@test.fr', locale: 'fr' })),
+  http.get(`${BASE}/me/blocked`, () => HttpResponse.json([])),
 
   http.post(`${BASE}/library`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),
   http.post(`${BASE}/wishlist`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),

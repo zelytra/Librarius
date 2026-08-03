@@ -40,6 +40,7 @@ being authored in French and translated.
 | **Author** (`author`) | A person credited on works, related to a work through `work_author` | Shared catalog |
 | **Follow** (`series_follow`, `author_follow`) | The user ↔ series and user ↔ author links: "tell me about what comes next" | User |
 | **Member follow** (`user_follow`) | The user ↔ user link: "I want to keep an eye on this member". One-directional; a mutual pair is what "friends" means. Distinct from the two follows above — those point at the catalog, this points at another account ([#200](https://github.com/zelytra/Librarius/issues/200)) | User |
+| **Member block** (`user_block`) | The user ↔ user link that *hides*: "I don't want this member to see me, or to see them". Stored one way but hides content both ways, and overrides a follow ([#203](https://github.com/zelytra/Librarius/issues/203)) | User |
 | **Library item** (`library_item`) | The user ↔ edition link: status, rating, acquisition date, rank | User |
 | **Progress** (`reading_progress`) | Current page / percentage, start and finish dates | User |
 | **Wish** (`wishlist_item`) | Priority, estimated price, note | User |
@@ -96,6 +97,20 @@ answer whether the id is unknown or simply out of reach — so the product confi
 who has an account. This step ships the **preference and the rule** only; the screens that let a
 member *browse* other people (#202) and the places that actually surface a member's reviews
 (#205) and reading feed (#209) are their own issues, each reusing this one rule.
+
+**Members can block each other** (v1.2, [#203](https://github.com/zelytra/Librarius/issues/203)):
+a member can block another and later unblock them. A block **hides content both ways** — while
+alice blocks bob, neither sees the other's shared reviews, activity or comments, whatever follow
+or public-account setting stands between them — and it **overrides a follow**: an existing follow
+is left in place but stops granting anything while the block stands, and a new follow in either
+direction is refused. **Whether you blocked someone is visible only to you**: the block is stored
+as your intent alone, the blocked party is never told, they simply find your content unavailable
+the way any private account's is. The minimal interface #203 adds is a **Blocked members** list
+in Settings, where a caller sees who they block and can take it back; the block button that puts
+a member there lives on their profile ([#202](https://github.com/zelytra/Librarius/issues/202)).
+One clause of the specification is deliberately left for later — a blocked author barred from
+reviewing a book about them — because nothing today ties an account to an author identity; it is
+revisited once the authors-as-accounts work (v0.8) makes that link exist.
 
 ## 4. Screens
 
@@ -546,9 +561,9 @@ year 🔜.
 
 ## 7. Out of scope (explicit decisions)
 
-- Social network beyond the v1.2 follow: member-to-member following ships (#200), and
-  mutual-follow visibility of a public account is #201 — but library sharing at large,
-  messaging and public comments stay out.
+- Social network beyond the v1.2 follow: member-to-member following ships (#200), blocking
+  ships (#203), and mutual-follow visibility of a public account is #201 — but library sharing
+  at large, messaging and public comments stay out.
 - Lending books between users.
 - Reading content (the app manages *ownership*, not files).
 - Marketplace / built-in purchasing: prices are **entered** by the user, not fetched.

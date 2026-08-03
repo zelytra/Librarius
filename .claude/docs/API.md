@@ -17,8 +17,11 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
-| PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 404 on an unknown id |
+| GET | `/api/me/blocked` | The members the caller blocks (`MemberSummaryDto`) — see [Blocking members](#blocking-members) |
+| PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 400 while a block stands, 404 on an unknown id |
 | DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
+| PUT | `/api/users/{id}/block` | Block another member — 204, idempotent. 400 on self, 404 on an unknown id |
+| DELETE | `/api/users/{id}/block` | Unblock another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
@@ -273,6 +276,41 @@ This issue ships the **preference and the gate mechanism only**. What the gate a
 reading feed ([#209](https://github.com/zelytra/Librarius/issues/209)) — is other issues, and
 each will call `canView` and apply the 404 at its own read endpoint. `VisibilityGateTest`
 covers the full matrix (self, public, mutual, one-way, none, unknown, null).
+
+## Blocking members
+
+The block ([#203](https://github.com/zelytra/Librarius/issues/203)) is the second link the
+schema draws between two accounts, and the one that **hides content**: it lets a member stop
+another from seeing its shared reviews, activity and comments, and from following it — both
+ways, whatever follow or public-account setting stands between them.
+
+`PUT /api/users/{id}/block` and `DELETE /api/users/{id}/block` start and stop blocking the
+member `{id}`, always as the caller (`CurrentUser.id()`). Both are **idempotent** and answer
+**204**: a repeated `PUT`, or a `DELETE` of a block that is not there, is a no-op. Blocking
+**yourself** is a **400** — the `user_block` row is impossible to store anyway, a `CHECK` in
+the schema — and an id that is **nobody** is a **404**, never a 403, exactly like the follow
+endpoints: the answer says nothing about who exists.
+
+`GET /api/me/blocked` returns the caller's own blocked list as `MemberSummaryDto` — the same
+shape the follow lists use, `id`/`displayName`/`trusted`, no reach-them field. **Whether an
+account is blocked is visible only to the blocker**: the block is stored one-directionally
+(`blocker → blocked`), only the blocker's row exists, and the blocked party is never told — it
+sees the blocker's content become unavailable, no more than that, the same as any private
+account. So there is no "who blocks me" list, on purpose.
+
+**A block is symmetric in effect though asymmetric in storage, and it overrides a follow.** The
+reusable predicate `UserBlockRepository.isBlockBetween(a, b)` tests *either* ordering — it is
+what the visibility gate ([#201](https://github.com/zelytra/Librarius/issues/201)) and later the
+feed and reviews read a block through, running **before** #201's own rule and short-circuiting
+it either way. Existing `user_follow` rows are left untouched (no silent unfollow), but
+`PUT /api/users/{id}/follow` is refused with **400** while a block stands between the two
+accounts, in **either** direction; unblocking lifts the refusal and restores whatever the follow
+rule would otherwise grant. `UserBlockApiTest` pins the round-trip, idempotence, self-refusal,
+the unknown-id 404, the alice/bob/carol isolation of the blocked list and the
+block-overrides-follow case; `UserBlockTest` pins the symmetry of the predicate and its
+reversibility. The author-specific clause the specification also names — a blocked author barred
+from reviewing a book about them — is **out of scope** until an account can be tied to an author
+identity.
 
 ## Reading progress
 
