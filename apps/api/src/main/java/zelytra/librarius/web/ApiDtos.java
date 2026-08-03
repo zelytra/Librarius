@@ -726,6 +726,23 @@ public final class ApiDtos {
     }
 
     /**
+     * A deferred import, handed back the moment it is scheduled and polled through
+     * {@code GET /api/import/jobs/{id}} until it finishes. A large scrape walks dozens of pages
+     * and inserts thousands of rows, well past what a request can hold open, so it never runs
+     * inside one.
+     *
+     * @param id       identifier to poll; the caller's own, 404 to anyone else
+     * @param status   {@code RUNNING}, {@code DONE} or {@code FAILED}
+     * @param total    titles read from the source, known once the scrape finishes (0 until then)
+     * @param imported titles added so far
+     * @param skipped  titles already present, left untouched
+     * @param error    a reader-facing message when the import failed, else null
+     */
+    public record ImportJobDto(UUID id, String status, int total, int imported, int skipped,
+            String error) {
+    }
+
+    /**
      * What deleting the account actually erased.
      *
      * <p>Returned rather than a bare 204 so the confirmation screen can state what has gone,

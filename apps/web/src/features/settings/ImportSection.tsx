@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,13 +10,16 @@ import { useApiAuth } from '../../shared/api';
 import {
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
+  useGetApiImportJobsJobId,
   usePostApiImportCsv,
   usePostApiImportSource,
-  type ImportResult,
 } from '../../api/generated/librarius';
 import styles from './ImportSection.module.css';
 
 type Source = 'booknode' | 'babelio';
+
+/** How often a running import is polled — brisk enough to feel live, gentle on the server. */
+const POLL_MS = 1500;
 
 /**
  * Booknode publishes its members' libraries, so one can be fetched from a handle alone.
@@ -27,10 +30,6 @@ type Source = 'booknode' | 'babelio';
  */
 function importsByHandle(source: Source): boolean {
   return source !== 'babelio';
-}
-
-function resultMessage(t: TFunction, r: ImportResult): string {
-  return t('settings.import.result', { imported: r.imported ?? 0, skipped: r.skipped ?? 0 });
 }
 
 /** The API reports import problems through the message of a 400 response. */
@@ -54,31 +53,50 @@ export function ImportSection() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<Source>('booknode');
   const [handle, setHandle] = useState('');
+  // The import runs in the background; the screen follows a job identifier instead of holding
+  // the request open. `message`/`error` carry the terminal outcome once it stops.
+  const [jobId, setJobId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { mutateAsync: importFromSource, isPending: scraping } = usePostApiImportSource();
-  const { mutateAsync: importCsv, isPending: uploading } = usePostApiImportCsv();
-  const busy = scraping || uploading;
+  const { mutateAsync: importFromSource, isPending: startingScrape } = usePostApiImportSource();
+  const { mutateAsync: importCsv, isPending: startingCsv } = usePostApiImportCsv();
+
+  // Follows the running import, stopping the poll the moment it is no longer RUNNING.
+  const { data: job } = useGetApiImportJobsJobId(jobId ?? '', {
+    query: {
+      enabled: jobId != null,
+      refetchInterval: (query) => (query.state.data?.status === 'RUNNING' ? POLL_MS : false),
+    },
+  });
+
+  useEffect(() => {
+    if (!job || job.status === 'RUNNING') return;
+    if (job.status === 'DONE') {
+      setMessage(t('settings.import.result', { imported: job.imported ?? 0, skipped: job.skipped ?? 0 }));
+      // The titles are in: the collection and the counters must be refreshed.
+      void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+    } else {
+      setError(job.error ?? t('settings.import.unavailable'));
+    }
+    setJobId(null); // Stop polling; the job has finished.
+  }, [job, queryClient, t]);
+
+  const running = jobId != null;
+  const busy = running || startingScrape || startingCsv;
 
   function reset() {
     setMessage(null);
     setError(null);
   }
 
-  /** An import adds titles: the collection and the counters must be refreshed. */
-  function refreshLibrary() {
-    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
-  }
-
   async function runScrape() {
     if (!handle.trim()) return;
     reset();
     try {
-      const result = await importFromSource({ source, data: { handle: handle.trim() } });
-      setMessage(resultMessage(t, result));
-      refreshLibrary();
+      const started = await importFromSource({ source, data: { handle: handle.trim() } });
+      if (started.id) setJobId(started.id);
     } catch (e) {
       setError(failureMessage(t, e, t('settings.import.unavailable')));
     }
@@ -90,9 +108,8 @@ export function ImportSection() {
     reset();
     try {
       const text = await file.text();
-      const result = await importCsv({ data: text });
-      setMessage(resultMessage(t, result));
-      refreshLibrary();
+      const started = await importCsv({ data: text });
+      if (started.id) setJobId(started.id);
     } catch (err) {
       setError(failureMessage(t, err, t('settings.import.unreadableFile')));
     } finally {
@@ -154,8 +171,15 @@ export function ImportSection() {
             className={styles.hiddenInput}
           />
 
-          {message && <p className={styles.success}>{message}</p>}
-          {error && <p className={styles.failure}>{error}</p>}
+          {/* A large library takes a while: the screen says it is working, and counts up as
+              titles land, rather than looking frozen behind one long request. */}
+          {running && (
+            <p className={styles.progress} role="status">
+              {t('settings.import.running', { imported: job?.imported ?? 0 })}
+            </p>
+          )}
+          {!running && message && <p className={styles.success}>{message}</p>}
+          {!running && error && <p className={styles.failure}>{error}</p>}
         </div>
       )}
     </>

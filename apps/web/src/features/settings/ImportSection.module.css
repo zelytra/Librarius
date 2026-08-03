@@ -68,6 +68,12 @@
   margin: 0;
 }
 
+.progress {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  margin: 0;
+}
+
 .failure {
   font-size: var(--fs-13);
   color: var(--rose);

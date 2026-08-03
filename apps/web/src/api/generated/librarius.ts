@@ -295,6 +295,15 @@ export interface GoalUpsertDto {
   unit?: GoalUnit;
 }
 
+export interface ImportJobDto {
+  id?: Uuid;
+  status?: string;
+  total?: number;
+  imported?: number;
+  skipped?: number;
+  error?: string;
+}
+
 export interface ImportResult {
   source?: string;
   imported?: number;
@@ -2220,9 +2229,9 @@ export const getPostApiImportCsvUrl = () => {
 /**
  * @summary Csv
  */
-export const postApiImportCsv = async (postApiImportCsvBody: string, options?: RequestInit): Promise<ImportResult> => {
+export const postApiImportCsv = async (postApiImportCsvBody: string, options?: RequestInit): Promise<ImportJobDto> => {
 
-  return apiClient<ImportResult>(getPostApiImportCsvUrl(),
+  return apiClient<ImportJobDto>(getPostApiImportCsvUrl(),
   {
     ...options,
     method: 'POST',
@@ -2279,6 +2288,107 @@ export const usePostApiImportCsv = <TError = void,
       > => {
       return useMutation(getPostApiImportCsvMutationOptions(options), queryClient);
     }
+
+export const getGetApiImportJobsJobIdUrl = (jobId: Uuid,) => {
+
+
+
+
+  return `/api/import/jobs/${jobId}`
+}
+
+/**
+ * @summary Job
+ */
+export const getApiImportJobsJobId = async (jobId: Uuid, options?: RequestInit): Promise<ImportJobDto> => {
+
+  return apiClient<ImportJobDto>(getGetApiImportJobsJobIdUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiImportJobsJobIdQueryKey = (jobId: Uuid,) => {
+    return [
+    `/api/import/jobs/${jobId}`
+    ] as const;
+    }
+
+
+export const getGetApiImportJobsJobIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError = void>(jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiImportJobsJobIdQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiImportJobsJobId>>> = () => getApiImportJobsJobId(jobId, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiImportJobsJobIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiImportJobsJobId>>>
+export type GetApiImportJobsJobIdQueryError = void
+
+
+export function useGetApiImportJobsJobId<TData = Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError = void>(
+ jobId: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiImportJobsJobId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiImportJobsJobId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiImportJobsJobId<TData = Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiImportJobsJobId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiImportJobsJobId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiImportJobsJobId<TData = Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Job
+ */
+
+export function useGetApiImportJobsJobId<TData = Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError = void>(
+ jobId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiImportJobsJobId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiImportJobsJobIdQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getPostApiImportJsonUrl = () => {
 
@@ -2363,9 +2473,9 @@ export const getPostApiImportSourceUrl = (source: string,) => {
  * @summary Scrape
  */
 export const postApiImportSource = async (source: string,
-    scrapeRequest: ScrapeRequest, options?: RequestInit): Promise<ImportResult> => {
+    scrapeRequest: ScrapeRequest, options?: RequestInit): Promise<ImportJobDto> => {
 
-  return apiClient<ImportResult>(getPostApiImportSourceUrl(source),
+  return apiClient<ImportJobDto>(getPostApiImportSourceUrl(source),
   {
     ...options,
     method: 'POST',

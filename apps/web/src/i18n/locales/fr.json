@@ -662,6 +662,7 @@
       },
       "babelioNote": "Babelio ne permet pas l'import par pseudo : sa bibliothèque n'est pas publique. Exporte ta liste depuis Babelio, puis importe le fichier CSV ci-dessous.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
+      "running": "Import en cours… {{imported}} titre(s) ajouté(s).",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible."
     },

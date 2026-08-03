@@ -390,6 +390,24 @@ components:
           minimum: 1
         unit:
           $ref: "#/components/schemas/GoalUnit"
+    ImportJobDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        status:
+          type: string
+        total:
+          type: integer
+          format: int32
+        imported:
+          type: integer
+          format: int32
+        skipped:
+          type: integer
+          format: int32
+        error:
+          type: string
     ImportResult:
       type: object
       properties:
@@ -1464,12 +1482,36 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImportResult"
+                $ref: "#/components/schemas/ImportJobDto"
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Csv
+      tags:
+      - Import Resource
+      security:
+      - SecurityScheme: []
+  /api/import/jobs/{jobId}:
+    get:
+      parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportJobDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Job
       tags:
       - Import Resource
       security:
@@ -1520,7 +1562,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImportResult"
+                $ref: "#/components/schemas/ImportJobDto"
         "401":
           description: Not Authorized
         "403":
