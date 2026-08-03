@@ -16,6 +16,7 @@ function profileReturns(me: {
   locale?: string;
   timeZone?: string;
   trusted?: boolean;
+  publicAccount?: boolean;
 }) {
   server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', ...me })));
 }
@@ -57,6 +58,8 @@ describe('ProfileSection', () => {
       displayName: 'Alice Liddell',
       locale: 'fr',
       timeZone: 'America/New_York',
+      // #201: the required preference travels with the full-replacement form, default off.
+      publicAccount: false,
     });
     expect(await screen.findByText('Profil enregistré.')).toBeInTheDocument();
   });
@@ -73,7 +76,22 @@ describe('ProfileSection', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1));
     // An empty zone is left out of the body rather than sent as a blank string.
-    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr' });
+    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: false });
+  });
+
+  test('a profile save preserves an account that is already public (#201)', async () => {
+    // No toggle control ships yet (#202): a save must carry the stored preference through
+    // rather than silently flip a public account back to private.
+    profileReturns({ displayName: 'alice', locale: 'fr', publicAccount: true });
+    const saved = captureSaves();
+    renderWithProviders(<ProfileSection />);
+
+    const name = await screen.findByLabelText('Nom affiché');
+    await waitFor(() => expect(name).toHaveValue('alice'));
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: true });
   });
 
   test('applies the chosen language to the interface on save', async () => {

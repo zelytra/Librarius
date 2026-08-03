@@ -525,6 +525,8 @@ components:
           type: string
         trusted:
           type: boolean
+        publicAccount:
+          type: boolean
     MemberSummaryDto:
       type: object
       properties:
@@ -840,6 +842,7 @@ components:
       required:
       - displayName
       - locale
+      - publicAccount
       properties:
         displayName:
           type: string
@@ -851,6 +854,8 @@ components:
         timeZone:
           type: string
           maxLength: 64
+        publicAccount:
+          type: boolean
     WishPriority:
       type: string
       enum:
