@@ -46,6 +46,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/series/{id}/missing` | Holes in the owned run (`SeriesMissingDto`) |
 | PUT | `/api/series/{id}/follow` | Starts following the series — 204, idempotent |
 | DELETE | `/api/series/{id}/follow` | Stops following the series — 204, idempotent |
+| GET | `/api/series/{id}/review` | The caller's own rating and review of the series (`SeriesReviewDto`) — 404 until they write one, see [Series](#series) |
+| PUT | `/api/series/{id}/review` | Creates or replaces it (`SeriesReviewUpsertDto`) — returns the stored `SeriesReviewDto` |
+| DELETE | `/api/series/{id}/review` | Removes it — 204, idempotent |
 | GET | `/api/authors?q=` | Local author search over the shared catalog (`AuthorSummaryDto`) — see [Authors](#authors). A blank `q` returns nothing |
 | GET | `/api/authors/{id}` | An author, their bibliography and the caller's `followed` flag (`AuthorDetailDto`) — 404 on an unknown id |
 | PUT | `/api/authors/{id}/follow` | Starts following the author — 204, idempotent |
@@ -146,6 +149,9 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
                 String synopsis, Integer totalVolumes, String status, long ownedCount,
                 long readCount, boolean followed, List<SeriesVolumeDto> volumes)
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
+SeriesReviewDto(UUID id, UUID seriesId, int rating, String review,
+                OffsetDateTime createdAt, OffsetDateTime updatedAt)
+SeriesReviewUpsertDto(Integer rating, String review)   // rating required, 1-5
 
 AuthorSummaryDto(UUID id, String name, String photoUrl, long workCount, boolean followed)
 AuthorWorkDto(UUID workId, String kind, String title, String authors, String seriesTitle,
@@ -493,6 +499,28 @@ read volume is also an owned one:
 and 5 reports `[3, 4]`. Volumes carrying no number (a series entry recorded without one)
 are appended after the numbered ones with a null `volumeNumber`; they count towards
 `ownedCount` but are never reported as missing.
+
+### Series review
+
+`GET/PUT/DELETE /api/series/{id}/review` are the caller's own rating (1–5) and free-text
+review of a series as a whole ([#190](https://github.com/zelytra/Librarius/issues/190)) —
+distinct from, and never mixed with, the private per-title `rating`/`review` a `PUT
+/api/library/{id}/review` carries on one owned edition (#48). Both are equally private:
+scoped by `CurrentUser.id()` on every read and write, returned to nobody but their author,
+and neither is ever folded into the other or into any shared score. Sharing a series review
+with other members and rolling reviews up into a public score are both explicitly out of
+scope here — [#205](https://github.com/zelytra/Librarius/issues/205) and
+[#206](https://github.com/zelytra/Librarius/issues/206) respectively.
+
+The row only exists once the caller has written a review: `GET` answers **404** until then,
+the same as it does for a series outside the caller's ownership/follow perimeter — both read
+as "nothing here for you". `PUT` creates it on the first call and replaces it (rating and
+text as a whole, like `ReviewDto`) on every one after; `rating` is **required** on every
+`PUT`, unlike the per-title review's nullable one, because the row itself only exists
+because the caller chose to leave one — taking the opinion back is a `DELETE`, not a rating
+of `null`. `DELETE` is idempotent, like the series and author follow endpoints. All three
+answer 404 on a series the caller does not own a volume of or follow, exactly like every
+other `/api/series/{id}/*` endpoint.
 
 ## Authors
 

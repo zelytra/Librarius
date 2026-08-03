@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TestProviders, renderWithProviders } from '../../test/utils';
 import { seriesDetail, seriesVolumes } from '../../test/fixtures';
-import { http, HttpResponse, seriesDetailReturns, server } from '../../test/server';
+import { http, HttpResponse, seriesDetailReturns, seriesReviewReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
-import type { ManualBookDto } from '../../api/generated/librarius';
+import type { ManualBookDto, SeriesReviewDto } from '../../api/generated/librarius';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -33,6 +33,31 @@ function servesMutableSeries() {
       detail = next;
     },
   };
+}
+
+/**
+ * Serves the caller's own review of `SERIES` from a single mutable payload — absent (404)
+ * until the first write, then read back on every subsequent `GET`, exactly like the real
+ * `PUT` / `GET` pair (#190).
+ */
+function servesMutableReview() {
+  let review: SeriesReviewDto | null = null;
+  server.use(
+    http.get('*/api/series/:id/review', ({ params }) =>
+      params.id === SERIES.id && review
+        ? HttpResponse.json(review)
+        : new HttpResponse(null, { status: 404 })),
+    http.put('*/api/series/:id/review', async ({ request }) => {
+      const body = (await request.json()) as { rating: number; review?: string };
+      review = { id: 'review-1', seriesId: SERIES.id, rating: body.rating, review: body.review };
+      return HttpResponse.json(review);
+    }),
+    http.delete('*/api/series/:id/review', () => {
+      review = null;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+  return { current: () => review };
 }
 
 describe('SeriesPage', () => {
@@ -197,5 +222,74 @@ describe('SeriesPage', () => {
     renderSeries();
 
     expect(await screen.findByText(/Connecte-toi pour voir cette série/)).toBeInTheDocument();
+  });
+
+  // ── Rating and private review of the series (#190) ──────────────────────────
+
+  test('leaves a rating on the series', async () => {
+    seriesDetailReturns(SERIES);
+    const review = servesMutableReview();
+    renderSeries();
+
+    await userEvent.click(await screen.findByLabelText('Noter 4 sur 5'));
+
+    // The fourth star now offers to take the rating back: it is the one in force.
+    expect(await screen.findByLabelText('Retirer ma note')).toBeInTheDocument();
+    expect(review.current()?.rating).toBe(4);
+  });
+
+  test('saves the review text once the series has been rated', async () => {
+    seriesDetailReturns(SERIES);
+    const review = servesMutableReview();
+    renderSeries();
+
+    // A rating has to exist first: the row is created by rating, not by the text alone.
+    await userEvent.click(await screen.findByLabelText('Noter 5 sur 5'));
+    await screen.findByLabelText('Retirer ma note');
+
+    await userEvent.type(
+      await screen.findByLabelText('Mon avis sur la série'),
+      'Le meilleur seinen que j’aie lu.',
+    );
+    await userEvent.tab();
+
+    await waitFor(() =>
+      expect(review.current()?.review).toBe('Le meilleur seinen que j’aie lu.'));
+  });
+
+  /** Clicking the star already in force removes the whole review, not just the number. */
+  test('clearing the rating removes the review entirely', async () => {
+    seriesDetailReturns(SERIES);
+    const review = servesMutableReview();
+    renderSeries();
+
+    await userEvent.click(await screen.findByLabelText('Noter 3 sur 5'));
+    await userEvent.click(await screen.findByLabelText('Retirer ma note'));
+
+    await waitFor(() => expect(review.current()).toBeNull());
+    expect(await screen.findByLabelText('Noter 3 sur 5')).toBeInTheDocument();
+  });
+
+  test('a series already reviewed shows the rating and the text back', async () => {
+    seriesDetailReturns(SERIES);
+    seriesReviewReturns(SERIES.id!, {
+      id: 'review-1',
+      seriesId: SERIES.id,
+      rating: 5,
+      review: 'Un classique.',
+    });
+    renderSeries();
+
+    expect(await screen.findByLabelText('Retirer ma note')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Un classique.')).toBeInTheDocument();
+  });
+
+  /** The user is told, on the screen itself, that none of this is shared — same wording
+   *  as the per-title review on Detail, and never the same data. */
+  test('states that the series rating and review stay private', async () => {
+    seriesDetailReturns(SERIES);
+    renderSeries();
+
+    expect(await screen.findByText(/strictement privés/)).toBeInTheDocument();
   });
 });

@@ -286,6 +286,38 @@
   gap: 8px;
 }
 
+/* ── Rating & private review (#190) ───────────────────────────────────────────
+   Same card and same field styling as Detail's per-title review — a different
+   opinion, kept exactly as private, drawn the same way. */
+
+.review {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.reviewInput {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  padding: 10px;
+  resize: vertical;
+}
+
+.privateNote {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin: 8px 0 0;
+}
+
 .reportRow {
   display: flex;
   justify-content: center;

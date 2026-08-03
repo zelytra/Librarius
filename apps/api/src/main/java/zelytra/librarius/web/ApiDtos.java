@@ -537,6 +537,31 @@ public final class ApiDtos {
             java.util.List<Integer> volumes) {
     }
 
+    /**
+     * A member's own opinion of a series as a whole (#190) — the series-level counterpart of
+     * {@link ReviewDto}. Kept exactly as private: returned to nobody but its author, and
+     * never folded into anything the per-title review reports on. Sharing it with other
+     * members (#205) and rolling it into a public score (#206) are both out of scope here.
+     */
+    public record SeriesReviewDto(UUID id, UUID seriesId, int rating, String review,
+            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime updatedAt) {
+        public static SeriesReviewDto of(zelytra.librarius.domain.SeriesReview r) {
+            return new SeriesReviewDto(r.id, r.seriesId, r.rating, r.review, r.createdAt,
+                    r.updatedAt);
+        }
+    }
+
+    /**
+     * The pair a caller writes to rate and review a series: a {@code PUT} of the whole thing,
+     * like {@link ReviewDto} — except the rating is mandatory here. {@link ReviewDto} clears
+     * itself by sending a null rating because {@code library_item} exists regardless of
+     * whether it is reviewed; a series review row exists only because the caller chose to
+     * leave one, so removing it is a {@code DELETE}, not a rating of {@code null}.
+     */
+    public record SeriesReviewUpsertDto(@NotNull @Min(1) @Max(5) Integer rating,
+            @Size(max = 5000) String review) {
+    }
+
     // ── Authors ─────────────────────────────────────────────────────────────
 
     /**

@@ -442,6 +442,25 @@ export interface SeriesMissingDto {
   volumes?: number[];
 }
 
+export interface SeriesReviewDto {
+  id?: Uuid;
+  seriesId?: Uuid;
+  rating?: number;
+  review?: string;
+  createdAt?: OffsetDateTime;
+  updatedAt?: OffsetDateTime;
+}
+
+export interface SeriesReviewUpsertDto {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @maxLength 5000 */
+  review?: string;
+}
+
 export interface SeriesSummaryDto {
   id?: Uuid;
   kind?: string;
@@ -4209,6 +4228,250 @@ export function useGetApiSeriesIdMissing<TData = Awaited<ReturnType<typeof getAp
 
 
 
+
+export const getPutApiSeriesIdReviewUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/review`
+}
+
+/**
+ * @summary Put Review
+ */
+export const putApiSeriesIdReview = async (id: Uuid,
+    seriesReviewUpsertDto: SeriesReviewUpsertDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiSeriesIdReviewUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(seriesReviewUpsertDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiSeriesIdReviewMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdReview>>, TError,{id: Uuid;data: SeriesReviewUpsertDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdReview>>, TError,{id: Uuid;data: SeriesReviewUpsertDto}, TContext> => {
+
+const mutationKey = ['putApiSeriesIdReview'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiSeriesIdReview>>, {id: Uuid;data: SeriesReviewUpsertDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiSeriesIdReview(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiSeriesIdReviewMutationResult = NonNullable<Awaited<ReturnType<typeof putApiSeriesIdReview>>>
+    export type PutApiSeriesIdReviewMutationBody = SeriesReviewUpsertDto
+    export type PutApiSeriesIdReviewMutationError = void
+
+    /**
+ * @summary Put Review
+ */
+export const usePutApiSeriesIdReview = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiSeriesIdReview>>, TError,{id: Uuid;data: SeriesReviewUpsertDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiSeriesIdReview>>,
+        TError,
+        {id: Uuid;data: SeriesReviewUpsertDto},
+        TContext
+      > => {
+      return useMutation(getPutApiSeriesIdReviewMutationOptions(options), queryClient);
+    }
+
+export const getGetApiSeriesIdReviewUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/review`
+}
+
+/**
+ * @summary Get Review
+ */
+export const getApiSeriesIdReview = async (id: Uuid, options?: RequestInit): Promise<SeriesReviewDto> => {
+
+  return apiClient<SeriesReviewDto>(getGetApiSeriesIdReviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiSeriesIdReviewQueryKey = (id: Uuid,) => {
+    return [
+    `/api/series/${id}/review`
+    ] as const;
+    }
+
+
+export const getGetApiSeriesIdReviewQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdReviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesIdReview>>> = () => getApiSeriesIdReview(id, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiSeriesIdReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesIdReview>>>
+export type GetApiSeriesIdReviewQueryError = void
+
+
+export function useGetApiSeriesIdReview<TData = Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdReview>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdReview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdReview<TData = Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdReview>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdReview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdReview<TData = Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Review
+ */
+
+export function useGetApiSeriesIdReview<TData = Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiSeriesIdReviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteApiSeriesIdReviewUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/review`
+}
+
+/**
+ * @summary Delete Review
+ */
+export const deleteApiSeriesIdReview = async (id: Uuid, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getDeleteApiSeriesIdReviewUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiSeriesIdReviewMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdReview>>, TError,{id: Uuid}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdReview>>, TError,{id: Uuid}, TContext> => {
+
+const mutationKey = ['deleteApiSeriesIdReview'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiSeriesIdReview>>, {id: Uuid}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiSeriesIdReview(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiSeriesIdReviewMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiSeriesIdReview>>>
+
+    export type DeleteApiSeriesIdReviewMutationError = void
+
+    /**
+ * @summary Delete Review
+ */
+export const useDeleteApiSeriesIdReview = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiSeriesIdReview>>, TError,{id: Uuid}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiSeriesIdReview>>,
+        TError,
+        {id: Uuid},
+        TContext
+      > => {
+      return useMutation(getDeleteApiSeriesIdReviewMutationOptions(options), queryClient);
+    }
 
 export const getGetApiStatsUrl = () => {
 

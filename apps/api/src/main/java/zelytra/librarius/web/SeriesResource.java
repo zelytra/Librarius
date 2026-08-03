@@ -2,6 +2,8 @@ package zelytra.librarius.web;
 
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -15,6 +17,8 @@ import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.series.SeriesService;
 import zelytra.librarius.web.ApiDtos.SeriesDetailDto;
 import zelytra.librarius.web.ApiDtos.SeriesMissingDto;
+import zelytra.librarius.web.ApiDtos.SeriesReviewDto;
+import zelytra.librarius.web.ApiDtos.SeriesReviewUpsertDto;
 import zelytra.librarius.web.ApiDtos.SeriesSummaryDto;
 
 import java.util.List;
@@ -82,5 +86,49 @@ public class SeriesResource {
         return series.unfollow(currentUser.id(), id)
                 ? Response.noContent().build()
                 : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    /**
+     * The caller's own rating and review of the series (#190), exactly as private as the
+     * per-title review (#48): returned to nobody else, and never folded into a shared score.
+     *
+     * @throws NotFoundException when the series is not visible to the caller, or when they
+     *         have not written a review of it yet
+     */
+    @GET
+    @Path("/{id}/review")
+    public SeriesReviewDto getReview(@PathParam("id") UUID id) {
+        return series.review(currentUser.id(), id).orElseThrow(NotFoundException::new);
+    }
+
+    /**
+     * Writes the caller's own rating and review of the series, creating it on the first call
+     * and replacing it on every one after.
+     *
+     * <p>An identifier belonging to a series the caller does not own or follow answers 404,
+     * like an unknown one.
+     */
+    @PUT
+    @Path("/{id}/review")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response putReview(@PathParam("id") UUID id, @Valid SeriesReviewUpsertDto dto) {
+        currentUser.require();
+        return series.rate(currentUser.id(), id, dto.rating(), blankToNull(dto.review()))
+                .map(review -> Response.ok(review).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    /** Deletes the caller's own review of the series. Idempotent. */
+    @DELETE
+    @Path("/{id}/review")
+    public Response deleteReview(@PathParam("id") UUID id) {
+        return series.deleteReview(currentUser.id(), id)
+                ? Response.noContent().build()
+                : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    /** An empty text area means "no review", not a row holding an empty string. */
+    private static String blankToNull(String text) {
+        return text == null || text.isBlank() ? null : text.trim();
     }
 }
