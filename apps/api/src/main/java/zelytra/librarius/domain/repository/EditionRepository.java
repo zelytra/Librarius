@@ -43,4 +43,24 @@ public class EditionRepository implements PanacheRepositoryBase<Edition, UUID> {
                 .setParameter("from", from)
                 .getResultList();
     }
+
+    /**
+     * Imported or hand-entered editions still without a page count — a scrape brings none, and a
+     * manual entry may omit it. Joined to their work so a page-count lookup can read the title and
+     * author, most recently added first so a fresh import fills before an old backlog, and capped
+     * so one enrichment run cannot spend the provider quota. Only editions with no provider
+     * reference: a catalog edition either came with its length or the provider has none to give.
+     */
+    public List<Edition> needingPageCount(int limit) {
+        return getEntityManager()
+                .createQuery("""
+                        select e from Edition e
+                          join fetch e.work w
+                        where e.pageCount is null
+                          and e.provider is null
+                        order by e.createdAt desc, e.id asc
+                        """, Edition.class)
+                .setMaxResults(limit)
+                .getResultList();
+    }
 }
