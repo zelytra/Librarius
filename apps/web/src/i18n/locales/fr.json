@@ -604,6 +604,8 @@
     "dashboardDescription": "Réordonne ou masque les sections de l'accueil : reprise de lecture, compteurs, objectif, prochaines sorties, derniers lus.",
     "dashboardAction": "Aller à l'accueil",
     "onboardingAction": "Revoir la visite guidée",
+    "session": "Session",
+    "logout": "Se déconnecter",
     "appearance": "Apparence",
     "language": "Langue",
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",

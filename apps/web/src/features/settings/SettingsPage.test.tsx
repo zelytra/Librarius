@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { http, HttpResponse, server } from '../../test/server';
-import { removeUser, resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { removeUser, resetAuth, setAuthenticated, signoutRedirect } from '../../test/oidcMock';
 import { changeLanguage } from '../../i18n';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -217,5 +217,24 @@ describe('SettingsPage — account deletion', () => {
     renderWithProviders(<SettingsPage />);
 
     expect(screen.queryByText('Supprimer mon compte')).not.toBeInTheDocument();
+  });
+});
+
+describe('SettingsPage — session', () => {
+  beforeEach(resetAuth);
+
+  test('signs the user out, ending the Keycloak session', async () => {
+    renderWithProviders(<SettingsPage />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
+
+    expect(signoutRedirect).toHaveBeenCalled();
+  });
+
+  test('hides the sign-out when there is no session', () => {
+    setAuthenticated(false);
+    renderWithProviders(<SettingsPage />);
+
+    expect(screen.queryByRole('button', { name: 'Se déconnecter' })).not.toBeInTheDocument();
   });
 });
