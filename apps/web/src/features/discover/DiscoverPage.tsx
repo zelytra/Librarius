@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -132,6 +132,25 @@ function DiscoverContent() {
   const [addError, setAddError] = useState<string | null>(null);
 
   const detectedIsbn = detectIsbn(query);
+
+  // Fluid search: once the box holds a real keyword, the search follows the typing after a
+  // short pause — the Babelio/Mangacollec feel the button alone never gave. It holds off
+  // until three characters (or a full ISBN) so a lone letter does not spend a rate-limited
+  // provider call on nothing, and the pause folds a burst of keystrokes into one query. The
+  // button and the Enter key still fire it at once; an advanced criterion on its own, with
+  // no keyword, stays submit-driven — there is nothing typed there that settles.
+  useEffect(() => {
+    if (!detectedIsbn && query.trim().length < 3) return;
+    const timer = setTimeout(() => {
+      const params = searchParams(query, advanced);
+      if (isBlankSearch(params)) return;
+      setAdded({});
+      setAddError(null);
+      setManualAdded(null);
+      setSubmitted(params);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [query, advanced, detectedIsbn]);
 
   const keyOf = (r: CatalogResult, i: number) => `${r.provider ?? ''}:${r.providerRef ?? i}:${r.title ?? ''}`;
 
