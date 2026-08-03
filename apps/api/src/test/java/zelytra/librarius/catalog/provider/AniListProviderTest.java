@@ -33,7 +33,7 @@ class AniListProviderTest {
 
     private static AniListClient.Media media(String title, Integer year, Boolean adult) {
         return new AniListClient.Media(1, new AniListClient.Title(title, null),
-                new AniListClient.FuzzyDate(year, null, null), null, null, adult, null);
+                new AniListClient.FuzzyDate(year, null, null), null, null, adult, null, null);
     }
 
     private final CapturingClient client = new CapturingClient();

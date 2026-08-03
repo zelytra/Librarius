@@ -90,4 +90,9 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
                 .setParameter("seriesId", seriesId)
                 .getResultList();
     }
+
+    /** Series still missing a volume total, capped so one refresh run stays bounded. */
+    public List<Series> needingVolumeCount(int limit) {
+        return find("totalVolumes is null").page(0, limit).list();
+    }
 }
