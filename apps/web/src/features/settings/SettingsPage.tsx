@@ -36,11 +36,7 @@ export function SettingsPage() {
         <h2 className={styles.title}>{t('settings.title')}</h2>
       </div>
 
-      {/* Below the tablet breakpoint this is the single stacked column shipped today;
-          past it, the sections that fit lay out side by side rather than running the
-          whole width of a wide window one at a time — see `.sections` in the module
-          CSS for how the column count follows the grid tokens without a media query
-          of its own. */}
+      {/* Single stacked column at every width, phone included — see `.sections`. */}
       <div className={styles.sections}>
         {/* Identity: display name, language and time zone, persisted to the account (#75). */}
         <div className={styles.sectionBlock}>
