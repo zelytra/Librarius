@@ -84,6 +84,11 @@ class CatalogServiceTest {
         public List<CatalogResult> upcoming(int limit) {
             return canned;
         }
+
+        @Override
+        public List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+            return canned.stream().limit(limit).toList();
+        }
     }
 
     /** Reports a fixed volume count, to check the series-volume routing. */
@@ -360,5 +365,18 @@ class CatalogServiceTest {
         assertEquals(20, service.seriesVolumes(Kind.MANGA, "One Piece").getAsInt());
         // A book catalogue reports no series total, so the kind with no such provider is empty.
         assertTrue(service.seriesVolumes(Kind.BOOK, "Any Book").isEmpty());
+    }
+
+    @Test
+    void worksOfAuthorRoutesToTheProvidersOfTheGivenKinds() {
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.MANGA, List.of(
+                        result("MANGA", "Naruto"), result("MANGA", "Boruto")))),
+                passThroughCache());
+
+        List<String> titles = service.worksOfAuthor(Set.of(Kind.MANGA), "Kishimoto", 10)
+                .stream().map(CatalogResult::title).toList();
+
+        assertEquals(List.of("Naruto", "Boruto"), titles);
     }
 }

@@ -382,7 +382,7 @@
     "workCount_one": "{{count}} work",
     "workCount_other": "{{count}} works",
     "bibliography": "Bibliography",
-    "emptyWorks": "No work known for this author in your library.",
+    "emptyWorks": "No work known for this author.",
     "notFound": "Author not found.",
     "error": "This author could not be loaded.",
     "search": {
