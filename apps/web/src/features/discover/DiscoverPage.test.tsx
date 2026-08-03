@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders } from '../../test/utils';
+import { renderWithProviders, TestProviders } from '../../test/utils';
 import { catalogResult } from '../../test/fixtures';
 import { http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
@@ -72,6 +73,24 @@ describe('DiscoverPage', () => {
     // The title is rendered twice: in the card, and on the fallback cover.
     expect((await screen.findAllByText('Fourth Wing')).length).toBeGreaterThan(0);
     expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
+  });
+
+  test('opens the catalog fiche when a result is clicked', async () => {
+    searchReturns([catalogResult()]);
+    render(
+      <TestProviders route="/discover">
+        <Routes>
+          <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/catalog/:provider/:ref" element={<p>fiche catalogue</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await search();
+    // The title is a button; clicking it opens the fiche, the page to read before owning.
+    await userEvent.click(await screen.findByRole('button', { name: 'Fourth Wing' }));
+
+    expect(await screen.findByText('fiche catalogue')).toBeInTheDocument();
   });
 
   /**

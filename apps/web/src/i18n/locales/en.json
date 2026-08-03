@@ -393,6 +393,15 @@
       "workCount_other": "{{count}} works"
     }
   },
+  "catalog": {
+    "addToLibrary": "Add to my collection",
+    "addToWishlist": "Add to wishlist",
+    "gone": {
+      "title": "Entry unavailable",
+      "description": "The catalog is browsed, not stored: run a search again to find this title.",
+      "action": "Back to search"
+    }
+  },
   "discover": {
     "title": "Discover",
     "searchPlaceholder": "Search a title, an author, an ISBN…",

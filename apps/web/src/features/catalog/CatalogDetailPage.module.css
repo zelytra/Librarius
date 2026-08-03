@@ -1,0 +1,123 @@
+.screen {
+  padding-bottom: 32px;
+}
+
+.backRow {
+  display: flex;
+  margin-bottom: 12px;
+}
+.backButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.coverRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.kind {
+  display: inline-block;
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+  margin-bottom: 6px;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  line-height: 1.15;
+  margin: 0;
+}
+.authors {
+  font-size: var(--fs-14);
+  color: var(--muted);
+  margin-top: 4px;
+}
+.authors :global(a) {
+  color: var(--accent-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+.authors :global(a:hover) {
+  text-decoration: underline;
+}
+
+.facts {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px 0;
+  margin-bottom: 16px;
+}
+.fact {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 0 10px;
+}
+.fact + .fact {
+  border-left: 1px solid var(--line);
+}
+.factValue {
+  font-size: var(--fs-15);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.factLabel {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.meta {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  text-align: center;
+  margin: 0 0 22px;
+  overflow-wrap: anywhere;
+}
+
+.sectionTitle {
+  font-size: var(--fs-17);
+  margin: 0 0 8px;
+}
+.synopsis {
+  font-size: var(--fs-13-5);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+  white-space: pre-line;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+.actions > * {
+  flex: 1;
+}
+
+.added {
+  text-align: center;
+  font-weight: 600;
+  color: var(--sage-deep, var(--accent-deep));
+  padding: 10px 0;
+}

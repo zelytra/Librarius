@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,7 +15,6 @@ import {
   type CatalogResult,
   type GetApiCatalogSearchParams,
   type Kind,
-  type ManualBookDto,
 } from '../../api/generated/librarius';
 
 import { Icon } from '../../shared/ui/Icon';
@@ -22,6 +22,7 @@ import { Button, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import { AuthorSearch } from '../author/AuthorSearch';
+import { catalogPath, toBook } from '../catalog/catalogBook';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
@@ -91,42 +92,17 @@ function isBlankSearch(params: GetApiCatalogSearchParams): boolean {
     && !params.publisher;
 }
 
-/**
- * The result as the API takes it. `provider` and `providerRef` say which record the entry
- * came from: without them the server cannot tell a title picked here from one typed by hand,
- * and no provider can be asked about it again later. The kind is the result's own — a mixed
- * feed carries no screen-wide default to fall back on any more.
- */
-function toBook(r: CatalogResult): ManualBookDto {
-  return {
-    kind: knownKind(r.kind),
-    title: r.title ?? '—',
-    authors: r.authors,
-    seriesTitle: r.seriesTitle,
-    volumeNumber: r.volumeNumber,
-    coverUrl: r.coverUrl,
-    synopsis: r.synopsis,
-    isbn13: r.isbn13,
-    publisher: r.publisher,
-    language: r.language,
-    pageCount: r.pageCount,
-    originalYear: r.year,
-    releaseDate: r.releaseDate,
-    provider: r.provider,
-    providerRef: r.providerRef,
-  };
-}
-
 function DiscoverContent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
   const [advanced, setAdvanced] = useState<Advanced>(NO_ADVANCED);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualAdded, setManualAdded] = useState<string | null>(null);
-  // The search only runs once submitted, never on every keystroke: each miss costs a
-  // call to a rate-limited third-party provider.
+  // The parameters a search actually ran with — set by the button, by Enter, and by the
+  // debounced auto-search below, never straight from the input value.
   const [submitted, setSubmitted] = useState<GetApiCatalogSearchParams | null>(null);
   const [added, setAdded] = useState<Record<string, 'library' | 'wishlist'>>({});
   const [addError, setAddError] = useState<string | null>(null);
@@ -193,6 +169,10 @@ function DiscoverContent() {
       setAddError(t('discover.errors.addFailed'));
     }
   }
+
+  /** Opens the catalog fiche of an unowned result, carrying the result itself along so the
+   *  page has everything to draw without a second lookup. */
+  const openFiche = (r: CatalogResult) => navigate(catalogPath(r), { state: { result: r } });
 
   /** The way out of an empty screen: the book exists, the catalogs just do not know it. */
   const manualAction = (
@@ -334,9 +314,14 @@ function DiscoverContent() {
                 width={RESULT_COVER.width}
                 height={RESULT_COVER.height}
                 radius={RESULT_COVER.radius}
+                onClick={() => openFiche(r)}
               />
               <div className={styles.resultBody}>
-                <div className={styles.resultTitle}>{r.title}</div>
+                {/* The cover and the title open the fiche — the page to read before owning;
+                    the two buttons below file it straight away without that detour. */}
+                <button type="button" onClick={() => openFiche(r)} className={styles.resultTitle}>
+                  {r.title}
+                </button>
                 {/* A mixed feed no longer says what a result is through a screen-wide
                     toggle, so each one names its own medium here. */}
                 <div className={styles.resultMeta}>

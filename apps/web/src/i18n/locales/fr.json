@@ -393,6 +393,15 @@
       "workCount_other": "{{count}} œuvres"
     }
   },
+  "catalog": {
+    "addToLibrary": "Ajouter à ma collection",
+    "addToWishlist": "Ajouter aux souhaits",
+    "gone": {
+      "title": "Fiche indisponible",
+      "description": "Le catalogue se parcourt, il ne se garde pas : relance une recherche pour retrouver ce titre.",
+      "action": "Retour à la recherche"
+    }
+  },
   "discover": {
     "title": "Découvrir",
     "searchPlaceholder": "Rechercher un titre, un auteur, un ISBN…",
