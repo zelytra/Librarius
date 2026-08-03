@@ -128,9 +128,12 @@ jobs:
       # CI: no credential transits through this repository. Procedure in
       # docs/DEPLOYMENT.md. A missing Secret makes the chart fail to render.
       # The node this deploys to is CPU-saturated at times, and a rollout that is
-      # merely slow — not stuck — has intermittently blown past helm's `--wait`
-      # window with "context deadline exceeded" (#187). 15m/420s give a slow-but-
-      # healthy rollout enough room without changing anything else about the deploy.
+      # merely slow — not stuck — kept blowing past helm's `--wait` with "context
+      # deadline exceeded" (#187), marking a healthy deploy failed and leaving the
+      # release pending. So the apply no longer waits: `kubectl rollout status`
+      # below is the readiness gate instead — per deployment, with generous room,
+      # and it names the one that is stuck when a rollout genuinely does not
+      # converge (the Report step adds the pod events).
       - name: Helm upgrade --install
         run: |
           helm upgrade --install librarius ./infra/helm/librarius \
@@ -139,13 +142,13 @@ jobs:
             --set web.image.tag=${{ github.sha }} \
             --set api.image.tag=${{ github.sha }} \
             --set postgres.existingSecret=librarius-postgres \
-            --set keycloak.existingSecret=librarius-keycloak \
-            --wait --timeout 15m
+            --set keycloak.existingSecret=librarius-keycloak
 
       - name: Verify rollout
         run: |
-          kubectl -n "$NAMESPACE" rollout status deployment/librarius-web --timeout=420s
-          kubectl -n "$NAMESPACE" rollout status deployment/librarius-api --timeout=420s
+          kubectl -n "$NAMESPACE" rollout status deployment/librarius-web --timeout=600s
+          kubectl -n "$NAMESPACE" rollout status deployment/librarius-api --timeout=600s
+          kubectl -n "$NAMESPACE" rollout status deployment/librarius-keycloak --timeout=600s
           kubectl -n "$NAMESPACE" get pods,ingress -l release=librarius
 
       # A failed `--wait` says "timed out waiting for the condition" and nothing
