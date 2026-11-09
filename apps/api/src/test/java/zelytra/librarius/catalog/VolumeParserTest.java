@@ -42,10 +42,35 @@ class VolumeParserTest {
     void readsTheBnfIsbdSeriesDotVolumeForm() {
         assertEquals(new VolumeParser.Parsed("One Piece", 1),
                 VolumeParser.parse("One Piece. 1, À l'aube d'une grande aventure"));
-        // The comma is required, so a bare "Catch. 22" and a year in "Foundation. 1951, …" do
-        // not read as volumes.
-        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Catch. 22"));
+        // A four-digit number after the period is a year, not a volume.
         assertEquals(new VolumeParser.Parsed(null, null),
                 VolumeParser.parse("Foundation. 1951, a novel"));
+        // No period, no ISBD volume: a number that is part of the title stays in it.
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Catch 22"));
+        // "No." abbreviates a number that belongs to the title.
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Kaiju No. 8"));
+        assertEquals(new VolumeParser.Parsed("Kaiju No. 8", 3), VolumeParser.parse("Kaiju No. 8 Tome 3"));
+    }
+
+    @Test
+    void readsTheBnfVolumeThatEndsTheTitle() {
+        // Live BnF titles, once the statement of responsibility is cut: most volumes end right on
+        // the number, or carry their own title after a colon — neither carried a comma, so none
+        // of them used to parse, and no BnF manga volume joined its series.
+        assertEquals(new VolumeParser.Parsed("One Piece", 56), VolumeParser.parse("One Piece. 56"));
+        assertEquals(new VolumeParser.Parsed("One piece party", 1),
+                VolumeParser.parse("One piece party. 1"));
+        assertEquals(new VolumeParser.Parsed("One Piece", 112),
+                VolumeParser.parse("One Piece. 112 : le coffre"));
+    }
+
+    @Test
+    void dropsTheMarkerWordsAndKeepsTheNumber() {
+        assertEquals("one piece 1", VolumeParser.withoutMarkers("one piece tome 1"));
+        assertEquals("Frieren 3", VolumeParser.withoutMarkers("Frieren Vol. 3"));
+        assertEquals("Naruto 12", VolumeParser.withoutMarkers("Naruto T. 12"));
+        // Words that merely start like a marker stay.
+        assertEquals("Les tomates vertes", VolumeParser.withoutMarkers("Les tomates vertes"));
+        assertEquals("Voltaire", VolumeParser.withoutMarkers("Voltaire"));
     }
 }

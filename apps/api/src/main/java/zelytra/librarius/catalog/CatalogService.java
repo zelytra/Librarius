@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
@@ -37,6 +40,15 @@ public class CatalogService {
     private final Map<String, CatalogProvider> byName = new HashMap<>();
 
     private final CatalogCache cache;
+
+    /**
+     * Whether a coverless result with an ISBN is pointed at Open Library's cover for it. On by
+     * default; off in the end-to-end stack, which serves fixed catalog answers and must not
+     * depend on the internet for what its tiles show.
+     */
+    @org.eclipse.microprofile.config.inject.ConfigProperty(
+            name = "librarius.catalog.isbn-covers", defaultValue = "true")
+    boolean isbnCovers = true;
 
     @Inject
     public CatalogService(Instance<CatalogProvider> providers, CatalogCache cache) {
@@ -168,11 +180,9 @@ public class CatalogService {
     private List<CatalogResult> aggregate(List<CatalogProvider> providers, int limit,
             Function<CatalogProvider, List<CatalogResult>> call,
             ToIntFunction<CatalogResult> relevance) {
-        List<List<CatalogResult>> perProvider = new ArrayList<>(providers.size());
+        List<List<CatalogResult>> perProvider = callAll(providers, call);
         int rounds = 0;
-        for (CatalogProvider provider : providers) {
-            List<CatalogResult> results = call.apply(provider);
-            perProvider.add(results);
+        for (List<CatalogResult> results : perProvider) {
             rounds = Math.max(rounds, results.size());
         }
 
@@ -186,11 +196,73 @@ public class CatalogService {
             }
         }
 
-        Stream<CatalogResult> ordered = merged.values().stream();
+        Stream<CatalogResult> ordered = merged.values().stream()
+                .map(r -> isbnCovers ? withIsbnCover(r) : r);
         if (relevance != null) {
-            ordered = ordered.sorted(Comparator.comparingInt(relevance).reversed());
+            // Equally relevant results are told apart by how much of a record they carry: an
+            // edition with an ISBN and a cover is one a reader can recognise and add, where a
+            // 19th-century notice with neither (the BnF holds plenty) is mostly noise.
+            ordered = ordered.sorted(Comparator.comparingInt(relevance)
+                    .thenComparingInt(CatalogService::completeness).reversed());
         }
         return ordered.limit(limit).toList();
+    }
+
+    private static int completeness(CatalogResult r) {
+        return (r.isbn13() != null ? 1 : 0) + (r.coverUrl() != null ? 1 : 0);
+    }
+
+    /**
+     * Calls every provider at once and waits for all of them, in the providers' order. They
+     * used to be called one after the other, so a book search cost Open Library's latency
+     * (often several seconds) <em>plus</em> the BnF's, and a cross-medium search added
+     * AniList's on top; now it costs the slowest of them. Each call is already bounded by its
+     * provider's own deadline and turns a failure into an empty list, so a join cannot hang
+     * past that deadline nor throw. One provider is called inline, with no thread hop.
+     */
+    private static List<List<CatalogResult>> callAll(List<CatalogProvider> providers,
+            Function<CatalogProvider, List<CatalogResult>> call) {
+        if (providers.size() <= 1) {
+            return providers.stream().map(call).toList();
+        }
+        List<CompletableFuture<List<CatalogResult>>> pending = providers.stream()
+                .map(provider -> CompletableFuture.supplyAsync(() -> call.apply(provider), CALLS))
+                .toList();
+        List<List<CatalogResult>> results = new ArrayList<>(pending.size());
+        for (CompletableFuture<List<CatalogResult>> future : pending) {
+            try {
+                List<CatalogResult> value = future.join();
+                results.add(value == null ? List.of() : value);
+            } catch (RuntimeException e) {
+                results.add(List.of());
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Virtual threads: a provider call spends its whole life waiting on the network, and the
+     * cache underneath it uses plain JDBC and its own transaction, neither of which needs the
+     * request's context.
+     */
+    private static final ExecutorService CALLS = Executors.newVirtualThreadPerTaskExecutor();
+
+    /**
+     * Gives a result with an ISBN and no cover the one Open Library serves by ISBN. The BnF
+     * describes the French legal deposit — exactly the titles this application is for — and
+     * carries no image at all, so a title only it knew always reached the screen blank. The
+     * {@code default=false} flag makes Open Library answer 404 rather than a blank placeholder
+     * when it has nothing, which the front end's cover already falls back from.
+     */
+    static CatalogResult withIsbnCover(CatalogResult r) {
+        if ((r.coverUrl() != null && !r.coverUrl().isBlank()) || r.isbn13() == null
+                || !r.isbn13().matches("\\d{13}")) {
+            return r;
+        }
+        return new CatalogResult(r.kind(), r.title(), r.authors(), r.year(),
+                "https://covers.openlibrary.org/b/isbn/" + r.isbn13() + "-M.jpg?default=false",
+                r.synopsis(), r.isbn13(), r.publisher(), r.language(), r.releaseDate(),
+                r.seriesTitle(), r.volumeNumber(), r.pageCount(), r.provider(), r.providerRef());
     }
 
     /**
@@ -204,21 +276,64 @@ public class CatalogService {
         if (needle.isEmpty()) {
             return result -> 0;
         }
-        List<String> words = List.of(needle.split(" "));
+        List<String> words = significantWords(needle);
         return result -> {
-            String title = normalize(result.title());
-            if (title.equals(needle)) {
+            String title = normalize(scoredTitle(result));
+            List<String> titleWords = significantWords(title);
+            if (titleWords.equals(words)) {
+                return 4;
+            }
+            // Whole words, not substrings: "one piece 1" must not find its "1" inside "113",
+            // which used to rank every volume of a run as well as the one asked for.
+            // The last word may still be being typed (Discover searches as you type), so it
+            // also counts when a title word starts with it: "one pie" finds "One Piece".
+            Set<String> tokens = Set.copyOf(titleWords);
+            long present = 0;
+            for (int i = 0; i < words.size(); i++) {
+                String word = words.get(i);
+                boolean typing = i == words.size() - 1;
+                if (tokens.contains(word)
+                        || (typing && titleWords.stream().anyMatch(t -> t.startsWith(word)))) {
+                    present++;
+                }
+            }
+            if (present == words.size()) {
+                // Every word typed is there; the asked volume number, when there is one,
+                // separates "One Piece - Tome 1" from the other hundred volumes of the run.
                 return 3;
             }
-            if (title.startsWith(needle)) {
+            if (title.startsWith(needle + " ")) {
+                return 3;
+            }
+            if (present == 0 && !words.isEmpty()
+                    && Set.copyOf(significantWords(normalize(result.authors()))).containsAll(words)) {
+                // A name typed in the search field ("damasio"): a work by that person beats
+                // a title that merely shares nothing with the query.
                 return 2;
             }
-            long present = words.stream().filter(title::contains).count();
-            if (present == words.size()) {
-                return 2;
-            }
-            return present > 0 ? 1 : 0;
+            return present > 0 ? (int) Math.min(2, present) : 0;
         };
+    }
+
+    /** Volume markers carry no meaning of their own: "tome 1", "vol. 1" and ". 1" are one volume. */
+    private static final Set<String> VOLUME_MARKERS = Set.of("tome", "tomes", "t", "vol", "volume");
+
+    private static List<String> significantWords(String normalized) {
+        return Stream.of(normalized.split(" "))
+                .filter(word -> !word.isEmpty() && !VOLUME_MARKERS.contains(word))
+                .toList();
+    }
+
+    /**
+     * The title as scored: a result that parsed into a series and a volume is scored as
+     * "series volume", whatever wording its catalogue gave it ("One Piece. 1", "ONE PIECE
+     * Tome 1"), so the same volume from two catalogues scores alike.
+     */
+    private static String scoredTitle(CatalogResult r) {
+        if (r.seriesTitle() != null && !r.seriesTitle().isBlank() && r.volumeNumber() != null) {
+            return r.seriesTitle() + ' ' + r.volumeNumber();
+        }
+        return r.title();
     }
 
     /**
@@ -260,7 +375,7 @@ public class CatalogService {
                 ? seriesTitle + " - Tome " + volume
                 : kept.title();
         return new CatalogResult(kept.kind(), title,
-                firstNonBlank(kept.authors(), other.authors()),
+                readableAuthors(kept.authors(), other.authors()),
                 kept.year() != null ? kept.year() : other.year(),
                 firstNonBlank(kept.coverUrl(), other.coverUrl()),
                 firstNonBlank(kept.synopsis(), other.synopsis()),
@@ -270,6 +385,25 @@ public class CatalogService {
                 kept.releaseDate() != null ? kept.releaseDate() : other.releaseDate(),
                 seriesTitle, volume, maxPageCount(kept.pageCount(), other.pageCount()),
                 kept.provider(), kept.providerRef());
+    }
+
+    /**
+     * The incumbent's credit line, unless it is written in a script the reader cannot type and
+     * the newcomer's is in Latin letters: Open Library credits a manga to "尾田栄一郎" where the
+     * BnF writes "Eiichirō Oda", and the merged result should carry the name a French reader
+     * searches for and that their author page will be keyed on.
+     */
+    private static String readableAuthors(String kept, String other) {
+        String chosen = firstNonBlank(kept, other);
+        if (chosen != null && other != null && !other.isBlank() && !hasLatin(chosen) && hasLatin(other)) {
+            return other;
+        }
+        return chosen;
+    }
+
+    private static boolean hasLatin(String value) {
+        return value.codePoints().anyMatch(c -> Character.isLetter(c)
+                && Character.UnicodeScript.of(c) == Character.UnicodeScript.LATIN);
     }
 
     private static String firstNonBlank(String a, String b) {

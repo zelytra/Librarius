@@ -325,6 +325,7 @@ function SeriesContent({ id }: { id: string }) {
               <VolumeCell
                 key={volume.volumeNumber ?? `unnumbered-${index}`}
                 volume={volume}
+                seriesTitle={title}
                 wished={volume.volumeNumber != null && wished[volume.volumeNumber] === true}
                 onClick={() => openVolume(volume)}
               />
@@ -387,13 +388,20 @@ function SeriesContent({ id }: { id: string }) {
   );
 }
 
-/** One cell of the grid: a state, a number, and what can be done about it. */
+/**
+ * One volume of the run, drawn as the book it is: its cover when the reader owns it, a
+ * dashed ghost of a cover when they do not. A chip under it says where the reader stands —
+ * read, not read yet, not owned, not out yet — in words, on top of the colour and the
+ * outline, so no single channel carries the state alone.
+ */
 function VolumeCell({
   volume,
+  seriesTitle,
   wished,
   onClick,
 }: {
   volume: SeriesVolumeDto;
+  seriesTitle: string;
   wished: boolean;
   onClick: () => void;
 }) {
@@ -401,7 +409,7 @@ function VolumeCell({
   const state = volumeState(volume);
   const visual = VOLUME_VISUALS[state];
   const stateLabel = t(`series.states.${state}`);
-  // The number alone would leave a screen reader announcing "3" on a grid of squares.
+  // The number alone would leave a screen reader announcing "3" on a grid of covers.
   const label =
     volume.volumeNumber != null
       ? t(wished ? 'series.volumeLabelWished' : 'series.volumeLabel', {
@@ -409,19 +417,35 @@ function VolumeCell({
           state: stateLabel,
         })
       : t('series.unnumberedLabel', { title: volume.title ?? '', state: stateLabel });
+  const number =
+    volume.volumeNumber != null
+      ? t('collection.volumeShort', { number: volume.volumeNumber })
+      : t('series.unnumberedShort');
+  const owned = state === 'read' || state === 'owned';
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={`${styles.cell} ${visual.cell}`}
-    >
-      <Icon name={visual.icon} size={15} fill={visual.fill} />
-      <span className={styles.cellNumber}>
-        {volume.volumeNumber != null ? volume.volumeNumber : t('series.unnumberedShort')}
+    <button type="button" onClick={onClick} aria-label={label} className={styles.volume}>
+      {owned ? (
+        <Cover
+          variant="tile"
+          title={volume.title ?? `${seriesTitle} ${number}`}
+          imageUrl={volume.coverUrl}
+          tag={number}
+          caption={null}
+        >
+          {volume.coverUrl && <span className={styles.volumeNumber}>{number}</span>}
+        </Cover>
+      ) : (
+        <div className={`${styles.ghost} ${visual.cell}`}>
+          <span className={styles.ghostNumber}>{number}</span>
+          <Icon name={visual.icon} size={18} />
+        </div>
+      )}
+      <span className={`${styles.stateChip} ${visual.cell}`}>
+        <Icon name={visual.icon} size={12} fill={visual.fill} />
+        {t(`series.tile.${state}`)}
+        {wished && <Icon name="favorite" size={11} fill style={{ color: 'var(--rose)' }} />}
       </span>
-      {wished && <Icon name="favorite" size={11} fill style={{ color: 'var(--rose)' }} />}
     </button>
   );
 }

@@ -498,6 +498,12 @@ public final class ApiDtos {
             return new SeriesSummaryDto(s.id, s.kind.name(), s.title, s.coverUrl, s.totalVolumes,
                     s.status != null ? s.status.name() : null, ownedCount, readCount, followed);
         }
+
+        /** The same summary, drawn with another cover. */
+        public SeriesSummaryDto withCover(String cover) {
+            return new SeriesSummaryDto(id, kind, title, cover, totalVolumes, status, ownedCount,
+                    readCount, followed);
+        }
     }
 
     /**
@@ -510,10 +516,12 @@ public final class ApiDtos {
      * @param title         title carried by the catalog, {@code null} for a volume nobody
      *                      has entered yet
      * @param libraryItemId the user's item for this volume, {@code null} when not owned
+     * @param coverUrl      the cover of the user's edition of it, {@code null} when not owned
+     *                      or coverless — the grid draws the volume, not just its number
      */
     public record SeriesVolumeDto(Integer volumeNumber, String title, UUID workId,
             UUID libraryItemId, boolean owned, boolean read, boolean missing,
-            boolean upcoming) {
+            boolean upcoming, String coverUrl) {
     }
 
     /** A series, its counters and the state of each of its volumes. */

@@ -13,6 +13,7 @@ import zelytra.librarius.domain.Kind;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +34,7 @@ public class AniListProvider implements CatalogProvider {
     private static final String FIELDS = """
             id title { romaji english } startDate { year month day }
             coverImage { large } description(asHtml: false) isAdult volumes
-            staff(perPage: 1) { edges { role node { name { full } } } }
+            staff(perPage: 8, sort: RELEVANCE) { edges { role node { name { full } } } }
             """;
 
     /**
@@ -136,7 +137,9 @@ public class AniListProvider implements CatalogProvider {
                 + ") { " + FIELDS + " } } }";
 
         Map<String, Object> variables = new HashMap<>();
-        variables.put("q", query.text());
+        // AniList describes a series, not its volumes: "one piece tome 3" is a search for
+        // One Piece, and asked as typed it matched nothing at all.
+        variables.put("q", seriesOf(query.text()));
         variables.put("n", Math.min(limit, MAX_PAGE));
         if (withYear) {
             variables.put("from", query.year() * 10000 + 101);
@@ -171,6 +174,15 @@ public class AniListProvider implements CatalogProvider {
                 .map(this::toResult)
                 .limit(limit)
                 .toList();
+    }
+
+    /** The series a "series + volume marker" search is about; any other text, as typed. */
+    static String seriesOf(String text) {
+        if (text == null) {
+            return null;
+        }
+        VolumeParser.Parsed parsed = VolumeParser.parse(text);
+        return parsed.seriesTitle() != null ? parsed.seriesTitle() : text;
     }
 
     private static boolean matchesTitle(AniListClient.Media media, String text) {
@@ -213,18 +225,77 @@ public class AniListProvider implements CatalogProvider {
     }
 
     private CatalogResult toResult(AniListClient.Media m) {
+        // Trimmed: AniList stores some titles with a trailing line break ("…Volume 0\r\n").
         String title = m.title() == null ? null
-                : firstNonBlank(m.title().english(), m.title().romaji());
-        String author = m.staff() != null && m.staff().edges() != null && !m.staff().edges().isEmpty()
-                && m.staff().edges().get(0).node() != null
-                ? m.staff().edges().get(0).node().name().full()
-                : null;
+                : trimToNull(firstNonBlank(m.title().english(), m.title().romaji()));
+        String author = creators(m.staff());
         Integer year = m.startDate() != null ? m.startDate().year() : null;
         String cover = m.coverImage() != null ? m.coverImage().large() : null;
         VolumeParser.Parsed volume = VolumeParser.parse(title);
         return new CatalogResult("MANGA", title, author, year, cover, m.description(), null, null,
                 null, releaseDate(m.startDate()), volume.seriesTitle(), volume.volumeNumber(), null,
                 "anilist", String.valueOf(m.id()));
+    }
+
+    /**
+     * The people credited with writing or drawing the work, out of its staff list.
+     *
+     * <p>AniList's staff connection lists everyone who worked on a title — assistants,
+     * translators, letterers — and its first edge is not reliably the author: on
+     * <em>Attack on Titan</em> it is an assistant, ahead of Hajime Isayama. So the edges are
+     * filtered on their role: the creative ones ({@code Story & Art}, {@code Story},
+     * {@code Art}, {@code Original Creator}…) are kept, at most two distinct names, which is
+     * how a manga is credited on its cover ("Kanehito Yamada, Tsukasa Abe"). A list with no
+     * creative role falls back to nobody rather than to an assistant.
+     */
+    static String creators(AniListClient.Staff staff) {
+        if (staff == null || staff.edges() == null) {
+            return null;
+        }
+        List<String> names = namesWithRoles(staff, MAKERS);
+        if (names.isEmpty()) {
+            names = namesWithRoles(staff, ORIGINATORS);
+        }
+        return names.isEmpty() ? null : String.join(", ", names);
+    }
+
+    /** At most two distinct names holding one of {@code roles}, most authoritative role first. */
+    private static List<String> namesWithRoles(AniListClient.Staff staff, List<String> roles) {
+        List<String> names = new ArrayList<>();
+        for (String wanted : roles) {
+            for (AniListClient.StaffEdge edge : staff.edges()) {
+                if (names.size() == 2) {
+                    return names;
+                }
+                if (edge == null || edge.node() == null || edge.node().name() == null) {
+                    continue;
+                }
+                String name = edge.node().name().full();
+                if (name != null && !name.isBlank() && !names.contains(name)
+                        && wanted.equals(roleOf(edge.role()))) {
+                    names.add(name);
+                }
+            }
+        }
+        return names;
+    }
+
+    /** Who wrote or drew the work itself, most authoritative first. */
+    private static final List<String> MAKERS = List.of("story & art", "story", "art");
+
+    /**
+     * Whom a spin-off is "based on": credited only when nobody holds the story or the art, so
+     * a spin-off is credited to the person who drew it.
+     */
+    private static final List<String> ORIGINATORS = List.of("original creator", "original story");
+
+    /** The role without AniList's parenthesised qualifier ("Story & Art (ch 1-10)"). */
+    private static String roleOf(String role) {
+        if (role == null) {
+            return "";
+        }
+        int paren = role.indexOf('(');
+        return (paren >= 0 ? role.substring(0, paren) : role).trim().toLowerCase(Locale.ROOT);
     }
 
     private static LocalDate releaseDate(AniListClient.FuzzyDate d) {
@@ -236,6 +307,10 @@ public class AniListProvider implements CatalogProvider {
         } catch (RuntimeException e) {
             return null;
         }
+    }
+
+    private static String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     private static String firstNonBlank(String a, String b) {

@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useGetApiAuthors } from '../../api/generated/librarius';
 import { splitAuthorNames } from './author';
+import styles from './AuthorNames.module.css';
 
 /**
  * One name out of a credit line, resolved to the shared catalog through `GET /api/authors?q=`.
@@ -23,7 +24,11 @@ function AuthorNameLink({ name }: { name: string }) {
   // no such parent (the Author page's own header), stopping a click that bubbles nowhere is
   // harmless.
   return (
-    <Link to={`/authors/${match.id}`} onClick={(e) => e.stopPropagation()}>
+    <Link
+      to={`/authors/${match.id}`}
+      className={styles.link}
+      onClick={(e) => e.stopPropagation()}
+    >
       {name}
     </Link>
   );

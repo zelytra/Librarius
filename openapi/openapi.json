@@ -1072,6 +1072,9 @@
           },
           "upcoming" : {
             "type" : "boolean"
+          },
+          "coverUrl" : {
+            "type" : "string"
           }
         }
       },
@@ -2295,6 +2298,13 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "standalone",
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         }, {
           "name" : "status",

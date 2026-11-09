@@ -10,3 +10,13 @@
   cursor: pointer;
   line-height: 0;
 }
+
+.filled {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+
+.empty {
+  fill: none;
+  stroke: var(--line);
+}

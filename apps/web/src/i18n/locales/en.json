@@ -297,7 +297,11 @@
       "description": "Add books from the Discover tab.",
       "action": "Discover titles"
     },
-    "error": "Your collection could not be loaded."
+    "error": "Your collection could not be loaded.",
+    "grouped": "By series",
+    "flat": "All titles",
+    "groupedTotal_one": "{{count}} series · {{oneShots}} standalone titles",
+    "groupedTotal_other": "{{count}} series · {{oneShots}} standalone titles"
   },
   "categories": {
     "title": "My categories",
@@ -374,6 +378,20 @@
     "empty": {
       "title": "No series here.",
       "description": "A series shows up as soon as one of its volumes joins your collection."
+    },
+    "block": {
+      "tag": "Series",
+      "badge_one": "{{count}} volume",
+      "badge_other": "{{count}} volumes",
+      "ofTotal": "{{owned}} / {{total}} volumes · {{read}} read",
+      "owned_one": "{{count}} volume · {{read}} read",
+      "owned_other": "{{count}} volumes · {{read}} read"
+    },
+    "tile": {
+      "read": "Read",
+      "owned": "Unread",
+      "missing": "Not owned",
+      "upcoming": "Upcoming"
     }
   },
   "author": {

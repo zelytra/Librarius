@@ -146,6 +146,23 @@ describe('DiscoverPage', () => {
   });
 
   /**
+   * The search-as-you-type pause runs out after the button already fired the same search: it
+   * used to submit it again and wipe the confirmation of a title added in the meantime.
+   */
+  test('keeps the confirmation when the typing pause runs out after an addition', async () => {
+    searchReturns([catalogResult()]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+    await userEvent.click(await screen.findByText('Collection'));
+    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    expect(screen.getByText('✓ Ajouté à la collection')).toBeInTheDocument();
+  });
+
+  /**
    * The card knows which record it is showing, and it is the only place that does: dropped
    * here, no provider can ever be asked about the title again (#184).
    */

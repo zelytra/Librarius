@@ -167,28 +167,69 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 14px 10px;
 }
 
-.cell {
+/* One volume: a cover (or its ghost) over a chip naming the state. */
+.volume {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* The volume number over a real cover, which prints none of its own in the grid. */
+.volumeNumber {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-chip);
+  background: var(--overlay-strong);
+  color: var(--ink);
+  font-size: var(--fs-10);
+  font-weight: 700;
+}
+
+/* A volume not on the shelf: the outline of a cover, faded, with its number. */
+.ghost {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  aspect-ratio: 1;
-  padding: 4px;
+  gap: 6px;
+  aspect-ratio: 0.68;
   border-radius: var(--radius-tile);
-  font-family: inherit;
-  cursor: pointer;
+  opacity: 0.85;
 }
 
-.cellNumber {
-  font-size: var(--fs-13);
+.ghostNumber {
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
   font-weight: 600;
-  line-height: 1.1;
 }
+
+.stateChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: var(--radius-chip);
+  font-size: var(--fs-10);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+
 
 /* ── The four states ──────────────────────────────────────────────────────────
    Each pairs a fill with an icon, and the two states the user does not own are

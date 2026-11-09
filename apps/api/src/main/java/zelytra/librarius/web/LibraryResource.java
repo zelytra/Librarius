@@ -87,6 +87,8 @@ public class LibraryResource {
      * @param genre     code of a genre, as {@code /api/genres} returns it
      * @param minRating keeps the titles rated at least that much — 4 is "my favourites"
      * @param q         free text matched against the title, the authors and the series
+     * @param standalone only the titles that belong to no series, the one-shots the grouped
+     *                  shelf lists beside its series blocks
      */
     @GET
     public LibraryPageDto list(
@@ -98,7 +100,8 @@ public class LibraryResource {
             @QueryParam("rank") String rank,
             @QueryParam("genre") String genre,
             @QueryParam("minRating") Integer minRating,
-            @QueryParam("q") String q) {
+            @QueryParam("q") String q,
+            @QueryParam("standalone") @DefaultValue("false") boolean standalone) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
@@ -107,7 +110,8 @@ public class LibraryResource {
         }
         PageRequest window = PageRequest.of(page, size);
         LibraryFilter filter =
-                new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q);
+                new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q,
+                        standalone);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =

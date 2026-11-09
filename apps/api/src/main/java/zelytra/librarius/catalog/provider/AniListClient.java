@@ -7,6 +7,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Map;
  * on every chunk received, so it bounds silence, not slowness.
  */
 @RegisterRestClient(configKey = "anilist")
+@ClientHeaderParam(name = "User-Agent", value = CatalogUserAgent.VALUE)
 @Path("/")
 public interface AniListClient {
 

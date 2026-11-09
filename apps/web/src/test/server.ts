@@ -133,6 +133,8 @@ export function libraryReturns(items: LibraryItemDto[]) {
     if (minRating) matching = matching.filter((it) => (it.rating ?? 0) >= Number(minRating));
     const q = params.get('q');
     if (q) matching = matching.filter((it) => matches(it.book, q));
+    // The grouped shelf asks only for the one-shots: a volume of a series is drawn as its block.
+    if (params.get('standalone') === 'true') matching = matching.filter((it) => !it.book?.seriesTitle);
 
     const field = SORT_FIELD[params.get('sort') ?? 'added'];
     if (field) {

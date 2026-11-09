@@ -233,9 +233,16 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * @param minRating keep only the titles rated at least that much — the "my favourites"
      *                  shelf is this filter at 4. Unrated titles never match
      * @param search    free text matched against the title, the authors and the series
+     * @param standalone keep only the titles that belong to no series — the one-shots the
+     *                  grouped shelf lists beside its series blocks
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
-            String genre, Integer minRating, String search) {
+            String genre, Integer minRating, String search, boolean standalone) {
+
+        public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
+                String genre, Integer minRating, String search) {
+            this(userId, kind, status, rank, genre, minRating, search, false);
+        }
     }
 
     /** Orderings offered on the collection, exposed as the {@code sort} query parameter. */
@@ -324,6 +331,9 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         if (filter.status() != null) {
             clauses.add("li.status = :status");
             params.put("status", filter.status());
+        }
+        if (filter.standalone()) {
+            clauses.add("w.series is null");
         }
         if (filter.rank() != null && !filter.rank().isBlank()) {
             clauses.add("rc.code = :rank");
@@ -484,5 +494,30 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                 .map(row -> new GenreTotal((String) row[0], (String) row[1],
                         ((Number) row[2]).longValue()))
                 .toList();
+    }
+
+    /**
+     * For each series the user owns a volume of, the cover of the lowest-numbered owned volume
+     * that has one — what the series is drawn with when the catalog gave it no cover of its own.
+     */
+    public java.util.Map<UUID, String> firstVolumeCovers(String userId) {
+        List<Object[]> rows = getEntityManager()
+                .createQuery("""
+                        select w.series.id, e.coverUrl
+                        from LibraryItem li
+                          join li.edition e
+                          join e.work w
+                        where li.userId = :userId
+                          and w.series is not null
+                          and e.coverUrl is not null
+                        order by w.volumeNumber asc nulls last, li.createdAt asc
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .getResultList();
+        java.util.Map<UUID, String> covers = new java.util.LinkedHashMap<>();
+        for (Object[] row : rows) {
+            covers.putIfAbsent((UUID) row[0], (String) row[1]);
+        }
+        return covers;
     }
 }

@@ -376,4 +376,63 @@ class SeriesApiTest {
                 .when().put("/api/series/" + id + "/review")
                 .then().statusCode(400);
     }
+
+    // ── Covers ────────────────────────────────────────────────────────────────
+
+    /**
+     * An imported run has no series cover: the series is drawn with its first owned volume,
+     * and each owned volume of the grid with its own cover, a missing one with none.
+     */
+    @Test
+    void drawsTheSeriesAndItsVolumesWithTheOwnedCovers() {
+        String title = "Series Test - covers " + java.util.UUID.randomUUID();
+        for (int volume : new int[] {3, 1}) {
+            given().auth().oauth2(token("alice")).contentType("application/json")
+                    .body("""
+                            { "book": { "kind": "MANGA", "title": "%s vol. %d",
+                                        "authors": "Series Test", "seriesTitle": "%s",
+                                        "volumeNumber": %d,
+                                        "coverUrl": "https://covers.test/v%d.jpg" },
+                              "status": "OWNED" }
+                            """.formatted(title, volume, title, volume, volume))
+                    .when().post("/api/library")
+                    .then().statusCode(201);
+        }
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/series")
+                .then().statusCode(200)
+                .body("find { it.id == '" + id + "' }.coverUrl", is("https://covers.test/v1.jpg"));
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/series/" + id)
+                .then().statusCode(200)
+                .body("volumes[0].coverUrl", is("https://covers.test/v1.jpg"))
+                .body("volumes[1].owned", is(false))
+                .body("volumes[1].coverUrl", org.hamcrest.Matchers.nullValue())
+                .body("volumes[2].coverUrl", is("https://covers.test/v3.jpg"));
+    }
+
+    /** The grouped shelf lists one-shots apart: `standalone=true` leaves every volume of a run out. */
+    @Test
+    void listsOnlyTheTitlesOfNoSeriesWhenAskedForTheOneShots() {
+        String title = "Series Test - standalone " + java.util.UUID.randomUUID();
+        addVolume("bob", title, 1, "OWNED");
+        String oneShot = "One-shot " + java.util.UUID.randomUUID();
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "MANGA", "title": "%s", "authors": "Series Test" },
+                          "status": "OWNED" }
+                        """.formatted(oneShot))
+                .when().post("/api/library")
+                .then().statusCode(201);
+
+        given().auth().oauth2(token("bob"))
+                .queryParam("standalone", true).queryParam("size", 100).queryParam("kind", "MANGA")
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("items.book.title", org.hamcrest.Matchers.hasItem(oneShot))
+                .body("items.book.seriesTitle", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue()));
+    }
 }

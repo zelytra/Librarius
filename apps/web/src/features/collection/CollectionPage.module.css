@@ -127,7 +127,9 @@
    a medal hung outside came out sliced along two edges. */
 .rankBadge {
   position: absolute;
-  top: 6px;
+  /* Under the remove button: the bottom edge belongs to the title, which the button used
+     to cover ("One Piece Tom…" — the volume number was the part hidden). */
+  top: 36px;
   right: 6px;
   width: 24px;
   height: 24px;
@@ -140,7 +142,7 @@
 
 .removeButton {
   position: absolute;
-  bottom: 6px;
+  top: 6px;
   right: 6px;
   width: 24px;
   height: 24px;

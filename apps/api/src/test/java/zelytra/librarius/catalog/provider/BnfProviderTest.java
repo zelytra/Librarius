@@ -88,33 +88,34 @@ class BnfProviderTest {
     }
 
     @Test
-    void sendsTheFreeTextOnTheAnywhereIndex() {
-        assertEquals("bib.anywhere all \"fourth wing\"", cqlFor(CatalogQuery.of("fourth wing")));
+    void sendsTheFreeTextOnTheTitleAndAuthorIndexes() {
+        assertEquals("(bib.title all \"fourth wing\" or bib.author all \"fourth wing\") and bib.doctype any \"a\"", cqlFor(CatalogQuery.of("fourth wing")));
     }
 
     @Test
     void joinsEveryAdvancedCriterionWithAnd() {
         String cql = cqlFor(new CatalogQuery("dune", "Frank Herbert", null, null, "Pocket", null));
 
-        assertTrue(cql.contains("bib.anywhere all \"dune\""), cql);
+        assertTrue(cql.contains("(bib.title all \"dune\" or bib.author all \"dune\")"), cql);
         assertTrue(cql.contains("bib.author all \"Frank Herbert\""), cql);
         assertTrue(cql.contains("bib.publisher all \"Pocket\""), cql);
-        assertEquals(2, cql.split(" and ").length - 1, cql);
+        // Three criteria and the printed-text restriction.
+        assertEquals(3, cql.split(" and ").length - 1, cql);
     }
 
     @Test
     void searchesTheIsbnOnItsOwnIndex() {
-        assertEquals("bib.isbn all \"9782266116242\"",
+        assertEquals("bib.isbn all \"9782266116242\" and bib.doctype any \"a\"",
                 cqlFor(new CatalogQuery(null, null, null, null, null, "9782266116242")));
     }
 
     @Test
     void mapsTheLanguageToItsMarcCode() {
         // The BnF indexes languages as MARC codes; the client speaks ISO 639-1.
-        assertEquals("bib.language all \"fre\"",
+        assertEquals("bib.language all \"fre\" and bib.doctype any \"a\"",
                 cqlFor(new CatalogQuery(null, null, null, "fr", null, null)));
         // Already a MARC code: passed through rather than dropped.
-        assertEquals("bib.language all \"jpn\"",
+        assertEquals("bib.language all \"jpn\" and bib.doctype any \"a\"",
                 cqlFor(new CatalogQuery(null, null, null, "jpn", null, null)));
     }
 
@@ -123,7 +124,7 @@ class BnfProviderTest {
         // An unbalanced quote would make the BnF answer a diagnostic instead of records.
         String cql = cqlFor(new CatalogQuery(null, "Herbert\" or", null, null, null, null));
 
-        assertEquals("bib.author all \"Herbert or\"", cql);
+        assertEquals("bib.author all \"Herbert or\" and bib.doctype any \"a\"", cql);
         assertFalse(cql.contains("\"\""), cql);
     }
 
@@ -256,12 +257,15 @@ class BnfProviderTest {
     }
 
     @Test
-    void asksForAFullPageWhenTheYearIsFilteredHere() {
+    void asksForAFullPageWhenTheYearOrTheRankingNeedsOne() {
         CapturingClient client = new CapturingClient(DUNE);
         BnfProvider provider = provider(client, Duration.ofSeconds(5));
 
+        provider.search(new CatalogQuery(null, "Frank Herbert", null, null, null, null), 5);
+        assertEquals(5, client.maximumRecords, "nothing to filter or rank: ask for what is wanted");
+
         provider.search(CatalogQuery.of("dune"), 5);
-        assertEquals(5, client.maximumRecords, "no local filter: ask for what is wanted");
+        assertTrue(client.maximumRecords > 5, "free text is ranked downstream: a full page");
 
         provider.search(new CatalogQuery("dune", null, 1975, null, null, null), 5);
         assertTrue(client.maximumRecords > 5, "a locally filtered year needs a page to filter");
@@ -345,5 +349,62 @@ class BnfProviderTest {
         assertEquals("J. R. R. Tolkien", BnfProvider.normalizeCreator("Tolkien, J. R. R."));
         // A single-element name has nothing to swap.
         assertEquals("Hergé", BnfProvider.normalizeCreator("Hergé (1907-1983)"));
+    }
+
+    @Test
+    void restrictsTheSearchToPrintedText() {
+        assertTrue(cqlFor(CatalogQuery.of("one piece")).endsWith(" and bib.doctype any \"a\""));
+    }
+
+    @Test
+    void dropsTheGamesAndFilmsTheIndexStillLetsThrough() throws Exception {
+        // Live shapes: a box set of the film is "multimédia multisupport", a game "jeu vidéo".
+        String xml = "<srw:searchRetrieveResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\""
+                + " xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><srw:records>"
+                + record("One Piece. 56 / Eiichiro Oda", "texte imprimé")
+                + record("One piece Z (Éd. limitée) Eiichirô Oda, auteur adapté", "multimédia multisupport")
+                + record("One piece mansion / Capcom, développement", "jeu vidéo")
+                + "</srw:records></srw:searchRetrieveResponse>";
+
+        List<CatalogResult> results = BnfProvider.parse(xml);
+
+        assertEquals(1, results.size());
+        assertEquals("One Piece. 56", results.get(0).title());
+        assertEquals("One Piece", results.get(0).seriesTitle());
+        assertEquals(56, results.get(0).volumeNumber());
+    }
+
+    private static String record(String title, String type) {
+        return "<srw:record><srw:recordData><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\">"
+                + "<dc:title>" + title + "</dc:title><dc:type xml:lang=\"fre\">" + type
+                + "</dc:type></oai_dc:dc></srw:recordData></srw:record>";
+    }
+
+    @Test
+    void cutsTheEditionStatementAndTheFormSubtitleOffATitle() {
+        // Live BnF titles that carry no " / " before their authorship.
+        assertEquals("La horde du contrevent",
+                BnfProvider.isbdTitle("La horde du contrevent : roman (Nouvelle éd.) Alain Damasio"));
+        assertEquals("Le cycle de Dune",
+                BnfProvider.isbdTitle("Le cycle de Dune (Trad. revue et corrigée) Frank Herbert"));
+        assertEquals("One Piece 113 : coffre au trésor",
+                BnfProvider.isbdTitle("One Piece 113 : coffre au trésor (Édition originale) "));
+        // A real subtitle, and brackets that are no edition statement, stay.
+        assertEquals("Astérix : le tour de Gaule",
+                BnfProvider.isbdTitle("Astérix : le tour de Gaule / Goscinny"));
+        assertEquals("Les fleurs du mal (1857)", BnfProvider.isbdTitle("Les fleurs du mal (1857)"));
+    }
+
+    @Test
+    void keepsARecordThatCarriesNoType() {
+        assertTrue(BnfProvider.isPrintedText(List.of()));
+        assertTrue(BnfProvider.isPrintedText(List.of("texte imprimé", "printed text", "text")));
+        assertFalse(BnfProvider.isPrintedText(List.of("publication en série imprimée")));
+    }
+
+    @Test
+    void leavesTheVolumeMarkerOutOfTheTitleSearch() {
+        assertTrue(cqlFor(CatalogQuery.of("one piece tome 1"))
+                .startsWith("(bib.title all \"one piece 1\" or"), cqlFor(CatalogQuery.of("one piece tome 1")));
     }
 }

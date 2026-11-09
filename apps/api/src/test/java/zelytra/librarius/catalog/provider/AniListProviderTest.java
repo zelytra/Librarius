@@ -133,4 +133,53 @@ class AniListProviderTest {
         assertTrue(results.isEmpty(), "a timed-out call degrades into an empty result");
         assertTrue(elapsedMs < 5_000, "the call must give up on its own, took " + elapsedMs + "ms");
     }
+
+    private static AniListClient.Staff staff(String... roleAndName) {
+        List<AniListClient.StaffEdge> edges = new java.util.ArrayList<>();
+        for (int i = 0; i < roleAndName.length; i += 2) {
+            edges.add(new AniListClient.StaffEdge(roleAndName[i],
+                    new AniListClient.StaffNode(new AniListClient.Name(roleAndName[i + 1]))));
+        }
+        return new AniListClient.Staff(edges);
+    }
+
+    @Test
+    void creditsTheAuthorRatherThanTheFirstAssistantListed() {
+        // Live AniList answer for Attack on Titan: an assistant comes first in the staff list.
+        assertEquals("Hajime Isayama", AniListProvider.creators(staff(
+                "Assistant", "Tatsuya Endou",
+                "Story & Art", "Hajime Isayama",
+                "Assistant", "Yuusuke Nomura")));
+    }
+
+    @Test
+    void creditsTheWriterAndTheArtistOfASplitTeam() {
+        assertEquals("Kanehito Yamada, Tsukasa Abe", AniListProvider.creators(staff(
+                "Translator (French)", "Géraldine Oudin",
+                "Art", "Tsukasa Abe",
+                "Story", "Kanehito Yamada")));
+    }
+
+    @Test
+    void prefersWhoeverDrewASpinOffOverTheOriginalCreator() {
+        assertEquals("Ei Andou", AniListProvider.creators(staff(
+                "Original Creator", "Eiichirou Oda",
+                "Story & Art (ch 1-7)", "Ei Andou",
+                "Translator (German)", "Antje Bockel")));
+    }
+
+    @Test
+    void creditsNobodyWhenNoCreativeRoleIsListed() {
+        assertEquals(null, AniListProvider.creators(staff("Assistant", "Someone", "Editing", "Else")));
+        assertEquals(null, AniListProvider.creators(null));
+    }
+
+    @Test
+    void searchesTheSeriesOfAVolumeSearch() {
+        provider().search(CatalogQuery.of("one piece tome 3"), 20);
+        assertEquals("one piece", client.request.variables().get("q"));
+
+        provider().search(CatalogQuery.of("Kaiju No. 8"), 20);
+        assertEquals("Kaiju No. 8", client.request.variables().get("q"));
+    }
 }

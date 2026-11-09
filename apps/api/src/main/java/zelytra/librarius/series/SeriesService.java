@@ -75,12 +75,18 @@ public class SeriesService {
         Set<UUID> visible = new LinkedHashSet<>(counters.keySet());
         visible.addAll(followed);
 
+        Map<UUID, String> ownCovers = items.firstVolumeCovers(userId);
         return series.listByIds(visible).stream()
                 .map(s -> {
                     OwnershipCounters row = counters.get(s.id);
                     long owned = row != null ? row.owned() : 0;
                     long read = row != null ? row.read() : 0;
-                    return SeriesSummaryDto.of(s, owned, read, followed.contains(s.id));
+                    SeriesSummaryDto dto = SeriesSummaryDto.of(s, owned, read, followed.contains(s.id));
+                    // A series carries a cover only when a provider gave it one, which an
+                    // imported run never had: its block on the shelf then shows the first
+                    // volume the reader owns, the way the spine of a run on a real shelf does.
+                    return dto.coverUrl() != null || !ownCovers.containsKey(s.id) ? dto
+                            : dto.withCover(ownCovers.get(s.id));
                 })
                 .toList();
     }
@@ -287,7 +293,8 @@ public class SeriesService {
                         isOwned,
                         isOwned && item.status == LibraryStatus.READ,
                         !isOwned && volume < highestOwned,
-                        !isOwned && volume > highestOwned));
+                        !isOwned && volume > highestOwned,
+                        isOwned ? item.edition.coverUrl : null));
             }
             // A numbered volume the span could not reach — only a stray number puts an owned
             // one outside [first, last] — is still listed, so ownership is never dropped.
@@ -298,13 +305,14 @@ public class SeriesService {
                     Work work = catalogByVolume.get(volume);
                     volumes.add(new SeriesVolumeDto(volume, work != null ? work.title : null,
                             work != null ? work.id : null, item.id, true,
-                            item.status == LibraryStatus.READ, false, false));
+                            item.status == LibraryStatus.READ, false, false,
+                            item.edition.coverUrl));
                 }
             }
             for (LibraryItem item : unnumbered) {
                 Work work = item.edition.work;
                 volumes.add(new SeriesVolumeDto(null, work.title, work.id, item.id, true,
-                        item.status == LibraryStatus.READ, false, false));
+                        item.status == LibraryStatus.READ, false, false, item.edition.coverUrl));
             }
 
             return new Run(List.copyOf(volumes), ownedWorks.size(), readWorks.size());

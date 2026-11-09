@@ -106,9 +106,12 @@ public class BnfProvider implements CatalogProvider {
             if (xml == null || xml.isBlank()) {
                 return List.of();
             }
+            // A free-text search hands back the whole page: the BnF orders its answer by
+            // nothing a reader would recognise, and CatalogService ranks the candidates of every
+            // provider by relevance before trimming them to the limit.
             return parse(xml).stream()
                     .filter(result -> query.year() == null || query.year().equals(result.year()))
-                    .limit(limit)
+                    .limit(query.text() != null ? MAX_RECORDS : limit)
                     .toList();
         } catch (Exception e) {
             // Same contract as the other two providers: a failure is no result, never an
@@ -125,9 +128,12 @@ public class BnfProvider implements CatalogProvider {
         return List.of();
     }
 
-    /** A locally filtered year needs a page to filter from; anything else asks for what it needs. */
+    /**
+     * A full page when the year is filtered here or when free text is to be ranked by
+     * CatalogService; otherwise only what is needed.
+     */
     private static int pageSize(CatalogQuery query, int limit) {
-        return query.year() != null ? MAX_RECORDS : Math.min(limit, MAX_RECORDS);
+        return query.year() != null || query.text() != null ? MAX_RECORDS : Math.min(limit, MAX_RECORDS);
     }
 
     /**
@@ -141,7 +147,20 @@ public class BnfProvider implements CatalogProvider {
      */
     private static String cqlQuery(CatalogQuery query) {
         StringBuilder cql = new StringBuilder();
-        append(cql, "bib.anywhere", query.text());
+        if (query.text() != null) {
+            // Title or author rather than bib.anywhere: "anywhere" also reads the notes, the
+            // series statements and the identifiers, so "one piece 1" matched 182 records in an
+            // arbitrary order and the actual first volume was not among the 20 returned; on the
+            // title and author indexes it matches 24 and is one of them. A bare author name
+            // typed in the search field still answers through bib.author.
+            // "tome", "vol." and "t." are the reader's words, never the catalogue's: a BnF
+            // volume is titled "One Piece. 1", so "one piece tome 1" matched nothing at all.
+            String text = cleaned(VolumeParser.withoutMarkers(query.text()));
+            if (!text.isEmpty()) {
+                cql.append("(bib.title all \"").append(text).append("\" or bib.author all \"")
+                        .append(text).append("\")");
+            }
+        }
         append(cql, "bib.author", query.author());
         append(cql, "bib.publisher", query.publisher());
         append(cql, "bib.isbn", query.isbn());
@@ -149,6 +168,14 @@ public class BnfProvider implements CatalogProvider {
             String language = query.language().toLowerCase(Locale.ROOT);
             append(cql, "bib.language", MARC_LANGUAGES.getOrDefault(language, language));
         }
+        if (cql.isEmpty()) {
+            return "";
+        }
+        // Printed text only. The general catalogue also describes video games, films, records
+        // and periodicals: "one piece" answered Namco's games and a DJ remix next to the
+        // manga. The index narrows most of it; isPrintedText() drops what still slips through
+        // (a box set catalogued as "multimédia multisupport").
+        cql.append(" and bib.doctype any \"a\"");
         return cql.toString();
     }
 
@@ -161,7 +188,7 @@ public class BnfProvider implements CatalogProvider {
         if (value == null) {
             return;
         }
-        String cleaned = value.replace("\"", " ").replace("\\", " ").replaceAll("\\s+", " ").trim();
+        String cleaned = cleaned(value);
         if (cleaned.isEmpty()) {
             return;
         }
@@ -169,6 +196,10 @@ public class BnfProvider implements CatalogProvider {
             cql.append(" and ");
         }
         cql.append(index).append(" all \"").append(cleaned).append('"');
+    }
+
+    private static String cleaned(String value) {
+        return value.replace("\"", " ").replace("\\", " ").replaceAll("\\s+", " ").trim();
     }
 
     /**
@@ -194,6 +225,9 @@ public class BnfProvider implements CatalogProvider {
     }
 
     private static CatalogResult toResult(Element record) {
+        if (!isPrintedText(all(record, "type"))) {
+            return null;
+        }
         String title = isbdTitle(first(record, "title"));
         if (title == null) {
             // A record with no title cannot be shown, and would collide with every other
@@ -218,13 +252,47 @@ public class BnfProvider implements CatalogProvider {
      * so it is cut: it is what makes the title fit a result tile, and what lets a book both
      * catalogues hold merge on the title+author key instead of being listed twice.
      */
-    private static String isbdTitle(String raw) {
+    static String isbdTitle(String raw) {
         if (raw == null) {
             return null;
         }
         int responsibility = raw.indexOf(" / ");
         String title = (responsibility > 0 ? raw.substring(0, responsibility) : raw).trim();
+        // A newer record drops the " / " and runs the edition statement and the authorship on
+        // after the title: "La horde du contrevent : roman (Nouvelle éd.) Alain Damasio". The
+        // edition statement in brackets is where that tail starts.
+        title = EDITION_STATEMENT.matcher(title).replaceFirst("").trim();
+        // A subtitle that is only the form of the work ("roman", "nouvelles") says nothing a
+        // reader would type, and kept the BnF's copy from merging with Open Library's.
+        title = FORM_SUBTITLE.matcher(title).replaceFirst("").trim();
         return title.isEmpty() ? null : title;
+    }
+
+    /**
+     * "(Nouvelle éd.)", "(Éd. collector)", "(Édition originale)", "(Trad. revue et corrigée)" —
+     * and whatever follows it.
+     */
+    private static final Pattern EDITION_STATEMENT = Pattern.compile(
+            "\\s*\\((?=[^)]*(?iu:(?<!\\p{L})[ée]d\\.|[ée]dition|(?<!\\p{L})trad\\.|traduction|revue et|augment))[^)]*\\).*$");
+
+    /** A trailing " : roman", " : nouvelles"… — a statement of form, not a subtitle. */
+    private static final Pattern FORM_SUBTITLE = Pattern.compile(
+            "(?iu)\\s*:\\s*(?:roman|romans|récit|récits|nouvelles|nouvelle|essai|contes|conte|"
+                    + "poèmes|poésie|théâtre|bande dessinée|manga)\\s*$");
+
+    /**
+     * Whether the record describes a printed text. Dublin Core carries the type in French
+     * first ("texte imprimé"), then in English; a record with no type at all is kept, so a
+     * change of wording at the BnF cannot empty every answer.
+     */
+    static boolean isPrintedText(List<String> types) {
+        if (types.isEmpty()) {
+            return true;
+        }
+        return types.stream().anyMatch(type -> {
+            String t = type.toLowerCase(Locale.ROOT);
+            return t.equals("texte imprimé") || t.equals("printed text");
+        });
     }
 
     /**

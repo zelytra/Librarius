@@ -180,4 +180,37 @@ class OpenLibraryProviderTest {
         assertTrue(provider.editionsOf("  ", 20).isEmpty());
         assertTrue(provider.editionsOf(null, 20).isEmpty());
     }
+
+    @Test
+    void searchResultsCarryTheWorkReferenceTheEditionsLookupKeysOn() {
+        OpenLibraryClient answering = new OpenLibraryClient() {
+            @Override
+            public Uni<SearchResponse> search(String q, int limit, String fields) {
+                assertTrue(fields.startsWith("key,"), fields);
+                return Uni.createFrom().item(new SearchResponse(List.of(new Doc(
+                        "/works/OL15505243W", "La Horde du Contrevent", List.of("Alain Damasio"),
+                        2004, 6670450L, List.of("9782070342266"), List.of("Gallimard"),
+                        List.of("fre"), 700))));
+            }
+
+            @Override
+            public Uni<EditionsResponse> editions(String ref, int limit) {
+                return Uni.createFrom().item(new EditionsResponse(List.of()));
+            }
+        };
+
+        CatalogResult result = provider(answering, Duration.ofSeconds(5))
+                .search(CatalogQuery.of("la horde du contrevent"), 10).get(0);
+
+        assertEquals("openlibrary", result.provider());
+        assertEquals("OL15505243W", result.providerRef());
+    }
+
+    @Test
+    void readsOnlyAWellFormedWorkKey() {
+        assertEquals("OL45804W", OpenLibraryProvider.workKey("/works/OL45804W"));
+        assertNull(OpenLibraryProvider.workKey("/books/OL7353617M"));
+        assertNull(OpenLibraryProvider.workKey("/works/../etc"));
+        assertNull(OpenLibraryProvider.workKey(null));
+    }
 }

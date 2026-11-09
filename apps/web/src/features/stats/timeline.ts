@@ -58,3 +58,26 @@ export function monthLabels(style: 'narrow' | 'long'): string[] {
   const format = new Intl.DateTimeFormat(activeLanguage(), { month: style });
   return Array.from({ length: 12 }, (_, index) => format.format(new Date(2026, index, 1)));
 }
+
+/** How many years the selector offers at most: the most recent ones. */
+const MAX_YEARS = 6;
+
+/**
+ * The years the selector offers, most recent first: the current year and the last one always —
+ * the goal is about the first, January readers look back at the second — then every year that
+ * holds a finished reading, and the year on screen in any case, capped to the most recent few.
+ */
+export function offeredYears(
+  thisYear: number,
+  selected: number,
+  points: { period?: string; books?: number }[] = []
+): number[] {
+  const years = new Set([thisYear, thisYear - 1, selected]);
+  for (const point of points) {
+    const value = Number((point.period ?? '').slice(0, 4));
+    if (Number.isInteger(value) && value > 1900 && value <= thisYear && (point.books ?? 0) > 0) {
+      years.add(value);
+    }
+  }
+  return [...years].sort((a, b) => b - a).slice(0, MAX_YEARS);
+}

@@ -297,7 +297,11 @@
       "description": "Ajoute des livres depuis l'onglet Découvrir.",
       "action": "Découvrir des titres"
     },
-    "error": "Impossible de charger ta collection."
+    "error": "Impossible de charger ta collection.",
+    "grouped": "Par série",
+    "flat": "Tous les titres",
+    "groupedTotal_one": "{{count}} série · {{oneShots}} titres seuls",
+    "groupedTotal_other": "{{count}} séries · {{oneShots}} titres seuls"
   },
   "categories": {
     "title": "Mes catégories",
@@ -374,6 +378,20 @@
     "empty": {
       "title": "Aucune série ici.",
       "description": "Les séries apparaissent dès qu'un de leurs tomes rejoint ta collection."
+    },
+    "block": {
+      "tag": "Série",
+      "badge_one": "{{count}} tome",
+      "badge_other": "{{count}} tomes",
+      "ofTotal": "{{owned}} / {{total}} tomes · {{read}} lus",
+      "owned_one": "{{count}} tome · {{read}} lu",
+      "owned_other": "{{count}} tomes · {{read}} lus"
+    },
+    "tile": {
+      "read": "Lu",
+      "owned": "Non lu",
+      "missing": "Pas possédé",
+      "upcoming": "À paraître"
     }
   },
   "author": {

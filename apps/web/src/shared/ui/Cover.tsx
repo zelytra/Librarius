@@ -62,10 +62,16 @@ export function Cover({
   // both the no-cover rendering and the backdrop the skeleton and the fading-in
   // image sit on.
   const background = colorFor(title);
-  const withImage = imageUrl ? styles.withImage : '';
+  // The titled placeholder stands until a real cover has actually loaded: a cover that fails
+  // (Open Library answers 404 for an ISBN it has no image of) or that never arrives (a slow
+  // or offline network) is no cover. Before, the title was only drawn when there was no URL
+  // at all, so either case left an anonymous coloured tile. The image is transparent until
+  // it decodes and sits above the title, so a successful load simply covers it.
+  const placeholder = !imageUrl || !loaded;
+  const withImage = placeholder ? '' : styles.withImage;
   const showSkeleton = Boolean(imageUrl) && !loaded && !errored;
 
-  const media = imageUrl && (
+  const media = imageUrl && !errored && (
     <>
       <img
         src={imageUrl}
@@ -89,7 +95,7 @@ export function Cover({
         style={{ background }}
         onClick={onClick}
       >
-        {!imageUrl && <div className={styles.heroTitle}>{title}</div>}
+        {placeholder && <div className={styles.heroTitle}>{title}</div>}
         {media}
       </div>
     );
@@ -106,7 +112,7 @@ export function Cover({
           style={artStyle}
           onClick={onClick}
         >
-          {!imageUrl && (
+          {placeholder && (
             <>
               <span className={styles.tileTag}>{tag}</span>
               <div className={styles.tileTitle}>{title}</div>
@@ -127,7 +133,7 @@ export function Cover({
         className={`${styles.art} ${styles.shelfArt} ${withImage}`}
         style={{ background, width: shelfWidth, height: shelfWidth * SHELF_RATIO }}
       >
-        {!imageUrl && <div className={styles.shelfTitle}>{title}</div>}
+        {placeholder && <div className={styles.shelfTitle}>{title}</div>}
         {media}
         {children}
       </div>

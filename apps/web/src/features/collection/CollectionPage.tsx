@@ -22,8 +22,8 @@ import {
   type LibraryItemDto,
 } from '../../api/generated/librarius';
 import { AuthorNames } from '../author/AuthorNames';
-import { SeriesList } from '../series/SeriesList';
-import { SERIES_SORTS, filterSeries, type SeriesSort } from '../series/series';
+import { SeriesBlock } from '../series/SeriesBlock';
+import { filterSeries } from '../series/series';
 import styles from './CollectionPage.module.css';
 
 /**
@@ -75,7 +75,7 @@ function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
 type SortBy = 'added' | 'title' | 'author' | 'genre' | 'rating';
 /** The two ways of reading the collection: title by title, or run by run. */
-type View = 'flat' | 'series';
+type View = 'grouped' | 'flat';
 
 /** Number of titles fetched per request — one shelf worth of covers. */
 const PAGE_SIZE = 24;
@@ -191,11 +191,13 @@ function CollectionContent() {
 
   const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
   const [sortBy, setSortBy] = useState<SortBy>('added');
-  const [seriesSort, setSeriesSort] = useState<SeriesSort>('progress');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<View>('flat');
-  const series = view === 'series';
+  const [view, setView] = useState<View>('grouped');
+  // By series by default: a run is one block, a one-shot one tile. A category or the
+  // favourites shelf filters titles one by one — a rank or a rating belongs to a volume, not
+  // to its run — so those shelves always list the titles themselves.
+  const grouped = view === 'grouped' && shelfFilter.kind === 'all';
   // Same shape decision as the Home shelves: whether the chip rows scroll or wrap is not
   // something a track-size token can answer, so it is read once from the shared breakpoint
   // rather than declared as a media query here.
@@ -220,6 +222,8 @@ function CollectionContent() {
     rank: shelfFilter.kind === 'rank' ? shelfFilter.code : undefined,
     minRating: shelfFilter.kind === 'favorites' ? FAVORITE_RATING : undefined,
     q: search || undefined,
+    // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
+    standalone: grouped || undefined,
   };
 
   const {
@@ -240,8 +244,6 @@ function CollectionContent() {
       const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
       return loaded < (last.total ?? 0) ? (last.page ?? 0) + 1 : undefined;
     },
-    // The Series view reads `/api/series`, not the pages of the collection.
-    enabled: !series,
   });
 
   const items = useMemo(() => data?.pages.flatMap((p) => p.items ?? []) ?? [], [data]);
@@ -260,7 +262,7 @@ function CollectionContent() {
 
   const remove = (id: string) => removeItem({ id });
 
-  // The Series view is not a grouping of the loaded page: `/api/series` knows the whole
+  // The series blocks are not a grouping of the loaded page: `/api/series` knows the whole
   // run — its announced total, what is owned of it and what is read — which no amount of
   // grouping over the titles fetched so far could reconstruct.
   const {
@@ -268,18 +270,22 @@ function CollectionContent() {
     isPending: seriesLoading,
     isError: seriesFailed,
     refetch: refetchSeries,
-  } = useGetApiSeries({ query: { enabled: series } });
+  } = useGetApiSeries({ query: { enabled: grouped } });
 
   const shelf = useMemo(
-    () => filterSeries(allSeries, { kind: collType, search, sort: seriesSort }),
-    [allSeries, collType, search, seriesSort],
+    () =>
+      grouped
+        ? filterSeries(allSeries, { kind: collType, search, sort: 'title' }).filter(
+            // A series only followed, with nothing of it on the shelf, is not in the collection.
+            (s) => (s.ownedCount ?? 0) > 0,
+          )
+        : [],
+    [allSeries, collType, search, grouped],
   );
 
-  // The two views share the kind switch and the search box, so each one reads the state
-  // of whichever query is actually feeding the screen.
-  const showLoading = series ? seriesLoading : loading;
-  const showError = series ? seriesFailed : isError;
-  const isEmpty = !showLoading && !showError && (series ? shelf.length === 0 : items.length === 0);
+  const showLoading = loading || (grouped && seriesLoading);
+  const showError = isError || (grouped && seriesFailed);
+  const isEmpty = !showLoading && !showError && shelf.length === 0 && items.length === 0;
 
   // The shelves are the categories the user actually has, not the three built-ins the
   // screen used to name itself: a category created on /categories has to become a filter
@@ -322,37 +328,34 @@ function CollectionContent() {
         />
       </div>
 
-      {/* A rank and a rating both belong to a title, not to a run: these chips would
-          filter nothing in the Series view. They keep their state so switching back
-          restores the shelf the user was on. */}
-      {!series && (
-        <div className={chipRowClass}>
-          {shelves.map((s) => (
-            <Chip
-              key={s.key}
-              selected={sameShelf(shelfFilter, s.filter)}
-              dotColor={s.dot}
-              onClick={() => setShelfFilter(s.filter)}
-            >
-              {s.name}
-            </Chip>
-          ))}
-          {/* The way out of the row: the shelves are editable, and this is where the user
-              is standing when they realise they want another one. */}
-          <button
-            onClick={() => navigate('/categories')}
-            className={styles.manageShelves}
+      {/* The shelves filter titles one by one: picking one lists the titles themselves,
+          whichever view was on — a rank or a rating belongs to a volume, not to a run. */}
+      <div className={chipRowClass}>
+        {shelves.map((s) => (
+          <Chip
+            key={s.key}
+            selected={sameShelf(shelfFilter, s.filter)}
+            dotColor={s.dot}
+            onClick={() => setShelfFilter(s.filter)}
           >
-            <Icon name="tune" size={15} color="var(--accent-deep)" />
-            {t('collection.ranks.manage')}
-          </button>
-        </div>
-      )}
+            {s.name}
+          </Chip>
+        ))}
+        {/* The way out of the row: the shelves are editable, and this is where the user
+            is standing when they realise they want another one. */}
+        <button
+          onClick={() => navigate('/categories')}
+          className={styles.manageShelves}
+        >
+          <Icon name="tune" size={15} color="var(--accent-deep)" />
+          {t('collection.ranks.manage')}
+        </button>
+      </div>
 
       <div className={styles.countRow}>
         <span className={styles.count}>
-          {series
-            ? t('collection.seriesTotal', { count: shelf.length })
+          {grouped && shelf.length > 0
+            ? t('collection.groupedTotal', { count: shelf.length, oneShots: total })
             : t('collection.total', { total })}
         </span>
         <div className={styles.viewSwitch}>
@@ -360,8 +363,8 @@ function CollectionContent() {
             value={view}
             onChange={setView}
             options={[
-              { id: 'flat', label: t('collection.list') },
-              { id: 'series', label: t('collection.series') },
+              { id: 'grouped', label: t('collection.grouped') },
+              { id: 'flat', label: t('collection.flat') },
             ]}
           />
         </div>
@@ -369,34 +372,28 @@ function CollectionContent() {
 
       <div className={sortRowClass}>
         <span className={styles.sortLabel}>{t('collection.sortBy')}</span>
-        {series
-          ? SERIES_SORTS.map((s) => (
-              <Chip key={s.id} selected={seriesSort === s.id} onClick={() => setSeriesSort(s.id)}>
-                {t(s.labelKey)}
-              </Chip>
-            ))
-          : SORTS.map((s) => (
-              <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>
-                {t(s.labelKey)}
-              </Chip>
-            ))}
+        {SORTS.map((s) => (
+          <Chip key={s.id} selected={sortBy === s.id} onClick={() => setSortBy(s.id)}>
+            {t(s.labelKey)}
+          </Chip>
+        ))}
       </div>
 
       {showLoading && <Loading />}
 
       {showError && (
         <ErrorState
-          message={t(series ? 'series.listError' : 'collection.error')}
-          onRetry={() => void (series ? refetchSeries() : refetch())}
+          message={t(seriesFailed ? 'series.listError' : 'collection.error')}
+          onRetry={() => void (seriesFailed ? refetchSeries() : refetch())}
         />
       )}
 
       {isEmpty && (
         <EmptyState
-          icon={series ? 'collections_bookmark' : 'bookmark_add'}
+          icon="bookmark_add"
           className={styles.empty}
-          title={t(series ? 'series.empty.title' : 'collection.empty.title')}
-          description={t(series ? 'series.empty.description' : 'collection.empty.description')}
+          title={t('collection.empty.title')}
+          description={t('collection.empty.description')}
           action={
             <Button variant="secondary" onClick={() => navigate('/discover')}>
               {t('collection.empty.action')}
@@ -405,14 +402,15 @@ function CollectionContent() {
         />
       )}
 
-      {series ? (
-        shelf.length > 0 && <SeriesList series={shelf} />
-      ) : (
-        items.length > 0 && (
+      {(shelf.length > 0 || items.length > 0) && (
           // The shared cover grid (shared/ui/primitives.tsx): three fixed columns on a
           // phone, as many as the width holds past --bp-tablet — see the Grid block of
-          // tokens.css for the reasoning behind the track sizes.
+          // tokens.css for the reasoning behind the track sizes. Grouped, the series blocks
+          // lead and the one-shots follow, each in the order the sort asks for.
           <Grid>
+            {shelf.map((s) => (
+              <SeriesBlock key={s.id} series={s} />
+            ))}
             {items.map((it) => (
               <CoverTile
                 key={it.id}
@@ -423,10 +421,9 @@ function CollectionContent() {
               />
             ))}
           </Grid>
-        )
       )}
 
-      {!series && hasNextPage && (
+      {hasNextPage && (
         <div className={styles.loadMore}>
           <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
             {isFetchingNextPage

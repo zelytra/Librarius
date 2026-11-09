@@ -80,6 +80,9 @@ services:
       QUARKUS_REST_CLIENT_OPENLIBRARY_URL: http://catalog-stub
       QUARKUS_REST_CLIENT_BNF_URL: http://catalog-stub
       QUARKUS_REST_CLIENT_ANILIST_URL: http://catalog-stub
+      # The stub serves no cover on purpose; the ISBN cover fallback would otherwise send the
+      # tiles to Open Library, and the journeys would depend on the internet after all.
+      LIBRARIUS_CATALOG_ISBN_COVERS: "false"
       # `quarkus.http.cors.origins` is pinned to the Vite dev server in
       # application.properties. Browsers attach an `Origin` header to same-origin POSTs
       # too, and the CORS filter answers 403 to any origin outside that list — the web
