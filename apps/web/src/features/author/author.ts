@@ -1,4 +1,4 @@
-import type { AuthorWorkDto } from '../../api/generated/librarius';
+import type { AuthorWorkDto, CatalogResult } from '../../api/generated/librarius';
 
 /**
  * Pure reading of the author-facing shapes. Kept out of the components so both the Author
@@ -34,9 +34,27 @@ export function initials(name: string): string {
 }
 
 /** One line under a bibliography tile: the series and volume when known, the kind otherwise. */
-export function workCaption(work: AuthorWorkDto, kindLabel: string): string {
+export function workCaption(work: AuthorWorkDto): string {
   if (work.seriesTitle && work.volumeNumber != null) {
     return `${work.seriesTitle} — ${work.volumeNumber}`;
   }
-  return work.seriesTitle ?? kindLabel;
+  // The kind is already the tile's badge: repeating it underneath said "LIVRE" twice. The
+  // year is what tells two titles of one bibliography apart.
+  return work.seriesTitle ?? (work.originalYear != null ? String(work.originalYear) : '');
+}
+
+/**
+ * A bibliography entry the reader does not own, as the catalog page reads it: what the
+ * bibliography carries is enough to show the title and to add it, the way a search result is.
+ */
+export function workAsCatalogResult(work: AuthorWorkDto): CatalogResult {
+  return {
+    kind: work.kind,
+    title: work.title,
+    authors: work.authors,
+    year: work.originalYear,
+    coverUrl: work.coverUrl,
+    seriesTitle: work.seriesTitle,
+    volumeNumber: work.volumeNumber,
+  };
 }

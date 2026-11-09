@@ -15,7 +15,8 @@ import {
   usePutApiAuthorsIdFollow,
   type AuthorWorkDto,
 } from '../../api/generated/librarius';
-import { initials, workCaption } from './author';
+import { catalogPath } from '../catalog/catalogBook';
+import { initials, workAsCatalogResult, workCaption } from './author';
 import styles from './AuthorPage.module.css';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail/Series. */
@@ -25,8 +26,7 @@ const WASH_TO = '00';
 /**
  * One title of the bibliography — the shared cover grid of Collection. It opens the
  * caller's own item when they own the work, the series when the work belongs to one they
- * do not own, and stays a plain, unclickable tile when neither exists: a standalone title
- * nobody here has entered yet has nothing to open.
+ * do not own, and the catalog page of the title otherwise.
  */
 function WorkTile({ work }: { work: AuthorWorkDto }) {
   const { t } = useTranslation();
@@ -38,14 +38,24 @@ function WorkTile({ work }: { work: AuthorWorkDto }) {
     : work.seriesId
       ? `/series/${work.seriesId}`
       : undefined;
+  // A title nobody here owns opens its catalog page — to read about it and add it — instead
+  // of being a tile that does nothing when clicked.
+  const open = () => {
+    if (target) {
+      navigate(target);
+      return;
+    }
+    const result = workAsCatalogResult(work);
+    navigate(catalogPath(result), { state: { result } });
+  };
   return (
     <Cover
       variant="tile"
       title={title}
       imageUrl={work.coverUrl}
       tag={tag}
-      caption={workCaption(work, tag)}
-      onClick={target ? () => navigate(target) : undefined}
+      caption={workCaption(work)}
+      onClick={open}
     />
   );
 }

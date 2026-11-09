@@ -33,14 +33,29 @@ describe('Cover', () => {
     expect(img).toHaveClass(/mediaLoaded/);
   });
 
-  test('gives up on the skeleton if the cover fails to load, without printing the title over it', () => {
+  test('falls back to the titled placeholder when the cover fails to load', () => {
     const { container } = render(<Cover title="Berserk" imageUrl="https://covers.test/missing.jpg" />);
     const img = container.querySelector('img')!;
 
     fireEvent.error(img);
 
+    // The broken image is dropped rather than left on top, and the placeholder prints the title
+    // it prints for a title with no cover at all: a cover service answering 404 used to leave an
+    // anonymous coloured tile nobody could tell apart from its neighbours.
     expect(container.querySelector('[class*="skeleton"]')).not.toBeInTheDocument();
-    expect(screen.queryByText('Berserk')).not.toBeInTheDocument();
+    expect(container.querySelector('img')).not.toBeInTheDocument();
+    expect(screen.getByText('Berserk')).toBeInTheDocument();
+  });
+
+  test('prints the title and the volume tag on a tile whose cover failed', () => {
+    const { container } = render(
+      <Cover variant="tile" title="One Piece Tome 3" tag="T.3" imageUrl="https://covers.test/missing.jpg" />
+    );
+
+    fireEvent.error(container.querySelector('img')!);
+
+    expect(screen.getByText('One Piece Tome 3')).toBeInTheDocument();
+    expect(screen.getByText('T.3')).toBeInTheDocument();
   });
 
   test('starts a fresh load when the image URL changes rather than keeping the old one loaded', () => {

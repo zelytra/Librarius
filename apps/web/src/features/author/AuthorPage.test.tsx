@@ -1,8 +1,10 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithProviders } from '../../test/utils';
-import { authorDetail } from '../../test/fixtures';
+import { render } from '@testing-library/react';
+import { Route, Routes, useLocation } from 'react-router';
+import { renderWithProviders, TestProviders } from '../../test/utils';
+import { authorDetail, authorWork } from '../../test/fixtures';
 import { authorDetailReturns, http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -110,5 +112,37 @@ describe('AuthorPage', () => {
     renderAuthor();
 
     expect(await screen.findByText(/Connecte-toi pour voir cet auteur/)).toBeInTheDocument();
+  });
+
+  test('opens the catalog page of a work nobody here owns', async () => {
+    const unowned = authorWork({
+      workId: undefined,
+      libraryItemId: undefined,
+      seriesId: undefined,
+      seriesTitle: undefined,
+      volumeNumber: undefined,
+      title: 'Les Portes de pierre',
+      originalYear: 2027,
+    });
+    authorDetailReturns(authorDetail({ works: [unowned] }));
+    function CatalogProbe() {
+      const location = useLocation();
+      const state = location.state as { result?: { title?: string } } | null;
+      return <p>{`catalogue: ${state?.result?.title ?? '—'}`}</p>;
+    }
+    render(
+      <TestProviders route="/authors/author-1">
+        <Routes>
+          <Route path="/authors/:id" element={<AuthorPage />} />
+          <Route path="/catalog/:provider/:ref" element={<CatalogProbe />} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    // The year, not the kind the badge already shows, sits under the title.
+    expect(await screen.findByText('2027')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Les Portes de pierre'));
+
+    expect(await screen.findByText('catalogue: Les Portes de pierre')).toBeInTheDocument();
   });
 });

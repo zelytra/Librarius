@@ -16,6 +16,7 @@ import {
   monthlySeries,
   type Metric,
   type MonthPoint,
+  offeredYears,
 } from './timeline';
 import styles from './TimelineSection.module.css';
 
@@ -160,6 +161,9 @@ function Figure({ value, label }: { value: string; label: string }) {
   );
 }
 
+/** Far enough back for any reading history an import can bring. */
+const HISTORY_START = '1900-01-01';
+
 export function TimelineSection({ stats }: { stats: StatsDto }) {
   const { t } = useTranslation();
   const thisYear = new Date().getFullYear();
@@ -171,6 +175,14 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
     from: `${year}-01-01`,
     to: `${year}-12-31`,
     granularity: 'month',
+  });
+  // Every year the reader finished something in, one bucket each: the years to offer. A fixed
+  // "this year and last" hid the whole history of an imported library — readings from 2019 to
+  // 2023 counted in the totals and could not be looked at.
+  const history = useGetApiStatsTimeline({
+    from: HISTORY_START,
+    to: `${thisYear}-12-31`,
+    granularity: 'year',
   });
 
   if (timeline.isPending) return <Loading />;
@@ -197,7 +209,7 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
   const daysPerBook = timeline.data.daysPerBook;
   const readAnything = (timeline.data.books ?? 0) > 0;
 
-  const years = [thisYear, thisYear - 1].map((value) => ({
+  const years = offeredYears(thisYear, year, history.data?.points).map((value) => ({
     id: String(value),
     label: String(value),
   }));

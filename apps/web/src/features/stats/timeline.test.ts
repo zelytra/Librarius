@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { chartMax, cumulative, monthLabels, monthlySeries } from './timeline';
+import { chartMax, cumulative, monthLabels, monthlySeries, offeredYears } from './timeline';
 
 /**
  * A chart that is subtly wrong looks exactly like a chart that is right: the series the
@@ -65,5 +65,26 @@ describe('monthLabels', () => {
     expect(monthLabels('narrow')).toHaveLength(12);
     expect(monthLabels('long')[0]).toBe('janvier');
     expect(monthLabels('long')[11]).toBe('décembre');
+  });
+});
+
+describe('offeredYears', () => {
+  test('offers every year holding a reading, most recent first', () => {
+    const points = [
+      { period: '2022', books: 3 },
+      { period: '2024', books: 2 },
+      { period: '2025', books: 1 },
+    ];
+    expect(offeredYears(2026, 2026, points)).toEqual([2026, 2025, 2024, 2022]);
+  });
+
+  test('always offers this year and last, even with no history', () => {
+    expect(offeredYears(2026, 2026)).toEqual([2026, 2025]);
+  });
+
+  test('ignores empty buckets and keeps to the most recent six', () => {
+    const points = [2014, 2015, 2016, 2017, 2018, 2019].map((y) => ({ period: String(y), books: 1 }));
+    points.push({ period: '2020', books: 0 });
+    expect(offeredYears(2026, 2026, points)).toEqual([2026, 2025, 2019, 2018, 2017, 2016]);
   });
 });

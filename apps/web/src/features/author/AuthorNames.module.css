@@ -1,0 +1,12 @@
+/* A name in a credit line: it reads as the caption it sits in, not as the browser's blue
+   underlined link, and shows it is one on hover and on keyboard focus. */
+.link {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.link:hover,
+.link:focus-visible {
+  text-decoration: underline;
+}

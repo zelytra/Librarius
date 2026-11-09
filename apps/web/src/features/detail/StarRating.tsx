@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { Icon } from '../../shared/ui/Icon';
 import styles from './StarRating.module.css';
 
 /** The rating is out of five, like everywhere the app shows one. */
@@ -36,14 +35,32 @@ export function StarRating({
           aria-pressed={n <= value}
           className={styles.star}
         >
-          <Icon
-            name="star"
-            size={size}
-            fill={n <= value}
-            color={n <= value ? 'var(--gold)' : 'var(--line)'}
-          />
+          <StarGlyph size={size} filled={n <= value} />
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * One star, drawn rather than taken from the icon font: the self-hosted Material Symbols
+ * subset carries no FILL axis, so `<Icon fill>` drew the same outline for a given star and an
+ * empty one, and a four-star rating read as five hollow stars of two near-identical shades.
+ */
+function StarGlyph({ size, filled }: { size: number; filled: boolean }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={filled ? styles.filled : styles.empty}
+    >
+      <path
+        d="M12 2.8l2.83 5.73 6.33.92-4.58 4.46 1.08 6.3L12 17.24l-5.66 2.97 1.08-6.3-4.58-4.46 6.33-.92z"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
