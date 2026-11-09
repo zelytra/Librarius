@@ -15,7 +15,9 @@ test('imports a library from a CSV file', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Réglages' }).click();
   await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Importer un fichier CSV' })).toBeVisible();
+  // One picker for every file — the collector's, a CSV, saved pages — matched on its opening
+  // words so the list of what it accepts can grow without rewriting the journey.
+  await expect(page.getByRole('button', { name: /^Importer un fichier/ })).toBeVisible();
 
   // The button only forwards the click to a hidden input, which is what is fed here.
   await page.locator('input[type="file"]').setInputFiles(CSV_FILE);
