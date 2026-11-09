@@ -54,10 +54,38 @@ class ImportPersistTest {
             assertEquals(1, owned.size());
             LibraryItem item = owned.get(0);
             assertEquals(Integer.valueOf(4), item.rating);
-            assertEquals(LocalDate.of(2024, 3, 12), item.acquiredAt);
+            // A dated reading: the title is read, finished on that day, and counted in the
+            // reading history rather than filed as an acquisition.
+            assertEquals(zelytra.librarius.domain.LibraryStatus.READ, item.status);
+            assertNotNull(item.progress);
+            assertEquals(LocalDate.of(2024, 3, 12), item.progress.finishedAt);
+            assertEquals(Integer.valueOf(100), item.progress.percent);
             // "favorites" is not a reading state, so it becomes a category on the item.
             assertNotNull(item.rankCategory);
             assertEquals("favorites", item.rankCategory.label);
+        });
+    }
+
+    @Test
+    void filesAnImportedVolumeUnderItsSeries() {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        String series = "Import Saga " + UUID.randomUUID();
+
+        imports.importFromCsv(userId, "titre;auteur;statut\n" + series + " Tome 2;A. Author;à lire\n");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem item = items.listByUser(userId).get(0);
+            assertNotNull(item.edition.work.series);
+            assertEquals(series, item.edition.work.series.title);
+            assertEquals(Integer.valueOf(2), item.edition.work.volumeNumber);
+            // Not read: no reading is recorded.
+            assertEquals(null, item.progress);
         });
     }
 }

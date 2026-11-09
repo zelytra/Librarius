@@ -147,7 +147,11 @@ public class AuthorService {
             Set<Kind> kinds = works.stream().map(w -> w.kind)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             for (CatalogResult r : catalog.worksOfAuthor(kinds, author.name, MAX_PROVIDER_WORKS)) {
-                if (r.title() != null && known.add(normalizeTitle(r.title()))) {
+                // A provider's author search matches words, not people: the BnF answered "Frank
+                // Herbert" with a thesis by F. T. H. Fletcher and a book on Van Gogh. Only a
+                // work that actually credits this author joins the bibliography.
+                if (r.title() != null && credits(r.authors(), author.name)
+                        && known.add(normalizeTitle(r.title()))) {
                     bibliography.add(new AuthorWorkDto(null, r.kind(), r.title(), r.authors(),
                             r.seriesTitle(), r.volumeNumber(), r.year(), r.coverUrl(), null, null));
                 }
@@ -157,8 +161,59 @@ public class AuthorService {
                 bibliography));
     }
 
+    /** Folded like a dedup key, so "DUNE", "Dune" and "Dune." are one title. */
     private static String normalizeTitle(String title) {
-        return title == null ? "" : title.toLowerCase(Locale.ROOT).trim();
+        String key = AuthorNormalizer.key(title);
+        return key == null ? "" : key;
+    }
+
+    /**
+     * Whether a credit line names this author: one of its names carries every word of the
+     * author's, each word folded and allowed to differ by a romanisation suffix ("Eiichiro" /
+     * "Eiichirou") or to be an initial ("J. R. R. Tolkien" / "John Ronald Reuel Tolkien").
+     * Package-private for the test.
+     */
+    static boolean credits(String creditLine, String authorName) {
+        List<String> wanted = words(authorName);
+        if (wanted.isEmpty() || creditLine == null) {
+            return false;
+        }
+        for (String part : AuthorNormalizer.parts(creditLine)) {
+            List<String> have = words(part);
+            if (have.isEmpty()) {
+                continue;
+            }
+            // The family name closes both names — headings arrive in reading order — and is
+            // spelled out on both: an initial may stand for a given name, never for the whole
+            // person. Otherwise "F. T. H. Fletcher", "Frank Thomas Herbert Fletcher" and the
+            // German writer Herbert Frank, all live BnF answers, passed for Frank Herbert.
+            String family = wanted.get(wanted.size() - 1);
+            String last = have.get(have.size() - 1);
+            boolean familyNamed = last.length() > 1 && sameNameWord(family, last);
+            if (familyNamed && wanted.stream()
+                    .allMatch(w -> have.stream().anyMatch(h -> sameNameWord(w, h)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<String> words(String name) {
+        String key = AuthorNormalizer.key(name);
+        if (key == null) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(key.split("-")).filter(w -> !w.isEmpty()).toList();
+    }
+
+    private static boolean sameNameWord(String a, String b) {
+        if (a.equals(b)) {
+            return true;
+        }
+        if (a.length() == 1 || b.length() == 1) {
+            return a.charAt(0) == b.charAt(0);
+        }
+        return a.length() >= 3 && b.length() >= 3 && (a.startsWith(b) || b.startsWith(a));
     }
 
     /**

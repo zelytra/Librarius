@@ -385,6 +385,8 @@ class BnfProviderTest {
         // Live BnF titles that carry no " / " before their authorship.
         assertEquals("La horde du contrevent",
                 BnfProvider.isbdTitle("La horde du contrevent : roman (Nouvelle éd.) Alain Damasio"));
+        assertEquals("Le cycle de Dune",
+                BnfProvider.isbdTitle("Le cycle de Dune (Trad. revue et corrigée) Frank Herbert"));
         assertEquals("One Piece 113 : coffre au trésor",
                 BnfProvider.isbdTitle("One Piece 113 : coffre au trésor (Édition originale) "));
         // A real subtitle, and brackets that are no edition statement, stay.

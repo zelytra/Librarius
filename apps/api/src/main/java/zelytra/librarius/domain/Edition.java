@@ -65,4 +65,8 @@ public class Edition {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
+
+    /** Last time the import enricher looked this edition up in the catalog (V23), or null. */
+    @Column(name = "enrich_attempted_at")
+    public OffsetDateTime enrichAttemptedAt;
 }

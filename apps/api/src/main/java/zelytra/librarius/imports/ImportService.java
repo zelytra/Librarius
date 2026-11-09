@@ -11,11 +11,14 @@ import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.RankCategory;
+import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
+import zelytra.librarius.domain.repository.ReadingProgressRepository;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +42,9 @@ public class ImportService {
 
     @Inject
     RankCategoryRepository ranks;
+
+    @Inject
+    ReadingProgressRepository progresses;
 
     @Inject
     MeterRegistry meters;
@@ -108,11 +114,17 @@ public class ImportService {
                 continue;
             }
             LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.OWNED;
+            // A volume of a run joins its series: "One Piece Tome 3" is volume 3 of One Piece,
+            // and Goodreads writes it "The Way of Kings (The Stormlight Archive, #1)". Left as
+            // a flat title, an imported manga collection had no series at all and the Series
+            // view stayed empty.
+            ImportTitle parsed = ImportTitle.parse(book.title());
             // No provider reference: Booknode is a shelf being scraped, not a catalog that
             // hands out identifiers, and the two trailing nulls say so rather than filing the
             // import under a provider nothing can query.
-            Edition edition = catalog.createManualEdition(new ManualBookDto(Kind.BOOK, book.title(),
-                    book.author(), null, null, null, null, null, null, book.coverUrl(), null, null,
+            Edition edition = catalog.createManualEdition(new ManualBookDto(Kind.BOOK,
+                    parsed.title(), book.author(), parsed.seriesTitle(), parsed.volumeNumber(),
+                    book.isbn13(), null, null, book.pageCount(), book.coverUrl(), null, null,
                     null, null, null, null, null));
             LibraryItem item = new LibraryItem();
             item.userId = userId;
@@ -123,12 +135,38 @@ public class ImportService {
             item.rankCategory = categoryFor(userId, book.shelf(), shelfCounts, minForCategory,
                     categories, nextOrder);
             items.persist(item);
+            recordReading(item, book.readAt());
             imported++;
         }
 
         meters.counter("librarius.import", "source", source).increment(imported);
         return new ImportResult(source, imported, skipped, books.size());
     }
+
+    /**
+     * The reading the import vouches for. A title read (or given up) is finished, on the day the
+     * export says when it says one: without this row it counted towards no goal, appeared in no
+     * monthly statistic, and its Detail screen read "not started" next to a "read" badge. No
+     * date is invented — {@code ReadingProgressService} stamps today, which for a book read in
+     * 2019 and imported now would be wrong — so an undated read is complete and undated.
+     */
+    private void recordReading(LibraryItem item, LocalDate readAt) {
+        if (item.status != LibraryStatus.READ && item.status != LibraryStatus.ABANDONED) {
+            return;
+        }
+        ReadingProgress progress = new ReadingProgress();
+        progress.libraryItem = item;
+        progress.finishedAt = readAt;
+        if (item.status == LibraryStatus.READ) {
+            progress.percent = COMPLETE;
+            progress.currentPage = item.edition.pageCount;
+        }
+        progresses.persist(progress);
+        item.progress = progress;
+    }
+
+    /** A finished reading, in the percentage the progress is stored as. */
+    private static final int COMPLETE = 100;
 
     private static String key(String title, String author) {
         return ((title == null ? "" : title) + '|' + (author == null ? "" : author))
@@ -148,7 +186,16 @@ public class ImportService {
         int authorCol = indexOf(header, "auteur", "author", "auteurs", "authors");
         int statusCol = indexOf(header, "statut", "status", "etagere", "étagère", "shelf", "exclusive shelf");
         int ratingCol = indexOf(header, "note", "rating", "my rating", "note moyenne");
-        int dateCol = indexOf(header, "date", "date read", "date added", "date de lecture", "date d'ajout");
+        // Two dates, kept apart: the day a book was finished is what the reading history, the
+        // annual goal and the monthly statistics are built on, the day it was added is only
+        // when it joined the shelf. A bare "date" column is read as the reading date for a
+        // title marked read (or given up), and as the day it was added otherwise.
+        int readDateCol = indexOf(header, "date read", "date de lecture", "lu le", "date de fin",
+                "finished", "date lu");
+        int addedDateCol = indexOf(header, "date added", "date d'ajout", "ajouté le", "acquis le");
+        int dateCol = indexOf(header, "date");
+        int isbnCol = indexOf(header, "isbn13", "isbn-13", "isbn", "ean");
+        int pagesCol = indexOf(header, "number of pages", "pages", "nombre de pages", "nb pages");
         boolean hasHeader = titleCol >= 0;
         int start = hasHeader ? 1 : 0;
         if (!hasHeader) {
@@ -165,10 +212,52 @@ public class ImportService {
                 continue;
             }
             String shelf = cell(cols, statusCol);
-            books.add(new ImportedBook(title, cell(cols, authorCol), null, mapCsvStatus(shelf),
-                    shelf, parseRating(cell(cols, ratingCol)), ImportDates.parse(cell(cols, dateCol))));
+            LibraryStatus status = mapCsvStatus(shelf);
+            LocalDate explicitReadAt = ImportDates.parse(cell(cols, readDateCol));
+            if (explicitReadAt != null && status == LibraryStatus.OWNED) {
+                // A dated reading is a book that was read, whatever custom shelf it sits on.
+                status = LibraryStatus.READ;
+            }
+            LocalDate bareDate = ImportDates.parse(cell(cols, dateCol));
+            boolean finished = status == LibraryStatus.READ || status == LibraryStatus.ABANDONED;
+            LocalDate readAt = firstNonNull(explicitReadAt, finished ? bareDate : null);
+            LocalDate addedAt = firstNonNull(ImportDates.parse(cell(cols, addedDateCol)),
+                    finished ? null : bareDate);
+            books.add(new ImportedBook(title, cell(cols, authorCol), null, status, shelf,
+                    parseRating(cell(cols, ratingCol)), addedAt, readAt,
+                    parseIsbn13(cell(cols, isbnCol)), parsePages(cell(cols, pagesCol))));
         }
         return books;
+    }
+
+    private static <T> T firstNonNull(T a, T b) {
+        return a != null ? a : b;
+    }
+
+    /**
+     * The ISBN-13 out of a cell. Goodreads writes it as a spreadsheet formula ({@code ="978…"}),
+     * other exports with hyphens; only the digits count, and anything but thirteen of them
+     * starting 978/979 is no ISBN-13.
+     */
+    static String parseIsbn13(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String digits = raw.replaceAll("[^0-9]", "");
+        return digits.length() == 13 && (digits.startsWith("978") || digits.startsWith("979"))
+                ? digits : null;
+    }
+
+    private static Integer parsePages(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String digits = raw.replaceAll("[^0-9]", "");
+        if (digits.isEmpty() || digits.length() > 5) {
+            return null;
+        }
+        int pages = Integer.parseInt(digits);
+        return pages > 0 ? pages : null;
     }
 
     /**

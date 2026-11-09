@@ -45,21 +45,23 @@ public class EditionRepository implements PanacheRepositoryBase<Edition, UUID> {
     }
 
     /**
-     * Imported or hand-entered editions still without a page count — a scrape brings none, and a
-     * manual entry may omit it. Joined to their work so a page-count lookup can read the title and
-     * author, most recently added first so a fresh import fills before an old backlog, and capped
-     * so one enrichment run cannot spend the provider quota. Only editions with no provider
-     * reference: a catalog edition either came with its length or the provider has none to give.
+     * Imported or hand-entered editions the catalog may still complete — missing a cover, an
+     * ISBN or a length — that were never looked up, or not since {@code retryBefore}. Never
+     * tried first, then the longest-waiting: an edition the catalog does not know goes to the
+     * back instead of holding the head of the queue on every run. Only editions with no
+     * provider reference: a catalog edition already came with whatever its provider knew.
      */
-    public List<Edition> needingPageCount(int limit) {
+    public List<Edition> needingEnrichment(java.time.OffsetDateTime retryBefore, int limit) {
         return getEntityManager()
                 .createQuery("""
                         select e from Edition e
                           join fetch e.work w
-                        where e.pageCount is null
-                          and e.provider is null
-                        order by e.createdAt desc, e.id asc
+                        where e.provider is null
+                          and (e.pageCount is null or e.coverUrl is null or e.isbn13 is null)
+                          and (e.enrichAttemptedAt is null or e.enrichAttemptedAt < :retryBefore)
+                        order by e.enrichAttemptedAt asc nulls first, e.createdAt desc, e.id asc
                         """, Edition.class)
+                .setParameter("retryBefore", retryBefore)
                 .setMaxResults(limit)
                 .getResultList();
     }

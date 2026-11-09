@@ -268,9 +268,12 @@ public class BnfProvider implements CatalogProvider {
         return title.isEmpty() ? null : title;
     }
 
-    /** "(Nouvelle éd.)", "(Éd. collector)", "(Édition originale)" — and whatever follows it. */
+    /**
+     * "(Nouvelle éd.)", "(Éd. collector)", "(Édition originale)", "(Trad. revue et corrigée)" —
+     * and whatever follows it.
+     */
     private static final Pattern EDITION_STATEMENT = Pattern.compile(
-            "\\s*\\((?=[^)]*(?iu:(?<!\\p{L})[ée]d\\.|[ée]dition))[^)]*\\).*$");
+            "\\s*\\((?=[^)]*(?iu:(?<!\\p{L})[ée]d\\.|[ée]dition|(?<!\\p{L})trad\\.|traduction|revue et|augment))[^)]*\\).*$");
 
     /** A trailing " : roman", " : nouvelles"… — a statement of form, not a subtitle. */
     private static final Pattern FORM_SUBTITLE = Pattern.compile(

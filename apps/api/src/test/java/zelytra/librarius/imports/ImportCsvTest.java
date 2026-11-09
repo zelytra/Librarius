@@ -82,8 +82,54 @@ class ImportCsvTest {
         List<ImportedBook> books = ImportService.parseCsv(csv);
 
         assertEquals(Integer.valueOf(4), books.get(0).rating());
-        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).acquiredAt());
+        // A "Date Read" is when the book was finished, not when it was bought.
+        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).readAt());
+        assertEquals(null, books.get(0).acquiredAt());
         assertEquals(Integer.valueOf(5), books.get(1).rating());
-        assertEquals(LocalDate.of(2024, 4, 12), books.get(1).acquiredAt());
+        assertEquals(LocalDate.of(2024, 4, 12), books.get(1).readAt());
+    }
+
+    @Test
+    void keepsTheDayAddedApartFromTheDayRead() {
+        String csv = """
+                Title,Author,Exclusive Shelf,Date Read,Date Added,ISBN13,Number of Pages
+                Fourth Wing,Rebecca Yarros,read,2024/03/12,2023/12/25,"=""9781649374042""\",498
+                Iron Flame,Rebecca Yarros,to-read,,2024/01/02,,
+                """;
+        List<ImportedBook> books = ImportService.parseCsv(csv);
+
+        assertEquals(LocalDate.of(2024, 3, 12), books.get(0).readAt());
+        assertEquals(LocalDate.of(2023, 12, 25), books.get(0).acquiredAt());
+        assertEquals("9781649374042", books.get(0).isbn13());
+        assertEquals(Integer.valueOf(498), books.get(0).pageCount());
+        assertEquals(null, books.get(1).readAt());
+        assertEquals(LocalDate.of(2024, 1, 2), books.get(1).acquiredAt());
+    }
+
+    @Test
+    void readsABareDateAsTheReadingDateOfAReadTitleOnly() {
+        String csv = """
+                titre;auteur;statut;date
+                Dune;Frank Herbert;lu;2023-07-14
+                L'Apprenti assassin;Robin Hobb;à lire;2024-01-05
+                """;
+        List<ImportedBook> books = ImportService.parseCsv(csv);
+
+        assertEquals(LocalDate.of(2023, 7, 14), books.get(0).readAt());
+        assertEquals(null, books.get(0).acquiredAt());
+        assertEquals(null, books.get(1).readAt());
+        assertEquals(LocalDate.of(2024, 1, 5), books.get(1).acquiredAt());
+    }
+
+    @Test
+    void splitsTheSeriesOutOfAnImportedTitle() {
+        assertEquals(new ImportTitle("The Way of Kings", "The Stormlight Archive", 1),
+                ImportTitle.parse("The Way of Kings (The Stormlight Archive, #1)"));
+        assertEquals(new ImportTitle("One Piece Tome 3", "One Piece", 3),
+                ImportTitle.parse("One Piece Tome 3"));
+        assertEquals(new ImportTitle("Dune", null, null), ImportTitle.parse("Dune"));
+        // A novella numbered between two volumes is no volume.
+        assertEquals(new ImportTitle("Edgedancer (The Stormlight Archive, #2.5)", null, null),
+                ImportTitle.parse("Edgedancer (The Stormlight Archive, #2.5)"));
     }
 }

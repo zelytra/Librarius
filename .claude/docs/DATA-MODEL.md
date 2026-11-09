@@ -3,7 +3,7 @@
 Source of truth: `apps/api/src/main/resources/db/migration/`.
 Hibernate runs in `validate` — the Flyway schema **is** the model.
 
-## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19 + V20 + V21 + V22)
+## 1. Current schema (V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 + V13 + V14 + V15 + V16 + V17 + V18 + V19 + V20 + V21 + V22 + V23)
 
 ```text
 app_user ──┬─< library_item >── edition >── work >── series >── upcoming_release
@@ -29,7 +29,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating INT NOT NULL` (1–5), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
-| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref` | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
+| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref`, `enrich_attempted_at` (V23) | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ\|ABANDONED, V11), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
@@ -451,6 +451,15 @@ otherwise grant. The primary key indexes "who this user blocks"; the separate in
 clause the specification also names — a blocked author barred from reviewing a book about them —
 is **out of scope** until an account can be tied to an author identity (the v0.8 milestone);
 this migration ships the generic block only.
+
+`V23__import_completeness.sql` repairs what imports left behind. It adds
+`edition.enrich_attempted_at`, stamped by the import enricher on every lookup, matched or not,
+so an edition the catalog cannot complete goes to the back of the queue for a week instead of
+holding its head: before it, the newest 25 unmatched titles were picked again on every run and
+the rest of a large import was never looked up. It also gives every `READ` item with no
+`reading_progress` one at 100 % (page = page count when known), with **no** `finished_at`: the
+import used to record none, so the Detail screen read "not started" on a read book, and the
+reading date it lost is not invented. Imports now record it themselves (`ImportService`).
 
 `V22__series_review.sql` adds `series_review`, letting a member rate and review a series as a
 whole ([#190](https://github.com/zelytra/Librarius/issues/190)), on top of the per-title review
