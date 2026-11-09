@@ -62,10 +62,12 @@ export function Cover({
   // both the no-cover rendering and the backdrop the skeleton and the fading-in
   // image sit on.
   const background = colorFor(title);
-  // A cover that failed to load is no cover: the placeholder prints its title again. Before,
-  // the title was only drawn when there was no URL at all, so a 404 from the cover service
-  // (Open Library answers one for an ISBN it has no image of) left an anonymous coloured tile.
-  const placeholder = !imageUrl || errored;
+  // The titled placeholder stands until a real cover has actually loaded: a cover that fails
+  // (Open Library answers 404 for an ISBN it has no image of) or that never arrives (a slow
+  // or offline network) is no cover. Before, the title was only drawn when there was no URL
+  // at all, so either case left an anonymous coloured tile. The image is transparent until
+  // it decodes and sits above the title, so a successful load simply covers it.
+  const placeholder = !imageUrl || !loaded;
   const withImage = placeholder ? '' : styles.withImage;
   const showSkeleton = Boolean(imageUrl) && !loaded && !errored;
 

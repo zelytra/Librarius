@@ -120,15 +120,23 @@ function DiscoverContent() {
     const timer = setTimeout(() => {
       const params = searchParams(query, advanced);
       if (isBlankSearch(params)) return;
+      // The search on screen already answers this text — submitted with the button or Enter
+      // before the pause ran out. Submitting it again would wipe the "added" confirmations of
+      // whatever the reader filed in the meantime.
+      if (JSON.stringify(params) === JSON.stringify(submitted)) return;
       setAdded({});
       setAddError(null);
       setManualAdded(null);
       setSubmitted(params);
     }, 500);
     return () => clearTimeout(timer);
-  }, [query, advanced, detectedIsbn]);
+  }, [query, advanced, detectedIsbn, submitted]);
 
-  const keyOf = (r: CatalogResult, i: number) => `${r.provider ?? ''}:${r.providerRef ?? i}:${r.title ?? ''}`;
+  // What identifies a result is its content, never its rank: a key built on the index moved
+  // the "added" state onto another title whenever the list was re-ordered between two renders,
+  // which is exactly what happens to a result with no provider reference.
+  const keyOf = (r: CatalogResult) =>
+    [r.provider, r.providerRef, r.title, r.authors, r.isbn13, r.volumeNumber].map((v) => v ?? '').join('|');
 
   const {
     data: results = [],
@@ -301,8 +309,8 @@ function DiscoverContent() {
       )}
 
       <div className={styles.results}>
-        {results.map((r, i) => {
-          const key = keyOf(r, i);
+        {results.map((r) => {
+          const key = keyOf(r);
           const state = added[key];
           const meta = [r.authors, r.year].filter(Boolean).join(' · ');
           return (

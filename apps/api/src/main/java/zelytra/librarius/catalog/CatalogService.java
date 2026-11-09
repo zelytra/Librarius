@@ -41,6 +41,15 @@ public class CatalogService {
 
     private final CatalogCache cache;
 
+    /**
+     * Whether a coverless result with an ISBN is pointed at Open Library's cover for it. On by
+     * default; off in the end-to-end stack, which serves fixed catalog answers and must not
+     * depend on the internet for what its tiles show.
+     */
+    @org.eclipse.microprofile.config.inject.ConfigProperty(
+            name = "librarius.catalog.isbn-covers", defaultValue = "true")
+    boolean isbnCovers = true;
+
     @Inject
     public CatalogService(Instance<CatalogProvider> providers, CatalogCache cache) {
         this(providers.stream().toList(), cache);
@@ -187,7 +196,8 @@ public class CatalogService {
             }
         }
 
-        Stream<CatalogResult> ordered = merged.values().stream().map(CatalogService::withIsbnCover);
+        Stream<CatalogResult> ordered = merged.values().stream()
+                .map(r -> isbnCovers ? withIsbnCover(r) : r);
         if (relevance != null) {
             // Equally relevant results are told apart by how much of a record they carry: an
             // edition with an ISBN and a cover is one a reader can recognise and add, where a

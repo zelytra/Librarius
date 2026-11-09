@@ -70,4 +70,17 @@ describe('Cover', () => {
     expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument();
     expect(container.querySelector('img')).not.toHaveClass(/mediaLoaded/);
   });
+
+  test('keeps the title readable until the cover has loaded, then lets the cover take over', () => {
+    const { container } = render(
+      <Cover variant="tile" title="Dune" imageUrl="https://covers.test/slow.jpg" />,
+    );
+
+    // A cover still on its way (a slow or offline network) must not leave an anonymous tile.
+    expect(screen.getByText('Dune')).toBeInTheDocument();
+
+    fireEvent.load(container.querySelector('img')!);
+
+    expect(screen.queryByText('Dune')).not.toBeInTheDocument();
+  });
 });
