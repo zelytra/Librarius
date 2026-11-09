@@ -24,10 +24,13 @@ public final class VolumeParser {
      */
     private static final Pattern MARKER = Pattern.compile(
             "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})\\b|#\\s*(\\d{1,4})\\b"
-                    // The BnF ISBD form "Série. N, sous-titre": a number after the title's period,
-                    // followed by a comma. The comma (and the 3-digit cap) keep "Catch. 22" and
-                    // "Foundation. 1951, …" from reading as volumes.
-                    + "|\\.\\s+(\\d{1,3})(?=\\s*,)");
+                    // The BnF ISBD form "Série. N", "Série. N, sous-titre" or "Série. N : sous-titre":
+                    // a number after the title's period, ending the title or followed by its
+                    // volume title. Live BnF records ("One Piece. 56", "One piece party. 1") end
+                    // right on the number far more often than they carry a comma. The 3-digit cap
+                    // keeps a year ("Foundation. 1951") from reading as a volume.
+                    // "No." is an abbreviation, not the end of a title: "Kaiju No. 8" is a title.
+                    + "|(?<!(?i:\\bno|\\bnr|\\bnum))\\.\\s+(\\d{1,3})(?=\\s*(?:,|:|$))");
 
     private static final Pattern TRAILING_SEPARATORS = Pattern.compile("[\\s,;:.()\\-—]+$");
 
@@ -59,5 +62,22 @@ public final class VolumeParser {
                 .replaceAll("").trim();
         // A title that leads with the marker ("Tome 1", "Volume 3: …") names no series.
         return series.isEmpty() ? new Parsed(null, volume) : new Parsed(series, volume);
+    }
+
+    /** A volume marker word on its own: "tome", "tomes", "vol", "vol.", "volume", "t.". */
+    private static final Pattern MARKER_WORD = Pattern.compile(
+            "(?iu)(?<!\\p{L})(?:tomes?|volumes?|vol\\.?|t\\.)(?!\\p{L})");
+
+    /**
+     * The text with its volume marker words removed and the number kept — "one piece tome 1"
+     * becomes "one piece 1" — for a catalogue whose titles never carry the marker. A bare
+     * "t" is left alone ("t" is a word in some titles); "t." and "t1"-style markers are not
+     * written that way by readers searching a catalogue.
+     */
+    public static String withoutMarkers(String text) {
+        if (text == null) {
+            return null;
+        }
+        return MARKER_WORD.matcher(text).replaceAll(" ").replaceAll("\\s+", " ").trim();
     }
 }

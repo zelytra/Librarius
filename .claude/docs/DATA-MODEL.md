@@ -250,10 +250,9 @@ migration carry a reference — so an absent reference is the normal case for a 
 yet, not an exception, and [#197](https://github.com/zelytra/Librarius/issues/197) has to
 treat it as such.
 
-A second reason it stays empty longer than one would like: `OpenLibraryProvider` puts
-`"openlibrary"` on its results and **no reference**, so a book added from Discover still
-records neither half. The gap is in the provider — its search does not request the work key
-— and closing it is a provider change, not a schema one.
+`OpenLibraryProvider` used to put `"openlibrary"` on its results and **no reference**, so a
+book added from Discover recorded neither half. Since 2026-11 its search requests the work
+key and carries it (`OL45804W`), which is what `/works/{ref}/editions.json` is keyed on.
 
 Neither pair is indexed. Nothing looks a work up *by* its reference: the work is matched on
 (`kind`, `lower(title)`, `lower(authors)`, `volume_number`) as it always was, and whoever

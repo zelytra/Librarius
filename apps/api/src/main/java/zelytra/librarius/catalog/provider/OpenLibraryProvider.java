@@ -21,7 +21,7 @@ import java.util.Objects;
 public class OpenLibraryProvider implements CatalogProvider {
 
     private static final String FIELDS =
-            "title,author_name,first_publish_year,cover_i,isbn,publisher,language,"
+            "key,title,author_name,first_publish_year,cover_i,isbn,publisher,language,"
                     + "number_of_pages_median";
 
     /**
@@ -155,9 +155,13 @@ public class OpenLibraryProvider implements CatalogProvider {
         String publisher = d.publisher() == null || d.publisher().isEmpty() ? null : d.publisher().get(0);
         String language = d.language() == null || d.language().isEmpty() ? null : d.language().get(0);
         VolumeParser.Parsed volume = VolumeParser.parse(d.title());
+        // The work key ("/works/OL45804W") is what /works/{ref}/editions.json is keyed on: without
+        // it a book picked off a search recorded no reference, and its detail screen could never
+        // list the other printings Open Library holds.
+        String ref = workKey(d.key());
         return new CatalogResult("BOOK", d.title(), authors, d.firstPublishYear(), cover, null,
                 isbn13, publisher, language, null, volume.seriesTitle(), volume.volumeNumber(),
-                d.numberOfPagesMedian(), "openlibrary", null);
+                d.numberOfPagesMedian(), ref == null ? null : "openlibrary", ref);
     }
 
     /**
@@ -194,6 +198,15 @@ public class OpenLibraryProvider implements CatalogProvider {
         int slash = key.lastIndexOf('/');
         String code = (slash >= 0 ? key.substring(slash + 1) : key).trim();
         return code.isEmpty() ? null : code;
+    }
+
+    /** The work id out of a {@code /works/OL…W} key, or null for anything else. */
+    static String workKey(String key) {
+        if (key == null || !key.startsWith("/works/")) {
+            return null;
+        }
+        String id = key.substring("/works/".length()).trim();
+        return id.matches("OL\\d+W") ? id : null;
     }
 
     /** The edition id out of a {@code /books/OL…M} key, the part that identifies the record. */

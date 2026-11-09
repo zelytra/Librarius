@@ -8,6 +8,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
  * on every chunk received, so it bounds silence, not slowness.
  */
 @RegisterRestClient(configKey = "openlibrary")
+@ClientHeaderParam(name = "User-Agent", value = CatalogUserAgent.VALUE)
 public interface OpenLibraryClient {
 
     @GET
@@ -43,6 +45,7 @@ public interface OpenLibraryClient {
     }
 
     record Doc(
+            String key,
             String title,
             @JsonProperty("author_name") List<String> authorName,
             @JsonProperty("first_publish_year") Integer firstPublishYear,

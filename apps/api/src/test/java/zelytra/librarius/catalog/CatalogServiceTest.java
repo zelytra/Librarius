@@ -397,4 +397,131 @@ class CatalogServiceTest {
         assertEquals("Rebecca Yarros", provider.received.author());
         assertNull(provider.received.text());
     }
+
+    /** Answers its canned list after a fixed delay, to measure whether calls overlap. */
+    private record SlowProvider(String name, Kind kind, long millis, List<CatalogResult> canned)
+            implements CatalogProvider {
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            try {
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return canned;
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+    }
+
+    @Test
+    void callsTheProvidersAtOnceRatherThanOneAfterTheOther() {
+        CatalogService service = new CatalogService(List.of(
+                new SlowProvider("slow-a", Kind.BOOK, 600, List.of(result("BOOK", "A"))),
+                new SlowProvider("slow-b", Kind.BOOK, 600, List.of(result("BOOK", "B"))),
+                new SlowProvider("slow-c", Kind.MANGA, 600, List.of(result("MANGA", "C")))),
+                passThroughCache());
+
+        long start = System.nanoTime();
+        List<CatalogResult> results = service.search(Set.of(), CatalogQuery.of("x"), 10);
+        long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+
+        assertEquals(3, results.size());
+        // Sequential calls would take 1.8 s; concurrent ones the slowest of them.
+        assertTrue(elapsedMillis < 1500, "took " + elapsedMillis + " ms");
+    }
+
+    @Test
+    void keepsTheProvidersRoundRobinOrderWhenTheyAnswerOutOfOrder() {
+        CatalogService service = new CatalogService(List.of(
+                new SlowProvider("first", Kind.BOOK, 300, List.of(result("BOOK", "Premier", "a"))),
+                new SlowProvider("second", Kind.BOOK, 0, List.of(result("BOOK", "Second", "b")))),
+                passThroughCache());
+
+        List<CatalogResult> results = service.search(Set.of(Kind.BOOK), CatalogQuery.of("zzz"), 10);
+
+        assertEquals(List.of("Premier", "Second"), results.stream().map(CatalogResult::title).toList());
+    }
+
+    @Test
+    void ranksTheAskedVolumeAboveTheRestOfTheRun() {
+        // "1" used to be found inside "113" and "112", so every volume tied with the one asked.
+        CatalogService service = new CatalogService(List.of(new ListProvider(Kind.BOOK, List.of(
+                result("BOOK", "One Piece. 113", "Oda", "One Piece", 113),
+                result("BOOK", "One Piece. 112", "Oda", "One Piece", 112),
+                result("BOOK", "One Piece. 1", "Oda", "One Piece", 1)))),
+                passThroughCache());
+
+        assertEquals("One Piece. 1",
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("one piece 1"), 10).get(0).title());
+        assertEquals("One Piece. 1",
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("One Piece tome 1"), 10).get(0).title());
+    }
+
+    @Test
+    void stillMatchesAWordBeingTyped() {
+        CatalogService service = new CatalogService(List.of(new ListProvider(Kind.BOOK, List.of(
+                result("BOOK", "Pierre et Jean"),
+                result("BOOK", "One Piece")))),
+                passThroughCache());
+
+        assertEquals("One Piece",
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("one pie"), 10).get(0).title());
+    }
+
+    @Test
+    void givesACoverlessResultTheOpenLibraryCoverOfItsIsbn() {
+        CatalogResult bnfOnly = new CatalogResult("BOOK", "La horde du contrevent", "Alain Damasio",
+                2004, null, null, "9782070342266", "Gallimard", "fre", null, "bnf", "ark:/12148/x");
+        CatalogResult covered = new CatalogResult("BOOK", "Dune", "Frank Herbert", 1965,
+                "https://covers.openlibrary.org/b/id/1-M.jpg", null, "9782266116242", null, null,
+                null, "openlibrary", "OL1W");
+        CatalogResult noIsbn = result("BOOK", "Sans ISBN");
+
+        assertEquals("https://covers.openlibrary.org/b/isbn/9782070342266-M.jpg?default=false",
+                CatalogService.withIsbnCover(bnfOnly).coverUrl());
+        assertEquals(covered.coverUrl(), CatalogService.withIsbnCover(covered).coverUrl());
+        assertNull(CatalogService.withIsbnCover(noIsbn).coverUrl());
+    }
+
+    @Test
+    void keepsTheLatinCreditWhenTwoCataloguesHoldTheSameVolume() {
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, List.of(
+                        result("BOOK", "ONE PIECE Tome 1", "尾田栄一郎", "ONE PIECE", 1))),
+                new FakeProvider(Kind.BOOK, result("BOOK", "One Piece. 1", "Eiichirō Oda", "One Piece", 1))),
+                passThroughCache());
+
+        List<CatalogResult> results = service.search(Set.of(Kind.BOOK), CatalogQuery.of("one piece 1"), 10);
+
+        assertEquals(1, results.size());
+        assertEquals("Eiichirō Oda", results.get(0).authors());
+    }
+
+    @Test
+    void ranksAWorkByTheAuthorTypedInTheSearchField() {
+        CatalogService service = new CatalogService(List.of(new ListProvider(Kind.BOOK, List.of(
+                result("BOOK", "Pétition aux membres du Corps législatif", "Jacinthe Dias"),
+                result("BOOK", "Les Furtifs", "Alain Damasio")))),
+                passThroughCache());
+
+        assertEquals("Les Furtifs",
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("damasio"), 10).get(0).title());
+    }
+
+    @Test
+    void putsTheCompleteRecordFirstAmongEquallyRelevantOnes() {
+        CatalogResult bare = result("BOOK", "Astérix le Gaulois", "Goscinny");
+        CatalogResult complete = new CatalogResult("BOOK", "Astérix le Gaulois", "René Goscinny", 1961,
+                "https://covers.openlibrary.org/b/id/1-M.jpg", null, "9782012101333", null, null,
+                null, "fake", "ref2");
+        CatalogService service = new CatalogService(List.of(new ListProvider(Kind.BOOK,
+                List.of(bare, complete))), passThroughCache());
+
+        assertEquals("René Goscinny",
+                service.search(Set.of(Kind.BOOK), CatalogQuery.of("asterix"), 10).get(0).authors());
+    }
 }

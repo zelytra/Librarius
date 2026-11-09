@@ -6,6 +6,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 /**
@@ -24,6 +25,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
  * read-timeout} bounds silence, not slowness.
  */
 @RegisterRestClient(configKey = "bnf")
+@ClientHeaderParam(name = "User-Agent", value = CatalogUserAgent.VALUE)
 public interface BnfClient {
 
     @GET

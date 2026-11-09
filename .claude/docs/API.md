@@ -449,7 +449,7 @@ nothing:
 
 | Criterion | Open Library (`BOOK`) | BnF (`BOOK`) | AniList (`MANGA`) |
 |---|---|---|---|
-| `q` | ✅ free text | ✅ `bib.anywhere` | ✅ `media(search:)` |
+| `q` | ✅ free text | ✅ `bib.title` or `bib.author`, volume markers dropped | ✅ `media(search:)`, on the series of a "series + tome N" search |
 | `author` | ✅ `author:` | ✅ `bib.author` | ✅ resolved through `Staff(search:)`, then that person's works |
 | `year` | ✅ `first_publish_year:` | ⚠️ applied to the records, not by the catalogue | ✅ `startDate` window |
 | `publisher` | ✅ `publisher:` | ✅ `bib.publisher` | ❌ AniList describes works, not editions |
@@ -459,7 +459,29 @@ nothing:
 A `BOOK` search asks **both** book providers and merges their answers on the same
 `title|authors` key the rest of the aggregation uses, so a novel both catalogues hold is
 listed once and a novel only one of them holds still surfaces. The BnF's Dublin Core record
-carries no cover image, so a result only it knows reaches the screen without one.
+carries no cover image, so a result with an ISBN and no cover is given the one Open Library
+serves for that ISBN (`?default=false`: a 404 when it has none, which the front end's cover
+falls back from).
+
+**How the merged page is put together** (since 2026-11):
+
+- The providers are called **concurrently** (virtual threads), so a search costs the slowest
+  provider rather than the sum of them.
+- The BnF search is restricted to printed text (`bib.doctype any "a"`, plus a check of
+  `dc:type`): the general catalogue otherwise answers video games, films and records. Its
+  ISBD titles lose the edition statement and a bare form subtitle ("… : roman (Nouvelle éd.)
+  Alain Damasio" → "La horde du contrevent"), so they merge with Open Library's copy. A
+  free-text search hands back the BnF's whole page (50) to be ranked, since the BnF's own
+  order is arbitrary.
+- Ranking: whole words, not substrings ("1" no longer matches "113"); volume markers
+  ignored ("tome 1" = ". 1"); the last word matches as a prefix (search as you type); a name
+  typed in the field matches the authors; ties go to the record carrying an ISBN and a cover.
+- Merging two copies of a volume keeps the Latin-script credit ("Eiichirō Oda" over
+  "尾田栄一郎").
+- AniList's author is read from the staff **roles** (Story & Art, Story, Art; Original
+  Creator only for a spin-off with neither), not from the first staff edge, which is often
+  an assistant.
+- Every catalog client sends a `User-Agent` naming the project, as Open Library asks.
 
 The BnF's publication-date index does not take the plain year a caller supplies, so the
 year is applied to the records that come back instead. A search carrying **only** a year
@@ -920,8 +942,8 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
   (the manual form has none to send). The server stamps the pair on the `edition` it creates
   and on the `work` when it founds it, or completes a matched work that had none. **The two
   are one value**: half a pair is dropped rather than stored, on either row
-  ([DATA-MODEL](DATA-MODEL.md) § 1, V12). Beware that Open Library results carry a provider
-  and no reference today, so a book added from Discover still records neither.
+  ([DATA-MODEL](DATA-MODEL.md) § 1, V12). Open Library results carry the work key
+  (`OL45804W`) as their reference since 2026-11, so a book added from Discover records it.
 - **Isolation**: every resource resolves `CurrentUser.id()` and filters on it. An `id`
   belonging to another user must answer **404**, never 403 (no leaking of existence).
 - **Validation**: Jakarta Bean Validation (`@Valid`, `@NotBlank`, `@Min`) on the input DTOs;
@@ -943,5 +965,5 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A9 | ✅ Server-side search and filters on the collection (#38) | Foundations |
 | A10 | No rate limiting on `/api/catalog/*` | Operations |
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
-| A12 | **Provider enrichment** of a work's editions is wired but mostly dormant (#197). `GET /api/works/{id}/editions` now asks the work's provider for its other printings and merges them in, cached and rate-limited, degrading to the stored list when there is no reference or the provider is down. What is left: **no shipped provider actually feeds it**. Open Library still returns no usable work key to store on add, and the merge only fires on `openlibrary` works; BnF stores an ark but exposes no per-work edition list, and AniList describes works, not editions. So the path exists and is tested against a stubbed provider, but a real work is enriched only once a provider both stores a reference and answers `editionsOf` — the remaining half of #184's Open Library note. Entries stored before V12 carry no reference and never will | Core product |
+| A12 | **Provider enrichment** of a work's editions is wired but mostly dormant (#197). `GET /api/works/{id}/editions` now asks the work's provider for its other printings and merges them in, cached and rate-limited, degrading to the stored list when there is no reference or the provider is down. Open Library feeds it since 2026-11: its search results carry the work key, so a book added from Discover is enriched with the printings Open Library knows (verified live). What is left: BnF stores an ark but exposes no per-work edition list, AniList describes works, not editions, and entries stored before V12 — or before the Open Library fix — carry no reference and never will | Core product |
 | A13 | **Live author bibliography.** `GET /api/authors/{id}` lists only the works of the *local* shared catalog crediting an author; a provider (AniList's `Staff`, Open Library's `/authors/{id}/works.json`) knows the rest. Same shape as A12 for editions, deliberately deferred to an on-demand enrichment issue rather than bundled into #196 | Universal search, authors & editions |

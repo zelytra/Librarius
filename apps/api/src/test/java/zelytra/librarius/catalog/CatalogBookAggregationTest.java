@@ -60,7 +60,7 @@ class CatalogBookAggregationTest {
     }
 
     private void openLibraryAnswers(String title, String author) {
-        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc(title, List.of(author), 2023, 42L,
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL1W", title, List.of(author), 2023, 42L,
                 List.of("9781234567890"), List.of("Piatkus"), List.of("eng"), 300);
         Mockito.when(openLibrary.search(anyString(), anyInt(), anyString()))
                 .thenReturn(Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of(doc))));
