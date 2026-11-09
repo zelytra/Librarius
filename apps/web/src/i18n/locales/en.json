@@ -667,7 +667,7 @@
     },
     "import": {
       "title": "Import my library",
-      "description": "From Booknode (by handle) or from an exported CSV file (Babelio, Goodreads…).",
+      "description": "From Booknode or Babelio — by username, or with the collector in your browser — or from a CSV file (Goodreads…).",
       "signIn": "Sign in to import",
       "submit": "Import",
       "csv": "Import a CSV file",
@@ -678,11 +678,25 @@
       "handlePlaceholder": {
         "booknode": "Booknode handle"
       },
-      "babelioNote": "Babelio does not allow importing by handle: a library there is not public. Export your list from Babelio, then import the CSV file below.",
+      "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
       "running": "Import in progress… {{imported}} title(s) added.",
       "unavailable": "Import is unavailable right now.",
-      "unreadableFile": "Unreadable file."
+      "unreadableFile": "Unreadable file.",
+      "file": "Import a file (collected, CSV or saved pages)",
+      "collector": {
+        "title": "Collect from your browser — always works",
+        "step1": "Drag this button to your bookmarks bar:",
+        "button": "Librarius: collect",
+        "step2": {
+          "booknode": "Open your Booknode profile page and click the bookmark: it goes through every page of your library and downloads a librarius-booknode.json file.",
+          "babelio": "Open “Mes livres” on Babelio, signed in, and click the bookmark: it goes through every page of your library and downloads a librarius-babelio.json file."
+        },
+        "step3": "Import that file with the button below.",
+        "copy": "On mobile: copy the bookmark's code",
+        "copied": "Code copied: create a bookmark and paste it as its address.",
+        "notCollected": "This file was not produced by the Librarius collector."
+      }
     },
     "export": {
       "title": "Export my data",

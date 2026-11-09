@@ -66,6 +66,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
+| POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
 | POST | `/api/reports` | Flags an error in a shared catalog object (`ReportCreateDto`) — write-only, see [Reports](#reports). 201 with the created report, **400** on an unknown target |
 
@@ -792,6 +793,24 @@ is a stub by design, not a scraper waiting to be repaired — the Babelio path i
 export, and the Settings screen says so before anything is submitted rather than letting the
 400 explain it ([#193](https://github.com/zelytra/Librarius/issues/193)). An unknown source
 answers 400 as well.
+
+**The collector (`POST /api/import/collected`).** The path that works whatever a site does to
+servers. Babelio shows a library only to its signed-in owner, and Booknode refuses requests
+from a server it does not like. The reader's browser can read both, so Settings offers a
+bookmarklet (`features/settings/collector.ts`) that runs on the site, in the reader's session:
+
+- it walks every page of their library, Booknode's `biblio-table` or the Babelio page they are
+  on, paged by its own numbered links;
+- it decodes each page in the charset it declares (Babelio serves ISO-8859-1);
+- it keeps the rows of each page and downloads a `librarius-<source>.json` file.
+
+Settings then posts that file's `source` and `pages` here. The pages are read with the
+scrape's own parser for Booknode, and for Babelio with `BabelioPageParser`, which keys on the
+site's stable links (`/livres/<slug>/<id>`, `/auteur/<slug>/<id>`) rather than on a layout.
+It reads the status, a `rateit` star value and a reading date when a row carries them, and
+skips a "Pense-bête". At most 1 000 pages are accepted, and `quarkus.http.limits.max-body-size`
+is 32 MB. The import runs as a background job like the CSV one. Pages saved from the browser
+(`.html`) go through the same route.
 
 ## Export
 

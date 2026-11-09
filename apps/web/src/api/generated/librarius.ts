@@ -126,6 +126,13 @@ export interface CategoryUpdateDto {
   label: string;
 }
 
+export interface CollectedRequest {
+  /** @pattern booknode|babelio */
+  source: string;
+  /** @maxItems 1000 */
+  pages: string[];
+}
+
 export interface DashboardSectionDto {
   /** @pattern \S */
   code: string;
@@ -2218,6 +2225,77 @@ export const usePutApiGoalsYear = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiGoalsYearMutationOptions(options), queryClient);
+    }
+
+export const getPostApiImportCollectedUrl = () => {
+
+
+
+
+  return `/api/import/collected`
+}
+
+/**
+ * @summary Collected
+ */
+export const postApiImportCollected = async (collectedRequest: CollectedRequest, options?: RequestInit): Promise<ImportJobDto> => {
+
+  return apiClient<ImportJobDto>(getPostApiImportCollectedUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(collectedRequest)
+  }
+);}
+
+
+
+
+
+export const getPostApiImportCollectedMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportCollected>>, TError,{data: CollectedRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiImportCollected>>, TError,{data: CollectedRequest}, TContext> => {
+
+const mutationKey = ['postApiImportCollected'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportCollected>>, {data: CollectedRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiImportCollected(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiImportCollectedMutationResult = NonNullable<Awaited<ReturnType<typeof postApiImportCollected>>>
+    export type PostApiImportCollectedMutationBody = CollectedRequest
+    export type PostApiImportCollectedMutationError = void
+
+    /**
+ * @summary Collected
+ */
+export const usePostApiImportCollected = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportCollected>>, TError,{data: CollectedRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiImportCollected>>,
+        TError,
+        {data: CollectedRequest},
+        TContext
+      > => {
+      return useMutation(getPostApiImportCollectedMutationOptions(options), queryClient);
     }
 
 export const getPostApiImportCsvUrl = () => {

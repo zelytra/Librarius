@@ -77,19 +77,77 @@ describe('ImportSection', () => {
   });
 
   /**
-   * Babelio has no handle path at all — the API refuses every one of them — so offering a
-   * field and a submit button only taught that through a failed request.
+   * Babelio has no handle path at all — its library is shown to its signed-in owner only — so
+   * it leads to the collector that reads it from the reader's own browser.
    */
-  test('points Babelio at the CSV export instead of offering a handle', async () => {
+  test('points Babelio at the collector instead of offering a handle', async () => {
     const calls = captureImports();
     renderWithProviders(<ImportSection />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Babelio' }));
 
-    expect(screen.getByText(/sa bibliothèque n'est pas publique/)).toBeInTheDocument();
+    expect(screen.getByText(/utilise la collecte ci-dessous/)).toBeInTheDocument();
+    expect(screen.getByText(/Ouvre « Mes livres » sur Babelio/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Pseudo Babelio')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Importer' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Importer un fichier CSV' })).toBeInTheDocument();
+    expect(calls).toEqual([]);
+  });
+
+  test('offers the collector as a bookmark to drag', () => {
+    renderWithProviders(<ImportSection />);
+
+    const link = screen.getByText('Librarius : collecter').closest('a');
+    expect(link?.getAttribute('href')).toMatch(/^javascript:/);
+  });
+
+  test('imports the file the collector saved, for the source it was collected on', async () => {
+    const calls = captureImports();
+    const { container } = renderWithProviders(<ImportSection />);
+    const collected = {
+      format: 'librarius-collect',
+      version: 1,
+      source: 'babelio',
+      collectedAt: '2026-11-09T10:00:00Z',
+      pages: ['<table><tr><td><a href="/livres/X/1">Dune</a></td></tr></table>'],
+    };
+
+    await userEvent.upload(
+      fileInputOf(container),
+      new File([JSON.stringify(collected)], 'librarius-babelio.json', { type: 'application/json' }),
+    );
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].route).toBe('collected');
+    expect(JSON.parse(calls[0].body)).toEqual({ source: 'babelio', pages: collected.pages });
+    expect(await screen.findByText('3 titre(s) importé(s) · 1 déjà présent(s).')).toBeInTheDocument();
+  });
+
+  test('imports library pages saved from the browser, several at once', async () => {
+    const calls = captureImports();
+    const { container } = renderWithProviders(<ImportSection />);
+
+    await userEvent.upload(fileInputOf(container), [
+      new File(['<div class="book-item">Dune</div>'], 'page1.html', { type: 'text/html' }),
+      new File(['<div class="book-item">Fondation</div>'], 'page2.html', { type: 'text/html' }),
+    ]);
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(JSON.parse(calls[0].body)).toEqual({
+      source: 'booknode',
+      pages: ['<div class="book-item">Dune</div>', '<div class="book-item">Fondation</div>'],
+    });
+  });
+
+  test('refuses a JSON file the collector did not produce', async () => {
+    const calls = captureImports();
+    const { container } = renderWithProviders(<ImportSection />);
+
+    await userEvent.upload(
+      fileInputOf(container),
+      new File(['{"books":[]}'], 'other.json', { type: 'application/json' }),
+    );
+
+    expect(await screen.findByText("Ce fichier n'a pas été produit par la collecte Librarius.")).toBeInTheDocument();
     expect(calls).toEqual([]);
   });
 
@@ -115,7 +173,7 @@ describe('ImportSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Booknode' }));
 
     expect(screen.getByLabelText('Pseudo Booknode')).toBeInTheDocument();
-    expect(screen.queryByText(/sa bibliothèque n'est pas publique/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/utilise la collecte ci-dessous/)).not.toBeInTheDocument();
   });
 
   test('offers to sign in rather than to import when there is no session', () => {

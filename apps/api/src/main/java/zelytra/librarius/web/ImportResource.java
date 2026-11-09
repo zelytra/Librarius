@@ -40,7 +40,21 @@ public class ImportResource {
     @Inject
     ArchiveImportService archiveImportService;
 
+    @Inject
+    zelytra.librarius.imports.CollectedLibrary collectedLibrary;
+
     public record ScrapeRequest(@NotBlank String handle) {
+    }
+
+    /**
+     * What the collector of Settings saves: the source it ran on and the rows of each page of
+     * the reader's library, as their own browser displayed them.
+     */
+    public record CollectedRequest(
+            @NotBlank @jakarta.validation.constraints.Pattern(regexp = "booknode|babelio") String source,
+            @jakarta.validation.constraints.NotNull
+            @jakarta.validation.constraints.Size(max = zelytra.librarius.imports.CollectedLibrary.MAX_PAGES)
+            java.util.List<String> pages) {
     }
 
     /**
@@ -54,6 +68,19 @@ public class ImportResource {
     public ImportJobDto scrape(@PathParam("source") String source, ScrapeRequest req) {
         currentUser.require();
         return dto(importJobs.submit(currentUser.id(), source, req.handle(), null));
+    }
+
+    /**
+     * Starts the import of a library collected in the reader's own browser — the path that
+     * works whatever a site does to servers, Babelio's signed-in-only library included.
+     */
+    @POST
+    @Path("/collected")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ImportJobDto collected(@Valid CollectedRequest req) {
+        currentUser.require();
+        return dto(importJobs.submit(currentUser.id(), req.source(),
+                () -> collectedLibrary.parse(req.source(), req.pages())));
     }
 
     /** Starts a CSV import, deferred the same way — a Goodreads export is thousands of rows too. */

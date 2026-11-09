@@ -115,10 +115,20 @@ public class ImportJobs {
      * "csv".
      */
     public Job submit(String userId, String source, String handle, String csv) {
+        return submit(userId, source, () -> csv != null
+                ? ImportService.parseCsv(csv)
+                : imports.fetchBooks(source, handle));
+    }
+
+    /**
+     * Schedules an import of titles read by {@code loader} — a CSV parse, a scrape, or the
+     * pages a reader collected in their own browser — and returns the job to poll.
+     */
+    public Job submit(String userId, String source, java.util.function.Supplier<List<ImportedBook>> loader) {
         sweep();
         Job job = new Job(userId, source);
         jobs.put(job.id, job);
-        workers.execute(() -> run(job, handle, csv));
+        workers.execute(() -> run(job, loader));
         return job;
     }
 
@@ -131,11 +141,9 @@ public class ImportJobs {
         return Optional.ofNullable(jobs.get(id)).filter(job -> job.userId.equals(userId));
     }
 
-    private void run(Job job, String handle, String csv) {
+    private void run(Job job, java.util.function.Supplier<List<ImportedBook>> loader) {
         try {
-            List<ImportedBook> books = csv != null
-                    ? ImportService.parseCsv(csv)
-                    : imports.fetchBooks(job.source, handle);
+            List<ImportedBook> books = loader.get();
             job.total = books.size();
             ImportResult result = imports.persist(job.userId, job.source, books);
             job.imported = result.imported();
