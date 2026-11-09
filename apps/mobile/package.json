@@ -14,9 +14,9 @@
     "doctor": "cap doctor"
   },
   "dependencies": {
-    "@capacitor/android": "^7.6.8",
+    "@capacitor/android": "^7.6.9",
     "@capacitor/core": "^7.6.8",
-    "@capacitor/ios": "^7.6.8"
+    "@capacitor/ios": "^7.6.9"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.6.8",
