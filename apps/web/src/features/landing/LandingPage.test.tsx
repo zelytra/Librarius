@@ -107,4 +107,35 @@ describe('LandingPage', () => {
     expect(screen.getByText('tableau de bord')).toBeInTheDocument();
     expect(screen.queryByText('Ta bibliothèque, tome par tome.')).not.toBeInTheDocument();
   });
+
+  test('signs in from the top bar too', async () => {
+    renderLanding();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+
+    expect(signinRedirect).toHaveBeenCalled();
+  });
+
+  /** When Keycloak is down the button used to do nothing at all, with no word to the visitor. */
+  test('says the sign-in service is unavailable when it does not answer', async () => {
+    signinRedirect.mockRejectedValueOnce(new Error('Failed to fetch the OpenID configuration'));
+    renderLanding();
+
+    await userEvent.click(screen.getAllByText('Se connecter ou créer un compte')[0]);
+
+    expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent(
+      'La connexion est indisponible pour le moment',
+    );
+  });
+
+  test('shows the product and how a library comes over', () => {
+    renderLanding();
+
+    // The window of the hero, drawn from the application's own components.
+    expect(screen.getByRole('img', { name: /Aperçu de l'application/ })).toBeInTheDocument();
+    expect(screen.getByText('Arrive avec ta bibliothèque')).toBeInTheDocument();
+    expect(screen.getByText('Booknode')).toBeInTheDocument();
+    expect(screen.getByText('Babelio')).toBeInTheDocument();
+    expect(screen.getByText("Où tu en es, d'un coup d'œil")).toBeInTheDocument();
+  });
 });

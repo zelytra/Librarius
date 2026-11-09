@@ -44,17 +44,42 @@ updates:
       include: scope
     labels:
       - web
+    # The groups carry minor and patch updates only. A major used to ride in the same
+    # pull request as twenty safe bumps, and one blocked major (TypeScript 7, ESLint
+    # 10) kept the whole group red for months, the safe bumps with it. A major now
+    # arrives on its own, where it can be judged on its own.
     groups:
       # Runtime dependencies end up in the browser bundle: a regression there is
       # visible to users, so they are reviewed apart from the toolchain.
       web-runtime:
         dependency-type: production
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
       web-toolchain:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
         patterns:
           - "*"
+    ignore:
+      # Blocked upstream, see INVENTORY debt #20 and #133: typescript-eslint does not
+      # support TypeScript 7 yet, and eslint-plugin-react — which carries the
+      # react/jsx-no-literals guard on user-facing copy — still peers on ESLint 9.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      # Capacitor 8 is a migration of the native Android project, not a bump: core,
+      # cli, android and ios have to move together, with the Gradle project they
+      # generate. Planned as its own change rather than proposed weekly.
+      - dependency-name: "@capacitor/*"
+        update-types: ["version-update:semver-major"]
 
   # API. The Quarkus platform BOM drives most versions, hence a single group:
   # splitting it would produce pull requests that cannot be merged separately.

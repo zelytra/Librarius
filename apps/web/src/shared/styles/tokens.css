@@ -200,6 +200,10 @@
   --fs-25: 25px;
   --fs-26: 26px;
   --fs-27: 27px;
+  /* The one display size: the public landing page's headline, which has to read as the
+     front of a product at a glance. Fluid between a phone and a desktop rather than a
+     fixed step, since it is the only text that spans the width of the page. */
+  --fs-display: clamp(32px, 5.2vw, 52px);
 
   /* ── Breakpoints ──────────────────────────────────────────────────────────
      The two viewport widths the layout changes at. They are measured against

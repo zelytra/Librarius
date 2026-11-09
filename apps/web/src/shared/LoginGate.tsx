@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useApiAuth } from './api';
+import { useApiAuth, useSignIn } from './api';
 import { Button } from './ui/primitives';
 import { Icon } from './ui/Icon';
 import { Loading } from './ui/states';
@@ -29,7 +29,8 @@ function Welcome({ children }: { children: ReactNode }) {
 /** Renders the content when the user is signed in, otherwise a sign-in prompt. */
 export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: string }) {
   const { t } = useTranslation();
-  const { authed, loading, login } = useApiAuth();
+  const { authed, loading } = useApiAuth();
+  const { signIn, pending, failed } = useSignIn();
 
   // The session is still being resolved. Nothing is known yet — not even whether there
   // is one — so the screen says the app is opening rather than that a session is missing.
@@ -44,10 +45,15 @@ export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: 
     return (
       <Welcome>
         <p className={styles.prompt}>{prompt ?? t('auth.defaultPrompt')}</p>
-        <Button variant="primary" onClick={login}>
+        <Button variant="primary" onClick={signIn} disabled={pending}>
           <Icon name="login" size={20} fill color="var(--on-accent)" />
           {t('auth.signIn')}
         </Button>
+        {failed && (
+          <p className={styles.signInError} role="alert">
+            {t('auth.unavailable')}
+          </p>
+        )}
         {/* The root sends a signed-out visitor to the landing page on its own (see
             App.tsx), but a shared link to a title does not: it prompts here, so that
             signing in lands on that title. Without this way out, the visitor who

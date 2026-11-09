@@ -39,12 +39,15 @@
       "categories": "Connecte-toi pour gérer tes catégories.",
       "author": "Connecte-toi pour voir cet auteur."
     },
-    "discover": "Découvrir l'application"
+    "discover": "Découvrir l'application",
+    "unavailable": "La connexion est indisponible pour le moment : le service d'authentification ne répond pas. Réessaie dans quelques minutes."
   },
   "landing": {
     "hero": {
       "title": "Ta bibliothèque, tome par tome.",
-      "lead": "Ce que tu possèdes jusqu'au tome et à l'édition, où tu en es dans tes lectures, et ce qui sort ensuite dans les séries que tu suis."
+      "lead": "Ce que tu possèdes jusqu'au tome et à l'édition, où tu en es dans tes lectures, et ce qui sort ensuite dans les séries que tu suis.",
+      "eyebrow": "Pour les lecteurs de romans et les collectionneurs de mangas",
+      "how": "Voir comment ça marche"
     },
     "cta": {
       "label": "Se connecter ou créer un compte",
@@ -89,24 +92,60 @@
         "body": "Suivre ta progression, tenir un objectif sur l'année, retrouver ce que tu avais aimé."
       },
       "import": {
-        "title": "Tu viens de Booknode",
-        "body": "Importe ta bibliothèque depuis ton pseudo ou un fichier CSV, sans rien retaper."
+        "title": "Tu viens de Booknode ou de Babelio",
+        "body": "Ta bibliothèque te suit : statuts, notes, dates de lecture, séries."
       }
     },
     "features": {
       "title": "Ce qui est en ligne aujourd'hui",
-      "collection": "Collection en couvertures, vue par série, recherche, tri, catégories",
-      "discover": "Recherche dans Open Library et AniList, par mots-clés ou par ISBN",
+      "collection": "Collection en couvertures rangée par série, recherche, tri, catégories",
+      "discover": "Recherche dans Open Library, la BnF et AniList, par titre, auteur ou ISBN",
       "wishlist": "Souhaits classés par urgence, budget estimé, « je l'ai acheté »",
       "stats": "Objectif annuel, rythme, répartition par genre et par auteur",
-      "import": "Import depuis un pseudo Booknode ou un fichier CSV",
+      "import": "Import depuis Booknode, Babelio, Goodreads ou un fichier CSV",
       "export": "Export JSON et CSV, suppression du compte et des données",
       "themes": "Quatre thèmes clairs et sombres, en français et en anglais"
     },
     "closing": {
       "title": "Commence par un tome.",
       "body": "Tes notes et tes avis restent privés, et ne sont jamais agrégés entre utilisateurs."
-    }
+    },
+    "nav": {
+      "signIn": "Se connecter"
+    },
+    "mock": {
+      "alt": "Aperçu de l'application : une collection rangée par série et le livre en cours de lecture.",
+      "collection": "Ma collection",
+      "series": "Les Chroniques du Vent",
+      "seriesBadge": "12 tomes",
+      "shelf1": "L'Atelier des cartes",
+      "shelf2": "Archipel",
+      "shelf3": "La Cité de verre",
+      "shelf4": "Nuits d'encre",
+      "shelf5": "Le Dernier Phare",
+      "now": "Le Chant des marées",
+      "nowProgress": "Page 214 sur 336 · 64 %"
+    },
+    "reading": {
+      "title": "Où tu en es, d'un coup d'œil",
+      "body": "La page atteinte, la date de fin, ta note et ton avis privés. Un objectif pour l'année, le rythme à tenir, et l'historique de tes lectures mois par mois.",
+      "alt": "Exemple : un objectif annuel atteint à 70 % et une année de lectures mois par mois.",
+      "goal": "Objectif de l'année",
+      "goalValue": "28 / 40 livres"
+    },
+    "import": {
+      "title": "Arrive avec ta bibliothèque",
+      "body": "Pas besoin de tout retaper : ta bibliothèque Booknode ou Babelio arrive en un clic, avec tes statuts, tes notes et tes dates de lecture. Les couvertures et les ISBN manquants se complètent tout seuls.",
+      "sources": {
+        "booknode": "Booknode",
+        "babelio": "Babelio",
+        "csv": "Goodreads et CSV"
+      },
+      "step1": "Glisse le bouton de collecte dans tes favoris.",
+      "step2": "Ouvre ta bibliothèque Booknode ou Babelio et clique dessus.",
+      "step3": "Importe le fichier obtenu : tes livres sont là, rangés par série."
+    },
+    "footer": "{{name}} · ta bibliothèque, tome par tome"
   },
   "errors": {
     "title": "Quelque chose s'est mal passé.",

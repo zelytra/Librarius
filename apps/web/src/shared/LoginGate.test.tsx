@@ -100,4 +100,16 @@ describe('LoginGate', () => {
 
     expect(screen.getByText('Connecte-toi pour accéder à cette section.')).toBeInTheDocument();
   });
+
+  test('says so when the sign-in service does not answer, instead of doing nothing', async () => {
+    setAuthenticated(false);
+    signinRedirect.mockRejectedValueOnce(new Error('Failed to fetch the OpenID configuration'));
+    renderGate();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "La connexion est indisponible pour le moment",
+    );
+  });
 });

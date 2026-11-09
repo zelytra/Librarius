@@ -124,9 +124,23 @@ jobs:
         run: |
           kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-      # The two Secrets below are created by hand on the cluster and never by the
-      # CI: no credential transits through this repository. Procedure in
-      # docs/DEPLOYMENT.md. A missing Secret makes the chart fail to render.
+      # The two Secrets the chart reads are created by hand on the cluster and never
+      # by the CI: no credential transits through this repository. Procedure in
+      # docs/DEPLOYMENT.md § "Cluster secrets". The chart only checks that their
+      # *names* are set, not that they exist: a missing one used to render fine and
+      # leave postgres, keycloak and the api in CreateContainerConfigError until the
+      # rollout timed out ten minutes later. This fails the deploy before it starts.
+      - name: Check the cluster secrets exist
+        run: |
+          missing=0
+          for secret in librarius-postgres librarius-keycloak; do
+            if ! kubectl -n "$NAMESPACE" get secret "$secret" > /dev/null 2>&1; then
+              echo "::error::Secret ${secret} is missing from namespace ${NAMESPACE}: postgres, keycloak and the api cannot start without it. Create it as docs/DEPLOYMENT.md § 'Cluster secrets' explains, then re-run this job."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       # The node this deploys to is CPU-saturated at times, and a rollout that is
       # merely slow — not stuck — kept blowing past helm's `--wait` with "context
       # deadline exceeded" (#187), marking a healthy deploy failed and leaving the
