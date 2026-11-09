@@ -72,6 +72,12 @@ import { fileURLToPath } from 'node:url';
  * the check was one eager change away from red whatever landed; this one measured 162.6 kB.
  * Re-derived to the measurement plus ~6%, still well clear of #79's 200 kB product ceiling.
  *
+ * Both move again for the web-runtime upgrade of 2026-11 (React 19.3, TanStack Query 5.107,
+ * i18next 26.7, react-router 8.5): measured from the source maps, react-dom grew by ~88 kB of
+ * source and TanStack Query by as much, all of it eager — no import of ours changed. The upgrade
+ * measured 175.1 kB initial and 252.2 kB whole build, against 162.8 and 240.0 before it. A
+ * deliberate baseline change, so re-derived: `initial` 186, `total` 268, the measurement plus ~6%.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -79,9 +85,9 @@ import { fileURLToPath } from 'node:url';
  * re-derived when the baseline deliberately changes, never merely because a screen grew.
  */
 const BUDGET_KB = {
-  initial: 172,
+  initial: 186,
   chunk: 10,
-  total: 245,
+  total: 268,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
