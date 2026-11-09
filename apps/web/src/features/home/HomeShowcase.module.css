@@ -1,0 +1,147 @@
+/* The front of Home: a banner showing the library off, and the book being read now. */
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.banner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px;
+  border-radius: var(--radius-panel);
+  background: linear-gradient(135deg, var(--tint-sage), var(--surface-2));
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 220px;
+  flex: 1 1 260px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.figures {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+}
+
+.figureValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.figureLabel {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* The latest covers, fanned out like books leaning on a shelf. */
+.fan {
+  position: relative;
+  flex: 0 1 300px;
+  height: 150px;
+  min-width: 220px;
+}
+
+.fanCover {
+  position: absolute;
+  bottom: 0;
+  width: 78px;
+  left: calc(var(--i) * (100% - 78px) / max(1, var(--n) - 1));
+  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 3deg));
+  transform-origin: bottom center;
+}
+
+/* The book being read now. */
+.now {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.nowCover {
+  flex: 0 0 96px;
+}
+
+.nowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nowLabel {
+  font-size: var(--fs-10);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.nowTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.nowAuthor {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.nowTrack {
+  height: 6px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+  max-width: 360px;
+}
+
+.nowFill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.nowPercent {
+  font-size: var(--fs-12);
+  color: var(--muted);
+}

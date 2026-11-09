@@ -187,6 +187,20 @@
         "goal": "Objectif de lecture annuel",
         "recentlyRead": "Derniers lus"
       }
+    },
+    "showcase": {
+      "title": "Ta bibliothèque",
+      "titles_one": "titre",
+      "titles_other": "titres",
+      "series_one": "série",
+      "series_other": "séries",
+      "pages_one": "page lue",
+      "pages_other": "pages lues",
+      "add": "Ajouter un livre",
+      "collection": "Voir ma collection",
+      "now": "En ce moment",
+      "progress": "{{percent}} % lu",
+      "continue": "Continuer ma lecture"
     }
   },
   "onboarding": {
