@@ -108,9 +108,10 @@ describe('collectLibrary', () => {
 
 describe('bookmarkletHref', () => {
   test('is the collector, self-contained, run on the page', () => {
-    const href = bookmarkletHref();
-    expect(href.startsWith('javascript:')).toBe(true);
-    const code = decodeURIComponent(href.slice('javascript:'.length));
+    // The scheme and the code, split apart: what follows the colon is the collector itself.
+    const [scheme, encoded] = [bookmarkletHref().split(':', 1)[0], bookmarkletHref().slice(bookmarkletHref().indexOf(':') + 1)];
+    expect(scheme).toBe('javascript');
+    const code = decodeURIComponent(encoded);
     // It must parse on its own: a reference to this module would break once serialized.
     expect(() => new Function(code)).not.toThrow();
     expect(code.endsWith(')()')).toBe(true);

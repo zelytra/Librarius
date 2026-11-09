@@ -97,7 +97,7 @@ describe('ImportSection', () => {
     renderWithProviders(<ImportSection />);
 
     const link = screen.getByText('Librarius : collecter').closest('a');
-    expect(link?.getAttribute('href')).toMatch(/^javascript:/);
+    expect(link?.getAttribute('href')?.split(':', 1)[0]).toBe('javascript');
   });
 
   test('imports the file the collector saved, for the source it was collected on', async () => {
