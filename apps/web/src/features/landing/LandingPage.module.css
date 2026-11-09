@@ -1,37 +1,32 @@
-/* Public landing page (#80).
+/* Public landing page (#80) — the shop window of the application.
 
-   It is the one screen that renders outside the application shell, so it owns the two
-   things the shell would otherwise give it: a full-height surface in the palette, and a
-   content column that stops growing. Both come from the same tokens every screen uses —
-   --content-max caps the column, --screen-pad-* steps the padding at the breakpoints —
-   which is why there is not a single media query below. A phone gets one column because
-   --grid-panel-columns is `1fr` under --bp-tablet; a desktop gets three because the same
-   token becomes an auto-fit track list above it.
-
-   The type stays on the app's own scale, --fs-27 at the largest. A landing page is
-   usually where a display size gets invented; here that would mean either a hardcoded
-   px or a new token nothing else consumes, and a 27px serif heading on a narrow measure
-   is the voice this application already speaks in. */
+   It is the one screen that renders outside the application shell, so it owns its surface
+   and its column. Everything comes from the shared tokens; the layouts that change shape
+   with the width are auto-fit grids and wrapping flex rows, so a phone gets one column and
+   a desktop two without a single media query. The headline is the one display size of the
+   app (--fs-display), fluid because it is the only text that spans the page. */
 
 .page {
   min-height: 100dvh;
   background: var(--bg);
+  color: var(--ink);
 }
 
 .inner {
   max-width: var(--content-max);
   margin-inline: auto;
-  padding: var(--screen-pad-top) var(--screen-pad-x) var(--screen-pad-bottom);
+  padding: 0 var(--screen-pad-x) var(--screen-pad-bottom);
 }
 
-/* ── Hero ─────────────────────────────────────────────────────────────────── */
+/* ── Top bar ──────────────────────────────────────────────────────────────── */
 
-.hero {
+.nav {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 18px var(--screen-pad-x);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 26px 0 40px;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .brand {
@@ -40,150 +35,396 @@
   gap: 8px;
   margin: 0;
   font-family: var(--font-serif);
-  font-size: var(--fs-17);
+  font-size: var(--fs-19);
   font-weight: 600;
+}
+
+.navSignIn {
+  padding: 8px 16px;
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--line);
+  background: var(--surface);
   color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13-5);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.navSignIn:hover {
+  border-color: var(--accent);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+
+.hero {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 28px var(--screen-pad-x) 56px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  align-items: center;
+  gap: 40px;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius-chip);
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  font-size: var(--fs-12-5);
+  font-weight: 700;
 }
 
 .title {
-  font-size: var(--fs-27);
-  line-height: 1.2;
-  /* A measure, not a width: past --bp-tablet the column is 1140px wide and a heading
-     running its full length stops being a heading. */
-  max-width: 20ch;
   margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-display);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  max-width: 16ch;
 }
 
 .lead {
-  max-width: 58ch;
+  max-width: 52ch;
   margin: 0;
-  font-size: var(--fs-16);
-  line-height: 1.6;
+  font-size: var(--fs-17);
+  line-height: 1.55;
   color: var(--ink-soft);
 }
 
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  margin-top: 6px;
+}
+
 .cta {
-  align-self: flex-start;
-  margin-top: 4px;
+  box-shadow: var(--shadow-strong);
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.secondary:hover {
+  text-decoration: underline;
 }
 
 .note {
-  max-width: 52ch;
   margin: 0;
   font-size: var(--fs-12-5);
-  line-height: 1.5;
   color: var(--muted);
 }
 
-/* The staging warning. Loud enough to be read before an account is created, quiet
-   enough not to be the first thing on the page. */
 .beta {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  max-width: 62ch;
-  margin: 6px 0 0;
+  max-width: 52ch;
+  margin: 0;
   padding: 10px 14px;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-control);
   background: var(--tint-clay);
   color: var(--tint-clay-ink);
   font-size: var(--fs-12-5);
-  line-height: 1.5;
+}
+
+.signInError {
+  margin: 0;
+  max-width: 52ch;
+  padding: 10px 14px;
+  border-radius: var(--radius-control);
+  background: var(--tint-rose);
+  color: var(--tint-rose-ink);
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+
+/* ── The application, as a window ────────────────────────────────────────── */
+
+.window {
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-strong);
+  overflow: hidden;
+}
+
+.windowBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-round);
+  background: var(--chip);
+}
+
+.windowTitle {
+  margin-left: 8px;
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.windowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.seriesTile {
+  position: relative;
+  min-width: 0;
+}
+
+/* The sheets behind a series block, as the collection draws them. */
+.seriesSheets {
+  position: absolute;
+  inset: 0 0 auto;
+  aspect-ratio: 0.68;
+}
+
+.seriesSheets::before,
+.seriesSheets::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.seriesSheets::before {
+  transform: translate(7px, -7px);
+}
+
+.seriesSheets::after {
+  transform: translate(3.5px, -3.5px);
+}
+
+.seriesTile > :not(.seriesSheets) {
+  position: relative;
+}
+
+.seriesBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-chip);
+  background: var(--overlay-strong);
+  font-size: var(--fs-9);
+  font-weight: 700;
+}
+
+.seriesTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--overlay-strong);
+}
+
+.seriesFill {
+  display: block;
+  width: 58%;
+  height: 100%;
+  background: var(--accent);
+}
+
+.nowCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+
+.nowCover {
+  flex: 0 0 56px;
+}
+
+.nowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nowLabel {
+  font-size: var(--fs-9);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.nowTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+}
+
+.nowTrack {
+  display: block;
+  height: 5px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.nowFill {
+  display: block;
+  width: 64%;
+  height: 100%;
+  background: var(--accent);
+}
+
+.nowMeta {
+  font-size: var(--fs-11);
+  color: var(--muted);
 }
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 
 .section {
-  padding: 30px 0;
-  border-top: 1px solid var(--line);
+  padding: 40px 0;
 }
 
 .sectionTitle {
-  font-size: var(--fs-22);
-  line-height: 1.25;
-  max-width: 26ch;
   margin: 0 0 14px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-27);
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .sectionLead {
-  max-width: 62ch;
-  margin: 0 0 20px;
-  font-size: var(--fs-15);
+  max-width: 54ch;
+  margin: 0;
+  font-size: var(--fs-15-5);
   line-height: 1.6;
   color: var(--ink-soft);
 }
 
-/* One column on a phone, as many as fit past --bp-tablet — the token does the switch. */
 .cards {
   display: grid;
-  gap: var(--grid-gap-y) var(--grid-gap-x);
-  grid-template-columns: var(--grid-panel-columns);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
 }
 
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 18px;
-  border: 1px solid var(--line);
+  padding: 20px;
   border-radius: var(--radius-panel);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+}
+
+.cardIcon {
+  display: inline-flex;
+  padding: 9px;
+  border-radius: var(--radius-control);
+  background: var(--tint-sage);
 }
 
 .cardTitle {
-  font-size: var(--fs-17);
-  margin: 0;
+  margin: 12px 0 6px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-18);
+  font-weight: 600;
 }
 
 .cardBody {
   margin: 0;
   font-size: var(--fs-13-5);
   line-height: 1.55;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
-/* ── The differentiator: a run of volumes ─────────────────────────────────── */
-
-.differentiator {
-  /* The section carrying the argument, marked by its surface rather than by a bigger
-     heading — the type scale is deliberately flat here. */
-  background: var(--surface-2);
-  border-radius: var(--radius-panel-lg);
-  padding: 26px 20px;
-  margin-top: 30px;
-  border-top: none;
+/* A feature and its picture, side by side where there is room. */
+.row {
+  padding: 40px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  align-items: center;
+  gap: 32px;
 }
 
+/* Every other row puts its picture first, so the page zigzags on a desktop. */
+.rowReverse > .rowText {
+  order: 2;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel,
 .run {
-  max-width: 640px;
-  padding: 16px;
-  border: 1px solid var(--line);
+  padding: 22px;
   border-radius: var(--radius-panel);
   background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-frame);
 }
+
+/* ── The illustrated run ──────────────────────────────────────────────────── */
 
 .runHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .runCount {
-  font-size: var(--fs-14);
+  font-family: var(--font-serif);
+  font-size: var(--fs-18);
   font-weight: 600;
-  color: var(--ink);
 }
 
 .runBadge {
-  padding: 4px 10px;
-  border-radius: var(--radius-badge);
+  padding: 3px 10px;
+  border-radius: var(--radius-chip);
   background: var(--tint-rose);
   color: var(--tint-rose-ink);
   font-size: var(--fs-11);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .volumes {
@@ -198,15 +439,13 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 0.72;
   border-radius: var(--radius-tile);
-  font-size: var(--fs-11);
-  font-weight: 600;
+  font-size: var(--fs-13);
+  font-weight: 700;
 }
 
-/* The three states of the shipped Series screen, told apart on three channels at once —
-   a fill, an icon and an outline. Colour alone would be lost on a colour-blind reader,
-   and this drawing is the page's whole argument. */
+/* The three states, told apart by a fill, an icon and an outline, as on the Series screen. */
 .read {
   background: var(--accent);
   color: var(--on-accent);
@@ -216,19 +455,19 @@
 .owned {
   background: var(--tint-sage);
   color: var(--tint-sage-ink);
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--tint-sage-ink);
 }
 
 .missing {
   background: var(--tint-rose);
   color: var(--tint-rose-ink);
-  border: 1.5px dashed var(--rose);
+  border: 1.5px dashed var(--tint-rose-ink);
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
+  gap: 14px;
   margin: 14px 0 0;
   padding: 0;
   list-style: none;
@@ -237,24 +476,123 @@
 .legendItem {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   font-size: var(--fs-12-5);
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
 .swatch {
   width: 14px;
   height: 14px;
-  border-radius: var(--radius-bar);
-  flex: 0 0 auto;
+  border-radius: 4px;
 }
 
-/* ── Feature list ─────────────────────────────────────────────────────────── */
+/* ── Reading: the goal and a year of reading ─────────────────────────────── */
+
+.goalHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.goalTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+}
+
+.goalValue {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.goalTrack {
+  display: block;
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.goalFill {
+  display: block;
+  width: 70%;
+  height: 100%;
+  background: var(--accent);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  margin-top: 22px;
+}
+
+.bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+/* ── Import ───────────────────────────────────────────────────────────────── */
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.source {
+  padding: 6px 14px;
+  border-radius: var(--radius-chip);
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  font-size: var(--fs-13);
+  font-weight: 700;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: var(--fs-14);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.stepNumber {
+  flex: 0 0 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-13);
+  font-weight: 700;
+}
+
+/* ── What is online today ─────────────────────────────────────────────────── */
 
 .features {
   display: grid;
-  gap: var(--grid-gap-y) var(--grid-gap-x);
-  grid-template-columns: var(--grid-panel-columns);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 10px 24px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -264,9 +602,8 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: var(--fs-13-5);
+  font-size: var(--fs-14);
   line-height: 1.5;
-  color: var(--ink-soft);
 }
 
 /* ── Closing ──────────────────────────────────────────────────────────────── */
@@ -274,23 +611,32 @@
 .closing {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
   margin-top: 30px;
-  padding: 28px 20px;
-  border-radius: var(--radius-panel-lg);
-  background: var(--accent-soft);
+  padding: 44px 24px;
+  border-radius: var(--radius-panel);
+  background: linear-gradient(135deg, var(--tint-sage), var(--surface-2));
+  border: 1px solid var(--line);
+  text-align: center;
 }
 
 .closingTitle {
-  font-size: var(--fs-22);
   margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-27);
+  font-weight: 600;
 }
 
 .closingBody {
-  max-width: 58ch;
+  max-width: 48ch;
   margin: 0;
-  font-size: var(--fs-14);
-  line-height: 1.6;
   color: var(--ink-soft);
+}
+
+.footnote {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: var(--fs-12);
+  color: var(--muted);
 }

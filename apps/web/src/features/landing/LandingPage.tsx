@@ -1,39 +1,32 @@
 import { Navigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useApiAuth } from '../../shared/api';
+import { useApiAuth, useSignIn } from '../../shared/api';
 import { Button } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
+import { Cover } from '../../shared/ui/Cover';
 import styles from './LandingPage.module.css';
 
 /**
- * The public page a stranger meets, at `/welcome`.
+ * The public page a stranger meets, at `/welcome` — the shop window of the application.
  *
- * Until now the site opened straight onto a sign-in gate: pretty since #170, but still a
- * wall — nothing said what the application is or why it exists, so the only way to find
- * out was to create an account first. This page states the argument before asking for
- * anything, and every claim on it is a feature marked ✅ in `.claude/docs/PRODUCT.md`.
- * Nothing here describes something still to build, and nothing shows a screenshot of a
- * screen that does not exist.
+ * It states the argument before asking for anything, and shows the product rather than
+ * describing it: the hero holds a window drawn from the very components the application
+ * renders (cover tiles, a series block, the reading card), and each feature row carries the
+ * picture of the screen it talks about. Every claim is a shipped feature; nothing here shows
+ * a screen that does not exist.
  *
- * It is deliberately code split (see `App.tsx`): a marketing page is read once and never
- * again, so it has no business sitting in the payload every returning reader waits on.
- * The copy is the one exception — it lives in the locale files, which are eager — and it
- * is the reason the page is written short.
+ * The titles in the pictures are invented on purpose: naming a publisher's run on a public
+ * page would claim an endorsement nobody gave.
+ *
+ * It is code split (see `App.tsx`): a marketing page is read once and never again, so it has
+ * no business sitting in the payload every returning reader waits on. Its copy is the
+ * exception — it lives in the eager locale files — which is why it stays short.
  */
 
 /** The state a volume of the illustrated run is in. Mirrors the real Series screen. */
 type VolumeState = 'read' | 'owned' | 'missing';
 
-/**
- * The twelve volumes drawn under § "a series is not a pile of books", and the figures
- * printed above them.
- *
- * They are an illustration, labelled as one — not a screenshot, and not a real series:
- * naming a publisher's run on a public page would claim an endorsement nobody gave. What
- * the drawing does reproduce faithfully is the vocabulary of the shipped Series screen
- * (§ 4.8): the same three states, told apart by a fill, an icon *and* an outline, so the
- * illustration stays readable for a colour-blind reader like the screen it stands for.
- */
+/** The illustrated run: twelve volumes, in the three states the Series screen draws. */
 const RUN = { owned: 12, total: 105 };
 const VOLUMES: VolumeState[] = [
   'read', 'read', 'read', 'read', 'read', 'owned',
@@ -45,6 +38,12 @@ const VOLUME_ICONS: Record<VolumeState, string> = {
   owned: 'book_2',
   missing: 'priority_high',
 };
+
+/** The covers of the window in the hero — invented titles, drawn as the collection draws them. */
+const SHELF = ['shelf1', 'shelf2', 'shelf3', 'shelf4', 'shelf5'] as const;
+
+/** A year of reading, books per month, for the chart of the reading row. */
+const MONTHS = [2, 3, 1, 4, 3, 5, 6, 2, 4, 3, 5, 4];
 
 /** The three needs of PRODUCT § 1, in the order they are stated there. */
 const NEEDS = [
@@ -71,66 +70,141 @@ const FEATURES = [
   { key: 'themes', icon: 'visibility' },
 ] as const;
 
+/** Where a library can come from, as the Settings import offers it. */
+const SOURCES = ['booknode', 'babelio', 'csv'] as const;
+
 /**
  * Sign in / create an account.
  *
  * One button rather than two, and its label names both halves, because that is what the
- * destination actually offers: sign-up is open on the realm, and Keycloak's own page
- * carries the registration link under the form. Opening the registration form *directly*
- * would need the `registrations` endpoint — `prompt=create` is not honoured by the
- * Keycloak this project runs (25.0.6, checked against the deployed realm) — and
- * `react-oidc-context` gives no way to swap the authorization endpoint for one call. A
- * second button pointing at the same screen would be a lie told twice.
+ * destination offers: sign-up is open on the realm, and Keycloak's own page carries the
+ * registration link under the form. `prompt=create` is not honoured by the Keycloak this
+ * project runs, so a second button would point at the same screen.
  */
-function CallToAction({ onClick }: { onClick: () => void }) {
+function CallToAction({ onClick, disabled, size = 'lg' }: {
+  onClick: () => void;
+  disabled: boolean;
+  size?: 'lg' | 'compact';
+}) {
   const { t } = useTranslation();
   return (
-    <Button variant="primary" size="lg" onClick={onClick} className={styles.cta}>
+    <Button variant="primary" size={size} onClick={onClick} disabled={disabled} className={styles.cta}>
       <Icon name="login" size={20} fill color="var(--on-accent)" />
       {t('landing.cta.label')}
     </Button>
   );
 }
 
+/**
+ * The application, as a window: the collection grouped by series and the book being read.
+ * Drawn from the components the screens use, so it cannot drift from what a reader gets.
+ */
+function ProductWindow() {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.window} role="img" aria-label={t('landing.mock.alt')}>
+      <div className={styles.windowBar} aria-hidden="true">
+        <span className={styles.dot} />
+        <span className={styles.dot} />
+        <span className={styles.dot} />
+        <span className={styles.windowTitle}>{t('landing.mock.collection')}</span>
+      </div>
+      <div className={styles.windowBody} aria-hidden="true">
+        <div className={styles.shelf}>
+          <div className={styles.seriesTile}>
+            <div className={styles.seriesSheets} />
+            <Cover variant="tile" title={t('landing.mock.series')} tag={t('series.block.tag')} caption={null}>
+              <span className={styles.seriesBadge}>{t('landing.mock.seriesBadge')}</span>
+              <span className={styles.seriesTrack}>
+                <span className={styles.seriesFill} />
+              </span>
+            </Cover>
+          </div>
+          {SHELF.map((key) => (
+            <Cover key={key} variant="tile" title={t(`landing.mock.${key}`)} tag={t('collection.tag.book')} caption={null} />
+          ))}
+        </div>
+        <div className={styles.nowCard}>
+          <div className={styles.nowCover}>
+            <Cover variant="tile" title={t('landing.mock.now')} caption={null} />
+          </div>
+          <div className={styles.nowBody}>
+            <span className={styles.nowLabel}>{t('home.showcase.now')}</span>
+            <span className={styles.nowTitle}>{t('landing.mock.now')}</span>
+            <span className={styles.nowTrack}>
+              <span className={styles.nowFill} />
+            </span>
+            <span className={styles.nowMeta}>{t('landing.mock.nowProgress')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LandingPage() {
   const { t } = useTranslation();
-  const { authed, login } = useApiAuth();
+  const { authed } = useApiAuth();
+  const { signIn, pending, failed } = useSignIn();
 
   // A reader who already has a library has no use for the pitch: they are sent to it
   // instead. `replace`, so the back button leaves the site rather than bouncing between
-  // the two. Nothing waits on `loading` here — while the session resolves `authed` is
-  // false, and the overwhelmingly common visitor at this URL is the stranger this page
-  // was written for, who would otherwise be shown a spinner before the argument.
+  // the two.
   if (authed) return <Navigate to="/" replace />;
+
+  const signInError = failed && (
+    <p className={styles.signInError} role="alert">
+      {t('auth.unavailable')}
+    </p>
+  );
 
   return (
     <div className={styles.page}>
-      <div className={styles.inner}>
-        <header className={styles.hero}>
-          <p className={styles.brand}>
-            <Icon name="auto_stories" size={22} color="var(--accent-deep)" />
-            {t('app.name')}
-          </p>
+      <nav className={styles.nav}>
+        <p className={styles.brand}>
+          <Icon name="auto_stories" size={22} color="var(--accent-deep)" />
+          {t('app.name')}
+        </p>
+        <button type="button" onClick={signIn} disabled={pending} className={styles.navSignIn}>
+          {t('landing.nav.signIn')}
+        </button>
+      </nav>
+
+      <header className={styles.hero}>
+        <div className={styles.heroText}>
+          <p className={styles.eyebrow}>{t('landing.hero.eyebrow')}</p>
           <h1 className={styles.title}>{t('landing.hero.title')}</h1>
           <p className={styles.lead}>{t('landing.hero.lead')}</p>
-          <CallToAction onClick={login} />
+          <div className={styles.heroActions}>
+            <CallToAction onClick={signIn} disabled={pending} />
+            <a href="#how" className={styles.secondary}>
+              {t('landing.hero.how')}
+              <Icon name="arrow_forward" size={18} color="var(--accent-deep)" />
+            </a>
+          </div>
+          {signInError}
           <p className={styles.note}>{t('landing.cta.note')}</p>
           {/* Staging, not production: the data on this instance is disposable, and a
               visitor about to type in four hundred volumes deserves to know before they
-              start rather than after a reset. The line goes when production opens —
+              start. The line goes when production opens —
               https://github.com/zelytra/Librarius/issues/103. */}
           <p className={styles.beta}>
             <Icon name="flag" size={16} color="var(--tint-clay-ink)" />
             <span>{t('landing.cta.beta')}</span>
           </p>
-        </header>
+        </div>
+        <ProductWindow />
+      </header>
 
-        <section className={styles.section}>
+      <main className={styles.inner}>
+        <section className={styles.section} id="how">
           <h2 className={styles.sectionTitle}>{t('landing.needs.title')}</h2>
           <div className={styles.cards}>
             {NEEDS.map(({ key, icon }) => (
               <article key={key} className={styles.card}>
-                <Icon name={icon} size={24} color="var(--accent-deep)" />
+                <span className={styles.cardIcon}>
+                  <Icon name={icon} size={22} color="var(--accent-deep)" />
+                </span>
                 <h3 className={styles.cardTitle}>{t(`landing.needs.${key}.title`)}</h3>
                 <p className={styles.cardBody}>{t(`landing.needs.${key}.body`)}</p>
               </article>
@@ -138,10 +212,11 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className={`${styles.section} ${styles.differentiator}`}>
-          <h2 className={styles.sectionTitle}>{t('landing.series.title')}</h2>
-          <p className={styles.sectionLead}>{t('landing.series.body')}</p>
-
+        <section className={styles.row}>
+          <div className={styles.rowText}>
+            <h2 className={styles.sectionTitle}>{t('landing.series.title')}</h2>
+            <p className={styles.sectionLead}>{t('landing.series.body')}</p>
+          </div>
           <div className={styles.run}>
             <div className={styles.runHeader}>
               <span className={styles.runCount}>
@@ -150,8 +225,7 @@ export function LandingPage() {
               <span className={styles.runBadge}>{t('landing.series.incomplete')}</span>
             </div>
             {/* One image as far as assistive technology is concerned: twelve tiles read
-                out one by one would be noise, and the caption already says what the
-                drawing shows. */}
+                out one by one would be noise, and the caption already says what it shows. */}
             <div className={styles.volumes} role="img" aria-label={t('landing.series.alt')}>
               {VOLUMES.map((state, index) => (
                 <span key={index} className={`${styles.volume} ${styles[state]}`} aria-hidden="true">
@@ -171,12 +245,60 @@ export function LandingPage() {
           </div>
         </section>
 
+        <section className={`${styles.row} ${styles.rowReverse}`}>
+          <div className={styles.rowText}>
+            <h2 className={styles.sectionTitle}>{t('landing.reading.title')}</h2>
+            <p className={styles.sectionLead}>{t('landing.reading.body')}</p>
+          </div>
+          <div className={styles.panel} role="img" aria-label={t('landing.reading.alt')}>
+            <div className={styles.goalHead} aria-hidden="true">
+              <span className={styles.goalTitle}>{t('landing.reading.goal')}</span>
+              <span className={styles.goalValue}>{t('landing.reading.goalValue')}</span>
+            </div>
+            <span className={styles.goalTrack} aria-hidden="true">
+              <span className={styles.goalFill} />
+            </span>
+            <div className={styles.chart} aria-hidden="true">
+              {MONTHS.map((books, index) => (
+                // The height is the value itself: it can only be inline.
+                <span key={index} className={styles.bar} style={{ height: `${books * 14}%` }} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.row}>
+          <div className={styles.rowText}>
+            <h2 className={styles.sectionTitle}>{t('landing.import.title')}</h2>
+            <p className={styles.sectionLead}>{t('landing.import.body')}</p>
+          </div>
+          <div className={styles.panel}>
+            <div className={styles.sources}>
+              {SOURCES.map((source) => (
+                <span key={source} className={styles.source}>
+                  {t(`landing.import.sources.${source}`)}
+                </span>
+              ))}
+            </div>
+            <ol className={styles.steps}>
+              {(['step1', 'step2', 'step3'] as const).map((step, index) => (
+                <li key={step} className={styles.step}>
+                  <span className={styles.stepNumber}>{index + 1}</span>
+                  {t(`landing.import.${step}`)}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>{t('landing.audience.title')}</h2>
           <div className={styles.cards}>
             {AUDIENCE.map(({ key, icon }) => (
               <article key={key} className={styles.card}>
-                <Icon name={icon} size={24} color="var(--accent-deep)" />
+                <span className={styles.cardIcon}>
+                  <Icon name={icon} size={22} color="var(--accent-deep)" />
+                </span>
                 <h3 className={styles.cardTitle}>{t(`landing.audience.${key}.title`)}</h3>
                 <p className={styles.cardBody}>{t(`landing.audience.${key}.body`)}</p>
               </article>
@@ -199,9 +321,12 @@ export function LandingPage() {
         <footer className={styles.closing}>
           <h2 className={styles.closingTitle}>{t('landing.closing.title')}</h2>
           <p className={styles.closingBody}>{t('landing.closing.body')}</p>
-          <CallToAction onClick={login} />
+          <CallToAction onClick={signIn} disabled={pending} />
+          {signInError}
         </footer>
-      </div>
+
+        <p className={styles.footnote}>{t('landing.footer', { name: t('app.name') })}</p>
+      </main>
     </div>
   );
 }

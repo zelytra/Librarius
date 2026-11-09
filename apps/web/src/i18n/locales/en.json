@@ -39,12 +39,15 @@
       "categories": "Sign in to manage your categories.",
       "author": "Sign in to see this author."
     },
-    "discover": "Discover the app"
+    "discover": "Discover the app",
+    "unavailable": "Sign-in is unavailable right now: the authentication service is not answering. Try again in a few minutes."
   },
   "landing": {
     "hero": {
       "title": "Your library, volume by volume.",
-      "lead": "What you own down to the volume and the edition, where you are in your reading, and what comes next in the series you follow."
+      "lead": "What you own down to the volume and the edition, where you are in your reading, and what comes next in the series you follow.",
+      "eyebrow": "For novel readers and manga collectors",
+      "how": "See how it works"
     },
     "cta": {
       "label": "Sign in or create an account",
@@ -89,24 +92,60 @@
         "body": "Follow your progress, hold a goal across the year, find again what you enjoyed."
       },
       "import": {
-        "title": "You are coming from Booknode",
-        "body": "Import your library from your handle or a CSV file, without retyping a thing."
+        "title": "You come from Booknode or Babelio",
+        "body": "Your library comes with you: statuses, ratings, reading dates, series."
       }
     },
     "features": {
       "title": "What is online today",
-      "collection": "Cover grid, series view, search, sorting, categories",
-      "discover": "Search Open Library and AniList, by keyword or by ISBN",
+      "collection": "Collection in covers shelved by series, search, sorting, categories",
+      "discover": "Search Open Library, the BnF and AniList, by title, author or ISBN",
       "wishlist": "Wishes ordered by urgency, estimated budget, \"I bought it\"",
       "stats": "Annual goal, pace, breakdown by genre and by author",
-      "import": "Import from a Booknode handle or a CSV file",
+      "import": "Import from Booknode, Babelio, Goodreads or a CSV file",
       "export": "JSON and CSV export, account and data deletion",
       "themes": "Four light and dark themes, in French and English"
     },
     "closing": {
       "title": "Start with one volume.",
       "body": "Your ratings and reviews stay private, and are never aggregated across users."
-    }
+    },
+    "nav": {
+      "signIn": "Sign in"
+    },
+    "mock": {
+      "alt": "A glimpse of the application: a collection shelved by series and the book being read.",
+      "collection": "My collection",
+      "series": "Chronicles of the Wind",
+      "seriesBadge": "12 volumes",
+      "shelf1": "The Map Workshop",
+      "shelf2": "Archipelago",
+      "shelf3": "The Glass City",
+      "shelf4": "Ink Nights",
+      "shelf5": "The Last Lighthouse",
+      "now": "Song of the Tides",
+      "nowProgress": "Page 214 of 336 · 64%"
+    },
+    "reading": {
+      "title": "Where you stand, at a glance",
+      "body": "The page you reached, the day you finished, your private rating and review. A goal for the year, the pace to keep, and your reading history month by month.",
+      "alt": "Example: a yearly goal 70% reached and a year of reading month by month.",
+      "goal": "This year's goal",
+      "goalValue": "28 / 40 books"
+    },
+    "import": {
+      "title": "Bring your library along",
+      "body": "No need to type it all again: your Booknode or Babelio library comes over in one click, with your statuses, ratings and reading dates. Missing covers and ISBNs fill themselves in.",
+      "sources": {
+        "booknode": "Booknode",
+        "babelio": "Babelio",
+        "csv": "Goodreads and CSV"
+      },
+      "step1": "Drag the collect button to your bookmarks.",
+      "step2": "Open your Booknode or Babelio library and click it.",
+      "step3": "Import the file it gives you: your books are there, shelved by series."
+    },
+    "footer": "{{name}} · your library, volume by volume"
   },
   "errors": {
     "title": "Something went wrong.",

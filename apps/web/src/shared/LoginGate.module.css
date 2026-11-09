@@ -46,3 +46,12 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* The sign-in service did not answer: said where the reader is looking. */
+.signInError {
+  margin: 0;
+  max-width: 320px;
+  text-align: center;
+  font-size: var(--fs-12-5);
+  color: var(--tint-rose-ink);
+}
