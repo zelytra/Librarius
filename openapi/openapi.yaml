@@ -772,6 +772,8 @@ components:
           type: boolean
         upcoming:
           type: boolean
+        coverUrl:
+          type: string
     StatsDto:
       type: object
       properties:
@@ -1614,6 +1616,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: standalone
+        in: query
+        schema:
+          type: boolean
+          default: false
       - name: status
         in: query
         schema:

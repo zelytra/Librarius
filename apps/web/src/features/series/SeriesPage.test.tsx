@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -88,11 +88,19 @@ describe('SeriesPage', () => {
     const missing = screen.getByLabelText('Tome 3 — manquant');
     const upcoming = screen.getByLabelText('Tome 5 — à paraître');
 
-    // Four distinct fills, and four distinct icons — neither channel on its own.
-    const classes = [read, owned, missing, upcoming].map((cell) => cell.className);
-    expect(new Set(classes).size).toBe(4);
-    const icons = [read, owned, missing, upcoming].map((cell) => cell.textContent);
-    expect(new Set(icons).size).toBe(4);
+    // Each volume says where the reader stands in words, under its cover or its ghost:
+    // four distinct words and four distinct styles — no channel carries the state alone.
+    expect(within(read).getByText('Lu')).toBeInTheDocument();
+    expect(within(owned).getByText('Non lu')).toBeInTheDocument();
+    expect(within(missing).getByText('Pas possédé')).toBeInTheDocument();
+    expect(within(upcoming).getByText('À paraître')).toBeInTheDocument();
+    const chips = [read, owned, missing, upcoming].map(
+      (cell) => cell.querySelector('[class*="stateChip"]')?.className,
+    );
+    expect(new Set(chips).size).toBe(4);
+    // An owned volume is drawn as its cover, a missing one as a ghost.
+    expect(owned.querySelector('[class*="ghost"]')).toBeNull();
+    expect(missing.querySelector('[class*="ghost"]')).not.toBeNull();
 
     // And the holes are named under the grid.
     expect(screen.getByText('Il te manque les tomes 3')).toBeInTheDocument();

@@ -41,12 +41,6 @@ export function runLength(totalVolumes: number | undefined, volumes: SeriesVolum
 /** Orderings offered on the Series view of the collection. */
 export type SeriesSort = 'progress' | 'title';
 
-/** Sort chips, in display order, each with the key of its label. */
-export const SERIES_SORTS: { id: SeriesSort; labelKey: string }[] = [
-  { id: 'progress', labelKey: 'series.sorts.progress' },
-  { id: 'title', labelKey: 'series.sorts.title' },
-];
-
 /** Share of the announced run the user owns, between 0 and 1. Unknown total → 0. */
 export function completion(series: SeriesSummaryDto): number {
   const total = series.totalVolumes ?? 0;

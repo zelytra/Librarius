@@ -431,6 +431,7 @@ export interface SeriesVolumeDto {
   read?: boolean;
   missing?: boolean;
   upcoming?: boolean;
+  coverUrl?: string;
 }
 
 export interface SeriesDetailDto {
@@ -635,6 +636,7 @@ q?: string;
 rank?: string;
 size?: number;
 sort?: string;
+standalone?: boolean;
 status?: LibraryStatus;
 };
 

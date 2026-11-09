@@ -138,6 +138,10 @@ describe('CollectionPage', () => {
     libraryReturns([ROMAN, libraryItem({ id: 'roman-2', book: { kind: 'BOOK', title: 'La Peur du sage' } })]);
     renderWithProviders(<CollectionPage />);
 
+    // By series by default, but with no run there is nothing to group: the count is the
+    // same in both views.
+    expect(await screen.findByText('2 titres')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Tous les titres'));
     expect(await screen.findByText('2 titres')).toBeInTheDocument();
   });
 
@@ -324,81 +328,89 @@ describe('CollectionPage', () => {
     await waitFor(() => expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument());
   });
 
-  // ── Series view ────────────────────────────────────────────────────────────
+  // ── Grouped by series (the default view) ──────────────────────────────────────
 
-  /**
-   * Switches to the Series tab, the manga shelf being where the runs live. The kind switch
-   * only offers a shelf the user owns something of, so every caller needs at least one
-   * manga item in the library — {@link MANGA} unless the test seeds its own.
-   */
-  async function openSeriesView() {
+  /** The manga shelf, where the runs live: every caller seeds at least one manga item. */
+  async function openMangaShelf() {
     await userEvent.click(await screen.findByText('Mangathèque'));
-    await userEvent.click(screen.getByText('Séries'));
   }
 
-  test('lists the series of the collection with their progress', async () => {
-    libraryReturns([MANGA]);
-    seriesReturns([SAGA, COMPLETE]);
+  /** A volume of Vinland Saga: drawn as the series block, never as a tile of its own. */
+  const SAGA_VOLUME = libraryItem({
+    id: 'saga-3',
+    book: { kind: 'MANGA', title: 'Vinland Saga T3', seriesTitle: 'Vinland Saga', volumeNumber: 3 },
+  });
+  const ONE_SHOT = libraryItem({ id: 'one-shot', book: { kind: 'MANGA', title: 'Goodnight Punpun Omnibus' } });
+
+  test('draws a series as one block and a one-shot as a tile', async () => {
+    libraryReturns([SAGA_VOLUME, ONE_SHOT]);
+    seriesReturns([SAGA]);
     renderWithProviders(<CollectionPage />);
-    await openSeriesView();
+    await openMangaShelf();
 
     expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
-    expect(screen.getByText('12 / 27 tomes')).toBeInTheDocument();
-    expect(screen.getByText('2 séries')).toBeInTheDocument();
+    expect(screen.getByText('12 / 27 tomes · 1 lus')).toBeInTheDocument();
+    expect(screen.getByText('12 tomes')).toBeInTheDocument();
+    expect(await screen.findByText('Goodnight Punpun Omnibus')).toBeInTheDocument();
+    // The volume itself is inside the block, not repeated beside it.
+    expect(screen.queryByText('Vinland Saga T3')).not.toBeInTheDocument();
+    expect(screen.getByText('1 série · 1 titres seuls')).toBeInTheDocument();
   });
 
-  /** The acceptance criterion of #46: an incomplete run stands out from a finished one. */
-  test('flags the incomplete series only', async () => {
-    libraryReturns([MANGA]);
-    seriesReturns([SAGA, COMPLETE]);
+  test('lists every title, volumes included, in the flat view', async () => {
+    libraryReturns([SAGA_VOLUME, ONE_SHOT]);
+    seriesReturns([SAGA]);
     renderWithProviders(<CollectionPage />);
-    await openSeriesView();
+    await openMangaShelf();
 
-    await screen.findByText('Vinland Saga');
-    const badges = screen.getAllByText('Incomplète');
-    expect(badges).toHaveLength(1);
-    expect(badges[0].closest('button')).toHaveTextContent('Vinland Saga');
+    await userEvent.click(await screen.findByText('Tous les titres'));
+
+    expect(await screen.findByText('Vinland Saga T3')).toBeInTheDocument();
+    expect(screen.getByText('Goodnight Punpun Omnibus')).toBeInTheDocument();
   });
 
-  test('orders by progress, then by title', async () => {
-    libraryReturns([MANGA]);
-    seriesReturns([SAGA, COMPLETE]);
+  test('lists the titles themselves once a category is picked', async () => {
+    libraryReturns([
+      libraryItem({ ...SAGA_VOLUME, rankCode: 'or' }),
+      ONE_SHOT,
+    ]);
+    seriesReturns([SAGA]);
     renderWithProviders(<CollectionPage />);
-    await openSeriesView();
+    await openMangaShelf();
 
-    // Progress is the default: the run that still has volumes to buy comes first.
-    await screen.findByText('Vinland Saga');
-    const byProgress = screen.getAllByRole('button', { name: /tomes/ });
-    expect(byProgress[0]).toHaveTextContent('Vinland Saga');
+    // A rank belongs to a volume, not to its run: the volume is listed, not its series.
+    await userEvent.click(await screen.findByText('Or'));
 
-    await userEvent.click(screen.getByText('Titre'));
-
-    const byTitle = screen.getAllByRole('button', { name: /tomes/ });
-    expect(byTitle[0]).toHaveTextContent('Berserk');
+    expect(await screen.findByText('Vinland Saga T3')).toBeInTheDocument();
+    expect(screen.queryByText('Goodnight Punpun Omnibus')).not.toBeInTheDocument();
   });
 
-  test('keeps the kind filter and the search across the toggle', async () => {
+  test('leaves out a series only followed, with nothing of it owned', async () => {
+    libraryReturns([ONE_SHOT]);
+    seriesReturns([SAGA, seriesSummary({ id: 'series-9', title: 'Suivie seulement', ownedCount: 0, followed: true })]);
+    renderWithProviders(<CollectionPage />);
+    await openMangaShelf();
+
+    expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+    expect(screen.queryByText('Suivie seulement')).not.toBeInTheDocument();
+  });
+
+  test('keeps the kind filter and the search on the series blocks', async () => {
     libraryReturns([ROMAN, MANGA]);
-    seriesReturns([SAGA, seriesSummary({ id: 'series-3', kind: 'BOOK', title: 'Le Trône de fer' })]);
+    seriesReturns([SAGA, COMPLETE, seriesSummary({ id: 'series-3', kind: 'BOOK', title: 'Le Trône de fer' })]);
     renderWithProviders(<CollectionPage />);
+    await openMangaShelf();
 
-    await openSeriesView();
-    // The Manga toggle still applies: the book series is out.
-    expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+    expect(await screen.findByText('Berserk')).toBeInTheDocument();
     expect(screen.queryByText('Le Trône de fer')).not.toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText('Rechercher dans ma collection…'), 'berserk');
-    await waitFor(() => expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument());
-
-    // Back to the list: the kind and the search are still the ones that were set.
-    await userEvent.click(screen.getByText('Liste'));
-    expect(screen.getByLabelText('Rechercher dans ma collection…')).toHaveValue('berserk');
-    await userEvent.click(screen.getByText('Séries'));
-    expect(screen.queryByText('Le Trône de fer')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('12 / 27 tomes · 1 lus')).not.toBeInTheDocument());
+    expect(screen.getByText('Berserk')).toBeInTheDocument();
   });
 
-  test('opens the series screen when a row is clicked', async () => {
-    libraryReturns([MANGA]);
+  test('opens the series screen when a block is clicked', async () => {
+    libraryReturns([ONE_SHOT]);
     seriesReturns([SAGA]);
     render(
       <TestProviders route="/collection">
@@ -408,20 +420,11 @@ describe('CollectionPage', () => {
         </Routes>
       </TestProviders>,
     );
-    await openSeriesView();
+    await openMangaShelf();
 
     await userEvent.click(await screen.findByText('Vinland Saga'));
 
     expect(await screen.findByText('écran de la série')).toBeInTheDocument();
-  });
-
-  test('invites the user to fill an empty series shelf', async () => {
-    libraryReturns([MANGA]);
-    seriesReturns([]);
-    renderWithProviders(<CollectionPage />);
-    await openSeriesView();
-
-    expect(await screen.findByText('Aucune série ici.')).toBeInTheDocument();
   });
 
   test('offers a retry when the series cannot be loaded', async () => {
@@ -432,11 +435,11 @@ describe('CollectionPage', () => {
       return attempts === 1 ? new HttpResponse(null, { status: 500 }) : HttpResponse.json([SAGA]);
     }));
     renderWithProviders(<CollectionPage />);
-    await openSeriesView();
+    await openMangaShelf();
 
     await userEvent.click(await screen.findByText('Réessayer'));
 
-    expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+    expect(await screen.findByText('12 / 27 tomes · 1 lus')).toBeInTheDocument();
   });
 
   // ── Desktop layout (#173) ────────────────────────────────────────────────────

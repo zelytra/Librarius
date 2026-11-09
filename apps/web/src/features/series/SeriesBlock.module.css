@@ -1,0 +1,62 @@
+/* A series in the collection grid: a cover with two sheets drawn behind it. */
+.block {
+  position: relative;
+  min-width: 0;
+}
+
+/* The sheets: offset copies of the cover's outline peeking out top-right. */
+.stack {
+  position: absolute;
+  inset: 0 0 auto 0;
+  aspect-ratio: 0.68;
+  pointer-events: none;
+}
+
+.stack::before,
+.stack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-cover-sm);
+}
+
+.stack::before {
+  transform: translate(8px, -8px);
+}
+
+.stack::after {
+  transform: translate(4px, -4px);
+}
+
+.block > :not(.stack) {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 7px;
+  border-radius: var(--radius-chip);
+  background: var(--overlay-strong);
+  color: var(--ink);
+  font-size: var(--fs-10);
+  font-weight: 700;
+}
+
+.track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--overlay-strong);
+}
+
+.bar {
+  height: 100%;
+  background: var(--accent);
+}
