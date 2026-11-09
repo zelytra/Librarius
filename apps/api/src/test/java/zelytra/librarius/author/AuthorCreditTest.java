@@ -32,4 +32,23 @@ class AuthorCreditTest {
         assertTrue(AuthorService.credits("J. R. R. Tolkien", "John Ronald Reuel Tolkien"));
         assertTrue(AuthorService.credits("Ursula K. Le Guin", "Ursula K. Le Guin"));
     }
+
+    @Test
+    void foldsTheSameTitleWhateverItsEditionCaseOrSubtitle() {
+        String key = AuthorService.bibliographyKey("La zone du dehors", null);
+        org.junit.jupiter.api.Assertions.assertEquals(key,
+                AuthorService.bibliographyKey("La Zone Du Dehors (French Edition)", null));
+        org.junit.jupiter.api.Assertions.assertEquals(key,
+                AuthorService.bibliographyKey("LA ZONE DU DEHORS : roman", null));
+    }
+
+    @Test
+    void keysAVolumeOnItsSeriesAndNumber() {
+        org.junit.jupiter.api.Assertions.assertEquals(
+                AuthorService.bibliographyKey("One Piece Tome 1", 1),
+                AuthorService.bibliographyKey("One Piece Tome 1", null));
+        org.junit.jupiter.api.Assertions.assertNotEquals(
+                AuthorService.bibliographyKey("One Piece Tome 1", 1),
+                AuthorService.bibliographyKey("One Piece Tome 2", 2));
+    }
 }

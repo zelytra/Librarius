@@ -59,7 +59,7 @@ public class OpenLibraryProvider implements CatalogProvider {
         }
         try {
             OpenLibraryClient.SearchResponse res =
-                    client.search(q, Math.min(limit, 40), FIELDS).await().atMost(callTimeout);
+                    client.search(q, Math.min(limit, 40), FIELDS, null).await().atMost(callTimeout);
             if (res == null || res.docs() == null) {
                 return List.of();
             }
@@ -73,6 +73,30 @@ public class OpenLibraryProvider implements CatalogProvider {
     @Override
     public List<CatalogResult> upcoming(int limit) {
         return List.of();
+    }
+
+    /**
+     * An author's works, the most published first. Open Library's search answers works, not
+     * editions, so each line is one book; ordered by edition count, the books an author is known
+     * for lead instead of whatever matched the name best — "Dune" before a pamphlet.
+     */
+    @Override
+    public List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+        if (authorName == null || authorName.isBlank()) {
+            return List.of();
+        }
+        String q = solrQuery(new CatalogQuery(null, authorName, null, null, null, null));
+        try {
+            OpenLibraryClient.SearchResponse res = client
+                    .search(q, Math.min(limit, 40), FIELDS, "editions").await().atMost(callTimeout);
+            if (res == null || res.docs() == null) {
+                return List.of();
+            }
+            return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
+        } catch (Exception e) {
+            Log.warnf("Open Library author works failed: %s", e.getMessage());
+            return List.of();
+        }
     }
 
     /**

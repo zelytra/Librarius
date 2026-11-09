@@ -58,3 +58,69 @@ export function workAsCatalogResult(work: AuthorWorkDto): CatalogResult {
     volumeNumber: work.volumeNumber,
   };
 }
+
+/** One entry of the bibliography as shown: a standalone title, or a whole series. */
+export type BibliographyEntry =
+  | { kind: 'work'; work: AuthorWorkDto }
+  | {
+      kind: 'series';
+      title: string;
+      /** The series screen, when the run is one the shared catalog holds. */
+      seriesId?: string;
+      /** The volumes known for the series, owned or not. */
+      volumes: AuthorWorkDto[];
+      owned: number;
+      coverUrl?: string;
+      coverIsOwn?: boolean;
+    };
+
+/**
+ * Folds the volumes of one series into a single entry: a manga author's page listed every
+ * volume one after the other — forty tiles of One Piece — where a reader looks for the series.
+ * Volumes key on their series title, folded; the entry keeps the position of the first volume
+ * met, so the bibliography's order (the reader's own titles first) still holds.
+ */
+export function groupBibliography(works: AuthorWorkDto[]): BibliographyEntry[] {
+  const entries: BibliographyEntry[] = [];
+  const bySeries = new Map<string, Extract<BibliographyEntry, { kind: 'series' }>>();
+  const fold = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/\p{M}+/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  // A work titled exactly like a series of the page — "One Piece" next to its volumes — is the
+  // series itself, as a catalogue lists it: it belongs to that group, not beside it.
+  const seriesKeys = new Set(works.filter((w) => w.seriesTitle?.trim()).map((w) => fold(w.seriesTitle!)));
+  for (const work of works) {
+    const series = work.seriesTitle?.trim() || (seriesKeys.has(fold(work.title ?? '')) ? work.title : undefined);
+    if (!series) {
+      entries.push({ kind: 'work', work });
+      continue;
+    }
+    const key = fold(series);
+    const isVolume = Boolean(work.seriesTitle?.trim());
+    let entry = bySeries.get(key);
+    if (!entry) {
+      entry = { kind: 'series', title: series, volumes: [], owned: 0 };
+      bySeries.set(key, entry);
+      entries.push(entry);
+    }
+    if (isVolume) entry.volumes.push(work);
+    if (isVolume && work.libraryItemId) entry.owned += 1;
+    entry.seriesId ??= work.seriesId ?? undefined;
+    // The reader's own first volume draws the series, else the first volume with a cover.
+    const ownCover = Boolean(work.libraryItemId && work.coverUrl);
+    if (work.coverUrl && (!entry.coverUrl || (ownCover && !entry.coverIsOwn))) {
+      entry.coverUrl = work.coverUrl;
+      entry.coverIsOwn = ownCover;
+    }
+  }
+  // A "series" of a single volume nobody owns is just a title: shown as such.
+  return entries.map((entry) =>
+    entry.kind === 'series' && entry.volumes.length === 1 && entry.owned === 0
+      ? { kind: 'work', work: entry.volumes[0] }
+      : entry,
+  );
+}

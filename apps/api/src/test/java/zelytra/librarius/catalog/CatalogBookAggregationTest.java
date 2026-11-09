@@ -62,7 +62,7 @@ class CatalogBookAggregationTest {
     private void openLibraryAnswers(String title, String author) {
         OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL1W", title, List.of(author), 2023, 42L,
                 List.of("9781234567890"), List.of("Piatkus"), List.of("eng"), 300);
-        Mockito.when(openLibrary.search(anyString(), anyInt(), anyString()))
+        Mockito.when(openLibrary.search(anyString(), anyInt(), anyString(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of(doc))));
     }
 
@@ -129,7 +129,7 @@ class CatalogBookAggregationTest {
 
     @Test
     void bothProvidersBeingDownAnswerNothingRatherThanFailing() {
-        Mockito.when(openLibrary.search(anyString(), anyInt(), anyString()))
+        Mockito.when(openLibrary.search(anyString(), anyInt(), anyString(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Uni.createFrom().failure(new IllegalStateException("connect timed out")));
         bnfIsDown();
 

@@ -524,4 +524,77 @@ class CatalogServiceTest {
         assertEquals("René Goscinny",
                 service.search(Set.of(Kind.BOOK), CatalogQuery.of("asterix"), 10).get(0).authors());
     }
+
+    /** A catalogue of records rather than works — the BnF's shape. */
+    private record RecordProvider(Kind kind, List<CatalogResult> canned) implements CatalogProvider {
+        @Override
+        public String name() {
+            return "records-" + kind;
+        }
+
+        @Override
+        public boolean listsWorks() {
+            return false;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return canned;
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+            return canned;
+        }
+    }
+
+    private static List<CatalogResult> works(String prefix, int count) {
+        List<CatalogResult> results = new java.util.ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            results.add(result("BOOK", prefix + " " + i, "Frank Herbert"));
+        }
+        return results;
+    }
+
+    @Test
+    void drawsABibliographyFromTheCataloguesOfWorks() {
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, works("Work", 6)),
+                new RecordProvider(Kind.BOOK, works("Booster pack", 6))),
+                passThroughCache());
+
+        List<CatalogResult> bibliography = service.worksOfAuthor(Set.of(Kind.BOOK), "Frank Herbert", 40);
+
+        assertEquals(6, bibliography.size());
+        assertTrue(bibliography.stream().allMatch(r -> r.title().startsWith("Work")));
+    }
+
+    @Test
+    void fillsAThinBibliographyFromTheRecordCatalogues() {
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, works("Work", 2)),
+                new RecordProvider(Kind.BOOK, works("Record", 3))),
+                passThroughCache());
+
+        List<CatalogResult> bibliography = service.worksOfAuthor(Set.of(Kind.BOOK), "Alain Damasio", 40);
+
+        assertEquals(List.of("Work 0", "Work 1", "Record 0", "Record 1", "Record 2"),
+                bibliography.stream().map(CatalogResult::title).toList());
+    }
+
+    @Test
+    void asksEveryMediumForAnAuthorWhateverTheKindsOwned() {
+        // An imported manga is filed as a book: its author's series live on the manga side.
+        CatalogService service = new CatalogService(List.of(
+                new ListProvider(Kind.BOOK, List.of()),
+                new ListProvider(Kind.MANGA, works("Series", 5))),
+                passThroughCache());
+
+        assertEquals(5, service.worksOfAuthor(Set.of(Kind.BOOK), "Eiichiro Oda", 40).size());
+    }
 }

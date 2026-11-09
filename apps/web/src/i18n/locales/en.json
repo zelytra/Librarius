@@ -409,7 +409,11 @@
       "noResults": "No author matches this search.",
       "workCount_one": "{{count}} work",
       "workCount_other": "{{count}} works"
-    }
+    },
+    "seriesOwned_one": "{{owned}} owned of {{count}} known volume",
+    "seriesOwned_other": "{{owned}} owned of {{count}} known volumes",
+    "seriesKnown_one": "{{count}} known volume",
+    "seriesKnown_other": "{{count}} known volumes"
   },
   "catalog": {
     "addToLibrary": "Add to my collection",

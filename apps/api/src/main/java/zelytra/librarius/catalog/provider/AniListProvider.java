@@ -162,10 +162,19 @@ public class AniListProvider implements CatalogProvider {
         String gql = "query ($a: String, $n: Int) { Staff(search: $a) { staffMedia("
                 + "type: MANGA, sort: POPULARITY_DESC, perPage: $n) { nodes { " + FIELDS
                 + " } } } }";
-        Map<String, Object> variables = Map.of("a", query.author(),
-                "n", narrowed ? MAX_PAGE : Math.min(limit, MAX_PAGE));
+        int page = narrowed ? MAX_PAGE : Math.min(limit, MAX_PAGE);
+        List<AniListClient.Media> media = List.of();
+        // AniList spells Japanese names with their long vowels written out — "Eiichirou Oda" —
+        // and its staff search does not fold "Eiichiro" or "Eiichirō" onto it: it answers 404.
+        // The name is asked as typed first, then in that spelling.
+        for (String name : staffSpellings(query.author())) {
+            media = fetch(gql, Map.of("a", name, "n", page), AniListProvider::mediaOfStaff);
+            if (!media.isEmpty()) {
+                break;
+            }
+        }
 
-        return fetch(gql, variables, AniListProvider::mediaOfStaff).stream()
+        return media.stream()
                 // staffMedia carries no isAdult filter of its own, unlike the title search.
                 .filter(m -> !Boolean.TRUE.equals(m.isAdult()))
                 .filter(m -> matchesTitle(m, query.text()))
@@ -174,6 +183,28 @@ public class AniListProvider implements CatalogProvider {
                 .map(this::toResult)
                 .limit(limit)
                 .toList();
+    }
+
+    /**
+     * The spellings to ask AniList for a name in: as typed, then with the long vowels written
+     * the way AniList writes them — a macron as a doubled vowel ("ō" → "ou", "ū" → "uu") and a
+     * given or family name ending on a bare "o" lengthened ("Eiichiro" → "Eiichirou"), the
+     * spelling French editions drop. Package-private for the test.
+     */
+    static List<String> staffSpellings(String name) {
+        List<String> spellings = new ArrayList<>();
+        spellings.add(name);
+        String longVowels = name.replace("ō", "ou").replace("Ō", "Ou").replace("ū", "uu")
+                .replace("Ū", "Uu");
+        String lengthened = java.util.Arrays.stream(longVowels.split(" "))
+                .map(word -> word.length() >= 4 && word.endsWith("o") ? word + "u" : word)
+                .collect(java.util.stream.Collectors.joining(" "));
+        for (String candidate : List.of(longVowels, lengthened)) {
+            if (!spellings.contains(candidate)) {
+                spellings.add(candidate);
+            }
+        }
+        return spellings;
     }
 
     /** The series a "series + volume marker" search is about; any other text, as typed. */

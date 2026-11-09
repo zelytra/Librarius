@@ -22,7 +22,7 @@ class OpenLibraryProviderTest {
         private String q;
 
         @Override
-        public Uni<SearchResponse> search(String q, int limit, String fields) {
+        public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
             this.q = q;
             return Uni.createFrom().item(new SearchResponse(List.of()));
         }
@@ -37,7 +37,7 @@ class OpenLibraryProviderTest {
     private static OpenLibraryClient editionsClient(OpenLibraryClient.EditionEntry... entries) {
         return new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
                 return Uni.createFrom().item(new SearchResponse(List.of()));
             }
 
@@ -111,7 +111,7 @@ class OpenLibraryProviderTest {
         // database connection for as long as Open Library feels like taking.
         OpenLibraryProvider provider = provider(new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
                 return Uni.createFrom().nothing();
             }
 
@@ -185,7 +185,7 @@ class OpenLibraryProviderTest {
     void searchResultsCarryTheWorkReferenceTheEditionsLookupKeysOn() {
         OpenLibraryClient answering = new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
                 assertTrue(fields.startsWith("key,"), fields);
                 return Uni.createFrom().item(new SearchResponse(List.of(new Doc(
                         "/works/OL15505243W", "La Horde du Contrevent", List.of("Alain Damasio"),

@@ -409,7 +409,11 @@
       "noResults": "Aucun auteur ne correspond à cette recherche.",
       "workCount_one": "{{count}} œuvre",
       "workCount_other": "{{count}} œuvres"
-    }
+    },
+    "seriesOwned_one": "{{owned}} possédé sur {{count}} tome connu",
+    "seriesOwned_other": "{{owned}} possédés sur {{count}} tomes connus",
+    "seriesKnown_one": "{{count}} tome connu",
+    "seriesKnown_other": "{{count}} tomes connus"
   },
   "catalog": {
     "addToLibrary": "Ajouter à ma collection",
