@@ -145,10 +145,26 @@ public class CatalogService {
             return List.of();
         }
         String key = name.toLowerCase(Locale.ROOT).trim();
-        return aggregate(providersFor(kinds), limit, provider -> cache.get(CatalogCache.Scope.SEARCH,
-                provider.name(), "authorworks|" + key + '|' + limit,
-                () -> provider.worksOfAuthor(name, limit)));
+        Function<CatalogProvider, List<CatalogResult>> call = provider -> cache.get(
+                CatalogCache.Scope.SEARCH, provider.name(), "authorworks|" + key + '|' + limit,
+                () -> provider.worksOfAuthor(name, limit));
+        // Every medium, whatever the kinds owned: an imported manga is filed as a book, and its
+        // author's series would otherwise never be asked of AniList.
+        List<CatalogProvider> all = providersFor(Set.of());
+        List<CatalogResult> works = aggregate(
+                all.stream().filter(CatalogProvider::listsWorks).toList(), limit, call);
+        if (works.size() >= FEW_WORKS) {
+            return works;
+        }
+        // An author the work-listing catalogues barely know — published in France only, say —
+        // is filled in from the record catalogues, after what the others did find.
+        List<CatalogResult> filled = new ArrayList<>(works);
+        filled.addAll(aggregate(all.stream().filter(p -> !p.listsWorks()).toList(), limit, call));
+        return filled.stream().limit(limit).toList();
     }
+
+    /** Below this many works, an author's bibliography is filled in from record catalogues. */
+    private static final int FEW_WORKS = 5;
 
     /**
      * Merges every provider's results round-robin, one rank at a time, rather than

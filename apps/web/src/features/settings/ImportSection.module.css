@@ -79,3 +79,59 @@
   color: var(--rose);
   margin: 0;
 }
+
+/* The collector: three steps, and the button to drag into the bookmarks bar. */
+.collector {
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+
+.collectorTitle {
+  margin: 0 0 6px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.bookmarklet {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 5px 10px;
+  border-radius: var(--radius-chip);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: grab;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-deep);
+  font: inherit;
+  font-size: var(--fs-12-5);
+  font-weight: 600;
+  cursor: pointer;
+}

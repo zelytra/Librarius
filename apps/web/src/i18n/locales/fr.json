@@ -187,6 +187,20 @@
         "goal": "Objectif de lecture annuel",
         "recentlyRead": "Derniers lus"
       }
+    },
+    "showcase": {
+      "title": "Ta bibliothèque",
+      "titles_one": "titre",
+      "titles_other": "titres",
+      "series_one": "série",
+      "series_other": "séries",
+      "pages_one": "page lue",
+      "pages_other": "pages lues",
+      "add": "Ajouter un livre",
+      "collection": "Voir ma collection",
+      "now": "En ce moment",
+      "progress": "{{percent}} % lu",
+      "continue": "Continuer ma lecture"
     }
   },
   "onboarding": {
@@ -409,7 +423,11 @@
       "noResults": "Aucun auteur ne correspond à cette recherche.",
       "workCount_one": "{{count}} œuvre",
       "workCount_other": "{{count}} œuvres"
-    }
+    },
+    "seriesOwned_one": "{{owned}} possédé sur {{count}} tome connu",
+    "seriesOwned_other": "{{owned}} possédés sur {{count}} tomes connus",
+    "seriesKnown_one": "{{count}} tome connu",
+    "seriesKnown_other": "{{count}} tomes connus"
   },
   "catalog": {
     "addToLibrary": "Ajouter à ma collection",
@@ -667,7 +685,7 @@
     },
     "import": {
       "title": "Importer ma bibliothèque",
-      "description": "Depuis Booknode (par pseudo) ou via un fichier CSV exporté (Babelio, Goodreads…).",
+      "description": "Depuis Booknode ou Babelio — par pseudo, ou avec la collecte depuis ton navigateur — ou depuis un fichier CSV (Goodreads…).",
       "signIn": "Se connecter pour importer",
       "submit": "Importer",
       "csv": "Importer un fichier CSV",
@@ -678,11 +696,25 @@
       "handlePlaceholder": {
         "booknode": "Pseudo Booknode"
       },
-      "babelioNote": "Babelio ne permet pas l'import par pseudo : sa bibliothèque n'est pas publique. Exporte ta liste depuis Babelio, puis importe le fichier CSV ci-dessous.",
+      "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
       "running": "Import en cours… {{imported}} titre(s) ajouté(s).",
       "unavailable": "Import indisponible pour le moment.",
-      "unreadableFile": "Fichier illisible."
+      "unreadableFile": "Fichier illisible.",
+      "file": "Importer un fichier (collecte, CSV ou pages enregistrées)",
+      "collector": {
+        "title": "Collecte depuis ton navigateur — fonctionne toujours",
+        "step1": "Glisse ce bouton dans ta barre de favoris :",
+        "button": "Librarius : collecter",
+        "step2": {
+          "booknode": "Ouvre ta page de profil Booknode et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-booknode.json.",
+          "babelio": "Ouvre « Mes livres » sur Babelio, connecté à ton compte, et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-babelio.json."
+        },
+        "step3": "Importe ce fichier avec le bouton ci-dessous.",
+        "copy": "Sur mobile : copier le code du favori",
+        "copied": "Code copié : crée un favori et colle-le comme adresse.",
+        "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius."
+      }
     },
     "export": {
       "title": "Exporter mes données",

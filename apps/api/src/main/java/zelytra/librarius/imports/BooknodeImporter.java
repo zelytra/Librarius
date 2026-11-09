@@ -58,7 +58,8 @@ public class BooknodeImporter implements LibraryImporter {
         } catch (Exception e) {
             Log.warnf("Booknode import failed for %s: %s", h, e.getMessage());
             throw new ImportException("Impossible de lire la bibliothèque Booknode de « " + h
-                    + " ». Vérifie le pseudo et que le profil est public.");
+                    + " ». Vérifie le pseudo et que le profil est public, ou utilise la collecte depuis ton "
+                    + "navigateur : elle fonctionne même quand Booknode refuse notre serveur.");
         }
         all.addAll(parse(first));
 

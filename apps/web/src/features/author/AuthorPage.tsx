@@ -16,7 +16,13 @@ import {
   type AuthorWorkDto,
 } from '../../api/generated/librarius';
 import { catalogPath } from '../catalog/catalogBook';
-import { initials, workAsCatalogResult, workCaption } from './author';
+import {
+  groupBibliography,
+  initials,
+  workAsCatalogResult,
+  workCaption,
+  type BibliographyEntry,
+} from './author';
 import styles from './AuthorPage.module.css';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail/Series. */
@@ -55,6 +61,40 @@ function WorkTile({ work }: { work: AuthorWorkDto }) {
       imageUrl={work.coverUrl}
       tag={tag}
       caption={workCaption(work)}
+      onClick={open}
+    />
+  );
+}
+
+/**
+ * A whole series of the bibliography as one tile: its cover, how many volumes the reader owns
+ * of the ones known, and the series screen — or, for a run nobody here holds yet, the catalog
+ * page of its first volume.
+ */
+function SeriesTile({ entry }: { entry: Extract<BibliographyEntry, { kind: 'series' }> }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const first = entry.volumes[0];
+  const open = () => {
+    if (entry.seriesId) {
+      navigate(`/series/${entry.seriesId}`);
+      return;
+    }
+    const result = workAsCatalogResult(first);
+    navigate(catalogPath(result), { state: { result } });
+  };
+  const known = entry.volumes.length;
+  return (
+    <Cover
+      variant="tile"
+      title={entry.title}
+      imageUrl={entry.coverUrl}
+      tag={t('series.block.tag')}
+      caption={
+        entry.owned > 0
+          ? t('author.seriesOwned', { owned: entry.owned, count: known })
+          : t('author.seriesKnown', { count: known })
+      }
       onClick={open}
     />
   );
@@ -101,6 +141,7 @@ function AuthorContent({ id }: { id: string }) {
   const author = data;
   const name = author.name ?? '—';
   const works = author.works ?? [];
+  const entries = groupBibliography(works);
 
   return (
     <div className={styles.page}>
@@ -133,7 +174,7 @@ function AuthorContent({ id }: { id: string }) {
 
           <h2 className={styles.name}>{name}</h2>
           <p className={styles.workCount}>
-            {t('author.workCount', { count: works.length })}
+            {t('author.workCount', { count: entries.length })}
           </p>
 
           <div className={styles.followRow}>
@@ -163,9 +204,16 @@ function AuthorContent({ id }: { id: string }) {
           />
         ) : (
           <Grid>
-            {works.map((work) => (
-              <WorkTile key={work.workId ?? `${work.title}-${work.volumeNumber}`} work={work} />
-            ))}
+            {entries.map((entry) =>
+              entry.kind === 'work' ? (
+                <WorkTile
+                  key={entry.work.workId ?? `${entry.work.title}-${entry.work.volumeNumber}`}
+                  work={entry.work}
+                />
+              ) : (
+                <SeriesTile key={`series-${entry.title}`} entry={entry} />
+              ),
+            )}
           </Grid>
         )}
       </div>

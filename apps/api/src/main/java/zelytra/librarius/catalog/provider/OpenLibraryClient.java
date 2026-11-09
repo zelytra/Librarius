@@ -29,7 +29,8 @@ public interface OpenLibraryClient {
     @Produces(MediaType.APPLICATION_JSON)
     Uni<SearchResponse> search(@QueryParam("q") String q,
             @QueryParam("limit") int limit,
-            @QueryParam("fields") String fields);
+            @QueryParam("fields") String fields,
+            @QueryParam("sort") String sort);
 
     /**
      * The editions of a work, the source for "the other printings of this title". {@code ref}

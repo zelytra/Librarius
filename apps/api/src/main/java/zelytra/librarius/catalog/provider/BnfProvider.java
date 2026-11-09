@@ -122,6 +122,12 @@ public class BnfProvider implements CatalogProvider {
         }
     }
 
+    /** Legal-deposit records: one per printing, not one per book. */
+    @Override
+    public boolean listsWorks() {
+        return false;
+    }
+
     @Override
     public List<CatalogResult> upcoming(int limit) {
         // A legal-deposit catalogue records what has been published, not what is announced.

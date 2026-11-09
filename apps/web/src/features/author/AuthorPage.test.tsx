@@ -145,4 +145,39 @@ describe('AuthorPage', () => {
 
     expect(await screen.findByText('catalogue: Les Portes de pierre')).toBeInTheDocument();
   });
+
+  test('draws a series as one tile, with the volumes the reader owns of it', async () => {
+    const volume = (n: number, owned: boolean) =>
+      authorWork({
+        workId: `w-${n}`,
+        title: `One Piece Tome ${n}`,
+        seriesTitle: 'One Piece',
+        volumeNumber: n,
+        seriesId: 'series-op',
+        libraryItemId: owned ? `item-${n}` : undefined,
+        kind: 'MANGA',
+      });
+    authorDetailReturns(
+      authorDetail({
+        name: 'Eiichiro Oda',
+        works: [
+          volume(1, true),
+          volume(2, true),
+          volume(45, false),
+          // The series as a catalogue lists it, with no volume: part of the group.
+          authorWork({ workId: 'op', title: 'ONE PIECE', seriesTitle: undefined, volumeNumber: undefined }),
+          authorWork({ title: 'Wanted!', seriesTitle: undefined, volumeNumber: undefined }),
+        ],
+      }),
+    );
+    renderAuthor();
+
+    expect(await screen.findByText('One Piece')).toBeInTheDocument();
+    expect(screen.getByText('2 possédés sur 3 tomes connus')).toBeInTheDocument();
+    expect(screen.queryByText('One Piece Tome 45')).not.toBeInTheDocument();
+    expect(screen.queryByText('ONE PIECE')).not.toBeInTheDocument();
+    expect(screen.getByText('Wanted!')).toBeInTheDocument();
+    // The count is of what the page lists: one series and one standalone title.
+    expect(screen.getByText('2 œuvres')).toBeInTheDocument();
+  });
 });

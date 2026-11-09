@@ -186,12 +186,24 @@ Saisis ton **pseudo Booknode** et lance l'import : ta bibliothèque publique est
 directement. Le profil doit être **public**, sinon il n'y a rien à lire et l'application
 te le dit.
 
-Babelio ne propose pas d'import par pseudo : une bibliothèque Babelio n'est pas publique,
-il n'y a rien à aller y chercher. Passe par l'export CSV de Babelio, ci-dessous.
+### Collecte depuis ton navigateur (Booknode et Babelio)
+
+Babelio ne montre ta bibliothèque qu'à toi, connecté, et Booknode refuse parfois notre
+serveur. La **collecte** contourne les deux en passant par ton propre navigateur :
+
+1. Dans Réglages → Importer, glisse le bouton **« Librarius : collecter »** dans ta barre de
+   favoris (sur mobile : « copier le code du favori », puis crée un favori avec ce code).
+2. Ouvre ta bibliothèque — ta page de profil Booknode, ou « Mes livres » sur Babelio,
+   connecté — et clique sur ce favori. Il parcourt toutes les pages et télécharge un
+   fichier `librarius-booknode.json` ou `librarius-babelio.json`.
+3. Reviens dans Réglages et importe ce fichier.
+
+Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
+couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arrière-plan.
 
 ### Depuis un fichier CSV
 
-Le bouton « Importer un fichier CSV » accepte l'export de Babelio, de Goodreads, ou un
+Le bouton « Importer un fichier » accepte aussi l'export de Babelio, de Goodreads, ou un
 fichier fait à la main. Exemple prêt à l'emploi :
 [import-example.csv](import-example.csv).
 

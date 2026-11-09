@@ -11,9 +11,11 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiStatsQueryKey,
   useGetApiImportJobsJobId,
+  usePostApiImportCollected,
   usePostApiImportCsv,
   usePostApiImportSource,
 } from '../../api/generated/librarius';
+import { bookmarkletHref, isCollectedFile } from './collector';
 import styles from './ImportSection.module.css';
 
 type Source = 'booknode' | 'babelio';
@@ -61,6 +63,24 @@ export function ImportSection() {
 
   const { mutateAsync: importFromSource, isPending: startingScrape } = usePostApiImportSource();
   const { mutateAsync: importCsv, isPending: startingCsv } = usePostApiImportCsv();
+  const { mutateAsync: importCollected, isPending: startingCollected } = usePostApiImportCollected();
+  const [copied, setCopied] = useState(false);
+
+  // The collector's link. React refuses a `javascript:` URL in `href` — rightly, for anything
+  // built from data — so this one, a constant of our own code, is set on the element directly.
+  const bookmarklet = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    bookmarklet.current?.setAttribute('href', bookmarkletHref());
+  });
+
+  async function copyBookmarklet() {
+    try {
+      await navigator.clipboard.writeText(bookmarkletHref());
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   // Follows the running import, stopping the poll the moment it is no longer RUNNING.
   const { data: job } = useGetApiImportJobsJobId(jobId ?? '', {
@@ -84,7 +104,7 @@ export function ImportSection() {
   }, [job, queryClient, t]);
 
   const running = jobId != null;
-  const busy = running || startingScrape || startingCsv;
+  const busy = running || startingScrape || startingCsv || startingCollected;
 
   function reset() {
     setMessage(null);
@@ -102,13 +122,31 @@ export function ImportSection() {
     }
   }
 
+  /**
+   * One picker for every file a reader may hold: the collector's `.json`, pages of their library
+   * saved from the browser (`.html`, several at once), or a CSV export.
+   */
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     reset();
     try {
-      const text = await file.text();
-      const started = await importCsv({ data: text });
+      const first = files[0];
+      const name = first.name.toLowerCase();
+      let started;
+      if (name.endsWith('.json')) {
+        const parsed: unknown = JSON.parse(await first.text());
+        if (!isCollectedFile(parsed)) {
+          setError(t('settings.import.collector.notCollected'));
+          return;
+        }
+        started = await importCollected({ data: { source: parsed.source, pages: parsed.pages } });
+      } else if (name.endsWith('.html') || name.endsWith('.htm')) {
+        const pages = await Promise.all(files.map((f) => f.text()));
+        started = await importCollected({ data: { source, pages } });
+      } else {
+        started = await importCsv({ data: await first.text() });
+      }
       if (started.id) setJobId(started.id);
     } catch (err) {
       setError(failureMessage(t, err, t('settings.import.unreadableFile')));
@@ -159,15 +197,43 @@ export function ImportSection() {
             <p className={styles.note}>{t('settings.import.babelioNote')}</p>
           )}
 
+          {/* The path that works whatever the site does to servers: the reader's own browser,
+              already signed in, collects the library and hands back a file. */}
+          <div className={styles.collector}>
+            <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
+            <ol className={styles.steps}>
+              <li>
+                {t('settings.import.collector.step1')}{' '}
+                <a
+                  ref={bookmarklet}
+                  className={styles.bookmarklet}
+                  onClick={(e) => e.preventDefault()}
+                  draggable
+                >
+                  <Icon name="bookmark_add" size={16} color="var(--on-accent)" />
+                  {t('settings.import.collector.button')}
+                </a>
+              </li>
+              <li>{t(`settings.import.collector.step2.${source}`)}</li>
+              <li>{t('settings.import.collector.step3')}</li>
+            </ol>
+            <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
+              <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />
+              {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
+            </button>
+          </div>
+
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
-            {t('settings.import.csv')}
+            {t('settings.import.file')}
           </button>
           <input
             ref={fileInput}
             type="file"
-            accept=".csv,text/csv,text/plain"
+            multiple
+            accept=".json,.csv,.html,.htm,application/json,text/csv,text/plain,text/html"
             onChange={onFile}
+            aria-label={t('settings.import.file')}
             className={styles.hiddenInput}
           />
 

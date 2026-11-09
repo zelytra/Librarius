@@ -185,6 +185,20 @@ components:
         label:
           type: string
           pattern: \S
+    CollectedRequest:
+      type: object
+      required:
+      - source
+      - pages
+      properties:
+        source:
+          type: string
+          pattern: booknode|babelio
+        pages:
+          type: array
+          items:
+            type: string
+          maxItems: 1000
     DashboardLayoutDto:
       type: object
       required:
@@ -1468,6 +1482,32 @@ paths:
       summary: Upsert
       tags:
       - Goal Resource
+      security:
+      - SecurityScheme: []
+  /api/import/collected:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectedRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportJobDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Collected
+      tags:
+      - Import Resource
       security:
       - SecurityScheme: []
   /api/import/csv:

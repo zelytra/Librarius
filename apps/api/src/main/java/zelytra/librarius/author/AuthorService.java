@@ -133,17 +133,25 @@ public class AuthorService {
         List<UUID> workIds = works.stream().map(w -> w.id).toList();
         Map<UUID, String> covers = authors.coverByWork(workIds);
         Map<UUID, UUID> ownedItems = items.itemIdsByWork(userId, workIds);
-        List<AuthorWorkDto> bibliography = new ArrayList<>(works.stream()
-                .map(w -> AuthorWorkDto.of(w, covers.get(w.id), ownedItems.get(w.id)))
-                .toList());
+        // The shared catalog can hold one title twice — an import founded a work before another
+        // entry filed the same volume under its series. One line per title: the reader's own
+        // copy first, then one with a cover, the catalog order breaking the remaining ties.
+        Map<String, AuthorWorkDto> byTitle = new LinkedHashMap<>();
+        for (Work w : works) {
+            AuthorWorkDto dto = AuthorWorkDto.of(w, covers.get(w.id), ownedItems.get(w.id));
+            byTitle.merge(bibliographyKey(dto.title(), dto.volumeNumber()), dto,
+                    (kept, other) -> rank(other) > rank(kept) ? other : kept);
+        }
+        List<AuthorWorkDto> bibliography = new ArrayList<>(byTitle.values());
+        works = works.stream().filter(w -> byTitle.values().stream()
+                .anyMatch(dto -> w.id.equals(dto.workId()))).toList();
 
         // Add the works a provider credits to the author but the local catalog does not hold
         // yet: they carry no workId, which the page renders as a title nobody here owns. Behind
         // a flag, and off the transaction path, so the suite never reaches out to a provider and
         // no database connection is held across the outbound call.
         if (enrichBibliography) {
-            Set<String> known = works.stream().map(w -> normalizeTitle(w.title))
-                    .collect(Collectors.toCollection(java.util.HashSet::new));
+            Set<String> known = new java.util.HashSet<>(byTitle.keySet());
             Set<Kind> kinds = works.stream().map(w -> w.kind)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             for (CatalogResult r : catalog.worksOfAuthor(kinds, author.name, MAX_PROVIDER_WORKS)) {
@@ -151,7 +159,7 @@ public class AuthorService {
                 // Herbert" with a thesis by F. T. H. Fletcher and a book on Van Gogh. Only a
                 // work that actually credits this author joins the bibliography.
                 if (r.title() != null && credits(r.authors(), author.name)
-                        && known.add(normalizeTitle(r.title()))) {
+                        && known.add(bibliographyKey(r.title(), r.volumeNumber()))) {
                     bibliography.add(new AuthorWorkDto(null, r.kind(), r.title(), r.authors(),
                             r.seriesTitle(), r.volumeNumber(), r.year(), r.coverUrl(), null, null));
                 }
@@ -161,10 +169,41 @@ public class AuthorService {
                 bibliography));
     }
 
-    /** Folded like a dedup key, so "DUNE", "Dune" and "Dune." are one title. */
-    private static String normalizeTitle(String title) {
-        String key = AuthorNormalizer.key(title);
-        return key == null ? "" : key;
+    /**
+     * What makes two bibliography lines one title: the title folded like an author key (case,
+     * accents, punctuation), without an edition statement in brackets ("(French Edition)",
+     * "(Éd. collector)") and without its subtitle, plus the volume number when there is one —
+     * so "La Zone Du Dehors (French Edition)" and "La zone du dehors" are one line, while two
+     * volumes of a run stay two. Package-private for the test.
+     */
+    static String bibliographyKey(String title, Integer volume) {
+        if (title == null) {
+            return "";
+        }
+        String main = EDITION_NOTE.matcher(title).replaceAll(" ");
+        int subtitle = main.indexOf(" : ");
+        if (subtitle > 0) {
+            main = main.substring(0, subtitle);
+        }
+        // A volume keys on its series and number, however its title words it: "One Piece Tome
+        // 1" recorded with no number and "One Piece Tome 1" filed as volume 1 are one book.
+        zelytra.librarius.catalog.VolumeParser.Parsed parsed =
+                zelytra.librarius.catalog.VolumeParser.parse(main);
+        Integer number = volume != null ? volume : parsed.volumeNumber();
+        if (number != null && parsed.seriesTitle() != null) {
+            main = parsed.seriesTitle();
+        }
+        String key = AuthorNormalizer.key(main);
+        return (key == null ? "" : key) + (number != null ? "#" + number : "");
+    }
+
+    /** A bracketed edition statement: "(French Edition)", "(Éd. collector)", "(Nouvelle édition)". */
+    private static final java.util.regex.Pattern EDITION_NOTE = java.util.regex.Pattern.compile(
+            "\\((?=[^)]*(?iu:edition|édition|(?<!\\p{L})[ée]d\\.))[^)]*\\)");
+
+    /** Which of two copies of one title a bibliography keeps: owned, then with a cover. */
+    private static int rank(AuthorWorkDto dto) {
+        return (dto.libraryItemId() != null ? 2 : 0) + (dto.coverUrl() != null ? 1 : 0);
     }
 
     /**

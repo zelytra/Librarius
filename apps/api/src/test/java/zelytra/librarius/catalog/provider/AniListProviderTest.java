@@ -182,4 +182,11 @@ class AniListProviderTest {
         provider().search(CatalogQuery.of("Kaiju No. 8"), 20);
         assertEquals("Kaiju No. 8", client.request.variables().get("q"));
     }
+
+    @Test
+    void asksForAJapaneseNameInAniListsSpellingWhenTheTypedOneIsUnknown() {
+        assertEquals(List.of("Eiichiro Oda", "Eiichirou Oda"), AniListProvider.staffSpellings("Eiichiro Oda"));
+        assertEquals(List.of("Eiichirō Oda", "Eiichirou Oda"), AniListProvider.staffSpellings("Eiichirō Oda"));
+        assertEquals(List.of("Hajime Isayama"), AniListProvider.staffSpellings("Hajime Isayama"));
+    }
 }

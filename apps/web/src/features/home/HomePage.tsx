@@ -9,6 +9,7 @@ import { activeLanguage } from '../../i18n/languages';
 import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius';
 import { markOnboardingSeen, shouldShowOnboarding } from '../onboarding/onboarding';
 import { DashboardSections } from './DashboardSections';
+import { HomeShowcase } from './HomeShowcase';
 import styles from './HomePage.module.css';
 
 // Same reasoning as DashboardEditor: a returning user with any library never triggers
@@ -75,6 +76,7 @@ function Dashboard() {
 
   return (
     <>
+      {!libraryEmpty && <HomeShowcase reading={reading} read={read} stats={stats} />}
       <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />
       {showOnboarding && (
         <Suspense fallback={null}>

@@ -293,6 +293,40 @@ describe('HomePage', () => {
     expect(statuses).not.toContain(null);
   });
 
+  // ── Showcase ─────────────────────────────────────────────────────────────
+
+  test('shows the library off, and the book being read now with how far in it is', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 12, reading: 1, toRead: 7, seriesCount: 3, pagesRead: 4200 }))));
+    libraryReturns([
+      libraryItem({
+        id: 'en-cours',
+        status: 'READING',
+        progress: { currentPage: 120, percent: 40 },
+        book: { kind: 'BOOK', title: 'La Horde du Contrevent', authors: 'Alain Damasio', coverUrl: 'https://covers.test/horde.jpg' },
+      }),
+    ]);
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Ta bibliothèque')).toBeInTheDocument();
+    // Every status counts towards the titles; the series and the pages come from the stats.
+    expect(screen.getByText('20')).toBeInTheDocument();
+    expect(screen.getByText('séries')).toBeInTheDocument();
+    expect(screen.getByText('4200')).toBeInTheDocument();
+    expect(screen.getByText('En ce moment')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '40 % lu' })).toHaveAttribute('aria-valuenow', '40');
+    expect(screen.getByRole('button', { name: 'Continuer ma lecture' })).toBeInTheDocument();
+  });
+
+  test('keeps the showcase off an empty library', async () => {
+    server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ read: 0, reading: 0, toRead: 0 }))));
+    libraryReturns([]);
+    renderWithProviders(<HomePage />);
+
+    await screen.findByText('lus');
+    expect(screen.queryByText('Ta bibliothèque')).not.toBeInTheDocument();
+  });
+
   // ── Annual reading goal ────────────────────────────────────────────────────
 
   test('gauges the annual goal and says what pace holds it', async () => {

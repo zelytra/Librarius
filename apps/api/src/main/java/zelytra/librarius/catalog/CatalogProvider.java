@@ -59,6 +59,16 @@ public interface CatalogProvider {
      * staff-linked lookup, its author index being a first-class one. Best-effort catalog data,
      * merged with what the local catalog already holds.
      */
+    /**
+     * Whether the provider's answers are <em>works</em> — one line per book — rather than
+     * catalogue records of every edition. An author's bibliography is drawn from the former; a
+     * provider of records (the BnF: every printing, every booster pack of a manga) only fills in
+     * for an author the others barely know.
+     */
+    default boolean listsWorks() {
+        return true;
+    }
+
     default List<CatalogResult> worksOfAuthor(String authorName, int limit) {
         if (authorName == null || authorName.isBlank()) {
             return List.of();
