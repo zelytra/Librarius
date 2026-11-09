@@ -273,9 +273,19 @@ kubectl -n librarius get secret librarius-keycloak \
   -o jsonpath='{.data.admin-password}' | base64 -d; echo
 ```
 
-While a Secret is missing, `helm upgrade` stops at render time with
+While a Secret's *name* is not passed, `helm upgrade` stops at render time with
 `postgres.existingSecret is required: …`: the deployment fails loudly instead of falling
-back to a known password.
+back to a known password. A name passed for a Secret that does not exist renders fine —
+the pods then sit in `CreateContainerConfigError` (`secret "librarius-postgres" not
+found`) and the site answers 503 on `/api` and `/auth`. `cd.yml` therefore checks both
+Secrets exist before it deploys and stops with that message instead.
+
+If the namespace was recreated, the Secrets went with it. Creating them again is enough
+when the PostgreSQL volume went too. When the volume survived, the role still has its old
+password, which a new random one will not match: either put the old value back in the
+Secret, or reset the role from inside the container (`ALTER ROLE`, § "Rotating the exposed
+credentials"), or — staging data being disposable — delete the PVC and let it initialise
+again.
 
 The chart seeds **no user** in the imported realm any more — a credential written there
 would be a credential published here. Sign-up is open: create your account through the web
