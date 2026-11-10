@@ -444,3 +444,12 @@ the same PR**:
   and carry on.
 - Group independent tool calls into a single message.
 - Large delegable jobs (audits, bulk translation, exploration) go to parallel agents.
+
+## Developer wiki
+
+`docs/wiki/` is the source of the GitHub wiki (published by `.github/workflows/wiki.yml` on
+every merge to `main`). Architecture, API, data model, catalog, imports, authentication,
+local setup, contributing and deployment are documented there for human developers; a pull
+request that changes any of them updates the matching page in the same change. Pages are
+plain Markdown, linted with the rest (`markdownlint`), and link to each other through their
+wiki URLs (`https://github.com/zelytra/Librarius/wiki/<Page>`).

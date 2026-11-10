@@ -1,0 +1,48 @@
+name: wiki
+
+# The developer wiki is written in this repository, under docs/wiki/, so that a change and
+# the documentation of it go through the same pull request and the same review (#375). On
+# every merge to main the pages are copied onto the GitHub wiki, which is a git repository
+# of its own (Librarius.wiki.git): docs/wiki/ is the source, the wiki a published copy — an
+# edit made directly on the wiki is overwritten by the next merge.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/wiki/**'
+      - '.github/workflows/wiki.yml'
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: publish the wiki
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Copy docs/wiki onto the wiki repository
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
+          # Mirror: a page removed from docs/wiki/ disappears from the wiki too.
+          find wiki -maxdepth 1 -name '*.md' -delete
+          cp docs/wiki/*.md wiki/
+          cd wiki
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The wiki is already up to date."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "Publish docs/wiki from ${GITHUB_SHA::7}"
+          git push origin HEAD
