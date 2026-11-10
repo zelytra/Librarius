@@ -36,7 +36,8 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
      * @param owned    distinct works of the series present in the user's collection
      * @param read     those of them marked {@link LibraryStatus#READ}
      */
-    public record OwnershipCounters(UUID seriesId, long owned, long read) {
+    /** @param lastActivity the latest activity among the volumes held, see {@code LibraryItemRepository.ACTIVITY} */
+    public record OwnershipCounters(UUID seriesId, long owned, long read, java.time.LocalDate lastActivity) {
     }
 
     /**
@@ -50,20 +51,22 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
         return getEntityManager()
                 .createQuery("""
                         select w.series.id, count(distinct w.id),
-                               count(distinct case when li.status = :read then w.id end)
+                               count(distinct case when li.status = :read then w.id end),
+                               max(%s)
                         from LibraryItem li
                           join li.edition e
                           join e.work w
+                          left join li.progress p
                         where li.userId = :userId
                           and w.series is not null
                         group by w.series.id
-                        """, Object[].class)
+                        """.formatted(LibraryItemRepository.ACTIVITY), Object[].class)
                 .setParameter("userId", userId)
                 .setParameter("read", LibraryStatus.READ)
                 .getResultList()
                 .stream()
                 .map(row -> new OwnershipCounters((UUID) row[0], ((Number) row[1]).longValue(),
-                        ((Number) row[2]).longValue()))
+                        ((Number) row[2]).longValue(), (java.time.LocalDate) row[3]))
                 .toList();
     }
 

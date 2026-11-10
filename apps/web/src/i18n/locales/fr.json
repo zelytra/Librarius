@@ -341,12 +341,14 @@
       "title": "Titre",
       "author": "Auteur",
       "genre": "Genre",
-      "rating": "Note"
+      "rating": "Note",
+      "recent": "Récents"
     },
     "ranks": {
       "all": "Tous",
       "favorites": "Mes coups de cœur",
-      "manage": "Gérer mes catégories"
+      "manage": "Gérer mes catégories",
+      "toRead": "Pile à lire"
     },
     "empty": {
       "title": "Aucun titre ici.",
@@ -467,7 +469,10 @@
     "seriesOwned_one": "{{owned}} possédé sur {{count}} tome connu",
     "seriesOwned_other": "{{owned}} possédés sur {{count}} tomes connus",
     "seriesKnown_one": "{{count}} tome connu",
-    "seriesKnown_other": "{{count}} tomes connus"
+    "seriesKnown_other": "{{count}} tomes connus",
+    "unknownYear": "Date inconnue",
+    "yearCount_one": "{{count}} titre",
+    "yearCount_other": "{{count}} titres"
   },
   "catalog": {
     "addToLibrary": "Ajouter à ma collection",
@@ -539,7 +544,9 @@
       "rateLimited": "Trop de recherches d’affilée. Réessaie dans une minute.",
       "addFailed": "Ajout impossible pour le moment."
     },
-    "scan": "Scanner un code-barres"
+    "scan": "Scanner un code-barres",
+    "moreCredits_one": "{{names}} et {{count}} autre",
+    "moreCredits_other": "{{names}} et {{count}} autres"
   },
   "wishlist": {
     "title": "Liste de souhaits",
@@ -613,6 +620,17 @@
         "byPublisher": "Éditeurs",
         "byLanguage": "Langues",
         "byRank": "Rangs"
+      },
+      "tooltip": "{{month}} : {{books}} livres · {{pages}} pages",
+      "kinds": {
+        "BOOK": "Livres",
+        "MANGA": "Mangas",
+        "COMIC": "BD",
+        "OTHER": "Autres"
+      },
+      "views": {
+        "all": "Tout",
+        "byKind": "Par type"
       }
     }
   },
@@ -862,5 +880,18 @@
       "add": "Ajouter",
       "manual": "Ajouter à la main"
     }
+  },
+  "add": {
+    "targets": {
+      "READ": "Lu",
+      "OWNED": "Pile à lire",
+      "WISHLIST": "Souhait"
+    },
+    "added": {
+      "READ": "Ajouté à ta collection, comme lu.",
+      "OWNED": "Ajouté à ta pile à lire.",
+      "WISHLIST": "Ajouté à tes souhaits."
+    },
+    "as": "Ajouter comme"
   }
 }

@@ -63,9 +63,11 @@ function knownKind(kind: string | undefined): Kind {
  * — the user reads the row as "which shelf am I looking at", not as "which column is
  * filtered".
  */
-type ShelfFilter = { kind: 'all' } | { kind: 'favorites' } | { kind: 'rank'; code: string };
+type ShelfFilter = { kind: 'all' } | { kind: 'toRead' } | { kind: 'favorites' } | { kind: 'rank'; code: string };
 
 const ALL_SHELVES: ShelfFilter = { kind: 'all' };
+/** The to-read pile: titles in the collection, not started yet. */
+const TO_READ: ShelfFilter = { kind: 'toRead' };
 const FAVORITES: ShelfFilter = { kind: 'favorites' };
 
 function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
@@ -73,7 +75,7 @@ function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
   return a.kind === b.kind;
 }
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
-type SortBy = 'added' | 'title' | 'author' | 'genre' | 'rating';
+type SortBy = 'recent' | 'added' | 'title' | 'author' | 'genre' | 'rating';
 /** The two ways of reading the collection: title by title, or run by run. */
 type View = 'grouped' | 'flat';
 
@@ -88,12 +90,21 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 /** Sort chips, in display order, each with the key of its label. */
 const SORTS: { id: SortBy; labelKey: string }[] = [
+  { id: 'recent', labelKey: 'collection.sorts.recent' },
   { id: 'added', labelKey: 'collection.sorts.added' },
   { id: 'title', labelKey: 'collection.sorts.title' },
   { id: 'author', labelKey: 'collection.sorts.author' },
   { id: 'genre', labelKey: 'collection.sorts.genre' },
   { id: 'rating', labelKey: 'collection.sorts.rating' },
 ];
+
+/** The date of the last thing that happened to a title: finished, started or added. */
+function activityOf(item: LibraryItemDto): string {
+  return [item.progress?.finishedAt, item.progress?.startedAt, item.acquiredAt]
+    .filter((d): d is string => Boolean(d))
+    .sort()
+    .pop() ?? '';
+}
 
 function CoverTile({
   item,
@@ -190,7 +201,8 @@ function CollectionContent() {
   const kindOptions = presentKinds.length > 0 ? presentKinds : [ALL_KINDS[0]];
 
   const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
-  const [sortBy, setSortBy] = useState<SortBy>('added');
+  // Latest activity first — read, started or added — the way a reader thinks of their shelf.
+  const [sortBy, setSortBy] = useState<SortBy>('recent');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [view, setView] = useState<View>('grouped');
@@ -220,6 +232,7 @@ function CollectionContent() {
     sort: sortBy,
     kind: collType,
     rank: shelfFilter.kind === 'rank' ? shelfFilter.code : undefined,
+    status: shelfFilter.kind === 'toRead' ? 'OWNED' : undefined,
     minRating: shelfFilter.kind === 'favorites' ? FAVORITE_RATING : undefined,
     q: search || undefined,
     // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
@@ -283,6 +296,19 @@ function CollectionContent() {
     [allSeries, collType, search, grouped],
   );
 
+  // Grouped and by latest activity, the series blocks take their place among the one-shots
+  // by the date of what last happened in them, instead of all leading the shelf. A series
+  // older than every title loaded so far waits for the page that reaches its date.
+  const mixed = useMemo(() => {
+    if (!grouped || sortBy !== 'recent') return null;
+    const dated = items.map((it) => ({ item: it, date: activityOf(it) }));
+    const floor = hasNextPage && dated.length > 0 ? dated[dated.length - 1].date : '';
+    const series = shelf
+      .map((s) => ({ series: s, date: s.lastActivity ?? '' }))
+      .filter((s) => !hasNextPage || s.date >= floor);
+    return [...series, ...dated].sort((a, b) => b.date.localeCompare(a.date));
+  }, [grouped, sortBy, items, shelf, hasNextPage]);
+
   const showLoading = loading || (grouped && seriesLoading);
   const showError = isError || (grouped && seriesFailed);
   const isEmpty = !showLoading && !showError && shelf.length === 0 && items.length === 0;
@@ -295,6 +321,7 @@ function CollectionContent() {
 
   const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string }[] = [
     { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all') },
+    { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead') },
     { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites') },
     ...categories.map((c: CategoryDto) => ({
       key: c.id!,
@@ -412,18 +439,19 @@ function CollectionContent() {
           // tokens.css for the reasoning behind the track sizes. Grouped, the series blocks
           // lead and the one-shots follow, each in the order the sort asks for.
           <Grid>
-            {shelf.map((s) => (
-              <SeriesBlock key={s.id} series={s} />
-            ))}
-            {items.map((it) => (
-              <CoverTile
-                key={it.id}
-                item={it}
-                rankColor={it.rankCode ? rankColors.get(it.rankCode) : undefined}
-                onOpen={() => open(it)}
-                onDelete={() => void remove(it.id!)}
-              />
-            ))}
+            {(mixed ?? [...shelf.map((s) => ({ series: s })), ...items.map((it) => ({ item: it }))]).map((entry) =>
+              'series' in entry ? (
+                <SeriesBlock key={entry.series.id} series={entry.series} />
+              ) : (
+                <CoverTile
+                  key={entry.item.id}
+                  item={entry.item}
+                  rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
+                  onOpen={() => open(entry.item)}
+                  onDelete={() => void remove(entry.item.id!)}
+                />
+              ),
+            )}
           </Grid>
       )}
 

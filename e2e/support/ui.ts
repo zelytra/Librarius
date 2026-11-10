@@ -29,7 +29,7 @@ export function figure(page: Page, label: string): Locator {
 export async function searchCatalog(page: Page, query: string): Promise<void> {
   await page.getByPlaceholder(/^Rechercher un titre/).fill(query);
   await page.getByRole('button', { name: 'Rechercher' }).click();
-  await page.getByRole('button', { name: 'Collection', exact: true }).first().waitFor();
+  await page.getByRole('button', { name: 'Pile à lire', exact: true }).first().waitFor();
 }
 
 /**
@@ -37,7 +37,7 @@ export async function searchCatalog(page: Page, query: string): Promise<void> {
  * Once added, a result swaps its two buttons for a confirmation, so calling this twice
  * in a row adds the first result then the second one.
  */
-export async function addResult(page: Page, target: 'Collection' | 'Souhaits'): Promise<void> {
+export async function addResult(page: Page, target: 'Lu' | 'Pile à lire' | 'Souhait'): Promise<void> {
   await page.getByRole('button', { name: target, exact: true }).first().click();
 }
 

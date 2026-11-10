@@ -91,6 +91,114 @@
 }
 
 /* One column per month, aligned with the slots of the plot above. */
+/* ── Monthly columns ─────────────────────────────────────────────────────── */
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.columnValue {
+  min-height: 14px;
+  font-size: var(--fs-10);
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.columnTrack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 120px;
+}
+
+.columnBar,
+.columnEmpty {
+  display: flex;
+  flex-direction: column-reverse;
+  width: min(70%, 22px);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.columnBar {
+  background: var(--accent);
+}
+
+.columnEmpty {
+  background: var(--chip);
+}
+
+.column:hover .columnBar,
+.column:focus-visible .columnBar {
+  filter: brightness(0.92);
+}
+
+.segment {
+  display: block;
+  min-height: 2px;
+}
+
+.fillBook { background: var(--accent); }
+.fillManga { background: var(--rose); }
+.fillComic { background: var(--violet, #9b8fbf); }
+.fillOther { background: var(--faint); }
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--fs-12);
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  box-shadow: var(--shadow-frame);
+}
+
+/* The first and last months keep their bubble inside the card. */
+.column:first-child .tooltip { left: 0; transform: none; }
+.column:last-child .tooltip { left: auto; right: 0; transform: none; }
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 12px;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
 .axis {
   display: grid;
   grid-template-columns: repeat(12, 1fr);

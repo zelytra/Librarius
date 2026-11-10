@@ -114,3 +114,31 @@
 .emptyWorks {
   padding: 30px var(--screen-pad-x);
 }
+
+/* ── The bibliography, one group per year ─────────────────────────────────── */
+
+.years {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.yearTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.yearCount {
+  font-family: inherit;
+  font-size: var(--fs-12);
+  font-weight: 500;
+  color: var(--muted);
+}

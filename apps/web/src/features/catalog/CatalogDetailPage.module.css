@@ -107,12 +107,27 @@
   white-space: pre-line;
 }
 
+/* The three places a title can go, side by side — wrapped under each other on a narrow
+   phone rather than squeezed. */
+.addBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.addLabel {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .actions > * {
-  flex: 1;
+  flex: 1 1 140px;
 }
 
 .added {

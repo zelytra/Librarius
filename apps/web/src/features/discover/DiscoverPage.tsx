@@ -22,6 +22,7 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import { AuthorMatches } from '../author/AuthorSearch';
 import { catalogPath, toBook } from '../catalog/catalogBook';
+import { ADD_TARGETS, addedKeyOf, type AddTarget } from '../catalog/addTargets';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
@@ -104,7 +105,7 @@ function DiscoverContent() {
   // The parameters a search actually ran with — set by the button, by Enter, and by the
   // debounced auto-search below, never straight from the input value.
   const [submitted, setSubmitted] = useState<GetApiCatalogSearchParams | null>(null);
-  const [added, setAdded] = useState<Record<string, 'library' | 'wishlist'>>({});
+  const [added, setAdded] = useState<Record<string, AddTarget>>({});
   const [addError, setAddError] = useState<string | null>(null);
 
   const detectedIsbn = detectIsbn(query);
@@ -166,11 +167,11 @@ function DiscoverContent() {
     void queryClient.invalidateQueries(STATS_QUERIES);
   }
 
-  async function add(r: CatalogResult, key: string, target: 'library' | 'wishlist') {
+  async function add(r: CatalogResult, key: string, target: AddTarget) {
     const book = toBook(r);
     try {
-      if (target === 'library') await addToLibrary({ data: { book, status: 'OWNED' } });
-      else await addToWishlist({ data: { book, priority: 'SOON' } });
+      if (target === 'WISHLIST') await addToWishlist({ data: { book, priority: 'SOON' } });
+      else await addToLibrary({ data: { book, status: target } });
       setAdded((a) => ({ ...a, [key]: target }));
       refreshAfterAdd();
     } catch {
@@ -323,7 +324,7 @@ function DiscoverContent() {
         {results.map((r) => {
           const key = keyOf(r);
           const state = added[key];
-          const meta = [r.authors, r.year].filter(Boolean).join(' · ');
+          const meta = [shortCredits(r.authors, t), r.year].filter(Boolean).join(' · ');
           return (
             <div key={key} className={styles.result}>
               <BookCover
@@ -348,25 +349,23 @@ function DiscoverContent() {
                   {meta && <span>{meta}</span>}
                 </div>
                 {state ? (
-                  <div className={styles.added}>
-                    {t(state === 'library' ? 'discover.addedToLibrary' : 'discover.addedToWishlist')}
-                  </div>
+                  <div className={styles.added}>{t(addedKeyOf(state))}</div>
                 ) : (
-                  <div className={styles.actions}>
-                    <button
-                      onClick={() => void add(r, key, 'library')}
-                      className={`${styles.action} ${styles.actionPrimary}`}
-                    >
-                      <Icon name="add" size={16} color="var(--on-accent)" />
-                      {t('discover.addToLibrary')}
-                    </button>
-                    <button
-                      onClick={() => void add(r, key, 'wishlist')}
-                      className={`${styles.action} ${styles.actionGhost}`}
-                    >
-                      <Icon name="favorite" size={16} color="var(--rose)" />
-                      {t('discover.addToWishlist')}
-                    </button>
+                  <div className={styles.actions} role="group" aria-label={t('add.as')}>
+                    {ADD_TARGETS.map((target, index) => (
+                      <button
+                        key={target.id}
+                        onClick={() => void add(r, key, target.id)}
+                        className={`${styles.action} ${index === 0 ? styles.actionPrimary : styles.actionGhost}`}
+                      >
+                        <Icon
+                          name={target.icon}
+                          size={16}
+                          color={index === 0 ? 'var(--on-accent)' : target.id === 'WISHLIST' ? 'var(--rose)' : 'var(--accent-deep)'}
+                        />
+                        {t(target.labelKey)}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -377,6 +376,17 @@ function DiscoverContent() {
 
     </>
   );
+}
+
+/** Credits shown on a result card: an anthology's fifteen names grew the card to a screen's
+ *  height. The first three, then how many more; the fiche lists them all. */
+const SHOWN_CREDITS = 3;
+
+function shortCredits(authors: string | undefined, t: TFunction): string | undefined {
+  if (!authors) return authors;
+  const names = authors.split(/\s*,\s*/).filter(Boolean);
+  if (names.length <= SHOWN_CREDITS) return authors;
+  return t('discover.moreCredits', { names: names.slice(0, SHOWN_CREDITS).join(', '), count: names.length - SHOWN_CREDITS });
 }
 
 export function DiscoverPage() {

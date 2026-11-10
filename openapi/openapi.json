@@ -1079,6 +1079,9 @@
           },
           "followed" : {
             "type" : "boolean"
+          },
+          "lastActivity" : {
+            "$ref" : "#/components/schemas/LocalDate"
           }
         }
       },
@@ -1245,6 +1248,13 @@
           "pages" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "byKind" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }
       },

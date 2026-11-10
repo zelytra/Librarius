@@ -18,6 +18,7 @@ import {
 import { catalogPath } from '../catalog/catalogBook';
 import {
   groupBibliography,
+  groupByYear,
   initials,
   workAsCatalogResult,
   workCaption,
@@ -203,18 +204,28 @@ function AuthorContent({ id }: { id: string }) {
             title={t('author.emptyWorks')}
           />
         ) : (
-          <Grid>
-            {entries.map((entry) =>
-              entry.kind === 'work' ? (
-                <WorkTile
-                  key={entry.work.workId ?? `${entry.work.title}-${entry.work.volumeNumber}`}
-                  work={entry.work}
-                />
-              ) : (
-                <SeriesTile key={`series-${entry.title}`} entry={entry} />
-              ),
-            )}
-          </Grid>
+          <div className={styles.years}>
+            {groupByYear(entries).map((group) => (
+              <section key={group.year ?? 'unknown'} className={styles.year}>
+                <h4 className={styles.yearTitle}>
+                  {group.year ?? t('author.unknownYear')}
+                  <span className={styles.yearCount}>{t('author.yearCount', { count: group.entries.length })}</span>
+                </h4>
+                <Grid>
+                  {group.entries.map((entry) =>
+                    entry.kind === 'work' ? (
+                      <WorkTile
+                        key={entry.work.workId ?? `${entry.work.title}-${entry.work.volumeNumber}`}
+                        work={entry.work}
+                      />
+                    ) : (
+                      <SeriesTile key={`series-${entry.title}`} entry={entry} />
+                    ),
+                  )}
+                </Grid>
+              </section>
+            ))}
+          </div>
         )}
       </div>
     </div>

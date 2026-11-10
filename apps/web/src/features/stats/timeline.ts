@@ -15,6 +15,22 @@ export interface MonthPoint {
   month: number;
   books: number;
   pages: number;
+  /** Titles finished that month, per kind group. */
+  byKind: Record<KindGroup, number>;
+}
+
+/** The kinds a reader tells apart on the chart; graphic novels and audiobooks share "other". */
+export type KindGroup = 'BOOK' | 'MANGA' | 'COMIC' | 'OTHER';
+export const KIND_GROUPS: KindGroup[] = ['BOOK', 'MANGA', 'COMIC', 'OTHER'];
+
+export function kindGroupOf(kind: string): KindGroup {
+  return kind === 'BOOK' || kind === 'MANGA' || kind === 'COMIC' ? kind : 'OTHER';
+}
+
+function groupKinds(byKind: Record<string, number> | undefined): Record<KindGroup, number> {
+  const grouped: Record<KindGroup, number> = { BOOK: 0, MANGA: 0, COMIC: 0, OTHER: 0 };
+  for (const [kind, count] of Object.entries(byKind ?? {})) grouped[kindGroupOf(kind)] += count;
+  return grouped;
 }
 
 /** The two things a month can be measured in. */
@@ -35,7 +51,12 @@ export function monthlySeries(
 
   return Array.from({ length: 12 }, (_, index) => {
     const point = byMonth.get(index + 1);
-    return { month: index + 1, books: point?.books ?? 0, pages: point?.pages ?? 0 };
+    return {
+      month: index + 1,
+      books: point?.books ?? 0,
+      pages: point?.pages ?? 0,
+      byKind: groupKinds(point?.byKind),
+    };
   });
 }
 

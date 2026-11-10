@@ -76,6 +76,10 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
     public record PeriodTotal(int year, Integer month, long books, long pages) {
     }
 
+    /** Titles of one kind finished in one period: the per-kind split of a {@link PeriodTotal}. */
+    public record KindTotal(int year, Integer month, String kind, long books) {
+    }
+
     /** A label of some dimension and the number of finished titles carrying it. */
     public record LabelTotal(String label, long count) {
     }
@@ -147,6 +151,42 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                         monthly ? ((Number) row[1]).intValue() : null,
                         ((Number) row[monthly ? 2 : 1]).longValue(),
                         asLong(row[monthly ? 3 : 2])))
+                .toList();
+    }
+
+    /**
+     * The same buckets as {@link #timeline}, split by kind — the books, manga and comics of
+     * each period, so a screen can draw them apart as well as together.
+     */
+    public List<KindTotal> timelineByKind(String userId, LocalDate from, LocalDate to,
+            TimelineGranularity granularity) {
+        String bucket = granularity == TimelineGranularity.MONTH
+                ? "year(rp.finishedAt), month(rp.finishedAt)"
+                : "year(rp.finishedAt)";
+        List<Object[]> rows = getEntityManager()
+                .createQuery("""
+                        select %s, w.kind, count(rp)
+                        from ReadingProgress rp
+                          join rp.libraryItem li
+                          join li.edition e
+                          join e.work w
+                        where li.userId = :userId
+                          and rp.finishedAt between :from and :to
+                          %s
+                        group by %s, w.kind
+                        """.formatted(bucket, NOT_ABANDONED, bucket), Object[].class)
+                .setParameter("userId", userId)
+                .setParameter("abandoned", LibraryStatus.ABANDONED)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
+        boolean monthly = granularity == TimelineGranularity.MONTH;
+        return rows.stream()
+                .map(row -> new KindTotal(
+                        ((Number) row[0]).intValue(),
+                        monthly ? ((Number) row[1]).intValue() : null,
+                        String.valueOf(row[monthly ? 2 : 1]),
+                        ((Number) row[monthly ? 3 : 2]).longValue()))
                 .toList();
     }
 

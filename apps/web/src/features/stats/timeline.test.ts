@@ -26,7 +26,7 @@ describe('monthlySeries', () => {
   test('ignores the buckets of another year', () => {
     const series = monthlySeries([...points, { period: '2025-01', books: 99, pages: 9999 }], 2026);
 
-    expect(series[0]).toEqual({ month: 1, books: 3, pages: 300 });
+    expect(series[0]).toMatchObject({ month: 1, books: 3, pages: 300 });
   });
 
   test('reads a year with no reading as twelve zeros', () => {
@@ -88,3 +88,14 @@ describe('offeredYears', () => {
     expect(offeredYears(2026, 2026, points)).toEqual([2026, 2025, 2019, 2018, 2017, 2016]);
   });
 });
+
+describe('monthlySeries by kind', () => {
+  test('groups each month by kind, graphic novels and audiobooks together as "other"', () => {
+    const series = monthlySeries(
+      [{ period: '2026-03', books: 5, pages: 900, byKind: { BOOK: 2, MANGA: 2, AUDIOBOOK: 1 } }],
+      2026,
+    );
+    expect(series[2].byKind).toEqual({ BOOK: 2, MANGA: 2, COMIC: 0, OTHER: 1 });
+  });
+});
+

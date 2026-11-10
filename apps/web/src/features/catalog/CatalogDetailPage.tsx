@@ -18,10 +18,10 @@ import {
 import { AuthorNames } from '../author/AuthorNames';
 import { KIND_LABEL_KEY, knownKind } from '../discover/medium';
 import { toBook } from './catalogBook';
+import { ADD_TARGETS, addedKeyOf, type AddTarget } from './addTargets';
 import styles from './CatalogDetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
-type Target = 'library' | 'wishlist';
 
 /** The series line: the run and, when it is one, the volume within it. */
 function seriesLabel(result: CatalogResult, t: TFunction): string {
@@ -49,7 +49,7 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
 function CatalogDetailContent({ result }: { result: CatalogResult }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [added, setAdded] = useState<Target | null>(null);
+  const [added, setAdded] = useState<AddTarget | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
 
   const { mutateAsync: addToLibrary } = usePostApiLibrary();
@@ -68,11 +68,11 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
     void queryClient.invalidateQueries(STATS_QUERIES);
   }
 
-  async function add(target: Target) {
+  async function add(target: AddTarget) {
     const book = toBook(result);
     try {
-      if (target === 'library') await addToLibrary({ data: { book, status: 'OWNED' } });
-      else await addToWishlist({ data: { book, priority: 'SOON' } });
+      if (target === 'WISHLIST') await addToWishlist({ data: { book, priority: 'SOON' } });
+      else await addToLibrary({ data: { book, status: target } });
       setAdded(target);
       refreshAfterAdd();
     } catch {
@@ -114,19 +114,26 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
       {addError && <ErrorState message={addError} />}
 
       {added ? (
-        <p className={styles.added}>
-          {t(added === 'library' ? 'discover.addedToLibrary' : 'discover.addedToWishlist')}
-        </p>
+        <p className={styles.added}>{t(addedKeyOf(added))}</p>
       ) : (
-        <div className={styles.actions}>
-          <Button onClick={() => void add('library')}>
-            <Icon name="add" size={18} color="var(--on-accent)" />
-            {t('catalog.addToLibrary')}
-          </Button>
-          <Button variant="secondary" onClick={() => void add('wishlist')}>
-            <Icon name="favorite" size={18} color="var(--rose)" />
-            {t('catalog.addToWishlist')}
-          </Button>
+        <div className={styles.addBlock}>
+          <span className={styles.addLabel}>{t('add.as')}</span>
+          <div className={styles.actions}>
+            {ADD_TARGETS.map((target, index) => (
+              <Button
+                key={target.id}
+                variant={index === 0 ? 'primary' : 'secondary'}
+                onClick={() => void add(target.id)}
+              >
+                <Icon
+                  name={target.icon}
+                  size={18}
+                  color={index === 0 ? 'var(--on-accent)' : target.id === 'WISHLIST' ? 'var(--rose)' : 'var(--accent-deep)'}
+                />
+                {t(target.labelKey)}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
     </>

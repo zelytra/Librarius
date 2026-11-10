@@ -140,7 +140,8 @@ describe('AuthorPage', () => {
     );
 
     // The year, not the kind the badge already shows, sits under the title.
-    expect(await screen.findByText('2027')).toBeInTheDocument();
+    // The year names the group the title sits in, and the catalog page repeats it.
+    expect((await screen.findAllByText('2027')).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByText('Les Portes de pierre'));
 
     expect(await screen.findByText('catalogue: Les Portes de pierre')).toBeInTheDocument();
@@ -180,4 +181,20 @@ describe('AuthorPage', () => {
     // The count is of what the page lists: one series and one standalone title.
     expect(screen.getByText('2 œuvres')).toBeInTheDocument();
   });
+
+  /** #365: the bibliography grouped by year, newest first, undated titles last. */
+  test('groups the bibliography by year, newest first', async () => {
+    authorDetailReturns(authorDetail({
+      works: [
+        authorWork({ workId: 'w1', title: 'Le Premier', seriesTitle: undefined, volumeNumber: undefined, originalYear: 1965 }),
+        authorWork({ workId: 'w2', title: 'Le Dernier', seriesTitle: undefined, volumeNumber: undefined, originalYear: 1985 }),
+        authorWork({ workId: 'w3', title: 'Sans date', seriesTitle: undefined, volumeNumber: undefined, originalYear: undefined }),
+      ],
+    }));
+    renderAuthor();
+
+    const headings = (await screen.findAllByRole('heading', { level: 4 })).map((h) => h.textContent);
+    expect(headings).toEqual(['19851 titre', '19651 titre', 'Date inconnue1 titre']);
+  });
 });
+

@@ -81,7 +81,8 @@ public class SeriesService {
                     OwnershipCounters row = counters.get(s.id);
                     long owned = row != null ? row.owned() : 0;
                     long read = row != null ? row.read() : 0;
-                    SeriesSummaryDto dto = SeriesSummaryDto.of(s, owned, read, followed.contains(s.id));
+                    SeriesSummaryDto dto = SeriesSummaryDto.of(s, owned, read, followed.contains(s.id),
+                            row != null ? row.lastActivity() : null);
                     // A series carries a cover only when a provider gave it one, which an
                     // imported run never had: its block on the shelf then shows the first
                     // volume the reader owns, the way the spine of a run on a real shelf does.

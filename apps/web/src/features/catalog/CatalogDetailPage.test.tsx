@@ -66,18 +66,34 @@ describe('CatalogDetailPage', () => {
     }));
     renderFiche(catalogResult());
 
-    await userEvent.click(await screen.findByText('Ajouter à ma collection'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
 
-    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
+    expect(posts[0].status).toBe('OWNED');
+  });
+
+  /** The status is picked when the title is added: a book read years ago goes in as read. */
+  test('adds the shown result as already read', async () => {
+    const posts: Record<string, unknown>[] = [];
+    server.use(http.post('*/api/library', async ({ request }) => {
+      posts.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ id: 'nouveau' }, { status: 201 });
+    }));
+    renderFiche(catalogResult());
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Lu' }));
+
+    expect(await screen.findByText('Ajouté à ta collection, comme lu.')).toBeInTheDocument();
+    expect(posts[0].status).toBe('READ');
   });
 
   test('adds the shown result to the wishlist', async () => {
     renderFiche(catalogResult());
 
-    await userEvent.click(await screen.findByText('Ajouter aux souhaits'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Souhait' }));
 
-    expect(await screen.findByText('✓ Ajouté aux souhaits')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à tes souhaits.')).toBeInTheDocument();
   });
 
   test('sends a fiche reached without its result back to the search', async () => {

@@ -124,3 +124,35 @@ export function groupBibliography(works: AuthorWorkDto[]): BibliographyEntry[] {
       : entry,
   );
 }
+
+/** One year of an author's bibliography: the year, or null for titles of unknown date. */
+export interface BibliographyYear {
+  year: number | null;
+  entries: BibliographyEntry[];
+}
+
+/** The year an entry stands under: a title's own, a series' first volume's. */
+function yearOf(entry: BibliographyEntry): number | null {
+  if (entry.kind === 'work') return entry.work.originalYear ?? null;
+  const years = entry.volumes.map((v) => v.originalYear).filter((y): y is number => y != null);
+  return years.length > 0 ? Math.min(...years) : null;
+}
+
+/**
+ * The bibliography by year, newest first: an author's page read as an unsorted wall of
+ * covers, where a reader thinks of a career. A series sits under the year it began; the
+ * titles nobody dated come last, under a group of their own. Within a year the order of
+ * `groupBibliography` holds.
+ */
+export function groupByYear(entries: BibliographyEntry[]): BibliographyYear[] {
+  const byYear = new Map<number | null, BibliographyEntry[]>();
+  for (const entry of entries) {
+    const year = yearOf(entry);
+    const list = byYear.get(year) ?? [];
+    list.push(entry);
+    byYear.set(year, list);
+  }
+  return [...byYear.entries()]
+    .sort(([a], [b]) => (a == null ? 1 : b == null ? -1 : b - a))
+    .map(([year, list]) => ({ year, entries: list }));
+}

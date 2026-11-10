@@ -163,6 +163,15 @@
   font-weight: 600;
   line-height: 1.1;
 }
+/* A three-line title at most: a catalogue record's full subtitle ran a card to twice the
+   height of its neighbours. The fiche shows it whole. */
+.resultTitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .resultTitle:hover {
   color: var(--accent-deep);
 }
@@ -202,6 +211,7 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
 }
@@ -210,8 +220,10 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-height: 36px;
   border-radius: var(--radius-badge);
-  padding: 6px 12px;
+  padding: 0 12px;
+  white-space: nowrap;
   font-size: var(--fs-12);
   font-weight: 600;
   cursor: pointer;
