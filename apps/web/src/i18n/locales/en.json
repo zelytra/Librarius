@@ -879,6 +879,27 @@
       "wishlist": "My wishlist",
       "add": "Add",
       "manual": "Add by hand"
+    },
+    "session": {
+      "label": "Automatically add new books to",
+      "targets": {
+        "CHECK": "Check only",
+        "OWNED": "To read",
+        "READ": "Read",
+        "READING": "Reading",
+        "WISHLIST": "Wishlist"
+      },
+      "added": {
+        "OWNED": "Added to your to-read pile",
+        "READ": "Added as read",
+        "READING": "Added, being read",
+        "WISHLIST": "Added to your wishlist"
+      },
+      "undo": "Undo",
+      "undone": "Addition undone",
+      "failed": "Could not add it: add it by hand",
+      "count_one": "{{count}} book added during this scan",
+      "count_other": "{{count}} books added during this scan"
     }
   },
   "add": {

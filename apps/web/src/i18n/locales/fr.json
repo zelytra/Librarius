@@ -879,6 +879,27 @@
       "wishlist": "Mes souhaits",
       "add": "Ajouter",
       "manual": "Ajouter à la main"
+    },
+    "session": {
+      "label": "Ajouter automatiquement les nouveaux livres à",
+      "targets": {
+        "CHECK": "Vérifier seulement",
+        "OWNED": "Pile à lire",
+        "READ": "Lus",
+        "READING": "En cours",
+        "WISHLIST": "Souhaits"
+      },
+      "added": {
+        "OWNED": "Ajouté à ta pile à lire",
+        "READ": "Ajouté comme lu",
+        "READING": "Ajouté, en cours de lecture",
+        "WISHLIST": "Ajouté à tes souhaits"
+      },
+      "undo": "Annuler",
+      "undone": "Ajout annulé",
+      "failed": "Ajout impossible : ajoute-le à la main",
+      "count_one": "{{count}} livre ajouté pendant ce scan",
+      "count_other": "{{count}} livres ajoutés pendant ce scan"
     }
   },
   "add": {

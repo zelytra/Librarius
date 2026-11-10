@@ -120,4 +120,51 @@ describe('ScanPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('ne sait pas lire les codes-barres');
     expect(screen.getByLabelText("Ou tape l'ISBN")).toBeInTheDocument();
   });
+
+  // ── Sessions with a target (#168) ───────────────────────────────────────────
+
+  test('files a new book straight into the session target, counts it, and undoes it', async () => {
+    scanAnswers({ match: 'NONE', catalog: catalogResult({ title: 'Nouveau' }) });
+    const posts: Record<string, unknown>[] = [];
+    const deletes: string[] = [];
+    server.use(
+      http.post('*/api/library', async ({ request }) => {
+        posts.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ id: 'item-new' }, { status: 201 });
+      }),
+      http.delete('*/api/library/:id', ({ params }) => {
+        deletes.push(String(params.id));
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderScan();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Pile à lire' }));
+    await typeIsbn(ISBN);
+
+    expect(await screen.findByText('Ajouté à ta pile à lire')).toBeInTheDocument();
+    expect(posts[0].status).toBe('OWNED');
+    expect(screen.getByText('1 livre ajouté pendant ce scan')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+    expect(await screen.findByText('Ajout annulé')).toBeInTheDocument();
+    expect(deletes).toEqual(['item-new']);
+  });
+
+  test('reports a book already owned during a session instead of adding it again', async () => {
+    scanAnswers({ match: 'ISBN', owned: libraryItem({ status: 'READ' }) });
+    const posts: unknown[] = [];
+    server.use(http.post('*/api/library', () => {
+      posts.push(1);
+      return HttpResponse.json({ id: 'x' }, { status: 201 });
+    }));
+    renderScan();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Lus' }));
+    await typeIsbn(ISBN);
+
+    expect(await screen.findByText('Déjà chez toi · lu')).toBeInTheDocument();
+    expect(posts).toHaveLength(0);
+  });
 });
+
