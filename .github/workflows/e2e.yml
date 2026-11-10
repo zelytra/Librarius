@@ -3,8 +3,13 @@ name: e2e
 # Runs the key journeys against the whole stack — PostgreSQL, Keycloak, the API and the
 # web app — on every pull request. This is the only job that proves authentication, the
 # HTTP routing and the database still work together; unit tests cannot see any of it.
+# On main only, once a change is merged (#374): the journeys are the slowest check, and
+# running them on every pull request held each merge back. A broken journey on main shows
+# on the commit and in the deploy that follows; run it by hand on a branch when in doubt.
 on:
-  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main]
     paths:
       - 'apps/**'
       - 'e2e/**'

@@ -29,7 +29,7 @@ export function figure(page: Page, label: string): Locator {
 export async function searchCatalog(page: Page, query: string): Promise<void> {
   await page.getByPlaceholder(/^Rechercher un titre/).fill(query);
   await page.getByRole('button', { name: 'Rechercher' }).click();
-  await page.getByRole('button', { name: 'Collection', exact: true }).first().waitFor();
+  await page.getByRole('button', { name: 'Pile à lire', exact: true }).first().waitFor();
 }
 
 /**
