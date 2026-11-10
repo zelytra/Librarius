@@ -78,6 +78,11 @@ import { fileURLToPath } from 'node:url';
  * measured 175.1 kB initial and 252.2 kB whole build, against 162.8 and 240.0 before it. A
  * deliberate baseline change, so re-derived: `initial` 186, `total` 268, the measurement plus ~6%.
  *
+ * `total` moves to 285 kB for shared reviews (#205–#208, 2026-11): `main` measured 266 kB, 99%
+ * of its ceiling, after the scan sessions and people search landed; the readers' reviews block,
+ * review reports and their copy in both eager locales took it to 268.6 kB. Re-derived to the
+ * measurement plus ~6%; `initial` (179 kB, 96%) is untouched.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -87,7 +92,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 186,
   chunk: 10,
-  total: 268,
+  total: 285,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */

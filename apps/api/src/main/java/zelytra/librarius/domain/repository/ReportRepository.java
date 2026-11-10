@@ -26,7 +26,12 @@ public class ReportRepository implements PanacheRepositoryBase<Report, UUID> {
      * on a fresh evaluation.
      */
     public long countUpheldContributionsSince(String contributorId, OffsetDateTime since) {
-        return count("contributorId = ?1 and status = ?2 and createdAt >= ?3",
-                contributorId, ReportStatus.UPHELD, since);
+        // Catalog contributions only: a report on a review is about an opinion, never a strike
+        // against its author's trust (#208).
+        return count("contributorId = ?1 and status = ?2 and createdAt >= ?3 and targetType in ?4",
+                contributorId, ReportStatus.UPHELD, since,
+                java.util.List.of(zelytra.librarius.domain.ReportTargetType.WORK,
+                        zelytra.librarius.domain.ReportTargetType.EDITION,
+                        zelytra.librarius.domain.ReportTargetType.SERIES));
     }
 }

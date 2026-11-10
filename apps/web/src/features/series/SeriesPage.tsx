@@ -14,12 +14,14 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiSeriesIdQueryKey,
   getGetApiSeriesIdReviewQueryKey,
+  getGetApiSeriesIdReviewsQueryKey,
   getGetApiSeriesQueryKey,
   getGetApiWishlistQueryKey,
   useDeleteApiSeriesIdFollow,
   useDeleteApiSeriesIdReview,
   useGetApiSeriesId,
   useGetApiSeriesIdReview,
+  useGetApiSeriesIdReviews,
   usePostApiLibrary,
   usePostApiWishlist,
   usePutApiSeriesIdFollow,
@@ -31,6 +33,7 @@ import {
 import { StarRating } from '../detail/StarRating';
 import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
+import { ReadersReviews } from '../reviews/ReadersReviews';
 import styles from './SeriesPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
@@ -86,7 +89,12 @@ function SeriesReviewSection({ seriesId }: { seriesId: string }) {
     void queryClient.invalidateQueries({ queryKey: getGetApiSeriesIdReviewQueryKey(seriesId) });
 
   const { mutate: putReview, isPending: saving } = usePutApiSeriesIdReview({
-    mutation: { onSuccess: invalidate },
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        void queryClient.invalidateQueries({ queryKey: getGetApiSeriesIdReviewsQueryKey(seriesId) });
+      },
+    },
   });
   const { mutate: removeReview, isPending: deleting } = useDeleteApiSeriesIdReview({
     mutation: { onSuccess: invalidate },
@@ -132,9 +140,31 @@ function SeriesReviewSection({ seriesId }: { seriesId: string }) {
         onChange={(e) => setText(e.target.value)}
         onBlur={saveText}
       />
-      <p className={styles.privateNote}>{t('series.review.private')}</p>
+      {/* Shared or private (#205), once there is a review to share. */}
+      {review?.rating != null && (
+        <label className={styles.shareToggle}>
+          <input
+            type="checkbox"
+            checked={Boolean(review.shared)}
+            onChange={(e) =>
+              putReview({ id: seriesId, data: { rating: review.rating!, review: text || undefined, shared: e.target.checked } })
+            }
+          />
+          {t('detail.review.share')}
+        </label>
+      )}
+      <p className={styles.privateNote}>
+        {t(review?.shared ? 'detail.review.sharedNote' : 'series.review.private')}
+      </p>
+      <SeriesReaders seriesId={seriesId} />
     </section>
   );
+}
+
+/** What the readers the caller can see shared about this series (#207). */
+function SeriesReaders({ seriesId }: { seriesId: string }) {
+  const { data, isPending } = useGetApiSeriesIdReviews(seriesId);
+  return <ReadersReviews data={data} loading={isPending} kind="SERIES_REVIEW" />;
 }
 
 function SeriesContent({ id }: { id: string }) {

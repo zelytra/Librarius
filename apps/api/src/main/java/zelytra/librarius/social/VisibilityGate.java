@@ -44,6 +44,9 @@ public class VisibilityGate {
     @Inject
     UserFollowRepository follows;
 
+    @Inject
+    zelytra.librarius.domain.repository.UserBlockRepository blocks;
+
     /**
      * Whether {@code viewerId} may read {@code targetId}'s shared content.
      *
@@ -64,9 +67,12 @@ public class VisibilityGate {
         if (target == null) {
             return false;
         }
-        // #203 seam: when blocks land, a block denies here — before the public and mutual
-        // checks below — so a blocked caller never sees even a public account. Adding it is
-        // this one line and nothing at any call site.
+        // A block denies first, in either direction — before the public and mutual checks
+        // below — so a blocked member never sees even a public account's content, and the
+        // blocker never sees theirs.
+        if (blocks.isBlockBetween(viewerId, targetId)) {
+            return false;
+        }
         if (target.publicAccount) {
             return true;
         }

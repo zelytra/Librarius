@@ -480,6 +480,8 @@ components:
           $ref: "#/components/schemas/ProgressView"
         book:
           $ref: "#/components/schemas/BookView"
+        reviewShared:
+          type: boolean
     LibraryPageDto:
       type: object
       properties:
@@ -654,6 +656,9 @@ components:
       - WRONG_COVER
       - WRONG_INFO
       - DUPLICATE
+      - SPOILER
+      - OFFENSIVE
+      - SPAM
       - OTHER
     ReportTargetType:
       type: string
@@ -661,6 +666,8 @@ components:
       - WORK
       - EDITION
       - SERIES
+      - REVIEW
+      - SERIES_REVIEW
     ReviewDto:
       type: object
       properties:
@@ -672,6 +679,8 @@ components:
         review:
           type: string
           maxLength: 5000
+        shared:
+          type: boolean
     ScanResultDto:
       type: object
       properties:
@@ -753,6 +762,8 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         updatedAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        shared:
+          type: boolean
     SeriesReviewUpsertDto:
       type: object
       required:
@@ -766,6 +777,8 @@ components:
         review:
           type: string
           maxLength: 5000
+        shared:
+          type: boolean
     SeriesSummaryDto:
       type: object
       properties:
@@ -814,6 +827,35 @@ components:
           type: boolean
         coverUrl:
           type: string
+    SharedReviewDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        authorId:
+          type: string
+        authorName:
+          type: string
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    SharedReviewsDto:
+      type: object
+      properties:
+        average:
+          type: number
+          format: double
+        count:
+          type: integer
+          format: int64
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/SharedReviewDto"
     StatsDto:
       type: object
       properties:
@@ -2296,6 +2338,30 @@ paths:
       - Series Resource
       security:
       - SecurityScheme: []
+  /api/series/{id}/reviews:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedReviewsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Reviews
+      tags:
+      - Series Resource
+      security:
+      - SecurityScheme: []
   /api/stats:
     get:
       responses:
@@ -2637,6 +2703,30 @@ paths:
         "403":
           description: Not Allowed
       summary: List
+      tags:
+      - Work Resource
+      security:
+      - SecurityScheme: []
+  /api/works/{id}/reviews:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedReviewsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Reviews
       tags:
       - Work Resource
       security:

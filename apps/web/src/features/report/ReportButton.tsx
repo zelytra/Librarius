@@ -10,13 +10,25 @@ import {
 } from '../../api/generated/librarius';
 import styles from './ReportButton.module.css';
 
-/** The reasons the picklist offers, in the order it shows them. */
-const REASONS: ReportReason[] = [
+/** The reasons the picklist offers for a catalog object, in the order it shows them. */
+const CATALOG_REASONS: ReportReason[] = [
   ReportReason.WRONG_COVER,
   ReportReason.WRONG_INFO,
   ReportReason.DUPLICATE,
   ReportReason.OTHER,
 ];
+
+/** The reasons offered for a reader's shared review (#208): its content, not bibliographic data. */
+const REVIEW_REASONS: ReportReason[] = [
+  ReportReason.SPOILER,
+  ReportReason.OFFENSIVE,
+  ReportReason.SPAM,
+  ReportReason.OTHER,
+];
+
+function isReview(targetType: ReportTargetType) {
+  return targetType === 'REVIEW' || targetType === 'SERIES_REVIEW';
+}
 
 /**
  * "Signaler une erreur" on a shared catalog object — a work, an edition or a series (#192).
@@ -40,7 +52,7 @@ export function ReportButton({
     <>
       <button type="button" className={styles.trigger} onClick={() => setOpen(true)}>
         <Icon name="flag" size={16} color="var(--faint)" />
-        {t('report.trigger')}
+        {t(isReview(targetType) ? 'report.reviewTrigger' : 'report.trigger')}
       </button>
       {open && (
         <ReportDialog targetType={targetType} targetId={targetId} onClose={() => setOpen(false)} />
@@ -67,6 +79,7 @@ function ReportDialog({
   const headingId = useId();
   const panel = useRef<HTMLDivElement>(null);
 
+  const review = isReview(targetType);
   const [reason, setReason] = useState<ReportReason | undefined>(undefined);
   const [comment, setComment] = useState('');
   const [sent, setSent] = useState(false);
@@ -124,7 +137,7 @@ function ReportDialog({
             <h3 id={headingId} className={styles.title}>
               {t('report.sent.title')}
             </h3>
-            <p className={styles.subtitle}>{t('report.sent.body')}</p>
+            <p className={styles.subtitle}>{t(review ? 'report.sent.reviewBody' : 'report.sent.body')}</p>
             <Button variant="secondary" size="block" onClick={onClose}>
               {t('report.sent.close')}
             </Button>
@@ -132,12 +145,12 @@ function ReportDialog({
         ) : (
           <>
             <h3 id={headingId} className={styles.title}>
-              {t('report.title')}
+              {t(review ? 'report.reviewTitle' : 'report.title')}
             </h3>
-            <p className={styles.subtitle}>{t('report.subtitle')}</p>
+            <p className={styles.subtitle}>{t(review ? 'report.reviewSubtitle' : 'report.subtitle')}</p>
 
             <div className={styles.reasons} role="group" aria-label={t('report.reasonLegend')}>
-              {REASONS.map((value) => (
+              {(review ? REVIEW_REASONS : CATALOG_REASONS).map((value) => (
                 <button
                   key={value}
                   type="button"

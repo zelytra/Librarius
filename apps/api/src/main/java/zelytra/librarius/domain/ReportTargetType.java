@@ -13,5 +13,12 @@ package zelytra.librarius.domain;
 public enum ReportTargetType {
     WORK,
     EDITION,
-    SERIES
+    SERIES,
+    /**
+     * A shared title review (#208) — {@code target_id} is its {@code library_item}. An opinion,
+     * not a catalog fact: never weighed by the trust evaluation.
+     */
+    REVIEW,
+    /** A shared series review (#208) — {@code target_id} is its {@code series_review}. */
+    SERIES_REVIEW
 }

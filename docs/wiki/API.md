@@ -19,10 +19,10 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 
 | Area | Endpoints | Notes |
 |---|---|---|
-| Library | `GET/POST /api/library`, `GET/DELETE /api/library/{id}`, `PUT …/progress`, `…/rank`, `…/review`, `…/edition` | list is paged and filtered server-side (`kind`, `status`, `rank`, `minRating`, `q`, `standalone`); sorts `recent` (default: latest of finished, started, added), `added`, `title`, `author`, `genre`, `rating`. A title added as `READ` is finished that day |
+| Library | `GET/POST /api/library`, `GET/DELETE /api/library/{id}`, `PUT …/progress`, `…/rank`, `…/review`, `…/edition` | `…/review` takes `rating`, `review` and `shared` (private unless `true`). List is paged and filtered server-side (`kind`, `status`, `rank`, `minRating`, `q`, `standalone`); sorts `recent` (default: latest of finished, started, added), `added`, `title`, `author`, `genre`, `rating`. A title added as `READ` is finished that day |
 | Wishlist | `GET/POST /api/wishlist`, `PUT/DELETE /api/wishlist/{id}`, `POST …/acquire` | acquiring moves a wish to the library |
-| Series | `GET /api/series`, `GET /api/series/{id}`, `…/missing`, `…/follow`, `…/review` | the summary carries owned/read counts and `lastActivity` |
-| Works | `GET /api/works/{id}/editions` | stored editions (empty and duplicate ones left out) plus the provider's |
+| Series | `GET /api/series`, `GET /api/series/{id}`, `…/missing`, `…/follow`, `…/review`, `…/reviews` | `…/review` takes `shared` like a book review; `…/reviews` lists the shared ones the caller may see. The summary carries owned/read counts and `lastActivity` |
+| Works | `GET /api/works/{id}/editions`, `GET /api/works/{id}/reviews` | stored editions (empty and duplicate ones left out) plus the provider's; reviews = readers' shared reviews the caller may see, with the average of their ratings |
 | Authors | `GET /api/authors?q=`, `GET /api/authors/{id}`, `…/follow` | bibliography = the reader's titles plus the providers' |
 | Catalog | `GET /api/catalog/search`, `GET /api/catalog/upcoming` | see [Catalog & book search](https://github.com/zelytra/Librarius/wiki/Catalog-and-Book-Search) |
 | <a id="scan"></a>Scan | `GET /api/scan/{isbn}` | `match`: `ISBN`, `TITLE`, `SERIES_VOLUME` or `NONE`; `owned`, `wished`, `catalog` |
@@ -32,8 +32,17 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 | Goals | `GET /api/goals`, `PUT /api/goals/{year}` | books or pages |
 | Categories | `GET/POST /api/categories`, `PUT/DELETE /api/categories/{id}` | Or, Argent, Bronze, Abandon are built in |
 | Me | `GET/PATCH/DELETE /api/me`, `…/followers`, `…/following`, `…/blocked` | `DELETE` erases the account (off until a Keycloak service account is configured) |
-| Social | `GET /api/users?q=`, `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | members found by display name (two letters at least; the caller and blocked members left out), each with whether the caller follows them |
+| Social | `GET /api/users?q=`, `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | members found by display name (two letters at least; the caller and blocked members left out), each with whether the caller follows them. Reports target `WORK`, `EDITION`, `SERIES`, or a shared review (`REVIEW`, `SERIES_REVIEW`, with the reasons `SPOILER`, `OFFENSIVE`, `SPAM`, `OTHER`) |
 | Misc | `GET /api/genres`, `GET/PUT /api/dashboard/layout`, `GET /api/releases/upcoming` | |
 
 The full reference, parameter by parameter, is [`.claude/docs/API.md`](https://github.com/zelytra/Librarius/blob/main/.claude/docs/API.md);
 the schema itself is [`openapi/openapi.yaml`](https://github.com/zelytra/Librarius/blob/main/openapi/openapi.yaml).
+
+## Who sees a shared review
+
+A rating or review is private unless its author ticks "share". A shared one is listed by
+`GET /api/works/{id}/reviews` and `GET /api/series/{id}/reviews` only to the readers
+`VisibilityGate.canView` lets through: never anyone with a block in either direction between
+them, otherwise everyone when the author's account is public, otherwise readers who follow
+the author mutually. The average is computed over those visible ratings only, so it never
+leaks a private one.

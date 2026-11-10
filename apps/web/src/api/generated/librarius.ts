@@ -345,6 +345,7 @@ export interface LibraryItemDto {
   rankCode?: string;
   progress?: ProgressView;
   book?: BookView;
+  reviewShared?: boolean;
 }
 
 export interface LibraryPageDto {
@@ -401,6 +402,8 @@ export const ReportTargetType = {
   WORK: 'WORK',
   EDITION: 'EDITION',
   SERIES: 'SERIES',
+  REVIEW: 'REVIEW',
+  SERIES_REVIEW: 'SERIES_REVIEW',
 } as const;
 
 export type ReportReason = typeof ReportReason[keyof typeof ReportReason];
@@ -410,6 +413,9 @@ export const ReportReason = {
   WRONG_COVER: 'WRONG_COVER',
   WRONG_INFO: 'WRONG_INFO',
   DUPLICATE: 'DUPLICATE',
+  SPOILER: 'SPOILER',
+  OFFENSIVE: 'OFFENSIVE',
+  SPAM: 'SPAM',
   OTHER: 'OTHER',
 } as const;
 
@@ -429,6 +435,7 @@ export interface ReviewDto {
   rating?: number;
   /** @maxLength 5000 */
   review?: string;
+  shared?: boolean;
 }
 
 export interface WishlistItemDto {
@@ -492,6 +499,7 @@ export interface SeriesReviewDto {
   review?: string;
   createdAt?: OffsetDateTime;
   updatedAt?: OffsetDateTime;
+  shared?: boolean;
 }
 
 export interface SeriesReviewUpsertDto {
@@ -502,6 +510,7 @@ export interface SeriesReviewUpsertDto {
   rating: number;
   /** @maxLength 5000 */
   review?: string;
+  shared?: boolean;
 }
 
 export interface SeriesSummaryDto {
@@ -515,6 +524,21 @@ export interface SeriesSummaryDto {
   readCount?: number;
   followed?: boolean;
   lastActivity?: LocalDate;
+}
+
+export interface SharedReviewDto {
+  id?: Uuid;
+  authorId?: string;
+  authorName?: string;
+  rating?: number;
+  review?: string;
+  updatedAt?: OffsetDateTime;
+}
+
+export interface SharedReviewsDto {
+  average?: number;
+  count?: number;
+  reviews?: SharedReviewDto[];
 }
 
 export interface StatsDto {
@@ -4791,6 +4815,107 @@ export const useDeleteApiSeriesIdReview = <TError = void,
       return useMutation(getDeleteApiSeriesIdReviewMutationOptions(options), queryClient);
     }
 
+export const getGetApiSeriesIdReviewsUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/series/${id}/reviews`
+}
+
+/**
+ * @summary Reviews
+ */
+export const getApiSeriesIdReviews = async (id: Uuid, options?: RequestInit): Promise<SharedReviewsDto> => {
+
+  return apiClient<SharedReviewsDto>(getGetApiSeriesIdReviewsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiSeriesIdReviewsQueryKey = (id: Uuid,) => {
+    return [
+    `/api/series/${id}/reviews`
+    ] as const;
+    }
+
+
+export const getGetApiSeriesIdReviewsQueryOptions = <TData = Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiSeriesIdReviewsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiSeriesIdReviews>>> = () => getApiSeriesIdReviews(id, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiSeriesIdReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiSeriesIdReviews>>>
+export type GetApiSeriesIdReviewsQueryError = void
+
+
+export function useGetApiSeriesIdReviews<TData = Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdReviews<TData = Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiSeriesIdReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiSeriesIdReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiSeriesIdReviews<TData = Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Reviews
+ */
+
+export function useGetApiSeriesIdReviews<TData = Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiSeriesIdReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiSeriesIdReviewsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiStatsUrl = () => {
 
 
@@ -5875,6 +6000,107 @@ export function useGetApiWorksIdEditions<TData = Awaited<ReturnType<typeof getAp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiWorksIdEditionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiWorksIdReviewsUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/works/${id}/reviews`
+}
+
+/**
+ * @summary Reviews
+ */
+export const getApiWorksIdReviews = async (id: Uuid, options?: RequestInit): Promise<SharedReviewsDto> => {
+
+  return apiClient<SharedReviewsDto>(getGetApiWorksIdReviewsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiWorksIdReviewsQueryKey = (id: Uuid,) => {
+    return [
+    `/api/works/${id}/reviews`
+    ] as const;
+    }
+
+
+export const getGetApiWorksIdReviewsQueryOptions = <TData = Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorksIdReviewsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorksIdReviews>>> = () => getApiWorksIdReviews(id, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorksIdReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorksIdReviews>>>
+export type GetApiWorksIdReviewsQueryError = void
+
+
+export function useGetApiWorksIdReviews<TData = Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorksIdReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorksIdReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorksIdReviews<TData = Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorksIdReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorksIdReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorksIdReviews<TData = Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Reviews
+ */
+
+export function useGetApiWorksIdReviews<TData = Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorksIdReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorksIdReviewsQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -178,6 +178,12 @@ public class SeriesService {
      */
     @Transactional
     public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, int rating, String text) {
+        return rate(userId, seriesId, rating, text, null);
+    }
+
+    /** @param shared whether the review is shared (#205); null keeps the current choice */
+    @Transactional
+    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, int rating, String text, Boolean shared) {
         if (!isVisible(userId, seriesId)) {
             return Optional.empty();
         }
@@ -189,6 +195,9 @@ public class SeriesService {
         });
         entity.rating = rating;
         entity.review = text;
+        if (shared != null) {
+            entity.shared = shared;
+        }
         entity.updatedAt = OffsetDateTime.now();
         if (entity.id == null) {
             reviews.persist(entity);

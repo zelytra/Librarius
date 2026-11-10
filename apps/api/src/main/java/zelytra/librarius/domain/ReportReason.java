@@ -19,6 +19,15 @@ public enum ReportReason {
     /** This object duplicates one already in the catalog. */
     DUPLICATE,
 
-    /** Anything the four above do not name — spelled out in the comment. */
+    /** A shared review gives the story away without warning (#208). */
+    SPOILER,
+
+    /** A shared review is insulting, hateful or harassing (#208). */
+    OFFENSIVE,
+
+    /** A shared review is advertising or unrelated to the book (#208). */
+    SPAM,
+
+    /** Anything the reasons above do not name — spelled out in the comment. */
     OTHER
 }

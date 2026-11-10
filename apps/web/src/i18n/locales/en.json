@@ -686,7 +686,9 @@
       "star": "Rate {{rating}} out of 5",
       "clear": "Clear my rating",
       "placeholder": "What I thought of it…",
-      "private": "Rating and review are strictly private: nobody else sees them."
+      "private": "Rating and review are strictly private: nobody else sees them.",
+      "share": "Share my review with the readers who can see my activity",
+      "sharedNote": "Shared review: visible to the readers you follow mutually (or to everyone if your account is public), never to a blocked account."
     },
     "editions": {
       "title": "Other editions",
@@ -817,6 +819,9 @@
       "WRONG_COVER": "Wrong cover",
       "WRONG_INFO": "Wrong information",
       "DUPLICATE": "Duplicate",
+      "SPOILER": "Spoils the story",
+      "OFFENSIVE": "Offensive content",
+      "SPAM": "Spam or off-topic",
       "OTHER": "Other"
     },
     "commentLabel": "Comment (optional)",
@@ -828,8 +833,12 @@
     "sent": {
       "title": "Report sent",
       "body": "Thank you: your report will help us fix this record.",
-      "close": "Close"
-    }
+      "close": "Close",
+      "reviewBody": "Thanks: we will look into this review."
+    },
+    "reviewTrigger": "Report",
+    "reviewTitle": "Report this review",
+    "reviewSubtitle": "This review was shared by another reader. Tell us what is wrong: your report stays private."
   },
   "trust": {
     "badge": {
@@ -936,5 +945,11 @@
     "followAria": "Follow {{name}}",
     "unfollowAria": "Stop following {{name}}",
     "open": "Find readers"
+  },
+  "reviews": {
+    "title": "Readers' reviews",
+    "average": "★ {{average}} / 5 · {{count}} reviews",
+    "empty": "No reader you can see has shared a review yet. Share yours: it will show here for them.",
+    "stars": "{{rating}} stars out of 5"
   }
 }

@@ -38,6 +38,10 @@ public class SeriesReview {
     @Column(columnDefinition = "text")
     public String review;
 
+    /** Whether the reader shares this review (#205); private by default. */
+    @Column(nullable = false)
+    public boolean shared;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 

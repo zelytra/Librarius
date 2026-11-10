@@ -24,7 +24,7 @@ for how that matching happens on the way in.
 | Entity | What it is |
 |---|---|
 | `app_user` | A Keycloak identity, provisioned on first login. No credential is stored here — Keycloak owns those |
-| `library_item` | "I own this edition": status, rating, private review, acquisition date, rank |
+| `library_item` | "I own this edition": status, rating, review (private unless `review_shared`), acquisition date, rank |
 | `reading_progress` | Current page or percentage, start and finish dates — one row per `library_item` |
 | `wishlist_item` | Priority, estimated price, a note |
 | `series_follow` | "Tell me about the next volumes of this series" |

@@ -361,6 +361,26 @@ describe('DetailPage', () => {
     expect(await screen.findByText(/strictement privés/)).toBeInTheDocument();
   });
 
+  /** Sharing is opt-in (#205): ticking the box sends `shared`, and the note says who sees it. */
+  test('shares the review when the box is ticked', async () => {
+    const item = servesMutableItem();
+    const sent: Record<string, unknown>[] = [];
+    server.use(http.put('*/api/library/:id/review', async ({ request }) => {
+      const body = (await request.json()) as { rating?: number; review?: string; shared?: boolean };
+      sent.push(body);
+      item.set({ ...item.current(), rating: body.rating, review: body.review, reviewShared: Boolean(body.shared) });
+      return HttpResponse.json(item.current());
+    }));
+    renderDetail();
+
+    const box = await screen.findByLabelText(/Partager mon avis/);
+    expect(box).not.toBeChecked();
+    await userEvent.click(box);
+
+    await waitFor(() => expect(sent[0]).toMatchObject({ shared: true }));
+    expect(await screen.findByText(/Avis partagé/)).toBeInTheDocument();
+  });
+
   // ── Alternate editions ─────────────────────────────────────────────────────
 
   /** The item as the API returns it once the work carries more than one edition. */

@@ -113,9 +113,24 @@ public class SeriesResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response putReview(@PathParam("id") UUID id, @Valid SeriesReviewUpsertDto dto) {
         currentUser.require();
-        return series.rate(currentUser.id(), id, dto.rating(), blankToNull(dto.review()))
+        return series.rate(currentUser.id(), id, dto.rating(), blankToNull(dto.review()), dto.shared())
                 .map(review -> Response.ok(review).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    @Inject
+    zelytra.librarius.social.SharedReviewService sharedReviews;
+
+    /**
+     * The reviews readers shared on this series (#206), gated like every other piece of
+     * another member's activity (#201): not every signed-in account, only those who can see
+     * the author, and never across a block.
+     */
+    @GET
+    @Path("/{id}/reviews")
+    public ApiDtos.SharedReviewsDto reviews(@PathParam("id") UUID id) {
+        currentUser.require();
+        return sharedReviews.ofSeries(currentUser.id(), id);
     }
 
     /** Deletes the caller's own review of the series. Idempotent. */

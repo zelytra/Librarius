@@ -371,3 +371,22 @@
   justify-content: center;
   margin-top: 8px;
 }
+
+/* Sharing the series review (#205). */
+.shareToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  margin-top: 10px;
+  font-size: var(--fs-13-5);
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.shareToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-deep);
+}
