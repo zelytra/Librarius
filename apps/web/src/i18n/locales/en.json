@@ -579,7 +579,8 @@
       "read": "Books read",
       "pages": "Pages read",
       "series": "Series followed",
-      "reading": "In progress"
+      "reading": "In progress",
+      "pagesEstimated": "Pages read · estimate so far"
     },
     "favoriteGenres": "Favorite genres",
     "noGenres": "No data yet — add titles to your collection.",
@@ -739,7 +740,6 @@
       },
       "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
-      "running": "Import in progress… {{imported}} title(s) added.",
       "unavailable": "Import is unavailable right now.",
       "unreadableFile": "Unreadable file.",
       "file": "Import a file (collected, CSV or saved pages)",
@@ -755,7 +755,13 @@
         "copy": "On mobile: copy the bookmark's code",
         "copied": "Code copied: create a bookmark and paste it as its address.",
         "notCollected": "This file was not produced by the Librarius collector."
-      }
+      },
+      "runningTitle": "Import in progress",
+      "percent": "{{percent}}%",
+      "reading": "Reading the file…",
+      "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
+      "doneTitle": "Import complete",
+      "failedTitle": "The import did not go through"
     },
     "export": {
       "title": "Export my data",

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { activeLanguage } from '../../i18n/languages';
+import { pagesRead } from '../../shared/pagesRead';
 import type { StatsDto } from '../../api/generated/librarius';
 import { SHEET_THICKNESS_MM, formatPaperHeight, stackSpines } from './readingStack';
 import styles from './BookStack.module.css';
@@ -27,7 +28,9 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
   const { t } = useTranslation();
 
   const booksRead = stats?.read ?? 0;
-  const pagesRead = stats?.pagesRead ?? 0;
+  // The exact sum, or — while lengths are being filled in — the estimate the pile is drawn from.
+  const estimate = pagesRead(stats);
+  const pagesTotal = estimate.value;
   // How many of the books read those pages come from. An imported library starts out with
   // almost no lengths — the catalog fills them in over the following hours — and a bare
   // "0 pages · 0 mm" under two thousand books read as broken rather than incomplete.
@@ -38,9 +41,9 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
   // The figures are grouped the way the language in force groups them — « 12 480 » against
   // "12,480" — so `count` is handed over only to pick the plural form, never printed.
   const spines = stackSpines(booksRead);
-  const height = formatPaperHeight(pagesRead);
+  const height = formatPaperHeight(pagesTotal);
   const books = booksRead.toLocaleString(activeLanguage());
-  const pages = pagesRead.toLocaleString(activeLanguage());
+  const pages = (estimate.estimated ? '≈ ' : '') + pagesTotal.toLocaleString(activeLanguage());
   const thickness = SHEET_THICKNESS_MM.toLocaleString(activeLanguage());
 
   return (
@@ -62,9 +65,9 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
 
         <div className={styles.figures}>
           <p className={styles.books}>{t('home.bookStack.books', { count: booksRead, books })}</p>
-          {withLength > 0 && (
+          {!estimate.unknown && (
             <>
-              <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesRead, pages })}</p>
+              <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesTotal, pages })}</p>
               <p className={styles.height}>{t('home.bookStack.height', { height })}</p>
             </>
           )}

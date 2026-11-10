@@ -15,6 +15,7 @@ import {
   usePostApiImportCsv,
   usePostApiImportSource,
 } from '../../api/generated/librarius';
+import type { ImportJobDto } from '../../api/generated/librarius';
 import { bookmarkletHref, isCollectedFile } from './collector';
 import styles from './ImportSection.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -242,15 +243,77 @@ export function ImportSection() {
 
           {/* A large library takes a while: the screen says it is working, and counts up as
               titles land, rather than looking frozen behind one long request. */}
-          {running && (
-            <p className={styles.progress} role="status">
-              {t('settings.import.running', { imported: job?.imported ?? 0 })}
-            </p>
+          {running && <ImportProgress job={job} />}
+          {!running && message && (
+            <div className={styles.outcomeSuccess} role="status">
+              <Icon name="check_circle" size={26} color="var(--accent-deep)" />
+              <div>
+                <p className={styles.outcomeTitle}>{t('settings.import.doneTitle')}</p>
+                <p className={styles.outcomeText}>{message}</p>
+              </div>
+            </div>
           )}
-          {!running && message && <p className={styles.success}>{message}</p>}
-          {!running && error && <p className={styles.failure}>{error}</p>}
+          {!running && error && (
+            <div className={styles.outcomeFailure} role="alert">
+              <Icon name="priority_high" size={26} color="var(--tint-rose-ink)" />
+              <div>
+                <p className={styles.outcomeTitle}>{t('settings.import.failedTitle')}</p>
+                <p className={styles.outcomeText}>{error}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
   );
 }
+
+/**
+ * The import under way, in a card of its own: a large percentage and a bar that moves batch
+ * by batch. A line of grey text at the foot of the section was missed — readers launched a
+ * two-thousand-title import, saw nothing happen, and ran it again. It scrolls itself into view
+ * when it appears.
+ */
+function ImportProgress({ job }: { job: ImportJobDto | undefined }) {
+  const { t } = useTranslation();
+  const card = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    card.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  }, []);
+
+  const total = job?.total ?? 0;
+  const imported = job?.imported ?? 0;
+  const done = imported + (job?.skipped ?? 0);
+  // Before the first batch the file is still being read: no total yet, a bar that waits.
+  const percent = total > 0 ? Math.min(100, Math.round((done * 100) / total)) : null;
+
+  return (
+    <div ref={card} className={styles.progressCard} role="status" aria-live="polite">
+      <div className={styles.progressHead}>
+        <span className={styles.progressTitle}>{t('settings.import.runningTitle')}</span>
+        {percent != null && (
+          <span className={styles.progressPercent}>{t('settings.import.percent', { percent })}</span>
+        )}
+      </div>
+      <div
+        className={styles.progressTrack}
+        role="progressbar"
+        aria-label={t('settings.import.runningTitle')}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent ?? undefined}
+      >
+        <div
+          className={percent == null ? styles.progressWaiting : styles.progressBar}
+          style={percent == null ? undefined : { width: `${percent}%` }}
+        />
+      </div>
+      <p className={styles.progressDetail}>
+        {percent == null
+          ? t('settings.import.reading')
+          : t('settings.import.progressDetail', { done, total, imported })}
+      </p>
+    </div>
+  );
+}
+

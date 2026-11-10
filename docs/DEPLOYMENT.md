@@ -398,6 +398,20 @@ k exec deploy/librarius-keycloak -- $KC get realms/librarius \
   --fields loginTheme,internationalizationEnabled,supportedLocales,defaultLocale
 ```
 
+**Session lengths.** The web app asks for `offline_access`: Keycloak then keeps the reader's
+session in its database as an *offline* session, which no restart ends, idle for up to
+`offlineSessionIdleTimeout` (90 days in the realm file, Keycloak's 30 by default on a realm
+created before it) and with no maximum lifetime. The realm file also lengthens the ordinary
+browser session (7 days idle, 30 at most, against 30 minutes and 10 hours by default). To
+bring an existing realm in line:
+
+```bash
+k exec deploy/librarius-keycloak -- $KC update realms/librarius \
+  -s ssoSessionIdleTimeout=604800 \
+  -s ssoSessionMaxLifespan=2592000 \
+  -s offlineSessionIdleTimeout=7776000
+```
+
 `kcadm config credentials` writes a token into `~/.keycloak/kcadm.config` **inside the
 pod**, which the next restart throws away — no credential is left behind, and the two
 commands have to be run in that order in the same session.

@@ -9,6 +9,9 @@
   "internationalizationEnabled": true,
   "supportedLocales": ["fr", "en"],
   "defaultLocale": "fr",
+  "ssoSessionIdleTimeout": 604800,
+  "ssoSessionMaxLifespan": 2592000,
+  "offlineSessionIdleTimeout": 7776000,
   "roles": {
     "realm": [{ "name": "user", "description": "Utilisateur de Ma Bibliothèque" }]
   },

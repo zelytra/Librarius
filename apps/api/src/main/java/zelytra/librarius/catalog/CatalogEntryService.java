@@ -54,10 +54,31 @@ public class CatalogEntryService {
      * differs from one entry to the next, and the collection is keyed on it.
      */
     public Edition createManualEdition(ManualBookDto dto) {
+        return createManualEdition(dto, null);
+    }
+
+    /**
+     * The same, for one user's entry: an entry that says nothing about its edition — an
+     * import, most hand entries — shares the work's bare edition rather than founding one
+     * more. Every reader importing the same title used to add an identical, empty edition,
+     * and the work's edition list showed "unknown publisher" once per reader. An edition the
+     * user already holds is never handed back: it is unique per user.
+     */
+    public Edition createManualEdition(ManualBookDto dto, String userId) {
         Work work = works
                 .findMatch(dto.kind(), dto.title(), dto.authors(), dto.volumeNumber())
                 .map(known -> complete(known, dto))
                 .orElseGet(() -> createWork(dto));
+
+        if (userId != null && describesNoEdition(dto) && work.id != null) {
+            Edition bare = editions.findBareFreeFor(work.id, userId).orElse(null);
+            if (bare != null) {
+                if (bare.coverUrl == null && dto.coverUrl() != null && !dto.coverUrl().isBlank()) {
+                    bare.coverUrl = dto.coverUrl();
+                }
+                return bare;
+            }
+        }
 
         Edition edition = new Edition();
         edition.work = work;
@@ -75,6 +96,16 @@ public class CatalogEntryService {
         editions.persist(edition);
 
         return edition;
+    }
+
+    private static boolean describesNoEdition(ManualBookDto dto) {
+        return isBlank(dto.isbn13()) && isBlank(dto.publisher()) && isBlank(dto.language())
+                && dto.pageCount() == null && isBlank(dto.format()) && dto.releaseDate() == null
+                && !hasReference(dto);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /** A work the catalog did not know yet. */

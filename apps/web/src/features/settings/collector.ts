@@ -96,8 +96,14 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         .map((row) => row.outerHTML)
         .join('\n');
     }
+    // Babelio's current list: one `li.lib-book` per title. Taken as is when the page has it.
+    const items = Array.from(page.querySelectorAll('li.lib-book'));
+    if (items.length > 0) return items.map((item) => item.outerHTML).join('\n');
     const rows: Element[] = [];
     page.querySelectorAll('a[href*="/livres/"]').forEach((link) => {
+      // The site's menus, header and footer link to promoted books on every page: not the
+      // reader's library.
+      if (link.closest('[class*="megamenu"], nav, header, footer')) return;
       const row = link.closest('tr') ?? link.closest('li') ?? link.parentElement;
       if (row && !rows.includes(row)) rows.push(row);
     });

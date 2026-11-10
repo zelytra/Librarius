@@ -103,7 +103,7 @@ public class EditionService {
         }
         Set<UUID> owned = items.ownedEditionIds(userId, workId);
         List<Edition> stored = editions.listByWork(workId);
-        List<EditionDto> result = new ArrayList<>(stored.stream()
+        List<EditionDto> result = new ArrayList<>(distinct(stored, owned).stream()
                 .map(edition -> EditionDto.of(edition, owned.contains(edition.id)))
                 .toList());
         enrichFromProvider(userId, stored, result);
@@ -120,6 +120,49 @@ public class EditionService {
      * not an exemption from the quota. Over the limit, the enrichment is simply skipped — a
      * detail screen must not answer 429.
      */
+    /**
+     * The editions worth offering: one per distinct description, the caller's own first, and
+     * none that describes nothing. An edition with no publisher, ISBN, length or date — what
+     * every import of the same title by another reader used to leave behind — is not a choice
+     * anyone can make, and listed it read "Unknown publisher" once per reader who had it.
+     */
+    static List<Edition> distinct(List<Edition> stored, Set<UUID> owned) {
+        java.util.Map<String, Edition> kept = new java.util.LinkedHashMap<>();
+        List<Edition> ordered = new ArrayList<>(stored.stream().filter(e -> owned.contains(e.id)).toList());
+        ordered.addAll(stored.stream().filter(e -> !owned.contains(e.id)).toList());
+        for (Edition edition : ordered) {
+            if (!owned.contains(edition.id) && describesNothing(edition)) {
+                continue;
+            }
+            String key = owned.contains(edition.id) ? "own:" + edition.id : signature(edition);
+            kept.putIfAbsent(key, edition);
+        }
+        // Back in the stored order, which is the order editions were recorded in.
+        return stored.stream().filter(kept::containsValue).toList();
+    }
+
+    private static boolean describesNothing(Edition e) {
+        return blank(e.publisher) && blank(e.isbn13) && e.pageCount == null && e.releaseDate == null
+                && blank(e.format) && blank(e.language);
+    }
+
+    private static String signature(Edition e) {
+        String isbn = normalizeIsbn(e.isbn13);
+        if (isbn != null) {
+            return "isbn:" + isbn;
+        }
+        return String.join("|", lower(e.publisher), lower(e.language), lower(e.format),
+                String.valueOf(e.pageCount), String.valueOf(e.releaseDate));
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static String lower(String value) {
+        return value == null ? "" : value.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     private void enrichFromProvider(String userId, List<Edition> stored, List<EditionDto> result) {
         Work work = stored.isEmpty() ? null : stored.get(0).work;
         if (work == null || work.provider == null || work.providerRef == null) {

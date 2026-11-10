@@ -66,6 +66,23 @@ describe('collectLibrary', () => {
     expect(saved[0].pages[0]).toMatch(/^<table><tbody><tr>/);
   });
 
+  test("keeps Babelio's list items and leaves its menus' promoted books out", async () => {
+    const html =
+      '<html><body><nav><div class="megamenu-body"><a href="/livres/Promo/1" class="megamenu-hero">' +
+      '<span>Accroche</span><span>Promo</span><span>Auteur promu</span></a></div></nav>' +
+      '<ul><li class="lib-book" id="b1"><h3 class="lib-book-title"><a href="/livres/Mien/2">Mon livre</a></h3></li></ul>' +
+      '</body></html>';
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch: vi.fn(() => Promise.resolve(response(html))),
+    });
+
+    await collectLibrary(e);
+
+    expect(saved[0].pages[0]).toContain('Mon livre');
+    expect(saved[0].pages[0]).not.toContain('Promo');
+  });
+
   test('follows the numbered page links of the page the reader is on', async () => {
     const page = (n: number) =>
       `<html><body><table><tr><td><a href="/livres/T${n}/${n}">Titre ${n}</a></td></tr></table>` +

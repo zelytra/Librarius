@@ -5,6 +5,8 @@ import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
 import { AuthorNames } from '../author/AuthorNames';
 import type { LibraryItemDto, StatsDto } from '../../api/generated/librarius';
+import { activeLanguage } from '../../i18n/languages';
+import { pagesRead } from '../../shared/pagesRead';
 import styles from './HomeShowcase.module.css';
 
 /** Covers drawn in the shelf of the showcase: enough to read as a library, few enough to load. */
@@ -36,10 +38,14 @@ export function HomeShowcase({
   const current = reading[0];
   const percent = current?.progress?.percent ?? 0;
 
-  const figures = [
+  // An estimate while lengths are still being filled in, left out while there is none.
+  const pages = pagesRead(stats);
+  const figures: { value: number; prefix?: string; label: string }[] = [
     { value: total, label: t('home.showcase.titles', { count: total }) },
     { value: stats?.seriesCount ?? 0, label: t('home.showcase.series', { count: stats?.seriesCount ?? 0 }) },
-    { value: stats?.pagesRead ?? 0, label: t('home.showcase.pages', { count: stats?.pagesRead ?? 0 }) },
+    ...(pages.unknown
+      ? []
+      : [{ value: pages.value, prefix: pages.estimated ? '≈ ' : '', label: t('home.showcase.pages', { count: pages.value }) }]),
   ];
 
   return (
@@ -50,7 +56,10 @@ export function HomeShowcase({
           <div className={styles.figures}>
             {figures.map((f) => (
               <div key={f.label} className={styles.figure}>
-                <span className={styles.figureValue}>{f.value}</span>
+                <span className={styles.figureValue}>
+                  {f.prefix}
+                  {f.value.toLocaleString(activeLanguage())}
+                </span>
                 <span className={styles.figureLabel}>{f.label}</span>
               </div>
             ))}
