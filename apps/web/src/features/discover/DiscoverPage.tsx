@@ -7,7 +7,6 @@ import { LoginGate } from '../../shared/LoginGate';
 import { ApiError } from '../../shared/apiClient';
 import {
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   useGetApiCatalogSearch,
   usePostApiLibrary,
@@ -21,13 +20,14 @@ import { Icon } from '../../shared/ui/Icon';
 import { Button, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
-import { AuthorSearch } from '../author/AuthorSearch';
+import { AuthorMatches } from '../author/AuthorSearch';
 import { catalogPath, toBook } from '../catalog/catalogBook';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
 import { ALL_KINDS, KIND_LABEL_KEY, knownKind } from './medium';
 import styles from './DiscoverPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** The provider is reachable but refused: show the status, it is actionable. */
 function searchFailureMessage(t: TFunction, error: unknown): string {
@@ -163,7 +163,7 @@ function DiscoverContent() {
   function refreshAfterAdd() {
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
-    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+    void queryClient.invalidateQueries(STATS_QUERIES);
   }
 
   async function add(r: CatalogResult, key: string, target: 'library' | 'wishlist') {
@@ -298,6 +298,10 @@ function DiscoverContent() {
         )}
       </div>
 
+      {/* The same words, looked up among the people of the shared catalog: an author typed in
+          the one search bar is offered before the titles. */}
+      <AuthorMatches term={submitted?.q ?? ''} />
+
       {loading && <Loading />}
       {addError && <ErrorState message={addError} />}
       {searchFailed && (
@@ -371,9 +375,6 @@ function DiscoverContent() {
         })}
       </div>
 
-      {/* A different discovery flow from the catalog search above: this looks for a
-          person already in the shared catalog, not a title in an external one. */}
-      <AuthorSearch />
     </>
   );
 }

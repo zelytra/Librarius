@@ -10,7 +10,6 @@ import { LoginGate } from '../../shared/LoginGate';
 import {
   getApiWishlist,
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   useDeleteApiWishlistId,
   useGetApiSeries,
@@ -22,6 +21,7 @@ import {
 import { AuthorNames } from '../author/AuthorNames';
 import { seriesIdOf } from '../series/series';
 import styles from './WishlistPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Number of wishes fetched per request. */
 const PAGE_SIZE = 50;
@@ -183,7 +183,7 @@ function WishlistContent() {
         // The title left the wishlist for the collection: both of them moved, and so
         // did the counters the Home screen and the statistics read.
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
       },
       onError: () => setActionError(t('wishlist.errors.acquireFailed')),
     },

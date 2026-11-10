@@ -13,7 +13,6 @@ import { activeLanguage } from '../../i18n/languages';
 import {
   getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
   getGetApiWorksIdEditionsQueryKey,
   useGetApiCategories,
   useGetApiLibraryId,
@@ -35,6 +34,7 @@ import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
 import styles from './DetailPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
 const WASH_FROM = 'aa';
@@ -427,7 +427,7 @@ function DetailContent({ id }: { id: string }) {
     // invalidating the list alone would leave this very screen showing a stale rank.
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryIdQueryKey(id) });
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+    void queryClient.invalidateQueries(STATS_QUERIES);
   };
 
   const { mutate: mutateRank, isPending: rankSaving } = usePutApiLibraryIdRank({

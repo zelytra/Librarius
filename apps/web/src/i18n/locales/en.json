@@ -179,7 +179,10 @@
       "pages_other": "{{pages}} pages read",
       "height": "≈ {{height}} of stacked paper",
       "estimate": "Estimated height: one sheet of paper ≈ {{thickness}} mm, so two pages.",
-      "alt": "A stack of books illustrating {{books}} books read, {{pages}} pages, about {{height}} of paper."
+      "alt": "A stack of books illustrating {{books}} books read, {{pages}} pages, about {{height}} of paper.",
+      "partial_one": "Length known for {{known}} book out of {{books}}: the rest is being filled in from the catalogs.",
+      "partial_other": "Length known for {{known}} books out of {{books}}: the rest is being filled in from the catalogs.",
+      "noLength": "Your books' page counts are being filled in from the catalogs: the stack grows over the next few hours."
     },
     "upcomingReleases": {
       "title": "Upcoming releases",
@@ -457,11 +460,9 @@
     "notFound": "Author not found.",
     "error": "This author could not be loaded.",
     "search": {
-      "title": "Look up an author",
-      "placeholder": "Search for an author…",
-      "noResults": "No author matches this search.",
       "workCount_one": "{{count}} work",
-      "workCount_other": "{{count}} works"
+      "workCount_other": "{{count}} works",
+      "matches": "Authors"
     },
     "seriesOwned_one": "{{owned}} owned of {{count}} known volume",
     "seriesOwned_other": "{{owned}} owned of {{count}} known volumes",

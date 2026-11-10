@@ -393,9 +393,11 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * @param toRead    items marked {@code OWNED}, i.e. owned but not started
      * @param abandoned items marked {@code ABANDONED}, i.e. given up on partway through
      * @param pagesRead total pages of the read items, ignoring editions with no page count
+     * @param readWithPageCount how many of the read items those pages come from: the rest have
+     *                  no known length, which an imported library is mostly made of at first
      */
     public record StatusTotals(long read, long reading, long toRead, long abandoned,
-            long pagesRead) {
+            long pagesRead, long readWithPageCount) {
     }
 
     /**
@@ -415,7 +417,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     public StatusTotals statusTotals(String userId) {
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select li.status, count(li), sum(li.edition.pageCount)
+                        select li.status, count(li), sum(li.edition.pageCount), count(li.edition.pageCount)
                         from LibraryItem li
                         where li.userId = :userId
                         group by li.status
@@ -428,12 +430,14 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         long toRead = 0;
         long abandoned = 0;
         long pagesRead = 0;
+        long readWithPageCount = 0;
         for (Object[] row : rows) {
             long count = ((Number) row[1]).longValue();
             switch ((LibraryStatus) row[0]) {
                 case READ -> {
                     read = count;
                     pagesRead = row[2] == null ? 0L : ((Number) row[2]).longValue();
+                    readWithPageCount = row[3] == null ? 0L : ((Number) row[3]).longValue();
                 }
                 case READING -> reading = count;
                 case OWNED -> toRead = count;
@@ -442,7 +446,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                 case ABANDONED -> abandoned = count;
             }
         }
-        return new StatusTotals(read, reading, toRead, abandoned, pagesRead);
+        return new StatusTotals(read, reading, toRead, abandoned, pagesRead, readWithPageCount);
     }
 
     /**

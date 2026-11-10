@@ -179,7 +179,10 @@
       "pages_other": "{{pages}} pages lues",
       "height": "≈ {{height}} de papier empilé",
       "estimate": "Hauteur estimée : une feuille de papier ≈ {{thickness}} mm, soit deux pages.",
-      "alt": "Une pile de livres illustrant {{books}} livres lus, {{pages}} pages, soit environ {{height}} de papier."
+      "alt": "Une pile de livres illustrant {{books}} livres lus, {{pages}} pages, soit environ {{height}} de papier.",
+      "partial_one": "Longueur connue pour {{known}} livre sur {{books}} : les autres se complètent depuis les catalogues.",
+      "partial_other": "Longueur connue pour {{known}} livres sur {{books}} : les autres se complètent depuis les catalogues.",
+      "noLength": "Le nombre de pages de tes livres se complète depuis les catalogues : la pile prendra sa hauteur au fil des heures."
     },
     "upcomingReleases": {
       "title": "Prochaines sorties",
@@ -457,11 +460,9 @@
     "notFound": "Auteur introuvable.",
     "error": "Impossible de charger cet auteur.",
     "search": {
-      "title": "Chercher un auteur",
-      "placeholder": "Rechercher un auteur…",
-      "noResults": "Aucun auteur ne correspond à cette recherche.",
       "workCount_one": "{{count}} œuvre",
-      "workCount_other": "{{count}} œuvres"
+      "workCount_other": "{{count}} œuvres",
+      "matches": "Auteurs"
     },
     "seriesOwned_one": "{{owned}} possédé sur {{count}} tome connu",
     "seriesOwned_other": "{{owned}} possédés sur {{count}} tomes connus",

@@ -10,7 +10,6 @@ import { Button, Screen } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import {
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   usePostApiLibrary,
   usePostApiWishlist,
@@ -20,6 +19,7 @@ import { AuthorNames } from '../author/AuthorNames';
 import { KIND_LABEL_KEY, knownKind } from '../discover/medium';
 import { toBook } from './catalogBook';
 import styles from './CatalogDetailPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 type Target = 'library' | 'wishlist';
 
@@ -65,7 +65,7 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
   function refreshAfterAdd() {
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
-    void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+    void queryClient.invalidateQueries(STATS_QUERIES);
   }
 
   async function add(target: Target) {

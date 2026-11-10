@@ -520,6 +520,7 @@ export interface StatsDto {
   goalUnit?: string;
   goalCurrent?: number;
   byGenre?: GenreCount[];
+  readWithPageCount?: number;
 }
 
 export interface TimelinePointDto {

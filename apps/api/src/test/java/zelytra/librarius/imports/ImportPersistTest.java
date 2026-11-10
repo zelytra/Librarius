@@ -29,6 +29,9 @@ class ImportPersistTest {
     @Inject
     EntityManager em;
 
+    @Inject
+    zelytra.librarius.domain.repository.WishlistItemRepository wishes;
+
     @Test
     void importsRatingDateAndAShelfCategory() {
         String userId = "import-" + UUID.randomUUID();
@@ -129,5 +132,76 @@ class ImportPersistTest {
         ImportService.ImportResult again = imports.persist(userId, "booknode", books);
         assertEquals(0, again.imported());
         assertEquals(size, again.skipped());
+    }
+
+    private String newUser() {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        return userId;
+    }
+
+    private static ImportedBook booknodeRow(String title, String rank, zelytra.librarius.domain.Kind kind,
+            boolean wished, LocalDate added) {
+        return new ImportedBook(title, "Some Author", null,
+                wished ? zelytra.librarius.domain.LibraryStatus.OWNED : zelytra.librarius.domain.LibraryStatus.READ,
+                "manga or", 4, added, wished ? null : added, null, null, rank, kind, wished);
+    }
+
+    /** A Booknode library: tiers on the built-in ranks, manga as manga, wants on the wishlist, dated readings. */
+    @Test
+    void filesABooknodeLibraryTheWayTheReaderFiledIt() {
+        String userId = newUser();
+        String marker = "Booknode " + UUID.randomUUID();
+        LocalDate added = LocalDate.of(2024, 5, 2);
+
+        imports.persist(userId, "booknode", List.of(
+                booknodeRow(marker + " read", "or", zelytra.librarius.domain.Kind.MANGA, false, added),
+                booknodeRow(marker + " wanted", null, null, true, added)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(1, owned.size());
+            LibraryItem item = owned.get(0);
+            assertEquals("or", item.rankCategory.code);
+            org.junit.jupiter.api.Assertions.assertTrue(item.rankCategory.builtin);
+            assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
+            assertEquals(added, item.progress.finishedAt);
+            List<zelytra.librarius.domain.WishlistItem> wished = wishes.listForExport(userId);
+            assertEquals(1, wished.size());
+            assertEquals(marker + " wanted", wished.get(0).edition.work.title);
+        });
+    }
+
+    /**
+     * An account imported before tiers, kinds and dates were read: importing the same file again
+     * completes it rather than skipping every title it already holds.
+     */
+    @Test
+    void reimportingCompletesAnOlderImport() {
+        String userId = newUser();
+        String title = "Completion " + UUID.randomUUID();
+        LocalDate added = LocalDate.of(2023, 9, 14);
+        // What the older import made of the row: a book, filed under its list, undated.
+        imports.persist(userId, "booknode", List.of(new ImportedBook(title, "Some Author", null,
+                zelytra.librarius.domain.LibraryStatus.READ, "manga or", 4, added)));
+
+        ImportService.ImportResult again = imports.persist(userId, "booknode",
+                List.of(booknodeRow(title, "argent", zelytra.librarius.domain.Kind.MANGA, false, added)));
+
+        assertEquals(0, again.imported());
+        assertEquals(1, again.skipped());
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(1, owned.size());
+            LibraryItem item = owned.get(0);
+            assertEquals("argent", item.rankCategory.code);
+            assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
+            assertEquals(added, item.progress.finishedAt);
+        });
     }
 }

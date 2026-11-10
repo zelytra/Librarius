@@ -70,7 +70,7 @@ public class StatsService {
                 totals.pagesRead(), seriesCount,
                 goal != null ? goal.targetCount : null,
                 goal != null ? goal.unit.name() : null,
-                goalCurrent, byGenre);
+                goalCurrent, byGenre, totals.readWithPageCount());
     }
 
     /**

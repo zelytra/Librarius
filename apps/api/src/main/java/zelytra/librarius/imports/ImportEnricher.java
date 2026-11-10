@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public class ImportEnricher {
 
     /** Editions resolved per run: a batch, so one run cannot spend the whole provider quota. */
-    private static final int BATCH = 25;
+    private static final int BATCH = 60;
 
     /** Catalog answers to weigh before giving up on a title — the top few, ranked by relevance. */
     private static final int CANDIDATES = 8;

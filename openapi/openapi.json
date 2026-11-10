@@ -1158,6 +1158,10 @@
             "items" : {
               "$ref" : "#/components/schemas/GenreCount"
             }
+          },
+          "readWithPageCount" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

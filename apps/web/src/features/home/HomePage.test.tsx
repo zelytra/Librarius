@@ -487,6 +487,24 @@ describe('HomePage', () => {
     expect(screen.getByText(/4,5\s?cm de papier/)).toBeInTheDocument();
   });
 
+  /** An imported library: most lengths are still unknown, and the card says so. */
+  test('says how many books its pages come from while lengths are being filled in', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 2293, pagesRead: 30_000, readWithPageCount: 120 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/Longueur connue pour 120 livres sur 2\s?293/)).toBeInTheDocument();
+  });
+
+  test('shows no zero height for books whose lengths are all unknown yet', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 2293, pagesRead: 0, readWithPageCount: 0 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(/se complète depuis les catalogues/)).toBeInTheDocument();
+    expect(screen.queryByText(/de papier empilé/)).not.toBeInTheDocument();
+  });
+
   test('hides the section entirely on a library with nothing read yet', async () => {
     server.use(http.get('*/api/stats', () =>
       HttpResponse.json(stats({ read: 0, reading: 0, toRead: 7, pagesRead: 0 }))));

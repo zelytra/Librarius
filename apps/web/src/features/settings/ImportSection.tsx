@@ -9,7 +9,7 @@ import { ApiError } from '../../shared/apiClient';
 import { useApiAuth } from '../../shared/api';
 import {
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
+  getGetApiWishlistQueryKey,
   useGetApiImportJobsJobId,
   usePostApiImportCollected,
   usePostApiImportCsv,
@@ -17,6 +17,7 @@ import {
 } from '../../api/generated/librarius';
 import { bookmarkletHref, isCollectedFile } from './collector';
 import styles from './ImportSection.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 type Source = 'booknode' | 'babelio';
 
@@ -96,7 +97,9 @@ export function ImportSection() {
       setMessage(t('settings.import.result', { imported: job.imported ?? 0, skipped: job.skipped ?? 0 }));
       // The titles are in: the collection and the counters must be refreshed.
       void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-      void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+      void queryClient.invalidateQueries(STATS_QUERIES);
+      // A Booknode import brings the reader's wants along, onto the wishlist.
+      void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
     } else {
       setError(job.error ?? t('settings.import.unavailable'));
     }

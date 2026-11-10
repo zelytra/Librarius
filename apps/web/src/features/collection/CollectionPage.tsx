@@ -13,7 +13,6 @@ import {
   Kind,
   getApiLibrary,
   getGetApiLibraryQueryKey,
-  getGetApiStatsQueryKey,
   useDeleteApiLibraryId,
   useGetApiCategories,
   useGetApiSeries,
@@ -25,6 +24,7 @@ import { AuthorNames } from '../author/AuthorNames';
 import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
 import styles from './CollectionPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
  * The whole taxonomy, in the order the shelf switch offers it — same order as the API's
@@ -255,7 +255,7 @@ function CollectionContent() {
       onSuccess: () => {
         // Removing a title also changes the counters and the home carousels.
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
       },
     },
   });
