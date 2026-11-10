@@ -321,14 +321,28 @@ public class CatalogService {
             if (title.startsWith(needle + " ")) {
                 return 3;
             }
-            if (present == 0 && !words.isEmpty()
-                    && Set.copyOf(significantWords(normalize(result.authors()))).containsAll(words)) {
-                // A name typed in the search field ("damasio"): a work by that person beats
-                // a title that merely shares nothing with the query.
-                return 2;
+            if (!words.isEmpty() && oneCreditNames(result.authors(), words)) {
+                // A name typed in the search field ("frank herbert", "damasio"): a work by that
+                // person beats a title that merely shares a word with it. The words have to
+                // name one credited person — an anthology crediting a "Frank Andriat" and a
+                // "Philippe Herbet" is not by Frank Herbert, and used to rank as if it were.
+                return 3;
             }
             return present > 0 ? (int) Math.min(2, present) : 0;
         };
+    }
+
+    /** Whether one of the credited names, on its own, holds every word of the query. */
+    static boolean oneCreditNames(String authors, List<String> words) {
+        if (authors == null || authors.isBlank()) {
+            return false;
+        }
+        for (String name : authors.split("\\s*[,;&]\\s*|\\s+(?:et|and)\\s+")) {
+            if (Set.copyOf(significantWords(normalize(name))).containsAll(words)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Volume markers carry no meaning of their own: "tome 1", "vol. 1" and ". 1" are one volume. */

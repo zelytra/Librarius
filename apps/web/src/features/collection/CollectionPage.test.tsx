@@ -85,6 +85,32 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Livres')).not.toBeInTheDocument();
   });
 
+  test('offers the to-read pile: the titles held and not started yet', async () => {
+    libraryReturns([
+      libraryItem({ id: 'held', status: 'OWNED', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'done', status: 'READ', book: { kind: 'BOOK', title: 'Déjà fini' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    await userEvent.click(await screen.findByText('Pile à lire'));
+
+    expect(await screen.findByText('Pas encore ouvert')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Déjà fini')).not.toBeInTheDocument());
+  });
+
+  /** By latest activity, a series read last week comes before a one-shot added years ago. */
+  test('places the series blocks among the titles by what last happened in them', async () => {
+    libraryReturns([
+      libraryItem({ id: 'old', acquiredAt: '2019-03-01', book: { kind: 'MANGA', title: 'Vieux one-shot' } }),
+    ]);
+    seriesReturns([seriesSummary({ id: 'fresh', title: 'Série récente', lastActivity: '2026-11-01' })]);
+    renderWithProviders(<CollectionPage />);
+
+    const series = await screen.findByText('Série récente');
+    const oneShot = await screen.findByText('Vieux one-shot');
+    expect(series.compareDocumentPosition(oneShot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   /** #183: the kind switch is driven by the taxonomy, not a hardcoded Books/Manga pair. */
   test('offers a shelf for every kind the user owns, comics and audiobooks included', async () => {
     libraryReturns([

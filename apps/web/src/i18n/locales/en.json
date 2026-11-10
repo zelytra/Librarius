@@ -341,12 +341,14 @@
       "title": "Title",
       "author": "Author",
       "genre": "Genre",
-      "rating": "Rating"
+      "rating": "Rating",
+      "recent": "Recent"
     },
     "ranks": {
       "all": "All",
       "favorites": "My favorites",
-      "manage": "Manage my categories"
+      "manage": "Manage my categories",
+      "toRead": "To read"
     },
     "empty": {
       "title": "Nothing here.",
@@ -467,7 +469,10 @@
     "seriesOwned_one": "{{owned}} owned of {{count}} known volume",
     "seriesOwned_other": "{{owned}} owned of {{count}} known volumes",
     "seriesKnown_one": "{{count}} known volume",
-    "seriesKnown_other": "{{count}} known volumes"
+    "seriesKnown_other": "{{count}} known volumes",
+    "unknownYear": "Unknown date",
+    "yearCount_one": "{{count}} title",
+    "yearCount_other": "{{count}} titles"
   },
   "catalog": {
     "addToLibrary": "Add to my collection",
@@ -539,7 +544,9 @@
       "rateLimited": "Too many searches in a row. Try again in a minute.",
       "addFailed": "Cannot add it right now."
     },
-    "scan": "Scan a barcode"
+    "scan": "Scan a barcode",
+    "moreCredits_one": "{{names}} and {{count}} more",
+    "moreCredits_other": "{{names}} and {{count}} more"
   },
   "wishlist": {
     "title": "Wishlist",
@@ -613,6 +620,17 @@
         "byPublisher": "Publishers",
         "byLanguage": "Languages",
         "byRank": "Ranks"
+      },
+      "tooltip": "{{month}}: {{books}} books · {{pages}} pages",
+      "kinds": {
+        "BOOK": "Books",
+        "MANGA": "Manga",
+        "COMIC": "Comics",
+        "OTHER": "Other"
+      },
+      "views": {
+        "all": "All",
+        "byKind": "By kind"
       }
     }
   },
@@ -862,5 +880,18 @@
       "add": "Add",
       "manual": "Add by hand"
     }
+  },
+  "add": {
+    "targets": {
+      "READ": "Read",
+      "OWNED": "To read",
+      "WISHLIST": "Wishlist"
+    },
+    "added": {
+      "READ": "Added to your collection, as read.",
+      "OWNED": "Added to your to-read pile.",
+      "WISHLIST": "Added to your wishlist."
+    },
+    "as": "Add as"
   }
 }

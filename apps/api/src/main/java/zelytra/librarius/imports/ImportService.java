@@ -53,6 +53,9 @@ public class ImportService {
     WishlistItemRepository wishes;
 
     @Inject
+    zelytra.librarius.genre.GenreService genreService;
+
+    @Inject
     MeterRegistry meters;
 
     /** Outcome of an import. */
@@ -230,7 +233,7 @@ public class ImportService {
         return new ManualBookDto(book.kind() != null ? book.kind() : Kind.BOOK,
                 parsed.title(), book.author(), parsed.seriesTitle(), parsed.volumeNumber(),
                 book.isbn13(), null, null, book.pageCount(), book.coverUrl(), null, null,
-                null, null, null, null, null);
+                null, null, ImportGenres.of(book.shelf(), book.kind()), null, null);
     }
 
     /**
@@ -282,6 +285,15 @@ public class ImportService {
                     dto.seriesTitle(), dto.volumeNumber(), old.isbn13, old.publisher, old.language,
                     old.pageCount, old.coverUrl != null ? old.coverUrl : dto.coverUrl(), null, null,
                     null, null, null, null, null));
+        }
+        // A work imported before lists were read as genres has none: the list's genre fills it.
+        String genre = ImportGenres.of(book.shelf(), kind);
+        if (genre != null && item.edition.work.genres.isEmpty()) {
+            // A new set: a work created without genres holds the immutable empty one.
+            item.edition.work.genres = new java.util.LinkedHashSet<>(genreService.resolve(genre));
+            if (item.edition.work.genresText == null) {
+                item.edition.work.genresText = genre;
+            }
         }
         if (book.readAt() != null && (item.status == LibraryStatus.READ || item.status == LibraryStatus.ABANDONED)) {
             if (item.progress == null) {

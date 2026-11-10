@@ -90,8 +90,14 @@ public class StatsService {
                 .orElse(null);
         OptionalDouble daysPerBook = progresses.averageDaysToFinish(userId, from, to);
 
+        java.util.Map<String, java.util.Map<String, Long>> kinds = new java.util.HashMap<>();
+        for (var k : progresses.timelineByKind(userId, from, to, granularity)) {
+            kinds.computeIfAbsent(TimelinePointDto.period(k.year(), k.month()), p -> new java.util.TreeMap<>())
+                    .merge(k.kind(), k.books(), Long::sum);
+        }
         return new TimelineDto(from, to, granularity.name(),
-                buckets.stream().map(TimelinePointDto::of).toList(),
+                buckets.stream().map(b -> TimelinePointDto.of(b,
+                        kinds.getOrDefault(TimelinePointDto.period(b.year(), b.month()), java.util.Map.of()))).toList(),
                 books, pages, pagesPerDay(pages, from, to),
                 daysPerBook.isPresent() ? daysPerBook.getAsDouble() : null,
                 best != null ? TimelinePointDto.of(best).period() : null,

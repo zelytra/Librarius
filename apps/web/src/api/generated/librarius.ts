@@ -507,6 +507,7 @@ export interface SeriesSummaryDto {
   ownedCount?: number;
   readCount?: number;
   followed?: boolean;
+  lastActivity?: LocalDate;
 }
 
 export interface StatsDto {
@@ -523,10 +524,13 @@ export interface StatsDto {
   readWithPageCount?: number;
 }
 
+export type TimelinePointDtoByKind = {[key: string]: number};
+
 export interface TimelinePointDto {
   period?: string;
   books?: number;
   pages?: number;
+  byKind?: TimelinePointDtoByKind;
 }
 
 export interface TimelineDto {

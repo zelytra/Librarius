@@ -245,9 +245,20 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         }
     }
 
+    /**
+     * The last thing that happened to an item, as a date: finished, started, or put on the
+     * shelf — the day the source says it was added, an import's own date only when it says
+     * none (otherwise a whole imported library would share the day it was imported).
+     * Needs {@code li} and its progress joined as {@code p}.
+     */
+    public static final String ACTIVITY =
+            "greatest(p.finishedAt, p.startedAt, coalesce(li.acquiredAt, cast(li.createdAt as LocalDate)))";
+
     /** Orderings offered on the collection, exposed as the {@code sort} query parameter. */
     public enum LibrarySort {
-        /** Most recently added first — the default. */
+        /** Most recent activity first — read, started or added — the default. */
+        RECENT(ACTIVITY + " desc nulls last, li.createdAt desc, li.id desc"),
+        /** Most recently added first. */
         ADDED("li.createdAt desc, li.id desc"),
         TITLE("lower(w.title) asc, li.id asc"),
         AUTHOR("lower(coalesce(w.authorsText, '')) asc, lower(w.title) asc, li.id asc"),
@@ -274,7 +285,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
          */
         public static Optional<LibrarySort> parse(String value) {
             if (value == null || value.isBlank()) {
-                return Optional.of(ADDED);
+                return Optional.of(RECENT);
             }
             return Arrays.stream(values())
                     .filter(s -> s.name().equalsIgnoreCase(value.trim()))

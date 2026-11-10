@@ -350,12 +350,22 @@ public final class ApiDtos {
      *
      * @param period {@code 2026-03} at month granularity, {@code 2026} at year granularity
      */
-    public record TimelinePointDto(String period, long books, long pages) {
+    /**
+     * One period of the timeline: the titles and pages finished in it, and how many of those
+     * titles were of each kind ({@code BOOK}, {@code MANGA}, {@code COMIC}…).
+     */
+    public record TimelinePointDto(String period, long books, long pages,
+            java.util.Map<String, Long> byKind) {
         public static TimelinePointDto of(PeriodTotal total) {
-            String period = total.month() == null
-                    ? String.valueOf(total.year())
-                    : "%04d-%02d".formatted(total.year(), total.month());
-            return new TimelinePointDto(period, total.books(), total.pages());
+            return of(total, java.util.Map.of());
+        }
+
+        public static TimelinePointDto of(PeriodTotal total, java.util.Map<String, Long> byKind) {
+            return new TimelinePointDto(period(total.year(), total.month()), total.books(), total.pages(), byKind);
+        }
+
+        public static String period(int year, Integer month) {
+            return month == null ? String.valueOf(year) : "%04d-%02d".formatted(year, month);
         }
     }
 
@@ -502,17 +512,23 @@ public final class ApiDtos {
      */
     public record SeriesSummaryDto(UUID id, String kind, String title, String coverUrl,
             Integer totalVolumes, String status, long ownedCount, long readCount,
-            boolean followed) {
+            boolean followed, LocalDate lastActivity) {
         public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
                 boolean followed) {
+            return of(s, ownedCount, readCount, followed, null);
+        }
+
+        /** @param lastActivity the latest activity on the volumes held, to order the shelf by */
+        public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
+                boolean followed, LocalDate lastActivity) {
             return new SeriesSummaryDto(s.id, s.kind.name(), s.title, s.coverUrl, s.totalVolumes,
-                    s.status != null ? s.status.name() : null, ownedCount, readCount, followed);
+                    s.status != null ? s.status.name() : null, ownedCount, readCount, followed, lastActivity);
         }
 
         /** The same summary, drawn with another cover. */
         public SeriesSummaryDto withCover(String cover) {
             return new SeriesSummaryDto(id, kind, title, cover, totalVolumes, status, ownedCount,
-                    readCount, followed);
+                    readCount, followed, lastActivity);
         }
     }
 

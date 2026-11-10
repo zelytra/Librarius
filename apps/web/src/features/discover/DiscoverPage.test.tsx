@@ -87,6 +87,16 @@ describe('DiscoverPage', () => {
     expect(screen.getByRole('link', { name: /Rebecca Yarros/ })).toHaveAttribute('href', '/authors/author-1');
   });
 
+  /** #363: an anthology's fifteen credited names no longer grow the card to a screen's height. */
+  test('shortens a long list of credits on a result card', async () => {
+    searchReturns([catalogResult({ authors: 'A. Un, B. Deux, C. Trois, D. Quatre, E. Cinq', year: 1983 })]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search();
+
+    expect(await screen.findByText('A. Un, B. Deux, C. Trois et 2 autres · 1983')).toBeInTheDocument();
+  });
+
   test('opens the catalog fiche when a result is clicked', async () => {
     searchReturns([catalogResult()]);
     render(
@@ -152,9 +162,9 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByText('Collection'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
 
-    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
   });
 
   /**
@@ -166,12 +176,12 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByText('Collection'));
-    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
 
     await new Promise((resolve) => setTimeout(resolve, 700));
 
-    expect(screen.getByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(screen.getByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
   });
 
   /**
@@ -184,9 +194,9 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByText('Collection'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
 
-    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
   });
 
@@ -201,9 +211,9 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByText('Collection'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
 
-    expect(await screen.findByText('✓ Ajouté à la collection')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({
       seriesTitle: 'Vinland Saga',
       volumeNumber: 3,
@@ -216,9 +226,9 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByText('Souhaits'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Souhait' }));
 
-    expect(await screen.findByText('✓ Ajouté aux souhaits')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à tes souhaits.')).toBeInTheDocument();
   });
 
   test('signals a failed search', async () => {

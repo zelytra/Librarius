@@ -779,6 +779,8 @@ components:
           format: int64
         followed:
           type: boolean
+        lastActivity:
+          $ref: "#/components/schemas/LocalDate"
     SeriesVolumeDto:
       type: object
       properties:
@@ -894,6 +896,11 @@ components:
         pages:
           type: integer
           format: int64
+        byKind:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
     UUID:
       type: string
       format: uuid

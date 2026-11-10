@@ -17,6 +17,8 @@ import {
   type Metric,
   type MonthPoint,
   offeredYears,
+  KIND_GROUPS,
+  type KindGroup,
 } from './timeline';
 import styles from './TimelineSection.module.css';
 
@@ -35,7 +37,6 @@ import styles from './TimelineSection.module.css';
 
 /** Geometry of the plot area, in viewBox units. One slot per month. */
 const SLOT = 20;
-const BAR_WIDTH = 12;
 const PLOT_WIDTH = SLOT * 12;
 const PLOT_HEIGHT = 100;
 
@@ -46,54 +47,103 @@ const BREAKDOWN_BARS = [styles.bar1, styles.bar2, styles.bar3, styles.bar4];
 const BREAKDOWNS = ['byAuthor', 'byPublisher', 'byLanguage', 'byRank'] as const;
 type BreakdownKey = (typeof BREAKDOWNS)[number];
 
-function MonthlyBars({ values, labels, caption }: {
-  values: number[];
-  labels: string[];
+/** Colour of each kind group on the split chart, and in its legend. */
+const KIND_FILL: Record<KindGroup, string> = {
+  BOOK: styles.fillBook,
+  MANGA: styles.fillManga,
+  COMIC: styles.fillComic,
+  OTHER: styles.fillOther,
+};
+
+/**
+ * Twelve columns, one per month, the figure printed over each: a chart that has to be hovered
+ * to be read is a chart most people do not read. Hovering, focusing or tapping a month opens
+ * its details — books, pages and, split by kind, how many of each. Split, each column stacks
+ * the kinds in their own colours; together, it is one bar for everything read.
+ */
+function MonthlyBars({ months, metric, split, caption }: {
+  months: MonthPoint[];
+  metric: Metric;
+  split: boolean;
   caption: string;
 }) {
+  const { t } = useTranslation();
+  const [active, setActive] = useState<number | null>(null);
+  const values = months.map((month) => month[metric]);
   const max = chartMax(values);
+  const narrow = monthLabels('narrow');
+  const long = monthLabels('long');
+  const locale = activeLanguage();
+
+  const details = (month: MonthPoint) => {
+    const head = t('stats.timeline.tooltip', {
+      month: long[month.month - 1],
+      books: month.books,
+      pages: month.pages.toLocaleString(locale),
+    });
+    const kinds = KIND_GROUPS.filter((kind) => month.byKind[kind] > 0)
+      .map((kind) => `${t(`stats.timeline.kinds.${kind}`)} ${month.byKind[kind]}`)
+      .join(' · ');
+    return kinds ? `${head} — ${kinds}` : head;
+  };
 
   return (
-    <div className={styles.chart}>
-      <svg
-        viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT}`}
-        className={styles.plot}
-        role="img"
-        aria-label={caption}
-      >
-        {values.map((value, index) => {
-          const height = (value / max) * PLOT_HEIGHT;
+    <div className={styles.chart} role="group" aria-label={caption}>
+      <div className={styles.columns}>
+        {months.map((month, index) => {
+          const value = values[index];
+          const height = (value / max) * 100;
           return (
-            <rect
-              key={index}
-              className={value > 0 ? styles.bar : styles.barEmpty}
-              x={index * SLOT + (SLOT - BAR_WIDTH) / 2}
-              // SVG grows downwards, so a bar starts where it stops being empty. An empty
-              // month keeps a sliver of track so the year reads as twelve slots.
-              y={PLOT_HEIGHT - Math.max(height, 2)}
-              width={BAR_WIDTH}
-              height={Math.max(height, 2)}
-              rx="3"
-            />
+            <button
+              key={month.month}
+              type="button"
+              className={styles.column}
+              aria-label={details(month)}
+              aria-expanded={active === index}
+              onMouseEnter={() => setActive(index)}
+              onMouseLeave={() => setActive((current) => (current === index ? null : current))}
+              onFocus={() => setActive(index)}
+              onBlur={() => setActive((current) => (current === index ? null : current))}
+              onClick={() => setActive((current) => (current === index ? null : index))}
+            >
+              <span className={styles.columnValue}>{value > 0 ? value.toLocaleString(locale) : ''}</span>
+              <span className={styles.columnTrack}>
+                <span className={value > 0 ? styles.columnBar : styles.columnEmpty} style={{ height: `${Math.max(height, 2)}%` }}>
+                  {split && value > 0 &&
+                    KIND_GROUPS.filter((kind) => month.byKind[kind] > 0).map((kind) => (
+                      <span
+                        key={kind}
+                        className={`${styles.segment} ${KIND_FILL[kind]}`}
+                        // The share of the month's titles of that kind.
+                        style={{ flexGrow: month.byKind[kind] }}
+                      />
+                    ))}
+                </span>
+              </span>
+              <span className={styles.axisLabel}>{narrow[index]}</span>
+              {active === index && (
+                <span className={styles.tooltip} role="tooltip">
+                  {details(month)}
+                </span>
+              )}
+            </button>
           );
         })}
-      </svg>
-      {/* Labels in HTML rather than in the SVG: they must not scale with the plot. */}
-      <div className={styles.axis}>
-        {labels.map((label, index) => (
-          <span key={index} className={styles.axisLabel}>
-            {label}
-          </span>
-        ))}
       </div>
+      {split && (
+        <div className={styles.legend} aria-hidden="true">
+          {KIND_GROUPS.map((kind) => (
+            <span key={kind} className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${KIND_FILL[kind]}`} />
+              {t(`stats.timeline.kinds.${kind}`)}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-/**
- * The running total against the goal: the curve is what has been read, the dashed line the
- * steady pace that meets the target by 31 December.
- */
 function CumulativeLine({ values, target, caption }: {
   values: number[];
   target: number;
@@ -151,6 +201,20 @@ function Breakdown({ rows }: { rows: BreakdownCountDto[] }) {
   );
 }
 
+/** The year's titles per kind, under the split chart. */
+function KindTotals({ months }: { months: MonthPoint[] }) {
+  const { t } = useTranslation();
+  const totals = KIND_GROUPS.map((kind) => ({
+    kind,
+    count: months.reduce((sum, month) => sum + month.byKind[kind], 0),
+  })).filter((row) => row.count > 0);
+  return (
+    <p className={styles.total}>
+      {totals.map((row) => `${t(`stats.timeline.kinds.${row.kind}`)} : ${row.count}`).join(' · ')}
+    </p>
+  );
+}
+
 /** One derived figure, or a dash when the window holds nothing to derive it from. */
 function Figure({ value, label }: { value: string; label: string }) {
   return (
@@ -169,6 +233,8 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
   const thisYear = new Date().getFullYear();
   const [year, setYear] = useState(thisYear);
   const [metric, setMetric] = useState<Metric>('books');
+  // Everything read together, or the books, manga and comics of the year apart.
+  const [split, setSplit] = useState(false);
   const [dimension, setDimension] = useState<BreakdownKey>('byAuthor');
 
   const timeline = useGetApiStatsTimeline({
@@ -194,7 +260,6 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
 
   const months: MonthPoint[] = monthlySeries(timeline.data.points, year);
   const values = months.map((month) => month[metric]);
-  const narrow = monthLabels('narrow');
   const long = monthLabels('long');
 
   // The goal is only a meaningful overlay on the series it is counted in, and only for the
@@ -233,11 +298,21 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
 
         {readAnything ? (
           <>
+            <Segmented<'all' | 'byKind'>
+              options={[
+                { id: 'all', label: t('stats.timeline.views.all') },
+                { id: 'byKind', label: t('stats.timeline.views.byKind') },
+              ]}
+              value={split ? 'byKind' : 'all'}
+              onChange={(id) => setSplit(id === 'byKind')}
+            />
             <MonthlyBars
-              values={values}
-              labels={narrow}
+              months={months}
+              metric={metric}
+              split={split}
               caption={t(`stats.timeline.chartLabel.${metric}`, { year })}
             />
+            {split && <KindTotals months={months} />}
             <p className={styles.total}>
               {t('stats.timeline.total', {
                 books: timeline.data.books ?? 0,

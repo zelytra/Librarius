@@ -87,3 +87,17 @@ button {
     opacity: 1;
   }
 }
+
+/* Number fields without the browser's spin arrows: drawn by the platform, white on a light
+   theme they looked like a stray widget inside the app's own fields, and a page count or a
+   price is typed — on a phone the numeric keyboard does the rest. */
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

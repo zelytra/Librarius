@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { stats, timeline } from '../../test/fixtures';
@@ -84,6 +85,27 @@ describe('StatsPage', () => {
 
   // ── Reading over time ──────────────────────────────────────────────────────
 
+  /** Every month's figure is on screen; hovering one gives its details, split by kind. */
+  test('prints each month, details it on hover, and splits it by kind', async () => {
+    timelineReturns(timeline({
+      points: [
+        { period: `${YEAR}-03`, books: 5, pages: 900, byKind: { BOOK: 2, MANGA: 3 } },
+      ],
+      books: 5,
+      pages: 900,
+    }));
+    renderWithProviders(<StatsPage />);
+
+    const march = await screen.findByRole('button', { name: /^mars : 5 livres · 900 pages — Livres 2 · Mangas 3$/ });
+    expect(march).toHaveTextContent('5');
+
+    await userEvent.hover(march);
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Mangas 3');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Par type' }));
+    expect(screen.getByText('Livres : 2 · Mangas : 3')).toBeInTheDocument();
+  });
+
   test('charts what was read month by month, and what it adds up to', async () => {
     timelineReturns(timeline({
       points: [
@@ -101,7 +123,7 @@ describe('StatsPage', () => {
 
     expect(await screen.findByText(new RegExp(`4 titres et 450 pages terminés en ${YEAR}`)))
       .toBeInTheDocument();
-    expect(screen.getByRole('img', { name: `Titres terminés chaque mois en ${YEAR}` }))
+    expect(screen.getByRole('group', { name: `Titres terminés chaque mois en ${YEAR}` }))
       .toBeInTheDocument();
     // The derived figures the issue asks for, next to the chart.
     expect(screen.getByText('2,5')).toBeInTheDocument();

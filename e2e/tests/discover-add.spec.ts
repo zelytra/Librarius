@@ -15,8 +15,8 @@ test('adds a book found on Discover to the collection', async ({ page }) => {
   await searchCatalog(page, 'dune');
   await expect(page.getByText(FIRST_BOOK, { exact: true }).first()).toBeVisible();
 
-  await addResult(page, 'Collection');
-  await expect(page.getByText('✓ Ajouté à la collection')).toBeVisible();
+  await addResult(page, 'Pile à lire');
+  await expect(page.getByText('Ajouté à ta pile à lire.')).toBeVisible();
 
   await page.getByRole('link', { name: 'Collection' }).click();
   await expect(page.getByRole('heading', { name: 'Ma collection' })).toBeVisible();

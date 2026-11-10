@@ -16,13 +16,13 @@ test('keeps the statistics consistent after an addition', async ({ page }) => {
 
   await page.getByRole('link', { name: 'Découvrir' }).click();
   await searchCatalog(page, 'science-fiction');
-  await addResult(page, 'Collection');
+  await addResult(page, 'Pile à lire');
   // Waiting for the first confirmation before the second click: an added result swaps
   // its buttons for that confirmation, and "the first remaining button" is only
   // unambiguous once the swap happened.
-  await expect(page.getByText('✓ Ajouté à la collection')).toHaveCount(1);
-  await addResult(page, 'Collection');
-  await expect(page.getByText('✓ Ajouté à la collection')).toHaveCount(2);
+  await expect(page.getByText('Ajouté à ta pile à lire.')).toHaveCount(1);
+  await addResult(page, 'Pile à lire');
+  await expect(page.getByText('Ajouté à ta pile à lire.')).toHaveCount(2);
 
   await page.getByRole('link', { name: 'Accueil' }).click();
   await expect(figure(page, 'à lire')).toHaveText('2');

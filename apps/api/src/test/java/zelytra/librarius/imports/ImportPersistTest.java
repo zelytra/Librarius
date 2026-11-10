@@ -171,6 +171,9 @@ class ImportPersistTest {
             org.junit.jupiter.api.Assertions.assertTrue(item.rankCategory.builtin);
             assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
             assertEquals(added, item.progress.finishedAt);
+            // A manga list gives no genre word, so the kind stands for one: favourite genres
+            // are no longer empty for an imported library.
+            assertEquals(List.of("Manga"), item.edition.work.genres.stream().map(g -> g.label).toList());
             List<zelytra.librarius.domain.WishlistItem> wished = wishes.listForExport(userId);
             assertEquals(1, wished.size());
             assertEquals(marker + " wanted", wished.get(0).edition.work.title);
@@ -204,4 +207,16 @@ class ImportPersistTest {
             assertEquals(added, item.progress.finishedAt);
         });
     }
+
+    @Test
+    void readsAGenreOffTheReadersList() {
+        assertEquals("Romance", ImportGenres.of("romance", null));
+        assertEquals("Jeunesse", ImportGenres.of("Jeunesse", null));
+        assertEquals("Dark romance", ImportGenres.of("dark romance", null));
+        // A shelf that is not a genre stays out of the statistics.
+        assertEquals(null, ImportGenres.of("maman", null));
+        assertEquals(null, ImportGenres.of("Sarah JMass", null));
+        assertEquals("Bande dessinée", ImportGenres.of("BD", zelytra.librarius.domain.Kind.COMIC));
+    }
 }
+

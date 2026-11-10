@@ -37,7 +37,7 @@ export async function searchCatalog(page: Page, query: string): Promise<void> {
  * Once added, a result swaps its two buttons for a confirmation, so calling this twice
  * in a row adds the first result then the second one.
  */
-export async function addResult(page: Page, target: 'Collection' | 'Souhaits'): Promise<void> {
+export async function addResult(page: Page, target: 'Lu' | 'Pile à lire' | 'Souhait'): Promise<void> {
   await page.getByRole('button', { name: target, exact: true }).first().click();
 }
 

@@ -57,6 +57,9 @@ public class LibraryResource {
     CurrentUser currentUser;
 
     @Inject
+    zelytra.librarius.domain.repository.ReadingProgressRepository progressRepository;
+
+    @Inject
     LibraryItemRepository items;
 
     @Inject
@@ -151,6 +154,17 @@ public class LibraryResource {
         item.rating = dto.rating();
         item.acquiredAt = dto.acquiredAt();
         items.persist(item);
+        // Added straight as read: read now, as far as anyone can tell. Without a finished
+        // reading the title counted in no year, no goal and no monthly statistic.
+        if (item.status == LibraryStatus.READ) {
+            zelytra.librarius.domain.ReadingProgress progress = new zelytra.librarius.domain.ReadingProgress();
+            progress.libraryItem = item;
+            progress.percent = 100;
+            progress.currentPage = edition.pageCount;
+            progress.finishedAt = java.time.LocalDate.now();
+            progressRepository.persist(progress);
+            item.progress = progress;
+        }
 
         return Response.status(Response.Status.CREATED).entity(LibraryItemDto.of(item)).build();
     }
