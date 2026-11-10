@@ -33,7 +33,8 @@ export function SeriesBlock({ series }: { series: SeriesSummaryDto }) {
         variant="tile"
         title={series.title ?? '—'}
         imageUrl={series.coverUrl}
-        tag={t('series.block.tag')}
+        // No kind tag: the sheets behind the cover and the volume count say "series", and on a
+        // narrow screen the tag ran under the count badge.
         caption={caption}
         onClick={() => navigate(`/series/${series.id}`)}
       >

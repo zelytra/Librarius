@@ -145,7 +145,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
+  /* A finger-sized target, like every other action of the app. */
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-badge);
   background: var(--surface-2);
@@ -163,7 +165,11 @@
 
 .iconButton {
   display: inline-flex;
-  padding: 4px;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;

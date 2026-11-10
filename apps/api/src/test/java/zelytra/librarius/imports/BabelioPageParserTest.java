@@ -25,9 +25,13 @@ class BabelioPageParserTest {
 
     @Test
     void readsEachBookOnceWithItsAuthorFromTheSiteLinks() throws Exception {
-        List<ImportedBook> books = books();
+        List<ImportedBook> all = books();
 
-        // Five rows, one of them a "Pense-bête" — a reminder of a book wanted, not owned.
+        // Five rows, one of them a "Pense-bête" — a reminder of a book wanted, not owned: it
+        // goes to the wishlist.
+        assertEquals(5, all.size());
+        assertEquals(1, all.stream().filter(ImportedBook::wished).count());
+        List<ImportedBook> books = all.stream().filter(b -> !b.wished()).toList();
         assertEquals(4, books.size());
         assertEquals("La Horde du Contrevent", books.get(0).title());
         assertEquals("Alain Damasio", books.get(0).author());
@@ -37,7 +41,7 @@ class BabelioPageParserTest {
 
     @Test
     void readsTheStatusRatingDateAndCover() throws Exception {
-        List<ImportedBook> books = books();
+        List<ImportedBook> books = books().stream().filter(b -> !b.wished()).toList();
 
         ImportedBook horde = books.get(0);
         assertEquals(LibraryStatus.READ, horde.status());
@@ -68,4 +72,47 @@ class BabelioPageParserTest {
         assertEquals("Le Titre", books.get(0).title());
         assertEquals(LibraryStatus.READ, books.get(0).status());
     }
+
+    /** Babelio's current markup: one `li.lib-book` per title, the menus' promoted books left out. */
+    @Test
+    void readsTheCurrentLibraryListAndLeavesTheMenusOut() throws Exception {
+        String html;
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("babelio-lib-book.html")) {
+            html = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        List<ImportedBook> books = BabelioPageParser.parse(Jsoup.parse(html, "https://www.babelio.com/"));
+
+        assertEquals(4, books.size());
+        assertTrue(books.stream().noneMatch(b -> b.title().contains("mis en avant")));
+
+        ImportedBook read = books.get(0);
+        assertEquals("Premier roman", read.title());
+        assertEquals("Une Auteure", read.author());
+        assertEquals(LibraryStatus.READ, read.status());
+        // The reader's own rating, not the readers' 4,2 average next to it.
+        assertEquals(Integer.valueOf(4), read.rating());
+        assertEquals(LocalDate.of(2026, 5, 25), read.readAt());
+        assertEquals("https://www.babelio.com/couv/premier.jpg", read.coverUrl());
+
+        assertEquals(LibraryStatus.OWNED, books.get(1).status());
+        assertNull(books.get(1).rating());
+        assertEquals(LibraryStatus.ABANDONED, books.get(2).status());
+        assertEquals(LocalDate.of(2025, 3, 2), books.get(2).readAt());
+        // A "Pense-bête" is a wish.
+        assertTrue(books.get(3).wished());
+    }
+
+    /** The older markup too: a menu's book link is never a row of the library. */
+    @Test
+    void leavesMenuLinksOutOfTheGenericReading() {
+        String html = "<html><body><div class=\"megamenu-body\"><a href=\"/livres/P/1\" class=\"megamenu-hero\">"
+                + "<span>Accroche</span><span>Promu</span></a></div>"
+                + "<table><tr><td><a href=\"/livres/X/2\">Le mien</a></td><td><a href=\"/auteur/Y/3\">Moi</a></td><td>Lu</td></tr></table>"
+                + "</body></html>";
+        List<ImportedBook> books = BabelioPageParser.parse(Jsoup.parse(html, "https://www.babelio.com/"));
+
+        assertEquals(1, books.size());
+        assertEquals("Le mien", books.get(0).title());
+    }
 }
+

@@ -312,7 +312,7 @@ describe('HomePage', () => {
     // Every status counts towards the titles; the series and the pages come from the stats.
     expect(screen.getByText('20')).toBeInTheDocument();
     expect(screen.getByText('séries')).toBeInTheDocument();
-    expect(screen.getByText('4200')).toBeInTheDocument();
+    expect(screen.getByText(/^4\s?200$/)).toBeInTheDocument();
     expect(screen.getByText('En ce moment')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: '40 % lu' })).toHaveAttribute('aria-valuenow', '40');
     expect(screen.getByRole('button', { name: 'Continuer ma lecture' })).toBeInTheDocument();

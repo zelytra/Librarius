@@ -9,6 +9,7 @@ import { goalPace, toUnit } from '../../shared/goal';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiStats } from '../../api/generated/librarius';
 import { TimelineSection } from './TimelineSection';
+import { pagesRead } from '../../shared/pagesRead';
 import styles from './StatsPage.module.css';
 
 /** Bar colours, cycled through in order. */
@@ -26,7 +27,7 @@ function StatsContent() {
 
   const read = stats.read ?? 0;
   const reading = stats.reading ?? 0;
-  const pagesRead = stats.pagesRead ?? 0;
+  const pages = pagesRead(stats);
   const seriesCount = stats.seriesCount ?? 0;
   const goalCurrent = stats.goalCurrent ?? 0;
   const byGenre = stats.byGenre ?? [];
@@ -38,7 +39,9 @@ function StatsContent() {
 
   const bigStats = [
     { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
-    { value: pagesRead.toLocaleString(activeLanguage()), label: t('stats.cards.pages'), icon: 'auto_stories', ic: 'var(--tint-rose-ink)', tone: styles.tileRose },
+    {
+      value: pages.unknown ? '—' : (pages.estimated ? '≈ ' : '') + pages.value.toLocaleString(activeLanguage()),
+      label: t(pages.estimated || pages.unknown ? 'stats.cards.pagesEstimated' : 'stats.cards.pages'), icon: 'auto_stories', ic: 'var(--tint-rose-ink)', tone: styles.tileRose },
     { value: String(seriesCount), label: t('stats.cards.series'), icon: 'collections_bookmark', ic: 'var(--tint-violet-ink)', tone: styles.tileViolet },
     { value: String(reading), label: t('stats.cards.reading'), icon: 'local_fire_department', ic: 'var(--tint-clay-ink)', tone: styles.tileClay },
   ];

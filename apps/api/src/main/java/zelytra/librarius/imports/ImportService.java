@@ -191,7 +191,7 @@ public class ImportService {
                 } else {
                     WishlistItem wish = new WishlistItem();
                     wish.userId = userId;
-                    wish.edition = catalog.createManualEdition(manualBook(book, parsed));
+                    wish.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
                     wishes.persist(wish);
                     imported++;
                 }
@@ -208,7 +208,7 @@ public class ImportService {
             LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.OWNED;
             LibraryItem item = new LibraryItem();
             item.userId = userId;
-            item.edition = catalog.createManualEdition(manualBook(book, parsed));
+            item.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
             item.status = status;
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();

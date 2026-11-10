@@ -23,6 +23,28 @@ public class EditionRepository implements PanacheRepositoryBase<Edition, UUID> {
     }
 
     /**
+     * An edition of the work that describes nothing beyond the work itself — no ISBN,
+     * publisher, language, length, format, date or provider record: what an import or a bare
+     * manual entry records, and what the next one of the same title can share — provided the
+     * user does not hold it already, in the library or the wishlist, where an edition is unique
+     * per user.
+     */
+    public java.util.Optional<Edition> findBareFreeFor(UUID workId, String userId) {
+        return getEntityManager().createQuery("""
+                        select e from Edition e
+                        where e.work.id = :work and e.isbn13 is null and e.publisher is null
+                          and e.language is null and e.pageCount is null and e.format is null
+                          and e.releaseDate is null and e.provider is null
+                          and not exists (select 1 from LibraryItem li where li.edition = e and li.userId = :user)
+                          and not exists (select 1 from WishlistItem wi where wi.edition = e and wi.userId = :user)
+                        order by e.createdAt asc, e.id asc""", Edition.class)
+                .setParameter("work", workId)
+                .setParameter("user", userId)
+                .setMaxResults(1)
+                .getResultStream().findFirst();
+    }
+
+    /**
      * Editions of a series whose publication date is still ahead.
      *
      * <p>The only source of <em>French</em> release dates the application holds today: no

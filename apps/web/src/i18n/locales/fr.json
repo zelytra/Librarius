@@ -330,9 +330,9 @@
       "audiobook": "LIVRE AUDIO"
     },
     "kinds": {
-      "book": "Bibliothèque",
-      "manga": "Mangathèque",
-      "comic": "Bandes dessinées",
+      "book": "Livres",
+      "manga": "Mangas",
+      "comic": "BD",
       "graphicNovel": "Romans graphiques",
       "audiobook": "Livres audio"
     },
@@ -579,7 +579,8 @@
       "read": "Livres lus",
       "pages": "Pages lues",
       "series": "Séries suivies",
-      "reading": "En cours"
+      "reading": "En cours",
+      "pagesEstimated": "Pages lues · estimation en cours"
     },
     "favoriteGenres": "Genres favoris",
     "noGenres": "Pas encore de données — ajoute des titres à ta collection.",
@@ -739,7 +740,6 @@
       },
       "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
-      "running": "Import en cours… {{imported}} titre(s) ajouté(s).",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible.",
       "file": "Importer un fichier (collecte, CSV ou pages enregistrées)",
@@ -755,7 +755,13 @@
         "copy": "Sur mobile : copier le code du favori",
         "copied": "Code copié : crée un favori et colle-le comme adresse.",
         "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius."
-      }
+      },
+      "runningTitle": "Import en cours",
+      "percent": "{{percent}} %",
+      "reading": "Lecture du fichier…",
+      "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
+      "doneTitle": "Import terminé",
+      "failedTitle": "L'import n'a pas abouti"
     },
     "export": {
       "title": "Exporter mes données",

@@ -47,6 +47,23 @@ function fileInputOf(container: HTMLElement): HTMLInputElement {
 describe('ImportSection', () => {
   beforeEach(resetAuth);
 
+  test('shows a running import in a card of its own, with how far it has got', async () => {
+    server.use(
+      http.post('*/api/import/:source', () =>
+        HttpResponse.json({ id: 'job-big', status: 'RUNNING', total: 0, imported: 0, skipped: 0 })),
+      http.get('*/api/import/jobs/:id', () =>
+        HttpResponse.json({ id: 'job-big', status: 'RUNNING', total: 200, imported: 60, skipped: 20 })),
+    );
+    renderWithProviders(<ImportSection />);
+
+    await userEvent.type(screen.getByLabelText('Pseudo Booknode'), 'alice');
+    await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
+
+    expect(await screen.findByText('40 %')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '40');
+    expect(screen.getByText('80 titres traités sur 200 · 60 ajoutés')).toBeInTheDocument();
+  });
+
   test('imports a Booknode library from a handle', async () => {
     const calls = captureImports();
     renderWithProviders(<ImportSection />);

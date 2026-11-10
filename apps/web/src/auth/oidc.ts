@@ -39,7 +39,15 @@ export const oidcConfig: AuthProviderNoUserManagerProps = {
   client_id: import.meta.env.VITE_OIDC_CLIENT_ID || 'librarius-web',
   redirect_uri: redirectUri,
   post_logout_redirect_uri: redirectUri,
-  scope: 'openid profile email',
+  // `offline_access`: Keycloak hands out an offline token — kept in its database, so a
+  // Keycloak restart or redeploy leaves it valid, and with no maximum lifetime, only an idle
+  // limit (30 days by default). A reader who opens the app once a month stays signed in for
+  // good, where an ordinary session ended after 30 minutes away. Verified against the
+  // staging realm: the default roles grant it, the token comes back typed "Offline".
+  scope: 'openid profile email offline_access',
+  // Signing out has to end the offline session too, not only the browser's: otherwise the
+  // token would stay valid in Keycloak for weeks after the reader asked to leave.
+  revokeTokensOnSignout: true,
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   // Strips the callback parameters from the URL after sign-in.
   onSigninCallback: () => {

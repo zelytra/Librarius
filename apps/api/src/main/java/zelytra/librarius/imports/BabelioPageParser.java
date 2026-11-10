@@ -5,6 +5,7 @@ import org.jsoup.nodes.Element;
 import zelytra.librarius.domain.LibraryStatus;
 
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,11 +40,30 @@ public final class BabelioPageParser {
 
     public static List<ImportedBook> parse(Document page) {
         List<ImportedBook> books = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        // Babelio's current library: one `li.lib-book` per title, its fields in classes of their
+        // own. Read field by field — the generic reading below took the year, the readers'
+        // average and the reviews count for part of the row's text.
+        List<Element> items = page.select("li.lib-book");
+        if (!items.isEmpty()) {
+            for (Element item : items) {
+                ImportedBook book = fromLibraryItem(item);
+                if (book != null && seen.add(book.title() + '|' + book.author())) {
+                    books.add(book);
+                }
+            }
+            return books;
+        }
         Set<Element> rows = new LinkedHashSet<>();
         for (Element link : page.select("a[href*=/livres/]")) {
+            // The site's own furniture links to books too — the menus' featured titles, a
+            // header, a footer — and every page of the library carries it: eight promoted books
+            // were imported into every reader's library, each glued to its blurb.
+            if (link.closest("[class*=megamenu], nav, header, footer") != null) {
+                continue;
+            }
             rows.add(rowOf(link));
         }
-        Set<String> seen = new LinkedHashSet<>();
         for (Element row : rows) {
             ImportedBook book = toBook(row);
             if (book != null && seen.add(book.title() + '|' + book.author())) {
@@ -51,6 +71,48 @@ public final class BabelioPageParser {
             }
         }
         return books;
+    }
+
+    /** "Ma note : 4 sur 5" — the reader's own rating, as the stars announce it. */
+    private static final Pattern MY_RATING = Pattern.compile("(\\d(?:[.,]\\d)?)\\s*sur\\s*5");
+
+    /** The {@code --r:4.0} the stars are drawn with. */
+    private static final Pattern STARS_STYLE = Pattern.compile("--r\\s*:\\s*(\\d(?:\\.\\d)?)");
+
+    /** One title of Babelio's current "Mes livres" list. */
+    static ImportedBook fromLibraryItem(Element item) {
+        String title = textOf(item.selectFirst(".lib-book-title"));
+        if (title == null) {
+            return null;
+        }
+        Element authorLink = item.selectFirst(".lib-book-author a[href*=/auteur/]");
+        String author = authorLink != null ? emptyToNull(authorLink.text()) : null;
+        String statusText = textOf(item.selectFirst(".lib-status"));
+        boolean wished = statusText != null && fold(statusText).contains("pense");
+        LibraryStatus status = wished ? LibraryStatus.OWNED : status(item, statusText != null ? statusText : "");
+
+        Integer rating = null;
+        Element stars = item.selectFirst(".lib-stars");
+        if (stars != null && !stars.hasClass("lib-unrated")) {
+            Matcher said = MY_RATING.matcher(stars.attr("aria-label"));
+            Matcher drawn = STARS_STYLE.matcher(stars.attr("style"));
+            rating = said.find() ? toFive(said.group(1)) : drawn.find() ? toFive(drawn.group(1)) : null;
+        }
+
+        LocalDate readAt = null;
+        Element dated = item.selectFirst(".lib-date");
+        Matcher date = DATE.matcher(dated == null ? "" : dated.text());
+        if (date.find() && (status == LibraryStatus.READ || status == LibraryStatus.ABANDONED)) {
+            readAt = ImportDates.parse(date.group(1));
+        }
+        Element img = item.selectFirst(".lib-book-cover img[src]");
+        String cover = img == null ? null : emptyToNull(img.absUrl("src").isEmpty() ? img.attr("src") : img.absUrl("src"));
+        return new ImportedBook(title, author, cover, status, null, rating, null, readAt, null, null,
+                null, null, wished);
+    }
+
+    private static String textOf(Element element) {
+        return element == null ? null : emptyToNull(element.text());
     }
 
     /**
@@ -91,16 +153,15 @@ public final class BabelioPageParser {
         String author = authorLink != null ? emptyToNull(authorLink.text()) : null;
         String text = row.text();
         LibraryStatus status = status(row, text);
-        if (status == null) {
-            // A "Pense-bête" is a reminder of a book wanted, not one on the shelf.
-            return null;
-        }
+        // A "Pense-bête" is a reminder of a book wanted, not one on the shelf: the wishlist.
+        boolean wished = status == null;
         Element img = row.selectFirst("img[src]");
         String cover = img != null ? emptyToNull(img.absUrl("src").isEmpty() ? img.attr("src") : img.absUrl("src")) : null;
         Matcher date = DATE.matcher(text);
-        return new ImportedBook(title, author, cover, status, null, rating(row, text),
-                null, date.find() && status == LibraryStatus.READ ? ImportDates.parse(date.group(1)) : null,
-                null, null);
+        return new ImportedBook(title, author, cover, wished ? LibraryStatus.OWNED : status, null,
+                rating(row, text), null,
+                date.find() && status == LibraryStatus.READ ? ImportDates.parse(date.group(1)) : null,
+                null, null, null, null, wished);
     }
 
     /** The reading status a row names, from a status control's value or the row's words. */

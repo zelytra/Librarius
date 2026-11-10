@@ -66,11 +66,11 @@ describe('CollectionPage', () => {
     libraryReturns([ROMAN, MANGA]);
     renderWithProviders(<CollectionPage />);
 
-    // Default "Bibliothèque" view: the manga is hidden.
+    // Default "Livres" view: the manga is hidden.
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
     expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByText('Mangathèque'));
+    await userEvent.click(screen.getByText('Mangas'));
 
     expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
@@ -81,8 +81,8 @@ describe('CollectionPage', () => {
     renderWithProviders(<CollectionPage />);
 
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
-    // One position is no choice: the lone "Bibliothèque" pill is not drawn.
-    expect(screen.queryByText('Bibliothèque')).not.toBeInTheDocument();
+    // One position is no choice: the lone "Livres" pill is not drawn.
+    expect(screen.queryByText('Livres')).not.toBeInTheDocument();
   });
 
   /** #183: the kind switch is driven by the taxonomy, not a hardcoded Books/Manga pair. */
@@ -95,12 +95,12 @@ describe('CollectionPage', () => {
     ]);
     renderWithProviders(<CollectionPage />);
 
-    expect(await screen.findByText('Bibliothèque')).toBeInTheDocument();
-    expect(await screen.findByText('Bandes dessinées')).toBeInTheDocument();
+    expect(await screen.findByText('Livres')).toBeInTheDocument();
+    expect(await screen.findByText('BD')).toBeInTheDocument();
     expect(await screen.findByText('Romans graphiques')).toBeInTheDocument();
     expect(await screen.findByText('Livres audio')).toBeInTheDocument();
     // Nothing owned of this kind: no shelf offered for it.
-    expect(screen.queryByText('Mangathèque')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mangas')).not.toBeInTheDocument();
   });
 
   /**
@@ -344,7 +344,7 @@ describe('CollectionPage', () => {
    */
   async function openMangaShelf() {
     await screen.findByText('Par série');
-    const tab = screen.queryByText('Mangathèque');
+    const tab = screen.queryByText('Mangas');
     if (tab) await userEvent.click(tab);
   }
 
@@ -412,7 +412,7 @@ describe('CollectionPage', () => {
     libraryReturns([ROMAN, MANGA]);
     seriesReturns([SAGA, COMPLETE, seriesSummary({ id: 'series-3', kind: 'BOOK', title: 'Le Trône de fer' })]);
     renderWithProviders(<CollectionPage />);
-    await userEvent.click(await screen.findByText('Mangathèque'));
+    await userEvent.click(await screen.findByText('Mangas'));
 
     expect(await screen.findByText('Berserk')).toBeInTheDocument();
     expect(screen.queryByText('Le Trône de fer')).not.toBeInTheDocument();
