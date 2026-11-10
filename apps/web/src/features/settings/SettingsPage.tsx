@@ -120,6 +120,16 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* Other readers: finding them, who the reader follows and who follows them (#202). */}
+        <div className={styles.sectionBlock}>
+          <h3 className={styles.sectionTitle}>{t('settings.community')}</h3>
+          <p className={styles.sectionIntro}>{t('settings.communityDescription')}</p>
+          <button className={styles.dashboardLink} onClick={() => navigate('/people')}>
+            <Icon name="search" size={18} color="var(--accent-deep)" />
+            {t('people.open')}
+          </button>
+        </div>
+
         {/* Members the caller has blocked, with a way to take it back (#203). */}
         <div className={styles.sectionBlock}>
           <BlockedMembersSection />

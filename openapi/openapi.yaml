@@ -571,6 +571,17 @@ components:
           type: boolean
         publicAccount:
           type: boolean
+    MemberSearchDto:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        trusted:
+          type: boolean
+        following:
+          type: boolean
     MemberSummaryDto:
       type: object
       properties:
@@ -2332,6 +2343,31 @@ paths:
       summary: Timeline
       tags:
       - Stats Resource
+      security:
+      - SecurityScheme: []
+  /api/users:
+    get:
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberSearchDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search
+      tags:
+      - User Resource
       security:
       - SecurityScheme: []
   /api/users/{id}/block:

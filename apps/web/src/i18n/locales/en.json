@@ -804,7 +804,9 @@
       "confirm": "Delete permanently",
       "done": "Your account and all your data have been deleted. Thank you for using My Library.",
       "failed": "Cannot delete it right now. Nothing has been deleted."
-    }
+    },
+    "community": "Community",
+    "communityDescription": "Find other readers by name, follow them and see who follows you."
   },
   "report": {
     "trigger": "Report an error",
@@ -914,5 +916,25 @@
       "WISHLIST": "Added to your wishlist."
     },
     "as": "Add as"
+  },
+  "people": {
+    "title": "Readers",
+    "prompt": "Sign in to find other readers.",
+    "placeholder": "Search a reader by name…",
+    "searchHint": "Type at least two letters of a reader's name.",
+    "noMatch": "No reader by that name.",
+    "noFollowing": "You follow nobody yet: find readers in the Search tab.",
+    "noFollowers": "Nobody follows you yet.",
+    "tabs": {
+      "search": "Search",
+      "following_one": "Following ({{count}})",
+      "following_other": "Following ({{count}})",
+      "followers": "Followers"
+    },
+    "follow": "Follow",
+    "following": "Following",
+    "followAria": "Follow {{name}}",
+    "unfollowAria": "Stop following {{name}}",
+    "open": "Find readers"
   }
 }

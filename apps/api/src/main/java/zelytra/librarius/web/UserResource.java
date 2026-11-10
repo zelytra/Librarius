@@ -5,6 +5,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -12,6 +14,8 @@ import jakarta.ws.rs.core.Response;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.social.UserBlockService;
 import zelytra.librarius.social.UserFollowService;
+
+import java.util.List;
 
 /**
  * Acting on another member: following (#200) and blocking (#203).
@@ -39,6 +43,31 @@ public class UserResource {
 
     @Inject
     UserBlockService blocks;
+
+    @Inject
+    zelytra.librarius.domain.repository.AppUserRepository users;
+
+    @Inject
+    zelytra.librarius.domain.repository.UserFollowRepository followRepository;
+
+    /**
+     * Finds members by display name (#202), so a reader can find who to follow. Names are not
+     * unique: two "Marc" are both returned. Only the follow-list surface comes back — name,
+     * trusted badge, and whether the caller follows them — for anyone, since nothing in it is
+     * private; the caller and anyone a block stands between are left out. Two letters at least.
+     */
+    @GET
+    public List<ApiDtos.MemberSearchDto> search(@QueryParam("q") String q) {
+        currentUser.require();
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+        String me = currentUser.id();
+        return users.searchByName(me, q, 30).stream()
+                .map(u -> new ApiDtos.MemberSearchDto(u.id, u.displayName, u.trusted,
+                        followRepository.isFollowing(me, u.id)))
+                .toList();
+    }
 
     /** The caller starts following the member. Idempotent, 204. */
     @PUT

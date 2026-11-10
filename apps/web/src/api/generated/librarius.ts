@@ -364,6 +364,13 @@ export interface MeDto {
   publicAccount?: boolean;
 }
 
+export interface MemberSearchDto {
+  id?: string;
+  displayName?: string;
+  trusted?: boolean;
+  following?: boolean;
+}
+
 export interface MemberSummaryDto {
   id?: string;
   displayName?: string;
@@ -669,6 +676,10 @@ export type GetApiStatsTimelineParams = {
 from?: string;
 granularity?: string;
 to?: string;
+};
+
+export type GetApiUsersParams = {
+q?: string;
 };
 
 export type GetApiWishlistParams = {
@@ -4977,6 +4988,114 @@ export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiS
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiStatsTimelineQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiUsersUrl = (params?: GetApiUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/users?${stringifiedParams}` : `/api/users`
+}
+
+/**
+ * @summary Search
+ */
+export const getApiUsers = async (params?: GetApiUsersParams, options?: RequestInit): Promise<MemberSearchDto[]> => {
+
+  return apiClient<MemberSearchDto[]>(getGetApiUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiUsersQueryKey = (params?: GetApiUsersParams,) => {
+    return [
+    `/api/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiUsersQueryOptions = <TData = Awaited<ReturnType<typeof getApiUsers>>, TError = void>(params?: GetApiUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsers>>> = () => getApiUsers(params, );
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getApiUsers>>>
+export type GetApiUsersQueryError = void
+
+
+export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, TError = void>(
+ params: undefined |  GetApiUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, TError = void>(
+ params?: GetApiUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, TError = void>(
+ params?: GetApiUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search
+ */
+
+export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, TError = void>(
+ params?: GetApiUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiUsersQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
