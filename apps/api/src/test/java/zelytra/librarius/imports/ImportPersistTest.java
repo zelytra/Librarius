@@ -88,4 +88,46 @@ class ImportPersistTest {
             assertEquals(null, item.progress);
         });
     }
+
+    /**
+     * A library bigger than one batch: written in several transactions — a single one ran past
+     * the 60-second transaction timeout on a 2346-title Booknode library and was rolled back
+     * whole — with the progress reported after each, and one shelf category shared by titles
+     * that land in different batches rather than created once per batch.
+     */
+    @Test
+    void writesABigLibraryInBatchesAndReportsProgress() {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        int size = ImportService.BATCH * 2 + 17;
+        List<ImportedBook> books = new java.util.ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            books.add(new ImportedBook("Big Library Title " + i, "Author " + i, null,
+                    zelytra.librarius.domain.LibraryStatus.READ, "romance", 4, null));
+        }
+        List<int[]> reported = new java.util.ArrayList<>();
+
+        ImportService.ImportResult result = imports.persist(userId, "booknode", books,
+                (imported, skipped) -> reported.add(new int[] {imported, skipped}));
+
+        assertEquals(size, result.imported());
+        // One report per batch, each a running total.
+        assertEquals(List.of(ImportService.BATCH, ImportService.BATCH * 2, size),
+                reported.stream().map(r -> r[0]).toList());
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(size, owned.size());
+            assertEquals(1, owned.stream().map(i -> i.rankCategory.id).distinct().count());
+        });
+
+        // Running it again finds every title already there.
+        ImportService.ImportResult again = imports.persist(userId, "booknode", books);
+        assertEquals(0, again.imported());
+        assertEquals(size, again.skipped());
+    }
 }
