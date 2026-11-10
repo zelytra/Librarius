@@ -67,6 +67,10 @@ public final class ApiDtos {
      *                list can show the trusted badge next to a member's name exactly as the
      *                caller's own profile does (#186)
      */
+    /** A member found by name (#202): the follow-list surface, plus whether the caller follows them. */
+    public record MemberSearchDto(String id, String displayName, boolean trusted, boolean following) {
+    }
+
     public record MemberSummaryDto(String id, String displayName, boolean trusted) {
         public static MemberSummaryDto of(AppUser u) {
             return new MemberSummaryDto(u.id, u.displayName, u.trusted);

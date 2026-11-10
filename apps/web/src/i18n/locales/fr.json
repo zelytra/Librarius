@@ -804,7 +804,9 @@
       "confirm": "Supprimer définitivement",
       "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Ma Bibliothèque.",
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
-    }
+    },
+    "community": "Communauté",
+    "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit."
   },
   "report": {
     "trigger": "Signaler une erreur",
@@ -914,5 +916,25 @@
       "WISHLIST": "Ajouté à tes souhaits."
     },
     "as": "Ajouter comme"
+  },
+  "people": {
+    "title": "Lecteurs",
+    "prompt": "Connecte-toi pour trouver d'autres lecteurs.",
+    "placeholder": "Chercher un lecteur par son nom…",
+    "searchHint": "Tape au moins deux lettres du nom d'un lecteur.",
+    "noMatch": "Aucun lecteur de ce nom.",
+    "noFollowing": "Tu ne suis encore personne : cherche des lecteurs dans l'onglet Rechercher.",
+    "noFollowers": "Personne ne te suit pour l'instant.",
+    "tabs": {
+      "search": "Rechercher",
+      "following_one": "Abonnement ({{count}})",
+      "following_other": "Abonnements ({{count}})",
+      "followers": "Abonnés"
+    },
+    "follow": "Suivre",
+    "following": "Suivi",
+    "followAria": "Suivre {{name}}",
+    "unfollowAria": "Ne plus suivre {{name}}",
+    "open": "Trouver des lecteurs"
   }
 }

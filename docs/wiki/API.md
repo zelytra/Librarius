@@ -32,7 +32,7 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 | Goals | `GET /api/goals`, `PUT /api/goals/{year}` | books or pages |
 | Categories | `GET/POST /api/categories`, `PUT/DELETE /api/categories/{id}` | Or, Argent, Bronze, Abandon are built in |
 | Me | `GET/PATCH/DELETE /api/me`, `…/followers`, `…/following`, `…/blocked` | `DELETE` erases the account (off until a Keycloak service account is configured) |
-| Social | `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | |
+| Social | `GET /api/users?q=`, `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | members found by display name (two letters at least; the caller and blocked members left out), each with whether the caller follows them |
 | Misc | `GET /api/genres`, `GET/PUT /api/dashboard/layout`, `GET /api/releases/upcoming` | |
 
 The full reference, parameter by parameter, is [`.claude/docs/API.md`](https://github.com/zelytra/Librarius/blob/main/.claude/docs/API.md);
