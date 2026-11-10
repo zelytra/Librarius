@@ -22,6 +22,7 @@ import {
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
   usePutApiLibraryIdReview,
+  useGetApiWorksIdReviews,
   type EditionDto,
   type LibraryItemDto,
   type ProgressDto,
@@ -33,6 +34,7 @@ import { ReportButton } from '../report/ReportButton';
 import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
+import { ReadersReviews } from '../reviews/ReadersReviews';
 import styles from './DetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
@@ -270,7 +272,20 @@ function ReviewSection({
           if (review !== stored) onSave({ rating: item.rating ?? undefined, review: review || undefined });
         }}
       />
-      <p className={styles.privateNote}>{t('detail.review.private')}</p>
+      {/* Shared or private (#205): private stays the default, and the note says which. */}
+      <label className={styles.shareToggle}>
+        <input
+          type="checkbox"
+          checked={Boolean(item.reviewShared)}
+          onChange={(e) =>
+            onSave({ rating: item.rating ?? undefined, review: review || undefined, shared: e.target.checked })
+          }
+        />
+        {t('detail.review.share')}
+      </label>
+      <p className={styles.privateNote}>
+        {t(item.reviewShared ? 'detail.review.sharedNote' : 'detail.review.private')}
+      </p>
     </section>
   );
 }
@@ -418,6 +433,7 @@ function DetailContent({ id }: { id: string }) {
   const filedUnder = cats.find((c) => c.code === item?.rankCode)?.id;
 
   const workId = item?.book?.workId;
+  const readersReviews = useGetApiWorksIdReviews(workId ?? '');
   const [editionError, setEditionError] = useState<string | null>(null);
   /** Which end-of-reading sheet is open, if any. Null is the ordinary state of the screen. */
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -443,7 +459,14 @@ function DetailContent({ id }: { id: string }) {
       // with what was actually stored.
       onMutate: ({ data }) => {
         queryClient.setQueryData<LibraryItemDto>(getGetApiLibraryIdQueryKey(id), (prev) =>
-          prev ? { ...prev, rating: data.rating, review: data.review } : prev);
+          prev
+            ? {
+                ...prev,
+                rating: data.rating,
+                review: data.review,
+                reviewShared: data.shared ?? prev.reviewShared,
+              }
+            : prev);
       },
       onSettled: invalidateLibrary,
     },
@@ -636,6 +659,9 @@ function DetailContent({ id }: { id: string }) {
           saving={reviewSaving}
           onSave={(data) => mutateReview({ id, data })}
         />
+
+        {/* What the readers the caller can see shared about this book (#207). */}
+        <ReadersReviews data={readersReviews.data} loading={readersReviews.isPending && Boolean(workId)} />
 
         {/* Every button in the row writes the same rank, so the heading carries the
             indicator for all of them — the same rule as the review and the editions

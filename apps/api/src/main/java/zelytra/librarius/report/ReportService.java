@@ -40,6 +40,12 @@ public class ReportService {
     @Inject
     SeriesRepository series;
 
+    @Inject
+    zelytra.librarius.domain.repository.LibraryItemRepository items;
+
+    @Inject
+    zelytra.librarius.domain.repository.SeriesReviewRepository seriesReviews;
+
     /**
      * Files a report on behalf of {@code reporterId}.
      *
@@ -67,6 +73,9 @@ public class ReportService {
             case WORK -> works.findById(targetId) != null;
             case EDITION -> editions.findById(targetId) != null;
             case SERIES -> series.findById(targetId) != null;
+            // A review can be reported only once it is shared: a private one is read by nobody.
+            case REVIEW -> items.find("id = ?1 and reviewShared = true", targetId).count() > 0;
+            case SERIES_REVIEW -> seriesReviews.find("id = ?1 and shared = true", targetId).count() > 0;
         };
     }
 

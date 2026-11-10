@@ -231,6 +231,11 @@ public class LibraryResource {
         ReviewDto update = dto != null ? dto : new ReviewDto(null, null);
         item.rating = update.rating();
         item.review = blankToNull(update.review());
+        // Absent leaves the reader's choice as it was: a client that predates sharing never
+        // turns a shared review private, or the reverse.
+        if (update.shared() != null) {
+            item.reviewShared = update.shared();
+        }
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 

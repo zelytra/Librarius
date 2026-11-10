@@ -363,6 +363,25 @@
   resize: vertical;
 }
 
+/* Sharing the review (#205): a plain checkbox with its sentence, a finger-sized target. */
+.shareToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  margin-top: 10px;
+  font-size: var(--fs-13-5);
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.shareToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-deep);
+}
+
 .privateNote {
   font-size: var(--fs-11);
   color: var(--faint);

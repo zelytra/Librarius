@@ -286,6 +286,14 @@
           }
         }
       },
+      "Cover" : {
+        "type" : "object",
+        "properties" : {
+          "large" : {
+            "type" : "string"
+          }
+        }
+      },
       "DashboardLayoutDto" : {
         "type" : "object",
         "required" : [ "sections" ],
@@ -308,6 +316,17 @@
           },
           "hidden" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "Data" : {
+        "type" : "object",
+        "properties" : {
+          "Page" : {
+            "$ref" : "#/components/schemas/Page"
+          },
+          "Staff" : {
+            "$ref" : "#/components/schemas/StaffSearch"
           }
         }
       },
@@ -525,6 +544,23 @@
           }
         }
       },
+      "FuzzyDate" : {
+        "type" : "object",
+        "properties" : {
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "month" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "day" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "GenreCount" : {
         "type" : "object",
         "properties" : {
@@ -574,6 +610,26 @@
           },
           "unit" : {
             "$ref" : "#/components/schemas/GoalUnit"
+          }
+        }
+      },
+      "GqlRequest" : {
+        "type" : "object",
+        "properties" : {
+          "query" : {
+            "type" : "string"
+          },
+          "variables" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          }
+        }
+      },
+      "GqlResponse" : {
+        "type" : "object",
+        "properties" : {
+          "data" : {
+            "$ref" : "#/components/schemas/Data"
           }
         }
       },
@@ -675,6 +731,9 @@
           },
           "book" : {
             "$ref" : "#/components/schemas/BookView"
+          },
+          "reviewShared" : {
+            "type" : "boolean"
           }
         }
       },
@@ -799,6 +858,48 @@
           }
         }
       },
+      "Media" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/Title"
+          },
+          "startDate" : {
+            "$ref" : "#/components/schemas/FuzzyDate"
+          },
+          "coverImage" : {
+            "$ref" : "#/components/schemas/Cover"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "isAdult" : {
+            "type" : "boolean"
+          },
+          "volumes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "staff" : {
+            "$ref" : "#/components/schemas/Staff"
+          }
+        }
+      },
+      "MediaConnection" : {
+        "type" : "object",
+        "properties" : {
+          "nodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Media"
+            }
+          }
+        }
+      },
       "MemberSearchDto" : {
         "type" : "object",
         "properties" : {
@@ -830,10 +931,29 @@
           }
         }
       },
+      "Name" : {
+        "type" : "object",
+        "properties" : {
+          "full" : {
+            "type" : "string"
+          }
+        }
+      },
       "OffsetDateTime" : {
         "type" : "string",
         "format" : "date-time",
         "examples" : [ "2022-03-10T12:15:50-04:00" ]
+      },
+      "Page" : {
+        "type" : "object",
+        "properties" : {
+          "media" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Media"
+            }
+          }
+        }
       },
       "ProgressDto" : {
         "type" : "object",
@@ -908,11 +1028,11 @@
       },
       "ReportReason" : {
         "type" : "string",
-        "enum" : [ "WRONG_COVER", "WRONG_INFO", "DUPLICATE", "OTHER" ]
+        "enum" : [ "WRONG_COVER", "WRONG_INFO", "DUPLICATE", "SPOILER", "OFFENSIVE", "SPAM", "OTHER" ]
       },
       "ReportTargetType" : {
         "type" : "string",
-        "enum" : [ "WORK", "EDITION", "SERIES" ]
+        "enum" : [ "WORK", "EDITION", "SERIES", "REVIEW", "SERIES_REVIEW" ]
       },
       "ReviewDto" : {
         "type" : "object",
@@ -926,6 +1046,9 @@
           "review" : {
             "type" : "string",
             "maxLength" : 5000
+          },
+          "shared" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1045,6 +1168,9 @@
           },
           "updatedAt" : {
             "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "shared" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1061,6 +1187,9 @@
           "review" : {
             "type" : "string",
             "maxLength" : 5000
+          },
+          "shared" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1132,6 +1261,87 @@
           },
           "coverUrl" : {
             "type" : "string"
+          }
+        }
+      },
+      "SharedReviewDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "authorId" : {
+            "type" : "string"
+          },
+          "authorName" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "review" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "SharedReviewsDto" : {
+        "type" : "object",
+        "properties" : {
+          "average" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reviews" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SharedReviewDto"
+            }
+          }
+        }
+      },
+      "Staff" : {
+        "type" : "object",
+        "properties" : {
+          "edges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffEdge"
+            }
+          }
+        }
+      },
+      "StaffEdge" : {
+        "type" : "object",
+        "properties" : {
+          "role" : {
+            "type" : "string"
+          },
+          "node" : {
+            "$ref" : "#/components/schemas/StaffNode"
+          }
+        }
+      },
+      "StaffNode" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "$ref" : "#/components/schemas/Name"
+          }
+        }
+      },
+      "StaffSearch" : {
+        "type" : "object",
+        "properties" : {
+          "staffMedia" : {
+            "$ref" : "#/components/schemas/MediaConnection"
           }
         }
       },
@@ -1272,6 +1482,17 @@
               "type" : "integer",
               "format" : "int64"
             }
+          }
+        }
+      },
+      "Title" : {
+        "type" : "object",
+        "properties" : {
+          "romaji" : {
+            "type" : "string"
+          },
+          "english" : {
+            "type" : "string"
           }
         }
       },
@@ -1492,12 +1713,37 @@
     "securitySchemes" : {
       "SecurityScheme" : {
         "type" : "openIdConnect",
-        "openIdConnectUrl" : "http://localhost:8081/realms/librarius/.well-known/openid-configuration",
         "description" : "Authentication"
       }
     }
   },
   "paths" : {
+    "/" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GqlRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GqlResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/authors" : {
       "get" : {
         "parameters" : [ {
@@ -3301,6 +3547,41 @@
         } ]
       }
     },
+    "/api/series/{id}/reviews" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SharedReviewsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Reviews",
+        "tags" : [ "Series Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/stats" : {
       "get" : {
         "responses" : {
@@ -3798,6 +4079,41 @@
           }
         },
         "summary" : "List",
+        "tags" : [ "Work Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/works/{id}/reviews" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SharedReviewsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Reviews",
         "tags" : [ "Work Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]

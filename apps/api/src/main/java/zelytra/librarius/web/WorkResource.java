@@ -48,4 +48,18 @@ public class WorkResource {
     public List<EditionDto> list(@PathParam("id") UUID id) {
         return editions.editionsOf(currentUser.id(), id).orElseThrow(NotFoundException::new);
     }
+
+    @Inject
+    zelytra.librarius.social.SharedReviewService sharedReviews;
+
+    /**
+     * The reviews readers shared on this work (#206), as far as the caller may see them —
+     * whoever's activity they can see, never across a block — with their average.
+     */
+    @GET
+    @Path("/{id}/reviews")
+    public ApiDtos.SharedReviewsDto reviews(@PathParam("id") UUID id) {
+        currentUser.require();
+        return sharedReviews.ofWork(currentUser.id(), id);
+    }
 }

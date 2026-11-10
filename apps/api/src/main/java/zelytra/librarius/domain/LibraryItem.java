@@ -46,6 +46,10 @@ public class LibraryItem {
     @Column(columnDefinition = "text")
     public String review;
 
+    /** Whether the reader shares the rating and review above (#205); private by default. */
+    @Column(name = "review_shared", nullable = false)
+    public boolean reviewShared;
+
     /**
      * Where the reader stands in the book. The inverse side of the 1-1, so that a single
      * query can hand back an item and its progress; the list queries fetch it explicitly

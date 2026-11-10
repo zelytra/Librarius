@@ -233,12 +233,13 @@ public final class ApiDtos {
      * @param progress reading position, {@code null} while the title has never been opened
      */
     public record LibraryItemDto(UUID id, String status, Integer rating, String review,
-            LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book) {
+            LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
+            boolean reviewShared) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.edition.pageCount) : null,
-                    BookView.of(it.edition));
+                    BookView.of(it.edition), it.reviewShared);
         }
     }
 
@@ -315,7 +316,26 @@ public final class ApiDtos {
      * <p>A PUT of the pair, so clearing the rating is sending a null one — the alternative,
      * a partial update, gives no way to say "I no longer want to rate this".
      */
-    public record ReviewDto(@Min(1) @Max(5) Integer rating, @Size(max = 5000) String review) {
+    /**
+     * @param shared whether the rating and review are shared with whoever can see the reader's
+     *               activity (#205); absent leaves the current choice as it is
+     */
+    public record ReviewDto(@Min(1) @Max(5) Integer rating, @Size(max = 5000) String review, Boolean shared) {
+        public ReviewDto(Integer rating, String review) {
+            this(rating, review, null);
+        }
+    }
+
+    /** One review another reader shared (#206): who, how many stars, what they wrote, when. */
+    public record SharedReviewDto(UUID id, String authorId, String authorName, Integer rating, String review,
+            java.time.OffsetDateTime updatedAt) {
+    }
+
+    /**
+     * The shared reviews of a work or a series the caller may see, and their average rating —
+     * computed over those same reviews, so a hidden one never moves it.
+     */
+    public record SharedReviewsDto(Double average, long count, java.util.List<SharedReviewDto> reviews) {
     }
 
     /**
@@ -582,10 +602,10 @@ public final class ApiDtos {
      * members (#205) and rolling it into a public score (#206) are both out of scope here.
      */
     public record SeriesReviewDto(UUID id, UUID seriesId, int rating, String review,
-            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime updatedAt) {
+            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime updatedAt, boolean shared) {
         public static SeriesReviewDto of(zelytra.librarius.domain.SeriesReview r) {
             return new SeriesReviewDto(r.id, r.seriesId, r.rating, r.review, r.createdAt,
-                    r.updatedAt);
+                    r.updatedAt, r.shared);
         }
     }
 
@@ -597,7 +617,10 @@ public final class ApiDtos {
      * leave one, so removing it is a {@code DELETE}, not a rating of {@code null}.
      */
     public record SeriesReviewUpsertDto(@NotNull @Min(1) @Max(5) Integer rating,
-            @Size(max = 5000) String review) {
+            @Size(max = 5000) String review, Boolean shared) {
+        public SeriesReviewUpsertDto(Integer rating, String review) {
+            this(rating, review, null);
+        }
     }
 
     // ── Authors ─────────────────────────────────────────────────────────────

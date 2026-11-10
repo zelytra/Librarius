@@ -686,7 +686,9 @@
       "star": "Noter {{rating}} sur 5",
       "clear": "Retirer ma note",
       "placeholder": "Ce que j'en ai pensé…",
-      "private": "Note et avis strictement privés : personne d'autre ne les voit."
+      "private": "Note et avis strictement privés : personne d'autre ne les voit.",
+      "share": "Partager mon avis avec les lecteurs qui peuvent voir mon activité",
+      "sharedNote": "Avis partagé : visible des lecteurs que tu suis mutuellement (ou de tous si ton compte est public), jamais d'un compte bloqué."
     },
     "editions": {
       "title": "Autres éditions",
@@ -817,6 +819,9 @@
       "WRONG_COVER": "Mauvaise couverture",
       "WRONG_INFO": "Informations erronées",
       "DUPLICATE": "Doublon",
+      "SPOILER": "Divulgâche l'histoire",
+      "OFFENSIVE": "Propos offensants",
+      "SPAM": "Spam ou hors sujet",
       "OTHER": "Autre"
     },
     "commentLabel": "Commentaire (facultatif)",
@@ -828,8 +833,12 @@
     "sent": {
       "title": "Signalement envoyé",
       "body": "Merci : ton signalement nous aidera à corriger cette fiche.",
-      "close": "Fermer"
-    }
+      "close": "Fermer",
+      "reviewBody": "Merci : nous allons examiner cet avis."
+    },
+    "reviewTrigger": "Signaler",
+    "reviewTitle": "Signaler cet avis",
+    "reviewSubtitle": "Cet avis est partagé par un autre lecteur. Dis-nous ce qui ne va pas : ton signalement reste privé."
   },
   "trust": {
     "badge": {
@@ -936,5 +945,11 @@
     "followAria": "Suivre {{name}}",
     "unfollowAria": "Ne plus suivre {{name}}",
     "open": "Trouver des lecteurs"
+  },
+  "reviews": {
+    "title": "Avis des lecteurs",
+    "average": "★ {{average}} / 5 · {{count}} avis",
+    "empty": "Aucun lecteur que tu peux voir n'a encore partagé son avis. Partage le tien : il apparaîtra ici pour eux.",
+    "stars": "{{rating}} étoiles sur 5"
   }
 }
