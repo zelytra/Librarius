@@ -57,9 +57,7 @@ public class BooknodeImporter implements LibraryImporter {
             first = get(profileUrl(h, 1));
         } catch (Exception e) {
             Log.warnf("Booknode import failed for %s: %s", h, e.getMessage());
-            throw new ImportException("Impossible de lire la bibliothèque Booknode de « " + h
-                    + " ». Vérifie le pseudo et que le profil est public, ou utilise la collecte depuis ton "
-                    + "navigateur : elle fonctionne même quand Booknode refuse notre serveur.");
+            throw new ImportException(failureMessage(h, e));
         }
         all.addAll(parse(first));
 
@@ -76,6 +74,28 @@ public class BooknodeImporter implements LibraryImporter {
             }
         }
         return all;
+    }
+
+    /**
+     * What the reader is told when the first page cannot be read. The cases are told apart
+     * because they call for different things: a profile that does not exist needs another
+     * pseudo, while Booknode turning the server away needs the browser collector — under one
+     * message, neither the reader nor whoever reads the report could tell which it was.
+     */
+    static String failureMessage(String handle, Exception failure) {
+        int status = failure instanceof org.jsoup.HttpStatusException http ? http.getStatusCode() : 0;
+        if (status == 404) {
+            return "Aucun profil Booknode « " + handle + " ». Vérifie le pseudo : c'est celui de "
+                    + "l'adresse de ton profil, booknode.com/profil/ton-pseudo.";
+        }
+        if (status == 403 || status == 429 || status == 503) {
+            return "Booknode refuse les requêtes de notre serveur (HTTP " + status + "). Utilise la "
+                    + "collecte depuis ton navigateur, ci-dessous : elle lit ta bibliothèque avec ta "
+                    + "propre session et fonctionne toujours.";
+        }
+        return "Impossible de lire la bibliothèque Booknode de « " + handle + " »"
+                + (status > 0 ? " (HTTP " + status + ")" : "") + ". Vérifie que le profil est public, "
+                + "ou utilise la collecte depuis ton navigateur, ci-dessous.";
     }
 
     private static String profileUrl(String handle, int page) {

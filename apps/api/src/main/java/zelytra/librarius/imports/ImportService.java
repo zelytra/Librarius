@@ -4,7 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import zelytra.librarius.catalog.CatalogEntryService;
 import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
@@ -74,8 +74,52 @@ public class ImportService {
         return persist(userId, "csv", parseCsv(csv));
     }
 
-    @Transactional
+    /** Titles written per transaction; see {@link #persist(String, String, List, Progress)}. */
+    static final int BATCH = 100;
+
+    /** Told how far an import has got, after each batch it commits. */
+    @FunctionalInterface
+    public interface Progress {
+        void update(int imported, int skipped);
+    }
+
     ImportResult persist(String userId, String source, List<ImportedBook> books) {
+        return persist(userId, source, books, (imported, skipped) -> { });
+    }
+
+    /**
+     * Writes the titles to the reader's library, {@value #BATCH} per transaction.
+     *
+     * <p>Not one transaction for the whole library: a 2400-title Booknode export takes about a
+     * minute to write, and the transaction manager aborts any transaction past 60 seconds. One
+     * transaction meant a big library crossed it, was rolled back whole, and the reader got
+     * "import unavailable" with nothing saved — the smaller libraries the tests use never got
+     * near it. In batches, each commit is a few seconds, the progress the screen polls moves as
+     * the titles land, and a failure keeps what earlier batches wrote; running the import again
+     * skips those as already present.
+     */
+    ImportResult persist(String userId, String source, List<ImportedBook> books, Progress progress) {
+        Batches state = QuarkusTransaction.requiringNew().call(() -> prepare(userId, books));
+        int imported = 0;
+        int skipped = 0;
+        for (int from = 0; from < books.size(); from += BATCH) {
+            List<ImportedBook> slice = books.subList(from, Math.min(books.size(), from + BATCH));
+            int[] counts = QuarkusTransaction.requiringNew().call(() -> persistBatch(userId, slice, state));
+            imported += counts[0];
+            skipped += counts[1];
+            progress.update(imported, skipped);
+        }
+
+        meters.counter("librarius.import", "source", source).increment(imported);
+        return new ImportResult(source, imported, skipped, books.size());
+    }
+
+    /** What every batch of one import shares: the titles already held, and the categories. */
+    private record Batches(Set<String> existing, Map<String, RankCategory> categories, int[] nextOrder,
+            Map<String, Long> shelfCounts, long minForCategory) {
+    }
+
+    private Batches prepare(String userId, List<ImportedBook> books) {
         Set<String> existing = new HashSet<>();
         for (LibraryItem it : items.listByUser(userId)) {
             existing.add(key(it.edition.work.title, it.edition.work.authorsText));
@@ -101,15 +145,18 @@ public class ImportService {
                 shelfCounts.merge(b.shelf().trim(), 1L, Long::sum);
             }
         }
-        long minForCategory = Math.max(1, books.size() / 300);
+        return new Batches(existing, categories, nextOrder, shelfCounts, Math.max(1, books.size() / 300));
+    }
 
+    /** One batch, in the caller's transaction: how many titles it imported, and skipped. */
+    private int[] persistBatch(String userId, List<ImportedBook> books, Batches state) {
         int imported = 0;
         int skipped = 0;
         for (ImportedBook book : books) {
             if (book.title() == null || book.title().isBlank()) {
                 continue;
             }
-            if (!existing.add(key(book.title(), book.author()))) {
+            if (!state.existing().add(key(book.title(), book.author()))) {
                 skipped++;
                 continue;
             }
@@ -132,15 +179,17 @@ public class ImportService {
             item.status = status;
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();
-            item.rankCategory = categoryFor(userId, book.shelf(), shelfCounts, minForCategory,
-                    categories, nextOrder);
+            // A category from an earlier batch is detached by now; a reference to it is all the
+            // item needs, and the merge hands back the instance this transaction tracks.
+            RankCategory category = categoryFor(userId, book.shelf(), state.shelfCounts(),
+                    state.minForCategory(), state.categories(), state.nextOrder());
+            item.rankCategory = category == null || ranks.getEntityManager().contains(category)
+                    ? category : ranks.getEntityManager().merge(category);
             items.persist(item);
             recordReading(item, book.readAt());
             imported++;
         }
-
-        meters.counter("librarius.import", "source", source).increment(imported);
-        return new ImportResult(source, imported, skipped, books.size());
+        return new int[] {imported, skipped};
     }
 
     /**

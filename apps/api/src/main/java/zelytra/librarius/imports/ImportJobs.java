@@ -145,7 +145,12 @@ public class ImportJobs {
         try {
             List<ImportedBook> books = loader.get();
             job.total = books.size();
-            ImportResult result = imports.persist(job.userId, job.source, books);
+            // The counts move batch by batch, so the screen polling the job shows titles
+            // landing rather than a zero that only changes once the whole library is in.
+            ImportResult result = imports.persist(job.userId, job.source, books, (imported, skipped) -> {
+                job.imported = imported;
+                job.skipped = skipped;
+            });
             job.imported = result.imported();
             job.skipped = result.skipped();
             job.status = Status.DONE;

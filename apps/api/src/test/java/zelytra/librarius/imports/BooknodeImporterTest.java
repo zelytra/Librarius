@@ -93,4 +93,19 @@ class BooknodeImporterTest {
 
         assertEquals(97, BooknodeImporter.highestPage(doc));
     }
+
+    @Test
+    void tellsAMissingProfileFromARefusedServer() {
+        String missing = BooknodeImporter.failureMessage("nobody",
+                new org.jsoup.HttpStatusException("Not Found", 404, "https://booknode.com/profil/nobody"));
+        String refused = BooknodeImporter.failureMessage("alice",
+                new org.jsoup.HttpStatusException("Forbidden", 403, "https://booknode.com/profil/alice"));
+        String offline = BooknodeImporter.failureMessage("alice", new java.net.SocketTimeoutException("timeout"));
+
+        org.junit.jupiter.api.Assertions.assertTrue(missing.startsWith("Aucun profil Booknode « nobody »"), missing);
+        org.junit.jupiter.api.Assertions.assertTrue(refused.contains("refuse") && refused.contains("HTTP 403"), refused);
+        org.junit.jupiter.api.Assertions.assertTrue(offline.startsWith("Impossible de lire"), offline);
+        org.junit.jupiter.api.Assertions.assertFalse(offline.contains("HTTP"), offline);
+    }
 }
+
