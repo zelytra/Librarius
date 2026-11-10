@@ -38,4 +38,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Barcode scanning (#68): the web view reads the camera through getUserMedia, and
+         Capacitor asks for this permission at runtime when the scan screen first opens it. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Not required: a device without a camera still installs the app and types the ISBN. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

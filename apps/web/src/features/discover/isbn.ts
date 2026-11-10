@@ -42,3 +42,14 @@ export function detectIsbn(input: string): string | null {
   if (isValidIsbn13(candidate) || isValidIsbn10(candidate)) return candidate;
   return null;
 }
+
+/**
+ * The ISBN-13 of an ISBN `detectIsbn` accepted: an ISBN-10 gains its 978 prefix and a new
+ * check digit. A book is scanned as one and typed as the other; both must be the same book.
+ */
+export function toIsbn13(isbn: string): string {
+  if (isbn.length === 13) return isbn;
+  const body = '978' + isbn.slice(0, 9);
+  const sum = [...body].reduce((acc, c, i) => acc + Number(c) * (i % 2 === 0 ? 1 : 3), 0);
+  return body + String((10 - (sum % 10)) % 10);
+}

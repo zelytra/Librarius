@@ -39,6 +39,12 @@
   font-weight: 600;
 }
 
+.searchActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
 .advancedToggle {
   /* A text action still needs a finger-sized target. */
   min-height: 36px;

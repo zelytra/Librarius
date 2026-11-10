@@ -40,6 +40,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   arrow_back: 0xe5c4,
   arrow_forward: 0xe5c8,
   auto_stories: 0xe666,
+  barcode_scanner: 0xe70c,
   book_2: 0xf53e,
   bookmark_add: 0xe598,
   bookmark_added: 0xe599,

@@ -661,6 +661,19 @@ components:
         review:
           type: string
           maxLength: 5000
+    ScanResultDto:
+      type: object
+      properties:
+        isbn13:
+          type: string
+        match:
+          type: string
+        owned:
+          $ref: "#/components/schemas/LibraryItemDto"
+        wished:
+          $ref: "#/components/schemas/WishlistItemDto"
+        catalog:
+          $ref: "#/components/schemas/CatalogResult"
     ScrapeRequest:
       type: object
       required:
@@ -2047,6 +2060,30 @@ paths:
       summary: Create
       tags:
       - Report Resource
+      security:
+      - SecurityScheme: []
+  /api/scan/{isbn}:
+    get:
+      parameters:
+      - name: isbn
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanResultDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Scan
+      tags:
+      - Scan Resource
       security:
       - SecurityScheme: []
   /api/series:
