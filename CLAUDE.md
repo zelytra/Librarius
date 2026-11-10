@@ -32,7 +32,8 @@ pnpm web:dev            # Vite PWA :5173 (proxies /api → 8080)
 pnpm mobile:build       # builds the web bundle, then `cap sync` into the native shell
 ```
 
-Quality gate — **run before every push**:
+Quality gate — **run before every push** (the e2e journeys run on `main` after a merge, not on
+pull requests; trigger the `e2e` workflow by hand on a branch when a change touches a journey):
 
 ```bash
 pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build
@@ -61,6 +62,7 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 | `infra/` | dev & prod docker-compose, Keycloak realm, Prometheus, Grafana, Helm chart |
 | `infra/helm/librarius/` | k3s deployment chart (web, api, postgres, keycloak, ingress) |
 | `docs/` | public documentation (ARCHITECTURE, DEPLOYMENT) |
+| `docs/wiki/` | **developer wiki** — published to the GitHub wiki on every merge to `main` (`wiki.yml`) |
 | `.claude/docs/` | detailed working documentation for agents |
 
 ## Git flow — non-negotiable
@@ -75,6 +77,24 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
   squash or rebase only.
 - **Never merge on a red CI.** Merging into `main` deploys to **staging**; production
   will be deployed by tagging `main`, and does not exist yet ([#103](https://github.com/zelytra/Librarius/issues/103)).
+
+## Developer wiki — keep it current
+
+The GitHub wiki is the developers' technical documentation: architecture, API, data model,
+catalog, imports, authentication, running locally, contributing, deployment. Its source is
+**`docs/wiki/`** in this repository; the `wiki` workflow publishes it on every merge to `main`
+(never edit the wiki directly — the next merge overwrites it).
+
+**Any change that alters one of those subjects updates the matching `docs/wiki/` page in the
+same pull request** — a new endpoint, a DTO, an import rule, a migration, a workflow, a
+command. A pull request that changes behaviour a page describes and leaves the page stale is
+not finished.
+
+## Feedback goes into issues first
+
+Every fix or request the user reports is written into a GitHub issue (split when it covers
+several things) **before** any work on it starts, so a session cut short leaves a trace. The
+pull request that fixes it closes it (`Closes #n`).
 
 ## Code rules
 
