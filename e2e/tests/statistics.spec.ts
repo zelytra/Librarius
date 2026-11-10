@@ -39,9 +39,9 @@ test('keeps the statistics consistent after an addition', async ({ page }) => {
   await page.getByRole('link', { name: 'Stats' }).click();
   await expect(figure(page, 'Livres lus')).toHaveText('1');
   await expect(figure(page, 'En cours')).toHaveText('0');
-  // No page count on a stub catalog entry: the total read pages must stay at zero
-  // rather than count the book as an unknown number of pages.
-  await expect(figure(page, 'Pages lues')).toHaveText('0');
+  // No page count on a stub catalog entry: the length of what was read is not known, and
+  // the card says so with a dash rather than a "0 pages" it cannot vouch for.
+  await expect(figure(page, 'Pages lues · estimation en cours')).toHaveText('—');
 
   await page.getByRole('link', { name: 'Accueil' }).click();
   await expect(figure(page, 'lus')).toHaveText('1');
