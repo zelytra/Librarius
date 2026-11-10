@@ -258,3 +258,27 @@
   color: var(--muted);
   font-style: italic;
 }
+
+/* ── Session target ─────────────────────────────────────────────────────── */
+
+.session {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sessionLabel {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.sessionCount {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-panel);
+  background: var(--tint-sage);
+  border: 1.5px solid var(--accent);
+  font-weight: 700;
+  color: var(--accent-deep);
+}

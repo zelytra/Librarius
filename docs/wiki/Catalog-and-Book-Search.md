@@ -46,6 +46,12 @@ libraries carry no ISBN, so after the ISBN pass the catalog says what the book i
 library is searched again by title and author, then series and volume, then a reworded
 title with the same numbers.
 
+A scanning session can file what it finds on its own (#168): the reader picks a destination
+before scanning — to-read pile, read, reading, wishlist, or "check only" (the default) — and
+each new title the catalog recognises is added there with no confirmation, while a title
+already owned or wished for is only reported. The screen counts the session's additions and
+offers an undo on each.
+
 ## Filling in imported titles
 
 Booknode and Babelio give a title, an author and a cover — no ISBN, length or publisher.
