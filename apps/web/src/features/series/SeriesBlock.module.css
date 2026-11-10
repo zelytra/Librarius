@@ -1,13 +1,23 @@
-/* A series in the collection grid: a cover with two sheets drawn behind it. */
+/* A series in the collection grid: a cover with two sheets drawn behind it.
+
+   The sheets peek out top-right, and they do it inside the tile: drawn outside, they spilled
+   into the grid's gutter and past the grid itself on its last column. The cover gives up
+   the room they need — 8px at the top, and on the right the width that keeps its height
+   equal to a one-shot tile's at the 0.68 cover ratio (8 × 0.68), so the rows stay level. */
 .block {
+  --sheet-y: 8px;
+  --sheet-x: 5.44px;
+
   position: relative;
   min-width: 0;
+  padding: var(--sheet-y) var(--sheet-x) 0 0;
 }
 
-/* The sheets: offset copies of the cover's outline peeking out top-right. */
 .stack {
   position: absolute;
-  inset: 0 0 auto 0;
+  top: var(--sheet-y);
+  left: 0;
+  right: var(--sheet-x);
   aspect-ratio: 0.68;
   pointer-events: none;
 }
@@ -24,11 +34,11 @@
 }
 
 .stack::before {
-  transform: translate(8px, -8px);
+  transform: translate(var(--sheet-x), calc(-1 * var(--sheet-y)));
 }
 
 .stack::after {
-  transform: translate(4px, -4px);
+  transform: translate(calc(var(--sheet-x) / 2), calc(var(--sheet-y) / -2));
 }
 
 .block > :not(.stack) {

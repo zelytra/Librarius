@@ -60,6 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   margin-bottom: 12px;
 }
 
@@ -69,8 +71,9 @@
   font-weight: 500;
 }
 
+/* As wide as its two labels: a fixed 160px squeezed "Tous les titres" onto two lines. */
 .viewSwitch {
-  width: 160px;
+  flex: 0 0 auto;
 }
 
 .sortRow {

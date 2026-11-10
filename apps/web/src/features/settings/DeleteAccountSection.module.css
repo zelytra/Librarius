@@ -11,6 +11,8 @@
 }
 
 .reveal {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
   align-self: flex-start;
   background: none;
   border: none;

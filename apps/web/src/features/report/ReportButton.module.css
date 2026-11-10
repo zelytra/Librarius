@@ -2,6 +2,8 @@
    reads as a muted text link rather than a call to action competing with the buttons above
    it on the screen. */
 .trigger {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 6px;

@@ -56,15 +56,28 @@
 /* ── Button ───────────────────────────────────────────────────────────────── */
 
 .button {
+  /* A height, not a padding: the padding alone left a button as tall as whatever the
+     page around it decided, and a "compact" one outside a field collapsed to the height
+     of its text. Every size below sets its own, so two buttons side by side always match. */
+  min-height: 44px;
+  padding: 0 18px;
   border-radius: var(--radius-button);
-  padding: 14px 18px;
   font-size: var(--fs-15);
   font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  text-align: center;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .primary {
@@ -86,17 +99,22 @@
   border: none;
 }
 
-/* Sizes, declared after `.button` so they override its padding. */
+/* Sizes, declared after `.button` so they override its height and padding. */
 .sizeLg {
-  padding: 15px;
+  min-height: 52px;
+  padding: 0 22px;
 }
 
 .sizeBlock {
-  padding: 14px;
+  width: 100%;
+  min-height: 48px;
 }
 
+/* Next to a field, or among secondary actions: a step down, still a full button. */
 .sizeCompact {
+  min-height: 40px;
   padding: 0 16px;
+  font-size: var(--fs-14);
 }
 
 /* ── Chip ─────────────────────────────────────────────────────────────────── */
@@ -138,16 +156,26 @@
 
 .segmented {
   display: flex;
+  gap: 2px;
+  /* Never wider than its block: past that the options scroll inside the pill rather than
+     run out of the card holding it. */
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--chip);
   border-radius: var(--radius-field);
   padding: 4px;
 }
 
 .segment {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 36px;
   border: none;
   cursor: pointer;
-  padding: 10px 0;
+  /* Side padding and no wrapping: with none, short labels ran into each other
+     ("20262025") and a long one broke over two lines in a pill of one. */
+  padding: 8px 14px;
+  white-space: nowrap;
   border-radius: var(--radius-segment);
   font-size: var(--fs-13-5);
   font-weight: 600;

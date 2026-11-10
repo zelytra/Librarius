@@ -66,6 +66,14 @@
   flex-wrap: wrap;
 }
 
+/* Equal widths, side by side or wrapped: two calls to action of different lengths read as
+   two different kinds of button once the narrow screen stacks them. */
+.actions > * {
+  flex: 1 1 0;
+  min-width: 170px;
+  max-width: 240px;
+}
+
 /* The latest covers, fanned out like books leaning on a shelf. */
 .fan {
   position: relative;

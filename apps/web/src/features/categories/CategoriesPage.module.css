@@ -23,12 +23,15 @@
   color: var(--muted);
   line-height: 1.45;
   margin: 0 0 18px;
+  max-width: 760px;
 }
 
+/* The form and the list share Settings' reading width rather than the whole screen. */
 .createForm {
   display: flex;
   gap: 8px;
   margin-bottom: 14px;
+  max-width: 760px;
 }
 
 .input {
@@ -52,6 +55,7 @@
 
 .list {
   list-style: none;
+  max-width: 760px;
   margin: 0;
   padding: 0;
   display: flex;
@@ -67,7 +71,10 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  padding: 12px 14px;
+  /* One height for every row: a built-in category, which has no actions, used to be a
+     row 14px shorter than the custom one under it. */
+  min-height: 60px;
+  padding: 10px 14px;
 }
 
 .identity {
@@ -110,8 +117,8 @@
 }
 
 .action {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
   background: none;
   border-radius: var(--radius-round);
