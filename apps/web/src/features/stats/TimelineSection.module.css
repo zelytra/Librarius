@@ -7,7 +7,6 @@
   border-radius: var(--radius-panel-lg);
   padding: 20px;
   border: 1px solid var(--line);
-  margin-top: 18px;
   min-width: 0;
 }
 
@@ -15,8 +14,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+/* The breakdown takes the grid's whole width: four tabs and bars of names do not fit a
+   column, and its tabs ran out of the card when it had one. */
+.panelWide {
+  grid-column: 1 / -1;
 }
 
 .panelTitle {

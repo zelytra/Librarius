@@ -96,7 +96,14 @@
 .followRow {
   display: flex;
   flex-direction: column;
+  align-items: center;
   margin-bottom: 18px;
+}
+
+/* Full width on a phone, a button's width past it: stretched over the whole hero column
+   it read as a banner rather than an action. */
+.followRow > * {
+  max-width: 360px;
 }
 
 .sectionTitle {

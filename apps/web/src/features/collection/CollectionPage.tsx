@@ -309,13 +309,17 @@ function CollectionContent() {
 
   return (
     <>
-      <div className={styles.kindSwitch}>
-        <Segmented<Kind>
-          value={collType}
-          onChange={setCollType}
-          options={kindOptions.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) }))}
-        />
-      </div>
+      {/* A switch with one position is a heading dressed as a control: it only shows once
+          the library holds more than one kind. */}
+      {kindOptions.length > 1 && (
+        <div className={styles.kindSwitch}>
+          <Segmented<Kind>
+            value={collType}
+            onChange={setCollType}
+            options={kindOptions.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) }))}
+          />
+        </div>
+      )}
 
       <div className={styles.searchBar}>
         <Icon name="search" size={21} color="var(--faint)" />

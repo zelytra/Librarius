@@ -4,17 +4,14 @@
 
 /* ── Dashboard ────────────────────────────────────────────────────────────── */
 
-/* Below --bp-tablet `--grid-panel-columns` is `1fr`, so `row-gap: 0` costs nothing: the
-   panels below keep the same margins they always drew their own spacing from, and the
-   rendering stays pixel-identical to the plain stack this replaces. Past it the same
-   token turns into an auto-fit track list, the way Wishlist's buckets and Settings'
-   sections pick up columns without a media query of their own — `column-gap` only ever
-   matters once there is more than one column to separate. */
+/* The grid owns the spacing between panels, on every width: when each panel carried its
+   own margin, the ones that had one (the timeline cards) sat lower than their neighbours on
+   the same row. Columns of at least 300px, as many as fit: the shared 260px panel track
+   was too narrow for the four tabs of "what you read", which ran out of their card. */
 .dashboard {
   display: grid;
-  grid-template-columns: var(--grid-panel-columns);
-  column-gap: var(--grid-gap-x);
-  row-gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 18px var(--grid-gap-x);
   align-items: start;
 }
 
@@ -28,7 +25,6 @@
   border-radius: var(--radius-panel-lg);
   padding: 20px;
   border: 1px solid var(--line);
-  margin-bottom: 18px;
   /* The one panel that stays a banner rather than tiling with the others. */
   grid-column: 1 / -1;
 }
@@ -52,6 +48,10 @@
 }
 
 .goalLink {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
   margin-top: 8px;
   padding: 0;
   background: none;
@@ -69,7 +69,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 22px;
   min-width: 0;
 }
 

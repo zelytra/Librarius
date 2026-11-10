@@ -76,6 +76,15 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
   });
 
+  test('shows no kind switch when the library holds a single kind', async () => {
+    libraryReturns([ROMAN]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
+    // One position is no choice: the lone "Bibliothèque" pill is not drawn.
+    expect(screen.queryByText('Bibliothèque')).not.toBeInTheDocument();
+  });
+
   /** #183: the kind switch is driven by the taxonomy, not a hardcoded Books/Manga pair. */
   test('offers a shelf for every kind the user owns, comics and audiobooks included', async () => {
     libraryReturns([
@@ -129,8 +138,7 @@ describe('CollectionPage', () => {
     ]);
     renderWithProviders(<CollectionPage />);
 
-    await userEvent.click(await screen.findByText('Bandes dessinées'));
-
+    // The comics shelf opens by itself: it is the only kind the library holds.
     expect(await screen.findByText('BD')).toBeInTheDocument();
   });
 
@@ -330,9 +338,14 @@ describe('CollectionPage', () => {
 
   // ── Grouped by series (the default view) ──────────────────────────────────────
 
-  /** The manga shelf, where the runs live: every caller seeds at least one manga item. */
+  /**
+   * The manga shelf, where the runs live: every caller seeds at least one manga item. With
+   * manga alone in the library it is the shelf that opens, and there is no switch to press.
+   */
   async function openMangaShelf() {
-    await userEvent.click(await screen.findByText('Mangathèque'));
+    await screen.findByText('Par série');
+    const tab = screen.queryByText('Mangathèque');
+    if (tab) await userEvent.click(tab);
   }
 
   /** A volume of Vinland Saga: drawn as the series block, never as a tile of its own. */
@@ -399,7 +412,7 @@ describe('CollectionPage', () => {
     libraryReturns([ROMAN, MANGA]);
     seriesReturns([SAGA, COMPLETE, seriesSummary({ id: 'series-3', kind: 'BOOK', title: 'Le Trône de fer' })]);
     renderWithProviders(<CollectionPage />);
-    await openMangaShelf();
+    await userEvent.click(await screen.findByText('Mangathèque'));
 
     expect(await screen.findByText('Berserk')).toBeInTheDocument();
     expect(screen.queryByText('Le Trône de fer')).not.toBeInTheDocument();

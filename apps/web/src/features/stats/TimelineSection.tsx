@@ -292,7 +292,7 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
         </div>
       )}
 
-      <div className={styles.panel}>
+      <div className={`${styles.panel} ${styles.panelWide}`}>
         <div className={styles.panelTitle}>{t('stats.timeline.breakdownTitle')}</div>
         <Segmented<BreakdownKey>
           options={BREAKDOWNS.map((id) => ({ id, label: t(`stats.timeline.breakdowns.${id}`) }))}

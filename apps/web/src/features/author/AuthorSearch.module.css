@@ -1,6 +1,10 @@
 /* A compact author lookup, local to Discover — see AuthorSearch.tsx. */
 
+/* The same measure as the catalog search above it, and clear of the block above: it used
+   to run the whole width under a 640px field and touch the button just over it. */
 .section {
+  max-width: 640px;
+  margin-top: 28px;
   margin-bottom: 22px;
 }
 

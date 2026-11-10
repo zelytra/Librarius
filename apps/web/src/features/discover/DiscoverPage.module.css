@@ -40,6 +40,8 @@
 }
 
 .advancedToggle {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
   display: inline-flex;
   align-self: flex-start;
   align-items: center;
@@ -89,9 +91,18 @@
   font-family: inherit;
 }
 
+/* The arrow inside the field: a small glyph, still a finger-sized target. */
 .submit {
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px -6px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   background: none;
   border: none;
+  border-radius: var(--radius-round);
   cursor: pointer;
   padding: 0;
 }

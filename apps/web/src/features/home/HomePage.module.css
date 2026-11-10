@@ -44,6 +44,8 @@
    it read as the dashboard's own heading instead of an aside above it. */
 
 .customizeButton {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
   align-self: flex-end;
   display: flex;
   align-items: center;

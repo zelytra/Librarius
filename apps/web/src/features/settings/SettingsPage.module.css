@@ -2,18 +2,31 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-/* Single stacked column at every width — matches the phone layout, just centred
-   within `--content-max` by `Screen` on wider screens. */
+/* Single stacked column at every width, each section a card of its own. Capped at a
+   reading width: stretched across a desktop screen, a name field ran a thousand pixels
+   long and its Save button ended up a screen away from it. */
 .sections {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  max-width: 760px;
 }
 
 .sectionBlock {
   min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  padding: 20px;
+}
+
+/* The sections end on the margin that used to separate them; inside a card it is padding
+   the card already has. */
+.sectionBlock > :last-child {
+  margin-bottom: 0;
 }
 
 .backButton {
@@ -45,6 +58,8 @@
 }
 
 .dashboardLink {
+  /* A text action still needs a finger-sized target. */
+  min-height: 36px;
   align-self: flex-start;
   background: none;
   border: none;
@@ -57,7 +72,6 @@
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  margin-bottom: 26px;
 }
 
 .themes {
