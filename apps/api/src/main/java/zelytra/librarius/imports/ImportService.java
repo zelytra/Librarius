@@ -11,9 +11,11 @@ import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.RankCategory;
+import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
+import zelytra.librarius.domain.repository.WishlistItemRepository;
 import zelytra.librarius.domain.repository.ReadingProgressRepository;
 import zelytra.librarius.web.ApiDtos.ManualBookDto;
 
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /** Import orchestration: scraping or CSV -> creation of the owned titles. */
 @ApplicationScoped
@@ -45,6 +48,9 @@ public class ImportService {
 
     @Inject
     ReadingProgressRepository progresses;
+
+    @Inject
+    WishlistItemRepository wishes;
 
     @Inject
     MeterRegistry meters;
@@ -73,6 +79,9 @@ public class ImportService {
     public ImportResult importFromCsv(String userId, String csv) {
         return persist(userId, "csv", parseCsv(csv));
     }
+
+    /** Marks a title this very import created: there is nothing in it yet to complete. */
+    private static final UUID IMPORTED_IN_THIS_RUN = new UUID(0, 0);
 
     /** Titles written per transaction; see {@link #persist(String, String, List, Progress)}. */
     static final int BATCH = 100;
@@ -115,14 +124,22 @@ public class ImportService {
     }
 
     /** What every batch of one import shares: the titles already held, and the categories. */
-    private record Batches(Set<String> existing, Map<String, RankCategory> categories, int[] nextOrder,
-            Map<String, Long> shelfCounts, long minForCategory) {
+    /**
+     * What every batch of one import shares: the titles already held (by their key, with the
+     * item each one is), the titles already wished for, and the categories.
+     */
+    private record Batches(Map<String, UUID> existing, Set<String> wished, Map<String, RankCategory> categories,
+            int[] nextOrder, Map<String, Long> shelfCounts, long minForCategory) {
     }
 
     private Batches prepare(String userId, List<ImportedBook> books) {
-        Set<String> existing = new HashSet<>();
+        Map<String, UUID> existing = new HashMap<>();
         for (LibraryItem it : items.listByUser(userId)) {
-            existing.add(key(it.edition.work.title, it.edition.work.authorsText));
+            existing.putIfAbsent(key(it.edition.work.title, it.edition.work.authorsText), it.id);
+        }
+        Set<String> wished = new HashSet<>();
+        for (WishlistItem wi : wishes.listForExport(userId)) {
+            wished.add(key(wi.edition.work.title, wi.edition.work.authorsText));
         }
 
         // Reuse the user's existing custom categories and order new ones after them, so a second
@@ -145,10 +162,15 @@ public class ImportService {
                 shelfCounts.merge(b.shelf().trim(), 1L, Long::sum);
             }
         }
-        return new Batches(existing, categories, nextOrder, shelfCounts, Math.max(1, books.size() / 300));
+        return new Batches(existing, wished, categories, nextOrder, shelfCounts, Math.max(1, books.size() / 300));
     }
 
-    /** One batch, in the caller's transaction: how many titles it imported, and skipped. */
+    /**
+     * One batch, in the caller's transaction: how many titles it imported, and skipped. A
+     * skipped title is one already there — and is completed with what this import knows and
+     * the library does not, so running a richer import again repairs an older one instead of
+     * having to start the library over.
+     */
     private int[] persistBatch(String userId, List<ImportedBook> books, Batches state) {
         int imported = 0;
         int skipped = 0;
@@ -156,40 +178,118 @@ public class ImportService {
             if (book.title() == null || book.title().isBlank()) {
                 continue;
             }
-            if (!state.existing().add(key(book.title(), book.author()))) {
+            ImportTitle parsed = ImportTitle.parse(book.title());
+            String key = key(parsed.title(), book.author());
+            UUID held = state.existing().get(key);
+            if (held == null) {
+                held = state.existing().get(key(book.title(), book.author()));
+            }
+            if (book.wished()) {
+                // A wish for a title already held, or already wished for, adds nothing.
+                if (held != null || !state.wished().add(key)) {
+                    skipped++;
+                } else {
+                    WishlistItem wish = new WishlistItem();
+                    wish.userId = userId;
+                    wish.edition = catalog.createManualEdition(manualBook(book, parsed));
+                    wishes.persist(wish);
+                    imported++;
+                }
+                continue;
+            }
+            if (held != null) {
+                items.findOwned(userId, held).ifPresent(item -> complete(userId, item, book, parsed, state));
                 skipped++;
                 continue;
             }
+            // Held from now on: a title listed twice in the same file is imported once.
+            state.existing().put(key, IMPORTED_IN_THIS_RUN);
+
             LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.OWNED;
-            // A volume of a run joins its series: "One Piece Tome 3" is volume 3 of One Piece,
-            // and Goodreads writes it "The Way of Kings (The Stormlight Archive, #1)". Left as
-            // a flat title, an imported manga collection had no series at all and the Series
-            // view stayed empty.
-            ImportTitle parsed = ImportTitle.parse(book.title());
-            // No provider reference: Booknode is a shelf being scraped, not a catalog that
-            // hands out identifiers, and the two trailing nulls say so rather than filing the
-            // import under a provider nothing can query.
-            Edition edition = catalog.createManualEdition(new ManualBookDto(Kind.BOOK,
-                    parsed.title(), book.author(), parsed.seriesTitle(), parsed.volumeNumber(),
-                    book.isbn13(), null, null, book.pageCount(), book.coverUrl(), null, null,
-                    null, null, null, null, null));
             LibraryItem item = new LibraryItem();
             item.userId = userId;
-            item.edition = edition;
+            item.edition = catalog.createManualEdition(manualBook(book, parsed));
             item.status = status;
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();
-            // A category from an earlier batch is detached by now; a reference to it is all the
-            // item needs, and the merge hands back the instance this transaction tracks.
-            RankCategory category = categoryFor(userId, book.shelf(), state.shelfCounts(),
-                    state.minForCategory(), state.categories(), state.nextOrder());
-            item.rankCategory = category == null || ranks.getEntityManager().contains(category)
-                    ? category : ranks.getEntityManager().merge(category);
+            item.rankCategory = rankFor(userId, book, state);
             items.persist(item);
             recordReading(item, book.readAt());
             imported++;
         }
         return new int[] {imported, skipped};
+    }
+
+    /**
+     * The entry an imported title is recorded as. A volume of a run joins its series: "One
+     * Piece Tome 3" is volume 3 of One Piece, and Goodreads writes it "The Way of Kings (The
+     * Stormlight Archive, #1)". No provider reference: Booknode is a shelf being scraped, not a
+     * catalog that hands out identifiers.
+     */
+    private static ManualBookDto manualBook(ImportedBook book, ImportTitle parsed) {
+        return new ManualBookDto(book.kind() != null ? book.kind() : Kind.BOOK,
+                parsed.title(), book.author(), parsed.seriesTitle(), parsed.volumeNumber(),
+                book.isbn13(), null, null, book.pageCount(), book.coverUrl(), null, null,
+                null, null, null, null, null);
+    }
+
+    /**
+     * The category an imported title files under: the source's own tier when it has one (a
+     * Booknode "or" is the built-in Or the collection filters on), else its list, when that
+     * list is a shelf of the reader's rather than the kind it names ("manga", "BD").
+     */
+    private RankCategory rankFor(String userId, ImportedBook book, Batches state) {
+        RankCategory category;
+        if (book.rank() != null) {
+            category = ranks.findForUserByCode(userId, book.rank()).orElse(null);
+        } else if (book.kind() != null) {
+            category = null;
+        } else {
+            category = categoryFor(userId, book.shelf(), state.shelfCounts(), state.minForCategory(),
+                    state.categories(), state.nextOrder());
+        }
+        // A category from an earlier batch is detached by now; the merge hands back the
+        // instance this transaction tracks.
+        return category == null || ranks.getEntityManager().contains(category)
+                ? category : ranks.getEntityManager().merge(category);
+    }
+
+    /**
+     * Fills in, on a title the library already holds, what this import knows and it does not.
+     * Nothing the reader set is overwritten: a category is replaced only when it is the list an
+     * earlier import filed the title under, a rating or a date only when there is none.
+     */
+    private void complete(String userId, LibraryItem item, ImportedBook book, ImportTitle parsed, Batches state) {
+        RankCategory current = item.rankCategory;
+        boolean fromImport = current == null
+                || (!current.builtin && book.shelf() != null && current.code.equals(categoryCode(book.shelf())));
+        if (book.rank() != null && fromImport) {
+            item.rankCategory = rankFor(userId, book, state);
+        }
+        if (item.rating == null && book.rating() != null) {
+            item.rating = book.rating();
+        }
+        if (item.acquiredAt == null && book.acquiredAt() != null) {
+            item.acquiredAt = book.acquiredAt();
+        }
+        // Filed as a book by an import that could not tell a manga: moved to an entry of the
+        // right kind, keeping what the old edition knew (its cover, its length, its ISBN).
+        Kind kind = book.kind();
+        if (kind != null && kind != Kind.BOOK && item.edition.work.kind == Kind.BOOK) {
+            Edition old = item.edition;
+            ManualBookDto dto = manualBook(book, parsed);
+            item.edition = catalog.createManualEdition(new ManualBookDto(kind, dto.title(), dto.authors(),
+                    dto.seriesTitle(), dto.volumeNumber(), old.isbn13, old.publisher, old.language,
+                    old.pageCount, old.coverUrl != null ? old.coverUrl : dto.coverUrl(), null, null,
+                    null, null, null, null, null));
+        }
+        if (book.readAt() != null && (item.status == LibraryStatus.READ || item.status == LibraryStatus.ABANDONED)) {
+            if (item.progress == null) {
+                recordReading(item, book.readAt());
+            } else if (item.progress.finishedAt == null) {
+                item.progress.finishedAt = book.readAt();
+            }
+        }
     }
 
     /**

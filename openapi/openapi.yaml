@@ -834,6 +834,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GenreCount"
+        readWithPageCount:
+          type: integer
+          format: int64
     TimelineDto:
       type: object
       properties:

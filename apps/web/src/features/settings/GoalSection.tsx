@@ -6,12 +6,12 @@ import { useApiAuth } from '../../shared/api';
 import { goalForYear, toUnit, type Unit } from '../../shared/goal';
 import {
   getGetApiGoalsQueryKey,
-  getGetApiStatsQueryKey,
   useGetApiGoals,
   usePutApiGoalsYear,
   GoalUnit,
 } from '../../api/generated/librarius';
 import styles from './GoalSection.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
  * The units offered, in the order they read: a novel, a page. {@code VOLUMES} is not
@@ -56,7 +56,7 @@ export function GoalSection() {
       onSuccess: () => {
         setSaved(true);
         void queryClient.invalidateQueries({ queryKey: getGetApiGoalsQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
       },
     },
   });

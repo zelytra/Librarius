@@ -329,7 +329,7 @@ public final class ApiDtos {
      */
     public record StatsDto(long read, long reading, long toRead, long abandoned, long pagesRead,
             long seriesCount, Integer goalTarget, String goalUnit, long goalCurrent,
-            java.util.List<GenreCount> byGenre) {
+            java.util.List<GenreCount> byGenre, long readWithPageCount) {
     }
 
     /**

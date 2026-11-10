@@ -7,12 +7,12 @@ import { EmptyState } from '../../shared/ui/states';
 import { formatPace, goalPace, lastGoalBefore, paceForUnit, toUnit } from '../../shared/goal';
 import {
   getGetApiGoalsQueryKey,
-  getGetApiStatsQueryKey,
   useGetApiGoals,
   usePutApiGoalsYear,
   type StatsDto,
 } from '../../api/generated/librarius';
 import styles from './GoalCard.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
  * The annual reading goal on the dashboard.
@@ -35,7 +35,7 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: getGetApiGoalsQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
       },
     },
   });

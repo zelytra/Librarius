@@ -12,6 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Booknode parsing tested against an HTML fixture (without network access). */
 class BooknodeImporterTest {
@@ -23,17 +24,43 @@ class BooknodeImporterTest {
     }
 
     @Test
-    void parsesEveryRowSkipsTheHeaderAndDropsWants() throws Exception {
+    void parsesEveryRowSkipsTheHeaderAndKeepsWantsApart() throws Exception {
         List<ImportedBook> books = new BooknodeImporter().parse(fixture());
 
-        // Six data rows, minus the "Envies" want, which is not a library title: five imported.
-        // The `.book-header` row is not a `.book-item`, so it never counted.
-        assertEquals(5, books.size());
+        // Six data rows; the `.book-header` row is not a `.book-item`, so it never counted.
+        assertEquals(6, books.size());
+        // The "Envies" want is not a library title: it is flagged for the wishlist.
+        assertEquals(1, books.stream().filter(ImportedBook::wished).count());
+        assertEquals(5, books.stream().filter(b -> !b.wished()).count());
 
         assertEquals("Abysses, Tome 1", books.get(0).title());
         assertEquals("C. S. Quill", books.get(0).author());
         assertEquals("https://cdn1.booknode.com/book_cover/5675/mod11/abysses_tome_1.webp",
                 books.get(0).coverUrl());
+    }
+
+    /**
+     * A tier is the collection's own Or, Argent or Bronze shelf; a read title's only date, the
+     * day it was marked read, is its reading date; a manga or comics list tells the kind.
+     */
+    @Test
+    void filesTiersUnderTheBuiltInRanksAndDatesTheReading() throws Exception {
+        List<ImportedBook> books = new BooknodeImporter().parse(fixture());
+
+        ImportedBook gold = books.get(0);
+        assertEquals("or", gold.rank());
+        assertEquals(gold.acquiredAt(), gold.readAt());
+        org.junit.jupiter.api.Assertions.assertNotNull(gold.readAt());
+        // Being read: no reading date yet.
+        assertEquals(null, books.get(2).readAt());
+
+        assertEquals("or", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "diamant")));
+        assertEquals("bronze", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "bronze")));
+        assertEquals(null, BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "luaussi")));
+        assertEquals(zelytra.librarius.domain.Kind.MANGA, BooknodeImporter.kindOf("manga argent"));
+        assertEquals(zelytra.librarius.domain.Kind.COMIC, BooknodeImporter.kindOf("BD"));
+        assertEquals(zelytra.librarius.domain.Kind.COMIC, BooknodeImporter.kindOf("comic"));
+        assertEquals(null, BooknodeImporter.kindOf("romance"));
     }
 
     /**
@@ -49,7 +76,8 @@ class BooknodeImporterTest {
         assertEquals(LibraryStatus.READ, books.get(1).status());       // "lu aussi"
         assertEquals(LibraryStatus.READING, books.get(2).status());    // "en cours de lecture"
         assertEquals(LibraryStatus.ABANDONED, books.get(3).status());  // "abandonné"
-        assertEquals(LibraryStatus.OWNED, books.get(4).status());      // "à lire"
+        assertTrue(books.get(4).wished());                            // "envies"
+        assertEquals(LibraryStatus.OWNED, books.get(5).status());      // "à lire"
     }
 
     /** A read book's tier becomes a rating out of five; an untiered "lu aussi" carries none. */

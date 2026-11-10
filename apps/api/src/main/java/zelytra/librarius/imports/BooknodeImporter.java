@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryStatus;
 
 import java.io.IOException;
@@ -142,17 +143,25 @@ public class BooknodeImporter implements LibraryImporter {
             Set<String> badgeClasses = badge != null ? badge.classNames() : Set.of();
             String badgeText = badge != null ? badge.text() : textOf(row, ".list-name");
             LibraryStatus status = statusFromBadge(badgeClasses, badgeText);
+            // The list a title was filed under — `.group-name`, a genuine custom shelf — tells
+            // the kind when it is a manga or a comics list, and is otherwise a category.
+            String list = emptyToNull(textOf(row, ".group-name"));
+            LocalDate addedAt = ImportDates.parse(textOf(row, ".date-added"));
+            String author = emptyToNull(textOf(row, ".author-name"));
             if (status == null) {
-                // A Booknode "Envie" is a want, not a title in the library: skipped rather than
-                // imported as owned, which would inflate the collection with books not held.
+                // A Booknode "Envie" is a want, not a title in the library: it goes to the
+                // wishlist, where the reader keeps exactly that.
+                books.add(new ImportedBook(title, author, coverNear(row), LibraryStatus.OWNED, list, null,
+                        addedAt, null, null, null, null, kindOf(list), true));
                 continue;
             }
-            // The list a title was filed under — `.group-name`, a genuine custom shelf — is the
-            // one that becomes a category, not the rating tier the badge above encodes.
-            String list = emptyToNull(textOf(row, ".group-name"));
-            LocalDate acquiredAt = ImportDates.parse(textOf(row, ".date-added"));
-            books.add(new ImportedBook(title, emptyToNull(textOf(row, ".author-name")),
-                    coverNear(row), status, list, ratingFromBadge(badgeClasses), acquiredAt));
+            // Booknode's table carries one date, the day the title went on the shelf. For a
+            // read title that is the day it was marked read — the only reading date there is,
+            // and without one the title counted in no year, no goal and no statistic.
+            boolean finished = status == LibraryStatus.READ || status == LibraryStatus.ABANDONED;
+            books.add(new ImportedBook(title, author, coverNear(row), status, list,
+                    ratingFromBadge(badgeClasses), addedAt, finished ? addedAt : null, null, null,
+                    rankFromBadge(badgeClasses), kindOf(list), false));
         }
         return books;
     }
@@ -201,7 +210,8 @@ public class BooknodeImporter implements LibraryImporter {
                 || t.contains("cours de lecture")) {
             return LibraryStatus.READING;
         }
-        if (classes.contains("luaussi") || t.startsWith("lu") || t.contains("coup de c")
+        if (classes.contains("luaussi") || classes.contains("pasapprecie") || t.startsWith("lu")
+                || t.contains("pas appr") || t.contains("coup de c")
                 || classes.stream().anyMatch(READ_TIERS::contains)) {
             return LibraryStatus.READ;
         }
@@ -224,6 +234,47 @@ public class BooknodeImporter implements LibraryImporter {
         }
         if (classes.contains("bronze")) {
             return 2;
+        }
+        if (classes.contains("pasapprecie")) {
+            return 1;
+        }
+        return null;
+    }
+
+    /**
+     * The built-in rank a tier stands for: Booknode's or, argent and bronze are Librarius's own
+     * Or, Argent and Bronze, the shelves the collection filters on. Diamant, above or, has no
+     * shelf of its own here: it files under Or, and its 5/5 rating puts it in the favourites.
+     */
+    static String rankFromBadge(Set<String> classes) {
+        if (classes.contains("diamant") || classes.contains("or")) {
+            return "or";
+        }
+        if (classes.contains("argent")) {
+            return "argent";
+        }
+        if (classes.contains("bronze")) {
+            return "bronze";
+        }
+        return null;
+    }
+
+    /**
+     * The kind a Booknode list names, for readers who sort by it ("manga", "manga or", "BD",
+     * "comic"): Booknode itself does not say whether a title is a manga, so the reader's own
+     * filing is the best witness there is. Anything else is a book.
+     */
+    static Kind kindOf(String list) {
+        if (list == null) {
+            return null;
+        }
+        String l = list.toLowerCase(Locale.FRENCH);
+        if (l.contains("manga") || l.contains("manhwa") || l.contains("webtoon")) {
+            return Kind.MANGA;
+        }
+        if (l.equals("bd") || l.startsWith("bd ") || l.endsWith(" bd") || l.contains("bande dessin")
+                || l.contains("comic")) {
+            return Kind.COMIC;
         }
         return null;
     }

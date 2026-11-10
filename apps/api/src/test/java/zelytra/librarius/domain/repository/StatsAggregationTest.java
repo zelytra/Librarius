@@ -66,7 +66,8 @@ class StatsAggregationTest {
 
     @Test
     void sqlAggregationMatchesTheReplacedInMemoryFold() {
-        String userId = seed(representativeDataset());
+        List<Title> dataset = representativeDataset();
+        String userId = seed(dataset);
 
         InMemoryStats expected = inMemoryStats(userId);
         StatusTotals totals = library.statusTotals(userId);
@@ -80,6 +81,10 @@ class StatsAggregationTest {
         // and a `pagesRead` that agreed with the fold only because both were wrong would
         // not be caught by the comparison above.
         assertEquals(expected.pagesRead(), totals.pagesRead(), "pages read");
+        // How many read titles those pages come from: a 0-page edition is a known length, a
+        // missing one is not.
+        assertEquals(dataset.stream().filter(t -> t.status() == LibraryStatus.READ && t.pageCount() != null).count(),
+                totals.readWithPageCount(), "read titles with a known length");
         assertEquals(expected.seriesCount(), library.countDistinctSeries(userId), "series count");
     }
 
@@ -93,7 +98,7 @@ class StatsAggregationTest {
 
         StatusTotals totals = library.statusTotals(userId);
 
-        assertEquals(new StatusTotals(0, 0, 0, 0, 0), totals);
+        assertEquals(new StatusTotals(0, 0, 0, 0, 0, 0), totals);
         assertEquals(0, library.countDistinctSeries(userId));
         assertEquals(List.of(), library.topGenres(userId, TOP_GENRES));
     }

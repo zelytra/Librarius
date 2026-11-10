@@ -15,7 +15,6 @@ import {
   getGetApiSeriesIdQueryKey,
   getGetApiSeriesIdReviewQueryKey,
   getGetApiSeriesQueryKey,
-  getGetApiStatsQueryKey,
   getGetApiWishlistQueryKey,
   useDeleteApiSeriesIdFollow,
   useDeleteApiSeriesIdReview,
@@ -33,6 +32,7 @@ import { StarRating } from '../detail/StarRating';
 import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import styles from './SeriesPage.module.css';
+import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail. */
 const WASH_FROM = 'aa';
@@ -219,7 +219,7 @@ function SeriesContent({ id }: { id: string }) {
         // The volume is now owned: the grid, the counters and the collection all move.
         invalidateSeries();
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetApiStatsQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
       } else {
         await addToWishlist({ data: { book: bookOf(volume), priority: 'SOON' } });
         void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });

@@ -3,8 +3,8 @@ import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders, TestProviders } from '../../test/utils';
-import { catalogResult } from '../../test/fixtures';
-import { http, HttpResponse, server } from '../../test/server';
+import { authorSummary, catalogResult } from '../../test/fixtures';
+import { authorSearchReturns, http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -73,6 +73,18 @@ describe('DiscoverPage', () => {
     // The title is rendered twice: in the card, and on the fallback cover.
     expect((await screen.findAllByText('Fourth Wing')).length).toBeGreaterThan(0);
     expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
+  });
+
+  /** One bar for everything: an author's name finds the author as well as their books. */
+  test('offers the authors the search names above the titles', async () => {
+    searchReturns([catalogResult()]);
+    authorSearchReturns([authorSummary({ id: 'author-1', name: 'Rebecca Yarros', workCount: 4 })]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search('yarros');
+
+    expect(await screen.findByText('Auteurs')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Rebecca Yarros/ })).toHaveAttribute('href', '/authors/author-1');
   });
 
   test('opens the catalog fiche when a result is clicked', async () => {

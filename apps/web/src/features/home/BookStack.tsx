@@ -28,7 +28,12 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
 
   const booksRead = stats?.read ?? 0;
   const pagesRead = stats?.pagesRead ?? 0;
+  // How many of the books read those pages come from. An imported library starts out with
+  // almost no lengths — the catalog fills them in over the following hours — and a bare
+  // "0 pages · 0 mm" under two thousand books read as broken rather than incomplete.
+  const withLength = stats?.readWithPageCount ?? booksRead;
   if (booksRead <= 0) return null;
+  const known = withLength.toLocaleString(activeLanguage());
 
   // The figures are grouped the way the language in force groups them — « 12 480 » against
   // "12,480" — so `count` is handed over only to pick the plural form, never printed.
@@ -57,8 +62,19 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
 
         <div className={styles.figures}>
           <p className={styles.books}>{t('home.bookStack.books', { count: booksRead, books })}</p>
-          <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesRead, pages })}</p>
-          <p className={styles.height}>{t('home.bookStack.height', { height })}</p>
+          {withLength > 0 && (
+            <>
+              <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesRead, pages })}</p>
+              <p className={styles.height}>{t('home.bookStack.height', { height })}</p>
+            </>
+          )}
+          {withLength < booksRead && (
+            <p className={styles.estimate}>
+              {withLength > 0
+                ? t('home.bookStack.partial', { count: booksRead, known, books })
+                : t('home.bookStack.noLength')}
+            </p>
+          )}
           {/* The conversion is an estimate and says so, the way a provider's release date is
               captioned as indicative rather than presented as a fact (PRODUCT.md § 6.5). */}
           <p className={styles.estimate}>{t('home.bookStack.estimate', { thickness })}</p>

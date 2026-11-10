@@ -1,11 +1,9 @@
 /* A compact author lookup, local to Discover — see AuthorSearch.tsx. */
 
-/* The same measure as the catalog search above it, and clear of the block above: it used
-   to run the whole width under a 640px field and touch the button just over it. */
+/* Above the titles, at the search column's measure. */
 .section {
   max-width: 640px;
-  margin-top: 28px;
-  margin-bottom: 22px;
+  margin: 4px 0 20px;
 }
 
 .title {
@@ -13,31 +11,8 @@
   margin: 0 0 8px;
 }
 
-.searchBar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  padding: 10px 14px;
-}
 
-.searchInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: var(--fs-14);
-  color: var(--ink);
-  font-family: inherit;
-}
 
-.empty {
-  margin: 8px 0 0;
-  font-size: var(--fs-12-5);
-  color: var(--muted);
-}
 
 .results {
   display: flex;
