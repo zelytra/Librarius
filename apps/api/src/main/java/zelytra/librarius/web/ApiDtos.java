@@ -421,6 +421,16 @@ public final class ApiDtos {
     public record WishlistAcquireDto(LibraryStatus status, Integer rating, LocalDate acquiredAt) {
     }
 
+    /**
+     * What a scanned barcode is to the reader: {@code match} says how their copy or wish was
+     * recognised — {@code ISBN}, {@code TITLE}, {@code SERIES_VOLUME} — or {@code NONE}.
+     * {@code catalog} is the book the catalogs know under that ISBN, to add it from; it is
+     * null when the ISBN matched straight away (no catalog was asked) or no catalog knows it.
+     */
+    public record ScanResultDto(String isbn13, String match, LibraryItemDto owned, WishlistItemDto wished,
+            zelytra.librarius.catalog.CatalogResult catalog) {
+    }
+
     public record WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note,
             BookView book) {
         public static WishlistItemDto of(WishlistItem it) {

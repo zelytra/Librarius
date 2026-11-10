@@ -537,7 +537,8 @@
       "unavailable": "Recherche indisponible pour le moment.",
       "rateLimited": "Trop de recherches d’affilée. Réessaie dans une minute.",
       "addFailed": "Ajout impossible pour le moment."
-    }
+    },
+    "scan": "Scanner un code-barres"
   },
   "wishlist": {
     "title": "Liste de souhaits",
@@ -807,6 +808,52 @@
     "badge": {
       "label": "De confiance",
       "tooltip": "Ce compte est de confiance : assez d'ancienneté, assez de titres réellement terminés, et aucun signalement retenu contre lui."
+    }
+  },
+  "scan": {
+    "title": "Scanner un livre",
+    "prompt": "Connecte-toi pour scanner tes livres.",
+    "empty": "Scanne le code-barres au dos d'un livre, ou tape son ISBN : tu sauras aussitôt s'il est déjà chez toi.",
+    "pending": "Recherche…",
+    "failed": "Impossible de vérifier ce livre pour le moment.",
+    "tooMany": "Trop de recherches d'un coup : patiente un instant avant le suivant.",
+    "camera": {
+      "label": "Image de la caméra",
+      "start": "Activer la caméra",
+      "stop": "Arrêter",
+      "retry": "Réessayer",
+      "hint": "Cadre le code-barres : la caméra continue de lire, enchaîne les livres.",
+      "starting": "Ouverture de la caméra…",
+      "unsupported": "Ce navigateur ne sait pas lire les codes-barres. Tape l'ISBN ci-dessous, ou utilise Chrome ou l'application Android.",
+      "denied": "L'accès à la caméra a été refusé. Autorise-le dans les réglages du navigateur pour ce site, ou tape l'ISBN ci-dessous.",
+      "unavailable": "Aucune caméra disponible. Tape l'ISBN ci-dessous."
+    },
+    "manual": {
+      "label": "Ou tape l'ISBN",
+      "placeholder": "978…",
+      "submit": "Vérifier",
+      "invalid": "Ce n'est pas un ISBN valide : vérifie les chiffres au dos du livre."
+    },
+    "verdict": {
+      "owned": {
+        "OWNED": "Déjà chez toi · pas commencé",
+        "READING": "Déjà chez toi · en cours",
+        "READ": "Déjà chez toi · lu",
+        "ABANDONED": "Déjà chez toi · abandonné"
+      },
+      "wished": "Dans tes souhaits",
+      "new": "Pas encore chez toi",
+      "unknown": "Aucun catalogue ne connaît cet ISBN"
+    },
+    "likely": {
+      "TITLE": "Reconnu par son titre : peut-être une autre édition",
+      "SERIES_VOLUME": "Reconnu par sa série et son numéro de tome"
+    },
+    "action": {
+      "open": "Voir",
+      "wishlist": "Mes souhaits",
+      "add": "Ajouter",
+      "manual": "Ajouter à la main"
     }
   }
 }

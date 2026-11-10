@@ -537,7 +537,8 @@
       "unavailable": "Search is unavailable right now.",
       "rateLimited": "Too many searches in a row. Try again in a minute.",
       "addFailed": "Cannot add it right now."
-    }
+    },
+    "scan": "Scan a barcode"
   },
   "wishlist": {
     "title": "Wishlist",
@@ -807,6 +808,52 @@
     "badge": {
       "label": "Trusted",
       "tooltip": "This account is trusted: enough tenure, enough titles actually finished, and a record clean of upheld reports."
+    }
+  },
+  "scan": {
+    "title": "Scan a book",
+    "prompt": "Sign in to scan your books.",
+    "empty": "Scan the barcode on the back of a book, or type its ISBN: you will know at once whether it is already yours.",
+    "pending": "Looking it up…",
+    "failed": "This book cannot be checked right now.",
+    "tooMany": "Too many lookups at once: wait a moment before the next one.",
+    "camera": {
+      "label": "Camera view",
+      "start": "Turn on the camera",
+      "stop": "Stop",
+      "retry": "Try again",
+      "hint": "Frame the barcode: the camera keeps reading, go through the whole stack.",
+      "starting": "Opening the camera…",
+      "unsupported": "This browser cannot read barcodes. Type the ISBN below, or use Chrome or the Android app.",
+      "denied": "Camera access was refused. Allow it for this site in the browser settings, or type the ISBN below.",
+      "unavailable": "No camera available. Type the ISBN below."
+    },
+    "manual": {
+      "label": "Or type the ISBN",
+      "placeholder": "978…",
+      "submit": "Check",
+      "invalid": "That is not a valid ISBN: check the digits on the back of the book."
+    },
+    "verdict": {
+      "owned": {
+        "OWNED": "Already yours · not started",
+        "READING": "Already yours · reading",
+        "READ": "Already yours · read",
+        "ABANDONED": "Already yours · given up"
+      },
+      "wished": "On your wishlist",
+      "new": "Not yours yet",
+      "unknown": "No catalog knows this ISBN"
+    },
+    "likely": {
+      "TITLE": "Recognised by its title: perhaps another edition",
+      "SERIES_VOLUME": "Recognised by its series and volume number"
+    },
+    "action": {
+      "open": "Open",
+      "wishlist": "My wishlist",
+      "add": "Add",
+      "manual": "Add by hand"
     }
   }
 }

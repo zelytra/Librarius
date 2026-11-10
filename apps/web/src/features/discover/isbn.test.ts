@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { detectIsbn } from './isbn';
+import { detectIsbn, toIsbn13 } from './isbn';
 
 describe('detectIsbn', () => {
   test('recognises an ISBN13 however it was copied', () => {
@@ -28,5 +28,13 @@ describe('detectIsbn', () => {
     expect(detectIsbn('9780441013594')).toBeNull();
     // Thirteen digits outside the Bookland prefixes — a barcode or an order number.
     expect(detectIsbn('1234567890123')).toBeNull();
+  });
+});
+
+describe('toIsbn13', () => {
+  test('turns an ISBN-10 into the ISBN-13 of the same book', () => {
+    expect(toIsbn13('2070360024')).toBe('9782070360024');
+    expect(toIsbn13('080442957X')).toBe('9780804429573');
+    expect(toIsbn13('9782070360024')).toBe('9782070360024');
   });
 });

@@ -424,6 +424,22 @@ export interface ReviewDto {
   review?: string;
 }
 
+export interface WishlistItemDto {
+  id?: Uuid;
+  priority?: string;
+  estimatedPrice?: number;
+  note?: string;
+  book?: BookView;
+}
+
+export interface ScanResultDto {
+  isbn13?: string;
+  match?: string;
+  owned?: LibraryItemDto;
+  wished?: WishlistItemDto;
+  catalog?: CatalogResult;
+}
+
 export interface ScrapeRequest {
   /** @pattern \S */
   handle: string;
@@ -584,14 +600,6 @@ export interface WishlistCreateDto {
   estimatedPrice?: number;
   /** @maxLength 512 */
   note?: string;
-}
-
-export interface WishlistItemDto {
-  id?: Uuid;
-  priority?: string;
-  estimatedPrice?: number;
-  note?: string;
-  book?: BookView;
 }
 
 export interface WishlistPageDto {
@@ -3976,6 +3984,107 @@ export const usePostApiReports = <TError = void,
       > => {
       return useMutation(getPostApiReportsMutationOptions(options), queryClient);
     }
+
+export const getGetApiScanIsbnUrl = (isbn: string,) => {
+
+
+
+
+  return `/api/scan/${isbn}`
+}
+
+/**
+ * @summary Scan
+ */
+export const getApiScanIsbn = async (isbn: string, options?: RequestInit): Promise<ScanResultDto> => {
+
+  return apiClient<ScanResultDto>(getGetApiScanIsbnUrl(isbn),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiScanIsbnQueryKey = (isbn: string,) => {
+    return [
+    `/api/scan/${isbn}`
+    ] as const;
+    }
+
+
+export const getGetApiScanIsbnQueryOptions = <TData = Awaited<ReturnType<typeof getApiScanIsbn>>, TError = void>(isbn: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiScanIsbnQueryKey(isbn);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiScanIsbn>>> = () => getApiScanIsbn(isbn, );
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: isbn !== null && isbn !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiScanIsbnQueryResult = NonNullable<Awaited<ReturnType<typeof getApiScanIsbn>>>
+export type GetApiScanIsbnQueryError = void
+
+
+export function useGetApiScanIsbn<TData = Awaited<ReturnType<typeof getApiScanIsbn>>, TError = void>(
+ isbn: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiScanIsbn>>,
+          TError,
+          Awaited<ReturnType<typeof getApiScanIsbn>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiScanIsbn<TData = Awaited<ReturnType<typeof getApiScanIsbn>>, TError = void>(
+ isbn: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiScanIsbn>>,
+          TError,
+          Awaited<ReturnType<typeof getApiScanIsbn>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiScanIsbn<TData = Awaited<ReturnType<typeof getApiScanIsbn>>, TError = void>(
+ isbn: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Scan
+ */
+
+export function useGetApiScanIsbn<TData = Awaited<ReturnType<typeof getApiScanIsbn>>, TError = void>(
+ isbn: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiScanIsbn>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiScanIsbnQueryOptions(isbn,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiSeriesUrl = () => {
 

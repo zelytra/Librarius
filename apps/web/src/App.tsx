@@ -40,6 +40,9 @@ const AuthorPage = lazy(() =>
 const WishlistPage = lazy(() =>
   import('./features/wishlist/WishlistPage').then((m) => ({ default: m.WishlistPage })),
 );
+const ScanPage = lazy(() =>
+  import('./features/scan/ScanPage').then((m) => ({ default: m.ScanPage })),
+);
 const StatsPage = lazy(() =>
   import('./features/stats/StatsPage').then((m) => ({ default: m.StatsPage })),
 );
@@ -106,6 +109,7 @@ function App() {
           <Route path="catalog/:provider/:ref" element={<CatalogDetailPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="stats" element={<StatsPage />} />
+          <Route path="scan" element={<ScanPage />} />
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />

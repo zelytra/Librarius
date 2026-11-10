@@ -1,0 +1,260 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title {
+  font-size: var(--fs-25);
+}
+
+/* Camera and manual entry beside the results on a wide screen, above them on a phone —
+   the auto-fit grid decides, as the other screens' panel grids do. */
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Camera ───────────────────────────────────────────────────────────────── */
+
+.camera {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.viewfinder,
+.viewfinderOff {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-panel-lg);
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.viewfinderOff {
+  background: var(--surface);
+  border: 1px dashed var(--line);
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.viewfinderOff .video {
+  display: none;
+}
+
+/* Where to hold the barcode: a wide, short frame, the shape of an EAN-13. */
+.aim {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 35%;
+  bottom: 35%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.cameraIdle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.cameraMessage {
+  margin: 0;
+  max-width: 40ch;
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.cameraBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hint {
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+/* ── Manual entry ─────────────────────────────────────────────────────────── */
+
+.manual {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manualLabel {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.manualRow {
+  display: flex;
+  gap: 8px;
+}
+
+.manualInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-14);
+  padding: 0 12px;
+}
+
+.manualError {
+  margin: 0;
+  font-size: var(--fs-12-5);
+  color: var(--tint-rose-ink);
+}
+
+/* ── Results ──────────────────────────────────────────────────────────────── */
+
+.results {
+  min-width: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px;
+  border-radius: var(--radius-panel-lg);
+  border: 1px dashed var(--line);
+  font-size: var(--fs-13-5);
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+}
+
+.entryBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.entryTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.entryAuthor,
+.isbn {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.pending {
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.verdictOwned,
+.verdictWished,
+.verdictNew,
+.verdictError {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 3px 9px;
+  border-radius: var(--radius-chip);
+  font-size: var(--fs-12-5);
+  font-weight: 700;
+}
+
+.verdictOwned {
+  background: var(--tint-sage);
+  color: var(--accent-deep);
+}
+
+.verdictWished {
+  background: var(--tint-rose);
+  color: var(--ink);
+}
+
+.verdictNew {
+  background: var(--chip);
+  color: var(--ink);
+}
+
+.verdictError {
+  background: transparent;
+  padding: 0;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.likely {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  font-style: italic;
+}

@@ -217,15 +217,22 @@ function DiscoverContent() {
             <p className={styles.isbnHint}>{t('discover.isbnDetected', { isbn: detectedIsbn })}</p>
           )}
 
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((open) => !open)}
-            aria-expanded={advancedOpen}
-            className={styles.advancedToggle}
-          >
-            <Icon name={advancedOpen ? 'expand_less' : 'tune'} size={18} color="var(--accent-deep)" />
-            {t(advancedOpen ? 'discover.advanced.close' : 'discover.advanced.open')}
-          </button>
+          <div className={styles.searchActions}>
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen((open) => !open)}
+              aria-expanded={advancedOpen}
+              className={styles.advancedToggle}
+            >
+              <Icon name={advancedOpen ? 'expand_less' : 'tune'} size={18} color="var(--accent-deep)" />
+              {t(advancedOpen ? 'discover.advanced.close' : 'discover.advanced.open')}
+            </button>
+            {/* The bookshop path: a barcode instead of a typed title (#68). */}
+            <button type="button" onClick={() => navigate('/scan')} className={styles.advancedToggle}>
+              <Icon name="barcode_scanner" size={18} color="var(--accent-deep)" />
+              {t('discover.scan')}
+            </button>
+          </div>
 
           {advancedOpen && (
             <div className={styles.advanced}>
