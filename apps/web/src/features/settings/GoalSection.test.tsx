@@ -41,7 +41,25 @@ describe('GoalSection', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0]).toEqual({ year: String(YEAR), body: { targetCount: 30, unit: 'BOOKS' } });
-    expect(await screen.findByText('Objectif enregistré : 30 livres.')).toBeInTheDocument();
+    expect(await screen.findByText('Objectif Romans enregistré : 30 livres.')).toBeInTheDocument();
+  });
+
+  /** #393: the goal is set for the kind picked, sent as `kind`. */
+  test('sets the goal of the kind picked', async () => {
+    const kinds: (string | null)[] = [];
+    server.use(
+      http.put('*/api/goals/:year', ({ request }) => {
+        kinds.push(new URL(request.url).searchParams.get('kind'));
+        return HttpResponse.json({ id: 'goal-2' });
+      }),
+    );
+    renderWithProviders(<GoalSection />);
+
+    await userEvent.click(await screen.findByText('Mangas'));
+    await userEvent.type(screen.getByLabelText('Nombre à atteindre'), '40');
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(kinds).toEqual(['MANGA']));
   });
 
   test('sends the unit the user picked', async () => {

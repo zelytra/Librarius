@@ -59,18 +59,26 @@ public class StatsService {
                 .toList();
 
         int year = Year.now().getValue();
-        ReadingGoal goal = goals.findByUserAndYear(userId, year).orElse(null);
-        // Without a goal there is no unit to count in, and the figure is only shown next to
-        // a target anyway: titles finished this year is the sensible neutral answer.
+        LocalDate from = LocalDate.of(year, 1, 1);
+        LocalDate to = LocalDate.of(year, 12, 31);
+        // One goal per kind (#393), each counted on its own kind only.
+        List<ReadingGoal> yearGoals = goals.listByUserAndYear(userId, year);
+        List<zelytra.librarius.web.ApiDtos.KindGoalDto> kindGoals = yearGoals.stream()
+                .map(g -> new zelytra.librarius.web.ApiDtos.KindGoalDto(g.kind.name(), g.targetCount,
+                        g.unit.name(), progresses.progressTowards(userId, from, to, g.unit, g.kind)))
+                .toList();
+        // The single-goal fields, kept for clients that read them: the first of the year's
+        // goals. Without a goal, titles finished this year is the sensible neutral answer.
+        ReadingGoal goal = yearGoals.isEmpty() ? null : yearGoals.get(0);
         GoalUnit unit = goal != null ? goal.unit : GoalUnit.BOOKS;
-        long goalCurrent = progresses.progressTowards(
-                userId, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), unit);
+        long goalCurrent = goal != null ? kindGoals.get(0).current()
+                : progresses.progressTowards(userId, from, to, unit);
 
         return new StatsDto(totals.read(), totals.reading(), totals.toRead(), totals.abandoned(),
                 totals.pagesRead(), seriesCount,
                 goal != null ? goal.targetCount : null,
                 goal != null ? goal.unit.name() : null,
-                goalCurrent, byGenre, totals.readWithPageCount());
+                goalCurrent, byGenre, totals.readWithPageCount(), kindGoals);
     }
 
     /**

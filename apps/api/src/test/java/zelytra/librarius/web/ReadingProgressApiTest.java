@@ -170,6 +170,48 @@ class ReadingProgressApiTest {
                 .body("progress.percent", is(100));
     }
 
+    // ── Dates following the status (#392) ────────────────────────────────────
+
+    /**
+     * The screens hand the stored dates back with a status change. A book read years ago and
+     * picked up again today starts today: the old start date it carries is not a choice.
+     */
+    @Test
+    void pickingABookUpAgainStartsItTodayDespiteTheOldDateSentBack() {
+        String itemId = addBook("Progress - read again", "OWNED");
+        putProgress(itemId, "{ \"status\": \"READ\", \"startedAt\": \"2018-01-01\","
+                + " \"finishedAt\": \"2018-02-01\" }").statusCode(204);
+
+        putProgress(itemId, "{ \"status\": \"READING\", \"startedAt\": \"2018-01-01\","
+                + " \"finishedAt\": \"2018-02-01\" }").statusCode(204);
+
+        item(itemId)
+                .body("status", is("READING"))
+                .body("progress.startedAt", is(LocalDate.now().toString()))
+                .body("progress.finishedAt", nullValue());
+    }
+
+    /** Reaching the last page of a book being read finishes it, today. */
+    @Test
+    void reachingTheLastPageFinishesTheBook() {
+        String itemId = addBook("Progress - last page", "READING");
+
+        putProgress(itemId, "{ \"currentPage\": " + PAGE_COUNT + " }").statusCode(204);
+
+        item(itemId)
+                .body("status", is("READ"))
+                .body("progress.percent", is(100))
+                .body("progress.finishedAt", is(LocalDate.now().toString()));
+    }
+
+    /** Added straight as being read: the reading starts today. */
+    @Test
+    void addingATitleAsBeingReadStartsItToday() {
+        String itemId = addBook("Progress - added reading", "READING");
+
+        item(itemId).body("progress.startedAt", is(LocalDate.now().toString()));
+    }
+
     // ── Abandoning ────────────────────────────────────────────────────────────
 
     /**

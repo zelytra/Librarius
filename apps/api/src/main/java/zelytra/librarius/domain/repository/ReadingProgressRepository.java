@@ -270,10 +270,16 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
      * contributing nothing.
      */
     public long progressTowards(String userId, LocalDate from, LocalDate to, GoalUnit unit) {
+        return progressTowards(userId, from, to, unit, null);
+    }
+
+    /** The same figure, counted on one kind of book only when {@code kind} is given (#393). */
+    public long progressTowards(String userId, LocalDate from, LocalDate to, GoalUnit unit,
+            zelytra.librarius.domain.Kind kind) {
         // The unit picks the aggregate and nothing else; it is an enum, never caller input.
         String aggregate = unit == GoalUnit.PAGES ? "sum(li.edition.pageCount)" : "count(rp)";
 
-        Object total = getEntityManager()
+        jakarta.persistence.TypedQuery<Object> query = getEntityManager()
                 .createQuery("""
                         select %s
                         from ReadingProgress rp
@@ -281,13 +287,17 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                         where li.userId = :userId
                           and rp.finishedAt between :from and :to
                           %s
-                        """.formatted(aggregate, NOT_ABANDONED), Object.class)
+                          %s
+                        """.formatted(aggregate, NOT_ABANDONED,
+                                kind != null ? "and li.edition.work.kind = :kind" : ""), Object.class)
                 .setParameter("userId", userId)
                 .setParameter("abandoned", LibraryStatus.ABANDONED)
                 .setParameter("from", from)
-                .setParameter("to", to)
-                .getSingleResult();
-        return asLong(total);
+                .setParameter("to", to);
+        if (kind != null) {
+            query.setParameter("kind", kind);
+        }
+        return asLong(query.getSingleResult());
     }
 
     /** {@code SUM} over no row, or over editions with no page count, comes back null. */

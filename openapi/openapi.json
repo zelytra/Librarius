@@ -457,6 +457,9 @@
           },
           "unit" : {
             "$ref" : "#/components/schemas/GoalUnit"
+          },
+          "kind" : {
+            "$ref" : "#/components/schemas/Kind"
           }
         }
       },
@@ -556,6 +559,9 @@
           },
           "unit" : {
             "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
           }
         }
       },
@@ -626,6 +632,25 @@
       "Kind" : {
         "type" : "string",
         "enum" : [ "BOOK", "MANGA", "COMIC", "GRAPHIC_NOVEL", "AUDIOBOOK" ]
+      },
+      "KindGoalDto" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string"
+          },
+          "target" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "current" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "LibraryCreateDto" : {
         "type" : "object",
@@ -1276,6 +1301,12 @@
           "readWithPageCount" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "goals" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KindGoalDto"
+            }
           }
         }
       },
@@ -2207,6 +2238,12 @@
             "type" : "integer",
             "format" : "int32"
           }
+        }, {
+          "name" : "kind",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
         } ],
         "requestBody" : {
           "content" : {
@@ -2240,6 +2277,39 @@
           }
         },
         "summary" : "Upsert",
+        "tags" : [ "Goal Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "delete" : {
+        "parameters" : [ {
+          "name" : "year",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "kind",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Delete",
         "tags" : [ "Goal Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]

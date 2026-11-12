@@ -304,12 +304,19 @@
     },
     "settings": {
       "title": "{{year}} reading goal",
-      "description": "A number of books or pages to read this year. The gauge on the home screen follows your progress.",
+      "description": "One goal per kind of book — novels, manga or comics — in books or pages. The Home gauge follows each one.",
       "placeholder": "Number to reach",
       "submit": "Save",
       "saved": "Goal saved: {{target}} {{unit}}.",
       "failed": "The goal could not be saved right now.",
-      "signIn": "Sign in to set a reading goal."
+      "signIn": "Sign in to set a reading goal.",
+      "savedKind": "{{kind}} goal saved: {{target}} {{unit}}."
+    },
+    "titleKind": "{{year}} goal · {{kind}}",
+    "kinds": {
+      "BOOK": "Novels",
+      "MANGA": "Manga",
+      "COMIC": "Comics"
     }
   },
   "collection": {

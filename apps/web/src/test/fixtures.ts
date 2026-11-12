@@ -261,6 +261,14 @@ export function customCategory(overrides: Partial<CategoryDto> = {}): CategoryDt
 }
 
 export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
+  // The single-goal fields still describe the first goal; a fixture that sets them gets the
+  // matching book goal in `goals` (#393), which is what the screens draw from.
+  const target = overrides.goalTarget;
+  const goals =
+    overrides.goals ??
+    (target && target > 0
+      ? [{ kind: 'BOOK', target, unit: overrides.goalUnit ?? 'BOOKS', current: overrides.goalCurrent ?? 12 }]
+      : []);
   return {
     read: 12,
     reading: 2,
@@ -276,6 +284,7 @@ export function stats(overrides: Partial<StatsDto> = {}): StatsDto {
       { code: 'science-fiction', genre: 'Science-fiction', count: 4 },
     ],
     ...overrides,
+    goals,
   };
 }
 

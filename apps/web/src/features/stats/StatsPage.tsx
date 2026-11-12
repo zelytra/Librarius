@@ -29,13 +29,10 @@ function StatsContent() {
   const reading = stats.reading ?? 0;
   const pages = pagesRead(stats);
   const seriesCount = stats.seriesCount ?? 0;
-  const goalCurrent = stats.goalCurrent ?? 0;
   const byGenre = stats.byGenre ?? [];
-  const target = stats.goalTarget ?? 0;
   const year = new Date().getFullYear();
-  // The unit agrees with the number it qualifies: "20 pages", but "encore 1 page".
-  const units = (count: number) => t(`goal.units.${toUnit(stats.goalUnit)}`, { count });
-  const pace = goalPace(goalCurrent, target, new Date());
+  // One goal per kind (#393); the unit agrees with the number it qualifies.
+  const kindGoals = (stats.goals ?? []).filter((g) => (g.target ?? 0) > 0);
 
   const bigStats = [
     { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
@@ -59,32 +56,49 @@ function StatsContent() {
       {/* No goal means an invitation, not a ring stuck at zero: the two look the same
           and only one of them tells the user what to do about it. Spans every column:
           the annual goal is the one panel meant to stay a banner rather than tile. */}
-      <div className={styles.goal}>
-        {target > 0 && (
-          <GoalGauge
-            percent={pace.percent}
-            value={goalCurrent}
-            targetLabel={t('goal.outOf', { target })}
-            unitLabel={units(target)}
-            label={t('goal.gaugeLabel', { current: goalCurrent, target, unit: units(target), year })}
-          />
-        )}
-        <div className={styles.goalBody}>
-          <div className={styles.goalTitle}>
-            {target > 0 ? t('goal.title', { year }) : t('goal.empty.title')}
+      {kindGoals.length === 0 ? (
+        <div className={styles.goal}>
+          <div className={styles.goalBody}>
+            <div className={styles.goalTitle}>{t('goal.empty.title')}</div>
+            <div className={styles.goalHint}>{t('goal.empty.description', { year })}</div>
+            <button className={styles.goalLink} onClick={() => navigate('/settings')}>
+              {t('goal.empty.action')}
+            </button>
           </div>
-          <div className={styles.goalHint}>
-            {target <= 0 && t('goal.empty.description', { year })}
-            {target > 0 && pace.reached && t('goal.reached')}
-            {target > 0 &&
-              !pace.reached &&
-              t('goal.remaining', { remaining: pace.remaining, unit: units(pace.remaining) })}
-          </div>
-          <button className={styles.goalLink} onClick={() => navigate('/settings')}>
-            {t(target > 0 ? 'goal.edit' : 'goal.empty.action')}
-          </button>
         </div>
-      </div>
+      ) : (
+        // One banner per kind of goal (#393).
+        kindGoals.map((goal) => {
+          const target = goal.target ?? 0;
+          const current = goal.current ?? 0;
+          const units = (count: number) => t(`goal.units.${toUnit(goal.unit)}`, { count });
+          const pace = goalPace(current, target, new Date());
+          return (
+            <div key={goal.kind} className={styles.goal}>
+              <GoalGauge
+                percent={pace.percent}
+                value={current}
+                targetLabel={t('goal.outOf', { target })}
+                unitLabel={units(target)}
+                label={t('goal.gaugeLabel', { current, target, unit: units(target), year })}
+              />
+              <div className={styles.goalBody}>
+                <div className={styles.goalTitle}>
+                  {t('goal.titleKind', { year, kind: t(`goal.kinds.${goal.kind ?? 'BOOK'}`) })}
+                </div>
+                <div className={styles.goalHint}>
+                  {pace.reached
+                    ? t('goal.reached')
+                    : t('goal.remaining', { remaining: pace.remaining, unit: units(pace.remaining) })}
+                </div>
+                <button className={styles.goalLink} onClick={() => navigate('/settings')}>
+                  {t('goal.edit')}
+                </button>
+              </div>
+            </div>
+          );
+        })
+      )}
 
       <div className={styles.tiles}>
         {bigStats.map((s) => (

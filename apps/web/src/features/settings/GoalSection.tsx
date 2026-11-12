@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
 import { useApiAuth } from '../../shared/api';
-import { goalForYear, toUnit, type Unit } from '../../shared/goal';
+import { GOAL_KINDS, goalForYear, toUnit, type GoalKind, type Unit } from '../../shared/goal';
 import {
   getGetApiGoalsQueryKey,
   useGetApiGoals,
@@ -35,7 +35,9 @@ export function GoalSection() {
   const year = new Date().getFullYear();
 
   const { data: goals } = useGetApiGoals({ query: { enabled: auth.authed } });
-  const stored = goalForYear(goals, year);
+  // One goal per kind (#393): the form edits the kind picked above it.
+  const [kind, setKind] = useState<GoalKind>('BOOK');
+  const stored = goalForYear(goals, year, kind);
 
   const [target, setTarget] = useState('');
   const [unit, setUnit] = useState<Unit>(GoalUnit.BOOKS);
@@ -45,11 +47,9 @@ export function GoalSection() {
   // form yet. Syncing on the identity of that goal fills the fields once, and leaves them
   // alone afterwards — including while the save is in flight.
   useEffect(() => {
-    if (stored?.targetCount) {
-      setTarget(String(stored.targetCount));
-      setUnit(toUnit(stored.unit));
-    }
-  }, [stored?.id, stored?.targetCount, stored?.unit]);
+    setTarget(stored?.targetCount ? String(stored.targetCount) : '');
+    setUnit(toUnit(stored?.unit));
+  }, [kind, stored?.id, stored?.targetCount, stored?.unit]);
 
   const { mutate: saveGoal, isPending, isError } = usePutApiGoalsYear({
     mutation: {
@@ -73,6 +73,14 @@ export function GoalSection() {
         <p className={styles.intro}>{t('goal.settings.signIn')}</p>
       ) : (
         <div className={styles.form}>
+          <Segmented<GoalKind>
+            value={kind}
+            onChange={(next) => {
+              setKind(next);
+              setSaved(false);
+            }}
+            options={GOAL_KINDS.map((id) => ({ id, label: t(`goal.kinds.${id}`) }))}
+          />
           <Segmented<Unit>
             value={unit}
             onChange={(next) => {
@@ -100,7 +108,7 @@ export function GoalSection() {
               variant="primary"
               size="compact"
               disabled={!valid || isPending}
-              onClick={() => saveGoal({ year, data: { targetCount: parsed, unit } })}
+              onClick={() => saveGoal({ year, data: { targetCount: parsed, unit }, params: { kind } })}
             >
               {t(isPending ? 'common.working' : 'goal.settings.submit')}
             </Button>
@@ -108,9 +116,10 @@ export function GoalSection() {
 
           {saved && !isPending && (
             <p className={styles.success}>
-              {t('goal.settings.saved', {
+              {t('goal.settings.savedKind', {
                 target: parsed,
                 unit: t(`goal.units.${unit}`, { count: parsed }),
+                kind: t(`goal.kinds.${kind}`),
               })}
             </p>
           )}

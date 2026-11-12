@@ -320,6 +320,8 @@ components:
           format: int32
         unit:
           $ref: "#/components/schemas/GoalUnit"
+        kind:
+          $ref: "#/components/schemas/Kind"
     ExportProgressDto:
       type: object
       properties:
@@ -387,6 +389,8 @@ components:
           format: int32
         unit:
           type: string
+        kind:
+          type: string
     GoalUnit:
       type: string
       enum:
@@ -444,6 +448,19 @@ components:
       - COMIC
       - GRAPHIC_NOVEL
       - AUDIOBOOK
+    KindGoalDto:
+      type: object
+      properties:
+        kind:
+          type: string
+        target:
+          type: integer
+          format: int32
+        unit:
+          type: string
+        current:
+          type: integer
+          format: int64
     LibraryCreateDto:
       type: object
       required:
@@ -920,6 +937,10 @@ components:
         readWithPageCount:
           type: integer
           format: int64
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/KindGoalDto"
     TimelineDto:
       type: object
       properties:
@@ -1564,6 +1585,10 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
       requestBody:
         content:
           application/json:
@@ -1584,6 +1609,30 @@ paths:
         "400":
           description: Bad Request
       summary: Upsert
+      tags:
+      - Goal Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      parameters:
+      - name: year
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: kind
+        in: query
+        schema:
+          $ref: "#/components/schemas/Kind"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
       tags:
       - Goal Resource
       security:

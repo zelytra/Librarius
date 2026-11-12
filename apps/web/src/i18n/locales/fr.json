@@ -304,12 +304,19 @@
     },
     "settings": {
       "title": "Objectif de lecture {{year}}",
-      "description": "Un nombre de livres ou de pages à lire cette année. La jauge de l'accueil suit ta progression.",
+      "description": "Un objectif par type de livre — romans, mangas ou BD — en nombre de livres ou de pages. La jauge de l'accueil suit chacun.",
       "placeholder": "Nombre à atteindre",
       "submit": "Enregistrer",
       "saved": "Objectif enregistré : {{target}} {{unit}}.",
       "failed": "Impossible d'enregistrer l'objectif pour le moment.",
-      "signIn": "Connecte-toi pour définir un objectif de lecture."
+      "signIn": "Connecte-toi pour définir un objectif de lecture.",
+      "savedKind": "Objectif {{kind}} enregistré : {{target}} {{unit}}."
+    },
+    "titleKind": "Objectif {{year}} · {{kind}}",
+    "kinds": {
+      "BOOK": "Romans",
+      "MANGA": "Mangas",
+      "COMIC": "BD"
     }
   },
   "collection": {
