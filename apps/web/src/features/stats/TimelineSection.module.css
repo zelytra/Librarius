@@ -45,8 +45,15 @@
 
 /* ── Plots ────────────────────────────────────────────────────────────────── */
 
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .chart {
-  margin-top: 16px;
+  /* Room for the values printed above the columns, clear of the switches (#396). */
+  margin-top: 30px;
 }
 
 .plot {

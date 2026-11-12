@@ -6,9 +6,10 @@
  */
 export type AddTarget = 'READ' | 'OWNED' | 'WISHLIST';
 
+/** In the order the add sheet offers them, the default first (#399). */
 export const ADD_TARGETS: { id: AddTarget; labelKey: string; addedKey: string; icon: string }[] = [
-  { id: 'READ', labelKey: 'add.targets.READ', addedKey: 'add.added.READ', icon: 'check_circle' },
   { id: 'OWNED', labelKey: 'add.targets.OWNED', addedKey: 'add.added.OWNED', icon: 'library_books' },
+  { id: 'READ', labelKey: 'add.targets.READ', addedKey: 'add.added.READ', icon: 'check_circle' },
   { id: 'WISHLIST', labelKey: 'add.targets.WISHLIST', addedKey: 'add.added.WISHLIST', icon: 'favorite' },
 ];
 

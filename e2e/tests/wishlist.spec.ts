@@ -11,7 +11,7 @@ test('adds a title to the wishlist then removes it', async ({ page }) => {
   await page.goto('/discover');
   await searchCatalog(page, 'dune');
 
-  await addResult(page, 'Souhait');
+  await addResult(page, 'Souhaits');
   await expect(page.getByText('Ajouté à tes souhaits.')).toBeVisible();
 
   await page.getByRole('link', { name: 'Souhaits' }).click();

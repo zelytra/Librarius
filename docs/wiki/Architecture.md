@@ -65,3 +65,20 @@ without deploying it — production is not open yet. The
 more detail, and
 [`docs/ARCHITECTURE.md`](https://github.com/zelytra/Librarius/blob/main/docs/ARCHITECTURE.md)
 lists every workflow.
+
+## Caching
+
+What a browser keeps, so it does not ask the server again for what cannot have changed:
+
+| What | Where | Policy |
+|---|---|---|
+| Hashed bundles (`/assets/*`) | nginx (`apps/web/nginx.conf`) | `public, max-age=31536000, immutable` — a new build has new names |
+| `index.html`, `sw.js` | nginx | `no-cache`: they decide when a new version is picked up |
+| Root icons and manifest | nginx | `public, max-age=86400` |
+| App shell, fonts, icons | service worker precache (Workbox, `vite.config.ts`) | refreshed with each build |
+| Book covers (any image) | service worker runtime cache `covers` | cache-first, 400 entries, 30 days, purged on quota errors; cross-origin opaque responses accepted |
+| API responses | TanStack Query in memory | per query key; mutations invalidate what they change |
+
+The cover component tracks which URL has loaded rather than resetting its state in an
+effect: an image served from the cache can be complete before React attaches its `load`
+handler, which used to leave covers on their skeleton forever when coming back to a screen.

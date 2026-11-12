@@ -18,7 +18,8 @@ import {
 import { AuthorNames } from '../author/AuthorNames';
 import { KIND_LABEL_KEY, knownKind } from '../discover/medium';
 import { toBook } from './catalogBook';
-import { ADD_TARGETS, addedKeyOf, type AddTarget } from './addTargets';
+import { addedKeyOf, type AddTarget } from './addTargets';
+import { AddButton } from './AddButton';
 import styles from './CatalogDetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
@@ -75,8 +76,9 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
       else await addToLibrary({ data: { book, status: target } });
       setAdded(target);
       refreshAfterAdd();
-    } catch {
+    } catch (error) {
       setAddError(t('discover.errors.addFailed'));
+      throw error;
     }
   }
 
@@ -117,23 +119,7 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
         <p className={styles.added}>{t(addedKeyOf(added))}</p>
       ) : (
         <div className={styles.addBlock}>
-          <span className={styles.addLabel}>{t('add.as')}</span>
-          <div className={styles.actions}>
-            {ADD_TARGETS.map((target, index) => (
-              <Button
-                key={target.id}
-                variant={index === 0 ? 'primary' : 'secondary'}
-                onClick={() => void add(target.id)}
-              >
-                <Icon
-                  name={target.icon}
-                  size={18}
-                  color={index === 0 ? 'var(--on-accent)' : target.id === 'WISHLIST' ? 'var(--rose)' : 'var(--accent-deep)'}
-                />
-                {t(target.labelKey)}
-              </Button>
-            ))}
-          </div>
+          <AddButton onAdd={add} />
         </div>
       )}
     </>

@@ -22,7 +22,8 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import { AuthorMatches } from '../author/AuthorSearch';
 import { catalogPath, toBook } from '../catalog/catalogBook';
-import { ADD_TARGETS, addedKeyOf, type AddTarget } from '../catalog/addTargets';
+import { addedKeyOf, type AddTarget } from '../catalog/addTargets';
+import { AddButton } from '../catalog/AddButton';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
@@ -174,8 +175,9 @@ function DiscoverContent() {
       else await addToLibrary({ data: { book, status: target } });
       setAdded((a) => ({ ...a, [key]: target }));
       refreshAfterAdd();
-    } catch {
+    } catch (error) {
       setAddError(t('discover.errors.addFailed'));
+      throw error;
     }
   }
 
@@ -351,21 +353,9 @@ function DiscoverContent() {
                 {state ? (
                   <div className={styles.added}>{t(addedKeyOf(state))}</div>
                 ) : (
-                  <div className={styles.actions} role="group" aria-label={t('add.as')}>
-                    {ADD_TARGETS.map((target, index) => (
-                      <button
-                        key={target.id}
-                        onClick={() => void add(r, key, target.id)}
-                        className={`${styles.action} ${index === 0 ? styles.actionPrimary : styles.actionGhost}`}
-                      >
-                        <Icon
-                          name={target.icon}
-                          size={16}
-                          color={index === 0 ? 'var(--on-accent)' : target.id === 'WISHLIST' ? 'var(--rose)' : 'var(--accent-deep)'}
-                        />
-                        {t(target.labelKey)}
-                      </button>
-                    ))}
+                  <div className={styles.actions}>
+                    {/* One button, then the sheet that asks where the title goes (#399). */}
+                    <AddButton compact onAdd={(target) => add(r, key, target)} />
                   </div>
                 )}
               </div>

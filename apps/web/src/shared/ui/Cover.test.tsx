@@ -33,6 +33,35 @@ describe('Cover', () => {
     expect(img).toHaveClass(/mediaLoaded/);
   });
 
+  /**
+   * #398: coming back to a screen, the covers are in the cache and complete before any
+   * `load` handler runs. They must show at once, not sit under a skeleton forever.
+   */
+  test('shows a cover already in the cache without waiting for a load event', () => {
+    const complete = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'complete');
+    const width = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'naturalWidth');
+    Object.defineProperty(HTMLImageElement.prototype, 'complete', { configurable: true, get: () => true });
+    Object.defineProperty(HTMLImageElement.prototype, 'naturalWidth', { configurable: true, get: () => 120 });
+    try {
+      const { container } = render(<Cover title="Berserk" imageUrl="https://covers.test/cached.jpg" />);
+
+      expect(container.querySelector('[class*="skeleton"]')).not.toBeInTheDocument();
+      expect(container.querySelector('img')).toHaveClass(/mediaLoaded/);
+    } finally {
+      if (complete) Object.defineProperty(HTMLImageElement.prototype, 'complete', complete);
+      if (width) Object.defineProperty(HTMLImageElement.prototype, 'naturalWidth', width);
+    }
+  });
+
+  /** And a load event that lands before the component settles is never undone. */
+  test('keeps a cover loaded once its load event has fired', () => {
+    const { container, rerender } = render(<Cover title="Berserk" imageUrl="https://covers.test/a.jpg" />);
+    fireEvent.load(container.querySelector('img')!);
+    rerender(<Cover title="Berserk" imageUrl="https://covers.test/a.jpg" />);
+
+    expect(container.querySelector('img')).toHaveClass(/mediaLoaded/);
+  });
+
   test('falls back to the titled placeholder when the cover fails to load', () => {
     const { container } = render(<Cover title="Berserk" imageUrl="https://covers.test/missing.jpg" />);
     const img = container.querySelector('img')!;

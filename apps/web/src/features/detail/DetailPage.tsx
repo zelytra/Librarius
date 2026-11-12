@@ -15,6 +15,7 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiWorksIdEditionsQueryKey,
   useGetApiCategories,
+  useDeleteApiLibraryId,
   useGetApiLibraryId,
   useGetApiSeries,
   useGetApiWorksIdEditions,
@@ -415,6 +416,50 @@ function EditionsSection({
   );
 }
 
+/**
+ * Removing an owned title from the library (#400), behind a second tap: the title, its
+ * readings, its rating and its review go with it. The catalog fiche stays.
+ */
+function RemoveFromLibrary({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const { mutate: remove, isPending, isError } = useDeleteApiLibraryId({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+        void queryClient.invalidateQueries(STATS_QUERIES);
+        navigate('/collection', { replace: true });
+      },
+    },
+  });
+
+  return (
+    <div className={styles.removeRow}>
+      {!confirming ? (
+        <button type="button" className={styles.removeButton} onClick={() => setConfirming(true)}>
+          <Icon name="delete" size={16} color="var(--rose)" />
+          {t('detail.remove.start')}
+        </button>
+      ) : (
+        <div className={styles.removeConfirm} role="group" aria-label={t('detail.remove.start')}>
+          <p className={styles.removeWarning}>{t('detail.remove.warning')}</p>
+          <div className={styles.removeActions}>
+            <Button variant="secondary" size="compact" onClick={() => setConfirming(false)} disabled={isPending}>
+              {t('detail.remove.cancel')}
+            </Button>
+            <Button size="compact" onClick={() => remove({ id })} disabled={isPending}>
+              {t(isPending ? 'common.working' : 'detail.remove.confirm')}
+            </Button>
+          </div>
+          {isError && <p className={styles.removeWarning}>{t('detail.remove.failed')}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DetailContent({ id }: { id: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -713,6 +758,8 @@ function DetailContent({ id }: { id: string }) {
             <ReportButton targetType="WORK" targetId={b.workId} />
           </div>
         )}
+
+        <RemoveFromLibrary id={id} />
       </div>
 
       {outcome && (

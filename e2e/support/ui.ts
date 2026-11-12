@@ -37,8 +37,13 @@ export async function searchCatalog(page: Page, query: string): Promise<void> {
  * Once added, a result swaps its two buttons for a confirmation, so calling this twice
  * in a row adds the first result then the second one.
  */
-export async function addResult(page: Page, target: 'Lu' | 'Pile à lire' | 'Souhait'): Promise<void> {
-  await page.getByRole('button', { name: target, exact: true }).first().click();
+export async function addResult(page: Page, target: 'Lu' | 'Pile à lire' | 'Souhaits'): Promise<void> {
+  // One "Ajouter" button, then the sheet that asks where the title goes (#399).
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).first().click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByRole('radio', { name: target, exact: true }).click();
+  await sheet.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await sheet.waitFor({ state: 'detached' });
 }
 
 /** Opens the detail screen of a title from a cover tile (Collection or Home). */

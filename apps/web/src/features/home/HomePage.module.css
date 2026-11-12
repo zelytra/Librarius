@@ -19,6 +19,24 @@
   margin-top: 2px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customizeHeaderButton {
+  width: 46px;
+  height: 46px;
+  border: 1.5px solid var(--chip);
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .settingsButton {
   width: 46px;
   height: 46px;
@@ -43,22 +61,6 @@
    section, and giving it the same weight as "Reprendre la lecture" would make
    it read as the dashboard's own heading instead of an aside above it. */
 
-.customizeButton {
-  /* A text action still needs a finger-sized target. */
-  min-height: 36px;
-  align-self: flex-end;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: var(--fs-12);
-  font-weight: 600;
-  padding: 4px 0;
-}
 
 /* Horizontal shelf, bleeding out to the edges of the screen. */
 .shelf {

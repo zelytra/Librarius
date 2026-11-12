@@ -711,6 +711,13 @@
       "alreadyOwnedError": "Tu as déjà cette édition dans ta bibliothèque.",
       "error": "Impossible de changer d'édition.",
       "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination."
+    },
+    "remove": {
+      "start": "Supprimer de ma bibliothèque",
+      "warning": "Ce livre, ta progression, ta note et ton avis seront supprimés de ta bibliothèque.",
+      "cancel": "Annuler",
+      "confirm": "Supprimer",
+      "failed": "Suppression impossible pour le moment."
     }
   },
   "settings": {
@@ -937,16 +944,20 @@
   },
   "add": {
     "targets": {
-      "READ": "Lu",
       "OWNED": "Pile à lire",
-      "WISHLIST": "Souhait"
+      "READ": "Lu",
+      "WISHLIST": "Souhaits"
     },
     "added": {
       "READ": "Ajouté à ta bibliothèque, comme lu.",
       "OWNED": "Ajouté à ta pile à lire.",
       "WISHLIST": "Ajouté à tes souhaits."
     },
-    "as": "Ajouter comme"
+    "as": "Ajouter comme",
+    "open": "Ajouter",
+    "title": "Ajouter à…",
+    "cancel": "Annuler",
+    "confirm": "Ajouter"
   },
   "people": {
     "title": "Lecteurs",

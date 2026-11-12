@@ -6,6 +6,7 @@ import { renderWithProviders, TestProviders } from '../../test/utils';
 import { authorSummary, catalogResult } from '../../test/fixtures';
 import { authorSearchReturns, http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { addAs } from '../../test/addSheet';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -162,7 +163,7 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    await addAs('Pile à lire');
 
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
   });
@@ -176,7 +177,7 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    await addAs('Pile à lire');
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
 
     await new Promise((resolve) => setTimeout(resolve, 700));
@@ -194,7 +195,7 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    await addAs('Pile à lire');
 
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
@@ -211,7 +212,7 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    await addAs('Pile à lire');
 
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({
@@ -226,7 +227,7 @@ describe('DiscoverPage', () => {
     renderWithProviders(<DiscoverPage />);
 
     await search();
-    await userEvent.click(await screen.findByRole('button', { name: 'Souhait' }));
+    await addAs('Souhaits');
 
     expect(await screen.findByText('Ajouté à tes souhaits.')).toBeInTheDocument();
   });

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
@@ -90,6 +90,7 @@ function Dashboard() {
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [, setParams] = useSearchParams();
   const today = new Intl.DateTimeFormat(activeLanguage(), { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   return (
@@ -99,13 +100,24 @@ export function HomePage() {
           <div className={styles.date}>{today}</div>
           <div className={styles.greeting}>{t('home.greeting')}</div>
         </div>
-        <button
-          onClick={() => navigate('/settings')}
-          aria-label={t('settings.title')}
-          className={styles.settingsButton}
-        >
-          <Icon name="settings" size={22} color="var(--on-accent)" />
-        </button>
+        <div className={styles.headerActions}>
+          {/* Customising Home sits next to Settings (#397), where the reader looks for it. */}
+          <button
+            onClick={() => setParams({ customize: '1' }, { replace: true })}
+            aria-label={t('home.customize.open')}
+            title={t('home.customize.open')}
+            className={styles.customizeHeaderButton}
+          >
+            <Icon name="tune" size={22} color="var(--ink-soft)" />
+          </button>
+          <button
+            onClick={() => navigate('/settings')}
+            aria-label={t('settings.title')}
+            className={styles.settingsButton}
+          >
+            <Icon name="settings" size={22} color="var(--on-accent)" />
+          </button>
+        </div>
       </div>
       <LoginGate prompt={t('auth.prompts.home')}>
         <Dashboard />
