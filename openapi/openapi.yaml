@@ -498,6 +498,30 @@ components:
         total:
           type: integer
           format: int64
+    LibraryResetDto:
+      type: object
+      properties:
+        libraryItems:
+          type: integer
+          format: int32
+        wishlistItems:
+          type: integer
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        categories:
+          type: integer
+          format: int32
+        seriesFollows:
+          type: integer
+          format: int32
+        seriesReviews:
+          type: integer
+          format: int32
+        authorFollows:
+          type: integer
+          format: int32
     LibraryStatus:
       type: string
       enum:
@@ -2065,6 +2089,24 @@ paths:
         "403":
           description: Not Allowed
       summary: Following
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+  /api/me/library:
+    delete:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryResetDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Reset Library
       tags:
       - Me Resource
       security:

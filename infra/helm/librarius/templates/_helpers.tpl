@@ -29,6 +29,14 @@ a password committed to the repository.
 {{- required "postgres.existingSecret is required: create the Secret then deploy with --set postgres.existingSecret=<name> (see docs/DEPLOYMENT.md)" .Values.postgres.existingSecret -}}
 {{- end -}}
 
+{{/*
+Name of the Secret holding the api's Keycloak service-account secret (account deletion,
+#73): the one given, or the one the chart generates (templates/keycloak-setup.yaml).
+*/}}
+{{- define "librarius.apiAdmin.secretName" -}}
+{{- .Values.api.accountDeletion.existingSecret | default (printf "%s-keycloak-api-admin" .Release.Name) -}}
+{{- end -}}
+
 {{/* Name of the Secret holding the Keycloak admin password. Same rule. */}}
 {{- define "librarius.keycloak.secretName" -}}
 {{- required "keycloak.existingSecret is required: create the Secret then deploy with --set keycloak.existingSecret=<name> (see docs/DEPLOYMENT.md)" .Values.keycloak.existingSecret -}}

@@ -93,15 +93,16 @@ api:
     perMinute: ""
     perDay: ""
   # Deleting an account (GDPR art. 17) deletes the Keycloak login too, which needs a
-  # service account. Off by default, and no credential is invented: while this is off,
-  # DELETE /api/me answers 503 and erases nothing — never the reverse, which would leave
-  # a working login in front of a library that no longer exists.
-  # What to create first: docs/DEPLOYMENT.md § "Account deletion".
+  # service account. On by default since #73: the chart generates the client secret
+  # (kept across upgrades, never written in the repository) and the keycloak-setup Job
+  # creates the client with `manage-users` only. While Keycloak refuses, DELETE /api/me
+  # answers 503 and erases nothing — never the reverse.
+  # docs/DEPLOYMENT.md § "Account deletion".
   accountDeletion:
-    enabled: false
+    enabled: true
     # Client id of the service account, in the `librarius` realm.
     clientId: librarius-api-admin
-    # Secret holding its client secret. Created by hand, never by the chart.
+    # A Secret of your own holding the client secret; empty, the chart generates one.
     existingSecret: ""
     secretKey: admin-client-secret
 
@@ -204,6 +205,14 @@ keycloak:
   # ample for a single Keycloak issuing tokens for 50 concurrent sessions — it
   # spends its time on JWT signing, not on the database.
   dbPoolMaxSize: 15
+  # Session lifetimes, in seconds, applied to the live realm on every deploy by the
+  # keycloak-setup Job (#381) — the realm import alone only reaches a new realm.
+  # Seven days idle / thirty days at most for a browser session; ninety days idle for the
+  # offline session the web app asks for, which has no maximum.
+  sessions:
+    idle: 604800
+    max: 2592000
+    offlineIdle: 7776000
   resources:
     requests: { cpu: 100m, memory: 384Mi }
     limits: { cpu: "1", memory: 768Mi }

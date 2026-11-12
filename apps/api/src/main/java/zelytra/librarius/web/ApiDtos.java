@@ -813,6 +813,11 @@ public final class ApiDtos {
             int categories, int seriesFollows) {
     }
 
+    /** What a library reset removed (#382): counters only, the account itself stays. */
+    public record LibraryResetDto(int libraryItems, int wishlistItems, int goals, int categories,
+            int seriesFollows, int seriesReviews, int authorFollows) {
+    }
+
     // ── Upcoming releases ─────────────────────────────────────────────────────
 
     /**

@@ -172,6 +172,21 @@ jobs:
           kubectl -n "$NAMESPACE" rollout status deployment/librarius-keycloak --timeout=600s
           kubectl -n "$NAMESPACE" get pods,ingress -l release=librarius
 
+      # The keycloak-setup Job of this revision brings the live realm in line with the
+      # chart: session lifetimes (#381) and the account-deletion service account (#73).
+      # It waits for Keycloak itself; a failure prints its log and fails the deploy, since
+      # account deletion answers 503 until it has run.
+      - name: Wait for the Keycloak setup
+        run: |
+          rev=$(helm -n "$NAMESPACE" status librarius -o json | jq -r .version)
+          job="job/librarius-keycloak-setup-${rev}"
+          if ! kubectl -n "$NAMESPACE" wait --for=condition=complete "$job" --timeout=900s; then
+            kubectl -n "$NAMESPACE" logs "$job" --tail=100 || true
+            echo "::error::The Keycloak setup Job did not complete — see its log above."
+            exit 1
+          fi
+          kubectl -n "$NAMESPACE" logs "$job" --tail=20
+
       # A failed `--wait` says "timed out waiting for the condition" and nothing
       # else, which is why #125 read as a broken release for nine minutes when the
       # pod was merely unschedulable. The pod state and the namespace events name
