@@ -76,13 +76,17 @@ describe('CollectionPage', () => {
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
   });
 
-  test('shows no kind switch when the library holds a single kind', async () => {
+  /** #383: a books-only library (a Babelio import, say) keeps the Livres / Mangas / BD switch. */
+  test('always offers the books, manga and comics shelves', async () => {
     libraryReturns([ROMAN]);
     renderWithProviders(<CollectionPage />);
 
     expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
-    // One position is no choice: the lone "Livres" pill is not drawn.
-    expect(screen.queryByText('Livres')).not.toBeInTheDocument();
+    expect(screen.getByText('Livres')).toBeInTheDocument();
+    expect(screen.getByText('Mangas')).toBeInTheDocument();
+    expect(screen.getByText('BD')).toBeInTheDocument();
+    // The rarer kinds only once one is owned.
+    expect(screen.queryByText('Livres audio')).not.toBeInTheDocument();
   });
 
   test('offers the to-read pile: the titles held and not started yet', async () => {
@@ -125,8 +129,8 @@ describe('CollectionPage', () => {
     expect(await screen.findByText('BD')).toBeInTheDocument();
     expect(await screen.findByText('Romans graphiques')).toBeInTheDocument();
     expect(await screen.findByText('Livres audio')).toBeInTheDocument();
-    // Nothing owned of this kind: no shelf offered for it.
-    expect(screen.queryByText('Mangas')).not.toBeInTheDocument();
+    // Manga is always offered, owned or not (#383).
+    expect(screen.getByText('Mangas')).toBeInTheDocument();
   });
 
   /**

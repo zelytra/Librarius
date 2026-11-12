@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { canRestore } from './sessionRestore';
 
 /**
  * Authentication state for the screens that gate on it.
@@ -11,7 +12,10 @@ export function useApiAuth() {
   const auth = useAuth();
   return {
     authed: auth.isAuthenticated,
-    loading: auth.isLoading,
+    // An expired session that can be renewed is still being resolved, not signed out:
+    // `AuthTokenBridge` is renewing it, and the gates must wait rather than send the reader
+    // to the sign-in screen (#381).
+    loading: auth.isLoading || canRestore(auth.user),
     login: () => void auth.signinRedirect(),
     // Drops the local session. Used after an account deletion, where the Keycloak account
     // is already gone: the token in memory stays cryptographically valid until it expires,
