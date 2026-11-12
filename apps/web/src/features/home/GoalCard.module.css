@@ -94,3 +94,10 @@
   align-items: center;
   gap: 4px;
 }
+
+/* One card per kind of goal (#393), stacked. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

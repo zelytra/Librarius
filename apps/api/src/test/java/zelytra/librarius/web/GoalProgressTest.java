@@ -65,6 +65,45 @@ class GoalProgressTest {
                 .extract().jsonPath().getInt("goalCurrent");
     }
 
+    // ── Per kind (#393) ───────────────────────────────────────────────────────
+
+    /**
+     * A goal per kind counts that kind only: a manga finished moves the manga goal, not the
+     * book one. Run as bob so alice's book goal, which the tests below rely on, is untouched.
+     */
+    @Test
+    void eachKindHasItsOwnGoalCountedOnItsOwnTitles() {
+        String bob = keycloak.getAccessToken("bob");
+        for (String kind : new String[] {"BOOK", "MANGA"}) {
+            given().auth().oauth2(bob).contentType("application/json")
+                    .body("{ \"targetCount\": 10, \"unit\": \"BOOKS\" }")
+                    .when().put("/api/goals/" + year + "?kind=" + kind)
+                    .then().statusCode(200).body("kind", is(kind));
+        }
+        java.util.function.Function<String, Integer> current = kind -> given().auth().oauth2(bob)
+                .when().get("/api/stats").then().statusCode(200)
+                .extract().jsonPath().getInt("goals.find { it.kind == '" + kind + "' }.current");
+        int books = current.apply("BOOK");
+        int mangas = current.apply("MANGA");
+
+        String manga = given().auth().oauth2(bob).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "MANGA", "title": "Goal per kind %s", "authors": "Goal Test" },
+                          "status": "OWNED" }
+                        """.formatted(java.util.UUID.randomUUID()))
+                .when().post("/api/library").then().statusCode(201).extract().path("id");
+        given().auth().oauth2(bob).contentType("application/json").body("{ \"status\": \"READ\" }")
+                .when().put("/api/library/" + manga + "/progress").then().statusCode(204);
+
+        assertEquals(mangas + 1, current.apply("MANGA"), "the manga goal moves");
+        assertEquals(books, current.apply("BOOK"), "the book goal does not");
+
+        // A goal of a kind can be dropped on its own.
+        given().auth().oauth2(bob).when().delete("/api/goals/" + year + "?kind=MANGA").then().statusCode(204);
+        given().auth().oauth2(bob).when().get("/api/goals").then().statusCode(200)
+                .body("findAll { it.year == " + year + " }.kind", org.hamcrest.Matchers.contains("BOOK"));
+    }
+
     // ── The target ────────────────────────────────────────────────────────────
 
     /** The unit travels with the target: a gauge cannot label itself without it. */

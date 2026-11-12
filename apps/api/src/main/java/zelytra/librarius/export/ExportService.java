@@ -141,7 +141,7 @@ public class ExportService {
                 .toList();
 
         List<ExportGoalDto> readingGoals = goals.listByUser(userId).stream()
-                .map(g -> new ExportGoalDto(g.year, g.targetCount, g.unit))
+                .map(g -> new ExportGoalDto(g.year, g.targetCount, g.unit, g.kind))
                 .toList();
 
         List<ExportSeriesFollowDto> followed =

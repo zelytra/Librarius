@@ -157,12 +157,16 @@ public class ArchiveImportService {
             if (dto.targetCount() < 1) {
                 continue;
             }
-            ReadingGoal goal = goals.findByUserAndYear(userId, dto.year()).orElse(null);
+            // An archive written before goals were per kind carries none: a book goal.
+            zelytra.librarius.domain.Kind kind = dto.kind() != null ? dto.kind()
+                    : zelytra.librarius.domain.Kind.BOOK;
+            ReadingGoal goal = goals.findByUserAndYear(userId, dto.year(), kind).orElse(null);
             boolean isNew = goal == null;
             if (isNew) {
                 goal = new ReadingGoal();
                 goal.userId = userId;
                 goal.year = dto.year();
+                goal.kind = kind;
             }
             goal.targetCount = dto.targetCount();
             if (dto.unit() != null) {

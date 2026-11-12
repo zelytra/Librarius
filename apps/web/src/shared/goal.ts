@@ -112,9 +112,17 @@ export function paceForUnit(pace: GoalPace, unit: Unit): { value: number; perMon
     : { value: pace.perMonth, perMonth: true };
 }
 
-/** The goal set for a given year, if there is one. */
-export function goalForYear(goals: GoalDto[] | undefined, year: number): GoalDto | undefined {
-  return goals?.find((goal) => goal.year === year);
+/** The kinds a goal can be set for (#393), in the order the screens offer them. */
+export const GOAL_KINDS = ['BOOK', 'MANGA', 'COMIC'] as const;
+export type GoalKind = (typeof GOAL_KINDS)[number];
+
+/** The goal set for a given year and kind, if there is one; a goal stored without a kind is a book goal. */
+export function goalForYear(
+  goals: GoalDto[] | undefined,
+  year: number,
+  kind: GoalKind = 'BOOK',
+): GoalDto | undefined {
+  return goals?.find((goal) => goal.year === year && (goal.kind ?? 'BOOK') === kind);
 }
 
 /**

@@ -334,7 +334,7 @@ describe('HomePage', () => {
       HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText(`Objectif ${YEAR}`)).toBeInTheDocument();
+    expect(await screen.findByText(`Objectif ${YEAR} · Romans`)).toBeInTheDocument();
     expect(screen.getByText(/Encore 18 livres/)).toBeInTheDocument();
     expect(screen.getByText(/pour tenir le rythme/)).toBeInTheDocument();
     // A progress bar, not a picture: the value has to reach assistive tech as a value.
@@ -347,6 +347,19 @@ describe('HomePage', () => {
    * The unit agrees with the number in front of it. Rounding the pace up made "1" a common
    * figure, and "1 livres" is the kind of wording a reader notices before anything else.
    */
+  /** #393: one gauge per kind the reader set a goal for. */
+  test('draws a gauge for each kind of goal', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ goals: [
+        { kind: 'BOOK', target: 20, unit: 'BOOKS', current: 5 },
+        { kind: 'MANGA', target: 50, unit: 'BOOKS', current: 30 },
+      ] }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText(`Objectif ${YEAR} · Romans`)).toBeInTheDocument();
+    expect(screen.getByText(`Objectif ${YEAR} · Mangas`)).toBeInTheDocument();
+  });
+
   test('says one title in the singular', async () => {
     server.use(http.get('*/api/stats', () =>
       HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 29, goalUnit: 'BOOKS' }))));
@@ -588,7 +601,7 @@ describe('HomePage', () => {
     // The layout query is not part of the loading gate (by design, see DashboardSections):
     // "lus" can paint from the default order before the real layout has arrived, so the
     // hidden section's absence is an eventual condition, not an immediate one.
-    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR}`)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR} · Romans`)).not.toBeInTheDocument());
   });
 
   /**
@@ -638,7 +651,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     await screen.findByText('lus');
-    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR}`)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR} · Romans`)).not.toBeInTheDocument());
 
     await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
     await userEvent.click(await screen.findByRole('button', {
@@ -650,7 +663,7 @@ describe('HomePage', () => {
     expect(saved[0]).toMatchObject({
       sections: expect.arrayContaining([{ code: 'goal', hidden: false }]),
     });
-    expect(await screen.findByText(`Objectif ${YEAR}`)).toBeInTheDocument();
+    expect(await screen.findByText(`Objectif ${YEAR} · Romans`)).toBeInTheDocument();
   });
 
   test('moving a section up in the panel changes the order it is saved in', async () => {

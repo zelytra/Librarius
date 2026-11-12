@@ -165,6 +165,14 @@ public class LibraryResource {
             progressRepository.persist(progress);
             item.progress = progress;
         }
+        // Added as being read: started today (#392), so the reading has a start to count from.
+        if (item.status == LibraryStatus.READING) {
+            zelytra.librarius.domain.ReadingProgress progress = new zelytra.librarius.domain.ReadingProgress();
+            progress.libraryItem = item;
+            progress.startedAt = java.time.LocalDate.now();
+            progressRepository.persist(progress);
+            item.progress = progress;
+        }
 
         return Response.status(Response.Status.CREATED).entity(LibraryItemDto.of(item)).build();
     }

@@ -353,7 +353,8 @@ public final class ApiDtos {
      */
     public record StatsDto(long read, long reading, long toRead, long abandoned, long pagesRead,
             long seriesCount, Integer goalTarget, String goalUnit, long goalCurrent,
-            java.util.List<GenreCount> byGenre, long readWithPageCount) {
+            java.util.List<GenreCount> byGenre, long readWithPageCount,
+            java.util.List<KindGoalDto> goals) {
     }
 
     /**
@@ -513,10 +514,17 @@ public final class ApiDtos {
         }
     }
 
-    public record GoalDto(UUID id, int year, int targetCount, String unit) {
+    public record GoalDto(UUID id, int year, int targetCount, String unit, String kind) {
         public static GoalDto of(ReadingGoal g) {
-            return new GoalDto(g.id, g.year, g.targetCount, g.unit.name());
+            return new GoalDto(g.id, g.year, g.targetCount, g.unit.name(), g.kind.name());
         }
+    }
+
+    /**
+     * One of this year's goals and where the reader stands against it (#393): titles, or
+     * pages, of that kind finished this year.
+     */
+    public record KindGoalDto(String kind, int target, String unit, long current) {
     }
 
     public record GoalUpsertDto(@NotNull @Min(1) Integer targetCount, GoalUnit unit) {
@@ -739,7 +747,7 @@ public final class ApiDtos {
     public record ExportCategoryDto(String code, String label, String color, int sortOrder) {
     }
 
-    public record ExportGoalDto(int year, int targetCount, GoalUnit unit) {
+    public record ExportGoalDto(int year, int targetCount, GoalUnit unit, Kind kind) {
     }
 
     /**

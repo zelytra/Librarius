@@ -58,6 +58,7 @@ public class ReadingProgressService {
      * @param dto  the new position, either side of which may be left out
      */
     public void apply(LibraryItem item, ProgressDto dto) {
+        LibraryStatus before = item.status;
         if (dto.status() != null) {
             item.status = dto.status();
         }
@@ -78,12 +79,36 @@ public class ReadingProgressService {
         Integer percent = dto.percent() != null ? dto.percent()
                 : ReadingProgress.percentOf(dto.currentPage(), pageCount);
 
-        progress.currentPage = page;
-        progress.percent = percent;
-        progress.startedAt = dto.startedAt();
-        progress.finishedAt = dto.finishedAt();
+        // Reaching the end of a book being read finishes it (#392): 100 %, or the last page.
+        if (item.status == LibraryStatus.READING && before == LibraryStatus.READING
+                && percent != null && percent >= COMPLETE_PERCENT) {
+            item.status = LibraryStatus.READ;
+        }
 
         LocalDate today = LocalDate.now();
+        // A move into reading, or into read, happens today (#392) — unless the reader typed
+        // another date in this very request. The screens hand the stored dates back with a
+        // status change, so a date equal to the stored one is a carried-over value, not a
+        // choice: a book imported with a start date years ago and picked up again today
+        // starts today. Resuming an abandoned book is the one exception: it is the same
+        // reading, carried on from the page it stopped at, so it keeps its start.
+        boolean nowReading = item.status == LibraryStatus.READING && before != LibraryStatus.READING
+                && before != LibraryStatus.ABANDONED;
+        boolean nowRead = item.status == LibraryStatus.READ && before != LibraryStatus.READ;
+        LocalDate startedAt = dto.startedAt();
+        LocalDate finishedAt = dto.finishedAt();
+        if (nowReading && java.util.Objects.equals(startedAt, progress.startedAt)) {
+            startedAt = today;
+        }
+        if (nowRead && java.util.Objects.equals(finishedAt, progress.finishedAt)) {
+            finishedAt = today;
+        }
+
+        progress.currentPage = page;
+        progress.percent = percent;
+        progress.startedAt = startedAt;
+        progress.finishedAt = finishedAt;
+
         if (item.status == LibraryStatus.READING) {
             if (progress.startedAt == null) {
                 progress.startedAt = today;

@@ -5,13 +5,16 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import zelytra.librarius.domain.GoalUnit;
+import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.ReadingGoal;
 import zelytra.librarius.domain.repository.ReadingGoalRepository;
 import zelytra.librarius.security.CurrentUser;
@@ -37,19 +40,26 @@ public class GoalResource {
         return goals.listByUser(currentUser.id()).stream().map(GoalDto::of).toList();
     }
 
+    /**
+     * Sets the year's goal for one kind of book (#393); {@code BOOK} when the kind is left out,
+     * which is what every goal was before goals were per kind.
+     */
     @PUT
     @Path("/{year}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public GoalDto upsert(@PathParam("year") int year, @Valid GoalUpsertDto dto) {
+    public GoalDto upsert(@PathParam("year") int year, @QueryParam("kind") Kind kind,
+            @Valid GoalUpsertDto dto) {
         currentUser.require();
         String userId = currentUser.id();
-        ReadingGoal goal = goals.findByUserAndYear(userId, year).orElse(null);
+        Kind goalKind = kind != null ? kind : Kind.BOOK;
+        ReadingGoal goal = goals.findByUserAndYear(userId, year, goalKind).orElse(null);
         boolean created = goal == null;
         if (created) {
             goal = new ReadingGoal();
             goal.userId = userId;
             goal.year = year;
+            goal.kind = goalKind;
         }
         goal.targetCount = dto.targetCount();
         goal.unit = dto.unit() != null ? dto.unit() : GoalUnit.BOOKS;
@@ -59,5 +69,14 @@ public class GoalResource {
             goals.persist(goal);
         }
         return GoalDto.of(goal);
+    }
+
+    /** Drops the year's goal for one kind; nothing to drop is not an error. */
+    @DELETE
+    @Path("/{year}")
+    @Transactional
+    public void delete(@PathParam("year") int year, @QueryParam("kind") Kind kind) {
+        goals.findByUserAndYear(currentUser.id(), year, kind != null ? kind : Kind.BOOK)
+                .ifPresent(goals::delete);
     }
 }

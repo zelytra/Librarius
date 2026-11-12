@@ -9,6 +9,8 @@ import {
   getGetApiGoalsQueryKey,
   useGetApiGoals,
   usePutApiGoalsYear,
+  type Kind,
+  type KindGoalDto,
   type StatsDto,
 } from '../../api/generated/librarius';
 import styles from './GoalCard.module.css';
@@ -40,14 +42,10 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
     },
   });
 
-  const target = stats?.goalTarget ?? 0;
-  const current = stats?.goalCurrent ?? 0;
-  const unit = toUnit(stats?.goalUnit);
-  // The unit agrees with the number it qualifies, which is not the same one on every line:
-  // "8 / 30 livres", but "encore 1 livre".
-  const units = (count: number) => t(`goal.units.${unit}`, { count });
+  // One goal per kind (#393): a gauge for each one the reader set this year.
+  const kindGoals = (stats?.goals ?? []).filter((g) => (g.target ?? 0) > 0);
 
-  if (target <= 0) {
+  if (kindGoals.length === 0) {
     const previous = lastGoalBefore(goals, year);
     const previousUnit = toUnit(previous?.unit);
     const previousTarget = previous?.targetCount ?? 0;
@@ -70,7 +68,16 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
           <div className={styles.emptyActions}>
             <Button
               onClick={() =>
-                saveGoal({ year, data: { targetCount: previousTarget, unit: previousUnit } })
+                // Every goal of that year carries over, each for its own kind.
+                (goals ?? [])
+                  .filter((g) => g.year === previous.year && (g.targetCount ?? 0) > 0)
+                  .forEach((g) =>
+                    saveGoal({
+                      year,
+                      data: { targetCount: g.targetCount!, unit: toUnit(g.unit) },
+                      params: { kind: (g.kind ?? 'BOOK') as Kind },
+                    }),
+                  )
               }
               disabled={carryingOver}
             >
@@ -100,6 +107,25 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
     );
   }
 
+  return (
+    <div className={styles.list}>
+      {kindGoals.map((goal) => (
+        <KindGoal key={goal.kind} goal={goal} year={year} />
+      ))}
+    </div>
+  );
+}
+
+/** One kind's goal: its gauge, its pace, and the way to change it. */
+function KindGoal({ goal, year }: { goal: KindGoalDto; year: number }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const target = goal.target ?? 0;
+  const current = goal.current ?? 0;
+  const unit = toUnit(goal.unit);
+  // The unit agrees with the number it qualifies, which is not the same one on every line:
+  // "8 / 30 livres", but "encore 1 livre".
+  const units = (count: number) => t(`goal.units.${unit}`, { count });
   const pace = goalPace(current, target, new Date());
   const { value, perMonth } = paceForUnit(pace, unit);
 
@@ -114,7 +140,9 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
       />
       <div className={styles.body}>
         <div className={styles.head}>
-          <h3 className={styles.title}>{t('goal.title', { year })}</h3>
+          <h3 className={styles.title}>
+            {t('goal.titleKind', { year, kind: t(`goal.kinds.${goal.kind ?? 'BOOK'}`) })}
+          </h3>
           <span className={pace.onTrack ? styles.badgeOnTrack : styles.badgeBehind}>
             {t(pace.onTrack ? 'goal.onTrack' : 'goal.behind')}
           </span>

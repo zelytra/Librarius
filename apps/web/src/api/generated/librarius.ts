@@ -249,6 +249,7 @@ export interface ExportGoalDto {
   year?: number;
   targetCount?: number;
   unit?: GoalUnit;
+  kind?: Kind;
 }
 
 export type WishPriority = typeof WishPriority[keyof typeof WishPriority];
@@ -294,6 +295,7 @@ export interface GoalDto {
   year?: number;
   targetCount?: number;
   unit?: string;
+  kind?: string;
 }
 
 export interface GoalUpsertDto {
@@ -316,6 +318,13 @@ export interface ImportResult {
   imported?: number;
   skipped?: number;
   total?: number;
+}
+
+export interface KindGoalDto {
+  kind?: string;
+  target?: number;
+  unit?: string;
+  current?: number;
 }
 
 export interface LibraryCreateDto {
@@ -565,6 +574,7 @@ export interface StatsDto {
   goalCurrent?: number;
   byGenre?: GenreCount[];
   readWithPageCount?: number;
+  goals?: KindGoalDto[];
 }
 
 export type TimelinePointDtoByKind = {[key: string]: number};
@@ -688,6 +698,14 @@ limit?: number;
 
 export type GetApiExportParams = {
 format?: string;
+};
+
+export type PutApiGoalsYearParams = {
+kind?: Kind;
+};
+
+export type DeleteApiGoalsYearParams = {
+kind?: Kind;
 };
 
 export type GetApiLibraryParams = {
@@ -2215,21 +2233,30 @@ export function useGetApiGoals<TData = Awaited<ReturnType<typeof getApiGoals>>, 
 
 
 
-export const getPutApiGoalsYearUrl = (year: number,) => {
+export const getPutApiGoalsYearUrl = (year: number,
+    params?: PutApiGoalsYearParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/goals/${year}`
+  return stringifiedParams.length > 0 ? `/api/goals/${year}?${stringifiedParams}` : `/api/goals/${year}`
 }
 
 /**
  * @summary Upsert
  */
 export const putApiGoalsYear = async (year: number,
-    goalUpsertDto: GoalUpsertDto, options?: RequestInit): Promise<GoalDto> => {
+    goalUpsertDto: GoalUpsertDto,
+    params?: PutApiGoalsYearParams, options?: RequestInit): Promise<GoalDto> => {
 
-  return apiClient<GoalDto>(getPutApiGoalsYearUrl(year),
+  return apiClient<GoalDto>(getPutApiGoalsYearUrl(year,params),
   {
     ...options,
     method: 'PUT',
@@ -2243,8 +2270,8 @@ export const putApiGoalsYear = async (year: number,
 
 
 export const getPutApiGoalsYearMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto;params?: PutApiGoalsYearParams}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto;params?: PutApiGoalsYearParams}, TContext> => {
 
 const mutationKey = ['putApiGoalsYear'];
 const {mutation: mutationOptions} = options ?
@@ -2256,10 +2283,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiGoalsYear>>, {year: number;data: GoalUpsertDto}> = (props) => {
-          const {year,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiGoalsYear>>, {year: number;data: GoalUpsertDto;params?: PutApiGoalsYearParams}> = (props) => {
+          const {year,data,params} = props ?? {};
 
-          return  putApiGoalsYear(year,data,)
+          return  putApiGoalsYear(year,data,params,)
         }
 
 
@@ -2277,14 +2304,94 @@ const {mutation: mutationOptions} = options ?
  * @summary Upsert
  */
 export const usePutApiGoalsYear = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiGoalsYear>>, TError,{year: number;data: GoalUpsertDto;params?: PutApiGoalsYearParams}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putApiGoalsYear>>,
         TError,
-        {year: number;data: GoalUpsertDto},
+        {year: number;data: GoalUpsertDto;params?: PutApiGoalsYearParams},
         TContext
       > => {
       return useMutation(getPutApiGoalsYearMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiGoalsYearUrl = (year: number,
+    params?: DeleteApiGoalsYearParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/goals/${year}?${stringifiedParams}` : `/api/goals/${year}`
+}
+
+/**
+ * @summary Delete
+ */
+export const deleteApiGoalsYear = async (year: number,
+    params?: DeleteApiGoalsYearParams, options?: RequestInit): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiGoalsYearUrl(year,params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiGoalsYearMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiGoalsYear>>, TError,{year: number;params?: DeleteApiGoalsYearParams}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiGoalsYear>>, TError,{year: number;params?: DeleteApiGoalsYearParams}, TContext> => {
+
+const mutationKey = ['deleteApiGoalsYear'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiGoalsYear>>, {year: number;params?: DeleteApiGoalsYearParams}> = (props) => {
+          const {year,params} = props ?? {};
+
+          return  deleteApiGoalsYear(year,params,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiGoalsYearMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiGoalsYear>>>
+
+    export type DeleteApiGoalsYearMutationError = void
+
+    /**
+ * @summary Delete
+ */
+export const useDeleteApiGoalsYear = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiGoalsYear>>, TError,{year: number;params?: DeleteApiGoalsYearParams}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiGoalsYear>>,
+        TError,
+        {year: number;params?: DeleteApiGoalsYearParams},
+        TContext
+      > => {
+      return useMutation(getDeleteApiGoalsYearMutationOptions(options), queryClient);
     }
 
 export const getPostApiImportCollectedUrl = () => {

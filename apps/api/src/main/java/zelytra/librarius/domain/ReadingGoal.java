@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 
 import java.util.UUID;
 
-/** Yearly reading goal. */
+/** Yearly reading goal, for one kind of book. */
 @Entity
 @Table(name = "reading_goal")
 public class ReadingGoal {
@@ -31,4 +31,9 @@ public class ReadingGoal {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     public GoalUnit unit = GoalUnit.BOOKS;
+
+    /** The kind of book the goal counts — roman, manga, BD… — one goal per kind and year (#393). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    public Kind kind = Kind.BOOK;
 }
