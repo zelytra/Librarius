@@ -24,6 +24,26 @@ export default defineConfig({
         // is precached too. Without it the icons would still be missing on a cold
         // offline start, just from a same-origin file instead of Google Fonts.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
+        // Covers (#402): an image never changes at its URL, so it is served from the cache
+        // once fetched instead of asking Open Library (or any provider) again on every
+        // screen. Cross-origin `<img>` responses are opaque — status 0 — hence the status
+        // list; an opaque entry weighs heavily against the storage quota, hence the bound
+        // and purging the cache rather than failing when the quota runs out.
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'covers',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: {
+                maxEntries: 400,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+                purgeOnQuotaError: true,
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'Ma Bibliothèque',

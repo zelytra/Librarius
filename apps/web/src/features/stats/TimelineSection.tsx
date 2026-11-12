@@ -234,7 +234,8 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
   const [year, setYear] = useState(thisYear);
   const [metric, setMetric] = useState<Metric>('books');
   // Everything read together, or the books, manga and comics of the year apart.
-  const [split, setSplit] = useState(false);
+  // Split by kind by default (#396): the reader files by book, manga and comic.
+  const [split, setSplit] = useState(true);
   const [dimension, setDimension] = useState<BreakdownKey>('byAuthor');
 
   const timeline = useGetApiStatsTimeline({
@@ -287,17 +288,18 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
           <Segmented options={years} value={String(year)} onChange={(id) => setYear(Number(id))} />
         </div>
 
-        <Segmented<Metric>
-          options={[
-            { id: 'books', label: t('stats.timeline.metrics.books') },
-            { id: 'pages', label: t('stats.timeline.metrics.pages') },
-          ]}
-          value={metric}
-          onChange={setMetric}
-        />
-
-        {readAnything ? (
-          <>
+        {/* The two switches on one row, with room before the chart (#396): the month
+            values printed above the columns used to touch the buttons. */}
+        <div className={styles.controls}>
+          <Segmented<Metric>
+            options={[
+              { id: 'books', label: t('stats.timeline.metrics.books') },
+              { id: 'pages', label: t('stats.timeline.metrics.pages') },
+            ]}
+            value={metric}
+            onChange={setMetric}
+          />
+          {readAnything && (
             <Segmented<'all' | 'byKind'>
               options={[
                 { id: 'all', label: t('stats.timeline.views.all') },
@@ -306,6 +308,11 @@ export function TimelineSection({ stats }: { stats: StatsDto }) {
               value={split ? 'byKind' : 'all'}
               onChange={(id) => setSplit(id === 'byKind')}
             />
+          )}
+        </div>
+
+        {readAnything ? (
+          <>
             <MonthlyBars
               months={months}
               metric={metric}

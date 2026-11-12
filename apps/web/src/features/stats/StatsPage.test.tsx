@@ -102,8 +102,10 @@ describe('StatsPage', () => {
     await userEvent.hover(march);
     expect(screen.getByRole('tooltip')).toHaveTextContent('Mangas 3');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Par type' }));
+    // Split by kind from the start (#396), no click needed.
     expect(screen.getByText('Livres : 2 · Mangas : 3')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Tout' }));
+    expect(screen.queryByText('Livres : 2 · Mangas : 3')).not.toBeInTheDocument();
   });
 
   test('charts what was read month by month, and what it adds up to', async () => {

@@ -87,6 +87,13 @@
   font-size: var(--fs-15);
   font-weight: 600;
   line-height: 1.1;
+  /* A link since #390, drawn as a title rather than in the browser's link blue (#401). */
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.bookTitle:hover {
+  text-decoration: underline;
 }
 
 .authors {

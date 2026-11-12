@@ -711,6 +711,13 @@
       "alreadyOwnedError": "You already have this edition in your library.",
       "error": "The edition could not be changed.",
       "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination."
+    },
+    "remove": {
+      "start": "Remove from my library",
+      "warning": "This book, your progress, rating and review will be removed from your library.",
+      "cancel": "Cancel",
+      "confirm": "Remove",
+      "failed": "The book cannot be removed right now."
     }
   },
   "settings": {
@@ -946,7 +953,11 @@
       "OWNED": "Added to your to-read pile.",
       "WISHLIST": "Added to your wishlist."
     },
-    "as": "Add as"
+    "as": "Add as",
+    "open": "Add",
+    "title": "Add to…",
+    "cancel": "Cancel",
+    "confirm": "Add"
   },
   "people": {
     "title": "Readers",

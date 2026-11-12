@@ -1,9 +1,8 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { lazy, Suspense, type ReactNode } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Cover } from '../../shared/ui/Cover';
 import { AuthorNames } from '../author/AuthorNames';
-import { Icon } from '../../shared/ui/Icon';
 import { Button, SectionHeader } from '../../shared/ui/primitives';
 import { EmptyState } from '../../shared/ui/states';
 import { useViewportAtLeast } from '../../shared/ui/breakpoints';
@@ -43,7 +42,20 @@ interface DashboardSectionsProps {
 export function DashboardSections({ reading, read, stats, libraryEmpty }: DashboardSectionsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
+  // Opened from the header's button, next to Settings (#397): the request travels in the
+  // URL so the header and the sections need not share a parent's state.
+  const [params, setParams] = useSearchParams();
+  const editing = params.get('customize') === '1';
+  const setEditing = (open: boolean) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (open) next.set('customize', '1');
+        else next.delete('customize');
+        return next;
+      },
+      { replace: true },
+    );
   const { data } = useGetApiDashboardLayout();
   const sections = data?.sections ?? defaultLayout();
   const isHidden = (code: string) => sections.find((s) => s.code === code)?.hidden ?? false;
@@ -180,11 +192,6 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
 
   return (
     <div className={styles.sections}>
-      <button type="button" onClick={() => setEditing(true)} className={styles.customizeButton}>
-        <Icon name="tune" size={16} />
-        {t('home.customize.open')}
-      </button>
-
       {editing && (
         <Suspense fallback={null}>
           <DashboardEditor sections={sections} onClose={() => setEditing(false)} />

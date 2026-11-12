@@ -381,6 +381,31 @@ describe('DetailPage', () => {
     expect(await screen.findByText(/Avis partagé/)).toBeInTheDocument();
   });
 
+  /** #400: an owned book can be removed from the screen, behind a confirmation. */
+  test('removes the book from the library once confirmed', async () => {
+    servesMutableItem();
+    const deleted: string[] = [];
+    server.use(http.delete('*/api/library/:id', ({ params }) => {
+      deleted.push(String(params.id));
+      return new HttpResponse(null, { status: 204 });
+    }));
+    render(
+      <TestProviders route="/detail/item-1">
+        <Routes>
+          <Route path="/detail/:id" element={<DetailPage />} />
+          <Route path="/collection" element={<p>la bibliothèque</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Supprimer de ma bibliothèque'));
+    expect(deleted).toEqual([]);
+    await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+
+    await waitFor(() => expect(deleted).toEqual(['item-1']));
+    expect(await screen.findByText('la bibliothèque')).toBeInTheDocument();
+  });
+
   // ── Alternate editions ─────────────────────────────────────────────────────
 
   /** The item as the API returns it once the work carries more than one edition. */

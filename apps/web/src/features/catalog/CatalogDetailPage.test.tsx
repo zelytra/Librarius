@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -8,6 +8,7 @@ import { createTestQueryClient } from '../../test/utils';
 import { catalogResult } from '../../test/fixtures';
 import { http, HttpResponse, server } from '../../test/server';
 import { resetAuth } from '../../test/oidcMock';
+import { addAs } from '../../test/addSheet';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -66,11 +67,29 @@ describe('CatalogDetailPage', () => {
     }));
     renderFiche(catalogResult());
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Pile à lire' }));
+    await addAs('Pile à lire');
 
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
     expect(posts[0].status).toBe('OWNED');
+  });
+
+  /** #399: one "Ajouter", and the sheet starts on the to-read pile. */
+  test('adds to the to-read pile when the sheet is confirmed as it opens', async () => {
+    const posts: Record<string, unknown>[] = [];
+    server.use(http.post('*/api/library', async ({ request }) => {
+      posts.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ id: 'nouveau' }, { status: 201 });
+    }));
+    renderFiche(catalogResult());
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Ajouter' }));
+    const sheet = within(screen.getByRole('dialog'));
+    expect(sheet.getByRole('radio', { name: 'Pile à lire' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(sheet.getByRole('button', { name: 'Ajouter' }));
+
+    await waitFor(() => expect(posts[0]?.status).toBe('OWNED'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   /** The status is picked when the title is added: a book read years ago goes in as read. */
@@ -82,7 +101,7 @@ describe('CatalogDetailPage', () => {
     }));
     renderFiche(catalogResult());
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Lu' }));
+    await addAs('Lu');
 
     expect(await screen.findByText('Ajouté à ta bibliothèque, comme lu.')).toBeInTheDocument();
     expect(posts[0].status).toBe('READ');
@@ -91,7 +110,7 @@ describe('CatalogDetailPage', () => {
   test('adds the shown result to the wishlist', async () => {
     renderFiche(catalogResult());
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Souhait' }));
+    await addAs('Souhaits');
 
     expect(await screen.findByText('Ajouté à tes souhaits.')).toBeInTheDocument();
   });

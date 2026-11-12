@@ -12,7 +12,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 18px var(--grid-gap-x);
-  align-items: start;
+  /* Every block of a row takes the row's height (#396): side by side on a tablet or a
+     desktop, panels of different heights read as a disordered page. */
+  align-items: stretch;
 }
 
 /* ── Annual goal ──────────────────────────────────────────────────────────── */
@@ -68,6 +70,8 @@
 .tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  /* Four counters of one size, whatever their wording. */
+  grid-auto-rows: 1fr;
   gap: 12px;
   min-width: 0;
 }

@@ -426,3 +426,43 @@
   justify-content: center;
   margin-top: 8px;
 }
+
+/* Removing the title from the library (#400): last on the page, behind a confirmation. */
+.removeRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  border: none;
+  background: none;
+  color: var(--rose);
+  font-family: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.removeConfirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.removeWarning {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.removeActions {
+  display: flex;
+  gap: 10px;
+}

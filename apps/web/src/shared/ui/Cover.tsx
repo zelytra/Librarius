@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { colorFor } from './coverPalette';
 import styles from './Cover.module.css';
@@ -49,14 +49,25 @@ export function Cover({
   // Loading state of the real cover, tracked through the `<img>` itself so the
   // skeleton can fade out on `onLoad` and give up on `onError` — a background-image
   // has neither event, which is why a real `<img>` sits on top of the coloured block
-  // instead. Reset whenever the URL changes: a title swapped for another mid-session
-  // (an edit, a re-match against the catalog) starts a fresh load, not a stale one.
-  const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
-  useEffect(() => {
-    setLoaded(false);
-    setErrored(false);
-  }, [imageUrl]);
+  // instead.
+  //
+  // The state remembers *which* URL loaded or failed rather than being reset by an effect
+  // (#398): an image already in the cache — every cover when the reader comes back to a
+  // screen — can fire `load` before a mount effect runs, and resetting after it left the
+  // skeleton up forever, no second `load` ever coming. Keyed on the URL, a title swapped
+  // for another mid-session still starts a fresh load.
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+  const loaded = Boolean(imageUrl) && loadedUrl === imageUrl;
+  const errored = Boolean(imageUrl) && erroredUrl === imageUrl;
+  // An image complete before React attached `onLoad` (straight from the memory cache) is
+  // caught when the element mounts.
+  const imgRef = useCallback(
+    (img: HTMLImageElement | null) => {
+      if (img && imageUrl && img.complete && img.naturalWidth > 0) setLoadedUrl(imageUrl);
+    },
+    [imageUrl],
+  );
 
   // The coloured block stays underneath even when a cover image is expected: it is
   // both the no-cover rendering and the backdrop the skeleton and the fading-in
@@ -80,9 +91,10 @@ export function Cover({
         // alt is the correct value, not a stand-in for one.
         // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
         alt=""
+        ref={imgRef}
         className={`${styles.media} ${loaded ? styles.mediaLoaded : ''}`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setErrored(true)}
+        onLoad={() => setLoadedUrl(imageUrl)}
+        onError={() => setErroredUrl(imageUrl)}
       />
       {showSkeleton && <div className={styles.skeleton} aria-hidden="true" />}
     </>
