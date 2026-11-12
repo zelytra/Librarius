@@ -37,6 +37,9 @@ const SeriesPage = lazy(() =>
 const AuthorPage = lazy(() =>
   import('./features/author/AuthorPage').then((m) => ({ default: m.AuthorPage })),
 );
+const ToReadPage = lazy(() =>
+  import('./features/toread/ToReadPage').then((m) => ({ default: m.ToReadPage })),
+);
 const WishlistPage = lazy(() =>
   import('./features/wishlist/WishlistPage').then((m) => ({ default: m.WishlistPage })),
 );
@@ -110,6 +113,7 @@ function App() {
           {/* The catalog fiche of an unowned title, opened from a search result with the
               result carried in navigation state — a page to read before owning. */}
           <Route path="catalog/:provider/:ref" element={<CatalogDetailPage />} />
+          <Route path="to-read" element={<ToReadPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="stats" element={<StatsPage />} />
           <Route path="scan" element={<ScanPage />} />

@@ -76,6 +76,7 @@ public class SeriesService {
         visible.addAll(followed);
 
         Map<UUID, String> ownCovers = items.firstVolumeCovers(userId);
+        Map<UUID, String[]> sortKeys = items.seriesSortKeys(userId);
         return series.listByIds(visible).stream()
                 .map(s -> {
                     OwnershipCounters row = counters.get(s.id);
@@ -83,6 +84,10 @@ public class SeriesService {
                     long read = row != null ? row.read() : 0;
                     SeriesSummaryDto dto = SeriesSummaryDto.of(s, owned, read, followed.contains(s.id),
                             row != null ? row.lastActivity() : null);
+                    String[] keys = sortKeys.get(s.id);
+                    if (keys != null) {
+                        dto = dto.withSortKeys(keys[0], keys[1]);
+                    }
                     // A series carries a cover only when a provider gave it one, which an
                     // imported run never had: its block on the shelf then shows the first
                     // volume the reader owns, the way the spine of a run on a real shelf does.

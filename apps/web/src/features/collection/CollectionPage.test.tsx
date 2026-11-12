@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { TestProviders, mockViewportWidth, renderWithProviders } from '../../test/utils';
@@ -74,6 +74,34 @@ describe('CollectionPage', () => {
 
     expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
+  });
+
+  /** #389: the shelf is restored from the URL, so coming back from a book keeps it. */
+  test('restores the kind, search and sort from the URL', async () => {
+    libraryReturns([ROMAN, MANGA]);
+    renderWithProviders(<CollectionPage />, { route: '/collection?kind=MANGA&q=Vinland&sort=title' });
+
+    expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+    expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('Vinland')).toBeInTheDocument();
+  });
+
+  test('keeps what the reader picks in the URL', async () => {
+    libraryReturns([ROMAN, MANGA]);
+    let location = '';
+    function Spy() {
+      location = useLocation().search;
+      return null;
+    }
+    renderWithProviders(
+      <>
+        <CollectionPage />
+        <Spy />
+      </>,
+    );
+
+    await userEvent.click(await screen.findByText('Mangas'));
+    await waitFor(() => expect(location).toContain('kind=MANGA'));
   });
 
   /** #383: a books-only library (a Babelio import, say) keeps the Livres / Mangas / BD switch. */
@@ -291,7 +319,7 @@ describe('CollectionPage', () => {
     setAuthenticated(false);
     renderWithProviders(<CollectionPage />);
 
-    expect(await screen.findByText(/Connecte-toi pour voir ta collection/)).toBeInTheDocument();
+    expect(await screen.findByText(/Connecte-toi pour voir ta bibliothèque/)).toBeInTheDocument();
   });
 
   // ── Server-side pagination, sorting and search ─────────────────────────────
@@ -360,7 +388,7 @@ describe('CollectionPage', () => {
     renderWithProviders(<CollectionPage />);
 
     await screen.findByText('Le Nom du vent');
-    await userEvent.type(screen.getByLabelText('Rechercher dans ma collection…'), 'trône');
+    await userEvent.type(screen.getByLabelText('Rechercher dans ma bibliothèque…'), 'trône');
 
     expect(await screen.findByText('Le Trône de fer')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument());
@@ -447,7 +475,7 @@ describe('CollectionPage', () => {
     expect(await screen.findByText('Berserk')).toBeInTheDocument();
     expect(screen.queryByText('Le Trône de fer')).not.toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText('Rechercher dans ma collection…'), 'berserk');
+    await userEvent.type(screen.getByLabelText('Rechercher dans ma bibliothèque…'), 'berserk');
     await waitFor(() => expect(screen.queryByText('12 / 27 tomes · 1 lus')).not.toBeInTheDocument());
     expect(screen.getByText('Berserk')).toBeInTheDocument();
   });

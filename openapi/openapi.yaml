@@ -829,6 +829,10 @@ components:
           type: boolean
         lastActivity:
           $ref: "#/components/schemas/LocalDate"
+        authors:
+          type: string
+        genre:
+          type: string
     SeriesVolumeDto:
       type: object
       properties:

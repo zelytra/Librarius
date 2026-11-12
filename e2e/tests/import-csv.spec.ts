@@ -28,7 +28,7 @@ test('imports a library from a CSV file', async ({ page }) => {
   await expect(figure(page, 'en cours')).toHaveText('1');
   await expect(figure(page, 'à lire')).toHaveText('1');
 
-  await page.getByRole('link', { name: 'Collection' }).click();
+  await page.getByRole('link', { name: 'Bibliothèque', exact: true }).click();
   await expect(page.getByText('3 titres')).toBeVisible();
   await expect(page.getByText('La Horde du Contrevent', { exact: true })).toBeVisible();
   await expect(page.getByText('Le Nom du vent', { exact: true })).toBeVisible();

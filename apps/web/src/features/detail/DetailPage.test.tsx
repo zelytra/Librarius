@@ -466,7 +466,7 @@ describe('DetailPage', () => {
     ]);
     renderDetail();
 
-    expect(await screen.findByText('Déjà dans ta collection')).toBeInTheDocument();
+    expect(await screen.findByText('Déjà dans ta bibliothèque')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Je possède l'édition/ })).not.toBeInTheDocument();
   });
 
@@ -481,7 +481,7 @@ describe('DetailPage', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: /Je possède l'édition Robert Laffont/ }));
 
-    expect(await screen.findByText(/déjà cette édition dans ta collection/)).toBeInTheDocument();
+    expect(await screen.findByText(/déjà cette édition dans ta bibliothèque/)).toBeInTheDocument();
   });
 
   /**

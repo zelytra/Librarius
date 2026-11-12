@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueries, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
@@ -24,6 +24,7 @@ import { AuthorNames } from '../author/AuthorNames';
 import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
 import styles from './CollectionPage.module.css';
+import { interleave, isKeyedSort } from './shelfOrder';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
@@ -72,6 +73,19 @@ const ALL_SHELVES: ShelfFilter = { kind: 'all' };
 /** The to-read pile: titles in the collection, not started yet. */
 const TO_READ: ShelfFilter = { kind: 'toRead' };
 const FAVORITES: ShelfFilter = { kind: 'favorites' };
+
+/** A shelf as the `shelf` URL parameter spells it: absent for all, `rank:<code>` for a category. */
+function shelfToParam(filter: ShelfFilter): string | null {
+  if (filter.kind === 'rank') return `rank:${filter.code}`;
+  return filter.kind === 'all' ? null : filter.kind;
+}
+
+function shelfFromParam(value: string | null): ShelfFilter {
+  if (value === 'toRead') return TO_READ;
+  if (value === 'favorites') return FAVORITES;
+  if (value?.startsWith('rank:') && value.length > 5) return { kind: 'rank', code: value.slice(5) };
+  return ALL_SHELVES;
+}
 
 function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
   if (a.kind === 'rank' && b.kind === 'rank') return a.code === b.code;
@@ -191,23 +205,43 @@ function CollectionContent() {
     }
   }
 
+  // The shelf's state lives in the URL (#389): opening a book and coming back lands on the
+  // same kind, shelf, sort, view and search, and a filtered shelf can be bookmarked. Each
+  // change replaces the entry rather than pushing one, so Back leaves the library at once.
+  const [params, setParams] = useSearchParams();
+  const setParam = (key: string, value: string | null) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
+
   // Once the counts resolve they may move the default shelf under the user's feet — unless
   // the user has already picked one by hand, in which case that choice wins.
-  const [manualKind, setManualKind] = useState<Kind | null>(null);
+  const urlKind = params.get('kind');
+  const manualKind = urlKind && (ALL_KINDS as string[]).includes(urlKind) ? (urlKind as Kind) : null;
   const collType = manualKind ?? bestKind;
-  const setCollType = (kind: Kind) => setManualKind(kind);
+  const setCollType = (kind: Kind) => setParam('kind', kind);
 
   // Books, manga and comics are always offered (#383): they are the shelves a reader files
   // by, and an import that cannot tell a manga from a book must not take the switch away.
   // The two rarer kinds join only once the reader owns one.
   const kindOptions = ALL_KINDS.filter((kind) => ALWAYS_OFFERED.includes(kind) || totalOf(kind) > 0);
 
-  const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
+  const shelfFilter = shelfFromParam(params.get('shelf'));
+  const setShelfFilter = (filter: ShelfFilter) => setParam('shelf', shelfToParam(filter));
   // Latest activity first — read, started or added — the way a reader thinks of their shelf.
-  const [sortBy, setSortBy] = useState<SortBy>('recent');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [view, setView] = useState<View>('grouped');
+  const urlSort = params.get('sort');
+  const sortBy: SortBy = SORTS.some((s) => s.id === urlSort) ? (urlSort as SortBy) : 'recent';
+  const setSortBy = (sort: SortBy) => setParam('sort', sort === 'recent' ? null : sort);
+  const search = params.get('q') ?? '';
+  const [searchInput, setSearchInput] = useState(search);
+  const view: View = params.get('view') === 'flat' ? 'flat' : 'grouped';
+  const setView = (next: View) => setParam('view', next === 'flat' ? 'flat' : null);
   // By series by default: a run is one block, a one-shot one tile. A category or the
   // favourites shelf filters titles one by one — a rank or a rating belongs to a volume, not
   // to its run — so those shelves always list the titles themselves.
@@ -221,8 +255,13 @@ function CollectionContent() {
 
   // One request per pause in the typing rather than one per keystroke.
   useEffect(() => {
-    const handle = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    const handle = setTimeout(() => {
+      const q = searchInput.trim();
+      if (q !== search) setParam('q', q || null);
+    }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(handle);
+    // Only the typing drives it; `search` and `setParam` follow from the URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
   // The shelf is a window onto the server-side result set: filtering, sorting and
@@ -309,6 +348,14 @@ function CollectionContent() {
       .map((s) => ({ series: s, date: s.lastActivity ?? '' }))
       .filter((s) => !hasNextPage || s.date >= floor);
     return [...series, ...dated].sort((a, b) => b.date.localeCompare(a.date));
+  }, [grouped, sortBy, items, shelf, hasNextPage]);
+
+  // Grouped and by title, author or genre (#387): the series blocks are filed among the
+  // one-shots by the same key, instead of all leading the shelf in title order — which made
+  // the author and genre sorts look like they did nothing on a library of runs.
+  const interleaved = useMemo(() => {
+    if (!grouped || !isKeyedSort(sortBy)) return null;
+    return interleave(shelf, items, sortBy, hasNextPage);
   }, [grouped, sortBy, items, shelf, hasNextPage]);
 
   const showLoading = loading || (grouped && seriesLoading);
@@ -437,7 +484,7 @@ function CollectionContent() {
           // tokens.css for the reasoning behind the track sizes. Grouped, the series blocks
           // lead and the one-shots follow, each in the order the sort asks for.
           <Grid>
-            {(mixed ?? [...shelf.map((s) => ({ series: s })), ...items.map((it) => ({ item: it }))]).map((entry) =>
+            {(mixed ?? interleaved ?? [...shelf.map((s) => ({ series: s })), ...items.map((it) => ({ item: it }))]).map((entry) =>
               'series' in entry ? (
                 <SeriesBlock key={entry.series.id} series={entry.series} />
               ) : (

@@ -1,0 +1,20 @@
+.title {
+  margin-bottom: 6px;
+}
+
+.count {
+  margin: 0 0 16px;
+  font-size: var(--fs-15);
+  color: var(--ink-soft);
+}
+
+/* Same grid item as the library's: the min-width the cover track needs. */
+.cell {
+  min-width: 0;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}

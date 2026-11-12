@@ -26,7 +26,7 @@ function renderAt(path: string) {
 test('renders the translated navigation', () => {
   renderAt('/collection');
   expect(screen.getByText('Accueil')).toBeInTheDocument();
-  expect(screen.getByText('Collection')).toBeInTheDocument();
+  expect(screen.getByText('Bibliothèque')).toBeInTheDocument();
   expect(screen.getByText('Découvrir')).toBeInTheDocument();
 });
 
@@ -39,7 +39,7 @@ test('the theme switcher applies the theme on <html>', async () => {
 
 test('the collection prompts for sign-in when unauthenticated', async () => {
   renderAt('/collection');
-  expect(await screen.findByText(/Connecte-toi pour voir ta collection/)).toBeInTheDocument();
+  expect(await screen.findByText(/Connecte-toi pour voir ta bibliothèque/)).toBeInTheDocument();
 });
 
 test('the wishlist prompts for sign-in when unauthenticated', async () => {

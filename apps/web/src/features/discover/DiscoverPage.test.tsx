@@ -434,7 +434,7 @@ describe('DiscoverPage', () => {
       await userEvent.type(screen.getByLabelText('Éditeur'), 'Autoédition');
       await userEvent.type(screen.getByLabelText('Pages'), '48');
       await userEvent.type(screen.getByLabelText('URL de la couverture'), 'https://cover.test/1.jpg');
-      await userEvent.click(screen.getByText('Ajouter à la collection'));
+      await userEvent.click(screen.getByText('Ajouter à la bibliothèque'));
 
       expect(await screen.findByText(/« Le Fanzine du dimanche » ajouté/)).toBeInTheDocument();
       expect(posts).toHaveLength(1);
@@ -463,7 +463,7 @@ describe('DiscoverPage', () => {
 
       await userEvent.selectOptions(screen.getByLabelText('Support'), 'MANGA');
       await userEvent.type(screen.getByLabelText('Titre'), 'Un doujinshi');
-      await userEvent.click(screen.getByText('Ajouter à la collection'));
+      await userEvent.click(screen.getByText('Ajouter à la bibliothèque'));
 
       expect(await screen.findByText(/« Un doujinshi » ajouté/)).toBeInTheDocument();
       expect((posts[0].book as { kind: string }).kind).toBe('MANGA');
@@ -476,11 +476,11 @@ describe('DiscoverPage', () => {
 
       await openManualForm();
       await userEvent.type(screen.getByLabelText('Titre'), 'Un titre');
-      await userEvent.click(screen.getByText('Ajouter à la collection'));
+      await userEvent.click(screen.getByText('Ajouter à la bibliothèque'));
 
       expect(await screen.findByRole('status', undefined, { timeout: 3000 })).toBeInTheDocument();
       // The label stays put — the indicator is added to the button, not swapped in for it.
-      expect(screen.getByRole('button', { name: /Ajouter à la collection/ })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Ajouter à la bibliothèque/ })).toBeDisabled();
     });
 
     test('reports a rejected manual add', async () => {
@@ -489,7 +489,7 @@ describe('DiscoverPage', () => {
 
       await openManualForm();
       await userEvent.type(screen.getByLabelText('Titre'), 'Un titre');
-      await userEvent.click(screen.getByText('Ajouter à la collection'));
+      await userEvent.click(screen.getByText('Ajouter à la bibliothèque'));
 
       expect(await screen.findByText(/Ajout impossible/)).toBeInTheDocument();
     });

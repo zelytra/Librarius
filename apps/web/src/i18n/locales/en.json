@@ -6,7 +6,8 @@
   "nav": {
     "label": "Main navigation",
     "home": "Home",
-    "collection": "Collection",
+    "collection": "Library",
+    "toRead": "To read",
     "discover": "Discover",
     "wishlist": "Wishlist",
     "stats": "Stats"
@@ -30,7 +31,7 @@
     },
     "prompts": {
       "home": "Sign in to find your library and your reading again.",
-      "collection": "Sign in to see your collection.",
+      "collection": "Sign in to see your library.",
       "discover": "Sign in to search and grow your library.",
       "wishlist": "Sign in to see your wishlist.",
       "stats": "Sign in to see your statistics.",
@@ -98,7 +99,7 @@
     },
     "features": {
       "title": "What is online today",
-      "collection": "Collection in covers shelved by series, search, sorting, categories",
+      "collection": "Library in covers shelved by series, search, sorting, categories",
       "discover": "Search Open Library, the BnF and AniList, by title, author or ISBN",
       "wishlist": "Wishes ordered by urgency, estimated budget, \"I bought it\"",
       "stats": "Annual goal, pace, breakdown by genre and by author",
@@ -114,8 +115,8 @@
       "signIn": "Sign in"
     },
     "mock": {
-      "alt": "A glimpse of the application: a collection shelved by series and the book being read.",
-      "collection": "My collection",
+      "alt": "A glimpse of the application: a library shelved by series and the book being read.",
+      "collection": "My library",
       "series": "Chronicles of the Wind",
       "seriesBadge": "12 volumes",
       "shelf1": "The Map Workshop",
@@ -202,7 +203,7 @@
       },
       "empty": {
         "title": "No upcoming release for now.",
-        "description": "Follow a series from your collection to see its next volumes show up here.",
+        "description": "Follow a series from your library to see its next volumes show up here.",
         "action": "See my series"
       }
     },
@@ -239,7 +240,7 @@
       "pages_one": "page read",
       "pages_other": "pages read",
       "add": "Add a book",
-      "collection": "See my collection",
+      "collection": "See my library",
       "now": "Reading now",
       "progress": "{{percent}}% read",
       "continue": "Continue reading"
@@ -259,7 +260,7 @@
       },
       "discover": {
         "title": "Find your first titles",
-        "description": "Search our catalog for a book or a manga and add it to your collection or your wishlist.",
+        "description": "Search our catalog for a book or a manga and add it to your library or your wishlist.",
         "action": "Discover titles"
       },
       "goal": {
@@ -312,11 +313,11 @@
     }
   },
   "collection": {
-    "title": "My collection",
+    "title": "My library",
     "sortBy": "Sort",
     "list": "List",
     "series": "Series",
-    "searchPlaceholder": "Search my collection…",
+    "searchPlaceholder": "Search my library…",
     "loadMore": "Show more ({{loaded}} / {{total}})",
     "total": "{{total}} titles",
     "seriesTotal_one": "{{count}} series",
@@ -355,7 +356,7 @@
       "description": "Add books from the Discover tab.",
       "action": "Discover titles"
     },
-    "error": "Your collection could not be loaded.",
+    "error": "Your library could not be loaded.",
     "grouped": "By series",
     "flat": "All titles",
     "groupedTotal_one": "{{count}} series · {{oneShots}} standalone titles",
@@ -374,7 +375,7 @@
     "renameOf": "Rename {{name}}",
     "deleteOf": "Delete {{name}}",
     "confirmDelete": "Yes, delete it",
-    "deleteExplain": "The titles filed under this category stay in your collection: they simply lose that ranking.",
+    "deleteExplain": "The titles filed under this category stay in your library: they simply lose that ranking.",
     "errors": {
       "duplicate": "You already have a category with that name.",
       "createFailed": "Cannot create it right now.",
@@ -418,7 +419,7 @@
       "private": "Rating and review are strictly private: nobody else sees them."
     },
     "addToWishlist": "Add to the wishlist",
-    "addToCollection": "Add to my collection",
+    "addToCollection": "Add to my library",
     "addFailed": "Cannot add it right now.",
     "closeActions": "Close",
     "incomplete": "Incomplete",
@@ -431,11 +432,11 @@
     "listError": "Your series could not be loaded.",
     "emptyVolumes": {
       "title": "No volume known for this series.",
-      "description": "Add a volume to your collection to start the series."
+      "description": "Add a volume to your library to start the series."
     },
     "empty": {
       "title": "No series here.",
-      "description": "A series shows up as soon as one of its volumes joins your collection."
+      "description": "A series shows up as soon as one of its volumes joins your library."
     },
     "block": {
       "tag": "Series",
@@ -475,7 +476,7 @@
     "yearCount_other": "{{count}} titles"
   },
   "catalog": {
-    "addToLibrary": "Add to my collection",
+    "addToLibrary": "Add to my library",
     "addToWishlist": "Add to wishlist",
     "gone": {
       "title": "Entry unavailable",
@@ -491,9 +492,9 @@
     "start": "Run a search to find titles to add.",
     "noResults": "No title matches this search.",
     "isbnDetected": "ISBN recognized: searching on ISBN {{isbn}}.",
-    "addToLibrary": "Collection",
+    "addToLibrary": "Library",
     "addToWishlist": "Wishlist",
-    "addedToLibrary": "✓ Added to the collection",
+    "addedToLibrary": "✓ Added to the library",
     "addedToWishlist": "✓ Added to the wishlist",
     "advanced": {
       "open": "Advanced search",
@@ -536,8 +537,8 @@
       "publisher": "Publisher",
       "pageCount": "Pages",
       "coverUrl": "Cover URL",
-      "submit": "Add to the collection",
-      "added": "✓ “{{title}}” added to the collection"
+      "submit": "Add to the library",
+      "added": "✓ “{{title}}” added to the library"
     },
     "errors": {
       "unavailable": "Search is unavailable right now.",
@@ -577,7 +578,7 @@
     "errors": {
       "editFailed": "Cannot save the change right now.",
       "removeFailed": "Cannot remove it right now.",
-      "acquireFailed": "This title could not be moved to your collection."
+      "acquireFailed": "This title could not be moved to your library."
     }
   },
   "stats": {
@@ -590,7 +591,7 @@
       "pagesEstimated": "Pages read · estimate so far"
     },
     "favoriteGenres": "Favorite genres",
-    "noGenres": "No data yet — add titles to your collection.",
+    "noGenres": "No data yet — add titles to your library.",
     "unavailable": "Statistics unavailable.",
     "timeline": {
       "title": "Reading by month",
@@ -699,8 +700,8 @@
       "choose": "This is the edition I own",
       "chooseAria": "I own the {{edition}} edition",
       "fromCatalog": "Suggested by the catalog",
-      "alreadyOwned": "Already in your collection",
-      "alreadyOwnedError": "You already have this edition in your collection.",
+      "alreadyOwned": "Already in your library",
+      "alreadyOwnedError": "You already have this edition in your library.",
       "error": "The edition could not be changed.",
       "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination."
     }
@@ -785,7 +786,7 @@
     },
     "export": {
       "title": "Export my data",
-      "description": "Get your whole library back: collection, wishlist, reading, ratings, goals and categories.",
+      "description": "Get your whole library back: books, wishlist, reading, ratings, goals and categories.",
       "signIn": "Sign in to export",
       "json": "JSON file",
       "csv": "CSV file",
@@ -811,7 +812,7 @@
       "title": "Delete my account",
       "description": "Permanently erase your account and all your data.",
       "start": "Delete my account",
-      "warning": "This cannot be undone: your collection, your wishlist, your reading, your goals and your sign-in are deleted, with no way back.",
+      "warning": "This cannot be undone: your library, your wishlist, your reading, your goals and your sign-in are deleted, with no way back.",
       "kept": "The book records (titles, editions, series) stay in the shared catalog: they are not yours and they serve the other readers. Nothing there says you owned them.",
       "delay": "Erasure in the database is immediate. The encrypted backups of the database, however, are kept for up to six months: your data lives on in them until the last backup holding it expires, and is only restored in the event of a major incident.",
       "exportFirst": "Export my data first",
@@ -934,7 +935,7 @@
       "WISHLIST": "Wishlist"
     },
     "added": {
-      "READ": "Added to your collection, as read.",
+      "READ": "Added to your library, as read.",
       "OWNED": "Added to your to-read pile.",
       "WISHLIST": "Added to your wishlist."
     },
@@ -965,5 +966,16 @@
     "average": "★ {{average}} / 5 · {{count}} reviews",
     "empty": "No reader you can see has shared a review yet. Share yours: it will show here for them.",
     "stars": "{{rating}} stars out of 5"
+  },
+  "toRead": {
+    "title": "To read",
+    "prompt": "Sign in to see your to-read pile.",
+    "count_one": "{{count}} book to read",
+    "count_other": "{{count}} books to read",
+    "more": "Show more",
+    "empty": {
+      "title": "Your to-read pile is empty",
+      "description": "The books you own and have not started yet show up here."
+    }
   }
 }

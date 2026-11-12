@@ -19,9 +19,9 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 
 | Area | Endpoints | Notes |
 |---|---|---|
-| Library | `GET/POST /api/library`, `GET/DELETE /api/library/{id}`, `PUT …/progress`, `…/rank`, `…/review`, `…/edition` | `…/review` takes `rating`, `review` and `shared` (private unless `true`). List is paged and filtered server-side (`kind`, `status`, `rank`, `minRating`, `q`, `standalone`); sorts `recent` (default: latest of finished, started, added), `added`, `title`, `author`, `genre`, `rating`. A title added as `READ` is finished that day |
+| Library | `GET/POST /api/library`, `GET/DELETE /api/library/{id}`, `PUT …/progress`, `…/rank`, `…/review`, `…/edition` | `…/review` takes `rating`, `review` and `shared` (private unless `true`). List is paged and filtered server-side (`kind`, `status`, `rank`, `minRating`, `q`, `standalone`); sorts `recent` (default: latest of finished, started, added), `added`, `title`, `author`, `genre` (first normalised genre, unknown last), `rating`. A title added as `READ` is finished that day |
 | Wishlist | `GET/POST /api/wishlist`, `PUT/DELETE /api/wishlist/{id}`, `POST …/acquire` | acquiring moves a wish to the library |
-| Series | `GET /api/series`, `GET /api/series/{id}`, `…/missing`, `…/follow`, `…/review`, `…/reviews` | `…/review` takes `shared` like a book review; `…/reviews` lists the shared ones the caller may see. The summary carries owned/read counts and `lastActivity` |
+| Series | `GET /api/series`, `GET /api/series/{id}`, `…/missing`, `…/follow`, `…/review`, `…/reviews` | `…/review` takes `shared` like a book review; `…/reviews` lists the shared ones the caller may see. The summary carries `authors` and `genre` (what the grouped library sorts a run on next to the one-shots), and carries owned/read counts and `lastActivity` |
 | Works | `GET /api/works/{id}/editions`, `GET /api/works/{id}/reviews` | stored editions (empty and duplicate ones left out) plus the provider's; reviews = readers' shared reviews the caller may see, with the average of their ratings |
 | Authors | `GET /api/authors?q=`, `GET /api/authors/{id}`, `…/follow` | bibliography = the reader's titles plus the providers' |
 | Catalog | `GET /api/catalog/search`, `GET /api/catalog/upcoming` | see [Catalog & book search](https://github.com/zelytra/Librarius/wiki/Catalog-and-Book-Search) |

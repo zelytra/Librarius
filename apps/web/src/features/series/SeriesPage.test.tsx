@@ -141,7 +141,7 @@ describe('SeriesPage', () => {
     renderSeries();
 
     await userEvent.click(await screen.findByLabelText('Tome 3 — manquant'));
-    await userEvent.click(screen.getByText('Ajouter à ma collection'));
+    await userEvent.click(screen.getByText('Ajouter à ma bibliothèque'));
 
     // The series is re-read: the volume is owned and the run has no hole left.
     expect(await screen.findByLabelText('Tome 3 — possédé')).toBeInTheDocument();

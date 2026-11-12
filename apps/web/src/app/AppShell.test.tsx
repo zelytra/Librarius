@@ -88,7 +88,7 @@ function destinations() {
   return screen.getAllByRole('link').map((link) => link.getAttribute('href'));
 }
 
-const DESTINATIONS = ['/', '/collection', '/discover', '/wishlist', '/stats'];
+const DESTINATIONS = ['/', '/collection', '/to-read', '/discover', '/wishlist', '/stats'];
 
 describe('the navigation the shell mounts', () => {
   test('a phone gets the bottom bar, and only that', () => {
@@ -167,7 +167,7 @@ describe('the active destination', () => {
     viewport(390);
     renderAt('/collection');
 
-    expect(screen.getByRole('link', { name: 'Collection' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -178,7 +178,7 @@ describe('the active destination', () => {
     viewport(1440);
     renderAt('/collection');
 
-    expect(screen.getByRole('link', { name: 'Collection' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute(
       'aria-current',
       'page',
     );

@@ -16,12 +16,14 @@ export interface Destination {
 }
 
 /**
- * The five destinations of the application proper. Both navigations carry all five, in
+ * The six destinations of the application proper. Both navigations carry all six, in
  * this order.
  */
 export const NAV_DESTINATIONS: readonly Destination[] = [
   { to: '/', icon: 'cottage', labelKey: 'nav.home' },
   { to: '/collection', icon: 'auto_stories', labelKey: 'nav.collection' },
+  // The pile of books owned and not opened yet (#391).
+  { to: '/to-read', icon: 'library_books', labelKey: 'nav.toRead' },
   { to: '/discover', icon: 'search', labelKey: 'nav.discover' },
   { to: '/wishlist', icon: 'favorite', labelKey: 'nav.wishlist' },
   { to: '/stats', icon: 'insights', labelKey: 'nav.stats' },

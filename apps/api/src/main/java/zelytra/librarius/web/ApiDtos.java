@@ -536,23 +536,30 @@ public final class ApiDtos {
      */
     public record SeriesSummaryDto(UUID id, String kind, String title, String coverUrl,
             Integer totalVolumes, String status, long ownedCount, long readCount,
-            boolean followed, LocalDate lastActivity) {
+            boolean followed, LocalDate lastActivity, String authors, String genre) {
         public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
                 boolean followed) {
             return of(s, ownedCount, readCount, followed, null);
+        }
+
+        /** The same summary, with what the shelf sorts it on by author or genre (#387). */
+        public SeriesSummaryDto withSortKeys(String authors, String genre) {
+            return new SeriesSummaryDto(id, kind, title, coverUrl, totalVolumes, status, ownedCount,
+                    readCount, followed, lastActivity, authors, genre);
         }
 
         /** @param lastActivity the latest activity on the volumes held, to order the shelf by */
         public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
                 boolean followed, LocalDate lastActivity) {
             return new SeriesSummaryDto(s.id, s.kind.name(), s.title, s.coverUrl, s.totalVolumes,
-                    s.status != null ? s.status.name() : null, ownedCount, readCount, followed, lastActivity);
+                    s.status != null ? s.status.name() : null, ownedCount, readCount, followed, lastActivity,
+                    null, null);
         }
 
         /** The same summary, drawn with another cover. */
         public SeriesSummaryDto withCover(String cover) {
             return new SeriesSummaryDto(id, kind, title, cover, totalVolumes, status, ownedCount,
-                    readCount, followed, lastActivity);
+                    readCount, followed, lastActivity, authors, genre);
         }
     }
 

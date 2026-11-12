@@ -103,7 +103,9 @@
 .progressTrack {
   position: relative;
   height: 12px;
-  border-radius: var(--radius-round);
+  /* Half the height, for a pill (#386). 50% of a wide bar draws elliptical ends, and the
+     fill, inheriting it, a lens rather than a rounded bar. */
+  border-radius: var(--radius-bar);
   background: var(--surface);
   overflow: hidden;
 }

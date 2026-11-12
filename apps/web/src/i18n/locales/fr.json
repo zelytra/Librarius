@@ -6,7 +6,8 @@
   "nav": {
     "label": "Navigation principale",
     "home": "Accueil",
-    "collection": "Collection",
+    "collection": "Bibliothèque",
+    "toRead": "Pile à lire",
     "discover": "Découvrir",
     "wishlist": "Souhaits",
     "stats": "Stats"
@@ -30,7 +31,7 @@
     },
     "prompts": {
       "home": "Connecte-toi pour retrouver ta bibliothèque et tes lectures.",
-      "collection": "Connecte-toi pour voir ta collection.",
+      "collection": "Connecte-toi pour voir ta bibliothèque.",
       "discover": "Connecte-toi pour rechercher et enrichir ta bibliothèque.",
       "wishlist": "Connecte-toi pour voir tes souhaits.",
       "stats": "Connecte-toi pour voir tes statistiques.",
@@ -98,7 +99,7 @@
     },
     "features": {
       "title": "Ce qui est en ligne aujourd'hui",
-      "collection": "Collection en couvertures rangée par série, recherche, tri, catégories",
+      "collection": "Bibliothèque en couvertures rangée par série, recherche, tri, catégories",
       "discover": "Recherche dans Open Library, la BnF et AniList, par titre, auteur ou ISBN",
       "wishlist": "Souhaits classés par urgence, budget estimé, « je l'ai acheté »",
       "stats": "Objectif annuel, rythme, répartition par genre et par auteur",
@@ -114,8 +115,8 @@
       "signIn": "Se connecter"
     },
     "mock": {
-      "alt": "Aperçu de l'application : une collection rangée par série et le livre en cours de lecture.",
-      "collection": "Ma collection",
+      "alt": "Aperçu de l'application : une bibliothèque rangée par série et le livre en cours de lecture.",
+      "collection": "Ma bibliothèque",
       "series": "Les Chroniques du Vent",
       "seriesBadge": "12 tomes",
       "shelf1": "L'Atelier des cartes",
@@ -202,7 +203,7 @@
       },
       "empty": {
         "title": "Aucune sortie à venir pour l'instant.",
-        "description": "Suis une série depuis ta collection pour voir apparaître ses prochains tomes ici.",
+        "description": "Suis une série depuis ta bibliothèque pour voir apparaître ses prochains tomes ici.",
         "action": "Voir mes séries"
       }
     },
@@ -239,7 +240,7 @@
       "pages_one": "page lue",
       "pages_other": "pages lues",
       "add": "Ajouter un livre",
-      "collection": "Voir ma collection",
+      "collection": "Voir ma bibliothèque",
       "now": "En ce moment",
       "progress": "{{percent}} % lu",
       "continue": "Continuer ma lecture"
@@ -259,7 +260,7 @@
       },
       "discover": {
         "title": "Trouve tes premiers titres",
-        "description": "Cherche un livre ou un manga dans notre catalogue et ajoute-le à ta collection ou à tes souhaits.",
+        "description": "Cherche un livre ou un manga dans notre catalogue et ajoute-le à ta bibliothèque ou à tes souhaits.",
         "action": "Découvrir des titres"
       },
       "goal": {
@@ -312,11 +313,11 @@
     }
   },
   "collection": {
-    "title": "Ma collection",
+    "title": "Ma bibliothèque",
     "sortBy": "Trier",
     "list": "Liste",
     "series": "Séries",
-    "searchPlaceholder": "Rechercher dans ma collection…",
+    "searchPlaceholder": "Rechercher dans ma bibliothèque…",
     "loadMore": "Voir plus ({{loaded}} / {{total}})",
     "total": "{{total}} titres",
     "seriesTotal_one": "{{count}} série",
@@ -355,7 +356,7 @@
       "description": "Ajoute des livres depuis l'onglet Découvrir.",
       "action": "Découvrir des titres"
     },
-    "error": "Impossible de charger ta collection.",
+    "error": "Impossible de charger ta bibliothèque.",
     "grouped": "Par série",
     "flat": "Tous les titres",
     "groupedTotal_one": "{{count}} série · {{oneShots}} titres seuls",
@@ -374,7 +375,7 @@
     "renameOf": "Renommer {{name}}",
     "deleteOf": "Supprimer {{name}}",
     "confirmDelete": "Oui, supprimer",
-    "deleteExplain": "Les titres classés dans cette catégorie restent dans ta collection : ils perdent simplement ce classement.",
+    "deleteExplain": "Les titres classés dans cette catégorie restent dans ta bibliothèque : ils perdent simplement ce classement.",
     "errors": {
       "duplicate": "Tu as déjà une catégorie de ce nom.",
       "createFailed": "Création impossible pour le moment.",
@@ -418,7 +419,7 @@
       "private": "Note et avis strictement privés : personne d'autre ne les voit."
     },
     "addToWishlist": "Ajouter aux souhaits",
-    "addToCollection": "Ajouter à ma collection",
+    "addToCollection": "Ajouter à ma bibliothèque",
     "addFailed": "Ajout impossible pour le moment.",
     "closeActions": "Fermer",
     "incomplete": "Incomplète",
@@ -431,11 +432,11 @@
     "listError": "Impossible de charger tes séries.",
     "emptyVolumes": {
       "title": "Aucun tome connu pour cette série.",
-      "description": "Ajoute un tome à ta collection pour commencer la série."
+      "description": "Ajoute un tome à ta bibliothèque pour commencer la série."
     },
     "empty": {
       "title": "Aucune série ici.",
-      "description": "Les séries apparaissent dès qu'un de leurs tomes rejoint ta collection."
+      "description": "Les séries apparaissent dès qu'un de leurs tomes rejoint ta bibliothèque."
     },
     "block": {
       "tag": "Série",
@@ -475,7 +476,7 @@
     "yearCount_other": "{{count}} titres"
   },
   "catalog": {
-    "addToLibrary": "Ajouter à ma collection",
+    "addToLibrary": "Ajouter à ma bibliothèque",
     "addToWishlist": "Ajouter aux souhaits",
     "gone": {
       "title": "Fiche indisponible",
@@ -491,9 +492,9 @@
     "start": "Lancez une recherche pour trouver des titres à ajouter.",
     "noResults": "Aucun titre ne correspond à cette recherche.",
     "isbnDetected": "ISBN reconnu : recherche sur l’ISBN {{isbn}}.",
-    "addToLibrary": "Collection",
+    "addToLibrary": "Bibliothèque",
     "addToWishlist": "Souhaits",
-    "addedToLibrary": "✓ Ajouté à la collection",
+    "addedToLibrary": "✓ Ajouté à la bibliothèque",
     "addedToWishlist": "✓ Ajouté aux souhaits",
     "advanced": {
       "open": "Recherche avancée",
@@ -536,8 +537,8 @@
       "publisher": "Éditeur",
       "pageCount": "Pages",
       "coverUrl": "URL de la couverture",
-      "submit": "Ajouter à la collection",
-      "added": "✓ « {{title}} » ajouté à la collection"
+      "submit": "Ajouter à la bibliothèque",
+      "added": "✓ « {{title}} » ajouté à la bibliothèque"
     },
     "errors": {
       "unavailable": "Recherche indisponible pour le moment.",
@@ -577,7 +578,7 @@
     "errors": {
       "editFailed": "Modification impossible pour le moment.",
       "removeFailed": "Suppression impossible pour le moment.",
-      "acquireFailed": "Impossible de déplacer ce titre vers ta collection."
+      "acquireFailed": "Impossible de déplacer ce titre vers ta bibliothèque."
     }
   },
   "stats": {
@@ -590,7 +591,7 @@
       "pagesEstimated": "Pages lues · estimation en cours"
     },
     "favoriteGenres": "Genres favoris",
-    "noGenres": "Pas encore de données — ajoute des titres à ta collection.",
+    "noGenres": "Pas encore de données — ajoute des titres à ta bibliothèque.",
     "unavailable": "Statistiques indisponibles.",
     "timeline": {
       "title": "Lectures par mois",
@@ -699,8 +700,8 @@
       "choose": "C'est l'édition que je possède",
       "chooseAria": "Je possède l'édition {{edition}}",
       "fromCatalog": "Proposée par le catalogue",
-      "alreadyOwned": "Déjà dans ta collection",
-      "alreadyOwnedError": "Tu as déjà cette édition dans ta collection.",
+      "alreadyOwned": "Déjà dans ta bibliothèque",
+      "alreadyOwnedError": "Tu as déjà cette édition dans ta bibliothèque.",
       "error": "Impossible de changer d'édition.",
       "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination."
     }
@@ -785,7 +786,7 @@
     },
     "export": {
       "title": "Exporter mes données",
-      "description": "Récupère toute ta bibliothèque : collection, souhaits, lectures, notes, objectifs et catégories.",
+      "description": "Récupère toute ta bibliothèque : livres, souhaits, lectures, notes, objectifs et catégories.",
       "signIn": "Se connecter pour exporter",
       "json": "Fichier JSON",
       "csv": "Fichier CSV",
@@ -811,7 +812,7 @@
       "title": "Supprimer mon compte",
       "description": "Efface définitivement ton compte et toutes tes données.",
       "start": "Supprimer mon compte",
-      "warning": "Cette action est définitive : ta collection, tes souhaits, tes lectures, tes objectifs et ton identifiant de connexion sont supprimés, sans possibilité de retour.",
+      "warning": "Cette action est définitive : ta bibliothèque, tes souhaits, tes lectures, tes objectifs et ton identifiant de connexion sont supprimés, sans possibilité de retour.",
       "kept": "Les fiches des livres (titres, éditions, séries) restent dans le catalogue partagé : elles ne t'appartiennent pas et servent aux autres lecteurs. Rien n'y indique que tu les as possédées.",
       "delay": "L'effacement en base est immédiat. Les sauvegardes chiffrées de la base, elles, sont conservées jusqu'à six mois : tes données y subsistent jusqu'à l'expiration de la dernière sauvegarde qui les contient, et ne sont restaurées qu'en cas d'incident majeur.",
       "exportFirst": "Exporter mes données d'abord",
@@ -934,7 +935,7 @@
       "WISHLIST": "Souhait"
     },
     "added": {
-      "READ": "Ajouté à ta collection, comme lu.",
+      "READ": "Ajouté à ta bibliothèque, comme lu.",
       "OWNED": "Ajouté à ta pile à lire.",
       "WISHLIST": "Ajouté à tes souhaits."
     },
@@ -965,5 +966,16 @@
     "average": "★ {{average}} / 5 · {{count}} avis",
     "empty": "Aucun lecteur que tu peux voir n'a encore partagé son avis. Partage le tien : il apparaîtra ici pour eux.",
     "stars": "{{rating}} étoiles sur 5"
+  },
+  "toRead": {
+    "title": "Pile à lire",
+    "prompt": "Connecte-toi pour voir ta pile à lire.",
+    "count_one": "{{count}} livre à lire",
+    "count_other": "{{count}} livres à lire",
+    "more": "Afficher plus",
+    "empty": {
+      "title": "Ta pile à lire est vide",
+      "description": "Les livres que tu possèdes sans les avoir commencés apparaissent ici."
+    }
   }
 }
