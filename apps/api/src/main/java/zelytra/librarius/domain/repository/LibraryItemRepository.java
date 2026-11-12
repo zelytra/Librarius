@@ -261,10 +261,12 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         /** Most recently added first. */
         ADDED("li.createdAt desc, li.id desc"),
         TITLE("lower(w.title) asc, li.id asc"),
-        AUTHOR("lower(coalesce(w.authorsText, '')) asc, lower(w.title) asc, li.id asc"),
-        // Still the free-text value: a work now carries several genres, so there is no such
-        // thing as "its" genre to order on. The shelf keeps the ordering it had.
-        GENRE("lower(coalesce(w.genresText, '')) asc, lower(w.title) asc, li.id asc"),
+        AUTHOR("lower(w.authorsText) asc nulls last, lower(w.title) asc, li.id asc"),
+        // A work carries several genres: it files under the first of them alphabetically,
+        // the free text only when it has no normalised genre (#387 — imported works often
+        // have genres and no text, and all sorted as one blank block). Unknown genres last.
+        GENRE("coalesce((select min(lower(g.label)) from Work gw join gw.genres g where gw = w),"
+                + " lower(w.genresText)) asc nulls last, lower(w.title) asc, li.id asc"),
         /**
          * Best rated first. Unrated titles come last rather than first: they are the ones
          * the user has not judged, not the ones they judged worst.
@@ -534,5 +536,33 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             covers.putIfAbsent((UUID) row[0], (String) row[1]);
         }
         return covers;
+    }
+
+    /**
+     * What a series block sorts on next to the one-shots (#387): the author and the first
+     * genre of the volumes the reader holds, keyed by series. Same keys as {@link LibrarySort}
+     * uses for a title, so a run and a one-shot of the same author land side by side.
+     *
+     * @return per series, {@code [author, genre]}, either one {@code null} when unknown
+     */
+    public java.util.Map<UUID, String[]> seriesSortKeys(String userId) {
+        List<Object[]> rows = getEntityManager()
+                .createQuery("""
+                        select w.series.id, min(lower(w.authorsText)), min(lower(g.label))
+                        from LibraryItem li
+                          join li.edition e
+                          join e.work w
+                          left join w.genres g
+                        where li.userId = :userId
+                          and w.series is not null
+                        group by w.series.id
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .getResultList();
+        java.util.Map<UUID, String[]> keys = new java.util.HashMap<>();
+        for (Object[] row : rows) {
+            keys.put((UUID) row[0], new String[] {(String) row[1], (String) row[2]});
+        }
+        return keys;
     }
 }

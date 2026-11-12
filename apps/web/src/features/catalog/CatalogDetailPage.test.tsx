@@ -84,7 +84,7 @@ describe('CatalogDetailPage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Lu' }));
 
-    expect(await screen.findByText('Ajouté à ta collection, comme lu.')).toBeInTheDocument();
+    expect(await screen.findByText('Ajouté à ta bibliothèque, comme lu.')).toBeInTheDocument();
     expect(posts[0].status).toBe('READ');
   });
 

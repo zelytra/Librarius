@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders, TestProviders } from '../../test/utils';
@@ -68,6 +68,30 @@ describe('WishlistPage', () => {
     await userEvent.click(await screen.findByText('Vinland Saga — Tome 27'));
 
     expect(await screen.findByText('page de la série')).toBeInTheDocument();
+  });
+
+  /** #390: a wish outside any followed series opens its book's fiche, carrying the book. */
+  test('opens the fiche of a wish that continues no series', async () => {
+    wishlistReturns([wishlistItem({
+      book: { workId: 'work-9', kind: 'BOOK', title: 'Le Nom du vent', authors: 'Patrick Rothfuss' },
+    })]);
+    seriesReturns([]);
+    function Fiche() {
+      const state = useLocation().state as { result?: { title?: string } } | null;
+      return <p>fiche : {state?.result?.title}</p>;
+    }
+    render(
+      <TestProviders route="/wishlist">
+        <Routes>
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/catalog/:provider/:ref" element={<Fiche />} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(await screen.findByText('Le Nom du vent'));
+
+    expect(await screen.findByText('fiche : Le Nom du vent')).toBeInTheDocument();
   });
 
   // ── Desktop layout (#174) ────────────────────────────────────────────────────

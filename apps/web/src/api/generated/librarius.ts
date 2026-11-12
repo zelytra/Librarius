@@ -534,6 +534,8 @@ export interface SeriesSummaryDto {
   readCount?: number;
   followed?: boolean;
   lastActivity?: LocalDate;
+  authors?: string;
+  genre?: string;
 }
 
 export interface SharedReviewDto {

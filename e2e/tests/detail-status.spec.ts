@@ -14,7 +14,7 @@ test('changes the status of a title from its detail screen', async ({ page }) =>
   await addResult(page, 'Pile à lire');
   await expect(page.getByText('Ajouté à ta pile à lire.')).toBeVisible();
 
-  await page.getByRole('link', { name: 'Collection' }).click();
+  await page.getByRole('link', { name: 'Bibliothèque', exact: true }).click();
   await openTitle(page, FIRST_BOOK);
 
   // OWNED → READING.

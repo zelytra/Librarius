@@ -38,6 +38,11 @@
    ink of a primary one. No palette can therefore leave it invisible. */
 .mark {
   display: block;
+  /* Never squeezed by a crowded flex row (a button mid-import, #386): a ring that
+     shrinks on one axis turns into an ellipse. */
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   border-radius: var(--radius-round);
   border-style: solid;
   border-color: transparent;

@@ -1144,6 +1144,12 @@
           },
           "lastActivity" : {
             "$ref" : "#/components/schemas/LocalDate"
+          },
+          "authors" : {
+            "type" : "string"
+          },
+          "genre" : {
+            "type" : "string"
           }
         }
       },

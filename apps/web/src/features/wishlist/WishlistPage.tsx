@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { catalogPath, fromBook } from '../catalog/catalogBook';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
@@ -276,13 +277,13 @@ function WishlistContent() {
               // then the cover and the title lead to it, like every other title in the app.
               const seriesId = seriesIdOf(seriesList, w.book);
               const seriesLink = seriesId ? `/series/${seriesId}` : undefined;
+              // Every other wish opens its book's fiche (#390), like a search result does.
+              const fiche = fromBook(w.book);
+              const link = seriesLink ?? catalogPath(fiche);
+              const linkState = seriesLink ? undefined : { result: fiche };
               return (
                 <div key={w.id} className={styles.row}>
-                  {seriesLink ? (
-                    <Link to={seriesLink} aria-label={title} className={styles.thumb} style={thumbStyle} />
-                  ) : (
-                    <div className={styles.thumb} style={thumbStyle} />
-                  )}
+                  <Link to={link} state={linkState} aria-label={title} className={styles.thumb} style={thumbStyle} />
                   {editing === w.id ? (
                     <WishEditor
                       wish={w}
@@ -293,11 +294,7 @@ function WishlistContent() {
                   ) : (
                     <div className={styles.body}>
                       <div className={styles.headline}>
-                        {seriesLink ? (
-                          <Link to={seriesLink} className={styles.bookTitle}>{title}</Link>
-                        ) : (
-                          <span className={styles.bookTitle}>{title}</span>
-                        )}
+                        <Link to={link} state={linkState} className={styles.bookTitle}>{title}</Link>
                         {w.estimatedPrice != null && (
                           <span className={styles.price}>
                             {t('wishlist.price', { price: money(w.estimatedPrice) })}

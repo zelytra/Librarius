@@ -122,7 +122,7 @@ describe('CategoriesPage', () => {
 
     await userEvent.click(await screen.findByLabelText('Supprimer Doré'));
 
-    expect(screen.getByText(/restent dans ta collection/)).toBeInTheDocument();
+    expect(screen.getByText(/restent dans ta bibliothèque/)).toBeInTheDocument();
     expect(deleted).toBeNull();
 
     await userEvent.click(screen.getByText('Oui, supprimer'));
@@ -139,7 +139,7 @@ describe('CategoriesPage', () => {
     await userEvent.click(screen.getByText('Annuler'));
 
     expect(screen.getByText('Doré')).toBeInTheDocument();
-    expect(screen.queryByText(/restent dans ta collection/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/restent dans ta bibliothèque/)).not.toBeInTheDocument();
   });
 
   test('invites the user to create one when they have none of their own', async () => {

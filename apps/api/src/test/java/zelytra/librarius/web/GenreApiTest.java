@@ -61,6 +61,25 @@ class GenreApiTest {
                 .extract().jsonPath().getList("items.id", String.class);
     }
 
+    /**
+     * #387: sorting by genre files a title under the first of its normalised genres, and a
+     * title without one goes last instead of leading the shelf as a blank block.
+     */
+    @Test
+    void sortingByGenreUsesTheFirstNormalisedGenre() {
+        String thriller = add("alice", marker + " c", "Thriller");
+        String none = add("alice", marker + " a", null);
+        String both = add("alice", marker + " b", "Science-fiction, Aventure");
+
+        List<String> ids = given().auth().oauth2(token("alice"))
+                .queryParam("q", marker).queryParam("sort", "genre")
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .extract().jsonPath().getList("items.id", String.class);
+
+        assertEquals(List.of(both, thriller, none), ids);
+    }
+
     // ── Breakdown ─────────────────────────────────────────────────────────────
 
     /**

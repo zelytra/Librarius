@@ -1,4 +1,4 @@
-import { type CatalogResult, type ManualBookDto } from '../../api/generated/librarius';
+import { type BookView, type CatalogResult, type ManualBookDto } from '../../api/generated/librarius';
 import { knownKind } from '../discover/medium';
 
 /**
@@ -40,5 +40,29 @@ export function toBook(r: CatalogResult): ManualBookDto {
     releaseDate: r.releaseDate,
     provider: r.provider,
     providerRef: r.providerRef,
+  };
+}
+
+/**
+ * A book already stored — a wish (#390) — as the catalog fiche reads it: the same screen a
+ * search result opens, filled from what the work knows. Keyed on the work, so each wish has
+ * its own URL.
+ */
+export function fromBook(book: BookView | undefined): CatalogResult {
+  return {
+    kind: book?.kind,
+    title: book?.title,
+    authors: book?.authors,
+    year: book?.originalYear,
+    coverUrl: book?.coverUrl,
+    synopsis: book?.synopsis,
+    isbn13: book?.isbn13,
+    publisher: book?.publisher,
+    language: book?.language,
+    seriesTitle: book?.seriesTitle,
+    volumeNumber: book?.volumeNumber,
+    pageCount: book?.pageCount,
+    provider: 'work',
+    providerRef: book?.workId ?? book?.editionId ?? book?.title,
   };
 }

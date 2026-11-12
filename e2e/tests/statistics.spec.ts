@@ -28,7 +28,7 @@ test('keeps the statistics consistent after an addition', async ({ page }) => {
   await expect(figure(page, 'à lire')).toHaveText('2');
   await expect(figure(page, 'lus')).toHaveText('0');
 
-  await page.getByRole('link', { name: 'Collection' }).click();
+  await page.getByRole('link', { name: 'Bibliothèque', exact: true }).click();
   await openTitle(page, FIRST_BOOK);
   // Skipping the sheet that follows: the figures below are about the status alone, and
   // a title read without a rating or a shelf still counts as read.
