@@ -34,6 +34,9 @@ import { STATS_QUERIES } from '../../shared/statsQueries';
  */
 const ALL_KINDS: Kind[] = [Kind.BOOK, Kind.MANGA, Kind.COMIC, Kind.GRAPHIC_NOVEL, Kind.AUDIOBOOK];
 
+/** The shelves the kind switch always offers, owned or not (#383). */
+const ALWAYS_OFFERED: Kind[] = [Kind.BOOK, Kind.MANGA, Kind.COMIC];
+
 /** i18n key of the segmented-control label for each kind. */
 const KIND_LABEL_KEY: Record<Kind, string> = {
   BOOK: 'collection.kinds.book',
@@ -194,11 +197,10 @@ function CollectionContent() {
   const collType = manualKind ?? bestKind;
   const setCollType = (kind: Kind) => setManualKind(kind);
 
-  // Only the kinds the user actually owns become shelf options, so a Books/Manga-only
-  // account never sees the three newer ones. An empty account still needs a shelf to land
-  // on, so it falls back to the first kind of the taxonomy.
-  const presentKinds = ALL_KINDS.filter((kind) => totalOf(kind) > 0);
-  const kindOptions = presentKinds.length > 0 ? presentKinds : [ALL_KINDS[0]];
+  // Books, manga and comics are always offered (#383): they are the shelves a reader files
+  // by, and an import that cannot tell a manga from a book must not take the switch away.
+  // The two rarer kinds join only once the reader owns one.
+  const kindOptions = ALL_KINDS.filter((kind) => ALWAYS_OFFERED.includes(kind) || totalOf(kind) > 0);
 
   const [shelfFilter, setShelfFilter] = useState<ShelfFilter>(ALL_SHELVES);
   // Latest activity first — read, started or added — the way a reader thinks of their shelf.
@@ -336,17 +338,13 @@ function CollectionContent() {
 
   return (
     <>
-      {/* A switch with one position is a heading dressed as a control: it only shows once
-          the library holds more than one kind. */}
-      {kindOptions.length > 1 && (
-        <div className={styles.kindSwitch}>
-          <Segmented<Kind>
-            value={collType}
-            onChange={setCollType}
-            options={kindOptions.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) }))}
-          />
-        </div>
-      )}
+      <div className={styles.kindSwitch}>
+        <Segmented<Kind>
+          value={collType}
+          onChange={setCollType}
+          options={kindOptions.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) }))}
+        />
+      </div>
 
       <div className={styles.searchBar}>
         <Icon name="search" size={21} color="var(--faint)" />
