@@ -355,6 +355,16 @@ export interface LibraryPageDto {
   total?: number;
 }
 
+export interface LibraryResetDto {
+  libraryItems?: number;
+  wishlistItems?: number;
+  goals?: number;
+  categories?: number;
+  seriesFollows?: number;
+  seriesReviews?: number;
+  authorFollows?: number;
+}
+
 export interface MeDto {
   id?: string;
   email?: string;
@@ -3845,6 +3855,77 @@ export function useGetApiMeFollowing<TData = Awaited<ReturnType<typeof getApiMeF
 
 
 
+
+export const getDeleteApiMeLibraryUrl = () => {
+
+
+
+
+  return `/api/me/library`
+}
+
+/**
+ * @summary Reset Library
+ */
+export const deleteApiMeLibrary = async ( options?: RequestInit): Promise<LibraryResetDto> => {
+
+  return apiClient<LibraryResetDto>(getDeleteApiMeLibraryUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiMeLibraryMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeLibrary>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeLibrary>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteApiMeLibrary'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiMeLibrary>>, void> = () => {
+
+
+          return  deleteApiMeLibrary()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiMeLibraryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiMeLibrary>>>
+
+    export type DeleteApiMeLibraryMutationError = void
+
+    /**
+ * @summary Reset Library
+ */
+export const useDeleteApiMeLibrary = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeLibrary>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiMeLibrary>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteApiMeLibraryMutationOptions(options), queryClient);
+    }
 
 export const getGetApiReleasesUpcomingUrl = (params?: GetApiReleasesUpcomingParams,) => {
   const normalizedParams = new URLSearchParams();

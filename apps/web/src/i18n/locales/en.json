@@ -793,6 +793,20 @@
       "done": "Export downloaded.",
       "failed": "Export is unavailable right now."
     },
+    "resetLibrary": {
+      "title": "Empty my library",
+      "description": "Deletes all your books and statistics, and keeps your account.",
+      "start": "Empty my library",
+      "warning": "This cannot be undone: your books, readings, wishes, ratings and reviews, goals, categories and the series and authors you follow are deleted. Your statistics start over from zero.",
+      "kept": "Your account, your profile, the readers you follow or block and your Home layout are kept.",
+      "exportFirst": "Export my data first",
+      "word": "EMPTY",
+      "confirmLabel": "To confirm, type {{word}}",
+      "cancel": "Cancel",
+      "confirm": "Empty for good",
+      "done": "Your library is empty. Start afresh, or import another library.",
+      "failed": "The library cannot be emptied right now. Nothing was deleted."
+    },
     "deleteAccount": {
       "title": "Delete my account",
       "description": "Permanently erase your account and all your data.",

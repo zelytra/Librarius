@@ -189,6 +189,46 @@ class AccountDeletionTest {
                 .body("libraryItems", is(0));
     }
 
+    // ── Library reset (#382) ──────────────────────────────────────────────────
+
+    /**
+     * Emptying the library keeps the account: every row a statistic is drawn from goes, the
+     * account and its Home layout stay, another reader's library and the catalog are intact.
+     */
+    @Test
+    void resettingTheLibraryEmptiesItAndKeepsTheAccount() {
+        String userId = subject();
+        fillAccount();
+        UUID seriesId = UUID.fromString(seriesId());
+        String alice = given().auth().oauth2(keycloak.getAccessToken("alice")).when().get("/api/me")
+                .then().statusCode(200).extract().path("id");
+        Map<String, Long> aliceBefore = probe.personalRows(alice);
+
+        given().auth().oauth2(token())
+                .when().delete("/api/me/library")
+                .then().statusCode(200)
+                .body("libraryItems", is(1))
+                .body("wishlistItems", is(1))
+                .body("goals", is(1))
+                .body("categories", is(1))
+                .body("seriesFollows", is(1));
+
+        Map<String, Long> after = probe.personalRows(userId);
+        assertEquals(1L, after.get("app_user"), "the account stays");
+        assertEquals(1L, after.get("dashboard_layout"), "the Home layout is a setting, it stays");
+        for (String table : new String[] {"library_item", "reading_progress", "wishlist_item",
+                "reading_goal", "rank_category", "series_follow", "series_review", "author_follow"}) {
+            assertEquals(0L, after.get(table), "rows left in " + table + " after the reset");
+        }
+        assertEquals(aliceBefore, probe.personalRows(alice), "another reader's library is untouched");
+        assertTrue(probe.catalogRowExists("series", seriesId), "the catalog is untouched");
+
+        // The account still works, and its statistics are back to nothing.
+        given().auth().oauth2(token()).when().get("/api/me").then().statusCode(200);
+        given().auth().oauth2(token()).when().get("/api/library")
+                .then().statusCode(200).body("total", is(0));
+    }
+
     // ── Degradation ───────────────────────────────────────────────────────────
 
     /**

@@ -13,6 +13,7 @@ import { ImportSection } from './ImportSection';
 import { ExportSection } from './ExportSection';
 import { BlockedMembersSection } from './BlockedMembersSection';
 import { DeleteAccountSection } from './DeleteAccountSection';
+import { ResetLibrarySection } from './ResetLibrarySection';
 import styles from './SettingsPage.module.css';
 
 // Stamped at build time by the image build (`VITE_APP_VERSION`, see apps/web/Dockerfile):
@@ -143,6 +144,13 @@ export function SettingsPage() {
             <Button variant="secondary" size="compact" onClick={signOutFully}>
               {t('settings.logout')}
             </Button>
+          </div>
+        )}
+
+        {/* Behind a confirmation: emptying the library, the account kept (#382). */}
+        {authed && (
+          <div className={styles.sectionBlock}>
+            <ResetLibrarySection />
           </div>
         )}
 

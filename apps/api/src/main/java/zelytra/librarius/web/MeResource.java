@@ -14,11 +14,13 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import zelytra.librarius.account.AccountDeletionService;
 import zelytra.librarius.account.AccountEraser.Erased;
+import zelytra.librarius.account.LibraryReset;
 import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.social.UserBlockService;
 import zelytra.librarius.social.UserFollowService;
 import zelytra.librarius.web.ApiDtos.AccountDeletionDto;
+import zelytra.librarius.web.ApiDtos.LibraryResetDto;
 import zelytra.librarius.web.ApiDtos.MeDto;
 import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 import zelytra.librarius.web.ApiDtos.UpdateMeDto;
@@ -135,5 +137,23 @@ public class MeResource {
                 ? new AccountDeletionDto(0, 0, 0, 0, 0)
                 : new AccountDeletionDto(erased.libraryItems(), erased.wishlistItems(),
                         erased.goals(), erased.categories(), erased.seriesFollows());
+    }
+
+    @Inject
+    LibraryReset libraryReset;
+
+    /**
+     * Empties the caller's library and keeps the account (#382): titles, readings, wishes,
+     * goals, own categories, followed series and authors, series reviews. Statistics follow,
+     * being computed from those rows.
+     */
+    @DELETE
+    @Path("/library")
+    public LibraryResetDto resetLibrary() {
+        var removed = libraryReset.reset(currentUser.id());
+        return new LibraryResetDto(removed.get("library_item"), removed.get("wishlist_item"),
+                removed.get("reading_goal"), removed.get("rank_category"),
+                removed.get("series_follow"), removed.get("series_review"),
+                removed.get("author_follow"));
     }
 }

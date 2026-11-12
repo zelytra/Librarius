@@ -31,7 +31,7 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 | Stats | `GET /api/stats`, `GET /api/stats/timeline` | timeline points carry `books`, `pages` and `byKind`; `readWithPageCount` says how many read titles have a known length |
 | Goals | `GET /api/goals`, `PUT /api/goals/{year}` | books or pages |
 | Categories | `GET/POST /api/categories`, `PUT/DELETE /api/categories/{id}` | Or, Argent, Bronze, Abandon are built in |
-| Me | `GET/PATCH/DELETE /api/me`, `…/followers`, `…/following`, `…/blocked` | `DELETE` erases the account (off until a Keycloak service account is configured) |
+| Me | `GET/PATCH/DELETE /api/me`, `DELETE /api/me/library`, `…/followers`, `…/following`, `…/blocked` | `DELETE /api/me` erases the account and its Keycloak login; `DELETE /api/me/library` empties the library (titles, readings, wishes, goals, own categories, followed series and authors, series reviews) and keeps the account, profile, social links and Home layout |
 | Social | `GET /api/users?q=`, `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | members found by display name (two letters at least; the caller and blocked members left out), each with whether the caller follows them. Reports target `WORK`, `EDITION`, `SERIES`, or a shared review (`REVIEW`, `SERIES_REVIEW`, with the reasons `SPOILER`, `OFFENSIVE`, `SPAM`, `OTHER`) |
 | Misc | `GET /api/genres`, `GET/PUT /api/dashboard/layout`, `GET /api/releases/upcoming` | |
 

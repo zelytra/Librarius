@@ -24,3 +24,15 @@ Keycloak only by hand — the `kcadm` lines are in
 `pnpm infra:up` starts Keycloak on :8081 with two test accounts, `alice/alice` and `bob/bob`.
 The Quarkus tests start their own Keycloak (Dev Services) on the same port: stop the local
 stack before `./mvnw verify`.
+
+## Keeping the live realm in line
+
+Keycloak imports `realm-librarius.json` only when the realm does not exist yet, so a change
+to it never reaches a running deployment on its own. On every deploy, the chart's
+`keycloak-setup` Job applies to the live realm what has to stay true there: the session
+lifetimes (`keycloak.sessions` in `values.yaml`), and the confidential client
+`librarius-api-admin`, whose service account (`realm-management` → `manage-users` only)
+lets the api delete a Keycloak login when a reader deletes their account. The chart
+generates that client's secret and keeps it across upgrades. Details:
+[`docs/DEPLOYMENT.md`](https://github.com/zelytra/Librarius/blob/main/docs/DEPLOYMENT.md)
+§ "Account deletion".

@@ -89,9 +89,6 @@ spec:
               value: {{ . | quote }}
             {{- end }}
             {{- if .Values.api.accountDeletion.enabled }}
-            {{- if not .Values.api.accountDeletion.existingSecret }}
-            {{- fail "api.accountDeletion.existingSecret is required when api.accountDeletion.enabled is true (see docs/DEPLOYMENT.md § Account deletion)" }}
-            {{- end }}
             # Admin API, cluster-internal: the same Keycloak the tokens come from, reached
             # on its service rather than through the ingress.
             - name: KEYCLOAK_ADMIN_ENABLED
@@ -105,7 +102,7 @@ spec:
             - name: KEYCLOAK_ADMIN_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.api.accountDeletion.existingSecret }}
+                  name: {{ include "librarius.apiAdmin.secretName" . }}
                   key: {{ .Values.api.accountDeletion.secretKey }}
             {{- end }}
           # Removing the pod from the Service endpoints and sending it SIGTERM are

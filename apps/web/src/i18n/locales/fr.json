@@ -793,6 +793,20 @@
       "done": "Export téléchargé.",
       "failed": "Export impossible pour le moment."
     },
+    "resetLibrary": {
+      "title": "Vider ma bibliothèque",
+      "description": "Supprime tous tes livres et tes statistiques, en gardant ton compte.",
+      "start": "Vider ma bibliothèque",
+      "warning": "Cette action est définitive : tes livres, tes lectures, tes souhaits, tes notes et avis, tes objectifs, tes catégories et les séries et auteurs que tu suis sont supprimés. Tes statistiques repartent de zéro.",
+      "kept": "Ton compte, ton profil, les lecteurs que tu suis ou bloques et la disposition de ton accueil sont conservés.",
+      "exportFirst": "Exporter mes données d'abord",
+      "word": "VIDER",
+      "confirmLabel": "Pour confirmer, tape {{word}}",
+      "cancel": "Annuler",
+      "confirm": "Vider définitivement",
+      "done": "Ta bibliothèque est vide. Tu peux repartir de zéro ou importer une autre bibliothèque.",
+      "failed": "Impossible de vider la bibliothèque pour le moment. Rien n'a été supprimé."
+    },
     "deleteAccount": {
       "title": "Supprimer mon compte",
       "description": "Efface définitivement ton compte et toutes tes données.",

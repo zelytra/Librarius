@@ -1,0 +1,117 @@
+{{- if .Values.keycloak.enabled }}
+{{- /*
+Keeps the existing realm in line with the chart, on every deploy (#381, #73).
+
+`--import-realm` only imports a realm that does not exist yet, so anything the realm
+JSON gained after the first deploy never reached staging: the session lifetimes of #371
+among it, and the service account account deletion needs. This Job applies both to the
+live realm with kcadm, the admin CLI shipped in the Keycloak image, using the admin
+account the chart already configures. Every step is idempotent.
+
+A plain Job, not a Helm hook: the deploy does not `--wait` (see cd.yml), and a hook would
+block the upgrade while Keycloak restarts. Its name carries the release revision, so each
+deploy runs it once; cd.yml waits for it after the rollouts.
+*/ -}}
+{{- $apiAdmin := .Values.api.accountDeletion }}
+{{- $generated := and $apiAdmin.enabled (not $apiAdmin.existingSecret) }}
+{{- if $generated }}
+{{- $name := printf "%s-keycloak-api-admin" .Release.Name }}
+{{- $existing := lookup "v1" "Secret" .Release.Namespace $name }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak") | nindent 4 }}
+  annotations:
+    # Never deleted with the release: the client in Keycloak holds the same value.
+    helm.sh/resource-policy: keep
+type: Opaque
+data:
+  # Generated once, then read back from the cluster on every later deploy, so the
+  # secret is stable without ever being written in this repository.
+  {{ $apiAdmin.secretKey }}: {{ if and $existing (index $existing.data $apiAdmin.secretKey) }}{{ index $existing.data $apiAdmin.secretKey }}{{ else }}{{ randAlphaNum 48 | b64enc }}{{ end }}
+---
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-keycloak-setup-{{ .Release.Revision }}
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "keycloak-setup") | nindent 4 }}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        {{- include "librarius.labels" (dict "ctx" . "component" "keycloak-setup") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kcadm
+          image: {{ .Values.keycloak.image }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              kc=/opt/keycloak/bin/kcadm.sh
+              server="http://{{ .Release.Name }}-keycloak:8081/auth"
+
+              # Keycloak may still be starting (Recreate stops it first): wait up to 10 min.
+              for i in $(seq 1 120); do
+                if $kc config credentials --server "$server" --realm master \
+                     --user "$KC_ADMIN" --password "$KC_ADMIN_PASSWORD" >/dev/null 2>&1; then
+                  break
+                fi
+                [ "$i" = 120 ] && { echo "Keycloak never answered at $server"; exit 1; }
+                sleep 5
+              done
+
+              # Session lifetimes (#381): what the realm JSON says, on the live realm.
+              $kc update realms/librarius \
+                -s ssoSessionIdleTimeout={{ .Values.keycloak.sessions.idle }} \
+                -s ssoSessionMaxLifespan={{ .Values.keycloak.sessions.max }} \
+                -s offlineSessionIdleTimeout={{ .Values.keycloak.sessions.offlineIdle }}
+              echo "realm session lifetimes applied"
+
+              {{- if $apiAdmin.enabled }}
+
+              # Account deletion (#73): a confidential client with a service account that
+              # may manage users, and nothing else.
+              client={{ $apiAdmin.clientId | quote }}
+              id=$($kc get clients -r librarius -q clientId="$client" --fields id --format csv --noquotes)
+              if [ -z "$id" ]; then
+                $kc create clients -r librarius -s clientId="$client" -s enabled=true \
+                  -s publicClient=false -s serviceAccountsEnabled=true \
+                  -s standardFlowEnabled=false -s directAccessGrantsEnabled=false \
+                  -s implicitFlowEnabled=false -s "secret=$API_ADMIN_SECRET"
+                echo "client $client created"
+              else
+                $kc update "clients/$id" -r librarius -s enabled=true \
+                  -s serviceAccountsEnabled=true -s "secret=$API_ADMIN_SECRET"
+                echo "client $client updated"
+              fi
+              $kc add-roles -r librarius --uusername "service-account-$client" \
+                --cclientid realm-management --rolename manage-users
+              echo "service account may manage users"
+              {{- end }}
+          env:
+            - name: KC_ADMIN
+              value: {{ .Values.keycloak.admin | quote }}
+            - name: KC_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.keycloak.secretName" . }}
+                  key: {{ .Values.keycloak.secretKey }}
+            {{- if $apiAdmin.enabled }}
+            - name: API_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "librarius.apiAdmin.secretName" . }}
+                  key: {{ $apiAdmin.secretKey }}
+            {{- end }}
+          resources:
+            requests: { cpu: 10m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 384Mi }
+{{- end }}
