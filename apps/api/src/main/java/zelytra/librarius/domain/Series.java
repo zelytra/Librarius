@@ -39,6 +39,10 @@ public class Series {
     @Column(name = "total_volumes")
     public Integer totalVolumes;
 
+    /** Last time the providers were asked for {@link #totalVolumes}, found or not (V30, #429). */
+    @Column(name = "volumes_checked_at")
+    public java.time.OffsetDateTime volumesCheckedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 16)
     public SeriesStatus status;

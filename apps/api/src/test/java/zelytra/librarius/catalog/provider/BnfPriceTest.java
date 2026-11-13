@@ -64,4 +64,26 @@ class BnfPriceTest {
                 Uni.createFrom().failure(new RuntimeException("down"));
         assertTrue(provider.priceByIsbn("9782723492478").isEmpty());
     }
+
+    /** #429: the BnF counts the volumes of a series it records. */
+    @Test
+    void countsTheVolumesOfASeriesFromItsRecords() throws Exception {
+        String xml;
+        try (InputStream in = BnfPriceTest.class.getResourceAsStream("/catalog/bnf/blacksad.all.xml")) {
+            xml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        java.util.List<zelytra.librarius.catalog.CatalogResult> parsed = BnfProvider.parse(xml);
+        String series = parsed.stream().map(zelytra.librarius.catalog.CatalogResult::seriesTitle)
+                .filter(java.util.Objects::nonNull).findFirst().orElseThrow();
+        int highest = parsed.stream()
+                .filter(r -> series.equals(r.seriesTitle()) && r.volumeNumber() != null)
+                .mapToInt(zelytra.librarius.catalog.CatalogResult::volumeNumber).max().orElseThrow();
+
+        BnfProvider provider = new BnfProvider();
+        provider.client = (version, operation, query, schema, max) -> Uni.createFrom().item(xml);
+        provider.callTimeout = Duration.ofSeconds(2);
+
+        assertEquals(java.util.OptionalInt.of(highest), provider.seriesVolumes(series));
+        assertTrue(provider.seriesVolumes("Une série que la BnF ignore").isEmpty());
+    }
 }

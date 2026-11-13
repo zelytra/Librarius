@@ -96,6 +96,58 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
 
     /** Series still missing a volume total, capped so one refresh run stays bounded. */
     public List<Series> needingVolumeCount(int limit) {
-        return find("totalVolumes is null").page(0, limit).list();
+        return needingVolumeCount(null, limit);
+    }
+
+    /**
+     * Series still missing a total and not asked lately, the never-asked first (#429), so a
+     * series no provider knows cannot hold the others back. Restricted to the series one user
+     * holds a volume of when {@code userId} is given.
+     */
+    public List<Series> needingVolumeCount(String userId, int limit) {
+        String held = userId == null ? "" : """
+                 and exists (select 1 from LibraryItem li join li.edition e join e.work w
+                             where w.series = s and li.userId = :userId)""";
+        var query = getEntityManager().createQuery("""
+                select s from Series s
+                where s.totalVolumes is null
+                  and (s.volumesCheckedAt is null or s.volumesCheckedAt < :before)%s
+                order by s.volumesCheckedAt asc nulls first, s.id asc
+                """.formatted(held), Series.class)
+                .setParameter("before", java.time.OffsetDateTime.now().minusDays(VOLUME_RETRY_DAYS))
+                .setMaxResults(limit);
+        if (userId != null) {
+            query.setParameter("userId", userId);
+        }
+        return query.getResultList();
+    }
+
+    /** Days before a series whose total no provider gave is asked again. */
+    public static final int VOLUME_RETRY_DAYS = 7;
+
+    /**
+     * The cover of the lowest-numbered volume of each series that has one in the catalog,
+     * whatever its owner (#433) — what a series with no cover of its own is shown with.
+     */
+    public java.util.Map<UUID, String> firstVolumeCovers(java.util.Collection<UUID> seriesIds) {
+        if (seriesIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        List<Object[]> rows = getEntityManager()
+                .createQuery("""
+                        select w.series.id, e.coverUrl
+                        from Edition e
+                          join e.work w
+                        where w.series.id in :ids
+                          and e.coverUrl is not null
+                        order by w.volumeNumber asc nulls last, e.createdAt asc
+                        """, Object[].class)
+                .setParameter("ids", seriesIds)
+                .getResultList();
+        java.util.Map<UUID, String> covers = new java.util.LinkedHashMap<>();
+        for (Object[] row : rows) {
+            covers.putIfAbsent((UUID) row[0], (String) row[1]);
+        }
+        return covers;
     }
 }

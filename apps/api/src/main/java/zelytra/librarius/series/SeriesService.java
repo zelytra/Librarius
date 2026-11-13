@@ -76,6 +76,9 @@ public class SeriesService {
         visible.addAll(followed);
 
         Map<UUID, String> ownCovers = items.firstVolumeCovers(userId);
+        // A series with no cover of its own wears its first volume's (#433): the lowest volume
+        // with a cover in the catalog, whoever owns it, before the reader's own first volume.
+        Map<UUID, String> firstCovers = series.firstVolumeCovers(visible);
         Map<UUID, String[]> sortKeys = items.seriesSortKeys(userId);
         return series.listByIds(visible).stream()
                 .map(s -> {
@@ -91,8 +94,11 @@ public class SeriesService {
                     // A series carries a cover only when a provider gave it one, which an
                     // imported run never had: its block on the shelf then shows the first
                     // volume the reader owns, the way the spine of a run on a real shelf does.
-                    return dto.coverUrl() != null || !ownCovers.containsKey(s.id) ? dto
-                            : dto.withCover(ownCovers.get(s.id));
+                    if (dto.coverUrl() != null) {
+                        return dto;
+                    }
+                    String fallback = firstCovers.getOrDefault(s.id, ownCovers.get(s.id));
+                    return fallback == null ? dto : dto.withCover(fallback);
                 })
                 .toList();
     }
@@ -110,8 +116,25 @@ public class SeriesService {
         }
 
         Run run = Run.of(found, owned, series.worksOfSeries(seriesId));
-        return Optional.of(SeriesDetailDto.of(found, run.ownedCount(), run.readCount(), followed,
-                run.volumes()));
+        SeriesDetailDto dto = SeriesDetailDto.of(found, run.ownedCount(), run.readCount(), followed,
+                run.volumes());
+        if (dto.coverUrl() == null) {
+            // The first volume's cover (#433), else the first volume the reader owns.
+            String fallback = series.firstVolumeCovers(List.of(seriesId)).get(seriesId);
+            if (fallback == null) {
+                fallback = owned.stream()
+                        .filter(item -> item.edition.coverUrl != null)
+                        .min(java.util.Comparator.comparing(
+                                (LibraryItem item) -> item.edition.work.volumeNumber,
+                                java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                        .map(item -> item.edition.coverUrl)
+                        .orElse(null);
+            }
+            if (fallback != null) {
+                dto = dto.withCover(fallback);
+            }
+        }
+        return Optional.of(dto);
     }
 
     /** The holes in the user's run. Empty when the series is not visible to them. */

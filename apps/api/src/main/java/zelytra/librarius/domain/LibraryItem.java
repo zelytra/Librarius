@@ -66,6 +66,13 @@ public class LibraryItem {
     @Column(name = "acquired_at")
     public LocalDate acquiredAt;
 
+    /**
+     * The reader's own price for their copy (#431, V30), private to this row: the shared
+     * {@code edition.list_price} is never written by it. The library value counts it first.
+     */
+    @Column(precision = 8, scale = 2)
+    public java.math.BigDecimal price;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 }
