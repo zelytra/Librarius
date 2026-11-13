@@ -47,14 +47,30 @@ describe('ReadingSheetPage (#412)', () => {
     expect(await screen.findByText('Or')).toBeInTheDocument();
   });
 
-  test('leaves the cover out by default, to save ink', async () => {
+  /** #427: the cover is on by default, and can still be left out to save ink. */
+  test('includes the cover by default, and lets it go', async () => {
     libraryItemReturns(FINISHED);
     renderSheet();
 
-    await screen.findByRole('heading', { name: 'Le Nom du vent' });
-    expect(screen.queryByRole('img', { name: 'Couverture de Le Nom du vent' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: 'Couverture de Le Nom du vent' })).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText('Inclure la couverture'));
-    expect(screen.getByRole('img', { name: 'Couverture de Le Nom du vent' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Couverture de Le Nom du vent' })).not.toBeInTheDocument();
+  });
+
+  /** #427: A4 by default, A6 as a card — the summary left out, the printer told the size. */
+  test('switches between the A4 page and the A6 card', async () => {
+    libraryItemReturns({ ...FINISHED, book: { ...FINISHED.book, synopsis: 'Kvothe raconte sa vie.' } });
+    const { container } = renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    expect(sheet).toHaveAttribute('data-format', 'A4');
+    expect(screen.getByText('Kvothe raconte sa vie.')).toBeInTheDocument();
+    expect(container.querySelector('style')?.textContent).toContain('size: 210mm 297mm');
+
+    await userEvent.click(screen.getByRole('button', { name: 'A6 · carte' }));
+    expect(sheet).toHaveAttribute('data-format', 'A6');
+    expect(screen.queryByText('Kvothe raconte sa vie.')).not.toBeInTheDocument();
+    expect(container.querySelector('style')?.textContent).toContain('size: 105mm 148mm');
   });
 
   test('prints from its toolbar', async () => {

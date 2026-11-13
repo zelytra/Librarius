@@ -81,11 +81,31 @@ public class ImportEnricher {
     /** Runs one batch now; returns how many editions gained at least one field. */
     public int enrichNow() {
         OffsetDateTime now = OffsetDateTime.now();
+        return enrich(QuarkusTransaction.requiringNew().call(() ->
+                targets(editions.needingEnrichment(now.minus(RETRY_AFTER), BATCH))), now);
+    }
+
+    /**
+     * One batch of the editions one user holds (#425), run as soon as their import lands.
+     *
+     * @return how many editions the batch looked at — zero once nothing is left to try
+     */
+    public int enrichBatchFor(String userId) {
+        OffsetDateTime now = OffsetDateTime.now();
         List<Target> batch = QuarkusTransaction.requiringNew().call(() ->
-                editions.needingEnrichment(now.minus(RETRY_AFTER), BATCH).stream()
-                        .map(e -> new Target(e.id, e.work.kind, e.work.title, e.work.authorsText,
-                                e.work.seriesTitle, e.work.volumeNumber))
-                        .toList());
+                targets(editions.needingEnrichmentFor(userId, now.minus(RETRY_AFTER), BATCH)));
+        enrich(batch, now);
+        return batch.size();
+    }
+
+    private static List<Target> targets(List<Edition> found) {
+        return found.stream()
+                .map(e -> new Target(e.id, e.work.kind, e.work.title, e.work.authorsText,
+                        e.work.seriesTitle, e.work.volumeNumber))
+                .toList();
+    }
+
+    private int enrich(List<Target> batch, OffsetDateTime now) {
         int completed = 0;
         for (Target target : batch) {
             CatalogResult match = lookup(target);

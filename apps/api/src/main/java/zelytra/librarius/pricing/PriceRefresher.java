@@ -60,7 +60,21 @@ public class PriceRefresher {
 
     /** Runs one batch now; returns how many editions received a price. */
     public int refreshNow() {
-        List<Target> targets = QuarkusTransaction.requiringNew().call(this::targets);
+        return price(QuarkusTransaction.requiringNew().call(() -> targets(null)));
+    }
+
+    /**
+     * One batch of one user's editions (#425), run as soon as their import lands.
+     *
+     * @return how many editions the batch looked up — zero once none is left
+     */
+    public int refreshBatchFor(String userId) {
+        List<Target> targets = QuarkusTransaction.requiringNew().call(() -> targets(userId));
+        price(targets);
+        return targets.size();
+    }
+
+    private int price(List<Target> targets) {
         int priced = 0;
         for (Target target : targets) {
             Optional<ListPrice> price = lookup(target.isbn13());
@@ -82,20 +96,26 @@ public class PriceRefresher {
         }
     }
 
-    private List<Target> targets() {
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = em.createNativeQuery("""
+    /** Editions to price: everybody's, or only those of {@code userId} when given. */
+    private List<Target> targets(String userId) {
+        String owner = userId == null ? "" : " and li.user_id = :userId";
+        String wisher = userId == null ? "" : " and wi.user_id = :userId";
+        jakarta.persistence.Query query = em.createNativeQuery("""
                 select e.id, e.isbn13
                 from edition e
                 where e.isbn13 is not null
                   and (e.price_checked_at is null or e.price_checked_at < :before)
-                  and (exists (select 1 from library_item li where li.edition_id = e.id)
-                       or exists (select 1 from wishlist_item wi where wi.edition_id = e.id))
+                  and (exists (select 1 from library_item li where li.edition_id = e.id%s)
+                       or exists (select 1 from wishlist_item wi where wi.edition_id = e.id%s))
                 order by e.price_checked_at nulls first, e.created_at desc
-                """)
+                """.formatted(owner, wisher))
                 .setParameter("before", OffsetDateTime.now().minus(RETRY_AFTER))
-                .setMaxResults(BATCH)
-                .getResultList();
+                .setMaxResults(BATCH);
+        if (userId != null) {
+            query.setParameter("userId", userId);
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = query.getResultList();
         return rows.stream()
                 .map(row -> new Target((UUID) row[0], (String) row[1]))
                 .toList();

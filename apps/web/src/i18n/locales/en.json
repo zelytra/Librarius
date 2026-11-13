@@ -275,7 +275,8 @@
         "galaxy": "the heart of the Milky Way",
         "andromeda": "Andromeda",
         "edge": "the edge of the universe"
-      }
+      },
+      "details": "All the figures of the stack"
     }
   },
   "onboarding": {
@@ -619,7 +620,9 @@
       "removeFailed": "Cannot remove it right now.",
       "acquireFailed": "This title could not be moved to your library."
     },
-    "marketPrice": "New price: {{price}} €"
+    "marketPrice": "New price: {{price}} €",
+    "searchPlaceholder": "Search your wishlist…",
+    "noMatch": "No wish matches “{{q}}”."
   },
   "stats": {
     "title": "Statistics",
@@ -1060,7 +1063,11 @@
       "duration": "Reading time",
       "rank": "Rank"
     },
-    "coverAlt": "Cover of {{title}}"
+    "coverAlt": "Cover of {{title}}",
+    "formats": {
+      "A4": "A4 · page",
+      "A6": "A6 · card"
+    }
   },
   "statuses": {
     "readingTitle": "Reading",

@@ -8,6 +8,8 @@
   overflow: hidden;
   display: flex;
   align-items: flex-end;
+  /* The pile stands on the right, under the sky, the label at its foot on the left. */
+  justify-content: flex-end;
   gap: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -77,17 +79,57 @@
   transform: translateX(6px);
 }
 
-/* The text sits on a frosted panel so it reads on a noon sky and on deep space alike, in
-   every palette: the sky is a picture, the panel is the app. */
-.figures {
-  position: relative;
+/* The minimum on the sky (#426): a small frosted label in a corner, so it reads on a noon
+   sky and on deep space alike while leaving the picture visible. */
+.label {
+  position: absolute;
   z-index: 1;
-  flex: 1;
-  min-width: 0;
-  padding: 12px 14px;
+  left: 12px;
+  bottom: 12px;
+  max-width: calc(100% - 150px);
+  padding: 8px 12px;
   border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
   backdrop-filter: blur(3px);
+}
+
+.label .books {
+  font-size: var(--fs-15);
+}
+
+.label .pages {
+  margin-top: 1px;
+}
+
+.label .reached {
+  font-family: inherit;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--accent-deep);
+  margin-top: 3px;
+}
+
+/* The way into every figure the label leaves out. */
+.info {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  left: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
 }
 
 .stack {
@@ -171,8 +213,9 @@
 /* The sun, the Moon or a planet: one disc, dressed per scene. */
 .body {
   position: absolute;
-  top: 14px;
-  right: 18px;
+  top: 16px;
+  /* Top left, past the info button: the pile stands on the right. */
+  left: 64px;
   width: var(--body-size, 46px);
   height: var(--body-size, 46px);
   border-radius: 50%;
@@ -186,8 +229,8 @@
 /* Saturn's ring. */
 .ring {
   position: absolute;
-  top: calc(14px + var(--body-size, 46px) / 2 - 6px);
-  right: 6px;
+  top: calc(16px + var(--body-size, 46px) / 2 - 6px);
+  left: 52px;
   width: calc(var(--body-size, 46px) + 24px);
   height: 12px;
   border-radius: 50%;
@@ -380,7 +423,7 @@
 }
 
 .altitude {
-  margin-top: 10px;
+  margin-top: 14px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
 }

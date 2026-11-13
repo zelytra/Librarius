@@ -155,6 +155,9 @@ Chaque résultat s'ajoute d'un geste à la **collection** ou aux **souhaits**.
 
 ## Souhaits et budget
 
+Le champ de recherche en haut de la liste filtre tes souhaits par titre, auteur ou série ;
+le total et le budget suivent la recherche.
+
 Un souhait porte une priorité — **Priorité**, **Bientôt**, **Un jour** —, un prix estimé
 et une note libre (édition, format, où l'acheter). La liste est triée du plus urgent au
 moins urgent, groupée par priorité, et chaque groupe affiche son nombre de titres et son
@@ -189,11 +192,12 @@ Au 1ᵉʳ janvier, l'objectif de l'année précédente t'est reproposé.
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
-quand tu le marques lu) prépare une page A4 à imprimer : titre, auteur, ta note en étoiles,
+quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (une page) ou **A6** (une carte à glisser dans
+le livre, sans le résumé) : titre, auteur, ta note en étoiles,
 ton avis — ou des lignes pour l'écrire à la main —, les dates de lecture, l'éditeur, le
 nombre de pages et ton classement. Traits fins, aucun aplat de couleur : elle s'imprime aussi
-bien en noir et blanc qu'en couleur. La couverture, plus gourmande en encre, est désactivée
-par défaut.
+bien en noir et blanc qu'en couleur. La couverture est incluse par défaut ; décoche
+« Inclure la couverture » pour économiser l'encre.
 
 ## Les nombres de pages estimés
 
@@ -215,8 +219,9 @@ compte.
 « Tout ce que tu as lu » empile tes pages lues, et le fond monte avec elles : le sol sous
 un ciel bleu, les nuages, l'espace, la Lune, chaque planète tour à tour, puis les étoiles et
 les confins de l'univers. L'échelle est imagée — chaque palier est atteint à un nombre de
-pages réaliste, pas à la vraie distance —, et la carte dit combien de pages il reste avant
-le palier suivant.
+pages réaliste, pas à la vraie distance. La carte n'affiche que l'essentiel (livres, pages,
+palier atteint) pour laisser voir le ciel ; le bouton « i » ouvre tous les chiffres : hauteur
+de papier, longueurs estimées, distance et pages restantes avant le palier suivant.
 
 ## Les statistiques
 
@@ -234,6 +239,10 @@ le palier suivant.
 
 Réglages → **Importer ma bibliothèque**. Un import ne crée jamais de doublon : ce qui est
 déjà chez toi est compté comme « déjà présent » et laissé tranquille.
+
+Dès la fin de l'import, Librarius complète tes titres sans attendre : couverture, ISBN,
+nombre de pages et éditeur depuis les catalogues, puis le prix neuf depuis la BnF. Sur une
+grosse bibliothèque, le reste se complète ensuite en arrière-plan.
 
 ### Depuis Booknode
 

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -31,6 +31,12 @@ function StatsInvalidator() {
       relire les statistiques
     </button>
   );
+}
+
+/** Opens the stack's details (#426) and returns queries scoped to that dialog. */
+async function openStackDetails() {
+  await userEvent.click(await screen.findByRole('button', { name: 'Tous les chiffres de la pile' }));
+  return within(await screen.findByRole('dialog', { name: 'Tout ce que tu as lu' }));
 }
 
 describe('HomePage', () => {
@@ -444,20 +450,24 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText('Tout ce que tu as lu')).toBeInTheDocument();
+    // The card keeps the minimum (#426): books, pages, and where the stack reaches.
     expect(screen.getByText('12 livres lus')).toBeInTheDocument();
     // French groups thousands with a narrow no-break space whose code point moves between
     // ICU versions, so the assertion is on the digits and not on the separator.
     expect(screen.getByText(/^4\s?200 pages lues$/)).toBeInTheDocument();
-    // 4 200 pages = 2 100 sheets = 210 mm. Under a metre, so centimetres.
-    expect(screen.getByText(/21\s?cm de papier/)).toBeInTheDocument();
+    expect(screen.queryByText(/cm de papier/)).not.toBeInTheDocument();
+    // 4 200 pages = 2 100 sheets = 210 mm. Under a metre, so centimetres — in the details.
+    const details = await openStackDetails();
+    expect(details.getByText(/21\s?cm de papier/)).toBeInTheDocument();
   });
 
   /** The conversion is an estimate and the card has to say so, not imply a measurement. */
   test('labels the height as an estimate and names the thickness it assumes', async () => {
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText(/^Hauteur estimée/)).toBeInTheDocument();
-    expect(screen.getByText(/une feuille de papier ≈ 0,1\s?mm/)).toBeInTheDocument();
+    const details = await openStackDetails();
+    expect(details.getByText(/^Hauteur estimée/)).toBeInTheDocument();
+    expect(details.getByText(/une feuille de papier ≈ 0,1\s?mm/)).toBeInTheDocument();
   });
 
   /**
@@ -486,7 +496,7 @@ describe('HomePage', () => {
     const drawing = await screen.findByRole('img', { name: /400 livres lus/ });
     expect(drawing.childElementCount).toBe(MAX_SPINES);
     // 76 000 pages = 38 000 sheets = 3 800 mm, which reads in metres.
-    expect(screen.getByText(/3,8\s?m de papier/)).toBeInTheDocument();
+    expect((await openStackDetails()).getByText(/3,8\s?m de papier/)).toBeInTheDocument();
   });
 
   /** Sarah the newcomer: three books read still draw three books, not a smear. */
@@ -497,7 +507,7 @@ describe('HomePage', () => {
 
     const drawing = await screen.findByRole('img', { name: /3 livres lus/ });
     expect(drawing.childElementCount).toBe(3);
-    expect(screen.getByText(/4,5\s?cm de papier/)).toBeInTheDocument();
+    expect((await openStackDetails()).getByText(/4,5\s?cm de papier/)).toBeInTheDocument();
   });
 
   /** An imported library: most lengths are still unknown, and the card says so. */
@@ -506,7 +516,7 @@ describe('HomePage', () => {
       HttpResponse.json(stats({ read: 2293, pagesRead: 30_000, readWithPageCount: 120 }))));
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText(/Longueur connue pour 120 livres sur 2\s?293/)).toBeInTheDocument();
+    expect((await openStackDetails()).getByText(/Longueur connue pour 120 livres sur 2\s?293/)).toBeInTheDocument();
   });
 
   /**
@@ -518,8 +528,9 @@ describe('HomePage', () => {
       HttpResponse.json(stats({ read: 2293, pagesRead: 700_000, readWithPageCount: 44 }))));
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText(/sont estimés/)).toBeInTheDocument();
-    expect(screen.getByText(/de papier empilé/)).toBeInTheDocument();
+    const details = await openStackDetails();
+    expect(details.getByText(/sont estimés/)).toBeInTheDocument();
+    expect(details.getByText(/de papier empilé/)).toBeInTheDocument();
   });
 
   /** #415: the sky behind the pile climbs with the pages read — here past Neptune. */
@@ -529,7 +540,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText('Ta pile atteint Neptune')).toBeInTheDocument();
-    expect(screen.getByText(/pour atteindre Pluton/)).toBeInTheDocument();
+    expect((await openStackDetails()).getByText(/pour atteindre Pluton/)).toBeInTheDocument();
   });
 
   test('starts on the ground, under a blue sky', async () => {

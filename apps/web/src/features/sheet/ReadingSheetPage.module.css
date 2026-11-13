@@ -214,6 +214,71 @@
   text-align: right;
 }
 
+/* A6 (#427): a 105 × 148 mm card — the same sheet at a smaller type scale, the facts on
+   one column. */
+.a6 {
+  max-width: 105mm;
+  padding: 7mm 6mm;
+  font-size: 8pt;
+}
+
+.a6 .header {
+  font-size: 6.5pt;
+}
+
+.a6 .identity {
+  gap: 8px;
+  margin: 8px 0 6px;
+}
+
+.a6 .cover {
+  width: 16mm;
+}
+
+.a6 .bookTitle {
+  font-size: 14pt;
+}
+
+.a6 .authors {
+  font-size: 9pt;
+}
+
+.a6 .stars {
+  font-size: 11pt;
+}
+
+.a6 .facts {
+  grid-template-columns: 1fr;
+}
+
+.a6 .fact {
+  padding: 2px 0;
+  font-size: 7.5pt;
+}
+
+.a6 .block {
+  margin-top: 7px;
+}
+
+.a6 .blockTitle {
+  font-size: 9pt;
+  margin-bottom: 3px;
+}
+
+.a6 .review {
+  font-size: 8pt;
+  line-height: 1.4;
+}
+
+.a6 .line {
+  height: 6mm;
+}
+
+.a6 .footer {
+  margin-top: 6px;
+  font-size: 6pt;
+}
+
 @media (max-width: 600px) {
   .sheet {
     padding: 18px 16px;
@@ -225,11 +290,6 @@
 }
 
 @media print {
-  @page {
-    size: A4;
-    margin: 12mm;
-  }
-
   .page {
     padding: 0;
     background: #fff;

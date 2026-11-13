@@ -233,3 +233,25 @@
   font-weight: 600;
   color: var(--accent-deep);
 }
+
+/* Search (#424), the same field as Collection's. */
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--fs-14);
+  color: var(--ink);
+  font-family: inherit;
+}
