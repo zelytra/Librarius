@@ -341,11 +341,11 @@ class CatalogServiceTest {
         // but the same parsed series and volume: one result, under a canonical title.
         CatalogService service = new CatalogService(List.of(
                 new ListProvider(Kind.BOOK, List.of(
-                        result("BOOK", "One Piece - Édition originale, Tome 1", "Eiichiro Oda",
+                        result("MANGA", "One Piece - Édition originale, Tome 1", "Eiichiro Oda",
                                 "One Piece", 1),
-                        result("BOOK", "One Piece. 1, À l'aube d'une grande aventure",
+                        result("MANGA", "One Piece. 1, À l'aube d'une grande aventure",
                                 "Oda, Eiichirō", "One Piece", 1),
-                        result("BOOK", "One Piece Tome 1 : Romance Dawn", "Eiichirō Oda",
+                        result("MANGA", "One Piece Tome 1 : Romance Dawn", "Eiichirō Oda",
                                 "One Piece", 1)))),
                 passThroughCache());
 

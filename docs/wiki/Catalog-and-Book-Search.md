@@ -34,12 +34,23 @@ the search answer.
 1. **Clean-up** of provider artefacts: a credit glued to a title is cut when it is the credited
    author ("L'étranger Par Albert Camus"), the space after an elision goes ("L' Etranger"), an
    all-capitals title is put in sentence case, a bare initial gets its dot ("J. K Rowling").
+   A book's "series" that is a publisher collection — a known one (Folio, Folio junior, Poche,
+   Le Livre de poche, Pocket, J'ai lu, Points, 10/18, Babel, Profil, L'Œuvre au clair, Un livre
+   une œuvre, Bibliothèque…, Que sais-je, Bouquins, Omnibus, Librio, GF, Classiques…), or a
+   number above 30 — is cleared, so it neither names, groups nor orders the book. A title that
+   leads with its series ("One Piece, Vol. 38") keeps it.
 2. **Kinds**: when AniList answered a manga series, every result whose series (or title) is that
    series — under its title, the part before a colon ("Demon Slayer"), its romaji or native
    title or a synonym ("L'Attaque des Titans") — becomes `MANGA`. Inside one series, a volume
-   catalogued `MANGA` (else `COMIC`) makes the other volumes so when they credit the same
-   people or carry a credit that cannot be compared (kanji, none): Maxe L'Hermenier's comic
-   "Fantine" does not turn Hugo's volumes into comics. A manga is never downgraded.
+   catalogued `MANGA` (else `COMIC`) makes the other volumes so. Either conversion needs the
+   result to credit one of the same people (surnames compared with romanisation folded:
+   "Gotouge" = "Gotōge", "Endou" = "Endo"), or to be a numbered volume credited in another
+   script or not at all, or to be a comic already: Saint-Exupéry's "Le petit prince" stays a
+   book although an AniList synonym of "My Little Prince" reads like it, and Maxe L'Hermenier's
+   comic "Fantine" does not turn Hugo's volumes into comics. The record titled after the series
+   takes the kind of its volumes when they credit every person it does, two at least (Gaudin and
+   Sieurac's "L'assassin royal"); a novel credited to its author alone never does. A manga is
+   never downgraded.
 3. **Grouping**: the editions of one work become one result. A book never merges with a comic
    or manga — Hugo's novel stays apart from its adaptations — and Open Library, which files
    everything as a book, joins the book group of the same work when there is one, else the
@@ -52,9 +63,11 @@ the search answer.
    work; it takes what it lacks (cover, synopsis, pages, series, ISBN) from the others and the
    highest popularity. AniList series are never merged into a book record; a record numbered in
    a series but marked as merchandise (the "Carnet des pourfendeurs") is never grouped as a volume.
-   A volume the BnF titles by its part ("Romance dawn") is shown under its series, "One piece -
-   Tome 1 : Romance dawn", and a volume credited in kanji only shows the Latin credit of its
-   series.
+   The BnF's "Les aventures de Tintin - Tome 20 : Tintin au Tibet" is also grouped by its part
+   title, so Open Library's "Tintin au Tibet" joins it. A comic or manga volume the BnF titles by
+   its part ("Romance dawn") is shown under its series, "One piece - Tome 1 : Romance dawn"; a
+   book always keeps its own title ("Le nom du vent"), its series staying data. A volume
+   credited in kanji only shows the Latin credit of its series.
 4. **Score**. A title tier first — exact title > title starting with the query or "query +
    volume" > title containing the query phrase > every query word > some of them (a title much
    longer than the query that merely contains its words counts as partial). Words are compared
@@ -79,18 +92,24 @@ the search answer.
    - a title match **by somebody else** than the best-ranked work's author ("Dune" by Brian
      Herbert, Chaïko's comic "Les misérables") drops one tier, and so does a result with **no
      author** at all;
+   - a coverless record titled after a series whose covered volumes are on the page competes
+     at their tier, where the cover decides;
    - inside a tier: French first (another language lower, an unknown one neutral), a cover, a
      complete record.
 5. **Trim**: when a genuine result matches the title (exact, prefix, phrase, or an author with
    the rest of the title), the page loses its padding — everything matching less than every
    query word, an all-words match much longer than the query, a foreign edition of the
-   best-ranked author's work when a French one is there. A record with neither author nor cover
-   goes when five others have one. The volumes of a series run stay. A short honest page ("le
+   best-ranked author's work when a French one is there, and anything whose own title and
+   series hold none of the query's subject words (unless its credit is what matched). A record
+   with neither author nor cover goes when five others have one. The volumes of a run stay only
+   when the run is the series the query names. A short honest page ("le
    nom du vent" → the novel) beats twenty rows of 18th-century notices.
 6. **Volumes in order**: the volumes of one series are emitted together in ascending order from
    the position of the best-ranked one, AniList's series entry first. When the query names a
    volume ("one piece tome 1", "jujutsu kaisen 12"), that volume leads, then the series, then
-   the rest. "Blue Lock 1" is read as volume 1 only because another result is a volume of
+   the rest. A volume credited, in Latin letters, to nobody the series is credited to (an
+   unofficial "Jujutsu Kaisen 12" credited to a character) comes after the rest of its run.
+   "Blue Lock 1" is read as volume 1 only because another result is a volume of
    "Blue Lock"; a bare number alone ("Fahrenheit 451") never is.
 
 **Prefix retry.** When nothing reaches the two top title tiers and the plain query has two

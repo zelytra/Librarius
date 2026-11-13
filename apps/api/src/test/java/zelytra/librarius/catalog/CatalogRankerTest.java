@@ -496,4 +496,128 @@ class CatalogRankerTest {
         assertFalse(CatalogRanker.prefixRetryApplies(
                 new CatalogQuery("le nom du ven", "Rothfuss", null, null, null, null)));
     }
+
+    // --- third pass: collections, cross-check guard, junk runs, part titles, heads, strangers --
+
+    @Test
+    void aPublisherCollectionIsNoSeries() {
+        assertTrue(CatalogRanker.isCollection("BOOK", "Folio junior", 899));
+        assertTrue(CatalogRanker.isCollection("BOOK", "Profil littérature", 13));
+        assertTrue(CatalogRanker.isCollection("BOOK", "Le Livre de poche", 3));
+        assertTrue(CatalogRanker.isCollection("BOOK", "Études littéraires", 39));
+        assertFalse(CatalogRanker.isCollection("BOOK", "Chronique du tueur de roi", 1));
+        assertFalse(CatalogRanker.isCollection("MANGA", "One Piece", 112));
+
+        CatalogResult cleaned = CatalogRanker.cleanUp(
+                r("Harry Potter à l'école des sorciers", "J. K. Rowling").series("Folio junior", 899).build());
+        assertEquals(null, cleaned.seriesTitle());
+        assertEquals(null, cleaned.volumeNumber());
+        // Open Library's "One Piece, Vol. 38" is a book only until the kinds are settled.
+        assertEquals(Integer.valueOf(38), CatalogRanker.cleanUp(
+                r("One Piece, Vol. 38", "Eiichirō Oda").series("One Piece", 38).build()).volumeNumber());
+    }
+
+    @Test
+    void aBookKeepsItsOwnTitleAndItsSeriesAsData() {
+        List<CatalogResult> results = rank("le nom du vent",
+                r("Le nom du vent", "Patrick Rothfuss").series("Chronique du tueur de roi", 1).french().cover(),
+                r("Harry Potter à l'école des sorciers", "J. K. Rowling").series("Folio junior", 899).french());
+
+        assertEquals("Le nom du vent", results.get(0).title());
+        assertEquals("Chronique du tueur de roi", results.get(0).seriesTitle());
+        assertEquals(Integer.valueOf(1), results.get(0).volumeNumber());
+    }
+
+    @Test
+    void aNovelIsNotAMangaBecauseAnAniListSynonymReadsLikeItsTitle() {
+        List<CatalogResult> candidates = List.of(
+                r("My Little Prince", "Kjorelo").from("anilist", "1001").kind("MANGA").build(),
+                r("Le petit prince", "Antoine de Saint-Exupéry").french().cover().popular(300).build(),
+                r("Le petit prince - Tome 2", "Antoine de Saint-Exupéry").series("Le petit prince", 2).french().build());
+
+        List<CatalogResult> results = CatalogRanker.rank("le petit prince", candidates, false,
+                r -> "anilist".equals(r.provider()) ? List.of("Le Petit Prince") : List.of()).results();
+
+        CatalogResult novel = results.stream().filter(r -> r.title().equals("Le petit prince")).findFirst().orElseThrow();
+        assertEquals("BOOK", novel.kind());
+        assertTrue(results.stream().filter(r -> !"anilist".equals(r.provider()))
+                .allMatch(r -> "BOOK".equals(r.kind())), results.toString());
+        assertEquals("Le petit prince", results.get(0).title());
+    }
+
+    @Test
+    void aVolumeCreditedInKanjiOrToNobodyJoinsTheAniListSeries() {
+        List<CatalogResult> results = rank("blue lock",
+                r("Blue Lock", "Muneyuki Kaneshiro").from("anilist", "137").kind("MANGA"),
+                r("Blue Lock - Tome 2", null).series("Blue Lock", 2).cover(),
+                r("Blue Lock - Tome 3", "金城宗幸").series("Blue Lock", 3).cover());
+
+        assertTrue(results.stream().allMatch(r -> "MANGA".equals(r.kind())), results.toString());
+    }
+
+    @Test
+    void trimsTheVolumesOfASeriesTheQueryIsNotAbout() {
+        List<CatalogResult> results = rank("le nom du vent",
+                r("Le nom du vent", "Patrick Rothfuss").french().cover(),
+                r("Rapport fait, au nom de la Commission, sur les Iles sous le vent de Tahiti", "Sénat")
+                        .series("Recueils de pièces imprimées concernant les colonies", 3).french(),
+                r("Rapport fait au nom du comité de salut public, sur les Iles-du-Vent", null)
+                        .series("Recueils de pièces imprimées concernant les colonies", 4).french(),
+                r("Recueils de pièces imprimées concernant les colonies [Bulletin]", null).french());
+
+        assertEquals(List.of("Le nom du vent"), titles(results));
+    }
+
+    @Test
+    void groupsTheAlbumsOfOneVolumeAndOpenLibrarysEntryOfIt() {
+        List<CatalogResult> results = rank("tintin au tibet",
+                r("Tintin au Tibet", "Hergé").from("openlibrary", "OL1W").cover().popular(40),
+                r("Les aventures de Tintin - Tome 20 : Tintin au Tibet", "Hergé")
+                        .series("Les aventures de Tintin", 20).kind("COMIC").french(),
+                r("Les aventures de Tintín - Tome 20 : Tintín au Tibet", "Hergé")
+                        .series("Les aventures de Tintín", 20).french().isbn("9782203001206"));
+
+        assertEquals(1, results.size(), results.toString());
+        assertEquals("COMIC", results.get(0).kind());
+        assertEquals(Integer.valueOf(40), results.get(0).popularity());
+    }
+
+    @Test
+    void aCoverlessSeriesRecordDoesNotOutrankTheCoveredVolumesAndTakesTheirKind() {
+        List<CatalogResult> results = rank("l'assassin royal",
+                r("L'assassin royal", "Jean-Charles Gaudin, Laurent Sieurac").french(),
+                r("L'apprentissage de l'assassin", "Robin Hobb").series("L'assassin royal", 1).french().cover(),
+                r("L'assassin du roi", "Robin Hobb").series("L'assassin royal", 2).french().cover(),
+                r("Le prince bâtard", "Jean-Charles Gaudin, Laurent Sieurac").series("L'assassin royal", 1)
+                        .kind("COMIC").french());
+
+        assertEquals("Robin Hobb", results.get(0).authors(), titles(results).toString());
+        CatalogResult head = results.stream().filter(r -> r.title().equals("L'assassin royal")).findFirst().orElseThrow();
+        assertEquals("COMIC", head.kind());
+        // Hobb's novels keep their own titles; the comic's volume reads under its series.
+        assertTrue(titles(results).contains("L'apprentissage de l'assassin"), titles(results).toString());
+        assertTrue(titles(results).contains("L'assassin royal - Tome 1 : Le prince bâtard"), titles(results).toString());
+    }
+
+    @Test
+    void aNovelCreditedAloneNeverTakesTheKindOfItsComicAdaptation() {
+        List<CatalogResult> results = rank("les miserables",
+                r("Les misérables", "Victor Hugo").french().cover(),
+                r("Les misérables - Tome 1", "Victor Hugo, Looky").series("Les misérables", 1).kind("COMIC").french());
+
+        assertEquals("BOOK", results.stream().filter(r -> r.title().equals("Les misérables")).findFirst()
+                .orElseThrow().kind());
+    }
+
+    @Test
+    void putsAVolumeCreditedToAStrangerAfterTheRestOfTheRun() {
+        List<CatalogResult> results = rank("jujutsu kaisen 12",
+                r("Jujutsu Kaisen 12", "Ryomen Sukune").from("openlibrary", "OL12W").cover().language("eng"),
+                r("Jujutsu Kaisen", "Gege Akutami").from("anilist", "113138").kind("MANGA"),
+                r("Jujutsu kaisen - Tome 12", "Gege Akutami").series("Jujutsu kaisen", 12).kind("MANGA").french(),
+                r("Jujutsu kaisen - Tome 11", "Gege Akutami").series("Jujutsu kaisen", 11).kind("MANGA").french());
+
+        assertEquals(List.of("Jujutsu kaisen - Tome 12", "Jujutsu Kaisen", "Jujutsu kaisen - Tome 11",
+                "Jujutsu Kaisen 12"), titles(results));
+    }
 }

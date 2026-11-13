@@ -73,8 +73,10 @@ class CatalogRelevanceTest {
         String why = describe(page);
 
         CatalogResult first = page.get(0);
-        // Shown under its cycle: "Chronique du tueur de roi - Tome 1 : Le nom du vent".
-        assertTrue(fold(first.title()).contains("le nom du vent"), why);
+        // A novel keeps its own title, whatever cycle the BnF files it in.
+        assertEquals("le nom du vent", fold(first.title()), why);
+        assertEquals("Chronique du tueur de roi", first.seriesTitle(), why);
+        assertBooksKeepTheirTitles(page);
         assertTrue(credits(first, "rothfuss"), why);
         assertNotNull(first.coverUrl(), why);
         assertEquals(Integer.valueOf(76), first.popularity(), why);
@@ -135,6 +137,7 @@ class CatalogRelevanceTest {
             assertTrue(titles.add(fold(r.title())), why);
         }
         assertEquals("Harry Potter à l'école des sorciers", page.get(0).title(), why);
+        assertBooksKeepTheirTitles(page);
         // One entry per work. Weakened from "per folded title and volume": the recorded page
         // holds several genuinely different books titled just "Harry Potter" (a pop-up book, a
         // Scholastic reader, a film guide), each credited to someone else; what must not repeat
@@ -154,8 +157,8 @@ class CatalogRelevanceTest {
         List<CatalogResult> page = page("dune", "dune");
         String why = describe(page.subList(0, 6));
 
-        // The BnF's Pocket edition, volume 1 of "Le cycle de Dune": "Le cycle de Dune - Tome 1 : Dune".
-        assertTrue(page.get(0).title().endsWith("Dune"), why);
+        // The BnF's Pocket edition is volume 1 of "Le cycle de Dune", and still reads "Dune".
+        assertEquals("Dune", page.get(0).title(), why);
         assertEquals(Integer.valueOf(155), page.get(0).popularity(), why);
         assertTrue(credits(page.get(0), "frank herbert"), why);
         assertTrue(page.subList(0, 5).stream().anyMatch(r -> r.title().equals("Le Messie de Dune")), why);
@@ -218,6 +221,22 @@ class CatalogRelevanceTest {
         assertMangaSeries(page, "Demon Slayer: Kimetsu no Yaiba");
         // The "Carnet des pourfendeurs" the BnF numbers as volume 2 stays apart from the real one.
         assertEquals("Demon Slayer T02", page.get(1).title(), describe(page));
+    }
+
+    /**
+     * No book reads "Series - Tome N : Title", and no publisher collection ("Folio junior" 899)
+     * passes for a series.
+     */
+    private static void assertBooksKeepTheirTitles(List<CatalogResult> page) {
+        for (CatalogResult r : page) {
+            if ("BOOK".equals(r.kind())) {
+                assertFalse(r.title().contains(" - Tome "), r.title());
+                String text = fold(r.title() + ' ' + r.seriesTitle());
+                for (String collection : List.of("folio", "poche", "pocket", "profil", "j ai lu")) {
+                    assertFalse((' ' + text + ' ').contains(' ' + collection + ' '), r.title() + " / " + r.seriesTitle());
+                }
+            }
+        }
     }
 
     /** AniList's series first, then its volumes in ascending order, every one a manga, no merchandise. */
