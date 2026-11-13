@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../../shared/ui/Icon';
+import { Modal } from '../../shared/ui/Modal';
 import { SectionHeader } from '../../shared/ui/primitives';
 import { activeLanguage } from '../../i18n/languages';
 import { pagesRead } from '../../shared/pagesRead';
@@ -28,6 +31,7 @@ import styles from './BookStack.module.css';
 export function BookStack({ stats }: { stats: StatsDto | undefined }) {
   const { t } = useTranslation();
 
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const booksRead = stats?.read ?? 0;
   // The exact sum, or — while lengths are being filled in — the estimate the pile is drawn from.
   const estimate = pagesRead(stats);
@@ -51,6 +55,13 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
   const units = { au: t('home.sky.units.au'), ly: t('home.sky.units.ly'), mly: t('home.sky.units.mly') };
   const reached = t(`home.sky.scenes.${sky.current.scene}`);
   const distance = formatDistance(sky.km, activeLanguage(), units);
+  const nextLabel = sky.next
+    ? t('home.sky.next', {
+        place: t(`home.sky.scenes.${sky.next.scene}`),
+        count: sky.pagesToNext,
+        pages: sky.pagesToNext.toLocaleString(activeLanguage()),
+      })
+    : '';
 
   return (
     <section>
@@ -80,50 +91,60 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
           ))}
         </div>
 
-        <div className={styles.figures}>
+        {/* The minimum on the sky (#426): what the stack is and where it reaches. Everything
+            else — the paper height, the estimates, the scale — is one tap away, so the
+            picture is what the card shows. */}
+        <div className={styles.label}>
           <p className={styles.books}>{t('home.bookStack.books', { count: booksRead, books })}</p>
-          {!estimate.unknown && (
-            <>
-              <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesTotal, pages })}</p>
-              <p className={styles.height}>{t('home.bookStack.height', { height })}</p>
-            </>
-          )}
-          {withLength < booksRead && (
-            <p className={styles.estimate}>
-              {withLength > 0
-                ? t('home.bookStack.partial', { count: booksRead, known, books })
-                : t('home.bookStack.noLength')}
-            </p>
-          )}
-          {/* The conversion is an estimate and says so, the way a provider's release date is
-              captioned as indicative rather than presented as a fact (PRODUCT.md § 6.5). */}
-          <p className={styles.estimate}>{t('home.bookStack.estimate', { thickness })}</p>
-          <div className={styles.altitude}>
-            <p className={styles.reached}>{t('home.sky.reached', { place: reached })}</p>
-            <p className={styles.distance}>{t('home.sky.distance', { distance })}</p>
-            {sky.next && (
-              <>
-                <div
-                  className={styles.altTrack}
-                  role="progressbar"
-                  aria-label={t('home.sky.next', { place: t(`home.sky.scenes.${sky.next.scene}`), count: sky.pagesToNext, pages: sky.pagesToNext.toLocaleString(activeLanguage()) })}
-                  aria-valuenow={Math.round(sky.progress * 100)}
-                >
-                  <span className={styles.altFill} style={{ width: `${Math.round(sky.progress * 100)}%` }} />
-                </div>
-                <p className={styles.nextStep}>
-                  {t('home.sky.next', {
-                    place: t(`home.sky.scenes.${sky.next.scene}`),
-                    count: sky.pagesToNext,
-                    pages: sky.pagesToNext.toLocaleString(activeLanguage()),
-                  })}
-                </p>
-              </>
-            )}
-            <p className={styles.scaleNote}>{t('home.sky.scale')}</p>
-          </div>
+          <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesTotal, pages })}</p>
+          <p className={styles.reached}>{t('home.sky.reached', { place: reached })}</p>
         </div>
+        <button
+          type="button"
+          className={styles.info}
+          onClick={() => setDetailsOpen(true)}
+          aria-label={t('home.sky.details')}
+          title={t('home.sky.details')}
+        >
+          <Icon name="info" size={20} color="currentColor" />
+        </button>
       </div>
+      {detailsOpen && (
+        <Modal title={t('home.bookStack.title')} onClose={() => setDetailsOpen(false)}>
+          <div className={styles.details}>
+            <p className={styles.books}>{t('home.bookStack.books', { count: booksRead, books })}</p>
+            <p className={styles.pages}>{t('home.bookStack.pages', { count: pagesTotal, pages })}</p>
+            <p className={styles.height}>{t('home.bookStack.height', { height })}</p>
+            {withLength < booksRead && (
+              <p className={styles.estimate}>
+                {withLength > 0
+                  ? t('home.bookStack.partial', { count: booksRead, known, books })
+                  : t('home.bookStack.noLength')}
+              </p>
+            )}
+            {/* The conversion is an estimate and says so (PRODUCT.md § 6.5). */}
+            <p className={styles.estimate}>{t('home.bookStack.estimate', { thickness })}</p>
+            <div className={styles.altitude}>
+              <p className={styles.reached}>{t('home.sky.reached', { place: reached })}</p>
+              <p className={styles.distance}>{t('home.sky.distance', { distance })}</p>
+              {sky.next && (
+                <>
+                  <div
+                    className={styles.altTrack}
+                    role="progressbar"
+                    aria-label={nextLabel}
+                    aria-valuenow={Math.round(sky.progress * 100)}
+                  >
+                    <span className={styles.altFill} style={{ width: `${Math.round(sky.progress * 100)}%` }} />
+                  </div>
+                  <p className={styles.nextStep}>{nextLabel}</p>
+                </>
+              )}
+              <p className={styles.scaleNote}>{t('home.sky.scale')}</p>
+            </div>
+          </div>
+        </Modal>
+      )}
     </section>
   );
 }

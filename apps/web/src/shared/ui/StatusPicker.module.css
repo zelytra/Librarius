@@ -30,7 +30,9 @@
   gap: 6px;
   padding: 8px 12px;
   border: 1.5px solid var(--chip);
-  border-radius: var(--radius-round);
+  /* A pill whatever the width (#423): --radius-round is 50 %, which turns a wide chip
+     into an ellipse. */
+  border-radius: var(--radius-chip);
   background: var(--surface);
   color: var(--ink);
   font: inherit;

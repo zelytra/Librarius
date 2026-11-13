@@ -4,13 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { LoginGate } from '../../shared/LoginGate';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { Icon } from '../../shared/ui/Icon';
+import { Segmented } from '../../shared/ui/primitives';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiCategories, useGetApiLibraryId, type LibraryItemDto } from '../../api/generated/librarius';
-import { readingDays } from './readingSheet';
+import { pageRule, readingDays, type SheetFormat } from './readingSheet';
 import styles from './ReadingSheetPage.module.css';
 
-/** Ruled lines left to write on by hand, where the reader typed nothing. */
-const BLANK_LINES = 6;
+/** Ruled lines left to write on by hand, where the reader typed nothing, per format. */
+const BLANK_LINES: Record<SheetFormat, number> = { A4: 6, A6: 3 };
+const NOTE_LINES: Record<SheetFormat, number> = { A4: 4, A6: 2 };
 
 function formatDate(value: string | undefined | null): string | null {
   if (!value) return null;
@@ -44,7 +46,9 @@ function Stars({ value }: { value: number }) {
  */
 export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLabel?: string }) {
   const { t } = useTranslation();
-  const [withCover, setWithCover] = useState(false);
+  // The cover by default (#427): the sheet is a keepsake first; leaving it out saves ink.
+  const [withCover, setWithCover] = useState(true);
+  const [format, setFormat] = useState<SheetFormat>('A4');
   const navigate = useNavigate();
   const b = item.book ?? {};
   const started = formatDate(item.progress?.startedAt);
@@ -81,6 +85,14 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
           <Icon name="arrow_back" size={18} color="currentColor" />
           {t('common.back')}
         </button>
+        <Segmented<SheetFormat>
+          options={[
+            { id: 'A4', label: t('sheet.formats.A4') },
+            { id: 'A6', label: t('sheet.formats.A6') },
+          ]}
+          value={format}
+          onChange={setFormat}
+        />
         <label className={styles.toggle}>
           <input type="checkbox" checked={withCover} onChange={(e) => setWithCover(e.target.checked)} />
           {t('sheet.withCover')}
@@ -92,7 +104,14 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
       </div>
       <p className={styles.inkNote}>{t('sheet.inkNote')}</p>
 
-      <article className={styles.sheet} aria-label={t('sheet.title')}>
+      {/* The paper size can only be told to the printer through @page, which no class can
+          scope: the rule follows the format picked. */}
+      <style>{pageRule(format)}</style>
+      <article
+        className={`${styles.sheet} ${format === 'A6' ? styles.a6 : ''}`}
+        aria-label={t('sheet.title')}
+        data-format={format}
+      >
         <header className={styles.header}>
           <span className={styles.kicker}>{t('sheet.title')}</span>
           <span className={styles.brand}>{t('app.name')}</span>
@@ -125,14 +144,15 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
             <p className={styles.review}>{item.review}</p>
           ) : (
             <div className={styles.lines} aria-label={t('sheet.blank')}>
-              {Array.from({ length: BLANK_LINES }, (_, i) => (
+              {Array.from({ length: BLANK_LINES[format] }, (_, i) => (
                 <span key={i} className={styles.line} />
               ))}
             </div>
           )}
         </section>
 
-        {b.synopsis && (
+        {/* A card has no room for the summary: the book itself carries it. */}
+        {b.synopsis && format === 'A4' && (
           <section className={styles.block}>
             <h2 className={styles.blockTitle}>{t('sheet.summary')}</h2>
             <p className={styles.synopsis}>{b.synopsis}</p>
@@ -142,7 +162,7 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
         <section className={styles.block}>
           <h2 className={styles.blockTitle}>{t('sheet.notes')}</h2>
           <div className={styles.lines}>
-            {Array.from({ length: 4 }, (_, i) => (
+            {Array.from({ length: NOTE_LINES[format] }, (_, i) => (
               <span key={i} className={styles.line} />
             ))}
           </div>

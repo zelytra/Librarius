@@ -14,6 +14,34 @@ const { WishlistPage } = await import('./WishlistPage');
 describe('WishlistPage', () => {
   beforeEach(resetAuth);
 
+  /** #424: the server filters on the term, and a search with no match keeps the field. */
+  test('searches the wishlist on the server', async () => {
+    const all = [
+      wishlistItem({ id: 'a', book: { kind: 'MANGA', title: 'Vinland Saga' } }),
+      wishlistItem({ id: 'b', book: { kind: 'BOOK', title: 'Les Furtifs' } }),
+    ];
+    const asked: string[] = [];
+    server.use(http.get('*/api/wishlist', ({ request }) => {
+      const q = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase();
+      asked.push(q);
+      return HttpResponse.json(wishlistPage(all.filter((w) => w.book?.title?.toLowerCase().includes(q))));
+    }));
+    renderWithProviders(<WishlistPage />);
+
+    expect(await screen.findByText('Les Furtifs')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Rechercher dans mes souhaits…'), 'vinland');
+
+    await waitFor(() => {
+      expect(screen.queryByText('Les Furtifs')).not.toBeInTheDocument();
+      expect(screen.getByText('Vinland Saga')).toBeInTheDocument();
+    });
+    expect(asked).toContain('vinland');
+
+    await userEvent.clear(screen.getByLabelText('Rechercher dans mes souhaits…'));
+    await userEvent.type(screen.getByLabelText('Rechercher dans mes souhaits…'), 'zzz');
+    expect(await screen.findByText('Aucun souhait ne correspond à « zzz ».')).toBeInTheDocument();
+  });
+
   test('renders the wishes with their priority and price', async () => {
     wishlistReturns([wishlistItem()]);
     renderWithProviders(<WishlistPage />);
