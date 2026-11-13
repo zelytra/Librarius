@@ -33,8 +33,8 @@ pnpm web:dev            # Vite PWA :5173 (proxies /api → 8080)
 pnpm mobile:build       # builds the web bundle, then `cap sync` into the native shell
 ```
 
-Quality gate — **run before every push** (the e2e journeys run on `main` after a merge, not on
-pull requests; trigger the `e2e` workflow by hand on a branch when a change touches a journey):
+Quality gate — **run before every push** (the e2e journeys no longer run in CI — the workflow was
+removed while red on every merge, #439; run `pnpm e2e` locally when a change touches a journey):
 
 ```bash
 pnpm web:lint && pnpm --filter @librarius/web typecheck && pnpm web:test && pnpm web:build

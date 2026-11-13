@@ -386,6 +386,10 @@ web image — brought up by `e2e/docker-compose.e2e.yml`. It is the only place w
 authentication, the HTTP routing and the database are checked together, which is exactly
 where the regressions that reached production came from.
 
+**Not in CI.** The `e2e` workflow was removed (#439): it had failed on every merge to `main`
+since #403, and a check that is always red teaches people to ignore red checks. The suite is
+run by hand until it is green again and worth reinstating.
+
 ```bash
 pnpm e2e:install     # first run only: Playwright and its browser
 cd e2e && pnpm exec playwright install chromium
