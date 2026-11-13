@@ -341,11 +341,11 @@ class CatalogServiceTest {
         // but the same parsed series and volume: one result, under a canonical title.
         CatalogService service = new CatalogService(List.of(
                 new ListProvider(Kind.BOOK, List.of(
-                        result("BOOK", "One Piece - Édition originale, Tome 1", "Eiichiro Oda",
+                        result("MANGA", "One Piece - Édition originale, Tome 1", "Eiichiro Oda",
                                 "One Piece", 1),
-                        result("BOOK", "One Piece. 1, À l'aube d'une grande aventure",
+                        result("MANGA", "One Piece. 1, À l'aube d'une grande aventure",
                                 "Oda, Eiichirō", "One Piece", 1),
-                        result("BOOK", "One Piece Tome 1 : Romance Dawn", "Eiichirō Oda",
+                        result("MANGA", "One Piece Tome 1 : Romance Dawn", "Eiichirō Oda",
                                 "One Piece", 1)))),
                 passThroughCache());
 
@@ -596,5 +596,100 @@ class CatalogServiceTest {
                 passThroughCache());
 
         assertEquals(5, service.worksOfAuthor(Set.of(Kind.BOOK), "Eiichiro Oda", 40).size());
+    }
+    /** Answers a weak page to the whole-word query and the novel to the prefixed one, recording both. */
+    private static final class TruncatingProvider implements CatalogProvider {
+
+        private final List<CatalogQuery> asked = new java.util.ArrayList<>();
+
+        @Override
+        public String name() {
+            return "truncating";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOK;
+        }
+
+        @Override
+        public boolean searchesByPrefix() {
+            return true;
+        }
+
+        @Override
+        public synchronized List<CatalogResult> search(CatalogQuery query, int limit) {
+            asked.add(query);
+            return query.prefixLastWord()
+                    ? List.of(result("BOOK", "Le nom du vent", "Patrick Rothfuss"))
+                    : List.of(result("BOOK", "Rapport sur les ventes", "Comité"));
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+    }
+
+    /** Counts its searches, and cannot truncate a word. */
+    private static final class CountingProvider implements CatalogProvider {
+
+        private int searches;
+
+        @Override
+        public String name() {
+            return "counting";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.MANGA;
+        }
+
+        @Override
+        public synchronized List<CatalogResult> search(CatalogQuery query, int limit) {
+            searches++;
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+    }
+
+    @Test
+    void retriesAWeakAnswerWithTheLastWordAsAPrefix() {
+        TruncatingProvider truncating = new TruncatingProvider();
+        CountingProvider other = new CountingProvider();
+        List<String> keys = new java.util.ArrayList<>();
+        CatalogCache recordingCache = new CatalogCache() {
+            @Override
+            public synchronized List<CatalogResult> get(Scope scope, String provider, String key,
+                    Supplier<List<CatalogResult>> loader) {
+                keys.add(key);
+                return loader.get();
+            }
+        };
+        CatalogService service = new CatalogService(List.of(truncating, other), recordingCache);
+
+        List<CatalogResult> results = service.search(Set.of(), CatalogQuery.of("le nom du ven"), 10);
+
+        assertEquals("Le nom du vent", results.get(0).title());
+        assertEquals(List.of(false, true), truncating.asked.stream().map(CatalogQuery::prefixLastWord).toList());
+        // Only the providers that can truncate are asked again, and through the cache.
+        assertEquals(1, other.searches);
+        assertEquals(3, keys.size());
+        assertTrue(keys.stream().anyMatch(key -> key.contains("|prefix|")), keys.toString());
+    }
+
+    @Test
+    void doesNotRetryAnAnswerThatAlreadyMatchesTheTitle() {
+        TruncatingProvider truncating = new TruncatingProvider();
+        CatalogService service = new CatalogService(List.of(truncating), passThroughCache());
+
+        service.search(Set.of(Kind.BOOK), CatalogQuery.of("rapport sur les ventes"), 10);
+
+        assertEquals(1, truncating.asked.size());
     }
 }

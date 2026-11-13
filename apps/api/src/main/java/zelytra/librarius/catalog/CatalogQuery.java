@@ -15,7 +15,7 @@ import java.util.stream.Stream;
  * the same search, and would otherwise produce two cache entries for one answer.
  */
 public record CatalogQuery(String text, String author, Integer year, String language,
-        String publisher, String isbn) {
+        String publisher, String isbn, boolean prefixLastWord) {
 
     public CatalogQuery {
         text = trimToNull(text);
@@ -25,9 +25,25 @@ public record CatalogQuery(String text, String author, Integer year, String lang
         isbn = trimToNull(isbn);
     }
 
+    /** The criteria as a reader submits them: every word of the text is a whole word. */
+    public CatalogQuery(String text, String author, Integer year, String language, String publisher,
+            String isbn) {
+        this(text, author, year, language, publisher, isbn, false);
+    }
+
     /** Keyword-only search, the shape the plain search field produces. */
     public static CatalogQuery of(String text) {
         return new CatalogQuery(text, null, null, null, null, null);
+    }
+
+    /**
+     * The same criteria with the last word of the text read as the start of a word ("le nom du
+     * ven" finds "vent"). Never built from a request: {@link CatalogService} asks it of the
+     * providers that support it ({@link CatalogProvider#searchesByPrefix()}) when the whole-word
+     * search found nothing convincing, the reader having likely stopped typing mid-word.
+     */
+    public CatalogQuery withPrefixLastWord() {
+        return new CatalogQuery(text, author, year, language, publisher, isbn, true);
     }
 
     /** No criterion at all: nothing to ask a provider, and nothing to charge to the quota. */
@@ -41,9 +57,12 @@ public record CatalogQuery(String text, String author, Integer year, String lang
      * single field must not share an entry, so every field takes part, separator included.
      */
     public String cacheKey() {
-        return String.join("|", nullToEmpty(text), nullToEmpty(author),
+        String key = String.join("|", nullToEmpty(text), nullToEmpty(author),
                 year == null ? "" : year.toString(),
                 nullToEmpty(language), nullToEmpty(publisher), nullToEmpty(isbn));
+        // Appended rather than always present, so the entries cached before the flag existed
+        // keep their key.
+        return prefixLastWord ? key + "|prefix" : key;
     }
 
     private static String trimToNull(String value) {

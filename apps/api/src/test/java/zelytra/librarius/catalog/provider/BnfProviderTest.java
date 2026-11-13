@@ -5,68 +5,72 @@ import org.junit.jupiter.api.Test;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Checks the CQL the provider builds and the records it reads back, without calling the BnF. */
+/**
+ * Checks the CQL the provider builds and the UNIMARC records it reads back, without calling
+ * the BnF. The fixtures under {@code catalog/bnf} are real answers, recorded with
+ * {@code bib.title adj "<q>"} ({@code .phrase.xml}) and with the all-words query
+ * ({@code .all.xml}).
+ */
 class BnfProviderTest {
 
-    private static final String DUNE = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
-              <srw:numberOfRecords>2</srw:numberOfRecords>
-              <srw:records>
-                <srw:record>
-                  <srw:recordSchema>dublincore</srw:recordSchema>
-                  <srw:recordData>
-                    <dc xmlns="http://purl.org/dc/elements/1.1/">
-                      <title>Dune</title>
-                      <creator>Herbert, Frank (1920-1986). Auteur du texte</creator>
-                      <publisher>Pocket</publisher>
-                      <date>2001</date>
-                      <language>fre</language>
-                      <identifier>http://catalogue.bnf.fr/ark:/12148/cb37652488r</identifier>
-                      <identifier>978-2-266-11624-2 (br.) : 8,90 EUR</identifier>
-                    </dc>
-                  </srw:recordData>
-                </srw:record>
-                <srw:record>
-                  <srw:recordData>
-                    <dc xmlns="http://purl.org/dc/elements/1.1/">
-                      <title>Le messie de Dune</title>
-                      <creator>Herbert, Frank (1920-1986). Auteur du texte</creator>
-                      <date>cop. 1975</date>
-                    </dc>
-                  </srw:recordData>
-                </srw:record>
-              </srw:records>
-            </srw:searchRetrieveResponse>
-            """;
+    private static final List<String> FIXTURES = List.of("le-nom-du-vent", "l-etranger-camus",
+            "les-miserables", "dune", "harry-potter", "one-piece", "blue-lock", "demon-slayer",
+            "blacksad", "victor-hugo");
 
-    /** Captures the request the provider sends, and answers the canned envelope. */
-    private static final class CapturingClient implements BnfClient {
+    private static String fixture(String name) {
+        try (InputStream in = BnfProviderTest.class.getResourceAsStream("/catalog/bnf/" + name + ".xml")) {
+            assertNotNull(in, "missing fixture " + name);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
-        private String query;
+    /** Answers each query with what the function returns, and remembers the queries and page size. */
+    private static final class StubClient implements BnfClient {
 
-        private int maximumRecords;
+        private final List<String> queries = new ArrayList<>();
 
-        private final String answer;
+        private final List<Integer> pageSizes = new ArrayList<>();
 
-        private CapturingClient(String answer) {
+        private final List<String> schemas = new ArrayList<>();
+
+        private final Function<String, Uni<String>> answer;
+
+        private StubClient(Function<String, Uni<String>> answer) {
             this.answer = answer;
         }
 
+        static StubClient always(String xml) {
+            return new StubClient(query -> Uni.createFrom().item(xml));
+        }
+
+        /** The phrase fixture for the {@code adj} query, the all-words one for the other. */
+        static StubClient fixtures(String slug) {
+            return new StubClient(query -> Uni.createFrom().item(
+                    fixture(slug + (query.contains(" adj ") ? ".phrase" : ".all"))));
+        }
+
         @Override
-        public Uni<String> search(String version, String operation, String query,
+        public synchronized Uni<String> search(String version, String operation, String query,
                 String recordSchema, int maximumRecords) {
-            this.query = query;
-            this.maximumRecords = maximumRecords;
-            return Uni.createFrom().item(answer);
+            queries.add(query);
+            pageSizes.add(maximumRecords);
+            schemas.add(recordSchema);
+            return answer.apply(query);
         }
     }
 
@@ -77,233 +81,385 @@ class BnfProviderTest {
         return provider;
     }
 
-    private static String cqlFor(CatalogQuery criteria) {
-        CapturingClient client = new CapturingClient(DUNE);
+    private static List<CatalogResult> phrase(String slug) throws Exception {
+        return BnfProvider.parse(fixture(slug + ".phrase"));
+    }
+
+    private static List<String> queriesFor(CatalogQuery criteria) {
+        StubClient client = StubClient.always("");
         provider(client, Duration.ofSeconds(5)).search(criteria, 20);
-        return client.query;
+        return client.queries;
     }
 
-    private static List<CatalogResult> resultsOf(String xml, CatalogQuery criteria) {
-        return provider(new CapturingClient(xml), Duration.ofSeconds(5)).search(criteria, 20);
+    // --- the requests ---------------------------------------------------------------------
+
+    @Test
+    void asksForUnimarc() {
+        StubClient client = StubClient.always("");
+        provider(client, Duration.ofSeconds(5)).search(CatalogQuery.of("dune"), 20);
+
+        assertEquals(List.of("unimarcxchange", "unimarcxchange"), client.schemas);
     }
 
     @Test
-    void sendsTheFreeTextOnTheTitleAndAuthorIndexes() {
-        assertEquals("(bib.title all \"fourth wing\" or bib.author all \"fourth wing\") and bib.doctype any \"a\"", cqlFor(CatalogQuery.of("fourth wing")));
+    void freeTextRunsThePhraseThenTheAllWordsQuery() {
+        assertEquals(List.of(
+                "bib.title adj \"fourth wing\" and bib.doctype any \"a\"",
+                "(bib.title all \"fourth wing\" or bib.author all \"fourth wing\") and bib.doctype any \"a\""),
+                queriesFor(CatalogQuery.of("fourth wing")));
     }
 
     @Test
-    void joinsEveryAdvancedCriterionWithAnd() {
-        String cql = cqlFor(new CatalogQuery("dune", "Frank Herbert", null, null, "Pocket", null));
+    void appendsTheAdvancedCriteriaToBothQueries() {
+        List<String> queries = queriesFor(new CatalogQuery("dune", "Frank Herbert", null, null, "Pocket", null));
 
-        assertTrue(cql.contains("(bib.title all \"dune\" or bib.author all \"dune\")"), cql);
-        assertTrue(cql.contains("bib.author all \"Frank Herbert\""), cql);
-        assertTrue(cql.contains("bib.publisher all \"Pocket\""), cql);
-        // Three criteria and the printed-text restriction.
-        assertEquals(3, cql.split(" and ").length - 1, cql);
+        assertEquals(2, queries.size());
+        for (String cql : queries) {
+            assertTrue(cql.contains("bib.author all \"Frank Herbert\""), cql);
+            assertTrue(cql.contains("bib.publisher all \"Pocket\""), cql);
+            assertTrue(cql.endsWith(" and bib.doctype any \"a\""), cql);
+        }
+        assertTrue(queries.get(0).startsWith("bib.title adj \"dune\" and "), queries.get(0));
+        assertTrue(queries.get(1).startsWith("(bib.title all \"dune\" or bib.author all \"dune\") and "),
+                queries.get(1));
     }
 
     @Test
-    void searchesTheIsbnOnItsOwnIndex() {
-        assertEquals("bib.isbn all \"9782266116242\" and bib.doctype any \"a\"",
-                cqlFor(new CatalogQuery(null, null, null, null, null, "9782266116242")));
+    void aPrefixSearchIsOneTruncatedAllWordsQuery() {
+        assertEquals(List.of("bib.title all \"le nom du ven*\" and bib.doctype any \"a\""),
+                BnfProvider.cqlQueries(CatalogQuery.of("le nom du ven").withPrefixLastWord()));
+    }
+
+    @Test
+    void anIsbnSearchIsASingleQuery() {
+        assertEquals(List.of("bib.isbn all \"9782266116242\" and bib.doctype any \"a\""),
+                queriesFor(new CatalogQuery(null, null, null, null, null, "9782266116242")));
+    }
+
+    @Test
+    void criteriaWithoutFreeTextAreASingleQuery() {
+        assertEquals(List.of("bib.author all \"Frank Herbert\" and bib.doctype any \"a\""),
+                queriesFor(new CatalogQuery(null, "Frank Herbert", null, null, null, null)));
     }
 
     @Test
     void mapsTheLanguageToItsMarcCode() {
         // The BnF indexes languages as MARC codes; the client speaks ISO 639-1.
-        assertEquals("bib.language all \"fre\" and bib.doctype any \"a\"",
-                cqlFor(new CatalogQuery(null, null, null, "fr", null, null)));
+        assertEquals(List.of("bib.language all \"fre\" and bib.doctype any \"a\""),
+                queriesFor(new CatalogQuery(null, null, null, "fr", null, null)));
         // Already a MARC code: passed through rather than dropped.
-        assertEquals("bib.language all \"jpn\" and bib.doctype any \"a\"",
-                cqlFor(new CatalogQuery(null, null, null, "jpn", null, null)));
+        assertEquals(List.of("bib.language all \"jpn\" and bib.doctype any \"a\""),
+                queriesFor(new CatalogQuery(null, null, null, "jpn", null, null)));
     }
 
     @Test
     void dropsTheQuotesTypedByTheUser() {
         // An unbalanced quote would make the BnF answer a diagnostic instead of records.
-        String cql = cqlFor(new CatalogQuery(null, "Herbert\" or", null, null, null, null));
+        List<String> queries = queriesFor(new CatalogQuery(null, "Herbert\" or", null, null, null, null));
 
-        assertEquals("bib.author all \"Herbert or\" and bib.doctype any \"a\"", cql);
-        assertFalse(cql.contains("\"\""), cql);
+        assertEquals(List.of("bib.author all \"Herbert or\" and bib.doctype any \"a\""), queries);
+        assertFalse(queries.get(0).contains("\"\""), queries.get(0));
+    }
+
+    @Test
+    void dropsTheReadersVolumeWordsFromTheText() {
+        // A BnF title never says "tome": the number is a field of its own.
+        assertTrue(queriesFor(CatalogQuery.of("one piece tome 56")).get(0)
+                .startsWith("bib.title adj \"one piece 56\""));
     }
 
     @Test
     void doesNotCallTheBnfForAYearOnItsOwn() {
         // There is nothing to search for: every book printed that year is not an answer.
-        CapturingClient client = new CapturingClient(DUNE);
+        StubClient client = StubClient.always("");
 
         assertTrue(provider(client, Duration.ofSeconds(5))
                 .search(new CatalogQuery(null, null, 1965, null, null, null), 20).isEmpty());
-        assertNull(client.query, "no criterion the BnF can index, so no call");
-    }
-
-    @Test
-    void readsTheDublinCoreRecord() {
-        CatalogResult dune = resultsOf(DUNE, CatalogQuery.of("dune")).get(0);
-
-        assertEquals("BOOK", dune.kind());
-        assertEquals("Dune", dune.title());
-        // The authority heading is put back in reading order, so that the same novel found
-        // through Open Library ("Frank Herbert") merges with this one instead of being listed
-        // twice.
-        assertEquals("Frank Herbert", dune.authors());
-        assertEquals("Pocket", dune.publisher());
-        assertEquals(2001, dune.year());
-        assertEquals("fre", dune.language());
-        assertEquals("bnf", dune.provider());
-    }
-
-    @Test
-    void picksTheIsbnOutOfTheIdentifierSentence() {
-        // "978-2-266-11624-2 (br.) : 8,90 EUR" — the price must not become part of the number.
-        assertEquals("9782266116242", resultsOf(DUNE, CatalogQuery.of("dune")).get(0).isbn13());
-    }
-
-    @Test
-    void keepsTheArkAsTheProviderReference() {
-        assertEquals("ark:/12148/cb37652488r",
-                resultsOf(DUNE, CatalogQuery.of("dune")).get(0).providerRef());
-    }
-
-    @Test
-    void readsTheYearOutOfAWordedDate() {
-        // Dublin Core dates are not years: "cop. 1975", "DL 2001".
-        assertEquals(1975, resultsOf(DUNE, CatalogQuery.of("dune")).get(1).year());
-    }
-
-    /**
-     * A record copied from the live API, punctuation and repeats included — the shape the
-     * fixture above is idealised from. Everything asserted against it was observed in an
-     * actual answer to {@code bib.anywhere all "dune herbert"}.
-     */
-    private static final String LIVE_SHAPE = """
-            <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
-              <srw:records><srw:record>
-                <srw:recordSchema>dc</srw:recordSchema>
-                <srw:recordPacking>xml</srw:recordPacking>
-                <srw:recordData>
-                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
-                             xmlns:dc="http://purl.org/dc/elements/1.1/">
-                    <dc:identifier>http://catalogue.bnf.fr/ark:/12148/cb371048193</dc:identifier>
-                    <dc:title>Dune / Frank Herbert ; traduit par Michel Demuth</dc:title>
-                    <dc:creator>Herbert, Frank (1920-1986). Auteur du texte</dc:creator>
-                    <dc:creator>Herbert, Frank (1920-1986). Auteur du texte</dc:creator>
-                    <dc:contributor>Demuth, Michel (1939-2006). Traducteur</dc:contributor>
-                    <dc:publisher>Éd. France loisirs (Paris)</dc:publisher>
-                    <dc:date>1999</dc:date>
-                    <dc:identifier>ISBN 9782266116242</dc:identifier>
-                    <dc:language>fre</dc:language>
-                  </oai_dc:dc>
-                </srw:recordData>
-              </srw:record></srw:records>
-            </srw:searchRetrieveResponse>
-            """;
-
-    @Test
-    void dropsTheStatementOfResponsibilityFromTheTitle() {
-        // Every BnF title is a full ISBD statement. Left whole, "Dune / Frank Herbert ;
-        // traduit par Michel Demuth" would never merge with Open Library's "Dune", and the
-        // result tile would show a paragraph instead of a title.
-        assertEquals("Dune", resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0).title());
-    }
-
-    @Test
-    void namesARepeatedCreatorOnlyOnce() {
-        // The BnF lists an author once per role they filled. "Frank Herbert, Frank Herbert"
-        // would match nothing on the aggregation key and read as a bug.
-        assertEquals("Frank Herbert",
-                resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0).authors());
-    }
-
-    @Test
-    void readsTheIsbnOutOfTheLivePrefixedForm() {
-        // The live catalogue writes "ISBN 9782266116242", not a hyphenated number.
-        CatalogResult result = resultsOf(LIVE_SHAPE, CatalogQuery.of("dune")).get(0);
-
-        assertEquals("9782266116242", result.isbn13());
-        assertEquals("ark:/12148/cb371048193", result.providerRef());
-    }
-
-    @Test
-    void doesNotMistakeAnArkForAnIsbn() {
-        // "ark:/12148/cb11934534t" strips down to thirteen digits, exactly an ISBN-13's
-        // length. Only the 978/979 prefix tells the two apart, and every BnF record carries
-        // its ark, so getting this wrong would put a call number in every result's isbn13.
-        String xml = """
-                <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
-                  <srw:records><srw:record><srw:recordData>
-                    <dc xmlns="http://purl.org/dc/elements/1.1/">
-                      <title>Dune</title>
-                      <identifier>http://catalogue.bnf.fr/ark:/12148/cb11934534t</identifier>
-                    </dc>
-                  </srw:recordData></srw:record></srw:records>
-                </srw:searchRetrieveResponse>
-                """;
-
-        CatalogResult result = resultsOf(xml, CatalogQuery.of("dune")).get(0);
-
-        assertNull(result.isbn13());
-        assertEquals("ark:/12148/cb11934534t", result.providerRef());
-    }
-
-    @Test
-    void filtersTheYearOnTheRecordsThemselves() {
-        List<CatalogResult> results =
-                resultsOf(DUNE, new CatalogQuery("dune", null, 1975, null, null, null));
-
-        assertEquals(1, results.size());
-        assertEquals("Le messie de Dune", results.get(0).title());
+        assertTrue(client.queries.isEmpty(), "no criterion the BnF can index, so no call");
     }
 
     @Test
     void asksForAFullPageWhenTheYearOrTheRankingNeedsOne() {
-        CapturingClient client = new CapturingClient(DUNE);
+        StubClient client = StubClient.always("");
         BnfProvider provider = provider(client, Duration.ofSeconds(5));
 
         provider.search(new CatalogQuery(null, "Frank Herbert", null, null, null, null), 5);
-        assertEquals(5, client.maximumRecords, "nothing to filter or rank: ask for what is wanted");
+        assertEquals(5, client.pageSizes.get(0), "nothing to filter or rank: ask for what is wanted");
 
+        client.pageSizes.clear();
         provider.search(CatalogQuery.of("dune"), 5);
-        assertTrue(client.maximumRecords > 5, "free text is ranked downstream: a full page");
+        assertTrue(client.pageSizes.get(0) > 5, "free text is ranked downstream: a full page");
 
-        provider.search(new CatalogQuery("dune", null, 1975, null, null, null), 5);
-        assertTrue(client.maximumRecords > 5, "a locally filtered year needs a page to filter");
+        client.pageSizes.clear();
+        provider.search(new CatalogQuery(null, "Frank Herbert", 1975, null, null, null), 5);
+        assertTrue(client.pageSizes.get(0) > 5, "a locally filtered year needs a page to filter");
+    }
+
+    // --- Le nom du vent -------------------------------------------------------------------
+
+    @Test
+    void readsTheEditionsOfLeNomDuVent() throws Exception {
+        List<CatalogResult> results = phrase("le-nom-du-vent");
+
+        assertEquals(6, results.size());
+        for (CatalogResult result : results) {
+            assertEquals("Le nom du vent", result.title());
+            // The translator, Colette Carrière, is not an author: she is 702 $4 730. The
+            // illustrator of the anniversary edition (440) follows the author.
+            assertTrue(result.authors().startsWith("Patrick Rothfuss"), result.authors());
+            assertFalse(result.authors().contains("Carrière"), result.authors());
+            assertEquals("Chronique du tueur de roi", result.seriesTitle());
+            assertEquals(1, result.volumeNumber());
+            assertNotNull(result.pageCount());
+            assertEquals("BOOK", result.kind());
+            assertEquals("bnf", result.provider());
+            assertTrue(result.providerRef().startsWith("ark:/12148/"), result.providerRef());
+        }
     }
 
     @Test
-    void ignoresARecordWithoutATitle() {
-        String xml = """
-                <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
-                  <srw:records>
-                    <srw:record><srw:recordData>
-                      <dc xmlns="http://purl.org/dc/elements/1.1/"><date>1965</date></dc>
-                    </srw:recordData></srw:record>
-                  </srw:records>
-                </srw:searchRetrieveResponse>
-                """;
+    void emitsTheRelativeCoverOnlyWhenTheRecordHasAFrontCover() throws Exception {
+        List<CatalogResult> results = phrase("le-nom-du-vent");
 
-        assertTrue(resultsOf(xml, CatalogQuery.of("dune")).isEmpty());
+        CatalogResult anniversary = byRef(results, "ark:/12148/cb458523524");
+        assertEquals("/api/covers/bnf/cb458523524", anniversary.coverUrl());
+        assertEquals("Patrick Rothfuss, Marc Simonetti", anniversary.authors());
+        assertEquals(827, anniversary.pageCount());
+        assertEquals(2019, anniversary.year());
+        assertEquals("Bragelonne", anniversary.publisher());
+        assertEquals("Patrick Rothfuss", byRef(results, "ark:/12148/cb43664443h").authors());
+        assertEquals("fre", anniversary.language());
+
+        // The Grand livre du mois edition has no 856: no cover, and none guessed.
+        assertNull(byRef(results, "ark:/12148/cb43664443h").coverUrl());
     }
+
+    @Test
+    void readsTheIdentifiersOfARecord() throws Exception {
+        CatalogResult result = byRef(phrase("le-nom-du-vent"), "ark:/12148/cb43664443h");
+
+        // 010 holds the hyphenated ISBN, 073 the EAN: both end as one ISBN-13 without hyphens.
+        assertEquals("9782286085117", result.isbn13());
+        assertEquals(781, result.pageCount());
+        assertEquals(2013, result.year());
+        assertEquals("le Grand livre du mois", result.publisher());
+    }
+
+    // --- manga and comics -----------------------------------------------------------------
+
+    @Test
+    void readsBlueLockAsNumberedManga() throws Exception {
+        List<CatalogResult> results = phrase("blue-lock");
+
+        assertFalse(results.isEmpty());
+        for (CatalogResult result : results) {
+            assertTrue(result.title().matches("Blue [Ll]ock - Tome \\d+"), result.title());
+            assertEquals("MANGA", result.kind(), result.title());
+            assertNotNull(result.volumeNumber(), result.title());
+            assertTrue(result.title().endsWith("Tome " + result.volumeNumber()), result.title());
+            assertNotNull(result.seriesTitle());
+            assertFalse(result.authors().contains("Lebrun"), "translator credited: " + result.authors());
+        }
+        CatalogResult volume31 = byRef(results, "ark:/12148/cb48728614g");
+        assertEquals("Blue Lock - Tome 31", volume31.title());
+        assertEquals("Blue Lock", volume31.seriesTitle());
+        assertEquals(31, volume31.volumeNumber());
+        assertEquals(192, volume31.pageCount());
+        assertEquals("Pika éditions", volume31.publisher());
+        assertEquals(2026, volume31.year());
+        assertEquals("/api/covers/bnf/cb48728614g", volume31.coverUrl());
+    }
+
+    @Test
+    void creditsTheScriptwriterThenTheIllustratorOfAManga() throws Exception {
+        // 700 $4 070 Kaneshiro, 702 $4 730 Lebrun (translator), 440 Nomura, 410 Berberian.
+        CatalogResult volume17 = byRef(phrase("blue-lock"), "ark:/12148/cb473800118");
+
+        assertEquals("Muneyuki Kaneshiro, Yūsuke Nomura", volume17.authors());
+    }
+
+    @Test
+    void readsOnePieceVolumesAsMangaOrComicNeverBook() throws Exception {
+        List<CatalogResult> numbered = phrase("one-piece").stream()
+                .filter(result -> result.volumeNumber() != null)
+                .toList();
+
+        assertFalse(numbered.isEmpty());
+        for (CatalogResult result : numbered) {
+            assertTrue(result.kind().equals("MANGA") || result.kind().equals("COMIC"), result.title());
+        }
+        CatalogResult volume56 = byRef(numbered, "ark:/12148/cb43407362n");
+        assertEquals("One Piece - Tome 56", volume56.title());
+        assertEquals(56, volume56.volumeNumber());
+        assertEquals("Eiichirō Oda", volume56.authors());
+        assertEquals("One piece", volume56.seriesTitle());
+        CatalogResult volume112 = byRef(numbered, "ark:/12148/cb48756723v");
+        assertEquals("One Piece - Tome 112", volume112.title());
+        assertEquals(112, volume112.volumeNumber());
+        assertEquals("MANGA", volume112.kind());
+    }
+
+    @Test
+    void dropsTheFilmsAndGamesTheIndexLetsThrough() throws Exception {
+        // "One piece Z" is catalogued as "Multimédia multisupport": a DVD box set, not a book.
+        assertTrue(phrase("one-piece").stream().noneMatch(result -> result.title().startsWith("One piece Z")));
+    }
+
+    @Test
+    void readsBlacksadAsAComicCreditingItsAuthors() throws Exception {
+        List<CatalogResult> results = phrase("blacksad");
+
+        assertFalse(results.isEmpty());
+        for (CatalogResult result : results) {
+            assertEquals("COMIC", result.kind(), result.title());
+            assertTrue(result.authors().contains("Juan Díaz Canales"), result.authors());
+            assertTrue(result.authors().contains("Juanjo Guarnido"), result.authors());
+            assertFalse(result.authors().contains("Ruiz"), "translator credited: " + result.authors());
+        }
+        // Part number and part name: "[5]" is a plain 5, and $i follows the number.
+        CatalogResult amarillo = byRef(results, "ark:/12148/cb437848703");
+        assertEquals("Blacksad - Tome 5 : Amarillo", amarillo.title());
+        assertEquals(5, amarillo.volumeNumber());
+        assertEquals("Blacksad", amarillo.seriesTitle());
+        // A part carried by the series statement only: the title proper stays alone.
+        CatalogResult standalone = byRef(results, "ark:/12148/cb437056379");
+        assertEquals("Amarillo", standalone.title());
+        assertEquals("Blacksad", standalone.seriesTitle());
+        assertEquals(5, standalone.volumeNumber());
+    }
+
+    @Test
+    void doesNotTakeAPublisherCollectionForASeries() throws Exception {
+        // 225 "Pika Shônen" carries no volume: it is a shelf, and the series is the title.
+        CatalogResult result = byRef(phrase("blue-lock"), "ark:/12148/cb48862223w");
+
+        assertEquals("Blue Lock", result.seriesTitle());
+        assertEquals(35, result.volumeNumber());
+    }
+
+    // --- every fixture --------------------------------------------------------------------
+
+    @Test
+    void neverGuessesACoverFromOpenLibrary() throws Exception {
+        for (String slug : FIXTURES) {
+            for (String kind : List.of("phrase", "all")) {
+                for (CatalogResult result : BnfProvider.parse(fixture(slug + "." + kind))) {
+                    String cover = result.coverUrl();
+                    assertTrue(cover == null || cover.startsWith("/api/covers/bnf/cb"), slug + ": " + cover);
+                }
+            }
+        }
+    }
+
+    @Test
+    void everyFixtureYieldsCleanResults() throws Exception {
+        for (String slug : FIXTURES) {
+            for (String kind : List.of("phrase", "all")) {
+                List<CatalogResult> results = BnfProvider.parse(fixture(slug + "." + kind));
+                assertFalse(results.isEmpty(), slug + "." + kind);
+                for (CatalogResult result : results) {
+                    String where = slug + "." + kind + ": " + result.title();
+                    assertEquals(result.title().strip().replaceAll("\\s+", " "), result.title(), where);
+                    assertFalse(result.title().matches(".*[/:;,]$"), where);
+                    assertFalse(result.title().contains("L' "), where);
+                    assertTrue(result.isbn13() == null || result.isbn13().matches("97[89]\\d{10}"), where);
+                    assertTrue(result.authors() == null || !result.authors().toLowerCase().contains("traduct"), where);
+                }
+            }
+        }
+    }
+
+    // --- merging --------------------------------------------------------------------------
+
+    @Test
+    void putsThePhraseResultsFirstAndListsAnArkOnce() {
+        List<CatalogResult> results = provider(StubClient.fixtures("le-nom-du-vent"), Duration.ofSeconds(5))
+                .search(CatalogQuery.of("le nom du vent"), 20);
+
+        List<String> refs = results.stream().map(CatalogResult::providerRef).toList();
+        assertEquals(refs.size(), refs.stream().distinct().count(), "an ark appears twice: " + refs);
+
+        List<String> phraseRefs = parsedRefs("le-nom-du-vent.phrase");
+        assertEquals(phraseRefs, refs.subList(0, phraseRefs.size()), "the exact phrase comes first");
+        List<String> allRefs = parsedRefs("le-nom-du-vent.all");
+        assertTrue(allRefs.stream().anyMatch(ref -> !phraseRefs.contains(ref)), "fixture adds nothing to merge");
+        assertTrue(refs.containsAll(allRefs), "an all-words result was lost");
+    }
+
+    @Test
+    void keepsTheAllWordsResultsWhenThePhraseCallFails() {
+        StubClient client = new StubClient(query -> query.contains(" adj ")
+                ? Uni.createFrom().failure(new IllegalStateException("connection reset"))
+                : Uni.createFrom().item(fixture("le-nom-du-vent.all")));
+
+        List<CatalogResult> results = provider(client, Duration.ofSeconds(5))
+                .search(CatalogQuery.of("le nom du vent"), 20);
+
+        assertEquals(parsedRefs("le-nom-du-vent.all"), results.stream().map(CatalogResult::providerRef).toList());
+    }
+
+    @Test
+    void keepsThePhraseResultsWhenTheAllWordsAnswerIsGarbage() {
+        StubClient client = new StubClient(query -> Uni.createFrom().item(query.contains(" adj ")
+                ? fixture("le-nom-du-vent.phrase") : "<html>502 Bad Gateway</html>"));
+
+        List<CatalogResult> results = provider(client, Duration.ofSeconds(5))
+                .search(CatalogQuery.of("le nom du vent"), 20);
+
+        assertEquals(parsedRefs("le-nom-du-vent.phrase"), results.stream().map(CatalogResult::providerRef).toList());
+    }
+
+    @Test
+    void keepsThePhraseResultsWhenTheAllWordsCallNeverAnswers() {
+        StubClient client = new StubClient(query -> query.contains(" adj ")
+                ? Uni.createFrom().item(fixture("le-nom-du-vent.phrase"))
+                : Uni.createFrom().nothing());
+
+        long start = System.nanoTime();
+        List<CatalogResult> results = provider(client, Duration.ofMillis(300))
+                .search(CatalogQuery.of("le nom du vent"), 20);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertEquals(parsedRefs("le-nom-du-vent.phrase"), results.stream().map(CatalogResult::providerRef).toList());
+        assertTrue(elapsedMs < 5_000, "took " + elapsedMs + "ms");
+    }
+
+    @Test
+    void filtersTheYearOnTheRecordsThemselves() {
+        List<CatalogResult> results = provider(StubClient.fixtures("le-nom-du-vent"), Duration.ofSeconds(5))
+                .search(new CatalogQuery("le nom du vent", null, 2019, null, null, null), 20);
+
+        assertFalse(results.isEmpty());
+        assertTrue(results.stream().allMatch(result -> Integer.valueOf(2019).equals(result.year())));
+    }
+
+    // --- failures -------------------------------------------------------------------------
 
     @Test
     void degradesToNoResultWhenTheAnswerIsNotTheExpectedXml() {
         // A gateway error page instead of an SRU envelope must not reach CatalogService as an
         // exception: the aggregate has to go on with the other book provider's results.
-        assertTrue(resultsOf("<html><body>502 Bad Gateway</body></html>",
-                CatalogQuery.of("dune")).isEmpty());
-        assertTrue(resultsOf("not xml at all", CatalogQuery.of("dune")).isEmpty());
-        assertTrue(resultsOf("", CatalogQuery.of("dune")).isEmpty());
+        for (String answer : List.of("<html><body>502 Bad Gateway</body></html>", "not xml at all", "")) {
+            assertTrue(provider(StubClient.always(answer), Duration.ofSeconds(5))
+                    .search(CatalogQuery.of("dune"), 20).isEmpty());
+        }
     }
 
     @Test
     void degradesToNoResultWhenTheProviderIsUnreachable() {
-        BnfProvider provider = provider(
-                (version, operation, query, schema, max) ->
-                        Uni.createFrom().failure(new IllegalStateException("connection refused")),
-                Duration.ofSeconds(5));
+        StubClient client = new StubClient(
+                query -> Uni.createFrom().failure(new IllegalStateException("connection refused")));
 
-        assertTrue(provider.search(CatalogQuery.of("dune"), 20).isEmpty());
+        assertTrue(provider(client, Duration.ofSeconds(5)).search(CatalogQuery.of("dune"), 20).isEmpty());
+    }
+
+    @Test
+    void degradesToNoResultWhenTheClientThrows() {
+        BnfClient client = (version, operation, query, schema, max) -> {
+            throw new IllegalStateException("no connection available");
+        };
+
+        assertTrue(provider(client, Duration.ofSeconds(5)).search(CatalogQuery.of("dune"), 20).isEmpty());
     }
 
     @Test
@@ -330,81 +486,114 @@ class BnfProviderTest {
                 <!DOCTYPE lolz [<!ENTITY lol "lol">]>
                 <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
                   <srw:records><srw:record><srw:recordData>
-                    <dc xmlns="http://purl.org/dc/elements/1.1/"><title>&lol;</title></dc>
+                    <mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" id="ark:/12148/cb1">
+                      <mxc:datafield tag="200"><mxc:subfield code="a">&lol;</mxc:subfield></mxc:datafield>
+                    </mxc:record>
                   </srw:recordData></srw:record></srw:records>
                 </srw:searchRetrieveResponse>
                 """;
 
-        assertTrue(resultsOf(bomb, CatalogQuery.of("dune")).isEmpty());
+        assertTrue(provider(StubClient.always(bomb), Duration.ofSeconds(5))
+                .search(CatalogQuery.of("dune"), 20).isEmpty());
     }
 
-    @Test
-    void putsAnAuthorityHeadingBackInReadingOrder() {
-        assertEquals("Frank Herbert",
-                BnfProvider.normalizeCreator("Herbert, Frank (1920-1986). Auteur du texte"));
-        // No life dates to cut at: the role is the trailing plain phrase.
-        assertEquals("Rebecca Yarros",
-                BnfProvider.normalizeCreator("Yarros, Rebecca. Auteur du texte"));
-        // Initials end in a period too, and must not be mistaken for a role.
-        assertEquals("J. R. R. Tolkien", BnfProvider.normalizeCreator("Tolkien, J. R. R."));
-        // A single-element name has nothing to swap.
-        assertEquals("Hergé", BnfProvider.normalizeCreator("Hergé (1907-1983)"));
-    }
+    // --- small cases ----------------------------------------------------------------------
 
-    @Test
-    void restrictsTheSearchToPrintedText() {
-        assertTrue(cqlFor(CatalogQuery.of("one piece")).endsWith(" and bib.doctype any \"a\""));
-    }
-
-    @Test
-    void dropsTheGamesAndFilmsTheIndexStillLetsThrough() throws Exception {
-        // Live shapes: a box set of the film is "multimédia multisupport", a game "jeu vidéo".
-        String xml = "<srw:searchRetrieveResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\""
-                + " xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><srw:records>"
-                + record("One Piece. 56 / Eiichiro Oda", "texte imprimé")
-                + record("One piece Z (Éd. limitée) Eiichirô Oda, auteur adapté", "multimédia multisupport")
-                + record("One piece mansion / Capcom, développement", "jeu vidéo")
+    private static String record(String ark, String fields) {
+        return "<srw:searchRetrieveResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\"><srw:records>"
+                + "<srw:record><srw:recordData><mxc:record xmlns:mxc=\"info:lc/xmlns/marcxchange-v2\" id=\""
+                + ark + "\">" + fields + "</mxc:record></srw:recordData></srw:record>"
                 + "</srw:records></srw:searchRetrieveResponse>";
-
-        List<CatalogResult> results = BnfProvider.parse(xml);
-
-        assertEquals(1, results.size());
-        assertEquals("One Piece. 56", results.get(0).title());
-        assertEquals("One Piece", results.get(0).seriesTitle());
-        assertEquals(56, results.get(0).volumeNumber());
     }
 
-    private static String record(String title, String type) {
-        return "<srw:record><srw:recordData><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\">"
-                + "<dc:title>" + title + "</dc:title><dc:type xml:lang=\"fre\">" + type
-                + "</dc:type></oai_dc:dc></srw:recordData></srw:record>";
+    private static String field(String tag, String... subfields) {
+        StringBuilder xml = new StringBuilder("<mxc:datafield tag=\"" + tag + "\">");
+        for (int i = 0; i < subfields.length; i += 2) {
+            xml.append("<mxc:subfield code=\"").append(subfields[i]).append("\">")
+                    .append(subfields[i + 1]).append("</mxc:subfield>");
+        }
+        return xml.append("</mxc:datafield>").toString();
     }
 
     @Test
-    void cutsTheEditionStatementAndTheFormSubtitleOffATitle() {
-        // Live BnF titles that carry no " / " before their authorship.
-        assertEquals("La horde du contrevent",
-                BnfProvider.isbdTitle("La horde du contrevent : roman (Nouvelle éd.) Alain Damasio"));
-        assertEquals("Le cycle de Dune",
-                BnfProvider.isbdTitle("Le cycle de Dune (Trad. revue et corrigée) Frank Herbert"));
-        assertEquals("One Piece 113 : coffre au trésor",
-                BnfProvider.isbdTitle("One Piece 113 : coffre au trésor (Édition originale) "));
-        // A real subtitle, and brackets that are no edition statement, stay.
-        assertEquals("Astérix : le tour de Gaule",
-                BnfProvider.isbdTitle("Astérix : le tour de Gaule / Goscinny"));
-        assertEquals("Les fleurs du mal (1857)", BnfProvider.isbdTitle("Les fleurs du mal (1857)"));
+    void cleansTheTitle() throws Exception {
+        String xml = record("ark:/12148/cb1", field("200", "a", "L'  Etranger /", "h", "T.. 3",
+                "i", "Les &amp; autres :"));
+
+        CatalogResult result = BnfProvider.parse(xml).get(0);
+
+        // Elision spacing, trailing ISBD punctuation, entities and the part number.
+        assertEquals("L'Etranger - Tome 3 : Les & autres", result.title());
+        assertEquals(3, result.volumeNumber());
     }
 
     @Test
-    void keepsARecordThatCarriesNoType() {
-        assertTrue(BnfProvider.isPrintedText(List.of()));
-        assertTrue(BnfProvider.isPrintedText(List.of("texte imprimé", "printed text", "text")));
-        assertFalse(BnfProvider.isPrintedText(List.of("publication en série imprimée")));
+    void keepsAnUnnumberedPartAsItIsWritten() throws Exception {
+        CatalogResult result = BnfProvider.parse(record("ark:/12148/cb1",
+                field("200", "a", "Dune", "h", "Partie spéciale"))).get(0);
+
+        assertEquals("Dune - Partie spéciale", result.title());
+        assertNull(result.volumeNumber());
     }
 
     @Test
-    void leavesTheVolumeMarkerOutOfTheTitleSearch() {
-        assertTrue(cqlFor(CatalogQuery.of("one piece tome 1"))
-                .startsWith("(bib.title all \"one piece 1\" or"), cqlFor(CatalogQuery.of("one piece tome 1")));
+    void keepsPersonsWithoutRelatorCodesExceptNamedTranslators() throws Exception {
+        String xml = record("ark:/12148/cb1", field("200", "a", "Dune")
+                + field("700", "a", "Herbert", "b", "Frank")
+                + field("702", "a", "Demuth", "b", "Michel", "c", "Traducteur"));
+
+        assertEquals("Frank Herbert", BnfProvider.parse(xml).get(0).authors());
+    }
+
+    @Test
+    void readsAnOldRecordsIsbn10AsIsbn13() throws Exception {
+        String xml = record("ark:/12148/cb1", field("200", "a", "Dune") + field("010", "a", "2-7242-1298-3"));
+
+        assertEquals("9782724212983", BnfProvider.parse(xml).get(0).isbn13());
+    }
+
+    @Test
+    void readsTheYearOutOfAWordedDateAndLeavesAnEstimatedPageCountOut() throws Exception {
+        String xml = record("ark:/12148/cb1", field("200", "a", "Dune")
+                + field("210", "c", "Pocket", "d", "cop. 1975-")
+                + field("215", "a", "1 vol. (non paginé [ca 208] p.)"));
+
+        CatalogResult result = BnfProvider.parse(xml).get(0);
+
+        assertEquals(1975, result.year());
+        assertNull(result.pageCount());
+    }
+
+    @Test
+    void readsAMangaFromItsPublisherAndFromAnAccentedCollection() throws Exception {
+        assertEquals("MANGA", BnfProvider.parse(record("ark:/12148/cb1",
+                field("200", "a", "Berserk") + field("214", "c", "Glénat manga"))).get(0).kind());
+        assertEquals("MANGA", BnfProvider.parse(record("ark:/12148/cb1",
+                field("200", "a", "Berserk") + field("225", "a", "Collection Shōnen"))).get(0).kind());
+        // An original title and a Japanese author do not make a manga.
+        assertEquals("BOOK", BnfProvider.parse(record("ark:/12148/cb1",
+                field("200", "a", "Kafka sur le rivage") + field("454", "t", "Umibe no Kafuka")
+                        + field("700", "a", "Murakami", "b", "Haruki", "4", "070"))).get(0).kind());
+    }
+
+    @Test
+    void ignoresARecordWithoutATitle() throws Exception {
+        assertTrue(BnfProvider.parse(record("ark:/12148/cb1", field("210", "d", "1965"))).isEmpty());
+    }
+
+    private static CatalogResult byRef(List<CatalogResult> results, String ark) {
+        return results.stream()
+                .filter(result -> ark.equals(result.providerRef()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(ark + " not in " + results.stream()
+                        .map(CatalogResult::providerRef).toList()));
+    }
+
+    private static List<String> parsedRefs(String fixtureName) {
+        try {
+            return BnfProvider.parse(fixture(fixtureName)).stream().map(CatalogResult::providerRef).toList();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

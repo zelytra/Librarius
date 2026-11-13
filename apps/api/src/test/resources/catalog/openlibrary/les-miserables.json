@@ -1,0 +1,2271 @@
+{
+ "numFound": 1525,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 1525,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "les misérables",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 12721865,
+   "edition_count": 526,
+   "first_publish_year": 1862,
+   "isbn": [
+    "9781148171814",
+    "9781418540821",
+    "2070409236",
+    "9785553660628",
+    "9781616003555",
+    "8497936175",
+    "9781141972999",
+    "9781458710710",
+    "9781667302799",
+    "1469260565",
+    "842333418X",
+    "1314732714",
+    "9781590071243",
+    "1404319492",
+    "9781147583427",
+    "9780785939337",
+    "9780004215532",
+    "9788408054023",
+    "9782070409235",
+    "9781788283014",
+    "1496442970",
+    "0563496029",
+    "9780679643333",
+    "1116549425",
+    "0594082188",
+    "9781147798586",
+    "0140444300",
+    "1570190658",
+    "0665898878",
+    "1404319522",
+    "9782080701275",
+    "9780972859844",
+    "9781613820254",
+    "067654343X",
+    "9781144936622",
+    "1404319476",
+    "9780340717578",
+    "9780812974263",
+    "9781115280761",
+    "9788417928957",
+    "9789875500730",
+    "9780451419439",
+    "0784806845",
+    "9780671478889",
+    "9782070102648",
+    "0375403175",
+    "2013225830",
+    "0449300021",
+    "1481003542",
+    "0780791630",
+    "9789584301994",
+    "8415999259",
+    "9781926809397",
+    "9780594082187",
+    "9780606028363",
+    "1593080662",
+    "9780140444032",
+    "9781479313860",
+    "1434103617",
+    "0451520823",
+    "9781290489324",
+    "1906814171",
+    "0679641556",
+    "0453007856",
+    "9780453005791",
+    "9781467797894",
+    "9781600838088",
+    "9781469266473",
+    "0849963257",
+    "9781116389418",
+    "039460489X",
+    "9781578400171",
+    "1115280767",
+    "066589886X",
+    "9626346051",
+    "9780681331556",
+    "0871292874",
+    "2013225555",
+    "9782845950108",
+    "1400132754",
+    "1419229702",
+    "9780606215602",
+    "9781400152759",
+    "9780784806845",
+    "1912464160",
+    "9781540672414",
+    "9788423334186",
+    "9780785937579",
+    "1559352736",
+    "8484032922",
+    "2040160345",
+    "9781578151172",
+    "0679643338",
+    "9787511704535",
+    "9780217497985",
+    "9781783224180",
+    "9781732968202",
+    "9798563388291",
+    "9781535027175",
+    "1404319514",
+    "9706436197",
+    "9781912464166",
+    "0877207321",
+    "0606028366",
+    "0449911675",
+    "1587263300",
+    "1117691306",
+    "9781561799701",
+    "9780665898884",
+    "0449300579",
+    "0866852638",
+    "8544000002",
+    "9781400102754",
+    "0889626707",
+    "959030169X",
+    "0899664520",
+    "9781434103611",
+    "848969141X",
+    "0786105356",
+    "1435163699",
+    "9787020071265",
+    "9700700763",
+    "9781947808263",
+    "9780613099974",
+    "1442120452",
+    "9788423334193",
+    "9781502883360",
+    "9781496442963",
+    "9780217012850",
+    "9781570190650",
+    "9780241248744",
+    "2013232810",
+    "9781144820822",
+    "1619824167",
+    "1911238256",
+    "9781467792844",
+    "8408015796",
+    "9780563496021",
+    "9781404319530",
+    "9788497937078",
+    "9781587261220",
+    "1350000000",
+    "9782040160340",
+    "9786074154702",
+    "1117691284",
+    "9781977076601",
+    "1613826990",
+    "9780140269604",
+    "9781116389401",
+    "1566199158",
+    "1117994104",
+    "9798568305309",
+    "1117732959",
+    "9781613824931",
+    "2211304257",
+    "9782013225557",
+    "1143741013",
+    "9781772268591",
+    "6074154708",
+    "9780850671063",
+    "191061985X",
+    "0785937579",
+    "141650026X",
+    "9780679600121",
+    "9789626341056",
+    "9788540502321",
+    "9781350000001",
+    "1144250633",
+    "0665898886",
+    "1458710718",
+    "1142586340",
+    "0486457893",
+    "1400152755",
+    "0460003631",
+    "9782010151934",
+    "9798568305125",
+    "9781593080662",
+    "2261009313",
+    "9781230265742",
+    "1496442989",
+    "9878317609",
+    "9782211041997",
+    "7540210699",
+    "9781145879089",
+    "9780449458341",
+    "1772266914",
+    "9788544000007",
+    "9781481003544",
+    "1147798583",
+    "0241248744",
+    "0099529963",
+    "9782013227148",
+    "9781774760963",
+    "9788497937061",
+    "9781442120457",
+    "1494725622",
+    "9781906814175",
+    "9781785944000",
+    "0486122603",
+    "9786057748737",
+    "1857152395",
+    "9780871408945",
+    "1788283015",
+    "9780396084310",
+    "8497404378",
+    "021701285X",
+    "9780453009669",
+    "0217497942",
+    "9781149121337",
+    "9781408271186",
+    "192785430X",
+    "1314305786",
+    "9781613826997",
+    "1926809394",
+    "1290489327",
+    "0681331550",
+    "9780140624151",
+    "9781561799695",
+    "0141392606",
+    "1846140498",
+    "9788879836234",
+    "9782011552419",
+    "9780143123590",
+    "111638941X",
+    "1549764748",
+    "3746617006",
+    "0217497985",
+    "9781420953268",
+    "1141972999",
+    "1435144775",
+    "9780140622911",
+    "9781909621497",
+    "1148171819",
+    "1772268593",
+    "8897313213",
+    "1578151171",
+    "9780375403170",
+    "9781607108511",
+    "1149509635",
+    "8408054023",
+    "9782401078468",
+    "1587266016",
+    "1587261227",
+    "0318750805",
+    "9798521635375",
+    "9584301993",
+    "9781150149252",
+    "9781927854303",
+    "9781116549423",
+    "9781314732719",
+    "9789685142977",
+    "9500393824",
+    "9781146757430",
+    "9781587263309",
+    "2010151925",
+    "9798554265976",
+    "2401078460",
+    "9780848805357",
+    "9781404319523",
+    "9789706436191",
+    "9781117994109",
+    "0613099974",
+    "1400102758",
+    "9782848300443",
+    "9781451686005",
+    "0972859845",
+    "9798554266317",
+    "9781416500261",
+    "9789700700762",
+    "1149121335",
+    "9780736623391",
+    "9781115828161",
+    "9781469260563",
+    "9781404319509",
+    "9798663098373",
+    "9780453007856",
+    "0871408945",
+    "1412187141",
+    "2010151933",
+    "9780449300572",
+    "9780318750804",
+    "1607108518",
+    "0449458342",
+    "9781149509654",
+    "0453009662",
+    "9998869153",
+    "9781494725624",
+    "9798644488902",
+    "9780613610377",
+    "1345828756",
+    "9780062250001",
+    "1420953265",
+    "5553660637",
+    "9780787102890",
+    "1148671293",
+    "203588120X",
+    "9781846140495",
+    "9780756960148",
+    "1115047817",
+    "1590071239",
+    "1147583420",
+    "9781345828757",
+    "9798664079494",
+    "9798667513360",
+    "1467792845",
+    "2080701274",
+    "9780141392622",
+    "9044929429",
+    "9788897313212",
+    "1578400171",
+    "1147221669",
+    "9780217497947",
+    "0486464490",
+    "2845950101",
+    "1774760967",
+    "9781147619942",
+    "1607787806",
+    "9781607108160",
+    "9780451521583",
+    "9788408019398",
+    "046000364X",
+    "141854082X",
+    "0451521587",
+    "1626864640",
+    "9780449308356",
+    "9780449911679",
+    "0140444033",
+    "9789044929423",
+    "1143325427",
+    "8497649044",
+    "0786105348",
+    "1781605203",
+    "9685142971",
+    "9789584302007",
+    "9789590301698",
+    "9781496442970",
+    "0861366549",
+    "9781404319479",
+    "9781420942903",
+    "0143123599",
+    "156179970X",
+    "2011552419",
+    "9780665898877",
+    "1467797898",
+    "9781148218540",
+    "8582850484",
+    "9781619824164",
+    "9780676543438",
+    "9789998869158",
+    "9781314305784",
+    "9780681331563",
+    "9785553660635",
+    "114461449X",
+    "9781412187145",
+    "9780786105342",
+    "8491051120",
+    "5551948803",
+    "2013227140",
+    "9788877547002",
+    "9788497649049",
+    "0140622918",
+    "1117732967",
+    "9781404319486",
+    "9781625585790",
+    "9781587266010",
+    "9788491051121",
+    "1590071247",
+    "9781147221664",
+    "9584302000",
+    "9780217012867",
+    "2253096334",
+    "9780394604893",
+    "9788497941600",
+    "0453005799",
+    "1150149256",
+    "9788408015796",
+    "1142206777",
+    "0340717572",
+    "9787532227228",
+    "1115280759",
+    "0681331569",
+    "9788582850480",
+    "9780679641551",
+    "8497937074",
+    "9781566199155",
+    "9781400132751",
+    "962634105X",
+    "9780099529965",
+    "9781116549430",
+    "999822375X",
+    "9780861366545",
+    "8877547006",
+    "9789562919241",
+    "9780594104117",
+    "9798663298711",
+    "0671504398",
+    "1947808265",
+    "2011682150",
+    "0140624155",
+    "0606215603",
+    "0451521579",
+    "9781605015415",
+    "0671478885",
+    "1496442962",
+    "221104199X",
+    "9781149884829",
+    "1977076602",
+    "8417928952",
+    "1148218548",
+    "0784832889",
+    "9781143325427",
+    "9782266083089",
+    "9782040281601",
+    "9781433206986",
+    "9798568305606",
+    "9781117732961",
+    "0785939334",
+    "9798568305255",
+    "0140269606",
+    "1433206986",
+    "0140862617",
+    "0449308359",
+    "0141392622",
+    "9781149509630",
+    "2070102645",
+    "9781559352734",
+    "1589973941",
+    "9789500393829",
+    "9780141392608",
+    "9798667509882",
+    "9781911238256",
+    "1732968209",
+    "9782261009312",
+    "1772262919",
+    "1146757433",
+    "1613827008",
+    "9684322666",
+    "9781467792837",
+    "9780849963254",
+    "9798667507109",
+    "2010151941",
+    "9782211304252",
+    "1535027177",
+    "146925977X",
+    "9789875504950",
+    "9781117732947",
+    "9780899664521",
+    "2011550491",
+    "9780143107569",
+    "9782013232814",
+    "1540672417",
+    "1565116089",
+    "9789626346051",
+    "1667302795",
+    "7020038980",
+    "9781144250636",
+    "1404319506",
+    "9780895263681",
+    "9782070409228",
+    "0812974263",
+    "0895263688",
+    "0594104114",
+    "9780563496014",
+    "8879836234",
+    "1149884827",
+    "9780784832882",
+    "1230265740",
+    "9798666733493",
+    "9780665898846",
+    "2266083082",
+    "9781117691305",
+    "9781117691282",
+    "1115828169",
+    "0665898851",
+    "1117732940",
+    "0217012868",
+    "9780451525260",
+    "0099511134",
+    "9781115280754",
+    "9781404319493",
+    "8423334198",
+    "9782011550491",
+    "9780871292872",
+    "9780665898860",
+    "0742610330",
+    "9780780791633",
+    "9798667509875",
+    "1469266474",
+    "1404319484",
+    "9780486464497",
+    "9780460003643",
+    "1785944002",
+    "2848300442",
+    "1783224185",
+    "9781117994116",
+    "1147619948",
+    "5553660629",
+    "0062250000",
+    "1479313866",
+    "7020071260",
+    "9780486457895",
+    "8408019392",
+    "9782010151941",
+    "9798583445004",
+    "1496442997",
+    "1117994112",
+    "114587908X",
+    "9781607787808",
+    "9781589973947",
+    "1451686005",
+    "9781148671291",
+    "9781772266917",
+    "8445904256",
+    "9788415999256",
+    "9781144614490",
+    "078710289X",
+    "9781496442994",
+    "1613820259",
+    "9782010151927",
+    "9782011682154",
+    "1909621498",
+    "9780877207320",
+    "160710816X",
+    "2070409228",
+    "9781973545699",
+    "1420942905",
+    "0004215532",
+    "0756960142",
+    "0679600124",
+    "9781781605202",
+    "9789998223752",
+    "9780665898853",
+    "9781142586348",
+    "9780451521576",
+    "9780671504397",
+    "9781772262919",
+    "9781117732954",
+    "9798667507383",
+    "1144820820",
+    "9781143741012",
+    "8497937066",
+    "1625585799",
+    "9875500739",
+    "9781565116085",
+    "1408271184",
+    "9798664093803",
+    "9781469259772",
+    "9781613827000",
+    "1561799696",
+    "1116389401",
+    "9781435163690",
+    "1467792837",
+    "1613824939",
+    "9788445904251",
+    "9781558000360",
+    "9781549764745",
+    "9781115047814",
+    "7511704530",
+    "1502883368",
+    "0736623396",
+    "9781419229701",
+    "0396084311",
+    "9780460003636",
+    "9781910619858",
+    "9780486122601",
+    "0665898843",
+    "0143107569",
+    "9780449300022",
+    "9562919242",
+    "1144936624",
+    "9781857152395",
+    "1973545691",
+    "9780786105359",
+    "9780140444308",
+    "0671469088",
+    "9789684322660",
+    "1616003553",
+    "7532227227",
+    "9785551948803",
+    "9782013225830",
+    "1404319530",
+    "1149509651",
+    "9781626864641",
+    "0140444041",
+    "9875504955",
+    "8440689187",
+    "1605015415",
+    "0848805356",
+    "1600838081",
+    "1558000364",
+    "9788440689184",
+    "9781590071236",
+    "9788489691414",
+    "9780099511137",
+    "9780889626706",
+    "9780451520821",
+    "9787020038985",
+    "9781094016238",
+    "9781404319516",
+    "9782035881205",
+    "9787540210694",
+    "0451525264",
+    "9780140444049",
+    "9780742610330",
+    "9788497936170",
+    "045141943X",
+    "9780140862614",
+    "085067106X",
+    "9788497404372",
+    "9782253096337",
+    "1094016233",
+    "6057748735",
+    "8497941608",
+    "1116549433",
+    "9781435144774",
+    "8540502321",
+    "0613610377",
+    "9789878317601",
+    "2040281606",
+    "9783746617008",
+    "9781142206772",
+    "9780866852630",
+    "9780671469085",
+    "9788484032922",
+    "0563496010",
+    "9781496442987"
+   ],
+   "key": "/works/OL1063588W",
+   "language": [
+    "ita",
+    "spa",
+    "fin",
+    "gre",
+    "chi",
+    "vie",
+    "rus",
+    "por",
+    "yid",
+    "und",
+    "fre",
+    "eng",
+    "dut",
+    "mon",
+    "ger"
+   ],
+   "number_of_pages_median": 520,
+   "publisher": [
+    "Mizzou Publishing - The Mizzou Store",
+    "A. Lacroix, Verboeckhoven",
+    "Hachette",
+    "Marco Book Company",
+    "Audiofy/Naxos",
+    "Penguin Books",
+    "Librarie Gallimard",
+    "J. Hetzel et A. Lacroix",
+    "Fictionwise, Inc.",
+    "Standard Book Co., Ltd.",
+    "Gallimard-Jeunesse",
+    "W.R. Jenkins",
+    "Didier",
+    "Co-operative Publication Society",
+    "Classic Comic Store, Limited",
+    "Independently published",
+    "Canterbury Classics",
+    "Hetzel",
+    "Penguin Canada",
+    "Ren min wen xue chu ban she",
+    "International Collectors Library, American Headquarters",
+    "MobileReference",
+    "Galley Press",
+    "Collins",
+    "G. Routledge and sons [The De Vinne press] 1887.",
+    "FonoLibro Inc.",
+    "Thomas Y. Crowell & Co.",
+    "WN",
+    "Amsco School Pubns",
+    "Nelson",
+    "J. Hetzel, libraire-éditeur",
+    "Blackstone Audiobooks",
+    "Focus on the Family Publishing",
+    "New Millennium Audio",
+    "CreateSpace Independent Publishing Platform",
+    "Digireads.com",
+    "Dodd, Mead & Company",
+    "Borders Group Inc",
+    "National Yiddish Book Center",
+    "Garnier Frères",
+    "Editions Garnier",
+    "Cideb",
+    "Dodd, Mead",
+    "AD Classic",
+    "Librairi Gallimard",
+    "Garnier",
+    "Larousse & Co.",
+    "Heath",
+    "Naxos and Blackstone Publishing",
+    "The Athenaeum Society",
+    "Printers Row Publishing Group",
+    "D.C. Heath",
+    "Amereon Limited",
+    "Losada",
+    "Dover. 1 Paperback(s)",
+    "bnpublishing.com",
+    "Penguin",
+    "Baker Street Press",
+    "Everyman's Library",
+    "IndyPublish",
+    "Collins Claer-Type Press",
+    "Aldaba Ediciones",
+    "George Munro's Sons",
+    "M. Didier",
+    "BOOKS",
+    "ReadHowYouWant.com, Limited",
+    "Bordas",
+    "T. Nelson and sons",
+    "Little, Brown & co.",
+    "Ediciones B",
+    "New American Library",
+    "Le Livre de poche",
+    "Thomas Nelson",
+    "Penguin Random House Grupo Editorial",
+    "Editorium, The",
+    "International Collector's Library",
+    "Gallimard]",
+    "Creative Media Partners, LLC",
+    "Editoral Planeta",
+    "Project Gutenberg",
+    "Little, Brown",
+    "Donohue, Henneberry",
+    "First Avenue Editions, A division of Lerner Publishing Group",
+    "IndyPublish.com",
+    "Editorial Ramon Sopena",
+    "Ballantine Books",
+    "The Modern library",
+    "Pearson Education, Limited",
+    "Acclaim Books",
+    "NXB Văn nghue",
+    "BOOKET",
+    "Librairie générale française",
+    "Fall River Press",
+    "Hachette et cie",
+    "Heritage Press",
+    "Editions Flammarion",
+    "Larousse",
+    "Penguin Putnam~mass",
+    "Grosset and Dunlap",
+    "G.N. Morang",
+    "Newman Communications",
+    "Pocket",
+    "The Macmillan Company",
+    "A. L. Burt",
+    "Books On Tape",
+    "Dover Publications, Incorporated",
+    "J. Hetzel",
+    "Porrua",
+    "Dent",
+    "E.P. Dutton & co.",
+    "Little, Brown and co.",
+    "Editorial Planeta, S.A. (Barcelona)",
+    "C. Schoenhof",
+    "BBC Books",
+    "Yoyo USA",
+    "The Heritage Press",
+    "BRONTES ED",
+    "West & Johnston",
+    "Éditions S.E.C.A.",
+    "Vintage Classics",
+    "Classic Collection",
+    "Librairie Hachette",
+    "Bigelow, Smith",
+    "Macmillan Collector's Library",
+    "Nelson Incorporated, Thomas",
+    "Naxos",
+    "Hurst",
+    "Barnes & Noble Classics",
+    "Audio Literature",
+    "WARD, LOCK & CO.",
+    "E-Kitap Projesi & Cheapest Books",
+    "Carleton",
+    "Ulsyn Khėvlėl",
+    "Dutton Adult",
+    "Folio Press",
+    "HardPress Publishing",
+    "Allyn and Bacon",
+    "Gos. izdat. khudozh. lit.",
+    "Fawcett",
+    "J.M. Dent & Sons Ltd.",
+    "Castalia, Editorial S.A.",
+    "The Classic Collection",
+    "Barnes & Noble World Digital Library",
+    "Tyndale House Publishers",
+    "Walter Scott",
+    "Debolsillo",
+    "Beijing yan shan chu ban she",
+    "Books on Tape",
+    "Barnes & Noble",
+    "Newton Compton",
+    "Flammarion",
+    "Hurst and Blackett",
+    "Turtleback",
+    "Aufbau Taschenbuch Verlag",
+    "Gallimard",
+    "A.L. Burt",
+    "Penguin Books, Limited",
+    "Regnery Publishing, Incorporated, An Eagle Publishing Company",
+    "HATIER",
+    "William R. Jenkins",
+    "Plutón Ediciones",
+    "Signet Classics",
+    "HardPress",
+    "The Modern Library",
+    "Ernest Flammarion",
+    "D. C. Heath & Co",
+    "French & European Pubns",
+    "Tandem Library",
+    "Grosset & Dunlap",
+    "Edhasa",
+    "Dodd, Mead and company",
+    "Little, Brown, and Company",
+    "Tyndale Entertainment",
+    "Simon & Brown",
+    "Livre de Poche",
+    "Sceptre",
+    "Collegiate society",
+    "Independently Published",
+    "Borders Classics",
+    "Books on Tape, Inc.",
+    "HACHETTE JEUNESSE",
+    "Mosaic Press (NY)",
+    "Standard Ebooks",
+    "Naxos Audiobooks",
+    "Andres Bello",
+    "A.L. Burt Co.",
+    "Lerner Publishing Group",
+    "Liveright Books",
+    "Robert Hayes",
+    "T.Y. Crowell & Co.",
+    "Livre De Poche Jeunesse",
+    "C. Scribner's Sons",
+    "J.M. Dent & sons, ltd.",
+    "Buccaneer Books",
+    "Booket",
+    "Soundelux Audio Publishing",
+    "Zhong yang bian yi chu ban she",
+    "Penguin-Companhia",
+    "Radio Spirits",
+    "W. Clement Stone",
+    "Arkose Press",
+    "General Books LLC",
+    "Joe Books Inc.",
+    "Knopf",
+    "Grupo Editorial Tomo",
+    "Sine nomine",
+    "Highbridge Audio",
+    "B. Shimin",
+    "E-text",
+    "Les Mis Collection",
+    "Fawcett Columbine",
+    "Holt",
+    "G. Barrie",
+    "EVERYMANS LIBRARY (R",
+    "Ginn & Company",
+    "Random House Publishing Group",
+    "ReadZone Books",
+    "Arte Y Literatura",
+    "Ginn and company",
+    "eBooksLib",
+    "Larousse Kingfisher Chambers",
+    "Penguin Audio",
+    "Createspace Independent Publishing Platform",
+    "Pocket (FR)",
+    "Ann Arbor Media Group",
+    "Errepar",
+    "Blackstone Audio Inc.",
+    "Modern Library",
+    "Selector",
+    "G.W. Jacobs & Company",
+    "Book League of America",
+    "E.P. Dutton & Co.",
+    "D.C. Heath and Company",
+    "Garnier-Flammarion",
+    "Pagnerre",
+    "Sirius",
+    "J. M. Dent & Sons",
+    "HarperCollins Publishers",
+    "Hurst & Blackett",
+    "Signet",
+    "Kessinger Publishing",
+    "L'Ecole des loisirs",
+    "Martin Claret",
+    "R.K. Publishing",
+    "Hippocrene Books",
+    "Dutton",
+    "Turtleback Books Distributed by Demco Media",
+    "Ginn",
+    "Dover Publications",
+    "International Book Centre, Inc.",
+    "Hachette & cie.",
+    "Cosac Naify",
+    "Nelson [pref.",
+    "Shang hai ren min mei shu chu ban she",
+    "UDON Entertainment Corporation",
+    "Pocket Classics",
+    "Readers history Publishing Co.",
+    "Start Publishing LLC",
+    "Classic Books",
+    "Digireads.com Publishing",
+    "Non Basic Stock Line",
+    "Paris: Classiques Universels, 2000",
+    "Dramatic Pub.",
+    "Simon & Schuster, Limited",
+    "Ecole des loisirs",
+    "Pan Macmillan",
+    "Limited Editions Club",
+    "Bruna",
+    "Longseller",
+    "Hurst & company",
+    "The Macmillan company",
+    "Media Books Audio Publishing",
+    "random house",
+    "Thomas Y. Crowell Company",
+    "Perfection Learning Corporation",
+    "H. Holt and co",
+    "EDL",
+    "E.P. Dutton",
+    "Hachette Jeunesse",
+    "Charles River Editors",
+    "Editors",
+    "Fawcett Publications",
+    "Washington Square Press",
+    "Garnier frères",
+    "Editorial Porrúa",
+    "Tantor Media",
+    "J. Hetzet et A. Lacroix",
+    "T. Nelson and Sons",
+    "Dessain et Tolra",
+    "Collins' Clear-type Press",
+    "T.Y. Crowell & co.",
+    "George Routledge",
+    "Signet Book",
+    "Planeta",
+    "Scribner",
+    "Edimat Libros",
+    "Penguin Classics"
+   ],
+   "title": "Les Misérables",
+   "editions": {
+    "numFound": 526,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL24831918M",
+      "title": "Les misérables",
+      "cover_i": 12917653,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "D.C. Heath"
+      ],
+      "publish_date": [
+       "1903"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 6042232,
+   "edition_count": 14,
+   "first_publish_year": 1862,
+   "isbn": [
+    "9782011552426",
+    "2010151933",
+    "9782011550538",
+    "1544908822",
+    "0060172223",
+    "201155053X",
+    "9781544908823",
+    "201005422",
+    "9780060172220",
+    "9782010151934",
+    "2011552427"
+   ],
+   "key": "/works/OL13093506W",
+   "language": [
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 236,
+   "publisher": [
+    "Éditions Hachette",
+    "Hachette",
+    "Harpercollins",
+    "J. Hetzel",
+    "George Routledge and Sons",
+    "Little, Brown",
+    "Hachette Jeunesse",
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Cosette",
+   "editions": {
+    "numFound": 14,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL22888973M",
+      "title": "Les misérables.",
+      "cover_i": 5795534,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Little, Brown"
+      ],
+      "publish_date": [
+       "1892"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 15003375,
+   "edition_count": 11,
+   "first_publish_year": 1862,
+   "key": "/works/OL43259880W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 466,
+   "publisher": [
+    "Laidlaw Brothers New York",
+    "london j. m.  dent & sons ltd.",
+    "Charles Scribner's Sons",
+    "The modern library",
+    "Little Brown and Company",
+    "Garnier-Flammarion",
+    "Librairie Générale Française",
+    "Macmillan India Limited",
+    "Little, brown, and company",
+    "International Collector's Library",
+    "Edition Nelson"
+   ],
+   "title": "Les Miserables",
+   "editions": {
+    "numFound": 11,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL58919382M",
+      "title": "Les Miserables",
+      "cover_i": 15003375,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "The modern library"
+      ],
+      "publish_date": [
+       "1862"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 10073294,
+   "edition_count": 10,
+   "first_publish_year": 1800,
+   "isbn": [
+    "9782010005435",
+    "9782011550521",
+    "9780543855923",
+    "0543855929",
+    "2011550521",
+    "2010005430"
+   ],
+   "key": "/works/OL19669828W",
+   "language": [
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 79,
+   "publisher": [
+    "Hachette",
+    "W.R. Jenkins",
+    "Adamant Media Corporation",
+    "Librairie Hachett",
+    "J. Hetzel et A. Lacroix",
+    "J. Hetzel",
+    "Pagnerre",
+    "Bigelow, Smith & Company",
+    "West & Johnston",
+    "Little, Brown, and Company"
+   ],
+   "title": "Fantine",
+   "editions": {
+    "numFound": 10,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37818055M",
+      "title": "Les misérables",
+      "cover_i": 12721872,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "J. Hetzel"
+      ],
+      "publish_date": [
+       "1879?"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Monica Kulling"
+   ],
+   "cover_i": 422618,
+   "edition_count": 4,
+   "first_publish_year": 1995,
+   "isbn": [
+    "0679980148",
+    "9780606095396",
+    "061301376X",
+    "9780613013765",
+    "060609539X",
+    "067986668X",
+    "9780679980148",
+    "9780679866688"
+   ],
+   "key": "/works/OL109052W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 106,
+   "publisher": [
+    "Turtleback Books Distributed by Demco Media",
+    "Random House",
+    "Tandem Library"
+   ],
+   "title": "Les  misérables",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL3393547M",
+      "title": "Les  misérables",
+      "cover_i": 423971,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Random House"
+      ],
+      "publish_date": [
+       "2005"
+      ],
+      "isbn": [
+       "067986668X",
+       "0679980148",
+       "9780679866688",
+       "9780679980148"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 12951309,
+   "edition_count": 3,
+   "first_publish_year": 2007,
+   "isbn": [
+    "9788572327244",
+    "9789897788727",
+    "9788544000007",
+    "8572327231",
+    "857232724X",
+    "9897788727",
+    "9788572327237",
+    "8544000002"
+   ],
+   "key": "/works/OL27687141W",
+   "language": [
+    "por"
+   ],
+   "number_of_pages_median": 1787,
+   "publisher": [
+    "Mimética",
+    "Martin Claret"
+   ],
+   "title": "Os miseráveis",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39825778M",
+      "title": "Os miseráveis",
+      "cover_i": 12951309,
+      "language": [
+       "por"
+      ],
+      "publisher": [
+       "Martin Claret"
+      ],
+      "publish_date": [
+       "2007"
+      ],
+      "isbn": [
+       "9788572327244",
+       "9788572327237",
+       "857232724X",
+       "8572327231"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Lemony Snicket"
+   ],
+   "cover_i": 755266,
+   "edition_count": 45,
+   "first_publish_year": 2000,
+   "isbn": [
+    "1405249560",
+    "9780061550362",
+    "0061757160",
+    "0061146323",
+    "9864171119",
+    "0061187879",
+    "2092823574",
+    "8484412199",
+    "0060283157",
+    "9789727103508",
+    "1405266090",
+    "9685958335",
+    "9780736669320",
+    "9788426437433",
+    "9788426413550",
+    "0749747021",
+    "9727103502",
+    "9784794211545",
+    "8426437435",
+    "9781417638826",
+    "9783407798213",
+    "9780749747022",
+    "0060566183",
+    "006155037X",
+    "9785352005477",
+    "1405222875",
+    "069452543X",
+    "9780439272636",
+    "8327673831",
+    "9789864171118",
+    "3407798210",
+    "0439272637",
+    "9781405222877",
+    "9780060566180",
+    "0736669329",
+    "9780439366793",
+    "9780061550393",
+    "9781405249560",
+    "9782092823576",
+    "146075591X",
+    "0061550361",
+    "0008648522",
+    "9781405208703",
+    "9780061187872",
+    "9781405266093",
+    "0061550396",
+    "1417638826",
+    "9780785924142",
+    "9780307209382",
+    "9780064407694",
+    "9781460755914",
+    "9780606314558",
+    "0060814489",
+    "9780694525430",
+    "0606314555",
+    "9780061757167",
+    "0307209385",
+    "9780060283155",
+    "0062796054",
+    "0439366798",
+    "9788484412199",
+    "9780061550379",
+    "9789685958332",
+    "9788323715740",
+    "9780061550386",
+    "8323715742",
+    "9780061146329",
+    "8426413552",
+    "0785924140",
+    "0061550388",
+    "9780060814489",
+    "9788327673831",
+    "535200547X",
+    "9780062796059",
+    "1405208708",
+    "4794211546",
+    "0064407691",
+    "9780008648527"
+   ],
+   "key": "/works/OL15104047W",
+   "language": [
+    "jpn",
+    "chi",
+    "por",
+    "ger",
+    "fre",
+    "rus",
+    "pol",
+    "spa",
+    "eng"
+   ],
+   "number_of_pages_median": 202,
+   "publisher": [
+    "Editorial Lumen",
+    "HarperCollins Publishers New Zealand",
+    "HarperCollins Publishers",
+    "HarperTrophy",
+    "Scholastic",
+    "Cle Intl",
+    "Sōshisha",
+    "HarperCollins Polska",
+    "HarperCollins Publishers Limited",
+    "HarperCollins Canada, Limited",
+    "HarperCollins",
+    "Wydawnictwo Egmont",
+    "Terramar",
+    "French & European Pubns",
+    " Egmont Group ",
+    "HarperChildrensAudio",
+    "Tandem Library",
+    "Unknown",
+    "Montena",
+    "Egmont",
+    "Books on Tape, Inc",
+    "Tian xia yuan jian chu ban gu fen you xian gong si",
+    "Izd-vo \"Azbuka-klassika\"",
+    "Lectorum Publications",
+    "EGMONT BOOKS LTD",
+    "HarperChildren's Audio",
+    "Egmont Books Ltd",
+    "Egmont Group",
+    "Distribooks",
+    "Turtleback Books Distributed by Demco Media"
+   ],
+   "title": "The Miserable Mill",
+   "editions": {
+    "numFound": 45,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL28180362M",
+      "title": "Lugar tenebroso",
+      "cover_i": 10117195,
+      "language": [
+       "por"
+      ],
+      "publisher": [
+       "Terramar"
+      ],
+      "publish_date": [
+       "2003"
+      ],
+      "isbn": [
+       "9789727103508",
+       "9727103502"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "TszMei Lee",
+    "Stacy King",
+    "Victor Hugo",
+    "SunNeko Lee"
+   ],
+   "cover_i": 14624742,
+   "edition_count": 2,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9781927925164",
+    "1927925169",
+    "9781927925157",
+    "1927925150"
+   ],
+   "key": "/works/OL21082254W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 357,
+   "publisher": [
+    "UDON Entertainment Corporation"
+   ],
+   "title": "Manga Classics : les Miserables Hardcover",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL28537214M",
+      "title": "Manga Classics : les Miserables Hardcover",
+      "cover_i": 14624742,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "UDON Entertainment Corporation"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781927925157",
+       "1927925150"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo",
+    "Andrés Ruiz Merino"
+   ],
+   "cover_i": 12733432,
+   "edition_count": 3,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788435010825",
+    "9798709892040",
+    "9788491041542",
+    "8435010821",
+    "8491041540"
+   ],
+   "key": "/works/OL25863254W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published",
+    "Edhasa",
+    "Alianza"
+   ],
+   "title": "Los miserables",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37857441M",
+      "title": "Los miserables",
+      "cover_i": 12733432,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alianza"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9788491041542",
+       "8491041540"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 83,
+   "first_publish_year": 1862,
+   "isbn": [
+    "9781541298361",
+    "1985629658",
+    "1976144698",
+    "9781976278761",
+    "9781721108688",
+    "9781542678605",
+    "1975614496",
+    "1986226344",
+    "9781547045303",
+    "1541298365",
+    "1985600099",
+    "9781539161981",
+    "9781975939083",
+    "1975839870",
+    "197601283X",
+    "1986932397",
+    "1973765306",
+    "153318982X",
+    "9781976022388",
+    "1975919262",
+    "9781495265006",
+    "1719070466",
+    "9781497408715",
+    "9781511549929",
+    "1975687337",
+    "1975932315",
+    "1539161986",
+    "1986631303",
+    "9781548730994",
+    "1977546935",
+    "198747239X",
+    "9781977988829",
+    "197611764X",
+    "1976264227",
+    "1719505381",
+    "9781977715845",
+    "1977715842",
+    "1975613732",
+    "9781985809987",
+    "1985704145",
+    "9781985629653",
+    "1977782809",
+    "9781548517113",
+    "1548730998",
+    "9781985704145",
+    "1986377059",
+    "1511549920",
+    "1548755397",
+    "9781975917623",
+    "1547044772",
+    "9781533189820",
+    "9781975982805",
+    "1978021607",
+    "1546609105",
+    "9781534654143",
+    "1500609595",
+    "9781540608253",
+    "1976155967",
+    "9781976361012",
+    "9781718895249",
+    "1540608255",
+    "1973790645",
+    "1977845533",
+    "1548517119",
+    "9781976264221",
+    "9781717591555",
+    "9781495311338",
+    "1495946835",
+    "1542954266",
+    "9781986932394",
+    "9781976117640",
+    "9781973967989",
+    "1548272094",
+    "9781544137841",
+    "1500609587",
+    "1979441618",
+    "9781985809970",
+    "197602238X",
+    "9781973868798",
+    "1523201614",
+    "9781975614492",
+    "1495311333",
+    "9781986631303",
+    "9781974109173",
+    "9781975919269",
+    "9781977845535",
+    "1974650391",
+    "9781975687335",
+    "1718895240",
+    "1983856495",
+    "1976235154",
+    "9781985716476",
+    "9781547044771",
+    "9781519369994",
+    "197636101X",
+    "198571647X",
+    "1976549140",
+    "9781975613730",
+    "9781986383561",
+    "1976203465",
+    "9781976012839",
+    "9781985600096",
+    "9781975839871",
+    "1519369999",
+    "1977988822",
+    "1495265005",
+    "1547045302",
+    "9781977546937",
+    "9781544011844",
+    "9781973765301",
+    "1973967987",
+    "9781976467530",
+    "9781717210371",
+    "1975982800",
+    "9781719070461",
+    "1717210376",
+    "9781976203466",
+    "9781975932312",
+    "9781979441612",
+    "9781548445652",
+    "9781976144691",
+    "9781542954266",
+    "9781500609580",
+    "9781987472394",
+    "1974109178",
+    "1976278767",
+    "1544137842",
+    "1542678609",
+    "9781523201617",
+    "1985809982",
+    "1534654143",
+    "9781546609100",
+    "1548445657",
+    "9781500609597",
+    "9781548755393",
+    "1717591558",
+    "9781977718136",
+    "9781983856495",
+    "9781973790648",
+    "1721108688",
+    "9781974650392",
+    "197793062X",
+    "1985809974",
+    "1977718132",
+    "9781977782809",
+    "1976467535",
+    "1973868792",
+    "9781976549144",
+    "9781986377058",
+    "9781495946837",
+    "1544011849",
+    "9781976235153",
+    "9781974525102",
+    "1975939085",
+    "9781986226349",
+    "9781548272098",
+    "9781975949068",
+    "1497408717",
+    "1974525104",
+    "9781977930620",
+    "9781719505383",
+    "1975917626",
+    "9781978021600",
+    "1986383563",
+    "9781976155963",
+    "1975949064"
+   ],
+   "key": "/works/OL40542345W",
+   "language": [
+    "eng",
+    "fre"
+   ],
+   "number_of_pages_median": 568,
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Les Misérables",
+   "editions": {
+    "numFound": 83,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL56277439M",
+      "title": "Miserables",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9781534654143",
+       "1534654143"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Trans.Norman Denny Hugo"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1985,
+   "isbn": [
+    "9780140088908",
+    "0140088903"
+   ],
+   "key": "/works/OL7969199W",
+   "number_of_pages_median": 1232,
+   "publisher": [
+    "Penguin Books Ltd"
+   ],
+   "title": "Les Miserables",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL7347393M",
+      "title": "Les Miserables",
+      "publisher": [
+       "Penguin Books Ltd"
+      ],
+      "publish_date": [
+       "October 31, 1985"
+      ],
+      "isbn": [
+       "9780140088908",
+       "0140088903"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 18,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9781540607423",
+    "9781985808690",
+    "198767135X",
+    "9781981878352",
+    "1981878351",
+    "9781519352279",
+    "1519352271",
+    "1720964866",
+    "1540607429",
+    "1979851298",
+    "1979953570",
+    "9781979953573",
+    "1548855294",
+    "1718699603",
+    "1986584445",
+    "1987403657",
+    "9781986376327",
+    "1986782689",
+    "1544178999",
+    "9781985059856",
+    "9781986584449",
+    "1514692201",
+    "1985059851",
+    "1985808692",
+    "198637632X",
+    "1717210384",
+    "9781544178998",
+    "9781548855291",
+    "9781987671353",
+    "9781717210388",
+    "9781718699601",
+    "9781987403657",
+    "9781979851299",
+    "9781720964865",
+    "9781514692202",
+    "9781986782685"
+   ],
+   "key": "/works/OL40508127W",
+   "language": [
+    "eng",
+    "fre",
+    "spa"
+   ],
+   "number_of_pages_median": 376,
+   "publisher": [
+    "CreateSpace Independent Publishing Platform",
+    "Mybook",
+    "Hungry Engine"
+   ],
+   "title": "Fantine",
+   "editions": {
+    "numFound": 18,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL56313904M",
+      "title": "Fantine",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781981878352",
+       "1981878351"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "David Bellos"
+   ],
+   "cover_i": 10302605,
+   "edition_count": 7,
+   "first_publish_year": 2017,
+   "isbn": [
+    "9781515962632",
+    "1515962636",
+    "9780141969794",
+    "9780374716295",
+    "9780374223236",
+    "1846144701",
+    "0374223238",
+    "0141969792",
+    "9781846144707",
+    "0374716293",
+    "0374537402",
+    "9780374537401",
+    "0241954479",
+    "9780241954478"
+   ],
+   "key": "/works/OL20050369W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 336,
+   "publisher": [
+    "Tantor Audio",
+    "Farrar, Straus and Giroux",
+    "Penguin UK",
+    "imusti",
+    "Penguin Books, Limited",
+    "Particular Books"
+   ],
+   "title": "The novel of the century",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27230392M",
+      "title": "The novel of the century",
+      "cover_i": 14501935,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Farrar, Straus and Giroux"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9780374223236",
+       "0374223238"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "William Shakespeare",
+    "Crystal S. Chan",
+    "Julien Choy"
+   ],
+   "cover_i": 13851286,
+   "edition_count": 6,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9781947808232",
+    "9781947808218",
+    "1947808966",
+    "9781947808256",
+    "1947808222",
+    "9781947808249",
+    "1947808249",
+    "9781947808225",
+    "9781947808966",
+    "1947808214",
+    "1947808257",
+    "1947808230"
+   ],
+   "key": "/works/OL25323992W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 368,
+   "publisher": [
+    "Manga Classics",
+    "Manga Classics Inc."
+   ],
+   "title": "Manga Classics",
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL34784980M",
+      "title": "Manga Classics",
+      "cover_i": 14796253,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Manga Classics Inc."
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9781947808966",
+       "1947808966"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "George Klin"
+   ],
+   "cover_i": 6407209,
+   "edition_count": 2,
+   "first_publish_year": 1968,
+   "isbn": [
+    "0822007355",
+    "9780822007357",
+    "9780822071174",
+    "0822071177"
+   ],
+   "key": "/works/OL10338662W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 119,
+   "publisher": [
+    "John Wiley & Sons, Ltd.",
+    "Cliff's Notes"
+   ],
+   "title": "Les Miserables",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL15091556M",
+      "title": "Les Miserables",
+      "cover_i": 6524180,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Cliff's Notes"
+      ],
+      "publish_date": [
+       "1968"
+      ],
+      "isbn": [
+       "0822007355",
+       "9780822007357"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 12,
+   "first_publish_year": 1862,
+   "key": "/works/OL44270693W",
+   "language": [
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 289,
+   "publisher": [
+    "Ginn & Company",
+    "Little, Brown and co.",
+    "G. Routledge & sons",
+    "Librarie Hachette",
+    "Halcyon House",
+    "T. Nelson",
+    "Éditions rencontre",
+    "E. Flammarion",
+    "Readers Library Pub. Co.",
+    "Albert Cogswell",
+    "Pagnerre"
+   ],
+   "title": "Les misérables",
+   "editions": {
+    "numFound": 12,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL62587706M",
+      "title": "Les misérables ...",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "E. Flammarion"
+      ],
+      "publish_date": [
+       "1912"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 14896624,
+   "edition_count": 4,
+   "first_publish_year": 1935,
+   "key": "/works/OL43038007W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 570,
+   "publisher": [
+    "International Collector’s Library",
+    "New American Library",
+    "nelson editeurs"
+   ],
+   "title": "Les Miserables",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL58725437M",
+      "title": "LES MISERABLES",
+      "cover_i": 15003379,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "International Collector’s Library"
+      ],
+      "publish_date": [
+       "1964"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Alain Boublil"
+   ],
+   "cover_i": 2635769,
+   "edition_count": 2,
+   "first_publish_year": 1990,
+   "isbn": [
+    "0793529182",
+    "9780793529186",
+    "0881887749",
+    "9780881887747"
+   ],
+   "key": "/works/OL1695351W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 80,
+   "publisher": [
+    "Hal Leonard Corporation",
+    "Hal Leonard Publishing Corporation"
+   ],
+   "title": "Les Miserables",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL11198164M",
+      "title": "Les Miserables",
+      "cover_i": 2635769,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Hal Leonard Corporation"
+      ],
+      "publish_date": [
+       "April 1, 1994"
+      ],
+      "isbn": [
+       "9780793529186",
+       "0793529182"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 10611486,
+   "edition_count": 8,
+   "first_publish_year": 1862,
+   "isbn": [
+    "2013225555",
+    "9780343594749",
+    "0353627127",
+    "2322191078",
+    "9780343254254",
+    "0343254255",
+    "9780353627123",
+    "9782013225557",
+    "0343594749",
+    "9782322191079"
+   ],
+   "key": "/works/OL24185477W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 376,
+   "publisher": [
+    "J. Hetzel",
+    "Livre de Poche",
+    "Little, Brown",
+    "Franklin Classics",
+    "Books on Demand",
+    "Franklin Classics Trade Press"
+   ],
+   "title": "Jean Valjean",
+   "editions": {
+    "numFound": 8,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37821236M",
+      "title": "Les misérables",
+      "cover_i": 12722858,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "J. Hetzel"
+      ],
+      "publish_date": [
+       "1862"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_i": 971607,
+   "edition_count": 6,
+   "first_publish_year": 1963,
+   "isbn": [
+    "2013219474",
+    "9782080720962",
+    "9789875780026",
+    "9782013219471",
+    "9780140444032",
+    "2080720961",
+    "9875780022",
+    "0140444033"
+   ],
+   "key": "/works/OL15060028W",
+   "language": [
+    "fre",
+    "spa"
+   ],
+   "number_of_pages_median": 712,
+   "publisher": [
+    "Editions Garnier Freres",
+    "Hachette Jeunesse",
+    "Penguin Classics",
+    "Le Livrede Poche",
+    "Suma",
+    "Flammarion"
+   ],
+   "title": "Les Misérables, tome 1",
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8842041M",
+      "title": "Les Misérables, tome 1",
+      "cover_i": 971607,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Flammarion"
+      ],
+      "publish_date": [
+       "April 16, 1999"
+      ],
+      "isbn": [
+       "9782080720962",
+       "2080720961"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

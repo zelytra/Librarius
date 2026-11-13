@@ -33,6 +33,7 @@ client is **generated** from it (orval, `apps/web/src/api/generated/` — never 
 | Categories | `GET/POST /api/categories`, `PUT/DELETE /api/categories/{id}` | Or, Argent, Bronze, Abandon are built in |
 | Me | `GET/PATCH/DELETE /api/me`, `DELETE /api/me/library`, `…/followers`, `…/following`, `…/blocked` | `DELETE /api/me` erases the account and its Keycloak login; `DELETE /api/me/library` empties the library (titles, readings, wishes, goals, own categories, followed series and authors, series reviews) and keeps the account, profile, social links and Home layout |
 | Social | `GET /api/users?q=`, `PUT/DELETE /api/users/{id}/follow`, `…/block`, `POST /api/reports` | members found by display name (two letters at least; the caller and blocked members left out), each with whether the caller follows them. Reports target `WORK`, `EDITION`, `SERIES`, or a shared review (`REVIEW`, `SERIES_REVIEW`, with the reasons `SPOILER`, `OFFENSIVE`, `SPAM`, `OTHER`) |
+| Covers | `GET /api/covers/bnf/{ark}` | anonymous, resized and cached BnF cover thumbnail; see [Catalog & book search](https://github.com/zelytra/Librarius/wiki/Catalog-and-Book-Search) |
 | Misc | `GET /api/genres`, `GET/PUT /api/dashboard/layout`, `GET /api/releases/upcoming` | |
 
 The full reference, parameter by parameter, is [`.claude/docs/API.md`](https://github.com/zelytra/Librarius/blob/main/.claude/docs/API.md);

@@ -1,0 +1,1509 @@
+{
+ "numFound": 6645,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 6645,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "one piece",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020563,
+   "edition_count": 18,
+   "first_publish_year": 1997,
+   "isbn": [
+    "9872462852",
+    "9783551745811",
+    "1591163641",
+    "9861125795",
+    "3551745811",
+    "142154525X",
+    "9789872462857",
+    "9781421545257",
+    "9782723488525",
+    "2723488527",
+    "4088725093",
+    "9163828995",
+    "9781569319017",
+    "9789861125794",
+    "0613962982",
+    "6055686422",
+    "9786055686420",
+    "9788468480114",
+    "9782723433358",
+    "1569319014",
+    "9781591163640",
+    "9784088725093",
+    "2723433358",
+    "1435221443",
+    "9789163828997",
+    "9788468471525",
+    "9780613962988",
+    "8468471526",
+    "8468480118",
+    "9781435221444"
+   ],
+   "key": "/works/OL8215661W",
+   "language": [
+    "ger",
+    "chi",
+    "spa",
+    "tur",
+    "jpn",
+    "fre",
+    "ita",
+    "swe",
+    "eng"
+   ],
+   "number_of_pages_median": 208,
+   "publisher": [
+    "Echiro oda",
+    "Shônen Manga",
+    "Planeta DeAgostini",
+    "Selbite",
+    "Glénat",
+    "viz media",
+    "Viz Media, Subs. of Shogakukan Inc",
+    "GLENAT",
+    "SHONEN JUMP",
+    "Tandem Library",
+    "Glénat Manga",
+    "Star Comics",
+    "Dong li chu ban she you xian gong si",
+    "LARP EDITORES",
+    "Gerekli Seyler",
+    "Carlsen",
+    "Viz Media",
+    "Shueisha",
+    "Carlsen Comics",
+    "Planeta Cómic"
+   ],
+   "title": "ONE PIECE 1",
+   "editions": {
+    "numFound": 18,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933698M",
+      "title": "One Piece, tome 1",
+      "cover_i": 15260568,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "September 1, 2000"
+      ],
+      "isbn": [
+       "9782723433358",
+       "2723433358"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Óne Píece"
+   ],
+   "cover_i": 12942980,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9798426481466"
+   ],
+   "key": "/works/OL27887597W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Óne Píece Coloring Book Gorgeous and Sweet Pics for Anime Fans an Amazing Coloring Book for Kids",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38114519M",
+      "title": "Óne Píece Coloring Book Gorgeous and Sweet Pics for Anime Fans an Amazing Coloring Book for Kids",
+      "cover_i": 12942980,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9798426481466"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "one piece one piece color"
+   ],
+   "cover_i": 15270730,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798502326704"
+   ],
+   "key": "/works/OL30957320W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 108,
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "One Piece Coloring Book",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL42526580M",
+      "title": "One Piece Coloring Book",
+      "cover_i": 15270730,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021-08-02"
+      ],
+      "isbn": [
+       "9798502326704"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 9609527,
+   "edition_count": 13,
+   "first_publish_year": 1998,
+   "isbn": [
+    "9861125809",
+    "9781421546049",
+    "9786055686451",
+    "355174582X",
+    "9780575078697",
+    "4088725441",
+    "8468471534",
+    "9781417681167",
+    "9781591160571",
+    "0575078693",
+    "9783551745828",
+    "9782723434317",
+    "1421546043",
+    "6055686457",
+    "159116057X",
+    "1417681160",
+    "9788468471532",
+    "2723434311",
+    "9784088725444",
+    "9789861125800"
+   ],
+   "key": "/works/OL8215641W",
+   "language": [
+    "ger",
+    "chi",
+    "spa",
+    "jpn",
+    "fre",
+    "tur",
+    "eng"
+   ],
+   "number_of_pages_median": 198,
+   "publisher": [
+    "GOLLANCZ (ORIO)",
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "Star Comics",
+    "viz media",
+    "SHONEN JUMP",
+    "Tandem Library",
+    "Shueisha",
+    "Carlsen",
+    "Glénat",
+    "Gerekli Seyler",
+    "Viz Media"
+   ],
+   "title": "ONE PIECE 2",
+   "editions": {
+    "numFound": 13,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12591001M",
+      "title": "One Piece, tome 2",
+      "cover_i": 3122474,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "November 22, 2000"
+      ],
+      "isbn": [
+       "9782723434317",
+       "2723434311"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Sanji"
+   ],
+   "cover_i": 12388174,
+   "edition_count": 4,
+   "first_publish_year": 2012,
+   "isbn": [
+    "4083331623",
+    "1974724468",
+    "9784087806588",
+    "4087806588",
+    "9784083331626",
+    "9781974724468"
+   ],
+   "key": "/works/OL25316198W",
+   "language": [
+    "jpn",
+    "eng"
+   ],
+   "number_of_pages_median": 96,
+   "publisher": [
+    "Shueisha",
+    "Viz Media"
+   ],
+   "title": "ONE PIECE PIRATE RECIPES",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL42341090M",
+      "title": "One Piece: Pirate Recipes",
+      "cover_i": 13011785,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Viz Media"
+      ],
+      "publish_date": [
+       "2021-11-23"
+      ],
+      "isbn": [
+       "9781974724468",
+       "1974724468"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 9485994,
+   "edition_count": 17,
+   "first_publish_year": 1998,
+   "isbn": [
+    "4088725948",
+    "9781591163374",
+    "8573519037",
+    "3551745846",
+    "9789572541043",
+    "9782723434812",
+    "1417681187",
+    "1591163374",
+    "9789861125824",
+    "2723489914",
+    "9788468471556",
+    "9572541048",
+    "9782723489911",
+    "0575080205",
+    "9781421546070",
+    "9783551745842",
+    "9781417681181",
+    "1421546078",
+    "9784088725949",
+    "8468471550",
+    "9780575080201",
+    "2723434818",
+    "9861125825",
+    "9788573519037"
+   ],
+   "key": "/works/OL8215640W",
+   "language": [
+    "eng",
+    "jpn",
+    "ger",
+    "spa",
+    "chi",
+    "fre",
+    "cmn"
+   ],
+   "number_of_pages_median": 190,
+   "publisher": [
+    "Tandem Library",
+    "Viz Media",
+    "Star Comics",
+    "SHONEN JUMP",
+    "viz media",
+    "Panini",
+    "Glénat",
+    "Dong li chu ban she you xian gong si",
+    "Orion Publishing Group, Limited",
+    "PlanetadeAgostini",
+    "Carlsen",
+    "Da ran kai fa wen hua shi ye gu fen you xian gong si",
+    "GLENAT",
+    "Dong Li",
+    "Shônen Manga (Educa Books)",
+    "Shueisha"
+   ],
+   "title": "ONE PIECE 4",
+   "editions": {
+    "numFound": 17,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933711M",
+      "title": "One Piece, tome 4",
+      "cover_i": 984613,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "March 14, 2001"
+      ],
+      "isbn": [
+       "9782723434812",
+       "2723434818"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 9929208,
+   "edition_count": 16,
+   "first_publish_year": 1998,
+   "isbn": [
+    "9781421546056",
+    "9788573518931",
+    "6055686481",
+    "1591161843",
+    "9872517924",
+    "9784088725697",
+    "9789861125817",
+    "9786055686482",
+    "9781415536841",
+    "9788468471549",
+    "2723489906",
+    "9789872517922",
+    "1421546051",
+    "3551745838",
+    "1417681179",
+    "9783551745835",
+    "8417537694",
+    "9788417537692",
+    "4088725697",
+    "9781417681174",
+    "272343480X",
+    "9861125817",
+    "8573518936",
+    "8468471542",
+    "1415536848",
+    "9782723489904",
+    "9782723434805",
+    "9781591161844"
+   ],
+   "key": "/works/OL8215644W",
+   "language": [
+    "jpn",
+    "tur",
+    "chi",
+    "ger",
+    "fre",
+    "spa",
+    "eng"
+   ],
+   "number_of_pages_median": 200,
+   "publisher": [
+    "Planeta DeAgostini",
+    "Viz/Shonen Jump Graphic Novel",
+    "viz media",
+    "Tandem Library",
+    "Dong li chu ban she you xian gong si",
+    "Star Comics",
+    "LARP EDITORES",
+    "Panini",
+    "Glénat",
+    "VIZ Media LLC",
+    "Shueisha",
+    "Carlsen",
+    "Viz Media",
+    "Gerekli Seyler",
+    "Turtleback Books",
+    "SHONEN JUMP",
+    "Editorial Ivrea"
+   ],
+   "title": "ONE PIECE 3",
+   "editions": {
+    "numFound": 16,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933710M",
+      "title": "One Piece, tome 3",
+      "cover_i": 984612,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "January 10, 2001"
+      ],
+      "isbn": [
+       "9782723434805",
+       "272343480X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020701,
+   "edition_count": 10,
+   "first_publish_year": 2000,
+   "isbn": [
+    "9786055015145",
+    "9781421510910",
+    "6055015145",
+    "9783551756244",
+    "3551756244",
+    "9781421548029",
+    "9784088728889",
+    "2723441539",
+    "141778489X",
+    "1428725296",
+    "9782723441537",
+    "9788468471655",
+    "9781417784899",
+    "0575081023",
+    "142151091X",
+    "9780575081024",
+    "9781428725294",
+    "142154802X",
+    "8468471658",
+    "4088728882"
+   ],
+   "key": "/works/OL8215655W",
+   "language": [
+    "jpn",
+    "eng",
+    "fre",
+    "spa",
+    "ger",
+    "tur"
+   ],
+   "number_of_pages_median": 191,
+   "publisher": [
+    "Glénat",
+    "Carlsen",
+    "Planeta DeAgostini",
+    "Viz Media",
+    "Shueisha/Tsai Fong Books",
+    "VIZ Media LLC",
+    "Shueisha",
+    "SHONEN JUMP",
+    "Gerekli Seyler",
+    "viz media",
+    "Orion Publishing Group, Limited",
+    "Turtleback"
+   ],
+   "title": "ONE PIECE 14",
+   "editions": {
+    "numFound": 10,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12591326M",
+      "title": "One Piece, tome 14",
+      "cover_i": 3122782,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "January 21, 2003"
+      ],
+      "isbn": [
+       "9782723441537",
+       "2723441539"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020568,
+   "edition_count": 12,
+   "first_publish_year": 1998,
+   "isbn": [
+    "3551745862",
+    "9789871695041",
+    "2723435601",
+    "159116723X",
+    "9783551745866",
+    "9781417680986",
+    "9781591167235",
+    "9788468471570",
+    "9781421546087",
+    "9861125841",
+    "9789861125848",
+    "9782723435604",
+    "1417680989",
+    "8468471577",
+    "9784088726427",
+    "9871695047",
+    "4088726421",
+    "1421546086"
+   ],
+   "key": "/works/OL8215668W",
+   "language": [
+    "jpn",
+    "chi",
+    "ger",
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 191,
+   "publisher": [
+    "Planeta DeAgostini",
+    "viz media",
+    "Tandem Library",
+    "Dong li chu ban she you xian gong si",
+    "Star Comics",
+    "LARP EDITORES",
+    "Viz Media",
+    "Glénat",
+    "Carlsen",
+    "Shueisha",
+    "VIZ Media",
+    "SHONEN JUMP",
+    "Turtleback"
+   ],
+   "title": "ONE PIECE 6",
+   "editions": {
+    "numFound": 12,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933721M",
+      "title": "One Piece, tome 6 ",
+      "cover_i": 984622,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "July 3, 2001"
+      ],
+      "isbn": [
+       "9782723435604",
+       "2723435601"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 9602846,
+   "edition_count": 11,
+   "first_publish_year": 1998,
+   "isbn": [
+    "9781417681198",
+    "1591166152",
+    "4088726197",
+    "1421545403",
+    "9861125833",
+    "9788468471563",
+    "2723434826",
+    "9782723434829",
+    "8468471569",
+    "9783551745859",
+    "9781421545400",
+    "9784088726199",
+    "1417681195",
+    "9781591166153",
+    "3551745854",
+    "9789861125831"
+   ],
+   "key": "/works/OL8215645W",
+   "language": [
+    "ita",
+    "ger",
+    "chi",
+    "spa",
+    "jpn",
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 190,
+   "publisher": [
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "VIZ Media LLC",
+    "Star Comics",
+    "viz media",
+    "SHONEN JUMP",
+    "Tandem Library",
+    "Paneta deAgostini",
+    "Shueisha",
+    "Glénat",
+    "Carlsen",
+    "Turtleback Books",
+    "Viz"
+   ],
+   "title": "ONE PIECE 5",
+   "editions": {
+    "numFound": 11,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933712M",
+      "title": "One Piece, tome 5",
+      "cover_i": 984614,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "May 23, 2001"
+      ],
+      "isbn": [
+       "9782723434829",
+       "2723434826"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 8432797,
+   "edition_count": 7,
+   "first_publish_year": 2005,
+   "isbn": [
+    "9789861163734",
+    "6059520995",
+    "1421534541",
+    "9783551757289",
+    "9786059520997",
+    "9784088738390",
+    "9781421545875",
+    "9788468471891",
+    "9861163735",
+    "408873839X",
+    "8468471895",
+    "3551757283",
+    "142154587X",
+    "9781421534541"
+   ],
+   "key": "/works/OL16802401W",
+   "language": [
+    "jpn",
+    "tur",
+    "chi",
+    "ger",
+    "spa",
+    "eng"
+   ],
+   "number_of_pages_median": 216,
+   "publisher": [
+    "Planeta DeAgostini",
+    "Gerekli Seyler Yayincilik",
+    "viz media",
+    "Dong li chu ban she you xian gong si",
+    "Shueisha",
+    "Carlsen Verlag GmbH",
+    "SHONEN JUMP"
+   ],
+   "title": "ONE PIECE 38",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26017642M",
+      "title": "One Piece, Vol. 38: Rocketman!!",
+      "cover_i": 15206124,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "SHONEN JUMP",
+       "viz media"
+      ],
+      "publish_date": [
+       "2010"
+      ],
+      "isbn": [
+       "9781421534541",
+       "1421534541"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020570,
+   "edition_count": 10,
+   "first_publish_year": 1999,
+   "isbn": [
+    "9572547445",
+    "6055686732",
+    "9781421546155",
+    "1421501910",
+    "4088727355",
+    "9783551745897",
+    "1417784849",
+    "2723436241",
+    "9781415638286",
+    "3551745897",
+    "1421546159",
+    "9781421501918",
+    "9789572547441",
+    "9782723436243",
+    "1415638284",
+    "9788468471600",
+    "8468471607",
+    "9781417784844",
+    "9784088727356",
+    "9786055686734"
+   ],
+   "key": "/works/OL8215671W",
+   "language": [
+    "eng",
+    "fre",
+    "jpn",
+    "ger",
+    "ita",
+    "chi",
+    "tur"
+   ],
+   "number_of_pages_median": 204,
+   "publisher": [
+    "Glénat",
+    "viz media",
+    "Shueisha",
+    "Viz Media",
+    "Da ran kai fa wen hua shi ye gong si",
+    "Gerekli Seyler",
+    "Planeta DeAgostini",
+    "Star Comics",
+    "Carlsen",
+    "SHONEN JUMP",
+    "Turtleback"
+   ],
+   "title": "ONE PIECE 9",
+   "editions": {
+    "numFound": 10,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12591101M",
+      "title": "One Piece, tome 9",
+      "cover_i": 3122563,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "February 12, 2002"
+      ],
+      "isbn": [
+       "9782723436243",
+       "2723436241"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020569,
+   "edition_count": 12,
+   "first_publish_year": 1999,
+   "isbn": [
+    "9784088726830",
+    "9783551745873",
+    "159116852X",
+    "9781591168522",
+    "9788468471587",
+    "1421546132",
+    "986112585X",
+    "8468471585",
+    "3551745870",
+    "2723436225",
+    "9781417680993",
+    "0575080957",
+    "4088726839",
+    "1435221524",
+    "9781435221529",
+    "1417680997",
+    "9782723436229",
+    "9789861125855",
+    "9781421546131",
+    "9780575080959"
+   ],
+   "key": "/works/OL8215669W",
+   "language": [
+    "ita",
+    "ger",
+    "chi",
+    "jpn",
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 191,
+   "publisher": [
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "Star Comics",
+    "viz media",
+    "SHONEN JUMP",
+    "Tandem Library",
+    "Shueisha",
+    "Carlsen",
+    "Glénat",
+    "Viz Media",
+    "Orion Publishing Group, Limited"
+   ],
+   "title": "ONE PIECE 7",
+   "editions": {
+    "numFound": 12,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8933730M",
+      "title": "One Piece, tome 7 ",
+      "cover_i": 984632,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "September 25, 2001"
+      ],
+      "isbn": [
+       "9782723436229",
+       "2723436225"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020698,
+   "edition_count": 14,
+   "first_publish_year": 1999,
+   "isbn": [
+    "9789572549377",
+    "3551756201",
+    "9781417784851",
+    "1421547783",
+    "0575080981",
+    "2723492559",
+    "9780575080980",
+    "8468471615",
+    "9789861125886",
+    "1417784857",
+    "9788468471617",
+    "272343625X",
+    "9784088727738",
+    "1415668922",
+    "1421504065",
+    "9781415668924",
+    "4088727738",
+    "6055686821",
+    "9782723436250",
+    "9861125884",
+    "9572549375",
+    "9786055686826",
+    "9782723492553",
+    "9781421547787",
+    "9781421504063",
+    "9783551756206"
+   ],
+   "key": "/works/OL8215651W",
+   "language": [
+    "jpn",
+    "ger",
+    "tur",
+    "fre",
+    "eng",
+    "chi"
+   ],
+   "number_of_pages_median": 191,
+   "publisher": [
+    "Turtleback",
+    "VIZ Media LLC",
+    "Da ran kai fa wen hua shi ye gu fen you xian gong si",
+    "Glénat",
+    "Viz Media",
+    "SHONEN JUMP",
+    "Dong li chu ban she you xian gong si",
+    "Star Comics",
+    "Shueisha",
+    "viz media",
+    "Carlsen",
+    "Planeta DeAgostini",
+    "Shônen Manga (Educa Books)",
+    "Orion Publishing Group, Limited",
+    "Gerekli Seyler"
+   ],
+   "title": "ONE PIECE 10",
+   "editions": {
+    "numFound": 14,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49666834M",
+      "title": "One piece - Édition originale Vol.10 (One Piece, 10) (French Edition)",
+      "cover_i": 14843415,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Shônen Manga (Educa Books)"
+      ],
+      "publish_date": [
+       "2013-07-15"
+      ],
+      "isbn": [
+       "9782723492553",
+       "2723492559"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 7832218,
+   "edition_count": 7,
+   "first_publish_year": 2005,
+   "isbn": [
+    "1421545896",
+    "9784088738024",
+    "9861163727",
+    "9789861163727",
+    "9786059520867",
+    "9788468471884",
+    "8468471887",
+    "4088738020",
+    "3551757275",
+    "9781421545899",
+    "9781421534534",
+    "1421534533",
+    "9783551757272",
+    "6059520863"
+   ],
+   "key": "/works/OL16802400W",
+   "language": [
+    "ger",
+    "chi",
+    "spa",
+    "jpn",
+    "tur",
+    "eng"
+   ],
+   "number_of_pages_median": 232,
+   "publisher": [
+    "Gerekli Seyler Yayincilik",
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "viz media",
+    "Carlsen Verlag GmbH",
+    "SHONEN JUMP",
+    "Shueisha"
+   ],
+   "title": "ONE PIECE 37",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26155912M",
+      "title": "One Piece, Vol. 37",
+      "cover_i": 15207571,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "SHONEN JUMP",
+       "viz media"
+      ],
+      "publish_date": [
+       "2010-03-02"
+      ],
+      "isbn": [
+       "9781421534534",
+       "1421534533"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020705,
+   "edition_count": 8,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9781421515120",
+    "8468471690",
+    "9781421546841",
+    "6055015374",
+    "3551756287",
+    "408873100X",
+    "9789861127286",
+    "1421515121",
+    "9784088731001",
+    "9861127283",
+    "9786055015374",
+    "9788468471693",
+    "9783551756282",
+    "1421546841"
+   ],
+   "key": "/works/OL8215659W",
+   "language": [
+    "ger",
+    "chi",
+    "spa",
+    "jpn",
+    "tur",
+    "cmn",
+    "eng"
+   ],
+   "number_of_pages_median": 214,
+   "publisher": [
+    "Dong Li",
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "viz media",
+    "SHONEN JUMP",
+    "Shueisha",
+    "Carlsen",
+    "Gerekli Seyler",
+    "Viz Media"
+   ],
+   "title": "ONE PIECE 18",
+   "editions": {
+    "numFound": 8,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9030215M",
+      "title": "One Piece 18",
+      "cover_i": 14348569,
+      "language": [
+       "jpn"
+      ],
+      "publisher": [
+       "Shueisha"
+      ],
+      "publish_date": [
+       "2001-04-04"
+      ],
+      "isbn": [
+       "9784088731001",
+       "408873100X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020710,
+   "edition_count": 7,
+   "first_publish_year": 2001,
+   "isbn": [
+    "8468471755",
+    "3551756341",
+    "4088732820",
+    "9781421528458",
+    "9781421546223",
+    "9786059141253",
+    "9783551756343",
+    "9789861127545",
+    "6059141250",
+    "1421528452",
+    "1421546221",
+    "9861127542",
+    "9784088732824",
+    "9788468471754"
+   ],
+   "key": "/works/OL8215648W",
+   "language": [
+    "ger",
+    "chi",
+    "spa",
+    "jpn",
+    "tur",
+    "eng"
+   ],
+   "number_of_pages_median": 215,
+   "publisher": [
+    "Gerekli Seyler Yayincilik",
+    "Planeta DeAgostini",
+    "Dong li chu ban she you xian gong si",
+    "viz media",
+    "SHONEN JUMP",
+    "Shueisha",
+    "Carlsen",
+    "Viz Media"
+   ],
+   "title": "ONE PIECE 24",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27107762M",
+      "title": "Hang hai wang",
+      "language": [
+       "chi"
+      ],
+      "publisher": [
+       "Dong li chu ban she you xian gong si"
+      ],
+      "publish_date": [
+       "2003"
+      ],
+      "isbn": [
+       "9861127542",
+       "9789861127545"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 3122735,
+   "edition_count": 12,
+   "first_publish_year": 2000,
+   "isbn": [
+    "1428700900",
+    "9781428700901",
+    "6055015099",
+    "846847164X",
+    "9782723440103",
+    "9783551756237",
+    "9781421506654",
+    "1421506653",
+    "4088728637",
+    "9572554255",
+    "9781421547909",
+    "9789861127231",
+    "9861127232",
+    "9788468471648",
+    "9780575081017",
+    "3551756236",
+    "2723440109",
+    "1421547902",
+    "9784088728636",
+    "9789572554258",
+    "9786055015091",
+    "0575081015"
+   ],
+   "key": "/works/OL8215654W",
+   "language": [
+    "jpn",
+    "ger",
+    "tur",
+    "ita",
+    "fre",
+    "eng",
+    "chi",
+    "cmn",
+    "spa"
+   ],
+   "number_of_pages_median": 183,
+   "publisher": [
+    "VIZ Media LLC",
+    "Da ran kai fa wen hua shi ye gu fen you xian gong si",
+    "Dong Li",
+    "Glénat",
+    "Viz Media",
+    "SHONEN JUMP",
+    "Star Comics",
+    "Shueisha",
+    "viz media",
+    "Carlsen",
+    "Planeta DeAgostini",
+    "Orion Publishing Group, Limited",
+    "Gerekli Seyler"
+   ],
+   "title": "ONE PIECE 13",
+   "editions": {
+    "numFound": 12,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12591277M",
+      "title": "One Piece, tome 13",
+      "cover_i": 3122735,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "October 15, 2002"
+      ],
+      "isbn": [
+       "9782723440103",
+       "2723440109"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020703,
+   "edition_count": 7,
+   "first_publish_year": 2000,
+   "isbn": [
+    "9781421510934",
+    "8468471674",
+    "6055015293",
+    "2723442403",
+    "4088730453",
+    "1421510936",
+    "9783551756268",
+    "9782723442404",
+    "9784088730455",
+    "9788468471679",
+    "9781421548043",
+    "3551756260",
+    "1421548046",
+    "9786055015299"
+   ],
+   "key": "/works/OL8215657W",
+   "language": [
+    "jpn",
+    "tur",
+    "ger",
+    "fre",
+    "spa",
+    "eng"
+   ],
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Planeta DeAgostini",
+    "viz media",
+    "Viz Media",
+    "Glénat",
+    "Carlsen",
+    "Shueisha",
+    "Gerekli Seyler",
+    "SHONEN JUMP"
+   ],
+   "title": "ONE PIECE 16",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12591354M",
+      "title": "One Piece, tome 16",
+      "cover_i": 3122810,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Glénat"
+      ],
+      "publish_date": [
+       "May 14, 2003"
+      ],
+      "isbn": [
+       "9782723442404",
+       "2723442403"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "尾田栄一郎"
+   ],
+   "cover_i": 1020699,
+   "edition_count": 11,
+   "first_publish_year": 1999,
+   "isbn": [
+    "9781421506630",
+    "9782723436267",
+    "355175621X",
+    "4088727975",
+    "9781415672853",
+    "1417784865",
+    "2723436268",
+    "9783551756213",
+    "9788468471624",
+    "2723492567",
+    "9784088727974",
+    "9781421547886",
+    "9786055686895",
+    "1421547880",
+    "6055686899",
+    "8468471623",
+    "1415672857",
+    "9782723492560",
+    "1421506637",
+    "9781417784868"
+   ],
+   "key": "/works/OL8215652W",
+   "language": [
+    "fre",
+    "eng",
+    "jpn",
+    "ger",
+    "ita",
+    "tur"
+   ],
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Glénat",
+    "viz media",
+    "VIZ Media LLC",
+    "Shueisha",
+    "Viz Media",
+    "Gerekli Seyler",
+    "Planeta DeAgostini",
+    "Star Comics",
+    "Carlsen",
+    "SHONEN JUMP",
+    "Turtleback"
+   ],
+   "title": "ONE PIECE 11",
+   "editions": {
+    "numFound": 11,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49669014M",
+      "title": "One piece - Édition originale Vol.11 Le plus grand bandit d'East Blue (French Edition) (One Piece, 11)",
+      "cover_i": 15095841,
+      "language": [
+       "fre"
+      ],
+      "isbn": [
+       "9782723492560",
+       "2723492567"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,5 +1,6 @@
 package zelytra.librarius.catalog.provider;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.GET;
@@ -30,7 +31,8 @@ public interface OpenLibraryClient {
     Uni<SearchResponse> search(@QueryParam("q") String q,
             @QueryParam("limit") int limit,
             @QueryParam("fields") String fields,
-            @QueryParam("sort") String sort);
+            @QueryParam("sort") String sort,
+            @QueryParam("lang") String lang);
 
     /**
      * The editions of a work, the source for "the other printings of this title". {@code ref}
@@ -42,9 +44,11 @@ public interface OpenLibraryClient {
     @Produces(MediaType.APPLICATION_JSON)
     Uni<EditionsResponse> editions(@PathParam("ref") String ref, @QueryParam("limit") int limit);
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record SearchResponse(List<Doc> docs) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record Doc(
             String key,
             String title,
@@ -54,7 +58,29 @@ public interface OpenLibraryClient {
             List<String> isbn,
             List<String> publisher,
             List<String> language,
-            @JsonProperty("number_of_pages_median") Integer numberOfPagesMedian) {
+            @JsonProperty("number_of_pages_median") Integer numberOfPagesMedian,
+            @JsonProperty("edition_count") Integer editionCount,
+            EditionHits editions) {
+    }
+
+    /**
+     * The {@code editions} sub-document of a work: with {@code lang=fr} Open Library puts the
+     * edition it picked for that language first, so {@code docs[0]} is the French printing of
+     * the work when one exists.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record EditionHits(List<EditionDoc> docs) {
+    }
+
+    /** The preferred edition of a work, with the fields that differ from the work's own. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record EditionDoc(
+            String key,
+            String title,
+            List<String> language,
+            @JsonProperty("cover_i") Long coverId,
+            List<String> isbn,
+            List<String> publisher) {
     }
 
     record EditionsResponse(List<EditionEntry> entries) {

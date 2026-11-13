@@ -1,0 +1,931 @@
+{
+ "numFound": 48,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 48,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "blacksad",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 6671224,
+   "edition_count": 1,
+   "first_publish_year": 2010,
+   "isbn": [
+    "159582393X",
+    "9781595823939"
+   ],
+   "key": "/works/OL15507163W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 184,
+   "publisher": [
+    "Dark Horse Books"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL24468072M",
+      "title": "Blacksad",
+      "cover_i": 6671224,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Dark Horse Books"
+      ],
+      "publish_date": [
+       "2010"
+      ],
+      "isbn": [
+       "9781595823939",
+       "159582393X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 7274558,
+   "edition_count": 7,
+   "first_publish_year": 2003,
+   "isbn": [
+    "9780743479356",
+    "0743479351",
+    "9781506716183",
+    "0743479912",
+    "1506716180",
+    "9780743479912",
+    "9788484312451",
+    "8484317323",
+    "8484312453",
+    "9788484317326"
+   ],
+   "key": "/works/OL13730634W",
+   "language": [
+    "spa",
+    "eng"
+   ],
+   "number_of_pages_median": 54,
+   "publisher": [
+    "ibooks",
+    "Norma Editorial",
+    "Dark Horse Comics",
+    "Ibooks",
+    "Dark Horse Books",
+    "NORMA EDITORIAL, S.A.",
+    "IBooks",
+    "Distributed by Simon & Schuster"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL7951109M",
+      "title": "Blacksad 2 (Blacksad)",
+      "cover_i": 478732,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "IBooks"
+      ],
+      "publish_date": [
+       "February 24, 2004"
+      ],
+      "isbn": [
+       "9780743479356",
+       "0743479351"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juanjo Guarnido",
+    "Juan Díaz Canales"
+   ],
+   "cover_i": 10874523,
+   "edition_count": 3,
+   "first_publish_year": 2005,
+   "isbn": [
+    "9789067938006",
+    "9789874068644",
+    "9788467904857",
+    "9874068647",
+    "9067938009",
+    "8467904852"
+   ],
+   "key": "/works/OL24349739W",
+   "language": [
+    "spa"
+   ],
+   "number_of_pages_median": 144,
+   "publisher": [
+    "Dargaud Benelux",
+    "NORMA EDITORIAL, S.A.",
+    "Utopia Editorial"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL57683215M",
+      "title": "Blacksad",
+      "cover_i": 14842004,
+      "publisher": [
+       "Dargaud Benelux"
+      ],
+      "publish_date": [
+       "Jan 01, 2005"
+      ],
+      "isbn": [
+       "9789067938006",
+       "9067938009"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 877144,
+   "edition_count": 1,
+   "first_publish_year": 2004,
+   "isbn": [
+    "1596878177",
+    "9781596878174"
+   ],
+   "key": "/works/OL8454872W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 54,
+   "publisher": [
+    "IBooks Graphic Novel"
+   ],
+   "title": "Blacksad, Vol. 1",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8892147M",
+      "title": "Blacksad, Vol. 1",
+      "cover_i": 877144,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "IBooks Graphic Novel"
+      ],
+      "publish_date": [
+       "January 25, 2004"
+      ],
+      "isbn": [
+       "9781596878174",
+       "1596878177"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 10874482,
+   "edition_count": 1,
+   "first_publish_year": 2005,
+   "isbn": [
+    "9788498144222",
+    "8498144221"
+   ],
+   "key": "/works/OL24349703W",
+   "number_of_pages_median": 56,
+   "publisher": [
+    "NORMA EDITORIAL, S.A."
+   ],
+   "title": "BLACKSAD 03",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL32243665M",
+      "title": "BLACKSAD 03",
+      "cover_i": 10874482,
+      "publisher": [
+       "NORMA EDITORIAL, S.A."
+      ],
+      "publish_date": [
+       "Nov 25, 2005"
+      ],
+      "isbn": [
+       "9788498144222",
+       "8498144221"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 877145,
+   "edition_count": 1,
+   "first_publish_year": 2005,
+   "isbn": [
+    "1596878185",
+    "9781596878181"
+   ],
+   "key": "/works/OL8454876W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 72,
+   "publisher": [
+    "IBooks"
+   ],
+   "title": "Blacksad Volume 2 (Blacksad)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8892148M",
+      "title": "Blacksad Volume 2 (Blacksad)",
+      "cover_i": 877145,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "IBooks"
+      ],
+      "publish_date": [
+       "September 2005"
+      ],
+      "isbn": [
+       "9781596878181",
+       "1596878185"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2012,
+   "isbn": [
+    "9781595829313",
+    "1595829318"
+   ],
+   "key": "/works/OL19956449W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 108,
+   "publisher": [
+    "Dark Horse Books"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27136718M",
+      "title": "Blacksad",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Dark Horse Books"
+      ],
+      "publish_date": [
+       "2012"
+      ],
+      "isbn": [
+       "9781595829313",
+       "1595829318"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 10840317,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9782205071801",
+    "2205071807"
+   ],
+   "key": "/works/OL24321357W",
+   "number_of_pages_median": 56,
+   "publisher": [
+    "DARGAUD"
+   ],
+   "title": "Blacksad - Tome 5 - Amarillo",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL32186748M",
+      "title": "Blacksad - Tome 5 - Amarillo",
+      "cover_i": 10840317,
+      "publisher": [
+       "DARGAUD"
+      ],
+      "publish_date": [
+       "Nov 15, 2013"
+      ],
+      "isbn": [
+       "9782205071801",
+       "2205071807"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 973408,
+   "edition_count": 1,
+   "first_publish_year": 2000,
+   "isbn": [
+    "2205049658",
+    "9782205049657"
+   ],
+   "key": "/works/OL31449299W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 48,
+   "publisher": [
+    "Dargaud"
+   ],
+   "title": "Blacksad, tome 1",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8864289M",
+      "title": "Blacksad, tome 1",
+      "cover_i": 973408,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Dargaud"
+      ],
+      "publish_date": [
+       "November 10, 2000"
+      ],
+      "isbn": [
+       "9782205049657",
+       "2205049658"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 7352557,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "8467914254",
+    "9788467914252"
+   ],
+   "key": "/works/OL17117890W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Norma"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25688524M",
+      "title": "Blacksad",
+      "cover_i": 7352557,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Norma"
+      ],
+      "publish_date": [
+       "2013"
+      ],
+      "isbn": [
+       "9788467914252",
+       "8467914254"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 6681734,
+   "edition_count": 1,
+   "first_publish_year": 2010,
+   "isbn": [
+    "2205063138",
+    "9782205063134"
+   ],
+   "key": "/works/OL15667751W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "Dargaud"
+   ],
+   "title": "Blacksad, tome 4",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL24598510M",
+      "title": "Blacksad, tome 4",
+      "cover_i": 6681734,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Dargaud"
+      ],
+      "publish_date": [
+       "2010"
+      ],
+      "isbn": [
+       "9782205063134",
+       "2205063138"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 12553964,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9782205078046",
+    "2205078046"
+   ],
+   "key": "/works/OL27043401W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 60,
+   "publisher": [
+    "Dargaud"
+   ],
+   "title": "Blacksad, tome 6",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36664394M",
+      "title": "Blacksad, tome 6",
+      "cover_i": 12553964,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Dargaud"
+      ],
+      "publish_date": [
+       "Oct 01, 2021"
+      ],
+      "isbn": [
+       "9782205078046",
+       "2205078046"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9781616555252",
+    "1616555254"
+   ],
+   "key": "/works/OL19986145W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 63,
+   "publisher": [
+    "Dark Horse Comics"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27166272M",
+      "title": "Blacksad",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Dark Horse Comics"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9781616555252",
+       "1616555254"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juanjo Guarnido",
+    "Juan Díaz Canales"
+   ],
+   "cover_i": 479525,
+   "edition_count": 2,
+   "first_publish_year": 2005,
+   "isbn": [
+    "0743498380",
+    "9780743498388"
+   ],
+   "key": "/works/OL13739145W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 96,
+   "publisher": [
+    "IBooks",
+    "ibooks"
+   ],
+   "title": "The Blacksad Files 3",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL7951712M",
+      "title": "Blacksad 3",
+      "cover_i": 479525,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "IBooks"
+      ],
+      "publish_date": [
+       "August 1, 2005"
+      ],
+      "isbn": [
+       "9780743498388",
+       "0743498380"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 10864664,
+   "edition_count": 1,
+   "first_publish_year": 2005,
+   "isbn": [
+    "220505564X",
+    "9782205055641"
+   ],
+   "key": "/works/OL24341343W",
+   "number_of_pages_median": 56,
+   "publisher": [
+    "DARGAUD"
+   ],
+   "title": "Blacksad - Tome 3 - Âme rouge",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL32223197M",
+      "title": "Blacksad - Tome 3 - Âme rouge",
+      "cover_i": 10864664,
+      "publisher": [
+       "DARGAUD"
+      ],
+      "publish_date": [
+       "Nov 18, 2005"
+      ],
+      "isbn": [
+       "9782205055641",
+       "220505564X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 7381475,
+   "edition_count": 2,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9781506730578",
+    "1506730574"
+   ],
+   "key": "/works/OL17278806W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Dark Horse Comics",
+    "Norma",
+    "Dark Horse Books"
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25851648M",
+      "title": "Blacksad: Alma Roja",
+      "cover_i": 7381475,
+      "publisher": [
+       "Norma"
+      ],
+      "publish_date": [
+       "2014"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales"
+   ],
+   "cover_i": 4915483,
+   "edition_count": 1,
+   "first_publish_year": 2005,
+   "isbn": [
+    "9788484317326",
+    "8484317323"
+   ],
+   "key": "/works/OL8454871W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 56,
+   "publisher": [
+    "Norma Editorial Sa"
+   ],
+   "title": "Blacksad 2 Arctic-Nation",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9145812M",
+      "title": "Blacksad 2 Arctic-Nation",
+      "cover_i": 4915483,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Norma Editorial Sa"
+      ],
+      "publish_date": [
+       "April 30, 2005"
+      ],
+      "isbn": [
+       "9788484317326",
+       "8484317323"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 14842005,
+   "edition_count": 1,
+   "isbn": [
+    "9789067936750",
+    "9067936758"
+   ],
+   "key": "/works/OL42503345W",
+   "publisher": [
+    "Dargaud Benelux"
+   ],
+   "title": "Blacksad 2",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL57683217M",
+      "title": "Blacksad 2",
+      "cover_i": 14842005,
+      "publisher": [
+       "Dargaud Benelux"
+      ],
+      "isbn": [
+       "9789067936750",
+       "9067936758"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 7445594,
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9788467917918",
+    "8467917911"
+   ],
+   "key": "/works/OL17367606W",
+   "language": [
+    "spa"
+   ],
+   "number_of_pages_median": 274,
+   "publisher": [
+    "Norma Editorial",
+    "NORMA EDITORIAL, S.A."
+   ],
+   "title": "Blacksad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25946430M",
+      "title": "Blacksad : integral",
+      "cover_i": 7445594,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Norma Editorial",
+       "NORMA EDITORIAL, S.A."
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9788467917918",
+       "8467917911"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Juan Díaz Canales",
+    "Juanjo Guarnido"
+   ],
+   "cover_i": 873631,
+   "edition_count": 1,
+   "first_publish_year": 2006,
+   "isbn": [
+    "9781594972171",
+    "1594972176"
+   ],
+   "key": "/works/OL8454875W",
+   "language": [
+    "spa"
+   ],
+   "number_of_pages_median": 56,
+   "publisher": [
+    "Public Square Books"
+   ],
+   "title": "Blacksad, tome 3",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL8880103M",
+      "title": "Blacksad vol. 3",
+      "cover_i": 873631,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Public Square Books"
+      ],
+      "publish_date": [
+       "December 25, 2006"
+      ],
+      "isbn": [
+       "9781594972171",
+       "1594972176"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

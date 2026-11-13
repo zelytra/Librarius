@@ -1,0 +1,1003 @@
+{
+ "numFound": 88,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 88,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "le nom du vent",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "Patrick Rothfuss",
+    "Marc Simonetti"
+   ],
+   "cover_i": 11480483,
+   "edition_count": 76,
+   "first_publish_year": 2007,
+   "isbn": [
+    "9789789655175",
+    "9788499082479",
+    "960497274X",
+    "1491515015",
+    "9781101147160",
+    "1956000674",
+    "9780756413712",
+    "9780575081390",
+    "9781956000658",
+    "9780575087057",
+    "9781423389286",
+    "0575087056",
+    "8401352347",
+    "8466354026",
+    "9781469203829",
+    "9022548007",
+    "9789022548004",
+    "978-3608962505",
+    "9788499899329",
+    "978-3608938784",
+    "0575129476",
+    "9781399614948",
+    "9783867173575",
+    "9780756404079",
+    "9783608101362",
+    "9782352942832",
+    "147322408X",
+    "0756405890",
+    "9781407234724",
+    "9781429534840",
+    "9785699399376",
+    "9786555651850",
+    "0756413710",
+    "360893815X",
+    "9789655177",
+    "6073111606",
+    "1101192259",
+    "0575081406",
+    "1956000682",
+    "6053751340",
+    "9781473211896",
+    "5699399372",
+    "9780756405892",
+    "1956000658",
+    "9780756404741",
+    "1469203820",
+    "1469203812",
+    "0756404746",
+    "1101147164",
+    "9606231453",
+    "9789604972746",
+    "1429534818",
+    "9781956000689",
+    "1473211891",
+    "142338928X",
+    "3608101365",
+    "0575116714",
+    "8580410630",
+    "9788380622692",
+    "9788401337208",
+    "9780575129474",
+    "9782352943556",
+    "2352942837",
+    "9781473224087",
+    "8499082475",
+    "3608938788",
+    "3608962506",
+    "9783608938159",
+    "9504966365",
+    "9781439560808",
+    "0345805364",
+    "9781101192252",
+    "1439560803",
+    "9781491515013",
+    "8055117621",
+    "8834713656",
+    "9783608938784",
+    "9780345805362",
+    "3867173575",
+    "8380622693",
+    "9788401022524",
+    "9781469203812",
+    "9786053751342",
+    "9781473223073",
+    "0575081392",
+    "2352943558",
+    "9783608962505",
+    "9781429534819",
+    "9789606231452",
+    "9780575081383",
+    "9788580410631",
+    "9788758808314",
+    "0575081384",
+    "1399614940",
+    "1407234722",
+    "9781956000672",
+    "075640407X",
+    "1429534842",
+    "9788834713655",
+    "9789504966364",
+    "978-3867173575",
+    "1473223075",
+    "1101192453",
+    "1956000666",
+    "6555651857",
+    "8401022525",
+    "8499899323",
+    "950644174X",
+    "9789506441746",
+    "9786073111607",
+    "9788466344579",
+    "9788466354028",
+    "8466344578",
+    "9780575081406",
+    "8401337208",
+    "9781956000665",
+    "9789022557068",
+    "9022557065",
+    "8758808310",
+    "9780575116719",
+    "9781101192450",
+    "9788401352348"
+   ],
+   "key": "/works/OL8479867W",
+   "language": [
+    "dan",
+    "heb",
+    "dut",
+    "slo",
+    "rus",
+    "ger",
+    "por",
+    "tur",
+    "fre",
+    "ita",
+    "eng",
+    "gre",
+    "spa"
+   ],
+   "number_of_pages_median": 736,
+   "publisher": [
+    "Grim Oak Press",
+    "PLAZA & JANES EDITORES",
+    "Rothfuss, Patrick",
+    "İthaki Yayınları",
+    "Editora Arqueiro",
+    "Arqueiro",
+    "DAW",
+    "Anubis",
+    "Plaza & Janés",
+    "Debolsillo",
+    "Tellerup",
+    "Penguin USA, Inc.",
+    "Penguin Group DAW",
+    "DAW BOOKS",
+    "Rebis",
+    "Penguin Group USA, Inc.",
+    "Distributed by Penguin Group",
+    "Daw Books",
+    "Gollancz",
+    "Fanucci",
+    "Bragelonne",
+    "Meulenhoff Boekerij B.V.",
+    "Der Hörverlag",
+    "Random House Mondadori S.A.",
+    "Mynx",
+    "Klett-Cotta",
+    "der Hörverlag",
+    "Эксмо",
+    "DAW Books",
+    "Distributed by Penguin Group (USA) Inc.",
+    "Ikar",
+    "Daw Books Inc.",
+    "Orion Publishing Group, Limited",
+    "Paw Prints",
+    "Plaza & Janes",
+    "Daw Books, Inc.",
+    "DEBOLSILLO",
+    "Penguin Random House Grupo Editorial",
+    "Vintage Espanol",
+    "Brilliance Audio",
+    "כנרת",
+    "Orion Publishing Group",
+    "Orion",
+    "DAW Books, Inc."
+   ],
+   "title": "The Name of the Wind",
+   "editions": {
+    "numFound": 76,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26414789M",
+      "title": "Le Nom du Vent",
+      "cover_i": 8118037,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Bragelonne"
+      ],
+      "publish_date": [
+       "2009"
+      ],
+      "isbn": [
+       "9782352942832",
+       "2352942837"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre Pelot"
+   ],
+   "cover_i": 2137132,
+   "edition_count": 2,
+   "first_publish_year": 1998,
+   "isbn": [
+    "2070412113",
+    "2207245004",
+    "9782070412112",
+    "9782207245002"
+   ],
+   "key": "/works/OL15089956W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 393,
+   "publisher": [
+    "Denoël",
+    "Gallimard"
+   ],
+   "title": "Le nom perdu du soleil",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL418070M",
+      "title": "Le nom perdu du soleil",
+      "cover_i": 2144505,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Denoël"
+      ],
+      "publish_date": [
+       "1998"
+      ],
+      "isbn": [
+       "2207245004",
+       "9782207245002"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "France. Assemblée nationale constituante (1789-1791). Comité de l'imposition"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL33170681W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 39,
+   "publisher": [
+    "De l'imprimerie nationale"
+   ],
+   "title": "Rapport fait au nom du Comité de l'imposition",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL45052658M",
+      "title": "Rapport fait au nom du Comité de l'imposition",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'imprimerie nationale"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Renard, Jules",
+    "Jules Renard",
+    "Andre Fermigier"
+   ],
+   "cover_i": 5793791,
+   "edition_count": 37,
+   "first_publish_year": 1894,
+   "isbn": [
+    "9782743203429",
+    "2702156010",
+    "2277120111",
+    "8742975018",
+    "9782266082778",
+    "2277110116",
+    "9782266005036",
+    "9782277110118",
+    "1567925235",
+    "2266082779",
+    "9781567925234",
+    "2266005030",
+    "9781412174916",
+    "9782070370900",
+    "9782702156018",
+    "1412130646",
+    "9782277120117",
+    "9782110809742",
+    "2743203420",
+    "2038701989",
+    "9788742975015",
+    "2253160431",
+    "2253026956",
+    "1412130654",
+    "9781412130646",
+    "2110809744",
+    "9781412130653",
+    "9782253026952",
+    "2070370909",
+    "9782253160434",
+    "1412174910",
+    "9782038701982"
+   ],
+   "key": "/works/OL1498223W",
+   "language": [
+    "ger",
+    "fre",
+    "eng"
+   ],
+   "number_of_pages_median": 192,
+   "publisher": [
+    "eBooksLib",
+    "Librairie E. Flammarion",
+    "Imprimerie Nationale",
+    "David R. Godine, Publisher",
+    "Gallimard",
+    "Librairie Générale Française",
+    "Walker",
+    "J'ai Lu",
+    "Calmann-Levy",
+    "E. Flammarion",
+    "Éditions J'ai lu : exclusivité de vente, Flammarion",
+    "Samuel French",
+    "Guilde du livre",
+    "Arthème Fayard",
+    "Librairie Larousse",
+    "Presses Pocket",
+    "Modern-Théâtre",
+    "Calmann-Lévy",
+    "Pocket",
+    "Macmillan",
+    "Éd. Carrefour",
+    "Librairie générale française",
+    "Garnier-Flammarion",
+    "Ernest Flammarion",
+    "Grey Walls Press",
+    "Grafisk Forlag",
+    "Gallimard-Jeunesse",
+    "S. French",
+    "Flammarion"
+   ],
+   "title": "Poil de carotte",
+   "editions": {
+    "numFound": 37,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL17998700M",
+      "title": "Poil de Carotte.",
+      "cover_i": 5793791,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Modern-Théâtre"
+      ],
+      "publish_date": [
+       "1911"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "L. G. Bouteville",
+    "France. Assemblée nationale constituante (1789-1791). Comité de l'aliénation des biens nationaux"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL44460963W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 11,
+   "publisher": [
+    "Impr. nat."
+   ],
+   "title": "Décret de l'Assemblée nationale, du 10 octobre 1790, sur les ventes aux municipalités des domaines nationaux ; Précédé du rapport fait au nom du comité chargé de l'aliénation des domaines nationaux",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60728605M",
+      "title": "Décret de l'Assemblée nationale, du 10 octobre 1790, sur les ventes aux municipalités des domaines nationaux ; Précédé du rapport fait au nom du comité chargé de l'aliénation des domaines nationaux",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Impr. nat."
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "B. Bare  re"
+   ],
+   "cover_i": 13411819,
+   "edition_count": 1,
+   "first_publish_year": 1794,
+   "key": "/works/OL17340891W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "De l'Imprimerie nationale"
+   ],
+   "title": "Rapport fait au nom du Comite  de salut public par Bare  re, sur les colonies franc ʹaises Isles-du-Vent",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25917764M",
+      "title": "Rapport fait au nom du Comite  de salut public par Bare  re, sur les colonies franc ʹaises Isles-du-Vent",
+      "cover_i": 13411819,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie nationale"
+      ],
+      "publish_date": [
+       "1794"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Louis Guislain Bouteville du Metz"
+   ],
+   "cover_i": 13369648,
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL17366601W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 11,
+   "publisher": [
+    "De l'Imprimerie nationale"
+   ],
+   "title": "De cret de l'Assemble e nationale, du 10 octobre 1790, sur les ventes aux municipalite s des domaines nationaux, sanctionne  par le Roi le [blank] du me me mois",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25945387M",
+      "title": "De cret de l'Assemble e nationale, du 10 octobre 1790, sur les ventes aux municipalite s des domaines nationaux, sanctionne  par le Roi le [blank] du me me mois",
+      "cover_i": 13369648,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie nationale"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre-Claude-Noël Dedelay d'Agier"
+   ],
+   "cover_i": 11914932,
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL17600696W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 15,
+   "publisher": [
+    "De l'Imprimerie du roi"
+   ],
+   "title": "Rapport fait au nom du Comite  pour l'alie nation des biens domaniaux et eccle siastiques, sur les ventes de ces biens",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26204274M",
+      "title": "Rapport fait au nom du Comite  pour l'alie nation des biens domaniaux et eccle siastiques, sur les ventes de ces biens",
+      "cover_i": 11914932,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie du roi"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Saint-Domingue. Commissaires nationaux-civils"
+   ],
+   "cover_i": 11852644,
+   "edition_count": 2,
+   "first_publish_year": 1794,
+   "key": "/works/OL24937396W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "de l'Imprimerie de la Commission-civile."
+   ],
+   "title": "Commission civile.. Au nom du peuple français",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL33147860M",
+      "title": "Commission civile.. Au nom du peuple français",
+      "cover_i": 11852644,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "de l'Imprimerie de la Commission-civile."
+      ],
+      "publish_date": [
+       "1794"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Maurepas, Jean-Frédéric Phélypeaux comte de",
+    "France. Conseil d'Etat",
+    "Imprimerie royale (France)"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1723,
+   "key": "/works/OL45167713W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "De l'imprimerie Royale"
+   ],
+   "title": "Arrest du Conseil d'Estat du roy, pour la prise de possession du privilege de la vente exclusive du tabac pour la Compagnie des Indes, sous le nom de Pierre le Sueur, à commencer au premier octobre prochain 1723",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61590065M",
+      "title": "Arrest du Conseil d'Estat du roy, pour la prise de possession du privilege de la vente exclusive du tabac pour la Compagnie des Indes, sous le nom de Pierre le Sueur, à commencer au premier octobre prochain 1723",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'imprimerie Royale"
+      ],
+      "publish_date": [
+       "1723"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Talleyrand-Pe rigord, Charles Maurice de prince de Be ne vent"
+   ],
+   "cover_i": 7910844,
+   "edition_count": 1,
+   "first_publish_year": 1791,
+   "key": "/works/OL17638018W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 196,
+   "publisher": [
+    "Sine nomine"
+   ],
+   "title": "Rapport sur l'instruction publique, fait au nom du Comite  de Constitution a l'Assemble e nationale, les 10, 11 & 19 septembre 1791",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26243569M",
+      "title": "Rapport sur l'instruction publique, fait au nom du Comite  de Constitution a l'Assemble e nationale, les 10, 11 & 19 septembre 1791",
+      "cover_i": 7910844,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Sine nomine"
+      ],
+      "publish_date": [
+       "1791"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "France. Conseil d'État"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1723,
+   "key": "/works/OL39467301W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "De l'Imprimerie de Jean Martel ..."
+   ],
+   "title": "Arrest du Conseil d'Estat du Roy, du 11. septembre 1723, pour la prise de possession du privilege de la vente exclusive du tabac pour la Compagnie des Indes, sous le nom de Pierre le Sueur, à commencer au premier octobre prochain, 1723",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL53703580M",
+      "title": "Arrest du Conseil d'Estat du Roy, du 11. septembre 1723, pour la prise de possession du privilege de la vente exclusive du tabac pour la Compagnie des Indes, sous le nom de Pierre le Sueur, à commencer au premier octobre prochain, 1723",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie de Jean Martel ..."
+      ],
+      "publish_date": [
+       "1723"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre-Claude-Noël Dedelay d'Agier",
+    "France. Assemblée nationale constituante (1789-1791). Comité pour l'alienation des biens domaniaux et ecclesiastiques"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL44346386W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 20,
+   "publisher": [
+    "Mame"
+   ],
+   "title": "Rapport fait au nom du Comité pour l'aliénation des biens domaniaux et ecclésiastiques sur les ventes de ces biens, avec les décrets rendus le 14 mai 1790 sur cet objet",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60596523M",
+      "title": "Rapport fait au nom du Comité pour l'aliénation des biens domaniaux et ecclésiastiques sur les ventes de ces biens, avec les décrets rendus le 14 mai 1790 sur cet objet",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Mame"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "La Rochefoucauld-d'Enville, Louis-Alexandre duc de"
+   ],
+   "cover_i": 13415062,
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL17629520W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "De l'Imprimerie nationale"
+   ],
+   "title": "Rapport fait a l'Assemble e nationale, au nom du Comite , charge  de l'alie nation des domaines nationaux, sur les ventes aux municipalite s",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26234938M",
+      "title": "Rapport fait a l'Assemble e nationale, au nom du Comite , charge  de l'alie nation des domaines nationaux, sur les ventes aux municipalite s",
+      "cover_i": 13415062,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie nationale"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Lazare Du Crot"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1629,
+   "key": "/works/OL33284929W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 224,
+   "publisher": [
+    "Chez E. Davbin, & D. de Cay"
+   ],
+   "title": "Traicte des aydes, trailles, et gabelles",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL45181317M",
+      "title": "Traicte des aydes, trailles, et gabelles",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Chez E. Davbin, & D. de Cay"
+      ],
+      "publish_date": [
+       "1629"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre-Claude-Noël Dedelay d'Agier",
+    "France",
+    "France. Assemblée nationale constituante (1789-1791). Comité pour l'aliénation des biens domaniaux & ecclésiastiques"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1790,
+   "key": "/works/OL43322950W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 33,
+   "publisher": [
+    "De l'Imprimerie nationale"
+   ],
+   "title": "Décret rendu le 14 mai 1790, sanctionné par le roi, le 17 du même mois, sur la vente des domaines nationaux",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL59008859M",
+      "title": "Décret rendu le 14 mai 1790, sanctionné par le roi, le 17 du même mois, sur la vente des domaines nationaux",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie nationale"
+      ],
+      "publish_date": [
+       "1790"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Saint-Domingue. Commissaires nationaux-civils"
+   ],
+   "cover_i": 11764900,
+   "edition_count": 1,
+   "first_publish_year": 1794,
+   "key": "/works/OL24873892W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "De l'Imprimerie de la Commission civile."
+   ],
+   "title": "Au nom du peuple français",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL33063303M",
+      "title": "Au nom du peuple français",
+      "cover_i": 11764900,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "De l'Imprimerie de la Commission civile."
+      ],
+      "publish_date": [
+       "1794"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "France. Conseil d'État"
+   ],
+   "cover_i": 8222673,
+   "edition_count": 1,
+   "first_publish_year": 1730,
+   "key": "/works/OL17905898W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "Impr. Royale"
+   ],
+   "title": "Arrest ... pour la prise de possession de la ferme generale du privilege exclusif de la vente & distribution du tabac ... sous les noms de Pierre Carlier & Nicolas Desboves, pendant huit années ... Du 12 sept. 1730",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26481900M",
+      "title": "Arrest ... pour la prise de possession de la ferme generale du privilege exclusif de la vente & distribution du tabac ... sous les noms de Pierre Carlier & Nicolas Desboves, pendant huit années ... Du 12 sept. 1730",
+      "cover_i": 8222673,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Impr. Royale"
+      ],
+      "publish_date": [
+       "1730"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "France. Assemblée nationale constituante (1789-1791). Comité de l'aliénation des biens nationaux"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1791,
+   "key": "/works/OL44637543W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 63,
+   "publisher": [
+    "Sine nomine"
+   ],
+   "title": "Rapport fait a l'Assemblée nationale, au nom du Comité d'aliénation, sur la nécessité et les moyens de simplifier le mode du paiement des domaines nationaux",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60973458M",
+      "title": "Rapport fait a l'Assemblée nationale, au nom du Comité d'aliénation, sur la nécessité et les moyens de simplifier le mode du paiement des domaines nationaux",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Sine nomine"
+      ],
+      "publish_date": [
+       "1791"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "edition_count": 1,
+   "first_publish_year": 1723,
+   "key": "/works/OL38958816W",
+   "language": [
+    "fre"
+   ],
+   "title": "Arrest du conseil d'estat du roy, pour la prise de possession par la Compagnie des Indes du Privilege de la Vente exclusive du Caffe, sous le nom de Pierre le Sueur, a commencer au premier Novembre mil sept cens vingt-trois",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL53049563M",
+      "title": "Arrest du conseil d'estat du roy, pour la prise de possession par la Compagnie des Indes du Privilege de la Vente exclusive du Caffe, sous le nom de Pierre le Sueur, a commencer au premier Novembre mil sept cens vingt-trois",
+      "language": [
+       "fre"
+      ],
+      "publish_date": [
+       "1723"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

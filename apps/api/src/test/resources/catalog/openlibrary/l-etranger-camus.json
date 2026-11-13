@@ -1,0 +1,1528 @@
+{
+ "numFound": 118,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 118,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "l'étranger camus",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "Albert Camus"
+   ],
+   "cover_i": 13151269,
+   "edition_count": 470,
+   "first_publish_year": 1942,
+   "isbn": [
+    "9798370407765",
+    "9798635710876",
+    "9781537043036",
+    "9798778949751",
+    "1533116326",
+    "9798352584514",
+    "9782754807685",
+    "143957099X",
+    "9781950330119",
+    "0435121405",
+    "1428141200",
+    "151687806X",
+    "153509303X",
+    "1857151399",
+    "1515152448",
+    "0307827666",
+    "9781406711288",
+    "9781535540544",
+    "1515141675",
+    "9782070212002",
+    "3498090666",
+    "1681771802",
+    "9798836996130",
+    "9786309159472",
+    "2761657411",
+    "9782040160104",
+    "9780606014267",
+    "9500423707",
+    "8422686910",
+    "3125974704",
+    "9798536940525",
+    "9798409472368",
+    "9785415006984",
+    "9798788160443",
+    "9781521286418",
+    "1535093072",
+    "9798414737933",
+    "1541127323",
+    "9788422687375",
+    "9789500423694",
+    "0141182504",
+    "9798738338649",
+    "0241905079",
+    "630915947X",
+    "153545606X",
+    "9798677602573",
+    "9798846711082",
+    "1979742960",
+    "1980787158",
+    "1546723471",
+    "9798411100822",
+    "1539875172",
+    "9798408981212",
+    "9781681771809",
+    "9100185302",
+    "8432000736",
+    "0394447484",
+    "9781974494453",
+    "9780812416695",
+    "9188592138",
+    "950042777X",
+    "8422687372",
+    "9781522718222",
+    "9780891902201",
+    "9798367428018",
+    "1535188677",
+    "9781530123872",
+    "9798615693595",
+    "9781501260490",
+    "1535032510",
+    "9798838225832",
+    "9782761346382",
+    "1530408628",
+    "9798359699051",
+    "9781533527578",
+    "9789500402453",
+    "0679720200",
+    "9781535278416",
+    "9781986427913",
+    "9780241107782",
+    "1533364702",
+    "0241980615",
+    "9798539417277",
+    "9798720011642",
+    "9798365269804",
+    "1535073497",
+    "9781986781374",
+    "9798796212196",
+    "9788373893474",
+    "9798760913258",
+    "9788420636948",
+    "9780785916833",
+    "0141389583",
+    "9798481208961",
+    "9798357396235",
+    "9798361474196",
+    "1522895639",
+    "9798505327562",
+    "9788439737933",
+    "9783498090661",
+    "1537111744",
+    "0423816306",
+    "0394700023",
+    "8467497254",
+    "9781503173699",
+    "1501260499",
+    "9780881032475",
+    "9783499221897",
+    "9781587240324",
+    "1587240327",
+    "9781533548375",
+    "8489669457",
+    "0828836639",
+    "9798497298451",
+    "9781537552408",
+    "1983630446",
+    "9784102114018",
+    "1794316736",
+    "9781533464538",
+    "9780819121424",
+    "9798728836612",
+    "8501014869",
+    "9781978188280",
+    "9788937462665",
+    "1530123879",
+    "1535468963",
+    "2040284877",
+    "0203978692",
+    "9781533588449",
+    "0140274170",
+    "9789871144310",
+    "9798836137175",
+    "0819121428",
+    "9781508560449",
+    "9798787781632",
+    "9788845203237",
+    "9588161487",
+    "9789687349244",
+    "9781533116321",
+    "9798792991767",
+    "9788420663678",
+    "9798831171556",
+    "9781535093071",
+    "9781544618371",
+    "9798728322375",
+    "0881032476",
+    "9798835264612",
+    "9789500427777",
+    "9781530408627",
+    "9783150091692",
+    "9781546656029",
+    "9798570171008",
+    "9781546723479",
+    "9781428141209",
+    "1515028860",
+    "9798443777276",
+    "1517451248",
+    "1610425499",
+    "9798837983023",
+    "9781542596725",
+    "9798411605211",
+    "9788422686910",
+    "9788432055072",
+    "9781539617259",
+    "1503173690",
+    "9788381964319",
+    "9780141198064",
+    "9780394700021",
+    "0241107784",
+    "9500423693",
+    "1537627937",
+    "2761346386",
+    "9780318634708",
+    "9798362008529",
+    "9788501014863",
+    "1535540540",
+    "9788481093285",
+    "9781535073493",
+    "9798849530123",
+    "9780075478126",
+    "8845203239",
+    "1508883475",
+    "2040160108",
+    "9798818116877",
+    "9788917161083",
+    "1907590234",
+    "9780679420262",
+    "9789100185305",
+    "9781138127906",
+    "1537552406",
+    "0318634708",
+    "9798834954712",
+    "9781533529664",
+    "0141198060",
+    "9782070385751",
+    "9781533591005",
+    "8845247465",
+    "2070360024",
+    "9798424086151",
+    "9780203978696",
+    "9788491041689",
+    "0141904259",
+    "9789799102980",
+    "207030602X",
+    "8448705041",
+    "9789188592132",
+    "9783499241734",
+    "8496580202",
+    "9788845247460",
+    "3498009036",
+    "0140180184",
+    "9783499104329",
+    "9781533553393",
+    "9780423846102",
+    "0415025869",
+    "9780241905074",
+    "9798417000164",
+    "9789023422174",
+    "9780394533056",
+    "9781541127326",
+    "9798729333110",
+    "1950330117",
+    "9781537392349",
+    "1534971742",
+    "1530030560",
+    "1546656022",
+    "9781517149796",
+    "9781974397815",
+    "9781534971745",
+    "9798440684416",
+    "0394533054",
+    "1138127906",
+    "9798613348619",
+    "9781548837891",
+    "1725169185",
+    "9781537361857",
+    "9798729333189",
+    "9798447579852",
+    "9781534663329",
+    "9798370925863",
+    "9798810436720",
+    "9781508883470",
+    "9780819121417",
+    "9798731343039",
+    "9390492580",
+    "9798570069893",
+    "1419345338",
+    "9788466356138",
+    "9798353580812",
+    "9798847709729",
+    "9798358039650",
+    "3125974712",
+    "9871144318",
+    "8420636940",
+    "1419337319",
+    "0785916830",
+    "8466356134",
+    "9782070393718",
+    "9781515152446",
+    "9781537415680",
+    "8381964318",
+    "8420675202",
+    "0891902201",
+    "9584301187",
+    "1986781372",
+    "9500402459",
+    "0679420266",
+    "8491041680",
+    "9783125974715",
+    "9781439570999",
+    "9781537553023",
+    "1533464537",
+    "1974494454",
+    "9781516878062",
+    "1533004757",
+    "9798357773494",
+    "3499241730",
+    "0844217565",
+    "9798448462474",
+    "9781539057413",
+    "2070212009",
+    "1539617254",
+    "9789651322730",
+    "9798597748368",
+    "1537415689",
+    "9783125974708",
+    "9780844217567",
+    "9781857151398",
+    "9781717041067",
+    "9781535468961",
+    "8917161081",
+    "1127512021",
+    "9789500423700",
+    "9781786826657",
+    "9798847007306",
+    "9781515028864",
+    "9780135307908",
+    "9789579093668",
+    "965132273X",
+    "9789962724025",
+    "171704106X",
+    "9798842233755",
+    "1515131041",
+    "9788448705046",
+    "9798683371579",
+    "3561302505220",
+    "2040076115",
+    "9798351934808",
+    "9782070306022",
+    "9780307827661",
+    "9782040076115",
+    "9780679720201",
+    "9781515131045",
+    "1544618379",
+    "9781329529687",
+    "9781127512027",
+    "9783425041964",
+    "9781727202014",
+    "8432055077",
+    "9798364637529",
+    "9780140015188",
+    "9798834969259",
+    "1535278412",
+    "1978188285",
+    "1522718222",
+    "9781535032513",
+    "9781535456067",
+    "1727202015",
+    "0423846108",
+    "1515398080",
+    "154883789X",
+    "9798362039677",
+    "9798686154391",
+    "9798748182485",
+    "9798566004204",
+    "9781535188678",
+    "9798402255425",
+    "1533529663",
+    "207030602",
+    "9798417264429",
+    "9782070360024",
+    "97897902980",
+    "9781548046149",
+    "9750740939",
+    "9023422171",
+    "9781793078971",
+    "9798779255943",
+    "1548200697",
+    "1533548374",
+    "9798355001957",
+    "9781539310297",
+    "0723353042",
+    "9798730733206",
+    "9962724023",
+    "1794277307",
+    "9781517392949",
+    "9798441401265",
+    "9780141389585",
+    "9798633058727",
+    "0241458854",
+    "9781907590238",
+    "1977545351",
+    "1329529685",
+    "1937482987",
+    "9780394447483",
+    "1986427919",
+    "9788496580206",
+    "1533527571",
+    "9787559352392",
+    "9798812038069",
+    "9798646821424",
+    "9798401789419",
+    "9781937482985",
+    "9781539301554",
+    "9788845277634",
+    "9781419345333",
+    "9798358107274",
+    "9780828836630",
+    "9781539310877",
+    "4102114017",
+    "0135307902",
+    "9781515141679",
+    "9781522895633",
+    "2070385752",
+    "8937462664",
+    "9781539875178",
+    "1539057410",
+    "9781725169180",
+    "9798758770481",
+    "9798848936223",
+    "0075478129",
+    "9780241554401",
+    "9781794316737",
+    "9798371104038",
+    "1793078971",
+    "153755302X",
+    "9788489669451",
+    "9782040120924",
+    "2070393712",
+    "8422608960",
+    "9780141904252",
+    "1786826658",
+    "9781977545350",
+    "9780723353041",
+    "9781517451240",
+    "9788467497250",
+    "9781548200695",
+    "3150091691",
+    "3499104326",
+    "9780141182506",
+    "1517392942",
+    "9789390492589",
+    "9781517039011",
+    "1517039010",
+    "0606014268",
+    "9798366725347",
+    "9783498009038",
+    "153704303X",
+    "9798447663049",
+    "9789584301185",
+    "9781533527288",
+    "1406711284",
+    "081912141X",
+    "0140015183",
+    "9781610425490",
+    "9780423816303",
+    "0812416694",
+    "9780241950050",
+    "9798435675405",
+    "5415006982",
+    "7559352391",
+    "1537392344",
+    "0140061584",
+    "8475300618",
+    "9798783508394",
+    "9799102987",
+    "9798357683304",
+    "9780241980613",
+    "1537361856",
+    "1533588449",
+    "9781533004758",
+    "9780140180183",
+    "7516824038",
+    "2754807683",
+    "9782761657419",
+    "8373893474",
+    "1508560447",
+    "9780415025867",
+    "1534663320",
+    "9798809136082",
+    "1539310876",
+    "9780435121402",
+    "9782040284879",
+    "9798359403429",
+    "9781533364708",
+    "9780241458853",
+    "9787516824030",
+    "1974397815",
+    "9798775334857",
+    "1521286418",
+    "9798773678144",
+    "9798821362605",
+    "8420663670",
+    "0241991315",
+    "3425041967",
+    "1542596726",
+    "3499221896",
+    "8845277631",
+    "9781537627939",
+    "9780241991312",
+    "9798839235861",
+    "9788475300610",
+    "9781537111742",
+    "1539301559",
+    "8439737939",
+    "9781794277304",
+    "9781515398080",
+    "9788422608967",
+    "8481093289",
+    "9798359726252",
+    "9798629659617",
+    "0241554403",
+    "9579093660",
+    "2040120920",
+    "9798737939250",
+    "9780140274172",
+    "9788420675206",
+    "9789588161488",
+    "9788478880010",
+    "9789750740930",
+    "8478880011",
+    "0241950058",
+    "9781980787150",
+    "9798783517099",
+    "9788420613123",
+    "9781983630446",
+    "8420613126",
+    "1517149797",
+    "1533553394",
+    "9687349247",
+    "9780140061581",
+    "1533527288",
+    "1539310299",
+    "1548046140",
+    "9788432000737",
+    "9781979742962",
+    "9798792380165",
+    "9781419337314",
+    "1533591008",
+    "9781530030569",
+    "9798729333127",
+    "9781535093033",
+    "9798799043858"
+   ],
+   "key": "/works/OL1230613W",
+   "language": [
+    "kur",
+    "vie",
+    "spa",
+    "swe",
+    "jav",
+    "wel",
+    "jpn",
+    "heb",
+    "chi",
+    "mul",
+    "fre",
+    "ita",
+    "hin",
+    "ger",
+    "dut",
+    "pol",
+    "por",
+    "per",
+    "eng",
+    "ara"
+   ],
+   "number_of_pages_median": 143,
+   "publisher": [
+    "Folioplus Classiques",
+    "Rowohlt Taschenbuch Verlag GmbH",
+    "Tai hai chu ban she",
+    "Peguin Books",
+    "Editions Gallimard",
+    "Recorded Books on Brilliance Audio",
+    "Círculo de Lectores",
+    "Record",
+    "[Yr Academi Gymraeg]",
+    "Rowohlt",
+    "Brand: Amereon Ltd",
+    "General Press",
+    "Vaga",
+    "Gardners Books",
+    "Sine nomine",
+    "Weşanên Nûdem",
+    "Taylor & Francis Group",
+    "A. A. Knopf",
+    "So ng Moi",
+    "Lulu Press, Inc.",
+    "Penguin Books",
+    "קצין חינוך ראשי, ענף השכלה",
+    "Vintage Books",
+    "עם עובד",
+    "T.P.F.L.M.",
+    "Bordas",
+    "Methuen & Co. Ltd.",
+    "Golgotha Press",
+    "Livre de poche",
+    "Garzanti",
+    "Editorial Planeta, S.A.",
+    "Mineumsa",
+    "Klett",
+    "DEBOLSILLO",
+    "Editora Continental",
+    "McGraw-Hill",
+    "Pegasus Books",
+    "Wheeler Pub.",
+    "Hesperides Press",
+    "Routledge",
+    "FREMEAUX",
+    "Planeta",
+    "Pantheon",
+    "Gallimard-Jeunesse",
+    "Oberon Books, Limited",
+    "Forum Jakarta-Paris",
+    "Albert Bonniers Förlag",
+    "YOYO USA",
+    "Kitābhā-yi Jībī",
+    "Reclam, Ditzingen",
+    "Penguin Classic",
+    "Planeta DeAgostini",
+    "Cid",
+    "Gauthier-Villars",
+    "Rowohlt, Reinbek",
+    "penguin books",
+    "El País",
+    "Kanun-i Maʻrifat",
+    "Zielona Sowa",
+    "Everyman's Library Ltd",
+    "French & European Pubns",
+    "Gallimard Folio",
+    "Sisa Yeongeosa/Tsai Fong Books",
+    "黑龙江美术出版社",
+    "Yoyo Music",
+    "Fackelverlag",
+    "A.A. Knopf",
+    "Vintage",
+    "Debolsillo",
+    "University Press of America",
+    "Everyman's Library",
+    "Methuen Educational",
+    "NTC/Contemporary Publishing Company",
+    "Emecé Editores",
+    "H. Hamilton",
+    "Lin yü wen hua shi yeh yu xian gong si",
+    "Pantheon Books",
+    "Nudem",
+    "Knopf",
+    "Methuen Educational Ltd.",
+    "Rowohlt Taschenbuch Verla",
+    "FOLIO / GALLIMARD",
+    "Hamish Hamilton",
+    "Rajkamal Parkashan",
+    "Distributed by Random House",
+    "Heinemann Educational",
+    "Penguin Random House",
+    "Emecé",
+    "Recorded Books",
+    "De Bezige Bij",
+    "Państ. Instytut Wydawniczy",
+    "Random",
+    "ALIANZA EDITORIAL",
+    "Hamilton",
+    "Alianza",
+    "Penguin Books, Limited",
+    "Beauchemin",
+    "Sông Moi",
+    "Diesterweg",
+    "Futuropolis",
+    "Shinchōsha",
+    "El Pais",
+    "LIVRE DE POCHE N°406",
+    "CreateSpace Independent Publishing Platform",
+    "Kairry",
+    "Can Yayınları",
+    "The Easton Press",
+    "Printed for the memebers of the Limited Editions Club [by Vermont Print. Co.]",
+    "Albert Martin",
+    "Demco Media",
+    "ARTFL Project",
+    "Vintage book",
+    "Amereon Limited",
+    "Big Font Books",
+    "Top Emecé",
+    "Prentice Hall",
+    "Vintage International",
+    "Galaxia Gutenberg",
+    "Livre de Poche",
+    "Vilnius",
+    "Penguin Group",
+    "Booket",
+    "Altaya",
+    "Kepustakaan Populer Gramedia",
+    "Amereon Ltd",
+    "Tandem Library",
+    "Methuen",
+    "Hong Guang",
+    "Publicaciones Prensa Gráfica",
+    "Orbis",
+    "Bompiani",
+    "gallimard",
+    "Penguin Books Ltd",
+    "Dessain et Tolra",
+    "Ancient Wisdom Publications",
+    "Heritage Press",
+    "Penguin, in association with Hamish Hamilton",
+    "Fontal Lobe Publishing",
+    "ASAP, S.A.",
+    "Alfred A. Knopf, Inc.",
+    "Perfection Learning Prebound",
+    "Appleton-Century-Crofts",
+    "Penguin Books, in association with H. Hamilton",
+    "Independently Published",
+    "Independently published",
+    "Penguin",
+    "Gallimard"
+   ],
+   "title": "L’étranger",
+   "editions": {
+    "numFound": 470,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40777822M",
+      "title": "L'étranger Par Albert Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2019"
+      ],
+      "isbn": [
+       "9781793078971",
+       "1793078971"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre Louis Rey"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1976,
+   "isbn": [
+    "9782218004520",
+    "2218004526"
+   ],
+   "key": "/works/OL3616031W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 63,
+   "publisher": [
+    "Hatier"
+   ],
+   "title": "L' Etranger, Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21189673M",
+      "title": "L' Etranger, Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Hatier"
+      ],
+      "publish_date": [
+       "1976"
+      ],
+      "isbn": [
+       "2218004526",
+       "9782218004520"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre Louis Rey"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1970,
+   "key": "/works/OL3616032W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 64,
+   "publisher": [
+    "Hatier"
+   ],
+   "title": "\"L' Étranger,\" Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL19719602M",
+      "title": "\"L' Étranger,\" Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Hatier"
+      ],
+      "publish_date": [
+       "1970"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "J. H. Matthews"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1961,
+   "key": "/works/OL4651219W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 191,
+   "publisher": [
+    "Lettres modernes"
+   ],
+   "title": "L' Étranger à l'étranger",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL22290423M",
+      "title": "L 'Étranger à l'étranger",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Lettres modernes"
+      ],
+      "publish_date": [
+       "1961"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Pierre-Georges Castex"
+   ],
+   "cover_i": 9296138,
+   "edition_count": 4,
+   "first_publish_year": 1965,
+   "isbn": [
+    "9782714301406",
+    "2714301401"
+   ],
+   "key": "/works/OL9970293W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 126,
+   "publisher": [
+    "Jose Corti",
+    "José Corti",
+    "Corti"
+   ],
+   "title": "Albert Camus et l'étranger",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12527631M",
+      "title": "Albert Camus et \"L'étranger\"",
+      "cover_i": 9296138,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Jose Corti"
+      ],
+      "publish_date": [
+       "August 1, 1989"
+      ],
+      "isbn": [
+       "9782714301406",
+       "2714301401"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Elisabeth Vincent"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1990,
+   "isbn": [
+    "9782040192006",
+    "204019200X"
+   ],
+   "key": "/works/OL13459730W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 95,
+   "publisher": [
+    "Dessain et Tolra",
+    "Bordas"
+   ],
+   "title": "L' étranger, Camus",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21763817M",
+      "title": "L' étranger, Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Bordas"
+      ],
+      "publish_date": [
+       "1990"
+      ],
+      "isbn": [
+       "204019200X",
+       "9782040192006"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Margot Ryhming"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1969,
+   "key": "/works/OL7184296W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 30,
+   "publisher": [
+    "Studentlitteratur"
+   ],
+   "title": "Albert Camus: L'étranger",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5381251M",
+      "title": "Albert Camus: L'étranger.",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Studentlitteratur"
+      ],
+      "publish_date": [
+       "1969"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Slemnia Bendaoud"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "234322370X",
+    "9782343223704"
+   ],
+   "key": "/works/OL32107190W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 159,
+   "publisher": [
+    "L'Harmattan"
+   ],
+   "title": "Albert l'étranger, Camus l'Algérien",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL43840594M",
+      "title": "Albert l'étranger, Camus l'Algérien",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "L'Harmattan"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9782343223704",
+       "234322370X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "G. V. Banks"
+   ],
+   "cover_i": 5148412,
+   "edition_count": 1,
+   "first_publish_year": 1993,
+   "isbn": [
+    "9780852613184",
+    "0852613180"
+   ],
+   "key": "/works/OL9685066W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 64,
+   "publisher": [
+    "Hyperion Books"
+   ],
+   "title": "L' Etranger, Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL11603383M",
+      "title": "L' Etranger, Camus",
+      "cover_i": 5148412,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Hyperion Books"
+      ],
+      "publish_date": [
+       "December 1993"
+      ],
+      "isbn": [
+       "9780852613184",
+       "0852613180"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Michel Mougenot"
+   ],
+   "cover_i": 3126372,
+   "edition_count": 1,
+   "first_publish_year": 2000,
+   "isbn": [
+    "2735203050",
+    "9782735203055"
+   ],
+   "key": "/works/OL9990587W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 126,
+   "publisher": [
+    "Bertrand Lacoste"
+   ],
+   "title": "L'Etranger. Albert Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL12595931M",
+      "title": "L'Etranger. Albert Camus",
+      "cover_i": 3126372,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Bertrand Lacoste"
+      ],
+      "publish_date": [
+       "January 1, 2000"
+      ],
+      "isbn": [
+       "9782735203055",
+       "2735203050"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Bernard Pingaud"
+   ],
+   "edition_count": 4,
+   "first_publish_year": 1971,
+   "key": "/works/OL2107708W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 89,
+   "publisher": [
+    "Classiques Hachette",
+    "Hachette"
+   ],
+   "title": "\"L' Étranger\" de Camus",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5486229M",
+      "title": "\"L' Étranger\" de Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Hachette"
+      ],
+      "publish_date": [
+       "1972"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Bernard Pingaud"
+   ],
+   "cover_i": 15003780,
+   "edition_count": 1,
+   "first_publish_year": 1992,
+   "isbn": [
+    "2070385752",
+    "9782070385751"
+   ],
+   "key": "/works/OL2107695W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 216,
+   "publisher": [
+    "Gallimard"
+   ],
+   "title": "L' Etranger d'Albert Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21020132M",
+      "title": "L' Etranger d'Albert Camus",
+      "cover_i": 15003780,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Gallimard"
+      ],
+      "publish_date": [
+       "1992"
+      ],
+      "isbn": [
+       "2070385752",
+       "9782070385751"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Michel Mougenot"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1993,
+   "isbn": [
+    "2735203055"
+   ],
+   "key": "/works/OL9990589W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 126,
+   "publisher": [
+    "Bertrand-Lacoste"
+   ],
+   "title": "L' étranger, Albert Camus",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21793596M",
+      "title": "L' étranger, Albert Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Bertrand-Lacoste"
+      ],
+      "publish_date": [
+       "1993"
+      ],
+      "isbn": [
+       "2735203055"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Françoise Bagot"
+   ],
+   "cover_i": 3826315,
+   "edition_count": 1,
+   "first_publish_year": 1993,
+   "isbn": [
+    "2130450849",
+    "9782130450849"
+   ],
+   "key": "/works/OL981400W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 126,
+   "publisher": [
+    "Presses universitaires de France"
+   ],
+   "title": "Albert Camus, L'étranger",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL838440M",
+      "title": "Albert Camus, L'étranger",
+      "cover_i": 3826315,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Presses universitaires de France"
+      ],
+      "publish_date": [
+       "1993"
+      ],
+      "isbn": [
+       "2130450849",
+       "9782130450849"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Adele King"
+   ],
+   "cover_i": 2367668,
+   "edition_count": 4,
+   "first_publish_year": 1992,
+   "isbn": [
+    "1349220051",
+    "0312068581",
+    "9781349220052",
+    "9781349220038",
+    "1349220035",
+    "9780312068585"
+   ],
+   "key": "/works/OL4796144W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 267,
+   "publisher": [
+    "Palgrave Macmillan",
+    "St. Martin's Press"
+   ],
+   "title": "Camus's L'Etranger",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL10385213M",
+      "title": "Camus's L'Etranger",
+      "cover_i": 2367668,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Palgrave Macmillan"
+      ],
+      "publish_date": [
+       "May 15, 1992"
+      ],
+      "isbn": [
+       "9780312068585",
+       "0312068581"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Castex, Pierre Georges"
+   ],
+   "cover_i": 9486428,
+   "edition_count": 4,
+   "first_publish_year": 1965,
+   "isbn": [
+    "2714301401",
+    "9782714301406"
+   ],
+   "key": "/works/OL4713821W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 127,
+   "publisher": [
+    "J. Corti"
+   ],
+   "title": "Albert Camus et \"l'Étranger.\"",
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL6018509M",
+      "title": "Albert Camus et \"l'Étranger.\"",
+      "cover_i": 9486428,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "J. Corti"
+      ],
+      "publish_date": [
+       "1965"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Brian T. Fitch"
+   ],
+   "cover_i": 9961639,
+   "edition_count": 3,
+   "first_publish_year": 1961,
+   "key": "/works/OL3494854W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 48,
+   "publisher": [
+    "Lettres modernes"
+   ],
+   "title": "Narrateur et narration dans \"l'Étranger\" d'Albert Camus",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL4617393M",
+      "title": "Narrateur et narration dans \"l'Étranger\" d'Albert Camus",
+      "cover_i": 9961639,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Lettres modernes"
+      ],
+      "publish_date": [
+       "1968"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Franck Planeille"
+   ],
+   "cover_i": 13311951,
+   "edition_count": 1,
+   "first_publish_year": 2003,
+   "isbn": [
+    "2047303877",
+    "9782047303870"
+   ],
+   "key": "/works/OL11729852W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 141,
+   "publisher": [
+    "Bordas",
+    "BORDAS"
+   ],
+   "title": "L' étranger, Albert Camus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL16303885M",
+      "title": "L' étranger, Albert Camus",
+      "cover_i": 13311951,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Bordas",
+       "BORDAS"
+      ],
+      "publish_date": [
+       "2003"
+      ],
+      "isbn": [
+       "2047303877",
+       "9782047303870"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Jean de Bazin"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1969,
+   "key": "/works/OL10551804W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 26,
+   "publisher": [
+    "Nizet"
+   ],
+   "title": "Vocabulaire de l'Étranger d'Albert Camus",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21205577M",
+      "title": "Vocabulaire de l'Étranger d'Albert Camus",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Nizet"
+      ],
+      "publish_date": [
+       "1969"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "B Pingaud"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1971,
+   "key": "/works/OL34662186W",
+   "publisher": [
+    "Hachette"
+   ],
+   "title": "L'etranger",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46993201M",
+      "title": "L'etranger",
+      "publisher": [
+       "Hachette"
+      ],
+      "publish_date": [
+       "1971-01-01"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -52,6 +52,27 @@ public interface CatalogProvider {
     }
 
     /**
+     * The other names the provider knows one of its results by, keyed by its
+     * {@code providerRef}: AniList's native and romaji titles and synonyms, which is how
+     * "L'Attaque des Titans" is recognised as Shingeki no Kyojin. Best-effort and kept in memory
+     * only: a result served from the persistent cache after a restart has none until the
+     * provider answers again. The default knows none.
+     */
+    default List<String> alternativeTitles(String providerRef) {
+        return List.of();
+    }
+
+    /**
+     * Whether the provider honours {@link CatalogQuery#prefixLastWord()}, reading the last word
+     * of the text as the start of a word. Open Library (Solr) and the BnF (CQL) both accept a
+     * truncated term; AniList's fuzzy search already matches a partial word, so asking it twice
+     * would only cost a call.
+     */
+    default boolean searchesByPrefix() {
+        return false;
+    }
+
+    /**
      * Every work the provider credits to an author, by name. The default runs the provider's
      * own search on the author term alone — Open Library and the BnF both index works by
      * author, so their bibliography <em>is</em> that search, which is why a book author page

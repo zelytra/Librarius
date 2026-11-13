@@ -105,6 +105,7 @@ export interface CatalogResult {
   pageCount?: number;
   provider?: string;
   providerRef?: string;
+  popularity?: number;
 }
 
 export interface CategoryCreateDto {

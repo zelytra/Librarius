@@ -2,6 +2,7 @@ package zelytra.librarius.catalog.provider;
 
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -15,14 +16,22 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /** Book catalog provider backed by Open Library (no API key needed). */
 @ApplicationScoped
 public class OpenLibraryProvider implements CatalogProvider {
 
     private static final String FIELDS =
-            "key,title,author_name,first_publish_year,cover_i,isbn,publisher,language,"
-                    + "number_of_pages_median";
+            "key,title,author_name,first_publish_year,cover_i,edition_count,isbn,publisher,language,"
+                    + "number_of_pages_median,editions,editions.key,editions.title,editions.language,"
+                    + "editions.cover_i,editions.isbn,editions.publisher,editions.publish_date";
+
+    /**
+     * Asks Open Library to pick, for each work, the French edition when one exists: the answer
+     * is then "Le Nom du Vent" with its own cover instead of the English original.
+     */
+    private static final String PREFERRED_LANG = "fr";
 
     /**
      * Open Library indexes languages as MARC codes ({@code fre}, {@code eng}), while a client
@@ -57,22 +66,18 @@ public class OpenLibraryProvider implements CatalogProvider {
         if (q.isEmpty()) {
             return List.of();
         }
-        try {
-            OpenLibraryClient.SearchResponse res =
-                    client.search(q, Math.min(limit, 40), FIELDS, null).await().atMost(callTimeout);
-            if (res == null || res.docs() == null) {
-                return List.of();
-            }
-            return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
-        } catch (Exception e) {
-            Log.warnf("Open Library search failed: %s", e.getMessage());
-            return List.of();
-        }
+        return fetch(() -> client.search(q, Math.min(limit, 40), FIELDS, null, PREFERRED_LANG),
+                "search");
     }
 
     @Override
     public List<CatalogResult> upcoming(int limit) {
         return List.of();
+    }
+
+    @Override
+    public boolean searchesByPrefix() {
+        return true;
     }
 
     /**
@@ -86,17 +91,8 @@ public class OpenLibraryProvider implements CatalogProvider {
             return List.of();
         }
         String q = solrQuery(new CatalogQuery(null, authorName, null, null, null, null));
-        try {
-            OpenLibraryClient.SearchResponse res = client
-                    .search(q, Math.min(limit, 40), FIELDS, "editions").await().atMost(callTimeout);
-            if (res == null || res.docs() == null) {
-                return List.of();
-            }
-            return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
-        } catch (Exception e) {
-            Log.warnf("Open Library author works failed: %s", e.getMessage());
-            return List.of();
-        }
+        return fetch(() -> client.search(q, Math.min(limit, 40), FIELDS, "editions", PREFERRED_LANG),
+                "author works");
     }
 
     /**
@@ -127,15 +123,37 @@ public class OpenLibraryProvider implements CatalogProvider {
     }
 
     /**
+     * Runs one search call, and tries once more when it fails. Open Library regularly answers
+     * an empty or non-JSON body under load, which surfaces here as an exception or a response
+     * with no {@code docs}; a second attempt usually gets through, whereas giving up would show
+     * the user "no result" for a book that exists. A parsed response with zero docs is a real
+     * empty answer and is returned as is. Each attempt keeps its own {@code callTimeout}.
+     */
+    private List<CatalogResult> fetch(Supplier<Uni<OpenLibraryClient.SearchResponse>> call, String what) {
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            try {
+                OpenLibraryClient.SearchResponse res = call.get().await().atMost(callTimeout);
+                if (res != null && res.docs() != null) {
+                    return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
+                }
+                Log.warnf("Open Library %s answered no docs (attempt %d)", what, attempt);
+            } catch (Exception e) {
+                Log.warnf("Open Library %s failed (attempt %d): %s", what, attempt, e.getMessage());
+            }
+        }
+        return List.of();
+    }
+
+    /**
      * Renders the criteria as the Solr query {@code /search.json} expects: free text stays
      * bare, every advanced criterion becomes a fielded term. Open Library therefore filters
      * on all of them itself — narrowing the answers here would cost a page of results to
      * throw most of it away.
      */
-    private static String solrQuery(CatalogQuery query) {
+    static String solrQuery(CatalogQuery query) {
         StringBuilder q = new StringBuilder();
         if (query.text() != null) {
-            q.append(query.text());
+            q.append(query.prefixLastWord() ? prefixTitle(query.text()) : query.text());
         }
         append(q, "author", query.author());
         append(q, "publisher", query.publisher());
@@ -148,6 +166,23 @@ public class OpenLibraryProvider implements CatalogProvider {
             append(q, "language", MARC_LANGUAGES.getOrDefault(language, language));
         }
         return q.toString().trim();
+    }
+
+    /**
+     * "le nom du ven" as {@code title:(le AND nom AND du AND ven*)}: every word on the title, the
+     * last one truncated. A wildcard term is not analysed by Solr, hence the lower case; the
+     * words are reduced to their letters and digits so no character the user typed can reach
+     * the query syntax.
+     */
+    private static String prefixTitle(String text) {
+        List<String> words = java.util.Arrays.stream(text.toLowerCase(java.util.Locale.ROOT)
+                        .split("[^\\p{L}\\p{N}]+"))
+                .filter(word -> !word.isEmpty())
+                .toList();
+        if (words.isEmpty()) {
+            return "";
+        }
+        return "title:(" + String.join(" AND ", words) + "*)";
     }
 
     /**
@@ -171,21 +206,50 @@ public class OpenLibraryProvider implements CatalogProvider {
 
     private static CatalogResult toResult(OpenLibraryClient.Doc d) {
         String authors = d.authorName() == null ? null : String.join(", ", d.authorName());
-        String cover = d.coverId() != null
-                ? "https://covers.openlibrary.org/b/id/" + d.coverId() + "-M.jpg"
+        // The edition Open Library picked for lang=fr, when there is one. Each field falls back
+        // to the work's own value independently: an edition record is often sparse.
+        OpenLibraryClient.EditionDoc ed = d.editions() == null || d.editions().docs() == null
+                || d.editions().docs().isEmpty() ? null : d.editions().docs().get(0);
+        boolean editionTitle = ed != null && ed.title() != null && !ed.title().isBlank();
+        String title = editionTitle ? ed.title() : d.title();
+        // The language follows the title: a French title must not be labelled with the work's
+        // first language, which is whatever Open Library lists first (often not French).
+        String language = firstOf(editionTitle ? ed.language() : null);
+        if (language == null) {
+            language = firstOf(d.language());
+        }
+        // Never an /b/isbn/ URL here: Open Library 404s on most of them. A cover id is certain.
+        Long coverId = ed != null && ed.coverId() != null ? ed.coverId() : d.coverId();
+        String cover = coverId != null
+                ? "https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg"
                 : null;
-        String isbn13 = d.isbn() == null ? null
-                : d.isbn().stream().filter(s -> s != null && s.length() == 13).findFirst().orElse(null);
-        String publisher = d.publisher() == null || d.publisher().isEmpty() ? null : d.publisher().get(0);
-        String language = d.language() == null || d.language().isEmpty() ? null : d.language().get(0);
-        VolumeParser.Parsed volume = VolumeParser.parse(d.title());
+        String isbn13 = isbn13Of(ed == null ? null : ed.isbn());
+        if (isbn13 == null) {
+            isbn13 = isbn13Of(d.isbn());
+        }
+        String publisher = firstOf(ed == null ? null : ed.publisher());
+        if (publisher == null) {
+            publisher = firstOf(d.publisher());
+        }
+        VolumeParser.Parsed volume = VolumeParser.parse(title);
         // The work key ("/works/OL45804W") is what /works/{ref}/editions.json is keyed on: without
         // it a book picked off a search recorded no reference, and its detail screen could never
         // list the other printings Open Library holds.
         String ref = workKey(d.key());
-        return new CatalogResult("BOOK", d.title(), authors, d.firstPublishYear(), cover, null,
+        return new CatalogResult("BOOK", title, authors, d.firstPublishYear(), cover, null,
                 isbn13, publisher, language, null, volume.seriesTitle(), volume.volumeNumber(),
-                d.numberOfPagesMedian(), ref == null ? null : "openlibrary", ref);
+                d.numberOfPagesMedian(), ref == null ? null : "openlibrary", ref)
+                .withPopularity(d.editionCount());
+    }
+
+    private static String firstOf(List<String> values) {
+        return values == null ? null
+                : values.stream().filter(s -> s != null && !s.isBlank()).findFirst().orElse(null);
+    }
+
+    private static String isbn13Of(List<String> isbns) {
+        return isbns == null ? null
+                : isbns.stream().filter(s -> s != null && s.length() == 13).findFirst().orElse(null);
     }
 
     /**

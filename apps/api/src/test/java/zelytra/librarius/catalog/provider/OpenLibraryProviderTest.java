@@ -1,15 +1,22 @@
 package zelytra.librarius.catalog.provider;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,7 +29,7 @@ class OpenLibraryProviderTest {
         private String q;
 
         @Override
-        public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
+        public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
             this.q = q;
             return Uni.createFrom().item(new SearchResponse(List.of()));
         }
@@ -37,7 +44,7 @@ class OpenLibraryProviderTest {
     private static OpenLibraryClient editionsClient(OpenLibraryClient.EditionEntry... entries) {
         return new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
                 return Uni.createFrom().item(new SearchResponse(List.of()));
             }
 
@@ -65,6 +72,15 @@ class OpenLibraryProviderTest {
     @Test
     void sendsTheFreeTextAsIs() {
         assertEquals("fourth wing", queryFor(CatalogQuery.of("fourth wing")));
+    }
+
+    @Test
+    void truncatesTheLastWordOfTheTitleWhenAsked() {
+        assertEquals("title:(le AND nom AND du AND ven*)",
+                queryFor(CatalogQuery.of("Le nom du ven").withPrefixLastWord()));
+        // Nothing the reader typed reaches the Solr syntax.
+        assertEquals("title:(l AND étranger AND cam*)",
+                queryFor(CatalogQuery.of("l'étranger \"cam)").withPrefixLastWord()));
     }
 
     @Test
@@ -111,7 +127,7 @@ class OpenLibraryProviderTest {
         // database connection for as long as Open Library feels like taking.
         OpenLibraryProvider provider = provider(new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
                 return Uni.createFrom().nothing();
             }
 
@@ -185,12 +201,12 @@ class OpenLibraryProviderTest {
     void searchResultsCarryTheWorkReferenceTheEditionsLookupKeysOn() {
         OpenLibraryClient answering = new OpenLibraryClient() {
             @Override
-            public Uni<SearchResponse> search(String q, int limit, String fields, String sort) {
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
                 assertTrue(fields.startsWith("key,"), fields);
                 return Uni.createFrom().item(new SearchResponse(List.of(new Doc(
                         "/works/OL15505243W", "La Horde du Contrevent", List.of("Alain Damasio"),
                         2004, 6670450L, List.of("9782070342266"), List.of("Gallimard"),
-                        List.of("fre"), 700))));
+                        List.of("fre"), 700, 40, null))));
             }
 
             @Override
@@ -212,5 +228,166 @@ class OpenLibraryProviderTest {
         assertNull(OpenLibraryProvider.workKey("/books/OL7353617M"));
         assertNull(OpenLibraryProvider.workKey("/works/../etc"));
         assertNull(OpenLibraryProvider.workKey(null));
+    }
+
+    // ── French-first, work-centric results ───────────────────────────────────────
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /** A client answering what Open Library really answered, recorded in the fixtures. */
+    private static OpenLibraryClient recorded(String fixture) {
+        return answering(() -> {
+            try (InputStream in = OpenLibraryProviderTest.class
+                    .getResourceAsStream("/catalog/openlibrary/" + fixture + ".json")) {
+                return Uni.createFrom().item(MAPPER.readValue(in, OpenLibraryClient.SearchResponse.class));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    private static OpenLibraryClient answering(
+            Supplier<Uni<OpenLibraryClient.SearchResponse>> answer) {
+        return new OpenLibraryClient() {
+            @Override
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
+                return answer.get();
+            }
+
+            @Override
+            public Uni<EditionsResponse> editions(String ref, int limit) {
+                return Uni.createFrom().item(new EditionsResponse(List.of()));
+            }
+        };
+    }
+
+    private List<CatalogResult> searchFixture(String fixture) {
+        return provider(recorded(fixture), Duration.ofSeconds(5))
+                .search(CatalogQuery.of(fixture), 40);
+    }
+
+    @Test
+    void harryPotterLeadsWithItsFrenchEdition() {
+        List<CatalogResult> results = searchFixture("harry-potter");
+        CatalogResult first = results.get(0);
+
+        // The fixture spells the accents as a letter plus a combining mark (NFD), as recorded.
+        assertEquals("Harry Potter à l'école des sorciers", first.title());
+        assertEquals("fre", first.language());
+        assertTrue(first.coverUrl().contains("/b/id/"), first.coverUrl());
+        assertTrue(first.popularity() > 100, "popularity is the work's edition count");
+    }
+
+    @Test
+    void leNomDuVentIsFoundByItsFrenchTitle() {
+        CatalogResult result = searchFixture("le-nom-du-vent").stream()
+                .filter(r -> "Le Nom du Vent".equals(r.title())
+                        && r.authors() != null && r.authors().contains("Patrick Rothfuss"))
+                .findFirst().orElseThrow();
+
+        assertNotNull(result.coverUrl());
+    }
+
+    @Test
+    void noSearchResultBuildsAnIsbnCoverUrl() {
+        // /b/isbn/ covers 404 most of the time; a cover is a cover id or nothing.
+        for (String fixture : List.of("dune", "harry-potter", "le-nom-du-vent", "l-etranger-camus",
+                "les-miserables", "one-piece", "blue-lock", "demon-slayer", "blacksad", "victor-hugo")) {
+            for (CatalogResult r : searchFixture(fixture)) {
+                assertTrue(r.coverUrl() == null || !r.coverUrl().contains("/b/isbn/"),
+                        fixture + ": " + r.coverUrl());
+            }
+        }
+    }
+
+    @Test
+    void aWorkWithoutEditionsMapsFromItsOwnFields() {
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL1W", "Dune",
+                List.of("Frank Herbert"), 1965, 99L, List.of("0441013597", "9780441013593"),
+                List.of("Ace"), List.of("eng"), 600, 250, null);
+        OpenLibraryProvider provider = provider(answering(() -> Uni.createFrom()
+                .item(new OpenLibraryClient.SearchResponse(List.of(doc)))), Duration.ofSeconds(5));
+
+        CatalogResult r = provider.search(CatalogQuery.of("dune"), 10).get(0);
+
+        assertEquals("Dune", r.title());
+        assertEquals("eng", r.language());
+        assertEquals("9780441013593", r.isbn13());
+        assertEquals("Ace", r.publisher());
+        assertEquals(1965, r.year());
+        assertEquals("https://covers.openlibrary.org/b/id/99-M.jpg", r.coverUrl());
+        assertEquals(250, r.popularity());
+    }
+
+    @Test
+    void aSparseEditionFallsBackToTheWorkFieldByField() {
+        OpenLibraryClient.EditionDoc edition = new OpenLibraryClient.EditionDoc("/books/OL2M",
+                "Le Nom du Vent", List.of("fre"), null, null, null);
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL3W", "The Name of the Wind",
+                List.of("Patrick Rothfuss"), 2007, 7L, List.of("9780756404741"), List.of("DAW"),
+                List.of("eng", "fre"), 700, 76,
+                new OpenLibraryClient.EditionHits(List.of(edition)));
+        OpenLibraryProvider provider = provider(answering(() -> Uni.createFrom()
+                .item(new OpenLibraryClient.SearchResponse(List.of(doc)))), Duration.ofSeconds(5));
+
+        CatalogResult r = provider.search(CatalogQuery.of("nom du vent"), 10).get(0);
+
+        assertEquals("Le Nom du Vent", r.title());
+        assertEquals("fre", r.language());
+        // Nothing on the edition for these: the work's own values stand in.
+        assertEquals("9780756404741", r.isbn13());
+        assertEquals("DAW", r.publisher());
+        assertEquals("https://covers.openlibrary.org/b/id/7-M.jpg", r.coverUrl());
+    }
+
+    @Test
+    void retriesOnceWhenTheFirstCallFails() {
+        AtomicInteger calls = new AtomicInteger();
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL1W", "Dune", null, null,
+                null, null, null, null, null, null, null);
+        OpenLibraryProvider provider = provider(answering(() -> calls.incrementAndGet() == 1
+                ? Uni.createFrom().failure(new IllegalStateException("not json"))
+                : Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of(doc)))),
+                Duration.ofSeconds(5));
+
+        assertEquals(1, provider.search(CatalogQuery.of("dune"), 10).size());
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void retriesOnceWhenTheAnswerIsEmpty() {
+        AtomicInteger calls = new AtomicInteger();
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL1W", "Dune", null, null,
+                null, null, null, null, null, null, null);
+        OpenLibraryProvider provider = provider(answering(() -> calls.incrementAndGet() == 1
+                ? Uni.createFrom().nullItem()
+                : Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of(doc)))),
+                Duration.ofSeconds(5));
+
+        assertEquals(1, provider.search(CatalogQuery.of("dune"), 10).size());
+    }
+
+    @Test
+    void givesUpAfterTheSecondFailure() {
+        AtomicInteger calls = new AtomicInteger();
+        OpenLibraryProvider provider = provider(answering(() -> {
+            calls.incrementAndGet();
+            return Uni.createFrom().failure(new IllegalStateException("down"));
+        }), Duration.ofSeconds(5));
+
+        assertTrue(provider.search(CatalogQuery.of("dune"), 10).isEmpty());
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void doesNotRetryALegitimatelyEmptyAnswer() {
+        AtomicInteger calls = new AtomicInteger();
+        OpenLibraryProvider provider = provider(answering(() -> {
+            calls.incrementAndGet();
+            return Uni.createFrom().item(new OpenLibraryClient.SearchResponse(List.of()));
+        }), Duration.ofSeconds(5));
+
+        assertTrue(provider.search(CatalogQuery.of("zzzz"), 10).isEmpty());
+        assertEquals(1, calls.get());
     }
 }
