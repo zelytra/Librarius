@@ -37,3 +37,10 @@ twice in the file, is not imported twice.
 
 After the import, `ImportEnricher` fills lengths, ISBNs and publishers in from the catalog, in
 the background — see [Catalog & book search](https://github.com/zelytra/Librarius/wiki/Catalog-and-Book-Search#filling-in-imported-titles).
+
+The importing reader's own editions do not wait for the schedule (#425): once the job is
+done, `ImportFollowUp` runs, on the import worker, consecutive enrichment batches restricted
+to that reader's library and wishlist, then consecutive BnF price batches (`PriceRefresher`)
+for the editions that now carry an ISBN, then the page-count estimates — at most 20 batches
+of each, the rest left to the scheduled passes. `librarius.imports.follow-up.enabled` turns
+it off (it is off in the test profile).

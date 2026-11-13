@@ -584,8 +584,9 @@ year 🔜.
   scanning session; Collection filters on it and badges a cover that is not `OWNED`. A title
   wanted and not read is a plain wish; `WISHLIST` on a title of the library keeps a wish on the
   same edition in step, and buying it keeps the reading history.
-- **Reading sheet** (`/detail/:id/fiche`): a printable A4 page of a finished title — rating,
-  review (or ruled lines), facts, dates — black on white with hairlines, cover off by default.
+- **Reading sheet** (`/detail/:id/fiche`): a printable A4 page or A6 card (#427) of a
+  finished title — rating, review (or ruled lines), facts, dates — black on white with
+  hairlines, cover on by default.
   Offered on Detail once read and from the end-of-reading sheet.
 - **Feedback**: every write announces its outcome in a toast (`shared/ui/toast.ts`, mounted
   once by `App`); buttons and status chips give under the finger. Reduced motion is honoured.
@@ -593,7 +594,10 @@ year 🔜.
   average, else per kind) and is shown with "≈".
 - **Home**: one vertical gap between blocks; the customize panel is a modal; the stack of pages
   read rises through a sky — ground, clouds, space, the Moon, each planet, the stars, the edge
-  of the universe — on a story scale (`skyAltitude.ts`), not a true one.
+  of the universe — on a story scale (`skyAltitude.ts`), not a true one. The card shows the
+  minimum over the sky; an « i » opens every figure in a modal (#426).
+- **Wishlist search** (#424) on `q`, the count and budget following it.
+- **Imports** are enriched and priced right after the job (#425, `ImportFollowUp`).
 - **Stats**: the pace is titles per month; "What you read" covers everything read by default,
   every rank listed; the cumulative chart is one curve per kind goal; a value panel prices the
   owned books and the wishlist at the BnF publisher's price (fixed book price in France).
