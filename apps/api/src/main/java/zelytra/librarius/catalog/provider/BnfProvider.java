@@ -1,6 +1,7 @@
 package zelytra.librarius.catalog.provider;
 
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -18,13 +19,17 @@ import zelytra.librarius.catalog.CatalogQuery;
 import zelytra.librarius.catalog.CatalogResult;
 import zelytra.librarius.catalog.VolumeParser;
 import zelytra.librarius.domain.Kind;
+import zelytra.librarius.scan.Isbn;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
+import java.text.Normalizer;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,9 +45,11 @@ import java.util.regex.Pattern;
  * also open without registration, quota or key, which is what keeps the deployment free of
  * a credential to carry around.
  *
- * <p>What it costs is the shape of the answer: SRU returns a Dublin Core record, which
- * carries a title, a creator, a date, a publisher, a language and a handful of identifiers —
- * and no cover image. A title only the BnF knows therefore reaches the screen without one.
+ * <p>Records are asked in UNIMARC, the format the BnF catalogues in. Dublin Core, which this
+ * class read before, flattens the record into a title sentence and a list of creators with
+ * their roles glued on: the translator was credited as an author, the volume number was
+ * buried in the title and the series was lost. UNIMARC keeps each of those in a field of its
+ * own, and says whether the BnF holds a cover image.
  */
 @ApplicationScoped
 public class BnfProvider implements CatalogProvider {
@@ -51,14 +58,17 @@ public class BnfProvider implements CatalogProvider {
 
     private static final String SRU_OPERATION = "searchRetrieve";
 
-    /** Simplest of the schemas the BnF serves; UNIMARC would carry more and cost a parser. */
-    private static final String RECORD_SCHEMA = "dublincore";
+    private static final String RECORD_SCHEMA = "unimarcxchange";
+
+    /** Namespace of the {@code <mxc:record>} the BnF wraps each UNIMARC record in. */
+    private static final String MARC_NS = "info:lc/xmlns/marcxchange-v2";
 
     /**
-     * Page asked of the BnF. Also the size fetched when the year is being filtered here
-     * rather than by the catalogue, the same trade AniList's author search makes.
+     * Page asked of the BnF for each query. Also the size fetched when the year is being
+     * filtered here rather than by the catalogue, the same trade AniList's author search makes.
+     * A UNIMARC record weighs several kilobytes, so it is kept below what Dublin Core allowed.
      */
-    private static final int MAX_RECORDS = 50;
+    private static final int MAX_RECORDS = 20;
 
     /**
      * The BnF indexes languages as MARC codes, like Open Library, while a client holds the
@@ -70,8 +80,38 @@ public class BnfProvider implements CatalogProvider {
     private static final Map<String, String> MARC_LANGUAGES = Map.of(
             "fr", "fre", "en", "eng", "ja", "jpn", "de", "ger", "es", "spa", "it", "ita");
 
-    /** First four consecutive digits of a Dublin Core date ("DL 2001", "cop. 1965", "2023"). */
+    /** First four consecutive digits of a date ("DL 2001", "cop. 2006-", "[2015]"). */
     private static final Pattern YEAR = Pattern.compile("\\d{4}");
+
+    /** "1 vol. (192 p.)", "1 volume 181 p", "100 p." — not the "[ca 208] p." of an estimate. */
+    private static final Pattern PAGES = Pattern.compile("(?<![\\d\\[])(\\d{1,5})\\s*p\\b");
+
+    /** A part number that is only a number, possibly behind its marker: "T.. 31", "[5]", "Livre 1". */
+    private static final Pattern PLAIN_NUMBER = Pattern.compile(
+            "(?iu)^\\W*(?:t\\.*|tome|vol\\.?|volume|livre|n°)?\\s*(\\d{1,4})\\W*$");
+
+    /** "L' Etranger": the BnF leaves a space after the apostrophe of an elision. */
+    private static final Pattern ELISION_SPACE = Pattern.compile("(?<=\\p{L})(['’])\\s+(?=\\p{L})");
+
+    private static final Pattern TRAILING_PUNCTUATION = Pattern.compile("[\\s/:;,=]+$|(?<!\\.)\\.$");
+
+    /** Seen on the live catalogue: the series is a shonen/seinen/… collection, or a manga house. */
+    private static final Pattern MANGA_HINT = Pattern.compile(
+            "\\b(?:shonen|shojo|seinen|josei|mangas?)\\b");
+
+    /**
+     * Publishers whose whole catalogue is manga. Matched on the normalised publisher only: a
+     * Japanese-looking author or an original title would guess, and a guess puts a French
+     * novel on the manga shelf.
+     */
+    private static final Pattern MANGA_PUBLISHER = Pattern.compile(
+            "\\b(?:pika|kana|ki[- ]?oon|kurokawa|glenat manga|tonkam|kaze|crunchyroll|panini manga|"
+                    + "mangetsu|akata|doki[- ]?doki|nobi[- ]?nobi|ototo|taifu|komikku|noeve|meian|"
+                    + "vega|soleil manga)\\b");
+
+    /** What a 200 $f/$g says when the credited people drew or scripted rather than wrote. */
+    private static final Pattern COMIC_RESPONSIBILITY = Pattern.compile(
+            "\\b(?:scenario|dessins?|dibujo|guion)\\b");
 
     @Inject
     @RestClient
@@ -93,31 +133,65 @@ public class BnfProvider implements CatalogProvider {
 
     @Override
     public List<CatalogResult> search(CatalogQuery query, int limit) {
-        String cql = cqlQuery(query);
-        if (cql.isEmpty()) {
+        List<String> queries = cqlQueries(query);
+        if (queries.isEmpty()) {
             // Only a year was given. Asking the BnF for everything printed that year would
             // answer, and the answer would be noise.
             return List.of();
         }
+        int size = pageSize(query, limit);
+        List<String> answers;
         try {
-            String xml = client
-                    .search(SRU_VERSION, SRU_OPERATION, cql, RECORD_SCHEMA, pageSize(query, limit))
-                    .await().atMost(callTimeout);
-            if (xml == null || xml.isBlank()) {
-                return List.of();
-            }
-            // A free-text search hands back the whole page: the BnF orders its answer by
-            // nothing a reader would recognise, and CatalogService ranks the candidates of every
-            // provider by relevance before trimming them to the limit.
-            return parse(xml).stream()
-                    .filter(result -> query.year() == null || query.year().equals(result.year()))
-                    .limit(query.text() != null ? MAX_RECORDS : limit)
-                    .toList();
+            // The queries run side by side and each recovers on its own: the phrase query is
+            // the precise one and the all-words query the forgiving one, so losing either
+            // because the other failed would throw away a usable answer. Each carries its own
+            // deadline, then the join is only a safety net.
+            List<Uni<String>> calls = queries.stream().map(cql -> call(cql, size)).toList();
+            answers = Uni.join().all(calls).andFailFast().await().atMost(callTimeout.plusSeconds(2));
         } catch (Exception e) {
             // Same contract as the other two providers: a failure is no result, never an
             // exception reaching CatalogService, so the aggregate degrades to what the other
             // book provider found instead of turning into a 500.
             Log.warnf("BnF search failed: %s", e.getMessage());
+            return List.of();
+        }
+        // The exact phrase comes first, then what only the all-words query found. The same
+        // ark in both answers is the same record.
+        Map<String, CatalogResult> merged = new LinkedHashMap<>();
+        for (String xml : answers) {
+            for (CatalogResult result : parseQuietly(xml)) {
+                if (query.year() != null && !query.year().equals(result.year())) {
+                    continue;
+                }
+                String key = result.providerRef() != null ? result.providerRef() : "#" + merged.size();
+                merged.putIfAbsent(key, result);
+            }
+        }
+        // A free-text search hands back every record: CatalogService ranks the candidates of
+        // every provider by relevance before trimming them to the limit.
+        return merged.values().stream()
+                .limit(query.text() != null ? 2L * MAX_RECORDS : limit)
+                .toList();
+    }
+
+    /** One SRU call that cannot fail: an error or a missing answer is an empty string. */
+    private Uni<String> call(String cql, int size) {
+        return Uni.createFrom().deferred(() -> client.search(SRU_VERSION, SRU_OPERATION, cql, RECORD_SCHEMA, size))
+                .ifNoItem().after(callTimeout).fail()
+                .onFailure().recoverWithItem(failure -> {
+                    Log.warnf("BnF query failed (%s): %s", cql, failure.getMessage());
+                    return "";
+                });
+    }
+
+    private static List<CatalogResult> parseQuietly(String xml) {
+        if (xml == null || xml.isBlank()) {
+            return List.of();
+        }
+        try {
+            return parse(xml);
+        } catch (Exception e) {
+            Log.warnf("BnF answer unreadable: %s", e.getMessage());
             return List.of();
         }
     }
@@ -143,50 +217,56 @@ public class BnfProvider implements CatalogProvider {
     }
 
     /**
-     * Renders the criteria as the CQL that SRU expects: every criterion is a fielded term on
-     * a {@code bib.*} index, joined by {@code and}, so the BnF narrows them itself.
+     * Renders the criteria as the CQL queries SRU expects: every criterion is a fielded term
+     * on a {@code bib.*} index, joined by {@code and}, so the BnF narrows them itself.
      *
-     * <p>The year is the exception: it is applied to the parsed records instead. The
-     * publication-date index is not the plain year a caller supplies — an edition carries a
-     * date of the shape "DL 2001" — and a term the catalogue rejects is not a narrower
-     * search, it is a diagnostic and no results at all.
+     * <p>Free text asks two questions. The exact phrase on the title ({@code adj}) answers
+     * "le nom du vent" with the editions of that novel and nothing else, where the all-words
+     * query puts books that merely contain those words first — the novel was not even in the
+     * page. The all-words query on title or author still runs second, because a reader also
+     * types an author, half a title or the words in another order. Without free text, or with
+     * an ISBN, there is one question only.
+     *
+     * <p>The year is applied to the parsed records instead. The publication-date index is not
+     * the plain year a caller supplies — an edition carries a date of the shape "DL 2001" —
+     * and a term the catalogue rejects is not a narrower search, it is a diagnostic and no
+     * results at all.
      */
-    private static String cqlQuery(CatalogQuery query) {
-        StringBuilder cql = new StringBuilder();
-        if (query.text() != null) {
-            // Title or author rather than bib.anywhere: "anywhere" also reads the notes, the
-            // series statements and the identifiers, so "one piece 1" matched 182 records in an
-            // arbitrary order and the actual first volume was not among the 20 returned; on the
-            // title and author indexes it matches 24 and is one of them. A bare author name
-            // typed in the search field still answers through bib.author.
-            // "tome", "vol." and "t." are the reader's words, never the catalogue's: a BnF
-            // volume is titled "One Piece. 1", so "one piece tome 1" matched nothing at all.
-            String text = cleaned(VolumeParser.withoutMarkers(query.text()));
-            if (!text.isEmpty()) {
-                cql.append("(bib.title all \"").append(text).append("\" or bib.author all \"")
-                        .append(text).append("\")");
-            }
-        }
-        append(cql, "bib.author", query.author());
-        append(cql, "bib.publisher", query.publisher());
-        append(cql, "bib.isbn", query.isbn());
+    static List<String> cqlQueries(CatalogQuery query) {
+        StringBuilder criteria = new StringBuilder();
+        append(criteria, "bib.author", query.author());
+        append(criteria, "bib.publisher", query.publisher());
+        append(criteria, "bib.isbn", query.isbn());
         if (query.language() != null) {
             String language = query.language().toLowerCase(Locale.ROOT);
-            append(cql, "bib.language", MARC_LANGUAGES.getOrDefault(language, language));
+            append(criteria, "bib.language", MARC_LANGUAGES.getOrDefault(language, language));
         }
-        if (cql.isEmpty()) {
-            return "";
+        // "tome", "vol." and "t." are the reader's words, never the catalogue's: a BnF
+        // volume is titled "One Piece" with its number apart, so "one piece tome 1" matched
+        // nothing at all.
+        String text = query.text() == null ? "" : cleaned(VolumeParser.withoutMarkers(query.text()));
+        List<String> terms = new ArrayList<>();
+        if (text.isEmpty()) {
+            if (!criteria.isEmpty()) {
+                terms.add(criteria.toString());
+            }
+        } else {
+            terms.add("bib.title adj \"" + text + "\"" + and(criteria));
+            terms.add("(bib.title all \"" + text + "\" or bib.author all \"" + text + "\")" + and(criteria));
         }
         // Printed text only. The general catalogue also describes video games, films, records
         // and periodicals: "one piece" answered Namco's games and a DJ remix next to the
-        // manga. The index narrows most of it; isPrintedText() drops what still slips through
-        // (a box set catalogued as "multimédia multisupport").
-        cql.append(" and bib.doctype any \"a\"");
-        return cql.toString();
+        // manga. The index narrows most of it; toResult() drops what still slips through (a
+        // box set catalogued as "multimédia multisupport").
+        return terms.stream().map(term -> term + " and bib.doctype any \"a\"").toList();
+    }
+
+    private static String and(StringBuilder criteria) {
+        return criteria.isEmpty() ? "" : " and " + criteria;
     }
 
     /**
-     * Appends {@code index all "value"} to the query. The quotes keep a multi-word value in
+     * Appends {@code index all "value"} to the criteria. The quotes keep a multi-word value in
      * one term, and the ones the user typed are dropped rather than escaped: a stray quote
      * would unbalance the CQL and the BnF would answer a diagnostic instead of records.
      */
@@ -211,13 +291,13 @@ public class BnfProvider implements CatalogProvider {
     /**
      * Reads the records out of the SRU envelope.
      *
-     * <p>Elements are matched on their local name, with the namespace left as a wildcard: the
-     * envelope and Dublin Core each have one, they are not what identifies a field here, and
-     * a prefix the BnF decides to change should not empty the answer.
+     * <p>Records are found by the MARCXchange namespace and their fields by tag, which is what
+     * identifies them; the prefix the BnF binds to it is not, and may change. The SRU envelope
+     * has a {@code record} of its own, hence the namespace rather than the local name alone.
      */
     static List<CatalogResult> parse(String xml) throws Exception {
         Document document = documentBuilder().parse(new InputSource(new StringReader(xml)));
-        NodeList records = document.getElementsByTagNameNS("*", "record");
+        NodeList records = document.getElementsByTagNameNS(MARC_NS, "record");
         List<CatalogResult> results = new ArrayList<>(records.getLength());
         for (int i = 0; i < records.getLength(); i++) {
             if (records.item(i) instanceof Element record) {
@@ -231,146 +311,170 @@ public class BnfProvider implements CatalogProvider {
     }
 
     private static CatalogResult toResult(Element record) {
-        if (!isPrintedText(all(record, "type"))) {
-            return null;
-        }
-        String title = isbdTitle(first(record, "title"));
-        if (title == null) {
+        Element titleField = field(record, "200");
+        String base = titleField == null ? null : clean(sub(titleField, 'a'));
+        if (base == null || !isPrintedText(titleField)) {
             // A record with no title cannot be shown, and would collide with every other
             // untitled one on the aggregation's title+author key.
             return null;
         }
-        List<String> identifiers = all(record, "identifier");
-        VolumeParser.Parsed volume = VolumeParser.parse(title);
-        return new CatalogResult("BOOK", title, creators(record), year(first(record, "date")),
-                null, null, isbn13(identifiers), first(record, "publisher"),
-                first(record, "language"), null, volume.seriesTitle(), volume.volumeNumber(),
-                null, "bnf", ark(identifiers));
+        String partNumber = sub(titleField, 'h');
+        Integer partVolume = number(partNumber);
+        Element series461 = field(record, "461");
+        Element series225 = fieldWith(record, "225", 'v');
+
+        // The series: the catalogue's own link to it (461) when there is one. A collection
+        // (225) is often the publisher's ("Pika Shônen", "Folio"), so it is only a series when
+        // it numbers the volume. With neither, a numbered part belongs to the work it is
+        // titled after.
+        String series = series461 != null ? clean(sub(series461, 't'))
+                : series225 != null ? clean(sub(series225, 'a'))
+                : partNumber != null ? base : null;
+        Integer volume = partVolume != null ? partVolume
+                : series461 != null ? number(sub(series461, 'v'))
+                : series225 != null ? number(sub(series225, 'v')) : null;
+
+        Element imprint = imprint(record);
+        String ark = ark(record);
+        return new CatalogResult(kind(record, titleField, imprint).name(), title(titleField, base, partNumber, partVolume),
+                authors(record), imprint == null ? null : year(sub(imprint, 'd')), cover(record, ark),
+                clean(sub(field(record, "330"), 'a')), isbn13(record),
+                imprint == null ? null : clean(sub(imprint, 'c')), sub(field(record, "101"), 'a'), null,
+                series, volume, pages(sub(field(record, "215"), 'a')), "bnf", ark);
     }
 
     /**
-     * Drops the ISBD statement of responsibility from a title.
-     *
-     * <p>A BnF title is a full ISBD statement — {@code "Fondation / Isaac Asimov"}, or
-     * {@code "Dune ; [suivi de] Le messie de Dune / Frank Herbert ; traduit de l'américain
-     * par Michel Demuth"} — where Open Library holds plain {@code "Fondation"}. Everything
-     * from the {@code " / "} on is the authorship, which {@code dc:creator} already carries,
-     * so it is cut: it is what makes the title fit a result tile, and what lets a book both
-     * catalogues hold merge on the title+author key instead of being listed twice.
+     * "Blue Lock - Tome 31": the title proper, the part number spelled out and the part's own
+     * name after it. The BnF writes the number as "T.. 31", "[5]" or "56", none of which a
+     * reader would recognise on a tile.
      */
-    static String isbdTitle(String raw) {
-        if (raw == null) {
-            return null;
+    private static String title(Element titleField, String base, String partNumber, Integer volume) {
+        StringBuilder title = new StringBuilder(base);
+        if (volume != null) {
+            title.append(" - Tome ").append(volume);
+        } else if (clean(partNumber) != null) {
+            title.append(" - ").append(clean(partNumber));
         }
-        int responsibility = raw.indexOf(" / ");
-        String title = (responsibility > 0 ? raw.substring(0, responsibility) : raw).trim();
-        // A newer record drops the " / " and runs the edition statement and the authorship on
-        // after the title: "La horde du contrevent : roman (Nouvelle éd.) Alain Damasio". The
-        // edition statement in brackets is where that tail starts.
-        title = EDITION_STATEMENT.matcher(title).replaceFirst("").trim();
-        // A subtitle that is only the form of the work ("roman", "nouvelles") says nothing a
-        // reader would type, and kept the BnF's copy from merging with Open Library's.
-        title = FORM_SUBTITLE.matcher(title).replaceFirst("").trim();
-        return title.isEmpty() ? null : title;
-    }
-
-    /**
-     * "(Nouvelle éd.)", "(Éd. collector)", "(Édition originale)", "(Trad. revue et corrigée)" —
-     * and whatever follows it.
-     */
-    private static final Pattern EDITION_STATEMENT = Pattern.compile(
-            "\\s*\\((?=[^)]*(?iu:(?<!\\p{L})[ée]d\\.|[ée]dition|(?<!\\p{L})trad\\.|traduction|revue et|augment))[^)]*\\).*$");
-
-    /** A trailing " : roman", " : nouvelles"… — a statement of form, not a subtitle. */
-    private static final Pattern FORM_SUBTITLE = Pattern.compile(
-            "(?iu)\\s*:\\s*(?:roman|romans|récit|récits|nouvelles|nouvelle|essai|contes|conte|"
-                    + "poèmes|poésie|théâtre|bande dessinée|manga)\\s*$");
-
-    /**
-     * Whether the record describes a printed text. Dublin Core carries the type in French
-     * first ("texte imprimé"), then in English; a record with no type at all is kept, so a
-     * change of wording at the BnF cannot empty every answer.
-     */
-    static boolean isPrintedText(List<String> types) {
-        if (types.isEmpty()) {
-            return true;
+        String partName = clean(sub(titleField, 'i'));
+        if (partName != null) {
+            title.append(" : ").append(partName);
         }
-        return types.stream().anyMatch(type -> {
-            String t = type.toLowerCase(Locale.ROOT);
-            return t.equals("texte imprimé") || t.equals("printed text");
-        });
+        return title.toString();
     }
 
     /**
-     * Joins the creators the way Open Library joins its authors, so that a book both
-     * catalogues know produces the same aggregation key and is shown once.
-     *
-     * <p>Repeats are dropped: a BnF record routinely carries the same author twice — once
-     * per role it filled — and {@code "Frank Herbert, Frank Herbert"} would match nothing
-     * and read as a mistake.
+     * A record that says what it is: "Texte imprimé" is the general material designation the
+     * catalogue gives a book, "Multimédia multisupport" a box set. A record that says nothing
+     * is kept, so a change of wording at the BnF cannot empty every answer.
      */
-    private static String creators(Element record) {
-        List<String> names = all(record, "creator").stream()
-                .map(BnfProvider::normalizeCreator)
-                .filter(name -> name != null && !name.isEmpty())
+    private static boolean isPrintedText(Element titleField) {
+        String designation = sub(titleField, 'b');
+        return designation == null || normalized(designation).startsWith("texte imprim");
+    }
+
+    /**
+     * Credits the authors, then the illustrators — who matter for a comic or a manga — and
+     * nobody else: a translator is not an author, and neither is the adapter or the
+     * lettering artist. A record whose persons carry no relator code keeps them all, except
+     * the ones it names as translators in words.
+     */
+    private static String authors(Element record) {
+        List<Person> persons = new ArrayList<>();
+        for (Element person : fields(record, "700", "701", "702")) {
+            String surname = clean(sub(person, 'a'));
+            if (surname == null) {
+                continue;
+            }
+            String forename = clean(sub(person, 'b'));
+            String code = sub(person, '4');
+            int rank;
+            if (code == null) {
+                String role = normalized(sub(person, 'c'));
+                rank = role.contains("traduct") ? -1 : 0;
+            } else {
+                rank = switch (code.trim()) {
+                    case "070" -> 0;
+                    case "440" -> 1;
+                    default -> -1;
+                };
+            }
+            if (rank >= 0) {
+                persons.add(new Person(rank, forename == null ? surname : forename + ' ' + surname));
+            }
+        }
+        // Stable: within one rank the catalogue's order is kept, first author first.
+        List<String> names = persons.stream()
+                .sorted(Comparator.comparingInt(Person::rank))
+                .map(Person::name)
                 .distinct()
                 .toList();
         return names.isEmpty() ? null : String.join(", ", names);
     }
 
-    /**
-     * Turns a BnF creator into the plain name Open Library returns.
-     *
-     * <p>The catalogue writes an authority heading — {@code "Herbert, Frank (1920-1986).
-     * Auteur du texte"} — where Open Library writes {@code "Frank Herbert"}. Left as-is the
-     * two never match and the same novel is listed twice, so the life dates and the role are
-     * dropped and the inverted name is put back in reading order.
-     *
-     * <p>Without dates to cut at, the role is the last {@code ". "} segment — but only when
-     * that segment is a plain phrase: {@code "Tolkien, J. R. R."} ends in an initial, not in
-     * a role, and cutting there would lose half the name.
-     */
-    static String normalizeCreator(String raw) {
-        if (raw == null) {
-            return null;
-        }
-        String name = raw.trim();
-        int dates = name.indexOf('(');
-        if (dates > 0) {
-            name = name.substring(0, dates);
-        } else {
-            int role = name.lastIndexOf(". ");
-            if (role > 0) {
-                String tail = name.substring(role + 2);
-                if (!tail.contains(".") && !tail.contains(",")) {
-                    name = name.substring(0, role);
-                }
-            }
-        }
-        name = name.trim();
-        int comma = name.indexOf(',');
-        if (comma > 0 && name.indexOf(',', comma + 1) < 0) {
-            String family = name.substring(0, comma).trim();
-            String given = name.substring(comma + 1).trim();
-            name = given.isEmpty() ? family : given + ' ' + family;
-        }
-        return name.isEmpty() ? null : name;
+    private record Person(int rank, String name) {
     }
 
     /**
-     * Picks the ISBN-13 out of the identifiers.
-     *
-     * <p>A Dublin Core identifier is a sentence, not a number — {@code "978-2-266-11624-2
-     * (br.) : 8,90 EUR"} — so the trailing binding and price are cut off before the digits
-     * are read, otherwise the price would be read as part of the number.
+     * Manga, comic or book. The manga hints win over the generic ones, since every manga is
+     * also catalogued as a "bande dessinée". Nothing is guessed from a romanised author or an
+     * original title: a translated Japanese novel has both and is a book.
      */
-    private static String isbn13(List<String> identifiers) {
-        for (String identifier : identifiers) {
-            int note = identifier.indexOf('(');
-            String candidate = (note > 0 ? identifier.substring(0, note) : identifier)
-                    .replaceAll("[^0-9]", "");
-            if (candidate.length() == 13 && (candidate.startsWith("978") || candidate.startsWith("979"))) {
-                return candidate;
+    private static Kind kind(Element record, Element titleField, Element imprint) {
+        StringBuilder manga = new StringBuilder();
+        for (Element collection : fields(record, "225")) {
+            manga.append(' ').append(sub(collection, 'a'));
+        }
+        for (Element subject : fields(record, "608")) {
+            manga.append(' ').append(sub(subject, 'a'));
+        }
+        if (MANGA_HINT.matcher(normalized(manga.toString())).find()
+                || imprint != null && MANGA_PUBLISHER.matcher(normalized(sub(imprint, 'c'))).find()) {
+            return Kind.MANGA;
+        }
+        for (Element subject : fields(record, "608")) {
+            if (normalized(sub(subject, 'a')).contains("bandes dessinees")) {
+                return Kind.COMIC;
+            }
+        }
+        for (Element dewey : fields(record, "676")) {
+            String number = sub(dewey, 'a');
+            if (number != null && number.trim().startsWith("741.5")) {
+                return Kind.COMIC;
+            }
+        }
+        boolean illustrated = fields(record, "700", "701", "702").stream()
+                .anyMatch(person -> "440".equals(trimmed(sub(person, '4'))));
+        if (illustrated) {
+            for (Element statement : fields(record, "200")) {
+                for (String text : subs(statement, 'f', 'g')) {
+                    if (COMIC_RESPONSIBILITY.matcher(normalized(text)).find()) {
+                        return Kind.COMIC;
+                    }
+                }
+            }
+        }
+        return Kind.BOOK;
+    }
+
+    /** The first publication statement: 214 is the current field, 210 the one older records use. */
+    private static Element imprint(Element record) {
+        List<Element> imprints = fields(record, "214", "210");
+        return imprints.isEmpty() ? null : imprints.get(0);
+    }
+
+    /**
+     * The BnF holds a scan of the cover when the record links to a "Première de couverture"
+     * (856 $b). The image itself is served by our own {@code /api/covers/bnf/{ark}}, which is
+     * why only the relative path is returned; a record without the link has no cover, and none
+     * is guessed from the ISBN.
+     */
+    private static String cover(Element record, String ark) {
+        if (ark == null) {
+            return null;
+        }
+        for (Element link : fields(record, "856")) {
+            if (normalized(sub(link, 'b')).startsWith("premiere de couverture")) {
+                return "/api/covers/bnf/" + ark.substring(ark.lastIndexOf('/') + 1);
             }
         }
         return null;
@@ -380,14 +484,38 @@ public class BnfProvider implements CatalogProvider {
      * The record's ark, which is the BnF's own stable identifier for it, kept as the
      * {@code providerRef} so a result can be traced back to the notice it came from.
      */
-    private static String ark(List<String> identifiers) {
-        for (String identifier : identifiers) {
-            int ark = identifier.indexOf("ark:/");
+    private static String ark(Element record) {
+        String id = record.getAttribute("id");
+        if (id.startsWith("ark:/")) {
+            return id;
+        }
+        for (Element control : children(record, "controlfield")) {
+            String text = control.getTextContent();
+            int ark = text == null ? -1 : text.indexOf("ark:/");
             if (ark >= 0) {
-                return identifier.substring(ark).trim();
+                return text.substring(ark).trim();
             }
         }
         return null;
+    }
+
+    /** The first valid ISBN of 010, then the EAN of 073, as an ISBN-13 without hyphens. */
+    private static String isbn13(Element record) {
+        for (Element field : fields(record, "010", "073")) {
+            String isbn = Isbn.toIsbn13(sub(field, 'a'));
+            if (isbn != null) {
+                return isbn;
+            }
+        }
+        return null;
+    }
+
+    private static Integer pages(String extent) {
+        if (extent == null) {
+            return null;
+        }
+        Matcher matcher = PAGES.matcher(extent);
+        return matcher.find() ? Integer.valueOf(matcher.group(1)) : null;
     }
 
     private static Integer year(String date) {
@@ -398,19 +526,107 @@ public class BnfProvider implements CatalogProvider {
         return matcher.find() ? Integer.valueOf(matcher.group()) : null;
     }
 
-    private static String first(Element record, String localName) {
-        List<String> values = all(record, localName);
+    private static Integer number(String value) {
+        if (value == null) {
+            return null;
+        }
+        Matcher matcher = PLAIN_NUMBER.matcher(value.trim());
+        return matcher.matches() ? Integer.valueOf(matcher.group(1)) : null;
+    }
+
+    /**
+     * A title or a name made presentable: spaces collapsed, the elision's space removed, the
+     * ISBD punctuation that trails a subfield ({@code " /"}, {@code " :"}) cut, and the
+     * brackets or quotes that enclose the whole value dropped. {@code null} when nothing is left.
+     */
+    static String clean(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String text = ELISION_SPACE.matcher(raw.replaceAll("\\s+", " ").trim()).replaceAll("$1");
+        String previous;
+        do {
+            previous = text;
+            text = TRAILING_PUNCTUATION.matcher(text).replaceAll("").trim();
+            if (text.length() > 1 && (text.startsWith("[") && text.endsWith("]")
+                    || text.startsWith("\"") && text.endsWith("\""))) {
+                text = text.substring(1, text.length() - 1).trim();
+            }
+        } while (!text.equals(previous));
+        return text.isEmpty() ? null : text;
+    }
+
+    /** Lower case without accents, so "Shônen", "shōnen" and "SHONEN" are one word. */
+    private static String normalized(String text) {
+        if (text == null) {
+            return "";
+        }
+        return Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT);
+    }
+
+    private static String trimmed(String text) {
+        return text == null ? null : text.trim();
+    }
+
+    private static List<Element> children(Element parent, String localName) {
+        List<Element> found = new ArrayList<>();
+        for (Node node = parent.getFirstChild(); node != null; node = node.getNextSibling()) {
+            if (node instanceof Element element && localName.equals(element.getLocalName())) {
+                found.add(element);
+            }
+        }
+        return found;
+    }
+
+    /** The data fields with one of these tags, in the order the tags are given, then the record's. */
+    private static List<Element> fields(Element record, String... tags) {
+        List<Element> found = new ArrayList<>();
+        List<Element> all = children(record, "datafield");
+        for (String tag : tags) {
+            for (Element field : all) {
+                if (tag.equals(field.getAttribute("tag"))) {
+                    found.add(field);
+                }
+            }
+        }
+        return found;
+    }
+
+    private static Element field(Element record, String tag) {
+        List<Element> found = fields(record, tag);
+        return found.isEmpty() ? null : found.get(0);
+    }
+
+    /** First field of that tag that carries the subfield: a record may repeat 225 for each collection. */
+    private static Element fieldWith(Element record, String tag, char code) {
+        for (Element field : fields(record, tag)) {
+            if (sub(field, code) != null) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    /** First non-blank value of the subfield, or {@code null}. */
+    private static String sub(Element field, char code) {
+        List<String> values = subs(field, code);
         return values.isEmpty() ? null : values.get(0);
     }
 
-    private static List<String> all(Element record, String localName) {
-        NodeList nodes = record.getElementsByTagNameNS("*", localName);
-        List<String> values = new ArrayList<>(nodes.getLength());
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-            String text = node.getTextContent();
-            if (text != null && !text.isBlank()) {
-                values.add(text.trim());
+    private static List<String> subs(Element field, char... codes) {
+        List<String> values = new ArrayList<>();
+        if (field == null) {
+            return values;
+        }
+        for (Element sub : children(field, "subfield")) {
+            String text = sub.getTextContent();
+            if (text == null || text.isBlank()) {
+                continue;
+            }
+            for (char code : codes) {
+                if (sub.getAttribute("code").equals(String.valueOf(code))) {
+                    values.add(text.trim());
+                }
             }
         }
         return values;
