@@ -10,6 +10,7 @@ import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius'
 import { markOnboardingSeen, shouldShowOnboarding } from '../onboarding/onboarding';
 import { DashboardSections } from './DashboardSections';
 import { HomeShowcase } from './HomeShowcase';
+import { LevelChip } from '../achievements/LevelChip';
 import styles from './HomePage.module.css';
 
 // Same reasoning as DashboardEditor: a returning user with any library never triggers
@@ -103,6 +104,8 @@ export function HomePage() {
           <div className={styles.greeting}>{t('home.greeting')}</div>
         </div>
         <div className={styles.headerActions}>
+          {/* The reader's level, the way into the achievements (#287). */}
+          <LevelChip />
           {/* Customising Home sits next to Settings (#397), where the reader looks for it. */}
           <button
             onClick={() => setParams({ customize: '1' }, { replace: true })}

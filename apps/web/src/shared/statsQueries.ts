@@ -11,6 +11,8 @@ import type { Query } from '@tanstack/react-query';
 export const STATS_QUERIES = {
   predicate: (query: Query) => {
     const head = query.queryKey[0];
-    return typeof head === 'string' && head.startsWith('/api/stats');
+    // The achievements (#287) are measured on the same data: a write that moves a statistic
+    // may unlock one, and refetching them is what announces it.
+    return typeof head === 'string' && (head.startsWith('/api/stats') || head === '/api/achievements');
   },
 };

@@ -30,6 +30,36 @@ export interface AccountDeletionDto {
   seriesFollows?: number;
 }
 
+export type OffsetDateTime = string;
+
+export interface AchievementDto {
+  code?: string;
+  family?: string;
+  tiers?: number;
+  tier?: number;
+  unlockedAt?: OffsetDateTime;
+  value?: number;
+  nextThreshold?: number;
+  xpEarned?: number;
+  nextXp?: number;
+}
+
+export interface AchievementUnlockDto {
+  code?: string;
+  tier?: number;
+  tiers?: number;
+  xp?: number;
+}
+
+export interface AchievementsDto {
+  xp?: number;
+  level?: number;
+  levelXp?: number;
+  nextLevelXp?: number;
+  achievements?: AchievementDto[];
+  unseen?: AchievementUnlockDto[];
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -251,8 +281,6 @@ export interface ExportCollectionItemDto {
   ownership?: Ownership;
   price?: number;
 }
-
-export type OffsetDateTime = string;
 
 export interface ExportUserDto {
   id?: string;
@@ -820,6 +848,178 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetApiAchievementsUrl = () => {
+
+
+
+
+  return `/api/achievements`
+}
+
+/**
+ * @summary Overview
+ */
+export const getApiAchievements = async ( options?: RequestInit): Promise<AchievementsDto> => {
+
+  return apiClient<AchievementsDto>(getGetApiAchievementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAchievementsQueryKey = () => {
+    return [
+    `/api/achievements`
+    ] as const;
+    }
+
+
+export const getGetApiAchievementsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAchievements>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAchievementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAchievements>>> = () => getApiAchievements();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAchievementsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAchievements>>>
+export type GetApiAchievementsQueryError = void
+
+
+export function useGetApiAchievements<TData = Awaited<ReturnType<typeof getApiAchievements>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAchievements>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAchievements>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAchievements<TData = Awaited<ReturnType<typeof getApiAchievements>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAchievements>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAchievements>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAchievements<TData = Awaited<ReturnType<typeof getApiAchievements>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Overview
+ */
+
+export function useGetApiAchievements<TData = Awaited<ReturnType<typeof getApiAchievements>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAchievements>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAchievementsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostApiAchievementsSeenUrl = () => {
+
+
+
+
+  return `/api/achievements/seen`
+}
+
+/**
+ * @summary Seen
+ */
+export const postApiAchievementsSeen = async ( options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiAchievementsSeenUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostApiAchievementsSeenMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAchievementsSeen>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAchievementsSeen>>, TError,void, TContext> => {
+
+const mutationKey = ['postApiAchievementsSeen'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAchievementsSeen>>, void> = () => {
+
+
+          return  postApiAchievementsSeen()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAchievementsSeenMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAchievementsSeen>>>
+
+    export type PostApiAchievementsSeenMutationError = void
+
+    /**
+ * @summary Seen
+ */
+export const usePostApiAchievementsSeen = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAchievementsSeen>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAchievementsSeen>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPostApiAchievementsSeenMutationOptions(options), queryClient);
+    }
 
 export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
   const normalizedParams = new URLSearchParams();

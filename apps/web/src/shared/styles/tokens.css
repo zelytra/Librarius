@@ -237,6 +237,11 @@
      responsive blocks at the end of the file are the only place that knows a
      viewport width. */
   --screen-pad-x: 22px;
+  /* The metals of an achievement's tiers (#287): fixed, a medal is bronze in every theme. */
+  --metal-bronze: #a86b3c;
+  --metal-silver: #8e959c;
+  --metal-gold: #c49a2c;
+  --metal-platinum: linear-gradient(135deg, #6f8fa6, #b9c7d3);
   /* Vertical gap between the blocks of a dashboard (#417). */
   --dashboard-gap: 28px;
   --screen-pad-top: 14px;

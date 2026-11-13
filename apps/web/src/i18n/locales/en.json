@@ -1132,5 +1132,126 @@
     "goalSaved": "Goal saved",
     "price": "Price saved: {{price}}",
     "priceCleared": "Price removed, back to the new price"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "prompt": "Sign in to see your achievements and your level.",
+    "error": "Achievements are unavailable right now.",
+    "level": "Level {{level}}",
+    "levelShort": "Lvl {{level}}",
+    "open": "Level {{level}} — see my achievements",
+    "xpLabel": "{{xp}} XP of {{next}} for the next level",
+    "toNext": "{{xp}} XP · {{remaining}} XP to level {{next}}",
+    "count": "{{unlocked}} of {{total}} achievements",
+    "xpTotal": "{{xp}} XP in all",
+    "see": "See my achievements",
+    "unlocked": "Achievement unlocked: {{name}} (+{{xp}} XP)",
+    "unlockedOn": "Unlocked on {{date}}",
+    "locked": "Locked",
+    "xpEarned": "{{xp}} XP earned",
+    "xpNext": "+{{xp}} XP at the next tier",
+    "tiersLabel": "Tier {{tier}} of {{tiers}}",
+    "tiers": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum"
+    },
+    "families": {
+      "READING": "Reading",
+      "CONSISTENCY": "Consistency",
+      "CURATION": "Collection & opinion",
+      "DISCOVERY": "Discovery"
+    },
+    "items": {
+      "FIRST_BOOK": {
+        "name": "First page turned",
+        "description": "Finish your first book."
+      },
+      "BOOKWORM": {
+        "name": "Bookworm",
+        "description_one": "Finish {{value}} book.",
+        "description_other": "Finish {{value}} books."
+      },
+      "PAGE_EATER": {
+        "name": "Page-eater",
+        "description_one": "Read {{value}} page.",
+        "description_other": "Read {{value}} pages."
+      },
+      "FINISHER": {
+        "name": "Finisher",
+        "description": "Read every volume you own of a series (two at least)."
+      },
+      "MARATHON": {
+        "name": "Marathon",
+        "description": "Start and finish a book on the same day."
+      },
+      "COMEBACK": {
+        "name": "Comeback",
+        "description": "Finish a book you had abandoned."
+      },
+      "ON_A_ROLL": {
+        "name": "On a roll",
+        "description_one": "Finish at least one book every week, {{value}} week in a row.",
+        "description_other": "Finish at least one book every week, {{value}} weeks in a row."
+      },
+      "GOAL_GETTER": {
+        "name": "Goal-getter",
+        "description": "Reach your annual reading goal."
+      },
+      "AHEAD_OF_THE_CURVE": {
+        "name": "Ahead of the curve",
+        "description": "Reach your annual goal before the end of September."
+      },
+      "CRITIC": {
+        "name": "Critic",
+        "description_one": "Rate {{value}} book.",
+        "description_other": "Rate {{value}} books."
+      },
+      "WORDSMITH": {
+        "name": "Wordsmith",
+        "description": "Write your first review."
+      },
+      "LIBRARIAN": {
+        "name": "Librarian",
+        "description_one": "Reach {{value}} title in your library.",
+        "description_other": "Reach {{value}} titles in your library."
+      },
+      "SORTER": {
+        "name": "Sorter",
+        "description_one": "File your books under {{value}} category.",
+        "description_other": "File your books under {{value}} different categories."
+      },
+      "EXPLORER": {
+        "name": "Explorer",
+        "description_one": "Own books in {{value}} genre.",
+        "description_other": "Own books in {{value}} different genres."
+      },
+      "POLYGLOT": {
+        "name": "Polyglot",
+        "description_one": "Own books in {{value}} language.",
+        "description_other": "Own books in {{value}} languages."
+      },
+      "OMNIVORE": {
+        "name": "Omnivore",
+        "description": "Own a novel, a manga, a comic, a graphic novel and an audiobook."
+      },
+      "SCOUT": {
+        "name": "Scout",
+        "description_one": "Add {{value}} title from Discover.",
+        "description_other": "Add {{value}} titles from Discover."
+      },
+      "FAN": {
+        "name": "Fan",
+        "description": "Follow an author."
+      },
+      "COMPLETIONIST": {
+        "name": "Completionist",
+        "description": "Own an author's whole known bibliography (three works at least)."
+      }
+    },
+    "progress": "{{value}} / {{target}}",
+    "unlockedMany_one": "{{count}} achievement unlocked (+{{xp}} XP) — see it in Achievements",
+    "unlockedMany_other": "{{count}} achievements unlocked (+{{xp}} XP) — see them in Achievements"
   }
 }
