@@ -42,21 +42,23 @@ class CatalogBookAggregationTest {
     @Inject
     CatalogService catalog;
 
+    /** A UNIMARC answer with one record; {@code creator} is "Surname, Forename". */
     private static String sru(String title, String creator) {
+        String[] name = creator.split(", ");
         return """
                 <srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
                   <srw:records><srw:record><srw:recordData>
-                    <dc xmlns="http://purl.org/dc/elements/1.1/">
-                      <title>%s</title>
-                      <creator>%s</creator>
-                      <publisher>Pocket</publisher>
-                      <date>DL 2001</date>
-                      <language>fre</language>
-                      <identifier>http://catalogue.bnf.fr/ark:/12148/cb37652488r</identifier>
-                    </dc>
+                    <mxc:record xmlns:mxc="info:lc/xmlns/marcxchange-v2" id="ark:/12148/cb37652488r">
+                      <mxc:datafield tag="200"><mxc:subfield code="a">%s</mxc:subfield></mxc:datafield>
+                      <mxc:datafield tag="210"><mxc:subfield code="c">Pocket</mxc:subfield>
+                        <mxc:subfield code="d">DL 2001</mxc:subfield></mxc:datafield>
+                      <mxc:datafield tag="101"><mxc:subfield code="a">fre</mxc:subfield></mxc:datafield>
+                      <mxc:datafield tag="700"><mxc:subfield code="a">%s</mxc:subfield>
+                        <mxc:subfield code="b">%s</mxc:subfield><mxc:subfield code="4">070</mxc:subfield></mxc:datafield>
+                    </mxc:record>
                   </srw:recordData></srw:record></srw:records>
                 </srw:searchRetrieveResponse>
-                """.formatted(title, creator);
+                """.formatted(title, name[0], name[1]);
     }
 
     private void openLibraryAnswers(String title, String author) {
@@ -86,7 +88,7 @@ class CatalogBookAggregationTest {
     @Test
     void aBookSearchMergesBothProviders() {
         openLibraryAnswers("Fourth Wing", "Rebecca Yarros");
-        bnfAnswers(sru("La Horde du Contrevent", "Damasio, Alain (1969-....). Auteur du texte"));
+        bnfAnswers(sru("La Horde du Contrevent", "Damasio, Alain"));
 
         List<CatalogResult> results = catalog.search(Set.of(Kind.BOOK), CatalogQuery.of("merge both"), 10);
 
@@ -99,7 +101,7 @@ class CatalogBookAggregationTest {
         // Open Library's French holdings are thin; a title only the BnF has must not be lost
         // in the merge, and the reverse must hold too.
         openLibraryAnswers("Fourth Wing", "Rebecca Yarros");
-        bnfAnswers(sru("La Horde du Contrevent", "Damasio, Alain (1969-....). Auteur du texte"));
+        bnfAnswers(sru("La Horde du Contrevent", "Damasio, Alain"));
 
         List<String> titles = titlesFor("only one knows");
 
@@ -113,7 +115,7 @@ class CatalogBookAggregationTest {
         // provider puts it back in reading order precisely so that the aggregation's
         // title+author key matches and the novel is not shown twice.
         openLibraryAnswers("Dune", "Frank Herbert");
-        bnfAnswers(sru("Dune", "Herbert, Frank (1920-1986). Auteur du texte"));
+        bnfAnswers(sru("Dune", "Herbert, Frank"));
 
         assertEquals(List.of("Dune"), titlesFor("listed once"));
     }
