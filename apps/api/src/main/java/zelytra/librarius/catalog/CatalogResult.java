@@ -21,7 +21,32 @@ public record CatalogResult(
         Integer volumeNumber,
         Integer pageCount,
         String provider,
-        String providerRef) {
+        String providerRef,
+        Integer popularity) {
+
+    /**
+     * Every field but {@link #popularity}: what a provider with no notion of how widely a
+     * work is published builds (BnF, AniList, the edition lookups).
+     */
+    public CatalogResult(String kind, String title, String authors, Integer year, String coverUrl,
+            String synopsis, String isbn13, String publisher, String language,
+            LocalDate releaseDate, String seriesTitle, Integer volumeNumber, Integer pageCount,
+            String provider, String providerRef) {
+        this(kind, title, authors, year, coverUrl, synopsis, isbn13, publisher, language,
+                releaseDate, seriesTitle, volumeNumber, pageCount, provider, providerRef, null);
+    }
+
+    /** The same result with a popularity: how many editions the work has, when a provider knows. */
+    public CatalogResult withPopularity(Integer value) {
+        return new CatalogResult(kind, title, authors, year, coverUrl, synopsis, isbn13, publisher,
+                language, releaseDate, seriesTitle, volumeNumber, pageCount, provider, providerRef, value);
+    }
+
+    /** The same result filed under another kind — a BnF record AniList knows as a manga. */
+    public CatalogResult withKind(String value) {
+        return new CatalogResult(value, title, authors, year, coverUrl, synopsis, isbn13, publisher,
+                language, releaseDate, seriesTitle, volumeNumber, pageCount, provider, providerRef, popularity);
+    }
 
     /**
      * The result a provider builds when it carries no series, volume or page count — AniList,
@@ -32,6 +57,6 @@ public record CatalogResult(
             String synopsis, String isbn13, String publisher, String language,
             LocalDate releaseDate, String provider, String providerRef) {
         this(kind, title, authors, year, coverUrl, synopsis, isbn13, publisher, language,
-                releaseDate, null, null, null, provider, providerRef);
+                releaseDate, null, null, null, provider, providerRef, null);
     }
 }
