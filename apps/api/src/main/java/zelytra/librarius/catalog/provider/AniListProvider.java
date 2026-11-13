@@ -250,15 +250,38 @@ public class AniListProvider implements CatalogProvider {
         if (parsed.seriesTitle() != null) {
             return parsed.seriesTitle();
         }
-        java.util.regex.Matcher bare = BARE_VOLUME.matcher(text.trim());
-        // "Kaiju No. 8": a number after "No." or "#" is the title's own.
-        return bare.matches() && !bare.group(1).matches("(?iu).*(?:\\bno\\.?|n°|#)")
-                ? bare.group(1).trim() : text;
+        String series = beforeBareVolume(text.trim());
+        return series != null ? series : text;
     }
 
-    /** Two words at least, the last one a number: "jujutsu kaisen 12". */
-    private static final java.util.regex.Pattern BARE_VOLUME =
-            java.util.regex.Pattern.compile("^(.*\\p{L}.*?)\\s+\\d{1,4}$");
+    /**
+     * The words before a bare trailing volume number — "jujutsu kaisen 12" → "jujutsu kaisen" —
+     * or null when the text does not end that way. Read by hand rather than with a regular
+     * expression: the text is the caller's, and a pattern with two open-ended groups around
+     * the spaces backtracks polynomially on a long run of them.
+     */
+    private static String beforeBareVolume(String text) {
+        int end = text.length();
+        int digits = end;
+        while (digits > 0 && Character.isDigit(text.charAt(digits - 1))) {
+            digits--;
+        }
+        int count = end - digits;
+        if (count < 1 || count > 4 || digits == 0 || !Character.isWhitespace(text.charAt(digits - 1))) {
+            return null;
+        }
+        String series = text.substring(0, digits).trim();
+        if (series.chars().noneMatch(Character::isLetter)) {
+            return null;
+        }
+        // "Kaiju No. 8": a number after "No." or "#" is the title's own.
+        String lower = series.toLowerCase(java.util.Locale.ROOT);
+        String lastWord = lower.substring(lower.lastIndexOf(' ') + 1);
+        if (lastWord.equals("no") || lastWord.equals("no.") || lower.endsWith("n°") || lower.endsWith("#")) {
+            return null;
+        }
+        return series;
+    }
 
     /**
      * The other titles of the series answered lately, by id. Bounded, in memory: what a search
