@@ -249,6 +249,7 @@ export interface ExportCollectionItemDto {
   rankCode?: string;
   progress?: ExportProgressDto;
   ownership?: Ownership;
+  price?: number;
 }
 
 export type OffsetDateTime = string;
@@ -389,6 +390,7 @@ export interface LibraryItemDto {
   book?: BookView;
   reviewShared?: boolean;
   ownership?: string;
+  price?: number;
 }
 
 export interface LibraryPageDto {
@@ -433,6 +435,11 @@ export interface MemberSummaryDto {
 
 export interface OwnershipDto {
   ownership: Ownership;
+}
+
+export interface PriceDto {
+  /** @minimum 0 */
+  price?: number;
 }
 
 export interface ProgressDto {
@@ -3327,6 +3334,78 @@ export const usePutApiLibraryIdOwnership = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiLibraryIdOwnershipMutationOptions(options), queryClient);
+    }
+
+export const getPutApiLibraryIdPriceUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/price`
+}
+
+/**
+ * @summary Set Price
+ */
+export const putApiLibraryIdPrice = async (id: Uuid,
+    priceDto: PriceDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdPriceUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(priceDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdPriceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,{id: Uuid;data: PriceDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,{id: Uuid;data: PriceDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdPrice'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, {id: Uuid;data: PriceDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdPrice(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdPriceMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdPrice>>>
+    export type PutApiLibraryIdPriceMutationBody = PriceDto
+    export type PutApiLibraryIdPriceMutationError = void
+
+    /**
+ * @summary Set Price
+ */
+export const usePutApiLibraryIdPrice = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,{id: Uuid;data: PriceDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdPrice>>,
+        TError,
+        {id: Uuid;data: PriceDto},
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdPriceMutationOptions(options), queryClient);
     }
 
 export const getPutApiLibraryIdProgressUrl = (id: Uuid,) => {

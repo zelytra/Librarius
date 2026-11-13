@@ -113,11 +113,12 @@ describe('ScanPage', () => {
     expect(screen.getAllByText('Pas encore chez toi')).toHaveLength(1);
   });
 
-  test('explains that this browser cannot read barcodes, and keeps the typed ISBN', () => {
-    // jsdom has no BarcodeDetector, like Safari and Firefox.
+  test('explains that this browser has no camera, and keeps the typed ISBN', () => {
+    // jsdom has no camera at all. A browser with a camera and no BarcodeDetector (Safari,
+    // Firefox) now scans through the WebAssembly decoder — see camera.test.ts.
     renderScan();
 
-    expect(screen.getByRole('alert')).toHaveTextContent('ne sait pas lire les codes-barres');
+    expect(screen.getByRole('alert')).toHaveTextContent("n'a pas accès à la caméra");
     expect(screen.getByLabelText("Ou tape l'ISBN")).toBeInTheDocument();
   });
 

@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,6 +26,7 @@ import { useAddTitle } from '../catalog/useAddTitle';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
+import { isBlankSearch, searchFromUrl, searchToUrl } from './searchUrl';
 import { ALL_KINDS, KIND_LABEL_KEY, knownKind } from './medium';
 import styles from './DiscoverPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -87,24 +88,35 @@ function searchParams(query: string, advanced: Advanced): GetApiCatalogSearchPar
   };
 }
 
-/** Nothing to search: every criterion is empty, and the API would answer an empty list. */
-function isBlankSearch(params: GetApiCatalogSearchParams): boolean {
-  return !params.q && !params.isbn && !params.author && !params.year && !params.language
-    && !params.publisher;
-}
 
 function DiscoverContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [query, setQuery] = useState('');
-  const [advanced, setAdvanced] = useState<Advanced>(NO_ADVANCED);
+  // The search lives in the URL (#435): coming back from a fiche lands on the same search.
+  const [url, setUrl] = useSearchParams();
+  const fromUrl = searchFromUrl(url);
+  const [query, setQuery] = useState(fromUrl?.q ?? fromUrl?.isbn ?? '');
+  const [advanced, setAdvanced] = useState<Advanced>(() => ({
+    author: fromUrl?.author ?? '',
+    year: fromUrl?.year != null ? String(fromUrl.year) : '',
+    language: fromUrl?.language ?? '',
+    publisher: fromUrl?.publisher ?? '',
+    medium: (fromUrl?.kind as Kind[] | undefined) ?? [],
+  }));
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualAdded, setManualAdded] = useState<string | null>(null);
   // The parameters a search actually ran with — set by the button, by Enter, and by the
   // debounced auto-search below, never straight from the input value.
-  const [submitted, setSubmitted] = useState<GetApiCatalogSearchParams | null>(null);
+  const [submitted, setSubmittedState] = useState<GetApiCatalogSearchParams | null>(fromUrl);
+  const setSubmitted = useCallback(
+    (params: GetApiCatalogSearchParams) => {
+      setSubmittedState(params);
+      setUrl(searchToUrl(params), { replace: true });
+    },
+    [setUrl],
+  );
   const [added, setAdded] = useState<Record<string, AddTarget>>({});
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -131,7 +143,7 @@ function DiscoverContent() {
       setSubmitted(params);
     }, 500);
     return () => clearTimeout(timer);
-  }, [query, advanced, detectedIsbn, submitted]);
+  }, [query, advanced, detectedIsbn, submitted, setSubmitted]);
 
   // What identifies a result is its content, never its rank: a key built on the index moved
   // the "added" state onto another title whenever the list was re-ordered between two renders,

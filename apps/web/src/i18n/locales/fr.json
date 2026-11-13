@@ -770,7 +770,21 @@
       "failed": "Suppression impossible pour le moment."
     },
     "statuses": "Statuts",
-    "pagesEstimated": "pages (estimé)"
+    "pagesEstimated": "pages (estimé)",
+    "price": {
+      "title": "Prix",
+      "unknown": "Prix inconnu",
+      "yours": "Ton prix",
+      "market": "Prix neuf (BnF)",
+      "none": "Ni prix neuf connu, ni prix saisi.",
+      "marketBeside": "Prix neuf : {{price}}",
+      "set": "Saisir un prix",
+      "edit": "Modifier",
+      "label": "Ton prix, en euros",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "private": "Ce prix n'est que pour toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs. Laisse vide pour revenir au prix neuf."
+    }
   },
   "settings": {
     "title": "Réglages",
@@ -941,7 +955,7 @@
       "retry": "Réessayer",
       "hint": "Cadre le code-barres : la caméra continue de lire, enchaîne les livres.",
       "starting": "Ouverture de la caméra…",
-      "unsupported": "Ce navigateur ne sait pas lire les codes-barres. Tape l'ISBN ci-dessous, ou utilise Chrome ou l'application Android.",
+      "unsupported": "Ce navigateur n'a pas accès à la caméra. Tape l'ISBN ci-dessous.",
       "denied": "L'accès à la caméra a été refusé. Autorise-le dans les réglages du navigateur pour ce site, ou tape l'ISBN ci-dessous.",
       "unavailable": "Aucune caméra disponible. Tape l'ISBN ci-dessous."
     },
@@ -1033,7 +1047,9 @@
     "empty": {
       "title": "Ta pile à lire est vide",
       "description": "Les livres que tu possèdes sans les avoir commencés apparaissent ici."
-    }
+    },
+    "searchPlaceholder": "Rechercher dans ma pile à lire…",
+    "noMatch": "Aucun titre de ta pile ne correspond à « {{q}} »."
   },
   "sheet": {
     "title": "Fiche de lecture",
@@ -1066,8 +1082,10 @@
     "coverAlt": "Couverture de {{title}}",
     "formats": {
       "A4": "A4 · page",
+      "A5": "A5 · demi-page",
       "A6": "A6 · carte"
-    }
+    },
+    "rings": "Classeur à anneaux (marge pour les trous)"
   },
   "statuses": {
     "readingTitle": "Lecture",
@@ -1110,6 +1128,8 @@
     "wishUpdated": "Envie mise à jour",
     "layoutSaved": "Accueil personnalisé",
     "failed": "L'action n'a pas abouti. Réessaie dans un instant.",
-    "goalSaved": "Objectif enregistré"
+    "goalSaved": "Objectif enregistré",
+    "price": "Prix enregistré : {{price}}",
+    "priceCleared": "Prix retiré, retour au prix neuf"
   }
 }

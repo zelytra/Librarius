@@ -80,6 +80,25 @@ describe('DetailPage', () => {
     expect(await screen.findByText('Statut de lecture : En cours')).toBeInTheDocument();
   });
 
+  /** #431: the reader enters their own price; the market price is shown until then. */
+  test('lets the reader enter their own price for the book', async () => {
+    libraryItemReturns({ ...ITEM, book: { ...ITEM.book, listPrice: 9.9 } });
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/price', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json({ ...ITEM, price: 12.5 });
+    }));
+    renderWithProviders(<><DetailPage /><Toaster /></>, { route: '/detail/item-1', path: '/detail/:id' });
+
+    expect(await screen.findByText('Prix neuf (BnF)')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Saisir un prix' }));
+    await userEvent.type(screen.getByLabelText('Ton prix, en euros'), '12,5');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(sent).toEqual([{ price: 12.5 }]));
+    expect(await screen.findByText(/Prix enregistré/)).toBeInTheDocument();
+  });
+
   /** #412: a finished book offers its printable reading sheet. */
   test('offers the reading sheet of a finished book', async () => {
     libraryItemReturns({ ...ITEM, status: 'READ' });
