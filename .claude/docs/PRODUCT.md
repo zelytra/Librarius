@@ -604,6 +604,12 @@ year 🔜.
   app (gzipped by nginx, not precached): from jsDelivr it failed silently wherever the CDN is
   blocked. Frames are read at up to 1080p, alternately cropped to the aim box and whole.
 - **Reading sheet**: A4, A5 or A6, with a ring-binder inner margin (#432).
+- **Achievements, XP and levels** (#287): nineteen achievements in four families (reading,
+  consistency, collection & opinion, discovery), one-shot or tiered (bronze → platinum), the
+  issue's starter catalogue. Server-authoritative, evaluated on read, retroactive and silent on
+  first evaluation; new unlocks are toasted by `AchievementWatcher` (a burst of three or more as
+  one message). `/achievements` lists earned and locked ones with progress; the level shows as a
+  chip in Home's header and a panel on Stats. No leaderboard (out of scope in the issue).
 - **Imports** are enriched and priced right after the job (#425, `ImportFollowUp`).
 - **Stats**: the pace is titles per month; "What you read" covers everything read by default,
   every rank listed; the cumulative chart is one curve per kind goal; a value panel prices the

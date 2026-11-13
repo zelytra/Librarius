@@ -34,6 +34,7 @@ for how that matching happens on the way in.
 | `series_follow` | "Tell me about the next volumes of this series" |
 | `reading_goal` | An annual target for one kind of book (`kind`, unique per user, year and kind — V25), in books, volumes or pages |
 | `cover_cache` | Resized BnF cover thumbnails by ark (`content` NULL = known miss) — V26 |
+| `user_achievement` | One unlocked achievement tier (V31), `seen_at` once announced; the catalogue, XP and levels live in code |
 | `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
 
 Every one of these carries a `user_id`, and every API resource filters on it: no query ever

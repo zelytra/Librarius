@@ -519,6 +519,18 @@ title). The refresher runs hourly, for the reader's series right after an import
 `library_item.price` is the reader's own price for their copy, private to their row; the
 shared `edition.list_price` is never written by it. The library value counts it first.
 
+### V31 — achievements (#287)
+
+`user_achievement(user_id, code, tier, unlocked_at, seen_at)`, primary key `(user_id, code,
+tier)`, `ON DELETE CASCADE` from `app_user`. The catalogue is code
+(`achievement.Achievement`): only unlocks are stored, so an earned tier stays earned when the
+data behind it changes. XP (the unlocked tiers' rewards + 10 per book read) and the level
+(`50 × (L − 1)^1.5` XP for level L) are derived, never stored.
+`app_user.achievements_evaluated_at` makes the first evaluation retroactive and silent
+(unlocks stored as seen). `library_item.was_abandoned` remembers a title was given up on, so
+finishing it later unlocks `COMEBACK`, the one event-borne achievement. The library reset
+deletes the unlocks and clears the evaluation stamp.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all
