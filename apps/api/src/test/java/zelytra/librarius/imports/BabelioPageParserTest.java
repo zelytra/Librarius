@@ -55,7 +55,7 @@ class BabelioPageParserTest {
         // A date on a title being read is not a reading date.
         assertNull(dune.readAt());
 
-        assertEquals(LibraryStatus.OWNED, books.get(2).status());
+        assertEquals(LibraryStatus.TO_READ, books.get(2).status());
         ImportedBook proust = books.get(3);
         assertEquals(LibraryStatus.ABANDONED, proust.status());
         assertEquals(Integer.valueOf(2), proust.rating());
@@ -94,7 +94,7 @@ class BabelioPageParserTest {
         assertEquals(LocalDate.of(2026, 5, 25), read.readAt());
         assertEquals("https://www.babelio.com/couv/premier.jpg", read.coverUrl());
 
-        assertEquals(LibraryStatus.OWNED, books.get(1).status());
+        assertEquals(LibraryStatus.TO_READ, books.get(1).status());
         assertNull(books.get(1).rating());
         assertEquals(LibraryStatus.ABANDONED, books.get(2).status());
         assertEquals(LocalDate.of(2025, 3, 2), books.get(2).readAt());

@@ -76,7 +76,7 @@ class ExportAsyncTest {
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "Export - deferred",
-                                    "authors": "Async Test" }, "status": "OWNED" }
+                                    "authors": "Async Test" }, "status": "TO_READ" }
                         """)
                 .when().post("/api/library").then().statusCode(201);
 

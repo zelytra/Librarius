@@ -315,3 +315,37 @@
 .bar4 {
   background: var(--gradient-genre-4);
 }
+
+/* ── Cumulative totals per kind (#420) ────────────────────────────────────── */
+.kindGoals {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kindGoal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kindGoalHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-13);
+}
+
+.kindGoalTitle {
+  font-weight: 700;
+}
+
+.kindGoalFigure {
+  margin-left: auto;
+  color: var(--ink-soft);
+}
+
+.curveBook { stroke: var(--accent-deep); }
+.curveManga { stroke: var(--rose); }
+.curveComic { stroke: var(--violet, #9b8fbf); }
+.curveOther { stroke: var(--muted); }

@@ -162,7 +162,7 @@ class StatsTimelineApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "Timeline - finished today",
                                     "authors": "Timeline Test", "pageCount": 321 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """)
                 .when().post("/api/library")
                 .then().statusCode(201)

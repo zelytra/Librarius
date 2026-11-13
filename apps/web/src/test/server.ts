@@ -54,6 +54,14 @@ export const defaultHandlers = [
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
   http.get(`${BASE}/stats/timeline`, () => HttpResponse.json(timeline())),
+  // #419 and #421: everything read, and what the shelves are worth.
+  http.get(`${BASE}/stats/breakdown`, () =>
+    HttpResponse.json({ books: 0, byAuthor: [], byPublisher: [], byLanguage: [], byRank: [] })),
+  http.get(`${BASE}/stats/value`, () =>
+    HttpResponse.json({
+      currency: 'EUR', library: 0, libraryOwned: 0, libraryPriced: 0,
+      wishlist: 0, wishlistCount: 0, wishlistPriced: 0, byKind: [],
+    })),
   http.get(`${BASE}/goals`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/search`, () => HttpResponse.json([])),
   http.get(`${BASE}/catalog/upcoming`, () => HttpResponse.json([])),

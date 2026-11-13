@@ -54,12 +54,15 @@ export function OutcomeSheet({
   categories,
   onConfirm,
   onSkip,
+  onPrintSheet,
 }: {
   outcome: Outcome;
   item: LibraryItemDto;
   categories: CategoryDto[];
   onConfirm: (choice: OutcomeChoice) => void;
   onSkip: () => void;
+  /** Offered on a finished book: confirm, then open its printable reading sheet (#412). */
+  onPrintSheet?: (choice: OutcomeChoice) => void;
 }) {
   const { t } = useTranslation();
   const headingId = useId();
@@ -134,6 +137,12 @@ export function OutcomeSheet({
           <Button variant="primary" size="block" onClick={() => onConfirm({ rating, categoryId })}>
             {t('detail.outcome.confirm')}
           </Button>
+          {onPrintSheet && (
+            <Button variant="secondary" size="block" onClick={() => onPrintSheet({ rating, categoryId })}>
+              <Icon name="print" size={18} color="var(--ink-soft)" />
+              {t('detail.outcome.printSheet')}
+            </Button>
+          )}
           <Button variant="ghost" size="block" onClick={onSkip}>
             {t('detail.outcome.skip')}
           </Button>

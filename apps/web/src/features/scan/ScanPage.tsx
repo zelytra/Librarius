@@ -22,6 +22,10 @@ import { Icon } from '../../shared/ui/Icon';
 import { LoginGate } from '../../shared/LoginGate';
 import { detectIsbn, toIsbn13 } from '../discover/isbn';
 import { catalogPath, toBook } from '../catalog/catalogBook';
+import { DEFAULT_ADD_TARGET, addedKeyOf, type AddTarget } from '../catalog/addTargets';
+import { StatusPicker } from '../../shared/ui/StatusPicker';
+import { addsToWishlistOnly } from '../../shared/statuses';
+import { toast } from '../../shared/ui/toast';
 import { cameraScanSupported, failureKind, startScanning, type CameraFailure } from './camera';
 import styles from './ScanPage.module.css';
 
@@ -31,17 +35,18 @@ interface Entry {
   result?: ScanResultDto;
   error?: string;
   /** Added by the session on its own: where, and the row to remove to undo it. */
-  added?: { target: SessionTarget; id?: string; undone?: boolean };
+  added?: { target: AddTarget; id?: string; undone?: boolean };
   addFailed?: boolean;
 }
 
 /**
- * Where a scanning session files the new titles it recognises (#168): nowhere — it only
- * checks, the default — or straight into one state, with no confirmation per book, so a
- * shelf of twenty volumes goes through in one motion.
+ * What a scanning session does with the new titles it recognises (#168): nothing — it only
+ * checks, the default — or files them straight away, with the reading status and the
+ * ownership picked once for the whole session (#411), so a shelf of twenty volumes goes
+ * through in one motion.
  */
-type SessionTarget = 'CHECK' | 'OWNED' | 'READ' | 'READING' | 'WISHLIST';
-const SESSION_TARGETS: SessionTarget[] = ['CHECK', 'OWNED', 'READ', 'READING', 'WISHLIST'];
+type SessionMode = 'CHECK' | 'ADD';
+const SESSION_MODES: SessionMode[] = ['CHECK', 'ADD'];
 
 /**
  * Scanning in a bookshop (#68): point the camera at the back cover and know within two
@@ -71,10 +76,11 @@ function Scanner() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [target, setTarget] = useState<SessionTarget>('CHECK');
+  const [mode, setMode] = useState<SessionMode>('CHECK');
+  const [target, setTarget] = useState<AddTarget>(DEFAULT_ADD_TARGET);
   // Read by the camera's callback, which outlives a render.
-  const targetRef = useRef<SessionTarget>('CHECK');
-  targetRef.current = target;
+  const sessionRef = useRef<{ mode: SessionMode; target: AddTarget }>({ mode, target });
+  sessionRef.current = { mode, target };
   const seen = useRef(new Set<string>());
 
   const update = useCallback((key: string, patch: Partial<Entry>) => {
@@ -89,19 +95,23 @@ function Scanner() {
 
   /** Files a new title where the session says, without asking. */
   const autoAdd = useCallback(
-    async (isbn: string, found: CatalogResult, session: Exclude<SessionTarget, 'CHECK'>) => {
+    async (isbn: string, found: CatalogResult, session: AddTarget) => {
       const book = toBook(found);
       try {
-        const created = (session === 'WISHLIST'
+        const created = (addsToWishlistOnly(session.status, session.ownership)
           ? await postApiWishlist({ book, priority: 'SOON' })
-          : await postApiLibrary({ book, status: session })) as { id?: string } | undefined;
+          : await postApiLibrary({ book, status: session.status, ownership: session.ownership })) as
+          | { id?: string }
+          | undefined;
         update(isbn, { added: { target: session, id: created?.id } });
+        toast.success(t('toasts.addedLibrary', { title: book.title ?? isbn }), 'library_books');
         refresh();
       } catch {
         update(isbn, { addFailed: true });
+        toast.error(t('toasts.failed'));
       }
     },
-    [update, refresh],
+    [update, refresh, t],
   );
 
   /** Looks a code up once: the camera reads the same barcode several times a second. */
@@ -114,16 +124,15 @@ function Scanner() {
       if (seen.current.has(isbn)) return true;
       seen.current.add(isbn);
       navigator.vibrate?.(40);
-      const session = targetRef.current;
+      const session = sessionRef.current;
       setEntries((list) => [{ isbn }, ...list]);
       getApiScanIsbn(isbn)
         .then((result) => {
           update(isbn, { result });
           // Only a title the reader holds nowhere yet: an owned or wished one is reported,
           // never added a second time, even mid-session.
-          if (session !== 'CHECK' && !result.owned && !result.wished && result.catalog) {
-            // Narrowed for the call: a checking session never adds anything.
-            void autoAdd(isbn, result.catalog, session);
+          if (session.mode === 'ADD' && !result.owned && !result.wished && result.catalog) {
+            void autoAdd(isbn, result.catalog, session.target);
           }
         })
         .catch((error: unknown) => update(isbn, { error: failureMessage(t, error) }));
@@ -136,7 +145,8 @@ function Scanner() {
     const id = entry.added?.id;
     if (!id) return;
     try {
-      if (entry.added?.target === 'WISHLIST') await deleteApiWishlistId(id);
+      const target = entry.added?.target;
+      if (target && addsToWishlistOnly(target.status, target.ownership)) await deleteApiWishlistId(id);
       else await deleteApiLibraryId(id);
       update(entry.isbn, { added: { ...entry.added!, undone: true } });
       refresh();
@@ -152,11 +162,19 @@ function Scanner() {
       <div className={styles.inputs}>
         <div className={styles.session}>
           <span className={styles.sessionLabel}>{t('scan.session.label')}</span>
-          <Segmented<SessionTarget>
-            options={SESSION_TARGETS.map((id) => ({ id, label: t(`scan.session.targets.${id}`) }))}
-            value={target}
-            onChange={setTarget}
+          <Segmented<SessionMode>
+            options={SESSION_MODES.map((id) => ({ id, label: t(`scan.session.modes.${id}`) }))}
+            value={mode}
+            onChange={setMode}
           />
+          {mode === 'ADD' && (
+            <StatusPicker
+              status={target.status}
+              ownership={target.ownership}
+              onStatus={(status) => setTarget((current) => ({ ...current, status }))}
+              onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+            />
+          )}
         </div>
         <Camera onCode={lookUp} />
         <ManualEntry onSubmit={lookUp} />
@@ -324,7 +342,7 @@ function ScanEntry({ entry, onUndo }: { entry: Entry; onUndo: () => void }) {
   let tone: string;
   let action: { label: string; go: () => void } | null = null;
   if (owned) {
-    verdict = t(`scan.verdict.owned.${owned.status ?? 'OWNED'}`);
+    verdict = t(`scan.verdict.owned.${owned.status ?? 'TO_READ'}`);
     tone = styles.verdictOwned;
     action = { label: t('scan.action.open'), go: () => navigate(`/detail/${owned.id}`) };
   } else if (wished) {
@@ -333,7 +351,7 @@ function ScanEntry({ entry, onUndo }: { entry: Entry; onUndo: () => void }) {
     action = { label: t('scan.action.wishlist'), go: () => navigate('/wishlist') };
   } else if (entry.added && !entry.added.undone) {
     // Filed by the session: what it became, and the way back from a mis-scan.
-    verdict = t(`scan.session.added.${entry.added.target}`);
+    verdict = t(addedKeyOf(entry.added.target));
     tone = styles.verdictOwned;
     action = entry.added.id ? { label: t('scan.session.undo'), go: onUndo } : null;
   } else if (result.catalog) {

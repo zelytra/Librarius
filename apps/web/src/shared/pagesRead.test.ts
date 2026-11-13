@@ -8,16 +8,16 @@ describe('pagesRead', () => {
     expect(pagesRead({ read: 3, pagesRead: 900 })).toEqual({ value: 900, estimated: false, unknown: false });
   });
 
-  test('extrapolates the known books to all of them, and says so', () => {
-    // 44 books averaging 370 pages, out of 2 293 read.
-    expect(pagesRead({ read: 2293, pagesRead: 16280, readWithPageCount: 44 })).toEqual({
-      value: 848410,
+  // #414: the server sums the estimated lengths of the books it knows no length for.
+  test('shows the server sum, marked as an estimate while some lengths are estimated', () => {
+    expect(pagesRead({ read: 2293, pagesRead: 740_000, readWithPageCount: 44 })).toEqual({
+      value: 740_000,
       estimated: true,
       unknown: false,
     });
   });
 
-  test('says nothing from too small a sample', () => {
-    expect(pagesRead({ read: 2293, pagesRead: 300, readWithPageCount: 1 }).unknown).toBe(true);
+  test('never leaves a hole, however few lengths are known', () => {
+    expect(pagesRead({ read: 2293, pagesRead: 700_000, readWithPageCount: 1 }).unknown).toBe(false);
   });
 });

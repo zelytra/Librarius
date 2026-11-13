@@ -43,7 +43,7 @@ class EditionApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "publisher": "%s", "pageCount": %s },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, AUTHOR, publisher,
                         pageCount == null ? "null" : pageCount.toString()))
                 .when().post("/api/library")
@@ -137,7 +137,7 @@ class EditionApiTest {
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "publisher": "Pocket", "synopsis": "Le résumé complet.",
                                     "genres": "Fantasy" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, AUTHOR))
                 .when().post("/api/library").then().statusCode(201).extract().path("id");
 
@@ -146,7 +146,7 @@ class EditionApiTest {
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "publisher": "Gallimard", "synopsis": "Un pitch bâclé.",
                                     "originalYear": 1998 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, AUTHOR))
                 .when().post("/api/library").then().statusCode(201).extract().path("id");
 

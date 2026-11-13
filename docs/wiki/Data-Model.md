@@ -14,6 +14,10 @@ the same novel point at the same catalog row; each still has their own, private 
 | `edition` | One materialisation of a work: a specific publisher, ISBN, language, format |
 | `genre` | A normalised genre, decoupled from whatever free-text wording a provider used |
 
+An `edition` with no known length carries a `page_count_estimate` (V28) — its series' average,
+else a typical length for its kind — that every figure falls back on, and the publisher's
+`list_price` read from the BnF record (V29), from which the library value is computed.
+
 A `work` can have several `edition`s — a paperback and a hardcover of the same novel, say —
 because entries are matched against the existing catalog before a new one is created. See
 [Catalog & book search](https://github.com/zelytra/Librarius/wiki/Catalog-and-Book-Search)
@@ -24,7 +28,7 @@ for how that matching happens on the way in.
 | Entity | What it is |
 |---|---|
 | `app_user` | A Keycloak identity, provisioned on first login. No credential is stored here — Keycloak owns those |
-| `library_item` | "I own this edition": status, rating, review (private unless `review_shared`), acquisition date, rank |
+| `library_item` | A title of the user's library: reading status (`TO_READ`, `READING`, `READ`, `ABANDONED`), ownership (`OWNED`, `BORROWED`, `EBOOK`, `WISHLIST`, `NOT_OWNED` — V27), rating, review (private unless `review_shared`), acquisition date, rank |
 | `reading_progress` | Current page or percentage, start and finish dates — one row per `library_item` |
 | `wishlist_item` | Priority, estimated price, a note |
 | `series_follow` | "Tell me about the next volumes of this series" |

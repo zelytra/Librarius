@@ -77,7 +77,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
     }
 
     /** Titles of one kind finished in one period: the per-kind split of a {@link PeriodTotal}. */
-    public record KindTotal(int year, Integer month, String kind, long books) {
+    public record KindTotal(int year, Integer month, String kind, long books, long pages) {
     }
 
     /** A label of some dimension and the number of finished titles carrying it. */
@@ -129,7 +129,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
 
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select %s, count(rp), sum(li.edition.pageCount)
+                        select %s, count(rp), sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate))
                         from ReadingProgress rp
                           join rp.libraryItem li
                         where li.userId = :userId
@@ -165,7 +165,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                 : "year(rp.finishedAt)";
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select %s, w.kind, count(rp)
+                        select %s, w.kind, count(rp), sum(coalesce(e.pageCount, e.pageCountEstimate))
                         from ReadingProgress rp
                           join rp.libraryItem li
                           join li.edition e
@@ -186,7 +186,8 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                         ((Number) row[0]).intValue(),
                         monthly ? ((Number) row[1]).intValue() : null,
                         String.valueOf(row[monthly ? 2 : 1]),
-                        ((Number) row[monthly ? 3 : 2]).longValue()))
+                        ((Number) row[monthly ? 3 : 2]).longValue(),
+                        asLong(row[monthly ? 4 : 3])))
                 .toList();
     }
 
@@ -221,6 +222,35 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
         return average == null
                 ? OptionalDouble.empty()
                 : OptionalDouble.of(((Number) average).doubleValue());
+    }
+
+    /**
+     * The same breakdown over every title marked {@code READ}, whatever its finish date —
+     * or the absence of one, which is how most imported titles arrive (#419).
+     */
+    public List<LabelTotal> breakdownOfRead(String userId, Breakdown dimension, int limit) {
+        String column = dimension.column;
+        return getEntityManager()
+                .createQuery("""
+                        select %s, count(li)
+                        from LibraryItem li
+                          join li.edition e
+                          join e.work w%s
+                        where li.userId = :userId
+                          and li.status = :read
+                          and %s is not null
+                          and length(trim(%s)) > 0
+                        group by %s
+                        order by count(li) desc, %s asc
+                        """.formatted(column, dimension.extraJoin, column, column, column, column),
+                        Object[].class)
+                .setParameter("userId", userId)
+                .setParameter("read", LibraryStatus.READ)
+                .setMaxResults(limit)
+                .getResultList()
+                .stream()
+                .map(row -> new LabelTotal((String) row[0], ((Number) row[1]).longValue()))
+                .toList();
     }
 
     /**
@@ -277,7 +307,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
     public long progressTowards(String userId, LocalDate from, LocalDate to, GoalUnit unit,
             zelytra.librarius.domain.Kind kind) {
         // The unit picks the aggregate and nothing else; it is an enum, never caller input.
-        String aggregate = unit == GoalUnit.PAGES ? "sum(li.edition.pageCount)" : "count(rp)";
+        String aggregate = unit == GoalUnit.PAGES ? "sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate))" : "count(rp)";
 
         jakarta.persistence.TypedQuery<Object> query = getEntityManager()
                 .createQuery("""

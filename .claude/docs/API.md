@@ -27,9 +27,10 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Generic provider trends, same answer to every caller. `kind` defaults to `MANGA`, `limit` clamped to 1–50. No longer read by the Home screen — see `/api/releases/upcoming` |
 | GET | `/api/releases/upcoming?kind=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
-| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination) |
+| GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=&ownership=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination). `status` is `TO_READ` (`OWNED` still accepted), `READING`, `READ` or `ABANDONED`; `ownership` is `OWNED`, `BORROWED`, `EBOOK`, `WISHLIST` or `NOT_OWNED` (#411) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
-| POST | `/api/library` | Adds a title (`LibraryCreateDto`) — creates `work`+`edition` if needed |
+| POST | `/api/library` | Adds a title (`LibraryCreateDto`: `book`, `status`, `ownership`, `rating`, `acquiredAt`) — creates `work`+`edition` if needed; `ownership: WISHLIST` also creates the wish |
+| PUT | `/api/library/{id}/ownership` | Sets the ownership (`OwnershipDto`) — `WISHLIST` puts the edition on the wishlist, any other value takes it off (#411) |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
@@ -39,8 +40,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist, with the budget of the whole filtered set (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | PUT | `/api/wishlist/{id}` | Replaces the priority, the estimated price and the note (`WishlistUpdateDto`) |
-| POST | `/api/wishlist/{id}/acquire` | "I bought it": creates the owned title and drops the wish, in one transaction (`WishlistAcquireDto`, body optional) |
-| DELETE | `/api/wishlist/{id}` | Removes a wish |
+| POST | `/api/wishlist/{id}/acquire` | "I bought it": creates the owned title and drops the wish, in one transaction (`WishlistAcquireDto`, body optional). An edition already in the library (ownership `WISHLIST`) becomes `OWNED` on that same title, its reading history kept |
+| DELETE | `/api/wishlist/{id}` | Removes a wish; a library title that pointed at it becomes `NOT_OWNED` |
 | GET | `/api/series` | Series the user owns a volume of or follows (`SeriesSummaryDto`) |
 | GET | `/api/series/{id}` | A series and the state of each of its volumes (`SeriesDetailDto`) |
 | GET | `/api/series/{id}/missing` | Holes in the owned run (`SeriesMissingDto`) |
@@ -63,7 +64,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/dashboard/layout` | The caller's Home screen layout, always complete (`DashboardLayoutDto`) — see [Dashboard layout](#dashboard-layout) |
 | PUT | `/api/dashboard/layout` | Replaces it — full replace, same convention as `ProgressDto` |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
-| GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline) |
+| GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline). Points carry `pagesByKind` (#420); `booksPerMonth` replaces `daysPerBook` on screen (#418); `byRank` lists every rank |
+| GET | `/api/stats/breakdown` | Everything read, all time (`BreakdownDto`): every `READ` title, dated or not, by author, publisher, language and every rank (#419) |
+| GET | `/api/stats/value` | What the library (`ownership = OWNED`, publisher's price) and the wishlist (market price, else the reader's estimate) are worth (`ValueDto`, #421) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 | POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
@@ -178,7 +181,7 @@ TimelinePointDto(String period, long books, long pages)
 BreakdownCountDto(String label, long count)
 ```
 
-Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {OWNED, READING, READ, ABANDONED}` ·
+Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {TO_READ, READING, READ, ABANDONED}` · `Ownership {OWNED, BORROWED, EBOOK, WISHLIST, NOT_OWNED}` ·
 `WishPriority {PRIORITY, SOON, SOMEDAY}` · `GoalUnit {BOOKS, VOLUMES, PAGES}` ·
 `SeriesStatus {ONGOING, COMPLETED, HIATUS}` · `DatePrecision {DAY, MONTH, QUARTER, YEAR}` ·
 `ReleaseRegion {FR, JP, EN}` · `ReleaseConfidence {CONFIRMED, ESTIMATED}` ·
@@ -339,7 +342,7 @@ the ratio meaningless, not zero.
 | → `READING` | `started_at` set to today **when it is empty**, `finished_at` cleared |
 | → `READ` | `percent` 100, `current_page` set to the page count when known, `finished_at` set to today unless one was supplied |
 | → `ABANDONED` | `finished_at` set to today unless one was supplied. **The position is not touched** |
-| → `OWNED` | `finished_at` cleared |
+| → `TO_READ` | `finished_at` cleared |
 
 A date sent explicitly always wins: marking a book read on the day it was actually finished
 is a normal thing to want, and so is recording that a book was given up on last spring.
@@ -939,7 +942,7 @@ downloading the collection.
 | `size` | `50` | both | Clamped to 1–200. The envelope echoes the size actually applied |
 | `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`, `rating` (best first, unrated last). Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
-| `status` | — | collection | `OWNED` \| `READING` \| `READ` \| `ABANDONED`. The four are exclusive: a title given up on answers to `ABANDONED` and to none of the three others |
+| `status` | — | collection | `TO_READ` (`OWNED` still accepted) \| `READING` \| `READ` \| `ABANDONED`. The four are exclusive: a title given up on answers to `ABANDONED` and to none of the three others |
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze`, `abandon` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |

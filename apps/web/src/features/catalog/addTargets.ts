@@ -1,18 +1,21 @@
+import type { Ownership, ReadingStatus } from '../../shared/statuses';
+import { addsToWishlistOnly } from '../../shared/statuses';
+
 /**
- * Where a title found in the catalog can go, picked at the moment it is added: read already,
- * onto the pile of books owned but not read yet, or onto the wishlist. Adding used to file
- * every title as owned-and-unread, and a book read years ago then needed a second trip to
- * its page to say so.
+ * Where a title found in the catalog goes, picked when it is added (#411): its reading status
+ * and whether the reader has it. The default is the most common case — a book just bought,
+ * owned and on the to-read pile.
  */
-export type AddTarget = 'READ' | 'OWNED' | 'WISHLIST';
+export interface AddTarget {
+  status: ReadingStatus;
+  ownership: Ownership;
+}
 
-/** In the order the add sheet offers them, the default first (#399). */
-export const ADD_TARGETS: { id: AddTarget; labelKey: string; addedKey: string; icon: string }[] = [
-  { id: 'OWNED', labelKey: 'add.targets.OWNED', addedKey: 'add.added.OWNED', icon: 'library_books' },
-  { id: 'READ', labelKey: 'add.targets.READ', addedKey: 'add.added.READ', icon: 'check_circle' },
-  { id: 'WISHLIST', labelKey: 'add.targets.WISHLIST', addedKey: 'add.added.WISHLIST', icon: 'favorite' },
-];
+export const DEFAULT_ADD_TARGET: AddTarget = { status: 'TO_READ', ownership: 'OWNED' };
 
+/** The message a screen shows once the title is filed. */
 export function addedKeyOf(target: AddTarget): string {
-  return ADD_TARGETS.find((t) => t.id === target)!.addedKey;
+  if (addsToWishlistOnly(target.status, target.ownership)) return 'add.added.WISHLIST';
+  if (target.status === 'READ') return 'add.added.READ';
+  return target.status === 'TO_READ' ? 'add.added.TO_READ' : 'add.added.LIBRARY';
 }

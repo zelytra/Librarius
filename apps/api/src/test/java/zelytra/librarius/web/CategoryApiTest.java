@@ -43,7 +43,7 @@ class CategoryApiTest {
         return given().auth().oauth2(token()).contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "Category Test" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title))
                 .when().post("/api/library")
                 .then().statusCode(201)

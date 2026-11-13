@@ -34,7 +34,7 @@ class AuthorApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "coverUrl": "%s" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, author, coverUrl))
                 .when().post("/api/library")
                 .then().statusCode(201);

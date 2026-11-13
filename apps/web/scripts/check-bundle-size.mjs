@@ -83,6 +83,13 @@ import { fileURLToPath } from 'node:url';
  * review reports and their copy in both eager locales took it to 268.6 kB. Re-derived to the
  * measurement plus ~6%; `initial` (179 kB, 96%) is untouched.
  *
+ * `initial` moves to 199 kB and `total` to 310 kB for the batch #411–#421 (2026-11): `main`
+ * measured 180.7 kB initial and ~285 kB whole build. Most of the growth is copy in the two
+ * eager locales (+4 kB gz: the two status families, the outcome messages, the reading sheet,
+ * the value panel), then the eager Home — the sky behind the pile of pages read, drawn in CSS
+ * (+2 kB) — and the toast region every screen shares. Measured 188.5 kB and 293.0 kB.
+ * Re-derived to the measurement plus ~5%, `initial` kept under #79's 200 kB product ceiling.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -90,9 +97,9 @@ import { fileURLToPath } from 'node:url';
  * re-derived when the baseline deliberately changes, never merely because a screen grew.
  */
 const BUDGET_KB = {
-  initial: 186,
+  initial: 199,
   chunk: 10,
-  total: 285,
+  total: 310,
 };
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { stats, timeline } from '../../test/fixtures';
-import type { StatsDto, TimelineDto } from '../../api/generated/librarius';
+import type { BreakdownDto, StatsDto, TimelineDto } from '../../api/generated/librarius';
 import { http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -25,8 +25,75 @@ function timelineReturns(payload: TimelineDto) {
   server.use(http.get('*/api/stats/timeline', () => HttpResponse.json(payload)));
 }
 
+function breakdownReturns(payload: BreakdownDto) {
+  server.use(http.get('*/api/stats/breakdown', () => HttpResponse.json(payload)));
+}
+
 describe('StatsPage', () => {
   beforeEach(resetAuth);
+
+  /** #419: the ranks of everything read, the Bronze shelf included, dated or not. */
+  test('breaks down everything read by default, every rank listed', async () => {
+    breakdownReturns({
+      books: 40,
+      byAuthor: [],
+      byPublisher: [],
+      byLanguage: [],
+      byRank: [
+        { label: 'Or', count: 12 },
+        { label: 'Argent', count: 9 },
+        { label: 'Bronze', count: 4 },
+      ],
+    });
+    renderWithProviders(<StatsPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Rangs' }));
+    expect(await screen.findByText('Bronze')).toBeInTheDocument();
+    expect(screen.getByText('Argent')).toBeInTheDocument();
+  });
+
+  /** #418: titles per month, a figure as soon as one title is finished. */
+  test('gives the pace in titles per month', async () => {
+    timelineReturns(timeline({ points: [{ period: `${YEAR}-02`, books: 6, pages: 900 }], books: 6, booksPerMonth: 1.5 }));
+    renderWithProviders(<StatsPage />);
+
+    expect(await screen.findByText('titres par mois')).toBeInTheDocument();
+    expect(screen.getByText('1,5')).toBeInTheDocument();
+    expect(screen.queryByText('jours par titre')).not.toBeInTheDocument();
+  });
+
+  /** #420: one running total per kind with a goal, each against its own target. */
+  test('draws one cumulative curve per kind goal', async () => {
+    statsReturns(stats({
+      goals: [
+        { kind: 'BOOK', target: 20, unit: 'BOOKS', current: 3 },
+        { kind: 'MANGA', target: 50, unit: 'BOOKS', current: 8 },
+      ],
+    }));
+    timelineReturns(timeline({
+      points: [{ period: `${YEAR}-02`, books: 11, pages: 2000, byKind: { BOOK: 3, MANGA: 8 }, pagesByKind: { BOOK: 900, MANGA: 1100 } }],
+      books: 11,
+    }));
+    renderWithProviders(<StatsPage />);
+
+    expect(await screen.findByRole('img', { name: /Cumul des Romans/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Mangas/ })).toBeInTheDocument();
+    expect(screen.getByText('3 / 20 livres')).toBeInTheDocument();
+    expect(screen.getByText('8 / 50 livres')).toBeInTheDocument();
+  });
+
+  /** #421: what the shelves and the wishlist are worth. */
+  test('shows the value of the library and of the wishlist', async () => {
+    server.use(http.get('*/api/stats/value', () => HttpResponse.json({
+      currency: 'EUR', library: 1234.5, libraryOwned: 120, libraryPriced: 100,
+      wishlist: 89.7, wishlistCount: 9, wishlistPriced: 9, byKind: [],
+    })));
+    renderWithProviders(<StatsPage />);
+
+    expect(await screen.findByText('Valeur estimée')).toBeInTheDocument();
+    expect(screen.getByText(/1\s?235\s?€/)).toBeInTheDocument();
+    expect(screen.getByText('100 titres sur 120 avec un prix connu')).toBeInTheDocument();
+  });
 
   test('renders the reading counters', async () => {
     statsReturns(stats());
@@ -141,6 +208,9 @@ describe('StatsPage', () => {
     }));
     renderWithProviders(<StatsPage />);
 
+    // The breakdown opens on everything read (#419); the year is one tap away.
+    const years = await screen.findAllByRole('button', { name: String(YEAR) });
+    await userEvent.click(years[years.length - 1]);
     expect(await screen.findByText('Makoto Yukimura')).toBeInTheDocument();
     expect(screen.getByText('Frank Herbert')).toBeInTheDocument();
     // The genre breakdown is still there, over the whole collection.

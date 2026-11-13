@@ -63,9 +63,9 @@ class ActivityApiTest {
     @Test
     void theCollectionOpensOnTheLatestActivity() {
         String marker = "Recent " + UUID.randomUUID();
-        add("BOOK", "Ajouté il y a longtemps", marker, "OWNED", "2015-06-01");
+        add("BOOK", "Ajouté il y a longtemps", marker, "TO_READ", "2015-06-01");
         add("BOOK", "Lu aujourd'hui", marker, "READ", "2014-01-01");
-        add("BOOK", "Ajouté l'an dernier", marker, "OWNED", LocalDate.now().minusYears(1).toString());
+        add("BOOK", "Ajouté l'an dernier", marker, "TO_READ", LocalDate.now().minusYears(1).toString());
 
         List<String> titles = given().auth().oauth2(token()).queryParam("q", marker)
                 .when().get("/api/library").then().statusCode(200).extract().jsonPath()

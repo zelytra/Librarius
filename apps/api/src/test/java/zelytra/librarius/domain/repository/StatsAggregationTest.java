@@ -194,13 +194,14 @@ class StatsAggregationTest {
             switch (item.status) {
                 case READ -> {
                     read++;
-                    Integer pages = item.edition.pageCount;
+                    // The real length, else the estimate (#414).
+                    Integer pages = item.edition.effectivePageCount();
                     if (pages != null) {
                         pagesRead += pages;
                     }
                 }
                 case READING -> reading++;
-                case OWNED -> toRead++;
+                case TO_READ -> toRead++;
                 // The status postdates the fold this mirrors; it counts on its own and
                 // contributes no pages, a book given up on not having been read.
                 case ABANDONED -> abandoned++;
@@ -244,7 +245,7 @@ class StatsAggregationTest {
                 "Berserk", "berserk",
                 null, "   ", "L'Ancien" };
         LibraryStatus[] statusCycle = {
-                LibraryStatus.READ, LibraryStatus.READING, LibraryStatus.OWNED, LibraryStatus.READ };
+                LibraryStatus.READ, LibraryStatus.READING, LibraryStatus.TO_READ, LibraryStatus.READ };
 
         List<Title> titles = new ArrayList<>();
         int index = 0;
@@ -260,7 +261,7 @@ class StatsAggregationTest {
 
         // Titles carrying no usable genre: absent from the breakdown, present in the counters.
         titles.add(new Title(LibraryStatus.READ, 320, "Berserk", null));
-        titles.add(new Title(LibraryStatus.OWNED, null, null, "   "));
+        titles.add(new Title(LibraryStatus.TO_READ, null, null, "   "));
         titles.add(new Title(LibraryStatus.READING, 210, null, ""));
         titles.add(new Title(LibraryStatus.READ, 0, "vinland saga", null));
 

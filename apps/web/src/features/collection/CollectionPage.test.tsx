@@ -119,7 +119,7 @@ describe('CollectionPage', () => {
 
   test('offers the to-read pile: the titles held and not started yet', async () => {
     libraryReturns([
-      libraryItem({ id: 'held', status: 'OWNED', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'held', status: 'TO_READ', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
       libraryItem({ id: 'done', status: 'READ', book: { kind: 'BOOK', title: 'Déjà fini' } }),
     ]);
     renderWithProviders(<CollectionPage />);

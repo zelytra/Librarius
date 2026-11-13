@@ -16,6 +16,7 @@ import zelytra.librarius.domain.GoalUnit;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.domain.Ownership;
 import zelytra.librarius.domain.ReadingGoal;
 import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.ReportReason;
@@ -122,14 +123,23 @@ public final class ApiDtos {
             String isbn13,
             Integer originalYear,
             String synopsis,
-            String genres) {
+            String genres,
+            boolean pageCountEstimated,
+            BigDecimal listPrice,
+            String listPriceCurrency) {
+        /**
+         * {@code pageCount} is the length every figure uses: the real count, else the estimate
+         * of #414, which {@code pageCountEstimated} flags so a screen can print it with "≈".
+         * {@code listPrice} is the publisher's price of a new copy (#421), when known.
+         */
         public static BookView of(Edition e) {
             Work w = e.work;
             // genresText, not the normalised genres: reading the association here would
             // cost one query per item of a page of the collection.
             return new BookView(e.id, w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
-                    w.volumeNumber, e.coverUrl, e.pageCount, e.publisher, e.language, e.isbn13,
-                    w.originalYear, w.synopsis, w.genresText);
+                    w.volumeNumber, e.coverUrl, e.effectivePageCount(), e.publisher, e.language,
+                    e.isbn13, w.originalYear, w.synopsis, w.genresText, e.pageCountEstimated(),
+                    e.listPrice, e.listPriceCurrency);
         }
     }
 
@@ -196,11 +206,20 @@ public final class ApiDtos {
             @Size(max = 255) String providerRef) {
     }
 
+    /**
+     * @param ownership whether the reader has the book (#411); {@code OWNED} when absent.
+     *                  {@code WISHLIST} also puts the edition on the wishlist.
+     */
     public record LibraryCreateDto(
             @NotNull @Valid ManualBookDto book,
             LibraryStatus status,
             @Min(1) @Max(5) Integer rating,
-            LocalDate acquiredAt) {
+            LocalDate acquiredAt,
+            Ownership ownership) {
+    }
+
+    /** The ownership of a title in the library (#411). */
+    public record OwnershipDto(@NotNull Ownership ownership) {
     }
 
     /**
@@ -232,14 +251,21 @@ public final class ApiDtos {
      * @param review   private notes on the title, never shared nor aggregated
      * @param progress reading position, {@code null} while the title has never been opened
      */
+    /**
+     * @param status    reading status: {@code TO_READ}, {@code READING}, {@code READ} or
+     *                  {@code ABANDONED}
+     * @param ownership whether the reader has the book (#411): {@code OWNED}, {@code BORROWED},
+     *                  {@code EBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
+     */
     public record LibraryItemDto(UUID id, String status, Integer rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
-            boolean reviewShared) {
+            boolean reviewShared, String ownership) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
-                    it.progress != null ? ProgressView.of(it.progress, it.edition.pageCount) : null,
-                    BookView.of(it.edition), it.reviewShared);
+                    it.progress != null ? ProgressView.of(it.progress, it.edition.effectivePageCount()) : null,
+                    BookView.of(it.edition), it.reviewShared,
+                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name());
         }
     }
 
@@ -380,13 +406,16 @@ public final class ApiDtos {
      * titles were of each kind ({@code BOOK}, {@code MANGA}, {@code COMIC}…).
      */
     public record TimelinePointDto(String period, long books, long pages,
-            java.util.Map<String, Long> byKind) {
+            java.util.Map<String, Long> byKind, java.util.Map<String, Long> pagesByKind) {
         public static TimelinePointDto of(PeriodTotal total) {
-            return of(total, java.util.Map.of());
+            return of(total, java.util.Map.of(), java.util.Map.of());
         }
 
-        public static TimelinePointDto of(PeriodTotal total, java.util.Map<String, Long> byKind) {
-            return new TimelinePointDto(period(total.year(), total.month()), total.books(), total.pages(), byKind);
+        /** {@code pagesByKind}: the pages of the period per kind, for a pages goal per kind (#420). */
+        public static TimelinePointDto of(PeriodTotal total, java.util.Map<String, Long> byKind,
+                java.util.Map<String, Long> pagesByKind) {
+            return new TimelinePointDto(period(total.year(), total.month()), total.books(), total.pages(),
+                    byKind, pagesByKind);
         }
 
         public static String period(int year, Integer month) {
@@ -422,7 +451,42 @@ public final class ApiDtos {
             java.util.List<BreakdownCountDto> byAuthor,
             java.util.List<BreakdownCountDto> byPublisher,
             java.util.List<BreakdownCountDto> byLanguage,
+            java.util.List<BreakdownCountDto> byRank,
+            double booksPerMonth) {
+    }
+
+    /**
+     * What the reader has read, all time (#419): every title with the {@code READ} status,
+     * whether or not it carries a finish date — an imported library mostly does not.
+     * {@code byRank} lists every rank in use, not a top few.
+     */
+    public record BreakdownDto(long books,
+            java.util.List<BreakdownCountDto> byAuthor,
+            java.util.List<BreakdownCountDto> byPublisher,
+            java.util.List<BreakdownCountDto> byLanguage,
             java.util.List<BreakdownCountDto> byRank) {
+    }
+
+    /**
+     * The value of one kind's share of the library and the wishlist (#421).
+     *
+     * @param kind {@code BOOK}, {@code MANGA}, {@code COMIC}…
+     */
+    public record KindValueDto(String kind, BigDecimal library, long libraryPriced,
+            BigDecimal wishlist, long wishlistPriced) {
+    }
+
+    /**
+     * What the library and the wishlist are worth (#421).
+     *
+     * <p>The library counts only the physically owned titles ({@code ownership = OWNED}), at
+     * the publisher's price of a new copy. The wishlist counts each wish at its market price,
+     * else at the price the reader estimated. The {@code *Priced} counters say how many of the
+     * titles carry a price at all, so a screen can say how complete the figure is.
+     */
+    public record ValueDto(String currency, BigDecimal library, long libraryOwned,
+            long libraryPriced, BigDecimal wishlist, long wishlistCount, long wishlistPriced,
+            java.util.List<KindValueDto> byKind) {
     }
 
     /**
@@ -773,7 +837,7 @@ public final class ApiDtos {
      */
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Integer rating, String review, LocalDate acquiredAt,
-            String rankCode, ExportProgressDto progress) {
+            String rankCode, ExportProgressDto progress, Ownership ownership) {
     }
 
     /** One wish, with the note the user attached to it. */

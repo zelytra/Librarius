@@ -21,9 +21,9 @@ describe('apiClient', () => {
       }),
     );
 
-    await postApiLibrary({ book: { kind: 'BOOK', title: 'Dune' }, status: 'OWNED' });
+    await postApiLibrary({ book: { kind: 'BOOK', title: 'Dune' }, status: 'TO_READ' });
 
-    expect(body).toBe('{"book":{"kind":"BOOK","title":"Dune"},"status":"OWNED"}');
+    expect(body).toBe('{"book":{"kind":"BOOK","title":"Dune"},"status":"TO_READ"}');
   });
 
   // A CSV is not JSON: encoding it as such turned the whole file into a single quoted

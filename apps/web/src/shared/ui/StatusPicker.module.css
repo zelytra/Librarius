@@ -1,0 +1,85 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groupLabel {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--chip);
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+
+.chip:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.chipOn {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: var(--on-accent);
+  animation: pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+.hint {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: 0;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.92);
+  }
+
+  60% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .chipOn {
+    transition: none;
+    animation: none;
+  }
+}

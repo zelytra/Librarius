@@ -41,17 +41,32 @@ classe pas ; le classer « Or » ne le marque pas lu.
 
 ## Ta collection
 
-### Les quatre statuts
+### Deux familles de statuts
 
-| Statut | Ce que ça veut dire | Comment y passer | Compteur de l'accueil |
+Un titre porte **deux** statuts, choisis sur sa page, au moment de l'ajouter ou pendant un
+scan : où tu en es dans ta **lecture**, et comment tu **possèdes** le livre.
+
+| Statut de lecture | Ce que ça veut dire | Comment y passer | Compteur de l'accueil |
 |---|---|---|---|
-| Possédé | Il est chez toi, tu ne l'as pas ouvert | c'est l'état d'un titre qu'on vient d'ajouter | « à lire » |
+| Pile à lire | Tu ne l'as pas encore ouvert | c'est l'état d'un titre qu'on vient d'ajouter | « à lire » |
 | En cours | Tu es dedans | « Commencer la lecture » | « en cours » |
 | Lu | Tu l'as fini | « Marquer comme lu » | « lus » |
 | Abandonné | Tu t'es arrêté en route | « J'abandonne ce livre » | aucun |
 
-Le statut n'est écrit nulle part sur une couverture : il se lit aux boutons proposés sur
-l'écran du titre, et se compte dans les trois chiffres de l'accueil.
+| Possession | Ce que ça veut dire |
+|---|---|
+| Possédé | Il est dans ta bibliothèque, en vrai — le seul cas compté dans la valeur de ta bibliothèque |
+| Emprunté | Tu l'as eu entre les mains (médiathèque, ami), mais il n'est pas sur tes étagères |
+| Livre numérique | Lu sur liseuse, tablette ou autre format numérique |
+| Liste d'envies | Tu ne l'as pas et tu aimerais l'avoir : il apparaît aussi dans tes souhaits |
+| Non possédé | Ni sur tes étagères, ni en envie |
+
+Choisir « Liste d'envies » sur un titre lu (emprunté, par exemple) l'ajoute à tes souhaits
+sans perdre ta lecture ; « Je l'ai acheté » le repasse en « Possédé ». Dans la bibliothèque,
+une pastille signale sur la couverture un titre qui n'est pas possédé, et des étagères
+« Emprunté », « Livre numérique »… les regroupent.
+
+Chaque changement est confirmé par un court message en bas de l'écran.
 
 Marquer « lu » enregistre la date de fin et complète la progression à 100 %. Reprendre un
 titre fini efface cette date de fin : un livre relu n'est pas un livre terminé.
@@ -145,7 +160,11 @@ et une note libre (édition, format, où l'acheter). La liste est triée du plus
 moins urgent, groupée par priorité, et chaque groupe affiche son nombre de titres et son
 sous-total. Le budget total en tête de liste couvre **toute** ta liste de souhaits.
 
-Les prix sont ceux que **tu** saisis : rien n'est récupéré chez un marchand.
+Chaque souhait affiche aussi son **prix neuf** quand il est connu : le prix éditeur relevé
+dans la notice de la BnF, qui est en France le prix de vente dans toutes les librairies
+(prix unique du livre). Le budget compte ton prix estimé quand tu en as saisi un, sinon ce
+prix neuf. Les prix se complètent tout seuls, en arrière-plan, dans les minutes qui suivent
+l'ajout.
 
 « Je l'ai acheté » fait passer le souhait dans ta collection, daté du jour. Un titre
 ajouté depuis Découvrir ou depuis une série arrive en priorité **Bientôt** ; la priorité
@@ -167,13 +186,49 @@ jauge démarre le jour où tu marques ton premier titre comme lu.
 
 Au 1ᵉʳ janvier, l'objectif de l'année précédente t'est reproposé.
 
+## La fiche de lecture
+
+Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
+quand tu le marques lu) prépare une page A4 à imprimer : titre, auteur, ta note en étoiles,
+ton avis — ou des lignes pour l'écrire à la main —, les dates de lecture, l'éditeur, le
+nombre de pages et ton classement. Traits fins, aucun aplat de couleur : elle s'imprime aussi
+bien en noir et blanc qu'en couleur. La couverture, plus gourmande en encre, est désactivée
+par défaut.
+
+## Les nombres de pages estimés
+
+Quand aucun catalogue ne connaît le nombre de pages d'une édition, Librarius l'**estime** :
+la moyenne des tomes connus de la même série, sinon une longueur typique (320 pages pour un
+roman, 192 pour un manga, 56 pour une BD). Un nombre estimé est précédé de « ≈ », et il est
+remplacé dès qu'un catalogue fournit le vrai.
+
 ## L'accueil, dans ton ordre
 
-« Personnaliser l'accueil » réordonne les sections du tableau de bord et masque celles qui
+« Personnaliser l'accueil » s'ouvre dans une fenêtre par-dessus l'accueil et réordonne les sections du tableau de bord et masque celles qui
 ne t'intéressent pas — avec des flèches plutôt qu'un glisser-déposer, pour que ça marche
 au doigt, à la souris et au clavier. Une section masquée reste listée dans le panneau,
 signalée comme telle, pour qu'on puisse la retrouver. Le choix est conservé sur ton
 compte.
+
+### La pile et le ciel
+
+« Tout ce que tu as lu » empile tes pages lues, et le fond monte avec elles : le sol sous
+un ciel bleu, les nuages, l'espace, la Lune, chaque planète tour à tour, puis les étoiles et
+les confins de l'univers. L'échelle est imagée — chaque palier est atteint à un nombre de
+pages réaliste, pas à la vraie distance —, et la carte dit combien de pages il reste avant
+le palier suivant.
+
+## Les statistiques
+
+- **Rythme de lecture** : pages par jour et **titres par mois**, calculés sur la période
+  écoulée de l'année choisie.
+- **Cumul et objectifs** : une courbe par type (romans, mangas, BD) qui a un objectif, chacune
+  dans son unité, avec la ligne du rythme régulier qui l'atteint au 31 décembre.
+- **Ce que tu as lu** : auteurs, éditeurs, langues et rangs, sur **tout** ce que tu as lu
+  par défaut — même les titres importés sans date de fin —, ou sur l'année choisie. Tous les
+  rangs sont listés.
+- **Valeur estimée** : ce que valent les livres que tu possèdes vraiment et ta liste
+  d'envies, au prix neuf de la BnF, avec le nombre de titres dont le prix est connu.
 
 ## Importer ta bibliothèque
 

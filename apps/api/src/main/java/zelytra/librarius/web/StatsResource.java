@@ -11,6 +11,9 @@ import jakarta.ws.rs.core.MediaType;
 import zelytra.librarius.domain.repository.ReadingProgressRepository.TimelineGranularity;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.stats.StatsService;
+import zelytra.librarius.stats.ValueService;
+import zelytra.librarius.web.ApiDtos.BreakdownDto;
+import zelytra.librarius.web.ApiDtos.ValueDto;
 import zelytra.librarius.web.ApiDtos.StatsDto;
 import zelytra.librarius.web.ApiDtos.TimelineDto;
 
@@ -35,6 +38,9 @@ public class StatsResource {
 
     @Inject
     StatsService stats;
+
+    @Inject
+    ValueService values;
 
     @GET
     public StatsDto stats() {
@@ -72,6 +78,26 @@ public class StatsResource {
                 .orElseThrow(() -> new BadRequestException("Unknown granularity: " + granularity));
 
         return stats.timeline(currentUser.id(), start, end, bucket);
+    }
+
+    /**
+     * What the reader has read, all time (#419): every title marked read, dated or not, by
+     * author, publisher, language and rank.
+     */
+    @GET
+    @Path("/breakdown")
+    public BreakdownDto breakdown() {
+        return stats.breakdownAllTime(currentUser.id());
+    }
+
+    /**
+     * What the library and the wishlist are worth (#421), at the publisher's price of a new
+     * copy — see {@link ValueDto}.
+     */
+    @GET
+    @Path("/value")
+    public ValueDto value() {
+        return values.value(currentUser.id());
     }
 
     /**

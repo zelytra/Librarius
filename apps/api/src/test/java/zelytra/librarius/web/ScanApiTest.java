@@ -83,7 +83,7 @@ class ScanApiTest {
         String marker = "Scan Title " + System.nanoTime();
         String id = add("alice", "/api/library",
                 "{ \"kind\": \"BOOK\", \"title\": \"" + marker + "\", \"authors\": \"Victor Hugo\" }",
-                ", \"status\": \"OWNED\"");
+                ", \"status\": \"TO_READ\"");
         String isbn = freshIsbn();
         catalogKnows(isbn, book(marker, "Hugo, Victor", isbn, null, null));
 
@@ -99,7 +99,7 @@ class ScanApiTest {
         String id = add("alice", "/api/library",
                 "{ \"kind\": \"MANGA\", \"title\": \"" + series + " T3\", \"authors\": \"A. Author\", "
                         + "\"seriesTitle\": \"" + series + "\", \"volumeNumber\": 3 }",
-                ", \"status\": \"OWNED\"");
+                ", \"status\": \"TO_READ\"");
         String isbn = freshIsbn();
         catalogKnows(isbn, book(series + " - Volume 3 : another title", "A. Author", isbn, series, 3));
 

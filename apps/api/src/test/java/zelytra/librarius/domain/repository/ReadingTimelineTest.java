@@ -46,6 +46,9 @@ class ReadingTimelineTest {
     /** Labels kept in a breakdown, mirroring {@code StatsService.TOP_LABELS}. */
     private static final int TOP_LABELS = 6;
 
+    /** The length a title of unknown length counts at since #414 — the fixtures' kind default. */
+    private static final int UNKNOWN_LENGTH_ESTIMATE = 192;
+
     private static final LocalDate YEAR_FROM = LocalDate.of(2019, 1, 1);
     private static final LocalDate YEAR_TO = LocalDate.of(2019, 12, 31);
 
@@ -70,7 +73,9 @@ class ReadingTimelineTest {
 
         assertEquals(
                 List.of(
-                        new PeriodTotal(2019, 1, 3, 300),
+                        // 300 known pages, plus the estimate standing for the title of
+                        // unknown length (#414).
+                        new PeriodTotal(2019, 1, 3, 300 + UNKNOWN_LENGTH_ESTIMATE),
                         new PeriodTotal(2019, 3, 1, 150),
                         new PeriodTotal(2019, 12, 4, 200)),
                 progresses.timeline(userId, YEAR_FROM, YEAR_TO, TimelineGranularity.MONTH));
@@ -83,7 +88,7 @@ class ReadingTimelineTest {
 
         assertEquals(
                 List.of(
-                        new PeriodTotal(2019, null, 8, 650),
+                        new PeriodTotal(2019, null, 8, 650 + UNKNOWN_LENGTH_ESTIMATE),
                         new PeriodTotal(2020, null, 1, 500)),
                 progresses.timeline(userId, YEAR_FROM, LocalDate.of(2020, 12, 31),
                         TimelineGranularity.YEAR));
@@ -120,7 +125,7 @@ class ReadingTimelineTest {
         seed();
 
         assertEquals(
-                List.of(new PeriodTotal(2019, null, 8, 650)),
+                List.of(new PeriodTotal(2019, null, 8, 650 + UNKNOWN_LENGTH_ESTIMATE)),
                 progresses.timeline(userId, YEAR_FROM, YEAR_TO, TimelineGranularity.YEAR));
     }
 

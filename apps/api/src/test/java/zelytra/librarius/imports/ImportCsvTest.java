@@ -43,8 +43,8 @@ class ImportCsvTest {
                 """;
         List<ImportedBook> books = ImportService.parseCsv(csv);
         assertEquals(4, books.size());
-        assertEquals(LibraryStatus.OWNED, books.get(0).status());
-        assertEquals(LibraryStatus.OWNED, books.get(1).status());
+        assertEquals(LibraryStatus.TO_READ, books.get(0).status());
+        assertEquals(LibraryStatus.TO_READ, books.get(1).status());
         assertEquals(LibraryStatus.READ, books.get(2).status());
         assertEquals(LibraryStatus.READING, books.get(3).status());
     }

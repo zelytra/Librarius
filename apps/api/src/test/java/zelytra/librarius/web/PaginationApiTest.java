@@ -68,7 +68,7 @@ class PaginationApiTest {
             return;
         }
         seeded = true;
-        BOOK_TITLES.forEach(title -> addLibraryItem("alice", "BOOK", title, "OWNED", MARKER));
+        BOOK_TITLES.forEach(title -> addLibraryItem("alice", "BOOK", title, "TO_READ", MARKER));
         MANGA_TITLES.forEach(title -> addLibraryItem("alice", "MANGA", title, "READ", MARKER));
         BOOK_TITLES.forEach(title -> addWishlistItem("alice", "BOOK", title, "SOON", MARKER));
         MANGA_TITLES.forEach(title -> addWishlistItem("alice", "MANGA", title, "PRIORITY", MARKER));
@@ -232,8 +232,8 @@ class PaginationApiTest {
     @Test
     void rankNarrowsTheShelf() {
         String marker = "Rankera Fixtura";
-        String ranked = addLibraryItem("alice", "BOOK", "Ranked pagination", "OWNED", marker);
-        addLibraryItem("alice", "BOOK", "Unranked pagination", "OWNED", marker);
+        String ranked = addLibraryItem("alice", "BOOK", "Ranked pagination", "TO_READ", marker);
+        addLibraryItem("alice", "BOOK", "Unranked pagination", "TO_READ", marker);
 
         String orId = given().auth().oauth2(token("alice")).when().get("/api/categories")
                 .then().statusCode(200)
@@ -301,7 +301,7 @@ class PaginationApiTest {
 
     @Test
     void anItemIsFetchableByIdentifierOnlyByItsOwner() {
-        String aliceItem = addLibraryItem("alice", "BOOK", "Deep link pagination", "OWNED",
+        String aliceItem = addLibraryItem("alice", "BOOK", "Deep link pagination", "TO_READ",
                 "Deeplinka Fixtura");
 
         given().auth().oauth2(token("alice"))

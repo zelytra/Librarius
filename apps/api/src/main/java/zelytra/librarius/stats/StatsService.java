@@ -12,6 +12,7 @@ import zelytra.librarius.domain.repository.ReadingProgressRepository.Breakdown;
 import zelytra.librarius.domain.repository.ReadingProgressRepository.PeriodTotal;
 import zelytra.librarius.domain.repository.ReadingProgressRepository.TimelineGranularity;
 import zelytra.librarius.web.ApiDtos.BreakdownCountDto;
+import zelytra.librarius.web.ApiDtos.BreakdownDto;
 import zelytra.librarius.web.ApiDtos.GenreCount;
 import zelytra.librarius.web.ApiDtos.StatsDto;
 import zelytra.librarius.web.ApiDtos.TimelineDto;
@@ -99,13 +100,18 @@ public class StatsService {
         OptionalDouble daysPerBook = progresses.averageDaysToFinish(userId, from, to);
 
         java.util.Map<String, java.util.Map<String, Long>> kinds = new java.util.HashMap<>();
+        java.util.Map<String, java.util.Map<String, Long>> kindPages = new java.util.HashMap<>();
         for (var k : progresses.timelineByKind(userId, from, to, granularity)) {
-            kinds.computeIfAbsent(TimelinePointDto.period(k.year(), k.month()), p -> new java.util.TreeMap<>())
-                    .merge(k.kind(), k.books(), Long::sum);
+            String period = TimelinePointDto.period(k.year(), k.month());
+            kinds.computeIfAbsent(period, p -> new java.util.TreeMap<>()).merge(k.kind(), k.books(), Long::sum);
+            kindPages.computeIfAbsent(period, p -> new java.util.TreeMap<>()).merge(k.kind(), k.pages(), Long::sum);
         }
         return new TimelineDto(from, to, granularity.name(),
-                buckets.stream().map(b -> TimelinePointDto.of(b,
-                        kinds.getOrDefault(TimelinePointDto.period(b.year(), b.month()), java.util.Map.of()))).toList(),
+                buckets.stream().map(b -> {
+                    String period = TimelinePointDto.period(b.year(), b.month());
+                    return TimelinePointDto.of(b, kinds.getOrDefault(period, java.util.Map.of()),
+                            kindPages.getOrDefault(period, java.util.Map.of()));
+                }).toList(),
                 books, pages, pagesPerDay(pages, from, to),
                 daysPerBook.isPresent() ? daysPerBook.getAsDouble() : null,
                 best != null ? TimelinePointDto.of(best).period() : null,
@@ -113,14 +119,52 @@ public class StatsService {
                 breakdown(userId, from, to, Breakdown.AUTHOR),
                 breakdown(userId, from, to, Breakdown.PUBLISHER),
                 breakdown(userId, from, to, Breakdown.LANGUAGE),
-                breakdown(userId, from, to, Breakdown.RANK));
+                breakdown(userId, from, to, Breakdown.RANK),
+                booksPerMonth(books, from, to));
+    }
+
+    /**
+     * What the reader has read, all time (#419): every {@code READ} title, dated or not.
+     * The ranks are all listed — the four built-in shelves and the reader's own are few, and
+     * cutting them to a top few is what hid the Bronze shelf.
+     */
+    public BreakdownDto breakdownAllTime(String userId) {
+        return new BreakdownDto(library.countByStatus(userId, zelytra.librarius.domain.LibraryStatus.READ),
+                allTime(userId, Breakdown.AUTHOR, TOP_LABELS),
+                allTime(userId, Breakdown.PUBLISHER, TOP_LABELS),
+                allTime(userId, Breakdown.LANGUAGE, TOP_LABELS),
+                allTime(userId, Breakdown.RANK, Integer.MAX_VALUE));
+    }
+
+    private List<BreakdownCountDto> allTime(String userId, Breakdown dimension, int limit) {
+        return progresses.breakdownOfRead(userId, dimension, limit).stream()
+                .map(BreakdownCountDto::of)
+                .toList();
     }
 
     private List<BreakdownCountDto> breakdown(String userId, LocalDate from, LocalDate to,
             Breakdown dimension) {
-        return progresses.breakdown(userId, from, to, dimension, TOP_LABELS).stream()
+        // Every rank in use, as in the all-time breakdown: a top few hid the smaller shelves.
+        int limit = dimension == Breakdown.RANK ? Integer.MAX_VALUE : TOP_LABELS;
+        return progresses.breakdown(userId, from, to, dimension, limit).stream()
                 .map(BreakdownCountDto::of)
                 .toList();
+    }
+
+    /**
+     * Titles finished per month over the window (#418), divided by the months that have gone
+     * by — the same reasoning as {@link #pagesPerDay}. It replaces the days-per-title average,
+     * which needed a start date imported titles never have and so printed a dash.
+     */
+    static double booksPerMonth(long books, LocalDate from, LocalDate to) {
+        LocalDate today = LocalDate.now();
+        LocalDate last = to.isAfter(today) ? today : to;
+        if (last.isBefore(from)) {
+            return 0;
+        }
+        double days = ChronoUnit.DAYS.between(from, last) + 1;
+        double months = Math.max(1.0, days / 30.4375);
+        return books / months;
     }
 
     /**

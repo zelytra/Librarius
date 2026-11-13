@@ -33,7 +33,12 @@ public class LibraryItem {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    public LibraryStatus status = LibraryStatus.OWNED;
+    public LibraryStatus status = LibraryStatus.TO_READ;
+
+    /** Whether the reader has the book, and in what form (#411, V27). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    public Ownership ownership = Ownership.OWNED;
 
     @ManyToOne
     @JoinColumn(name = "rank_category_id")

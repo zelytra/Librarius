@@ -1,8 +1,5 @@
 import type { StatsDto } from '../api/generated/librarius';
 
-/** Below this many books of known length, an average says nothing about the rest. */
-const MIN_SAMPLE = 10;
-
 export interface PagesRead {
   /** The figure to show: the exact sum, or an estimate for the whole of what was read. */
   value: number;
@@ -15,17 +12,14 @@ export interface PagesRead {
 /**
  * How many pages the reader has read, as a screen should state it.
  *
- * An imported library starts with almost no lengths — the catalog fills them in over the
- * following hours — so the exact sum read "16 275 pages" under 2 293 books: true of the 44
- * books whose length was known, and wildly wrong as an answer to "how much have I read". While
- * lengths are missing, the known books' average stands for the rest, and says it is an
- * estimate; once every read book has a length, the figure is the exact sum again.
+ * <p>Since #414 the server counts every read book: at its real length when a catalog gave
+ * one, at an estimate otherwise (the series average, else a typical length for its kind).
+ * The sum is therefore always a figure worth showing; it is marked "≈" as long as some of it
+ * rests on estimates — the books read without a known length.
  */
 export function pagesRead(stats: StatsDto | undefined): PagesRead {
   const read = stats?.read ?? 0;
   const pages = stats?.pagesRead ?? 0;
   const known = stats?.readWithPageCount ?? read;
-  if (read <= 0 || known >= read) return { value: pages, estimated: false, unknown: false };
-  if (known < MIN_SAMPLE) return { value: 0, estimated: false, unknown: true };
-  return { value: Math.round((pages / known) * read), estimated: true, unknown: false };
+  return { value: pages, estimated: read > 0 && known < read, unknown: false };
 }

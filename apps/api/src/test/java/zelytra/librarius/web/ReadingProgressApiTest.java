@@ -82,9 +82,12 @@ class ReadingProgressApiTest {
                 .body("progress.currentPage", is(150));
     }
 
-    /** An edition with no page count cannot be converted, and must not read as zero. */
+    /**
+     * An edition with no page count is converted on its estimated length (#414): 60 % of
+     * the 320 pages a book is assumed to run is page 192.
+     */
     @Test
-    void aPercentageIsLeftAloneWhenTheTotalIsUnknown() {
+    void aPercentageIsConvertedOnTheEstimateWhenTheTotalIsUnknown() {
         String itemId = given().auth().oauth2(token()).contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "Progress - no page count",
@@ -98,7 +101,7 @@ class ReadingProgressApiTest {
 
         item(itemId)
                 .body("progress.percent", is(60))
-                .body("progress.currentPage", nullValue());
+                .body("progress.currentPage", is(192));
     }
 
     /** The bounds of the column are the bounds of the payload: 150 % is a 400, not a row. */
@@ -114,7 +117,7 @@ class ReadingProgressApiTest {
 
     @Test
     void startingAReadingStampsTheStartDate() {
-        String itemId = addBook("Progress - start date", "OWNED");
+        String itemId = addBook("Progress - start date", "TO_READ");
 
         putProgress(itemId, "{ \"status\": \"READING\" }").statusCode(204);
 
@@ -127,7 +130,7 @@ class ReadingProgressApiTest {
     /** A date the user typed wins over the default: the book may have been opened last year. */
     @Test
     void anExplicitStartDateIsKept() {
-        String itemId = addBook("Progress - explicit start", "OWNED");
+        String itemId = addBook("Progress - explicit start", "TO_READ");
 
         putProgress(itemId, "{ \"status\": \"READING\", \"startedAt\": \"2020-03-04\" }")
                 .statusCode(204);
@@ -178,7 +181,7 @@ class ReadingProgressApiTest {
      */
     @Test
     void pickingABookUpAgainStartsItTodayDespiteTheOldDateSentBack() {
-        String itemId = addBook("Progress - read again", "OWNED");
+        String itemId = addBook("Progress - read again", "TO_READ");
         putProgress(itemId, "{ \"status\": \"READ\", \"startedAt\": \"2018-01-01\","
                 + " \"finishedAt\": \"2018-02-01\" }").statusCode(204);
 
@@ -295,7 +298,7 @@ class ReadingProgressApiTest {
                 .body("total", is(1))
                 .body("items[0].id", is(itemId));
 
-        for (String other : new String[] {"OWNED", "READING", "READ"}) {
+        for (String other : new String[] {"TO_READ", "READING", "READ"}) {
             given().auth().oauth2(token()).queryParam("status", other)
                     .queryParam("q", "Progress - filtered abandoned")
                     .when().get("/api/library")
@@ -373,7 +376,7 @@ class ReadingProgressApiTest {
     /** A title nobody has opened carries no progress at all, rather than a row of zeros. */
     @Test
     void anUntouchedTitleHasNoProgress() {
-        String itemId = addBook("Progress - untouched", "OWNED");
+        String itemId = addBook("Progress - untouched", "TO_READ");
 
         item(itemId)
                 .body("id", notNullValue())

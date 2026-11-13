@@ -29,8 +29,8 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating INT NOT NULL` (1–5), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
-| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `cover_url`, `format`, `release_date`, `provider`, `provider_ref`, `enrich_attempted_at` (V23) | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
-| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (OWNED\|READING\|READ\|ABANDONED, V11), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7) |
+| `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `page_count_estimate` (V28), `cover_url`, `format`, `release_date`, `provider`, `provider_ref`, `enrich_attempted_at` (V23), `list_price NUMERIC(8,2)` + `list_price_currency` + `price_checked_at` (V29) | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
+| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (TO_READ\|READING\|READ\|ABANDONED — `OWNED` renamed `TO_READ` in V27), `ownership` (OWNED\|BORROWED\|EBOOK\|WISHLIST\|NOT_OWNED, V27, default OWNED), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7), `(user_id, ownership)` (V27) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 
@@ -482,6 +482,30 @@ gets for free from its composite key. `rating` is `NOT NULL` — unlike
 `library_item.rating`, which can sit unrated on an owned title that exists regardless — because
 the row itself only exists once the caller has chosen to leave one; removing the opinion is a
 `DELETE`, not a `PUT` carrying a null rating.
+
+### V27–V29 — status families, estimated lengths, prices (#411, #414, #421)
+
+**V27** splits what `library_item.status` used to mix. The column keeps the **reading
+status**, its `OWNED` value renamed `TO_READ` (the to-read pile); a new `ownership` column says
+whether the reader has the book: `OWNED` (on the shelves), `BORROWED`, `EBOOK`, `WISHLIST`,
+`NOT_OWNED`. `WISHLIST` is the library side of a `wishlist_item` on the same edition —
+`OwnershipService` creates the wish when it is set and deletes it when it is left, and the
+wishlist's acquire and delete paths move the ownership back (`OWNED`, `NOT_OWNED`). The enum
+still reads `OWNED` from a query string or an older archive (`LibraryStatus.fromString`,
+`@JsonAlias`).
+
+**V28** adds `edition.page_count_estimate`, filled for every edition without a `page_count`:
+the average of the known volumes of its series, else a per-kind figure
+(`PageCountEstimator.defaultFor`: book 320, manga 192, comic 56, graphic novel 160). The real
+count stays in `page_count` and always wins; every aggregation reads
+`coalesce(page_count, page_count_estimate)` and `BookView.pageCountEstimated` flags a guess. A
+new edition gets the per-kind figure on insert (`@PrePersist`), and an hourly pass refines it
+from the series.
+
+**V29** adds the publisher's price, from UNIMARC `010$d` of the BnF record. `PriceRefresher`
+looks up, in batches of 40 every 10 minutes, the editions with an ISBN that sit in a library or
+a wishlist, and stamps `price_checked_at` whether a price was found or not (retry after 60
+days).
 
 ### Cascades
 

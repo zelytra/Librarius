@@ -1,0 +1,103 @@
+/* Fixed, like the outcome sheet: the shell scrolls its own content, and a dialog anchored
+   inside it would slide away with the screen. The scrim is a fixed dark, dimming every
+   palette alike. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(28 24 20 / 55%);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  animation: fade 160ms ease-out both;
+}
+
+/* Full screen on a phone: the dialog is the screen while it is open. */
+.panel {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 20px var(--screen-pad-x) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  outline: none;
+  animation: rise 200ms ease-out both;
+}
+
+@media (min-width: 600px) {
+  .scrim {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .panel {
+    max-width: 520px;
+    max-height: calc(100vh - 48px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel-lg);
+    box-shadow: var(--shadow-strong);
+    padding: 22px 22px 20px;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-19);
+  font-weight: 600;
+  margin: 0;
+}
+
+.close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.description {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .panel {
+    animation: none;
+  }
+}

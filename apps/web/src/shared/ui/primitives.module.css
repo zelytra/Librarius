@@ -80,6 +80,26 @@
   cursor: default;
 }
 
+/* A press is felt (#413): the button gives under the finger, then springs back. */
+.button {
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
 .primary {
   background: var(--accent);
   color: var(--on-accent);

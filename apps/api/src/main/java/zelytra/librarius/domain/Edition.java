@@ -40,6 +40,26 @@ public class Edition {
     @Column(name = "page_count")
     public Integer pageCount;
 
+    /**
+     * A guess at the length when no catalog gave one (#414, V28): the series average, else a
+     * figure per kind. Never read on its own — {@link #effectivePageCount()} prefers the real
+     * count — and never exported, being no fact about the book.
+     */
+    @Column(name = "page_count_estimate")
+    public Integer pageCountEstimate;
+
+    /** Publisher's price of a new copy (#421, V29), read from the BnF record. */
+    @Column(name = "list_price", precision = 8, scale = 2)
+    public java.math.BigDecimal listPrice;
+
+    /** ISO 4217 code of {@link #listPrice}, {@code EUR} for every price the BnF gives. */
+    @Column(name = "list_price_currency", length = 3)
+    public String listPriceCurrency;
+
+    /** Last time the price lookup ran on this edition, found or not. */
+    @Column(name = "price_checked_at")
+    public OffsetDateTime priceCheckedAt;
+
     @Column(name = "cover_url", length = 1024)
     public String coverUrl;
 
@@ -69,4 +89,26 @@ public class Edition {
     /** Last time the import enricher looked this edition up in the catalog (V23), or null. */
     @Column(name = "enrich_attempted_at")
     public OffsetDateTime enrichAttemptedAt;
+
+    /** The length every figure is computed from: the real count, else the estimate. */
+    public Integer effectivePageCount() {
+        return pageCount != null ? pageCount : pageCountEstimate;
+    }
+
+    /** Whether {@link #effectivePageCount()} is a guess rather than a count. */
+    public boolean pageCountEstimated() {
+        return pageCount == null && pageCountEstimate != null;
+    }
+
+    /**
+     * A new edition with no length gets the per-kind figure straight away, so it leaves no
+     * hole in the stats between its creation and the next {@code PageCountEstimator} pass,
+     * which refines it from the series.
+     */
+    @jakarta.persistence.PrePersist
+    void estimateMissingLength() {
+        if (pageCount == null && pageCountEstimate == null && work != null) {
+            pageCountEstimate = zelytra.librarius.library.PageCountEstimator.defaultFor(work.kind);
+        }
+    }
 }

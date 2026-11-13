@@ -50,10 +50,18 @@
   box-shadow: var(--shadow-accent-sm);
 }
 
+/* One vertical rhythm for the whole dashboard (#417): every block is separated by the same
+   gap, and none carries an outer margin of its own. */
+.dashboard,
 .sections {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--dashboard-gap);
+}
+
+/* A section with nothing to show renders nothing; an empty wrapper would still take a gap. */
+.sections > :empty {
+  display: none;
 }
 
 /* ── Customize dashboard trigger ─────────────────────────────────────────────

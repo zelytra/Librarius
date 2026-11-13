@@ -38,7 +38,7 @@ class GenreApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "genres": %s },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, marker, genres == null ? "null" : "\"" + genres + "\""))
                 .when().post("/api/library")
                 .then().statusCode(201)

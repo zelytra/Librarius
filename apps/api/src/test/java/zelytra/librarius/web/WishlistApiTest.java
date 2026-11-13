@@ -247,7 +247,7 @@ class WishlistApiTest {
         given().auth().oauth2(token("alice")).contentType("application/json").body("{}")
                 .when().post("/api/wishlist/" + wishId + "/acquire")
                 .then().statusCode(201)
-                .body("status", is("OWNED"))
+                .body("status", is("TO_READ"))
                 .body("acquiredAt", nullValue());
     }
 
@@ -259,20 +259,14 @@ class WishlistApiTest {
     }
 
     /**
-     * The transaction, verified rather than assumed: a failure on the collection side must
-     * not cost the user the wish that recorded the book.
-     *
-     * <p>The failure is a real one, not a stub. {@code library_item} carries a unique
-     * {@code (user_id, edition_id)}: planting an owned title on the very edition the wish
-     * points at makes the insert of the acquisition violate it. The wish is deleted first
-     * and the insert fails afterwards, so only the rollback can bring it back — an
-     * implementation writing outside a transaction would leave the user with neither the
-     * wish nor the book.
+     * A wish on an edition that is already a title of the library — read from a borrowed copy,
+     * say — is bought onto that title (#411): no second row, and the reading status it had
+     * survives the purchase.
      */
     @Test
-    void aFailedAcquisitionLeavesTheWishIntact() {
-        String marker = "Rollbacka Fixtura";
-        ValidatableResponse wish = addWish("alice", "Doomed rollbacka", "SOON", "12.00", marker);
+    void acquiringAWishOnATitleAlreadyInTheLibraryReusesThatTitle() {
+        String marker = "Reusa Fixtura";
+        ValidatableResponse wish = addWish("alice", "Reused title", "SOON", "12.00", marker);
         String wishId = wish.extract().path("id");
         UUID editionId = UUID.fromString(wish.extract().path("book.editionId"));
         String aliceId = given().auth().oauth2(token("alice"))
@@ -280,22 +274,25 @@ class WishlistApiTest {
                 .then().statusCode(200)
                 .extract().path("id");
 
+        UUID[] itemId = new UUID[1];
         QuarkusTransaction.requiringNew().run(() -> {
-            LibraryItem squatter = new LibraryItem();
-            squatter.userId = aliceId;
-            squatter.edition = em.find(Edition.class, editionId);
-            squatter.status = LibraryStatus.OWNED;
-            em.persist(squatter);
+            LibraryItem borrowed = new LibraryItem();
+            borrowed.userId = aliceId;
+            borrowed.edition = em.find(Edition.class, editionId);
+            borrowed.status = LibraryStatus.READ;
+            borrowed.ownership = zelytra.librarius.domain.Ownership.WISHLIST;
+            em.persist(borrowed);
+            itemId[0] = borrowed.id;
         });
 
         given().auth().oauth2(token("alice")).contentType("application/json").body("{}")
                 .when().post("/api/wishlist/" + wishId + "/acquire")
-                .then().statusCode(500);
+                .then().statusCode(201)
+                .body("id", is(itemId[0].toString()))
+                .body("status", is("READ"))
+                .body("ownership", is("OWNED"));
 
-        list("alice", marker, "")
-                .body("total", is(1))
-                .body("items[0].id", is(wishId))
-                .body("items[0].priority", is("SOON"));
+        list("alice", marker, "").body("total", is(0));
     }
 
     // ── Budget (#52) ──────────────────────────────────────────────────────────

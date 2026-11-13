@@ -163,3 +163,24 @@
   justify-content: center;
   margin-top: 20px;
 }
+
+/* How the reader has a title that is not on the shelves (#411). */
+.ownershipBadge {
+  position: absolute;
+  /* Under the kind tag, clear of the title a generated cover prints at its foot. */
+  left: 6px;
+  top: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  border-radius: var(--radius-badge);
+  background: var(--overlay-strong);
+  color: var(--overlay-ink);
+  font-size: var(--fs-10);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

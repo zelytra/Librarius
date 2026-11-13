@@ -237,11 +237,17 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      *                  grouped shelf lists beside its series blocks
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
-            String genre, Integer minRating, String search, boolean standalone) {
+            String genre, Integer minRating, String search, boolean standalone,
+            zelytra.librarius.domain.Ownership ownership) {
+
+        public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
+                String genre, Integer minRating, String search, boolean standalone) {
+            this(userId, kind, status, rank, genre, minRating, search, standalone, null);
+        }
 
         public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
                 String genre, Integer minRating, String search) {
-            this(userId, kind, status, rank, genre, minRating, search, false);
+            this(userId, kind, status, rank, genre, minRating, search, false, null);
         }
     }
 
@@ -348,6 +354,10 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         if (filter.standalone()) {
             clauses.add("w.series is null");
         }
+        if (filter.ownership() != null) {
+            clauses.add("li.ownership = :ownership");
+            params.put("ownership", filter.ownership());
+        }
         if (filter.rank() != null && !filter.rank().isBlank()) {
             clauses.add("rc.code = :rank");
             params.put("rank", filter.rank().trim());
@@ -403,7 +413,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      *
      * @param read      items marked {@code READ}
      * @param reading   items marked {@code READING}
-     * @param toRead    items marked {@code OWNED}, i.e. owned but not started
+     * @param toRead    items marked {@code TO_READ}, i.e. on the pile, not started
      * @param abandoned items marked {@code ABANDONED}, i.e. given up on partway through
      * @param pagesRead total pages of the read items, ignoring editions with no page count
      * @param readWithPageCount how many of the read items those pages come from: the rest have
@@ -430,7 +440,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     public StatusTotals statusTotals(String userId) {
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select li.status, count(li), sum(li.edition.pageCount), count(li.edition.pageCount)
+                        select li.status, count(li), sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate)), count(li.edition.pageCount)
                         from LibraryItem li
                         where li.userId = :userId
                         group by li.status
@@ -453,7 +463,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
                     readWithPageCount = row[3] == null ? 0L : ((Number) row[3]).longValue();
                 }
                 case READING -> reading = count;
-                case OWNED -> toRead = count;
+                case TO_READ -> toRead = count;
                 // Its own counter, and no share of `pagesRead`: those are the pages of the
                 // books that were finished, and this one was not.
                 case ABANDONED -> abandoned = count;

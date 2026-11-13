@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.domain.Ownership;
 import zelytra.librarius.domain.WishlistItem;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.WishlistItemRepository;
@@ -38,6 +39,35 @@ public class WishlistService {
      *
      * @return the updated wish, or empty when it does not exist or is not the caller's
      */
+    /**
+     * Removes a wish. A title of the library that pointed at it through
+     * {@link Ownership#WISHLIST} is no longer wanted: it becomes {@link Ownership#NOT_OWNED}.
+     *
+     * @return whether the wish existed and was the caller's
+     */
+    @Transactional
+    public boolean remove(String userId, UUID id) {
+        WishlistItem wish = wishes.findOwned(userId, id).orElse(null);
+        if (wish == null) {
+            return false;
+        }
+        items.findByEdition(userId, wish.edition.id)
+                .filter(item -> item.ownership == Ownership.WISHLIST)
+                .ifPresent(item -> item.ownership = Ownership.NOT_OWNED);
+        return wishes.deleteOwned(userId, id);
+    }
+
+    /**
+     * A new wish on an edition that is already a title of the library, not owned in any
+     * form: that title moves to {@link Ownership#WISHLIST}, the two staying in agreement.
+     */
+    @Transactional
+    public void linkToLibrary(String userId, WishlistItem wish) {
+        items.findByEdition(userId, wish.edition.id)
+                .filter(item -> item.ownership == Ownership.NOT_OWNED)
+                .ifPresent(item -> item.ownership = Ownership.WISHLIST);
+    }
+
     @Transactional
     public Optional<WishlistItemDto> update(String userId, UUID id, WishlistUpdateDto dto) {
         return wishes.findOwned(userId, id).map(wish -> {
@@ -70,10 +100,26 @@ public class WishlistService {
         }
         wishes.deleteOwned(userId, id);
 
+        // Already a title of the library — read from a borrowed copy and wished since (#411):
+        // buying it makes that title owned, keeping the reading history it carries.
+        LibraryItem existing = items.findByEdition(userId, wish.edition.id).orElse(null);
+        if (existing != null) {
+            existing.ownership = Ownership.OWNED;
+            if (dto != null && dto.status() != null) {
+                existing.status = dto.status();
+            }
+            if (dto != null && dto.rating() != null) {
+                existing.rating = dto.rating();
+            }
+            existing.acquiredAt = dto != null && dto.acquiredAt() != null ? dto.acquiredAt() : existing.acquiredAt;
+            return Optional.of(LibraryItemDto.of(existing));
+        }
+
         LibraryItem item = new LibraryItem();
         item.userId = userId;
         item.edition = wish.edition;
-        item.status = dto != null && dto.status() != null ? dto.status() : LibraryStatus.OWNED;
+        item.status = dto != null && dto.status() != null ? dto.status() : LibraryStatus.TO_READ;
+        item.ownership = Ownership.OWNED;
         item.rating = dto != null ? dto.rating() : null;
         item.acquiredAt = dto != null ? dto.acquiredAt() : null;
         items.persist(item);

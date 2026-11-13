@@ -151,7 +151,7 @@ public class BooknodeImporter implements LibraryImporter {
             if (status == null) {
                 // A Booknode "Envie" is a want, not a title in the library: it goes to the
                 // wishlist, where the reader keeps exactly that.
-                books.add(new ImportedBook(title, author, coverNear(row), LibraryStatus.OWNED, list, null,
+                books.add(new ImportedBook(title, author, coverNear(row), LibraryStatus.TO_READ, list, null,
                         addedAt, null, null, null, null, kindOf(list), true));
                 continue;
             }
@@ -218,7 +218,7 @@ public class BooknodeImporter implements LibraryImporter {
         if (classes.contains("envies") || t.contains("envie")) {
             return null;
         }
-        return LibraryStatus.OWNED;
+        return LibraryStatus.TO_READ;
     }
 
     /** The rating a read book's tier badge stands for, out of five; null when it carries none. */

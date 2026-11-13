@@ -46,7 +46,7 @@ class CorsTest {
                 .contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "CORS check", "authors": "Test" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """)
                 .when().post("/api/library")
                 .then().statusCode(201);
@@ -59,7 +59,7 @@ class CorsTest {
                 .contentType("application/json")
                 .body("""
                         { "book": { "kind": "BOOK", "title": "Should not be created", "authors": "Test" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """)
                 .when().post("/api/library")
                 .then().statusCode(403);

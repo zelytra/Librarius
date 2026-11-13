@@ -103,6 +103,7 @@ public class WishlistResource {
         item.estimatedPrice = dto.estimatedPrice();
         item.note = dto.note();
         items.persist(item);
+        wishlist.linkToLibrary(currentUser.id(), item);
 
         return Response.status(Response.Status.CREATED).entity(WishlistItemDto.of(item)).build();
     }
@@ -141,9 +142,8 @@ public class WishlistResource {
 
     @DELETE
     @Path("/{id}")
-    @Transactional
     public Response delete(@PathParam("id") UUID id) {
-        boolean removed = items.deleteOwned(currentUser.id(), id);
+        boolean removed = wishlist.remove(currentUser.id(), id);
         return removed ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
     }
 }

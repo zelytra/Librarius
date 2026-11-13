@@ -11,6 +11,7 @@ import {
   GoalUnit,
 } from '../../api/generated/librarius';
 import styles from './GoalSection.module.css';
+import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
@@ -55,6 +56,7 @@ export function GoalSection() {
     mutation: {
       onSuccess: () => {
         setSaved(true);
+        toast.success(t('toasts.goalSaved'), 'flag');
         void queryClient.invalidateQueries({ queryKey: getGetApiGoalsQueryKey() });
         void queryClient.invalidateQueries(STATS_QUERIES);
       },

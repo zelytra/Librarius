@@ -9,8 +9,6 @@ import {
   getGetApiLibraryQueryKey,
   getGetApiWishlistQueryKey,
   useGetApiCatalogSearch,
-  usePostApiLibrary,
-  usePostApiWishlist,
   type CatalogResult,
   type GetApiCatalogSearchParams,
   type Kind,
@@ -24,6 +22,7 @@ import { AuthorMatches } from '../author/AuthorSearch';
 import { catalogPath, toBook } from '../catalog/catalogBook';
 import { addedKeyOf, type AddTarget } from '../catalog/addTargets';
 import { AddButton } from '../catalog/AddButton';
+import { useAddTitle } from '../catalog/useAddTitle';
 import { Field, FieldGrid, MultiSelectField, SelectField } from './fields';
 import { ManualAddForm } from './ManualAddForm';
 import { detectIsbn } from './isbn';
@@ -158,23 +157,20 @@ function DiscoverContent() {
     setSubmitted(params);
   }
 
-  const { mutateAsync: addToLibrary } = usePostApiLibrary();
-  const { mutateAsync: addToWishlist } = usePostApiWishlist();
+  const addTitle = useAddTitle();
 
-  /** The new title must show up in Collection, Wishlist, Home and the counters. */
+  /** A title typed by hand must show up in Collection, Wishlist, Home and the counters. */
   function refreshAfterAdd() {
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
     void queryClient.invalidateQueries(STATS_QUERIES);
   }
 
+
   async function add(r: CatalogResult, key: string, target: AddTarget) {
-    const book = toBook(r);
     try {
-      if (target === 'WISHLIST') await addToWishlist({ data: { book, priority: 'SOON' } });
-      else await addToLibrary({ data: { book, status: target } });
+      await addTitle(toBook(r), target);
       setAdded((a) => ({ ...a, [key]: target }));
-      refreshAfterAdd();
     } catch (error) {
       setAddError(t('discover.errors.addFailed'));
       throw error;

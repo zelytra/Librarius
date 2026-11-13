@@ -44,7 +44,7 @@ class GoalProgressTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "Goal Test",
                                     "volumeNumber": %s, "pageCount": %d },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, String.valueOf(volumeNumber), pageCount))
                 .when().post("/api/library")
                 .then().statusCode(201)
@@ -89,7 +89,7 @@ class GoalProgressTest {
         String manga = given().auth().oauth2(bob).contentType("application/json")
                 .body("""
                         { "book": { "kind": "MANGA", "title": "Goal per kind %s", "authors": "Goal Test" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(java.util.UUID.randomUUID()))
                 .when().post("/api/library").then().statusCode(201).extract().path("id");
         given().auth().oauth2(bob).contentType("application/json").body("{ \"status\": \"READ\" }")

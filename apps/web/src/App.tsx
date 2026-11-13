@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from './app/AppShell';
+import { Toaster } from './shared/ui/Toaster';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { ErrorState, Loading } from './shared/ui/states';
 import { useApiAuth } from './shared/api';
@@ -48,6 +49,9 @@ const PeoplePage = lazy(() =>
 );
 const ScanPage = lazy(() =>
   import('./features/scan/ScanPage').then((m) => ({ default: m.ScanPage })),
+);
+const ReadingSheetPage = lazy(() =>
+  import('./features/sheet/ReadingSheetPage').then((m) => ({ default: m.ReadingSheetPage })),
 );
 const StatsPage = lazy(() =>
   import('./features/stats/StatsPage').then((m) => ({ default: m.StatsPage })),
@@ -105,6 +109,15 @@ function App() {
             </Suspense>
           }
         />
+        {/* The printable reading sheet (#412): a page of paper, without the app's navigation. */}
+        <Route
+          path="detail/:id/fiche"
+          element={
+            <Suspense fallback={<Loading />}>
+              <ReadingSheetPage />
+            </Suspense>
+          }
+        />
         <Route element={<AppShell />}>
           <Route index element={<RootRoute />} />
           <Route path="collection" element={<CollectionPage />} />
@@ -125,6 +138,8 @@ function App() {
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>
+      {/* The outcome of every action (#413), above whichever screen is showing. */}
+      <Toaster />
     </ErrorBoundary>
   );
 }

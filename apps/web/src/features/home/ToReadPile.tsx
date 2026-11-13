@@ -16,7 +16,7 @@ const SHELF_SIZE = 12;
  * The to-read pile ("PAL"): the titles the reader owns and has never opened (#166).
  *
  * <p>The counters already reported how many there were; this is the shelf that says
- * <em>which</em> ones. Only {@code OWNED} is asked for, and the four statuses are exclusive
+ * <em>which</em> ones. Only {@code TO_READ} is asked for, and the four statuses are exclusive
  * server-side, so a title being read, already read, or given up on is not in this pile —
  * an abandoned book is not waiting to be read (#163).
  *
@@ -31,7 +31,7 @@ export function ToReadPile() {
   const navigate = useNavigate();
   // No `sort`: the API's default is most recently added first, which is what a pile wants —
   // the book bought last week is the one most likely to be picked up next.
-  const { data, isPending, isError } = useGetApiLibrary({ status: 'OWNED', size: SHELF_SIZE });
+  const { data, isPending, isError } = useGetApiLibrary({ status: 'TO_READ', size: SHELF_SIZE });
 
   const items = data?.items ?? [];
   // Nothing to say, so nothing to draw — not an empty box. The dashboard's own empty state

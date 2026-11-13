@@ -145,7 +145,7 @@ final class ExportCsv {
         return switch (status) {
             case READ -> "read";
             case READING -> "currently-reading";
-            case OWNED -> "to-read";
+            case TO_READ -> "to-read";
             case ABANDONED -> "abandoned";
         };
     }
