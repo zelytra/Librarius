@@ -24,7 +24,10 @@ dropped for that provider rather than faked.
 A BnF result carries a cover only when the record links to a front cover, as the relative
 `/api/covers/bnf/{ark}`: the API fetches, resizes and caches the BnF's image. That endpoint is
 the only anonymous one (`@PermitAll`), because an `<img>` cannot send a bearer token and a
-catalogue cover is not user data; it is hidden from the OpenAPI schema. `popularity` is part of
+catalogue cover is not user data; it is hidden from the OpenAPI schema. It accepts only a
+well-formed BnF ark, so it is not an open proxy. The thumbnail (JPEG, 400 px high) is stored in
+`cover_cache`; a record the BnF holds no cover for is remembered as a miss for a week, while an
+outage (timeout, 429/502/503/504) is not remembered at all. `popularity` is part of
 the search answer.
 
 ## Relevance

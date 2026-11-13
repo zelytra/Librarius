@@ -103,8 +103,8 @@ closes the issue on merge. It did not while they targeted `develop`.
 ### Commit identity
 
 ```bash
-git config user.name "zelytra"
-git config user.email "contact@zelytra.fr"
+git config user.name "Claude"
+git config user.email "noreply@anthropic.com"
 ```
 
 **No mention of tooling.** No `Co-Authored-By` trailer, no "Generated with …", no assistant

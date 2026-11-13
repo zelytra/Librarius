@@ -33,8 +33,11 @@ import java.util.regex.Pattern;
  * <p>The ark id is validated against a strict pattern and is the only thing that reaches the
  * upstream URL, which sits on a fixed host: this is not an open proxy.
  *
- * <p>Any failure — upstream error, timeout, non-image, oversize, undecodable — is a miss and
- * is cached as one, so a record without a cover costs one fetch a week, not one per display.
+ * <p>A definitive "no cover" — the BnF's own error page, a non-image, an oversize or
+ * undecodable body — is cached as a miss, so a record without a cover costs one fetch a week,
+ * not one per display. A transient failure — a timeout, a connection error, a gateway or
+ * throttling status — is not remembered: an outage of a few minutes must not hide a cover for
+ * a week.
  */
 @ApplicationScoped
 public class CoverService {
@@ -73,25 +76,44 @@ public class CoverService {
                 || cached.fetchedAt.isAfter(OffsetDateTime.now().minus(MISS_RETRY)))) {
             return Optional.ofNullable(cached.content);
         }
-        byte[] thumbnail = fetch(ark);
-        store(key, thumbnail);
-        return Optional.ofNullable(thumbnail);
+        Fetched fetched = fetch(ark);
+        if (fetched.definitive()) {
+            store(key, fetched.thumbnail());
+        }
+        return Optional.ofNullable(fetched.thumbnail());
     }
 
-    private byte[] fetch(String ark) {
+    /** What the upstream gave: a thumbnail or none, and whether "none" is worth remembering. */
+    private record Fetched(byte[] thumbnail, boolean definitive) {
+        static final Fetched NO_COVER = new Fetched(null, true);
+        static final Fetched UNAVAILABLE = new Fetched(null, false);
+    }
+
+    private Fetched fetch(String ark) {
+        RestResponse<byte[]> response;
         try {
-            RestResponse<byte[]> response = client.cover("NE", "ark:/12148/" + ark, 1)
-                    .await().atMost(FETCH_TIMEOUT);
-            MediaType type = response.getMediaType();
-            byte[] body = response.getEntity();
-            if (response.getStatus() / 100 != 2 || type == null || !"image".equals(type.getType())
-                    || body == null || body.length == 0 || body.length > MAX_BYTES) {
-                return null;
-            }
-            return resize(body);
+            response = client.cover("NE", "ark:/12148/" + ark, 1).await().atMost(FETCH_TIMEOUT);
         } catch (Exception e) {
-            LOG.debugf("No BnF cover for %s: %s", ark, e.toString());
-            return null;
+            LOG.debugf("BnF cover service unreachable for %s: %s", ark, e.toString());
+            return Fetched.UNAVAILABLE;
+        }
+        int status = response.getStatus();
+        // The BnF answers a record without a cover with a 500 and an HTML page, so a plain 500
+        // is "no cover"; these four are the service or something in front of it struggling.
+        if (status == 429 || status == 502 || status == 503 || status == 504) {
+            return Fetched.UNAVAILABLE;
+        }
+        MediaType type = response.getMediaType();
+        byte[] body = response.getEntity();
+        if (status / 100 != 2 || type == null || !"image".equals(type.getType())
+                || body == null || body.length == 0 || body.length > MAX_BYTES) {
+            return Fetched.NO_COVER;
+        }
+        try {
+            byte[] thumbnail = resize(body);
+            return thumbnail == null ? Fetched.NO_COVER : new Fetched(thumbnail, true);
+        } catch (IOException e) {
+            return Fetched.NO_COVER;
         }
     }
 

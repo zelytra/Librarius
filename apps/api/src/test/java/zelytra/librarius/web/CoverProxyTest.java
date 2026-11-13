@@ -88,14 +88,28 @@ class CoverProxyTest {
         upstreamCalls(1);
     }
 
+    /**
+     * An outage is not "no cover": remembering it would hide the cover for a week after a
+     * failure of a few minutes. The next display asks again.
+     */
     @Test
-    void anUpstreamFailureIsAMissRememberedWithoutRefetching() {
+    void anUnreachableUpstreamIsAMissThatIsNotRemembered() {
         Mockito.when(upstream.cover(anyString(), anyString(), anyInt()))
                 .thenReturn(Uni.createFrom().failure(new IllegalStateException("timed out")));
 
         given().when().get("/api/covers/bnf/cb300000001a").then().statusCode(404);
         given().when().get("/api/covers/bnf/cb300000001a").then().statusCode(404);
-        upstreamCalls(1);
+        upstreamCalls(2);
+    }
+
+    @Test
+    void aGatewayErrorIsNotRememberedEither() {
+        upstreamAnswers(RestResponse.ResponseBuilder.<byte[]>create(503)
+                .entity("unavailable".getBytes()).type("text/plain").build());
+
+        given().when().get("/api/covers/bnf/cb300000009k").then().statusCode(404);
+        given().when().get("/api/covers/bnf/cb300000009k").then().statusCode(404);
+        upstreamCalls(2);
     }
 
     @Test

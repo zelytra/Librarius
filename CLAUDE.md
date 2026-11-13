@@ -4,8 +4,9 @@ Personal library for **books & manga**: collection, reading tracking, wishlist, 
 discovery, statistics. React PWA + Quarkus API + PostgreSQL + Keycloak.
 
 > 📚 **Full working documentation for agents: [`.claude/docs/`](.claude/docs/README.md).**
-> Read at least [INVENTORY](.claude/docs/INVENTORY.md) and
-> [CONVENTIONS](.claude/docs/CONVENTIONS.md) before changing anything.
+> Read at least [INVENTORY](.claude/docs/INVENTORY.md),
+> [CONVENTIONS](.claude/docs/CONVENTIONS.md) and [WORKFLOW](.claude/docs/WORKFLOW.md) before
+> changing anything.
 
 ## Language
 
@@ -72,7 +73,8 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
 - **Never commit directly** on `main`.
 - One branch per change, cut from an up-to-date `main`.
 - Conventional commits **in English**: `feat(web): …`, `fix(api): …`, `docs: …`, `ci: …`.
-- Commit identity: `zelytra` / `contact@zelytra.fr`.
+- Commit identity for agent sessions: `Claude` / `noreply@anthropic.com` (what the session hook
+  verifies). Pull requests are squashed, so `main` carries the merger's identity.
 - Every change goes through a pull request against `main`. Merge commits are refused:
   squash or rebase only.
 - **Never merge on a red CI.** Merging into `main` deploys to **staging**; production

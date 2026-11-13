@@ -12,6 +12,7 @@ people **using** the application, and it is written in French.
 |---|---|---|
 | 1 | [INVENTORY](INVENTORY.md) | **Always first.** What really exists, what is missing, the debt already identified |
 | 2 | [CONVENTIONS](CONVENTIONS.md) | Before writing a single line: git flow, commits, PRs, code style, tests |
+| 2b | [WORKFLOW](WORKFLOW.md) | Before starting on a request: issues first, measuring, merging, delegating to sub-agents |
 | 3 | [PRODUCT](PRODUCT.md) | Functional work: personas, screens, journeys, business rules |
 | 4 | [ARCHITECTURE](ARCHITECTURE.md) | Technical work: modules, flows, dependencies, structural decisions |
 | 5 | [DATA-MODEL](DATA-MODEL.md) | Any change to the schema or to an entity |
