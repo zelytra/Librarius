@@ -30,6 +30,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=&ownership=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination). `status` is `TO_READ` (`OWNED` still accepted), `READING`, `READ` or `ABANDONED`; `ownership` is `OWNED`, `BORROWED`, `EBOOK`, `WISHLIST` or `NOT_OWNED` (#411) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`: `book`, `status`, `ownership`, `rating`, `acquiredAt`) — creates `work`+`edition` if needed; `ownership: WISHLIST` also creates the wish |
+| PUT | `/api/library/{id}/price` | The reader's own price (`PriceDto`, null clears it, ≥ 0) — private, the edition's market price untouched (#431); `LibraryItemDto.price` |
 | PUT | `/api/library/{id}/ownership` | Sets the ownership (`OwnershipDto`) — `WISHLIST` puts the edition on the wishlist, any other value takes it off (#411) |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |

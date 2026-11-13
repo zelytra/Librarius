@@ -507,6 +507,18 @@ looks up, in batches of 40 every 10 minutes, the editions with an ISBN that sit 
 a wishlist, and stamps `price_checked_at` whether a price was found or not (retry after 60
 days).
 
+### V30 — series checks and the reader's own price (#429, #431)
+
+`series.volumes_checked_at` stamps every series whose volume count was asked of the providers,
+found or not: `SeriesRepository.needingVolumeCount` takes the never-asked first and retries
+after `VOLUME_RETRY_DAYS` (7), so a series no provider knows no longer holds the others back.
+The BnF now answers `seriesVolumes` too (highest volume number among the records of that series
+title). The refresher runs hourly, for the reader's series right after an import
+(`ImportFollowUp`), and for a series opened by an add once its transaction commits.
+
+`library_item.price` is the reader's own price for their copy, private to their row; the
+shared `edition.list_price` is never written by it. The library value counts it first.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

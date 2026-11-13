@@ -155,7 +155,8 @@ Chaque résultat s'ajoute d'un geste à la **collection** ou aux **souhaits**.
 
 ## Souhaits et budget
 
-Le champ de recherche en haut de la liste filtre tes souhaits par titre, auteur ou série ;
+Le champ de recherche en haut de la liste — comme celui de la pile à lire — filtre par titre,
+auteur ou série ;
 le total et le budget suivent la recherche.
 
 Un souhait porte une priorité — **Priorité**, **Bientôt**, **Un jour** —, un prix estimé
@@ -189,15 +190,23 @@ jauge démarre le jour où tu marques ton premier titre comme lu.
 
 Au 1ᵉʳ janvier, l'objectif de l'année précédente t'est reproposé.
 
+## Le prix de ton exemplaire
+
+Sur la page d'un livre, la section **Prix** montre le prix neuf relevé à la BnF, et
+« Saisir un prix » te laisse entrer le tien (prix payé, occasion…). Ce prix n'est que pour
+toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs.
+Vide, on revient au prix neuf.
+
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
-quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (une page) ou **A6** (une carte à glisser dans
-le livre, sans le résumé) : titre, auteur, ta note en étoiles,
+quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (une page), **A5** (une demi-page) ou **A6**
+(une carte à glisser dans le livre, sans le résumé) : titre, auteur, ta note en étoiles,
 ton avis — ou des lignes pour l'écrire à la main —, les dates de lecture, l'éditeur, le
 nombre de pages et ton classement. Traits fins, aucun aplat de couleur : elle s'imprime aussi
 bien en noir et blanc qu'en couleur. La couverture est incluse par défaut ; décoche
-« Inclure la couverture » pour économiser l'encre.
+« Inclure la couverture » pour économiser l'encre. L'option « Classeur à anneaux » élargit la
+marge intérieure pour que les trous de perforation ne tombent pas sur le texte.
 
 ## Les nombres de pages estimés
 
