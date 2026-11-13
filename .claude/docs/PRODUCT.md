@@ -599,8 +599,10 @@ year 🔜.
 - **Wishlist search** (#424) and **to-read search** (#430) on `q` (`useUrlSearch`, `SearchField`).
 - **Own price** on Detail (#431); **series covers** fall back on the first volume's (#433).
 - **Discover** keeps its search in the URL (#435) and its result cards one height (#434).
-- **Scanner** (#436): native `BarcodeDetector` when it reads EAN-13, else `barcode-detector`
-  (ZXing/WebAssembly) loaded on demand, decoder from jsDelivr, not precached.
+- **Scanner** (#436, #440): native `BarcodeDetector` when it reads EAN-13, else
+  `barcode-detector` (ZXing/WebAssembly) loaded on demand. The decoder `.wasm` is served by the
+  app (gzipped by nginx, not precached): from jsDelivr it failed silently wherever the CDN is
+  blocked. Frames are read at up to 1080p, alternately cropped to the aim box and whole.
 - **Reading sheet**: A4, A5 or A6, with a ring-binder inner margin (#432).
 - **Imports** are enriched and priced right after the job (#425, `ImportFollowUp`).
 - **Stats**: the pace is titles per month; "What you read" covers everything read by default,

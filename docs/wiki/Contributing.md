@@ -68,7 +68,7 @@ things worth knowing before relying on it:
 | Scope | Tool | Expected on |
 |---|---|---|
 | Front-end unit / component | Vitest + Testing Library | Every new screen or shared component |
-| End-to-end | Playwright (`e2e/`) | The key user journeys — run on `main` after a merge, not on pull requests; trigger the `e2e` workflow by hand on a branch when in doubt |
+| End-to-end | Playwright (`e2e/`) | The key user journeys — run locally with `pnpm e2e`; no CI workflow runs them since #439 |
 | API integration | `@QuarkusTest` | Every new endpoint |
 | Data isolation | `@QuarkusTest`, two accounts | **Mandatory** on every user-scoped resource — another user's identifier must answer 404 |
 
