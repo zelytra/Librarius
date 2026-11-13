@@ -1,0 +1,885 @@
+{
+ "numFound": 271,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 271,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "blue lock",
+ "offset": null,
+ "docs": [
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 12552345,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9781646516544",
+    "1646516540"
+   ],
+   "key": "/works/OL27042112W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 208,
+   "publisher": [
+    "Kodansha Comics"
+   ],
+   "title": "Blue Lock 1",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36661951M",
+      "title": "Blue Lock 1",
+      "cover_i": 12818592,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha Comics"
+      ],
+      "publish_date": [
+       "Jun 21, 2022"
+      ],
+      "isbn": [
+       "9781646516544",
+       "1646516540"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 12947660,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "1646516559",
+    "9781646516551"
+   ],
+   "key": "/works/OL27557890W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 2",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37579592M",
+      "title": "Blue Lock 2",
+      "cover_i": 12947660,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9781646516551",
+       "1646516559"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 13234636,
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "9781646516629",
+    "1646516621"
+   ],
+   "key": "/works/OL28093325W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 5",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38450106M",
+      "title": "Blue Lock 5",
+      "cover_i": 13234636,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2023"
+      ],
+      "isbn": [
+       "9781646516629",
+       "1646516621"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 13626965,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9781646516575",
+    "1646516575"
+   ],
+   "key": "/works/OL27823261W",
+   "number_of_pages_median": 208,
+   "publisher": [
+    "Kodansha Comics"
+   ],
+   "title": "Blue Lock 4",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38019200M",
+      "title": "Blue Lock 4",
+      "cover_i": 13626965,
+      "publisher": [
+       "Kodansha Comics"
+      ],
+      "publish_date": [
+       "Dec 20, 2022"
+      ],
+      "isbn": [
+       "9781646516575",
+       "1646516575"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "1646516648",
+    "9781646516643"
+   ],
+   "key": "/works/OL28948761W",
+   "publisher": [
+    "Kodansha Comics"
+   ],
+   "title": "Blue Lock 7",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39804681M",
+      "title": "Blue Lock 7",
+      "publisher": [
+       "Kodansha Comics"
+      ],
+      "publish_date": [
+       "Jun 27, 2023"
+      ],
+      "isbn": [
+       "9781646516643",
+       "1646516648"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 13817960,
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "1646516664",
+    "9781646516667"
+   ],
+   "key": "/works/OL34520861W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha Comics",
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 9",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46830370M",
+      "title": "Blue Lock 9",
+      "cover_i": 13817960,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated",
+       "Kodansha Comics"
+      ],
+      "publish_date": [
+       "2023"
+      ],
+      "isbn": [
+       "9781646516667",
+       "1646516664"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "cover_i": 12588220,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9781646516568",
+    "1646516567"
+   ],
+   "key": "/works/OL27125173W",
+   "publisher": [
+    "Kodansha Comics"
+   ],
+   "title": "Blue Lock 3",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36822363M",
+      "title": "Blue Lock 3",
+      "cover_i": 12588220,
+      "publisher": [
+       "Kodansha Comics"
+      ],
+      "publish_date": [
+       "Oct 25, 2022"
+      ],
+      "isbn": [
+       "9781646516568",
+       "1646516567"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "164651663X",
+    "9781646516636"
+   ],
+   "key": "/works/OL28705210W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 6",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39396351M",
+      "title": "Blue Lock 6",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2023"
+      ],
+      "isbn": [
+       "9781646516636",
+       "164651663X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "1646516656",
+    "9781646516650"
+   ],
+   "key": "/works/OL34062438W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 8",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46126785M",
+      "title": "Blue Lock 8",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2023"
+      ],
+      "isbn": [
+       "9781646516650",
+       "1646516656"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "9781646516728",
+    "1646516729"
+   ],
+   "key": "/works/OL37889738W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 15",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL51148549M",
+      "title": "Blue Lock 15",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9781646516728",
+       "1646516729"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "9781646516698",
+    "1646516699"
+   ],
+   "key": "/works/OL37618047W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 12",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL50714244M",
+      "title": "Blue Lock 12",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9781646516698",
+       "1646516699"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2025,
+   "isbn": [
+    "1646516745",
+    "9781646516742"
+   ],
+   "key": "/works/OL42549225W",
+   "language": [
+    "eng"
+   ],
+   "number_of_pages_median": 208,
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 17",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL57757312M",
+      "title": "Blue Lock 17",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2025"
+      ],
+      "isbn": [
+       "9781646516742",
+       "1646516745"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura",
+    "Andrea Bernal Asensio"
+   ],
+   "cover_i": 14278186,
+   "edition_count": 2,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788411123815",
+    "8411123812"
+   ],
+   "key": "/works/OL35248710W",
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Planeta Cómic"
+   ],
+   "title": "Blue Lock nº 05",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47651898M",
+      "title": "Blue Lock nº 05",
+      "cover_i": 14278187,
+      "publisher": [
+       "Planeta Cómic"
+      ],
+      "publish_date": [
+       "Jul 06, 2022"
+      ],
+      "isbn": [
+       "9788411123815",
+       "8411123812"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "1646516710",
+    "9781646516711"
+   ],
+   "key": "/works/OL38033661W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 14",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL51618645M",
+      "title": "Blue Lock 14",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9781646516711",
+       "1646516710"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "9781646516704",
+    "1646516702"
+   ],
+   "key": "/works/OL37857235W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 13",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL51095822M",
+      "title": "Blue Lock 13",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9781646516704",
+       "1646516702"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "9781646516674",
+    "1646516672"
+   ],
+   "key": "/works/OL36127894W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 10",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL48816291M",
+      "title": "Blue Lock 10",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2023"
+      ],
+      "isbn": [
+       "9781646516674",
+       "1646516672"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2025,
+   "isbn": [
+    "9798888770283"
+   ],
+   "key": "/works/OL42563012W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Kodansha America, Incorporated"
+   ],
+   "title": "Blue Lock 23",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL57775818M",
+      "title": "Blue Lock 23",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Kodansha America, Incorporated"
+      ],
+      "publish_date": [
+       "2025"
+      ],
+      "isbn": [
+       "9798888770283"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Yusuke Nomura",
+    "Muneyuki Kaneshiro"
+   ],
+   "cover_i": 12560526,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "2811661301",
+    "9782811661304"
+   ],
+   "key": "/works/OL27049124W",
+   "language": [
+    "fre"
+   ],
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Pika"
+   ],
+   "title": "Blue Lock T05",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36671751M",
+      "title": "Blue Lock T05",
+      "cover_i": 12560526,
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Pika"
+      ],
+      "publish_date": [
+       "Nov 24, 2021"
+      ],
+      "isbn": [
+       "9782811661304",
+       "2811661301"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Yusuke Nomura",
+    "Muneyuki Kaneshiro",
+    "Andrea Bernal Asensio"
+   ],
+   "cover_i": 14133229,
+   "edition_count": 1,
+   "first_publish_year": 2023,
+   "isbn": [
+    "8411402509",
+    "9788411402507"
+   ],
+   "key": "/works/OL35136578W",
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Planeta Cómic"
+   ],
+   "title": "Blue Lock nº 13",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47518090M",
+      "title": "Blue Lock nº 13",
+      "cover_i": 14133229,
+      "publisher": [
+       "Planeta Cómic"
+      ],
+      "publish_date": [
+       "May 24, 2023"
+      ],
+      "isbn": [
+       "9788411402507",
+       "8411402509"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_name": [
+    "Muneyuki Kaneshiro",
+    "Yusuke Nomura",
+    "Andrea Bernal Asensio"
+   ],
+   "cover_i": 14278159,
+   "edition_count": 2,
+   "first_publish_year": 2023,
+   "isbn": [
+    "8411402495",
+    "9788411402491"
+   ],
+   "key": "/works/OL35248684W",
+   "number_of_pages_median": 192,
+   "publisher": [
+    "Planeta Cómic"
+   ],
+   "title": "Blue Lock nº 12",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47651872M",
+      "title": "Blue Lock nº 12",
+      "cover_i": 14278160,
+      "publisher": [
+       "Planeta Cómic"
+      ],
+      "publish_date": [
+       "Apr 26, 2023"
+      ],
+      "isbn": [
+       "9788411402491",
+       "8411402495"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}
