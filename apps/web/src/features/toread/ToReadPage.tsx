@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import {
   getApiLibrary,
   getGetApiLibraryQueryKey,
@@ -13,6 +13,8 @@ import { Cover } from '../../shared/ui/Cover';
 import { Button, Grid, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { AuthorNames } from '../author/AuthorNames';
+import { SearchField } from '../../shared/ui/SearchField';
+import { useUrlSearch } from '../../shared/useUrlSearch';
 import styles from './ToReadPage.module.css';
 
 const PAGE_SIZE = 60;
@@ -23,10 +25,16 @@ const CRITERIA: GetApiLibraryParams = { status: 'TO_READ', sort: 'recent', size:
 function ToReadContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Searching the pile (#430), on the server like Collection's, kept in the URL.
+  const { input, setInput, search } = useUrlSearch();
+  const criteria: GetApiLibraryParams = { ...CRITERIA, q: search || undefined };
   const { data, isPending, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useInfiniteQuery({
-      queryKey: [...getGetApiLibraryQueryKey(CRITERIA), 'infinite'],
-      queryFn: ({ pageParam }) => getApiLibrary({ ...CRITERIA, page: pageParam }),
+      queryKey: [...getGetApiLibraryQueryKey(criteria), 'infinite'],
+      queryFn: ({ pageParam }) => getApiLibrary({ ...criteria, page: pageParam }),
+      // The previous results stay while a new search is answered: no flash of a spinner
+      // on every keystroke.
+      placeholderData: keepPreviousData,
       initialPageParam: 0,
       getNextPageParam: (last) => {
         const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
@@ -38,8 +46,18 @@ function ToReadContent() {
   const total = data?.pages[0]?.total ?? 0;
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
 
-  if (isPending) return <Loading />;
+  const field = <SearchField value={input} onChange={setInput} label={t('toRead.searchPlaceholder')} />;
+
+  if (isPending) return <>{field}<Loading /></>;
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
+  if (items.length === 0 && search) {
+    return (
+      <>
+        {field}
+        <p className={styles.count}>{t('toRead.noMatch', { q: search })}</p>
+      </>
+    );
+  }
   if (items.length === 0) {
     return (
       <EmptyState
@@ -52,6 +70,7 @@ function ToReadContent() {
 
   return (
     <>
+      {field}
       <p className={styles.count} aria-live="polite">
         {t('toRead.count', { count: total })}
       </p>

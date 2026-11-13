@@ -26,6 +26,7 @@ import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.Ownership;
 import zelytra.librarius.library.OwnershipService;
 import zelytra.librarius.web.ApiDtos.OwnershipDto;
+import zelytra.librarius.web.ApiDtos.PriceDto;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
@@ -79,6 +80,9 @@ public class LibraryResource {
 
     @Inject
     OwnershipService ownershipService;
+
+    @Inject
+    zelytra.librarius.series.SeriesVolumeRefresher seriesVolumes;
 
     /**
      * One page of the collection, filtered and sorted by the database.
@@ -164,6 +168,10 @@ public class LibraryResource {
         item.acquiredAt = dto.acquiredAt();
         items.persist(item);
         ownershipService.apply(item, dto.ownership());
+        // A run this title opens learns its length once the add commits (#429).
+        if (edition.work.series != null && edition.work.series.totalVolumes == null) {
+            seriesVolumes.refreshAfterCommit(edition.work.series.id);
+        }
         // Added straight as read: read now, as far as anyone can tell. Without a finished
         // reading the title counted in no year, no goal and no monthly statistic.
         if (item.status == LibraryStatus.READ) {
@@ -201,6 +209,23 @@ public class LibraryResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         ownershipService.apply(item, dto.ownership());
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * The reader's own price for their copy (#431). Private to this title: the shared edition's
+     * market price is left as it is. A null price clears it.
+     */
+    @PUT
+    @Path("/{id}/price")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setPrice(@PathParam("id") UUID id, @Valid PriceDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        item.price = dto != null ? dto.price() : null;
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 

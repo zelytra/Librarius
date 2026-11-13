@@ -214,6 +214,62 @@
   text-align: right;
 }
 
+/* A5 (#432): a 148 × 210 mm half page, between the page and the card. */
+.a5 {
+  max-width: 148mm;
+  padding: 10mm 9mm;
+  font-size: 9pt;
+}
+
+.a5 .bookTitle {
+  font-size: 18pt;
+}
+
+.a5 .authors {
+  font-size: 11pt;
+}
+
+.a5 .fact {
+  font-size: 8.5pt;
+}
+
+.a5 .review,
+.a5 .synopsis {
+  font-size: 9pt;
+}
+
+.a5 .line {
+  height: 7mm;
+}
+
+/* A ring binder (#432): the inner margin widens, and on screen faint holes show where the punch
+   will go, so the reader sees the text clear them. The printer is told through @page. */
+.rings {
+  position: relative;
+  padding-left: 24mm;
+}
+
+.rings::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6mm;
+  width: 6mm;
+  background:
+    radial-gradient(circle at 3mm 25%, transparent 2.6mm, var(--sheet-rule) 2.7mm, transparent 3mm),
+    radial-gradient(circle at 3mm 75%, transparent 2.6mm, var(--sheet-rule) 2.7mm, transparent 3mm);
+  opacity: 0.8;
+}
+
+.a6.rings {
+  padding-left: 16mm;
+}
+
+.a6.rings::before {
+  left: 4mm;
+}
+
 /* A6 (#427): a 105 × 148 mm card — the same sheet at a smaller type scale, the facts on
    one column. */
 .a6 {
@@ -296,8 +352,14 @@
   }
 
   .toolbar,
-  .inkNote {
+  .inkNote,
+  .rings::before {
     display: none;
+  }
+
+  .rings,
+  .a6.rings {
+    padding-left: 0;
   }
 
   .sheet {

@@ -319,6 +319,27 @@ public class BnfProvider implements CatalogProvider {
         return results;
     }
 
+    /**
+     * How many volumes the BnF records for a series (#429): the highest volume number among
+     * its records whose series title is this one. A legal-deposit catalogue holds every
+     * published volume, so it answers for the book and comic series AniList never knew; it
+     * reads one page of records, so a very long run may come out short — never long.
+     */
+    @Override
+    public java.util.OptionalInt seriesVolumes(String title) {
+        if (title == null || title.isBlank()) {
+            return java.util.OptionalInt.empty();
+        }
+        String wanted = normalized(title).trim();
+        return search(new CatalogQuery(title, null, null, null, null, null), MAX_RECORDS).stream()
+                .filter(r -> r.seriesTitle() != null && normalized(r.seriesTitle()).trim().equals(wanted))
+                .map(CatalogResult::volumeNumber)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .filter(volume -> volume > 1 && volume < 1000)
+                .max();
+    }
+
     /** A publisher's price, as the BnF records it: amount and ISO currency. */
     public record ListPrice(java.math.BigDecimal amount, String currency) {
     }

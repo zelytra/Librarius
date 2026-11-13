@@ -770,7 +770,21 @@
       "failed": "The book cannot be removed right now."
     },
     "statuses": "Statuses",
-    "pagesEstimated": "pages (estimated)"
+    "pagesEstimated": "pages (estimated)",
+    "price": {
+      "title": "Price",
+      "unknown": "Unknown price",
+      "yours": "Your price",
+      "market": "New price (BnF)",
+      "none": "No known new price, and none entered.",
+      "marketBeside": "New price: {{price}}",
+      "set": "Enter a price",
+      "edit": "Edit",
+      "label": "Your price, in euros",
+      "save": "Save",
+      "cancel": "Cancel",
+      "private": "This price is yours alone: it counts in your library's value and changes nothing for other readers. Leave it empty to go back to the new price."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -941,7 +955,7 @@
       "retry": "Try again",
       "hint": "Frame the barcode: the camera keeps reading, go through the whole stack.",
       "starting": "Opening the camera…",
-      "unsupported": "This browser cannot read barcodes. Type the ISBN below, or use Chrome or the Android app.",
+      "unsupported": "This browser has no access to the camera. Type the ISBN below.",
       "denied": "Camera access was refused. Allow it for this site in the browser settings, or type the ISBN below.",
       "unavailable": "No camera available. Type the ISBN below."
     },
@@ -1033,7 +1047,9 @@
     "empty": {
       "title": "Your to-read pile is empty",
       "description": "The books you own and have not started yet show up here."
-    }
+    },
+    "searchPlaceholder": "Search your to-read pile…",
+    "noMatch": "No title on your pile matches “{{q}}”."
   },
   "sheet": {
     "title": "Reading sheet",
@@ -1066,8 +1082,10 @@
     "coverAlt": "Cover of {{title}}",
     "formats": {
       "A4": "A4 · page",
+      "A5": "A5 · half page",
       "A6": "A6 · card"
-    }
+    },
+    "rings": "Ring binder (margin for the holes)"
   },
   "statuses": {
     "readingTitle": "Reading",
@@ -1110,6 +1128,8 @@
     "wishUpdated": "Wish updated",
     "layoutSaved": "Home customized",
     "failed": "That didn't work. Try again in a moment.",
-    "goalSaved": "Goal saved"
+    "goalSaved": "Goal saved",
+    "price": "Price saved: {{price}}",
+    "priceCleared": "Price removed, back to the new price"
   }
 }

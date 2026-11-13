@@ -218,6 +218,10 @@ public final class ApiDtos {
             Ownership ownership) {
     }
 
+    /** The reader's own price for a title (#431); null clears it. */
+    public record PriceDto(@PositiveOrZero @Digits(integer = 6, fraction = 2) BigDecimal price) {
+    }
+
     /** The ownership of a title in the library (#411). */
     public record OwnershipDto(@NotNull Ownership ownership) {
     }
@@ -257,15 +261,19 @@ public final class ApiDtos {
      * @param ownership whether the reader has the book (#411): {@code OWNED}, {@code BORROWED},
      *                  {@code EBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
      */
+    /**
+     * @param price the reader's own price for their copy (#431), private to them; the market
+     *              price is {@code book.listPrice}
+     */
     public record LibraryItemDto(UUID id, String status, Integer rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
-            boolean reviewShared, String ownership) {
+            boolean reviewShared, String ownership, BigDecimal price) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.edition.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
-                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name());
+                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price);
         }
     }
 
@@ -658,6 +666,12 @@ public final class ApiDtos {
             String coverUrl, String synopsis, Integer totalVolumes, String status,
             long ownedCount, long readCount, boolean followed,
             java.util.List<SeriesVolumeDto> volumes) {
+        /** The same detail with a cover — the first volume's, for a series with none (#433). */
+        public SeriesDetailDto withCover(String cover) {
+            return new SeriesDetailDto(id, kind, title, originalTitle, cover, synopsis, totalVolumes,
+                    status, ownedCount, readCount, followed, volumes);
+        }
+
         public static SeriesDetailDto of(Series s, long ownedCount, long readCount,
                 boolean followed, java.util.List<SeriesVolumeDto> volumes) {
             return new SeriesDetailDto(s.id, s.kind.name(), s.title, s.originalTitle, s.coverUrl,
@@ -837,7 +851,7 @@ public final class ApiDtos {
      */
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Integer rating, String review, LocalDate acquiredAt,
-            String rankCode, ExportProgressDto progress, Ownership ownership) {
+            String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price) {
     }
 
     /** One wish, with the note the user attached to it. */

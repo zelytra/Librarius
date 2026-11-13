@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useMemo, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { SearchField } from '../../shared/ui/SearchField';
+import { useUrlSearch } from '../../shared/useUrlSearch';
 import { catalogPath, fromBook } from '../catalog/catalogBook';
 import { useTranslation } from 'react-i18next';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { colorFor } from '../../shared/ui/coverPalette';
 import { Button, Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
@@ -117,9 +119,6 @@ function WishEditor({ wish, busy, onCancel, onSave }: EditorProps) {
   );
 }
 
-/** Pause in the typing before the search is sent, the same as Collection's. */
-const SEARCH_DEBOUNCE_MS = 300;
-
 function WishlistContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -129,25 +128,7 @@ function WishlistContent() {
 
   // Searching the wishlist (#424): the server filters on title, authors and series, so the
   // count and the budget follow the search. The term lives in the URL, like Collection's.
-  const [params, setParams] = useSearchParams();
-  const search = params.get('q') ?? '';
-  const [searchInput, setSearchInput] = useState(search);
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      const q = searchInput.trim();
-      if (q === search) return;
-      setParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          if (q) next.set('q', q);
-          else next.delete('q');
-          return next;
-        },
-        { replace: true },
-      );
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(handle);
-  }, [searchInput, search, setParams]);
+  const { input: searchInput, setInput: setSearchInput, search } = useUrlSearch();
 
   // The server pages the wishlist; the screen asks for the next page on demand.
   const {
@@ -164,6 +145,9 @@ function WishlistContent() {
     queryKey: [...getGetApiWishlistQueryKey({ size: PAGE_SIZE, q: search || undefined }), 'infinite'],
     queryFn: ({ pageParam }) =>
       getApiWishlist({ size: PAGE_SIZE, page: pageParam, q: search || undefined }),
+    // The previous results stay while a new search is answered: no flash of a spinner
+    // on every keystroke.
+    placeholderData: keepPreviousData,
     initialPageParam: 0,
     getNextPageParam: (last) => {
       const loaded = ((last.page ?? 0) + 1) * (last.size ?? PAGE_SIZE);
@@ -248,16 +232,7 @@ function WishlistContent() {
   );
 
   const searchBar = (
-    <div className={styles.searchBar}>
-      <Icon name="search" size={21} color="var(--faint)" />
-      <input
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        placeholder={t('wishlist.searchPlaceholder')}
-        aria-label={t('wishlist.searchPlaceholder')}
-        className={styles.searchInput}
-      />
-    </div>
+    <SearchField value={searchInput} onChange={setSearchInput} label={t('wishlist.searchPlaceholder')} />
   );
 
   if (loading) return <>{searchBar}<Loading /></>;

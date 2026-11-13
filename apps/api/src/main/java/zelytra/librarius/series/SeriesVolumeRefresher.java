@@ -32,6 +32,30 @@ public class SeriesVolumeRefresher {
     /** Series resolved per run: a batch, so one run cannot spend the whole provider quota. */
     private static final int BATCH = 50;
 
+    /** Batches at most when one user's series are resolved straight away. */
+    private static final int MAX_ROUNDS = 10;
+
+    /** Off in the test profile, which calls the refresher directly. */
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "librarius.series.volume-refresh.on-add",
+            defaultValue = "true")
+    boolean async;
+
+    @Inject
+    jakarta.transaction.TransactionSynchronizationRegistry transactions;
+
+    /** One daemon thread: a lookup a reader triggered must not hold a request thread. */
+    private final java.util.concurrent.ExecutorService worker =
+            java.util.concurrent.Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "librarius-series-volumes");
+                thread.setDaemon(true);
+                return thread;
+            });
+
+    @jakarta.annotation.PreDestroy
+    void stop() {
+        worker.shutdownNow();
+    }
+
     @Inject
     CatalogService catalog;
 
@@ -52,15 +76,87 @@ public class SeriesVolumeRefresher {
 
     /** Resolves a batch of series still missing a total, and returns how many were filled. */
     public int refreshNow() {
-        List<Series> batch = QuarkusTransaction.requiringNew()
-                .call(() -> series.needingVolumeCount(BATCH));
+        return resolve(QuarkusTransaction.requiringNew().call(() -> series.needingVolumeCount(BATCH)));
+    }
+
+    /**
+     * Resolves the series one user holds a volume of, straight away (#429): after an import, the
+     * reader's runs show their missing volumes without waiting for the schedule.
+     *
+     * @return how many series received a total
+     */
+    public int refreshFor(String userId) {
+        int filled = 0;
+        for (int round = 0; round < MAX_ROUNDS; round++) {
+            List<Series> batch = QuarkusTransaction.requiringNew()
+                    .call(() -> series.needingVolumeCount(userId, BATCH));
+            if (batch.isEmpty()) {
+                break;
+            }
+            filled += resolve(batch);
+        }
+        return filled;
+    }
+
+    /**
+     * Resolves one series once the transaction that created it has committed (#429) — a title
+     * added from the search opens a run whose other volumes the grid can list the same day.
+     * Runs off the request thread; a failure only leaves it to the schedule.
+     */
+    public void refreshAfterCommit(UUID seriesId) {
+        if (seriesId == null || !async) {
+            return;
+        }
+        Runnable task = () -> worker.execute(() -> {
+            try {
+                resolve(QuarkusTransaction.requiringNew().call(() -> {
+                    Series found = series.findById(seriesId);
+                    return found != null && found.totalVolumes == null && found.volumesCheckedAt == null
+                            ? List.of(found) : List.<Series>of();
+                }));
+            } catch (RuntimeException e) {
+                Log.warnf("Series volume lookup failed for %s: %s", seriesId, e.getMessage());
+            }
+        });
+        try {
+            transactions.registerInterposedSynchronization(new jakarta.transaction.Synchronization() {
+                @Override
+                public void beforeCompletion() {
+                    // Nothing to do before the commit.
+                }
+
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == jakarta.transaction.Status.STATUS_COMMITTED) {
+                        task.run();
+                    }
+                }
+            });
+        } catch (IllegalStateException noTransaction) {
+            task.run();
+        }
+    }
+
+    /** Asks the providers for each series, stamps it, and writes the total when one is known. */
+    private int resolve(List<Series> batch) {
         int filled = 0;
         for (Series s : batch) {
-            OptionalInt volumes = catalog.seriesVolumes(s.kind, s.title);
-            if (volumes.isPresent()) {
-                filled += QuarkusTransaction.requiringNew()
-                        .call(() -> setTotal(s.id, volumes.getAsInt()));
+            OptionalInt volumes;
+            try {
+                volumes = catalog.seriesVolumes(s.kind, s.title);
+            } catch (RuntimeException e) {
+                Log.warnf("Series volume lookup failed for %s: %s", s.id, e.getMessage());
+                volumes = OptionalInt.empty();
             }
+            OptionalInt found = volumes;
+            filled += QuarkusTransaction.requiringNew().call(() -> {
+                Series row = series.findById(s.id);
+                if (row == null) {
+                    return 0;
+                }
+                row.volumesCheckedAt = java.time.OffsetDateTime.now();
+                return found.isPresent() ? setTotal(s.id, found.getAsInt()) : 0;
+            });
         }
         return filled;
     }

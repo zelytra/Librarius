@@ -312,6 +312,8 @@ components:
           $ref: "#/components/schemas/ExportProgressDto"
         ownership:
           $ref: "#/components/schemas/Ownership"
+        price:
+          type: number
     ExportDto:
       type: object
       properties:
@@ -551,6 +553,8 @@ components:
           type: boolean
         ownership:
           type: string
+        price:
+          type: number
     LibraryPageDto:
       type: object
       properties:
@@ -706,6 +710,13 @@ components:
       properties:
         ownership:
           $ref: "#/components/schemas/Ownership"
+    PriceDto:
+      type: object
+      properties:
+        price:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
     ProgressDto:
       type: object
       properties:
@@ -2066,6 +2077,37 @@ paths:
         "400":
           description: Bad Request
       summary: Set Ownership
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/price:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Set Price
       tags:
       - Library Resource
       security:

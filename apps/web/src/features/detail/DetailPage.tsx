@@ -22,6 +22,7 @@ import {
   useGetApiWorksIdEditions,
   usePutApiLibraryIdEdition,
   usePutApiLibraryIdOwnership,
+  usePutApiLibraryIdPrice,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
   usePutApiLibraryIdReview,
@@ -421,6 +422,101 @@ function EditionsSection({
   );
 }
 
+/** A price as a French screen writes it, « 14,95 € ». */
+function euros(amount: number): string {
+  return amount.toLocaleString(activeLanguage(), { style: 'currency', currency: 'EUR' });
+}
+
+/**
+ * The price of the reader's copy (#431): theirs when they gave one, else the publisher's price
+ * of a new copy, with a field to set their own. Private to them — the shared edition's market
+ * price is never changed by it.
+ */
+function PriceSection({
+  item,
+  saving,
+  onSave,
+}: {
+  item: LibraryItemDto;
+  saving: boolean;
+  onSave: (price: number | null) => void;
+}) {
+  const { t } = useTranslation();
+  const own = item.price ?? null;
+  const market = item.book?.listPrice ?? null;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const parsed = draft.trim() === '' ? null : Number(draft.replace(',', '.'));
+  const valid = parsed === null || (Number.isFinite(parsed) && parsed >= 0 && parsed < 1_000_000);
+
+  return (
+    <section className={styles.price}>
+      <h3 className={styles.sectionTitle}>
+        {t('detail.price.title')}
+        <Loading size="compact" pending={saving} />
+      </h3>
+      {!editing ? (
+        <div className={styles.priceRow}>
+          <div>
+            <div className={styles.priceValue}>
+              {own != null ? euros(own) : market != null ? euros(market) : t('detail.price.unknown')}
+            </div>
+            <div className={styles.priceSource}>
+              {own != null
+                ? t('detail.price.yours')
+                : market != null
+                  ? t('detail.price.market')
+                  : t('detail.price.none')}
+            </div>
+            {own != null && market != null && (
+              <div className={styles.priceSource}>{t('detail.price.marketBeside', { price: euros(market) })}</div>
+            )}
+          </div>
+          <Button
+            variant="secondary"
+            size="compact"
+            onClick={() => {
+              setDraft(own != null ? String(own).replace('.', ',') : '');
+              setEditing(true);
+            }}
+          >
+            <Icon name="edit" size={16} color="var(--ink-soft)" />
+            {t(own != null ? 'detail.price.edit' : 'detail.price.set')}
+          </Button>
+        </div>
+      ) : (
+        <form
+          className={styles.priceRow}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!valid) return;
+            onSave(parsed === null ? null : Math.round(parsed * 100) / 100);
+            setEditing(false);
+          }}
+        >
+          <input
+            className={styles.priceInput}
+            inputMode="decimal"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            aria-label={t('detail.price.label')}
+            aria-invalid={!valid}
+            placeholder={market != null ? String(market).replace('.', ',') : '0,00'}
+            autoFocus
+          />
+          <Button type="submit" size="compact" disabled={!valid || saving}>
+            {t('detail.price.save')}
+          </Button>
+          <Button type="button" variant="ghost" size="compact" onClick={() => setEditing(false)}>
+            {t('detail.price.cancel')}
+          </Button>
+        </form>
+      )}
+      <p className={styles.privateNote}>{t('detail.price.private')}</p>
+    </section>
+  );
+}
+
 /**
  * Removing an owned title from the library (#400), behind a second tap: the title, its
  * readings, its rating and its review go with it. The catalog fiche stays.
@@ -516,6 +612,18 @@ function DetailContent({ id }: { id: string }) {
         toast.success(
           data.status ? t('toasts.status', { status: t(statusLabelKey(data.status)) }) : t('toasts.progress'),
           data.status === 'READ' ? 'check_circle' : 'auto_stories',
+        );
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
+  const { mutate: mutatePrice, isPending: priceSaving } = usePutApiLibraryIdPrice({
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(
+          data.price != null ? t('toasts.price', { price: euros(data.price) }) : t('toasts.priceCleared'),
+          'sell',
         );
         invalidateLibrary();
       },
@@ -773,6 +881,12 @@ function DetailContent({ id }: { id: string }) {
             onSave={(data) => mutateProgress({ id, data })}
           />
         )}
+
+        <PriceSection
+          item={item}
+          saving={priceSaving}
+          onSave={(price) => mutatePrice({ id, data: { price: price ?? undefined } })}
+        />
 
         <ReviewSection
           item={item}

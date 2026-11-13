@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders, TestProviders } from '../../test/utils';
@@ -58,6 +58,24 @@ async function openManualForm() {
 
 describe('DiscoverPage', () => {
   beforeEach(resetAuth);
+
+  /** #435: the search sits in the URL, so coming back from a fiche lands on it again. */
+  test('restores the search from the URL, and writes a new one into it', async () => {
+    searchReturns([catalogResult({ title: 'Dune' })]);
+    let location = '';
+    function Spy() {
+      location = useLocation().search;
+      return null;
+    }
+    renderWithProviders(<><DiscoverPage /><Spy /></>, { route: '/discover?q=dune', path: '/discover' });
+
+    expect((await screen.findAllByText('Dune')).length).toBeGreaterThan(0);
+    expect(screen.getByPlaceholderText(/Rechercher un titre/)).toHaveValue('dune');
+
+    await userEvent.clear(screen.getByPlaceholderText(/Rechercher un titre/));
+    await search('fourth wing');
+    await waitFor(() => expect(location).toBe('?q=fourth+wing'));
+  });
 
   test('invites the user to start a search on first render', async () => {
     renderWithProviders(<DiscoverPage />);

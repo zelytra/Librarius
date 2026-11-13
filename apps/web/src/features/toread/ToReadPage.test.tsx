@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { libraryItem } from '../../test/fixtures';
@@ -34,5 +35,24 @@ describe('ToReadPage', () => {
     renderWithProviders(<ToReadPage />);
 
     expect(await screen.findByText('Ta pile à lire est vide')).toBeInTheDocument();
+  });
+
+  /** #430: the pile can be searched, on the server, and says when nothing matches. */
+  test('searches the pile', async () => {
+    libraryReturns([
+      libraryItem({ id: 'a', status: 'TO_READ', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'b', status: 'TO_READ', book: { kind: 'MANGA', title: 'Berserk 1' } }),
+    ]);
+    renderWithProviders(<ToReadPage />);
+
+    await screen.findByText('Berserk 1');
+    await userEvent.type(screen.getByLabelText('Rechercher dans ma pile à lire…'), 'berserk');
+    await waitFor(() => expect(screen.queryByText('Pas encore ouvert')).not.toBeInTheDocument());
+    expect(screen.getByText('Berserk 1')).toBeInTheDocument();
+    expect(screen.getByText('1 livre à lire')).toBeInTheDocument();
+
+    await userEvent.clear(screen.getByLabelText('Rechercher dans ma pile à lire…'));
+    await userEvent.type(screen.getByLabelText('Rechercher dans ma pile à lire…'), 'zzz');
+    expect(await screen.findByText('Aucun titre de ta pile ne correspond à « zzz ».')).toBeInTheDocument();
   });
 });

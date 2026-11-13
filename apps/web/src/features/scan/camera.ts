@@ -1,10 +1,13 @@
 /**
- * Reads barcodes off the device camera, with the browser's own `BarcodeDetector`.
+ * Reads barcodes off the device camera.
  *
- * No decoding library is shipped: Chrome and the Android WebView the native app runs in both
- * carry a detector backed by the platform's barcode reader, which is faster and steadier than
- * anything a bundle could add, and costs nothing to download. Where there is none (Safari,
- * Firefox), the screen says so and the ISBN is typed instead — the issue's manual fallback.
+ * The browser's own `BarcodeDetector` first: Chrome on Android, macOS and ChromeOS and the
+ * Android WebView carry one backed by the platform's reader, faster than anything a bundle
+ * could add. Everywhere else — Safari on the iPhone, Firefox, Chrome on Windows and Linux —
+ * there is none, and the camera used to be refused outright there (#436). Those browsers now
+ * get the same API from `barcode-detector`, ZXing compiled to WebAssembly: its few kilobytes
+ * of script are loaded only on that path, and the decoder itself (~930 kB) is fetched from
+ * jsDelivr on first use rather than shipped in the bundle every visitor downloads.
  */
 
 /** The slice of the Shape Detection API this screen uses: not in TypeScript's DOM types yet. */
@@ -14,18 +17,32 @@ interface DetectedBarcode {
 interface BarcodeDetectorLike {
   detect(source: CanvasImageSource): Promise<DetectedBarcode[]>;
 }
-type BarcodeDetectorCtor = new (options: { formats: string[] }) => BarcodeDetectorLike;
+type BarcodeDetectorCtor = (new (options: { formats: string[] }) => BarcodeDetectorLike) & {
+  getSupportedFormats?: () => Promise<string[]>;
+};
 
 export type CameraFailure = 'unsupported' | 'denied' | 'unavailable';
 
-/** Whether this browser can read barcodes from the camera at all. */
+/**
+ * Whether this browser can read barcodes from the camera at all: a camera is all it takes now,
+ * the decoder being supplied where the browser has none.
+ */
 export function cameraScanSupported(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    'BarcodeDetector' in window &&
-    typeof navigator !== 'undefined' &&
-    Boolean(navigator.mediaDevices?.getUserMedia)
-  );
+  return typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia);
+}
+
+/** EAN-13 is the barcode printed on books; UPC-A covers the odd American paperback. */
+const FORMATS = ['ean_13', 'upc_a'];
+
+/** The browser's own detector when it reads book barcodes, else the WebAssembly one. */
+async function detectorClass(): Promise<BarcodeDetectorCtor> {
+  const native = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+  if (native) {
+    const formats: string[] | undefined = await native.getSupportedFormats?.().catch(() => [] as string[]);
+    if (!formats || formats.includes('ean_13')) return native;
+  }
+  const { BarcodeDetector } = await import('barcode-detector/ponyfill');
+  return BarcodeDetector as unknown as BarcodeDetectorCtor;
 }
 
 /** How often a frame is read: fast enough to feel instant, slow enough to stay cool. */
@@ -51,9 +68,14 @@ export async function startScanning(
     throw failure(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'unavailable');
   }
 
-  const Detector = (window as unknown as { BarcodeDetector: BarcodeDetectorCtor }).BarcodeDetector;
-  // EAN-13 is the barcode printed on books; UPC-A covers the odd American paperback.
-  const detector = new Detector({ formats: ['ean_13', 'upc_a'] });
+  let Detector: BarcodeDetectorCtor;
+  try {
+    Detector = await detectorClass();
+  } catch {
+    stream.getTracks().forEach((track) => track.stop());
+    throw failure('unsupported');
+  }
+  const detector = new Detector({ formats: FORMATS });
   video.srcObject = stream;
   video.setAttribute('playsinline', 'true');
   video.muted = true;

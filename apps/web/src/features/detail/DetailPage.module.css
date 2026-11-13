@@ -475,3 +475,47 @@
   border-radius: var(--radius-panel);
   background: var(--surface);
 }
+
+/* The reader's own price (#431). */
+.price {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.priceValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-22);
+  font-weight: 600;
+}
+
+.priceSource {
+  font-size: var(--fs-12);
+  color: var(--muted);
+}
+
+.priceInput {
+  flex: 1;
+  min-width: 100px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-16);
+}
+
+.priceInput[aria-invalid='true'] {
+  border-color: var(--rose);
+}

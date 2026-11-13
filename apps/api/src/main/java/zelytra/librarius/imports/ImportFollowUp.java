@@ -34,6 +34,9 @@ public class ImportFollowUp {
     @Inject
     PageCountEstimator pages;
 
+    @Inject
+    zelytra.librarius.series.SeriesVolumeRefresher seriesVolumes;
+
     /** Off in the test profile, which calls {@link #refresh} directly. */
     @ConfigProperty(name = "librarius.imports.follow-up.enabled", defaultValue = "true")
     boolean enabled;
@@ -68,6 +71,8 @@ public class ImportFollowUp {
             }
         }
         pages.estimateNow();
+        // The reader's series learn how many volumes they run to, so their missing tomes show (#429).
+        seriesVolumes.refreshFor(userId);
         return looked;
     }
 }

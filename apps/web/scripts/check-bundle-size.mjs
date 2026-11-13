@@ -100,7 +100,15 @@ const BUDGET_KB = {
   initial: 199,
   chunk: 10,
   total: 310,
+  // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
+  // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
+  // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the
+  // service worker does not precache it (vite.config.ts), so `total` leaves it out as well.
+  decoder: 17,
 };
+
+/** The one asset with a budget of its own; see `BUDGET_KB.decoder`. */
+const DECODER = /^assets\/ponyfill-[\w-]+\.js$/;
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
 const COMPRESSED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.svg', '.webmanifest']);
@@ -171,7 +179,9 @@ if (missing.length > 0) {
 
 const initial = initialNames.map((name) => byName.get(name));
 const initialBytes = initial.reduce((sum, f) => sum + f.bytes, 0);
-const totalBytes = files.reduce((sum, f) => sum + f.bytes, 0);
+// What the service worker precaches: everything but the decoder it is told to ignore.
+const precached = files.filter((f) => !DECODER.test(f.name));
+const totalBytes = precached.reduce((sum, f) => sum + f.bytes, 0);
 // Everything the browser fetches later: the lazy routes and the service worker runtime.
 const deferred = files
   .filter((f) => /\.(?:js|css)$/.test(f.name) && !initialNames.includes(f.name))
@@ -194,12 +204,12 @@ console.log(`  ${pad('initial')}${check('Initial payload', initialBytes, BUDGET_
 console.log('Deferred assets — the lazy routes and the service worker runtime');
 for (const f of deferred) {
   console.log(`  ${pad(f.name)}${fmt(f.bytes).padStart(10)}`);
-  check(`Deferred asset ${f.name}`, f.bytes, BUDGET_KB.chunk, [f]);
+  check(`Deferred asset ${f.name}`, f.bytes, DECODER.test(f.name) ? BUDGET_KB.decoder : BUDGET_KB.chunk, [f]);
 }
 console.log('');
 
 console.log('Whole build — what the service worker precaches after the first load');
-console.log(`  ${pad(`${files.length} files`)}${check('Whole build', totalBytes, BUDGET_KB.total, files)}\n`);
+console.log(`  ${pad(`${precached.length} files`)}${check('Whole build', totalBytes, BUDGET_KB.total, precached)}\n`);
 
 console.log('Sizes are gzipped for text assets, raw for the rest.\n');
 

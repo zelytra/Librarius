@@ -24,6 +24,11 @@ export default defineConfig({
         // is precached too. Without it the icons would still be missing on a cold
         // offline start, just from a same-origin file instead of Google Fonts.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
+        // The WebAssembly barcode decoder's loader (#436) is only fetched by a browser with no
+        // BarcodeDetector of its own, on the scan screen: precaching it would make every
+        // visitor download it for a fallback most never use. Its decoder comes from a CDN, so
+        // it could not scan offline anyway.
+        globIgnores: ['**/ponyfill-*.js'],
         // Covers (#402): an image never changes at its URL, so it is served from the cache
         // once fetched instead of asking Open Library (or any provider) again on every
         // screen. Cross-origin `<img>` responses are opaque — status 0 — hence the status

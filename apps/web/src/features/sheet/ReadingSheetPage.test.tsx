@@ -73,6 +73,21 @@ describe('ReadingSheetPage (#412)', () => {
     expect(container.querySelector('style')?.textContent).toContain('size: 105mm 148mm');
   });
 
+  /** #432: an A5 half page, and a wider inner margin for a ring binder. */
+  test('offers A5, and moves the text clear of the binder holes', async () => {
+    libraryItemReturns(FINISHED);
+    const { container } = renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    await userEvent.click(screen.getByRole('button', { name: 'A5 · demi-page' }));
+    expect(sheet).toHaveAttribute('data-format', 'A5');
+    expect(container.querySelector('style')?.textContent).toContain('size: 148mm 210mm; margin: 10mm 10mm 10mm 10mm');
+
+    await userEvent.click(screen.getByLabelText('Classeur à anneaux (marge pour les trous)'));
+    expect(sheet).toHaveAttribute('data-rings', 'true');
+    expect(container.querySelector('style')?.textContent).toContain('margin: 10mm 10mm 10mm 20mm');
+  });
+
   test('prints from its toolbar', async () => {
     libraryItemReturns(FINISHED);
     const print = vi.spyOn(window, 'print').mockImplementation(() => {});
