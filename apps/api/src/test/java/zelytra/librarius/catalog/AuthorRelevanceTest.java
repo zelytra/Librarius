@@ -12,11 +12,11 @@ class AuthorRelevanceTest {
 
     @Test
     void theWordsHaveToNameOneCreditedPerson() {
-        assertTrue(CatalogService.oneCreditNames("Frank Herbert", List.of("frank", "herbert")));
-        assertTrue(CatalogService.oneCreditNames("Brian Herbert, Frank Herbert", List.of("frank", "herbert")));
+        assertTrue(CatalogRanker.oneCreditNames("Frank Herbert", List.of("frank", "herbert")));
+        assertTrue(CatalogRanker.oneCreditNames("Brian Herbert, Frank Herbert", List.of("frank", "herbert")));
         // Fifteen names, one "Frank" and one "Herbet" among them: nobody of that name.
-        assertFalse(CatalogService.oneCreditNames(
+        assertFalse(CatalogRanker.oneCreditNames(
                 "Frank Andriat, Jean-Baptiste Baronian, Philippe Herbet", List.of("frank", "herbet")));
-        assertFalse(CatalogService.oneCreditNames(null, List.of("frank")));
+        assertFalse(CatalogRanker.oneCreditNames(null, List.of("frank")));
     }
 }

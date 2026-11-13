@@ -125,6 +125,12 @@ class BnfProviderTest {
     }
 
     @Test
+    void aPrefixSearchIsOneTruncatedAllWordsQuery() {
+        assertEquals(List.of("bib.title all \"le nom du ven*\" and bib.doctype any \"a\""),
+                BnfProvider.cqlQueries(CatalogQuery.of("le nom du ven").withPrefixLastWord()));
+    }
+
+    @Test
     void anIsbnSearchIsASingleQuery() {
         assertEquals(List.of("bib.isbn all \"9782266116242\" and bib.doctype any \"a\""),
                 queriesFor(new CatalogQuery(null, null, null, null, null, "9782266116242")));

@@ -196,6 +196,11 @@ public class BnfProvider implements CatalogProvider {
         }
     }
 
+    @Override
+    public boolean searchesByPrefix() {
+        return true;
+    }
+
     /** Legal-deposit records: one per printing, not one per book. */
     @Override
     public boolean listsWorks() {
@@ -246,7 +251,11 @@ public class BnfProvider implements CatalogProvider {
         // nothing at all.
         String text = query.text() == null ? "" : cleaned(VolumeParser.withoutMarkers(query.text()));
         List<String> terms = new ArrayList<>();
-        if (text.isEmpty()) {
+        if (!text.isEmpty() && query.prefixLastWord()) {
+            // The reader stopped mid-word: one forgiving question, the last word truncated
+            // ("nom du ven*" finds "Le nom du vent"). A phrase cannot carry a truncation.
+            terms.add("bib.title all \"" + text + "*\"" + and(criteria));
+        } else if (text.isEmpty()) {
             if (!criteria.isEmpty()) {
                 terms.add(criteria.toString());
             }

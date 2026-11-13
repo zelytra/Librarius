@@ -223,6 +223,10 @@
           },
           "providerRef" : {
             "type" : "string"
+          },
+          "popularity" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

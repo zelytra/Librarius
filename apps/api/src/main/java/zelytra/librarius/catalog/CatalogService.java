@@ -25,8 +25,8 @@ import java.util.stream.Stream;
 /**
  * Aggregates the catalog providers: for a set of kinds (or every registered one when
  * none is named), queries every matching provider (Open Library and the BnF for books,
- * AniList for mangas), then merges and deduplicates the results. Results are cached to
- * spare the external APIs.
+ * AniList for mangas), then merges and deduplicates the results — a free-text search is
+ * ranked by {@link CatalogRanker}. Results are cached to spare the external APIs.
  *
  * <p>The cache sits on the provider call rather than on the merged answer: the expensive
  * part is the outbound request, the merge is a walk over a few dozen records, and a
@@ -72,9 +72,37 @@ public class CatalogService {
      * a cross-medium one — nothing about the cache's shape changes.
      */
     public List<CatalogResult> search(Set<Kind> kinds, CatalogQuery query, int limit) {
-        return aggregate(providersFor(kinds), limit, provider -> cache.get(CatalogCache.Scope.SEARCH,
-                provider.name(), "search|" + provider.kind() + '|' + query.cacheKey() + '|' + limit,
-                () -> provider.search(query, limit)), relevanceScorer(query));
+        List<CatalogProvider> providers = providersFor(kinds);
+        if (query.text() == null) {
+            // An ISBN, an author, a year: nothing to rank on, so the providers' own order stands
+            // (the round-robin), the most complete record first among equals.
+            return aggregate(providers, limit, searchCall(query, limit), result -> 0);
+        }
+        List<CatalogResult> pool = roundRobin(callAll(providers, searchCall(query, limit)));
+        CatalogRanker.Ranking ranking = CatalogRanker.rank(query.text(), pool, false);
+        if (ranking.weak() && CatalogRanker.prefixRetryApplies(query)) {
+            // Nothing matched the title convincingly and the last word may still be being
+            // typed ("le nom du ven"): one more round, that word as a prefix, from the
+            // providers that can truncate. Cached like any other call, and charged nothing:
+            // the quota counts the reader's searches, not the provider calls one costs.
+            CatalogQuery prefixed = query.withPrefixLastWord();
+            List<CatalogProvider> truncating = providers.stream()
+                    .filter(CatalogProvider::searchesByPrefix).toList();
+            List<CatalogResult> widened = new ArrayList<>(pool);
+            widened.addAll(roundRobin(callAll(truncating, searchCall(prefixed, limit))));
+            ranking = CatalogRanker.rank(query.text(), widened, true);
+        }
+        return ranking.results().stream()
+                .limit(limit)
+                .map(r -> isbnCovers ? withIsbnCover(r) : r)
+                .toList();
+    }
+
+    /** A provider's search, through the cache: the key names the kind, every criterion and the page. */
+    private Function<CatalogProvider, List<CatalogResult>> searchCall(CatalogQuery query, int limit) {
+        return provider -> cache.get(CatalogCache.Scope.SEARCH, provider.name(),
+                "search|" + provider.kind() + '|' + query.cacheKey() + '|' + limit,
+                () -> provider.search(query, limit));
     }
 
     public List<CatalogResult> upcoming(Kind kind, int limit) {
@@ -185,31 +213,18 @@ public class CatalogService {
     }
 
     /**
-     * As above, but re-ranks the merged page by {@code relevance} before trimming it to the
-     * limit: the results that actually match the query rise to the top, whatever provider or
-     * rank they came in at, while the round-robin order survives as the tie-break between
-     * equally-relevant entries. The whole candidate pool is ranked, not just the first
-     * {@code limit} the round-robin happened to reach, so a strong match sitting deep in one
-     * provider's answer is no longer dropped for a weak one another returned early. A
-     * {@code null} ranker (upcoming, editions) leaves the round-robin order untouched.
+     * As above, but sorts the merged page by {@code relevance}, then by how complete each
+     * record is, before trimming it to the limit; the round-robin order survives as the
+     * tie-break. A {@code null} ranker (upcoming, an author's works) leaves the round-robin
+     * order untouched. A free-text search does not come through here: {@link CatalogRanker}
+     * ranks, groups and orders it.
      */
     private List<CatalogResult> aggregate(List<CatalogProvider> providers, int limit,
             Function<CatalogProvider, List<CatalogResult>> call,
             ToIntFunction<CatalogResult> relevance) {
-        List<List<CatalogResult>> perProvider = callAll(providers, call);
-        int rounds = 0;
-        for (List<CatalogResult> results : perProvider) {
-            rounds = Math.max(rounds, results.size());
-        }
-
         Map<String, CatalogResult> merged = new LinkedHashMap<>();
-        for (int rank = 0; rank < rounds; rank++) {
-            for (List<CatalogResult> results : perProvider) {
-                if (rank < results.size()) {
-                    CatalogResult r = results.get(rank);
-                    merged.merge(aggregationKey(r), r, CatalogService::mergeResults);
-                }
-            }
+        for (CatalogResult r : roundRobin(callAll(providers, call))) {
+            merged.merge(aggregationKey(r), r, CatalogService::mergeResults);
         }
 
         Stream<CatalogResult> ordered = merged.values().stream()
@@ -222,6 +237,23 @@ public class CatalogService {
                     .thenComparingInt(CatalogService::completeness).reversed());
         }
         return ordered.limit(limit).toList();
+    }
+
+    /** Every provider's answers, one rank at a time: the first of each, then the second of each… */
+    private static List<CatalogResult> roundRobin(List<List<CatalogResult>> perProvider) {
+        int rounds = 0;
+        for (List<CatalogResult> results : perProvider) {
+            rounds = Math.max(rounds, results.size());
+        }
+        List<CatalogResult> merged = new ArrayList<>();
+        for (int rank = 0; rank < rounds; rank++) {
+            for (List<CatalogResult> results : perProvider) {
+                if (rank < results.size()) {
+                    merged.add(results.get(rank));
+                }
+            }
+        }
+        return merged;
     }
 
     private static int completeness(CatalogResult r) {
@@ -278,92 +310,8 @@ public class CatalogService {
         return new CatalogResult(r.kind(), r.title(), r.authors(), r.year(),
                 "https://covers.openlibrary.org/b/isbn/" + r.isbn13() + "-M.jpg?default=false",
                 r.synopsis(), r.isbn13(), r.publisher(), r.language(), r.releaseDate(),
-                r.seriesTitle(), r.volumeNumber(), r.pageCount(), r.provider(), r.providerRef());
-    }
-
-    /**
-     * Scores a result against the free-text query so the merge can promote a genuine match:
-     * an exact title first, then a title carrying every word of the query, then some of them,
-     * then the rest. Only the text criterion drives it — an author, ISBN or year search leaves
-     * every result equal, so the providers' own order (and the round-robin fairness) stands.
-     */
-    private static ToIntFunction<CatalogResult> relevanceScorer(CatalogQuery query) {
-        String needle = normalize(query.text());
-        if (needle.isEmpty()) {
-            return result -> 0;
-        }
-        List<String> words = significantWords(needle);
-        return result -> {
-            String title = normalize(scoredTitle(result));
-            List<String> titleWords = significantWords(title);
-            if (titleWords.equals(words)) {
-                return 4;
-            }
-            // Whole words, not substrings: "one piece 1" must not find its "1" inside "113",
-            // which used to rank every volume of a run as well as the one asked for.
-            // The last word may still be being typed (Discover searches as you type), so it
-            // also counts when a title word starts with it: "one pie" finds "One Piece".
-            Set<String> tokens = Set.copyOf(titleWords);
-            long present = 0;
-            for (int i = 0; i < words.size(); i++) {
-                String word = words.get(i);
-                boolean typing = i == words.size() - 1;
-                if (tokens.contains(word)
-                        || (typing && titleWords.stream().anyMatch(t -> t.startsWith(word)))) {
-                    present++;
-                }
-            }
-            if (present == words.size()) {
-                // Every word typed is there; the asked volume number, when there is one,
-                // separates "One Piece - Tome 1" from the other hundred volumes of the run.
-                return 3;
-            }
-            if (title.startsWith(needle + " ")) {
-                return 3;
-            }
-            if (!words.isEmpty() && oneCreditNames(result.authors(), words)) {
-                // A name typed in the search field ("frank herbert", "damasio"): a work by that
-                // person beats a title that merely shares a word with it. The words have to
-                // name one credited person — an anthology crediting a "Frank Andriat" and a
-                // "Philippe Herbet" is not by Frank Herbert, and used to rank as if it were.
-                return 3;
-            }
-            return present > 0 ? (int) Math.min(2, present) : 0;
-        };
-    }
-
-    /** Whether one of the credited names, on its own, holds every word of the query. */
-    static boolean oneCreditNames(String authors, List<String> words) {
-        if (authors == null || authors.isBlank()) {
-            return false;
-        }
-        for (String name : authors.split("\\s*[,;&]\\s*|\\s+(?:et|and)\\s+")) {
-            if (Set.copyOf(significantWords(normalize(name))).containsAll(words)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Volume markers carry no meaning of their own: "tome 1", "vol. 1" and ". 1" are one volume. */
-    private static final Set<String> VOLUME_MARKERS = Set.of("tome", "tomes", "t", "vol", "volume");
-
-    private static List<String> significantWords(String normalized) {
-        return Stream.of(normalized.split(" "))
-                .filter(word -> !word.isEmpty() && !VOLUME_MARKERS.contains(word))
-                .toList();
-    }
-
-    /**
-     * The title as scored: a result that parsed into a series and a volume is scored as
-     * "series volume", whatever wording its catalogue gave it ("One Piece. 1", "ONE PIECE
-     * Tome 1"), so the same volume from two catalogues scores alike.
-     */
-    private static String scoredTitle(CatalogResult r) {
-        if (r.seriesTitle() != null && !r.seriesTitle().isBlank() && r.volumeNumber() != null) {
-            return r.seriesTitle() + ' ' + r.volumeNumber();
-        }
-        return r.title();
+                r.seriesTitle(), r.volumeNumber(), r.pageCount(), r.provider(), r.providerRef(),
+                r.popularity());
     }
 
     /**
@@ -414,26 +362,12 @@ public class CatalogService {
                 firstNonBlank(kept.language(), other.language()),
                 kept.releaseDate() != null ? kept.releaseDate() : other.releaseDate(),
                 seriesTitle, volume, maxPageCount(kept.pageCount(), other.pageCount()),
-                kept.provider(), kept.providerRef());
+                kept.provider(), kept.providerRef(),
+                kept.popularity() != null ? kept.popularity() : other.popularity());
     }
 
-    /**
-     * The incumbent's credit line, unless it is written in a script the reader cannot type and
-     * the newcomer's is in Latin letters: Open Library credits a manga to "尾田栄一郎" where the
-     * BnF writes "Eiichirō Oda", and the merged result should carry the name a French reader
-     * searches for and that their author page will be keyed on.
-     */
     private static String readableAuthors(String kept, String other) {
-        String chosen = firstNonBlank(kept, other);
-        if (chosen != null && other != null && !other.isBlank() && !hasLatin(chosen) && hasLatin(other)) {
-            return other;
-        }
-        return chosen;
-    }
-
-    private static boolean hasLatin(String value) {
-        return value.codePoints().anyMatch(c -> Character.isLetter(c)
-                && Character.UnicodeScript.of(c) == Character.UnicodeScript.LATIN);
+        return CatalogRanker.readableAuthors(kept, other);
     }
 
     private static String firstNonBlank(String a, String b) {

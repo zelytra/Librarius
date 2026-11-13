@@ -75,6 +75,11 @@ public class OpenLibraryProvider implements CatalogProvider {
         return List.of();
     }
 
+    @Override
+    public boolean searchesByPrefix() {
+        return true;
+    }
+
     /**
      * An author's works, the most published first. Open Library's search answers works, not
      * editions, so each line is one book; ordered by edition count, the books an author is known
@@ -145,10 +150,10 @@ public class OpenLibraryProvider implements CatalogProvider {
      * on all of them itself — narrowing the answers here would cost a page of results to
      * throw most of it away.
      */
-    private static String solrQuery(CatalogQuery query) {
+    static String solrQuery(CatalogQuery query) {
         StringBuilder q = new StringBuilder();
         if (query.text() != null) {
-            q.append(query.text());
+            q.append(query.prefixLastWord() ? prefixTitle(query.text()) : query.text());
         }
         append(q, "author", query.author());
         append(q, "publisher", query.publisher());
@@ -161,6 +166,23 @@ public class OpenLibraryProvider implements CatalogProvider {
             append(q, "language", MARC_LANGUAGES.getOrDefault(language, language));
         }
         return q.toString().trim();
+    }
+
+    /**
+     * "le nom du ven" as {@code title:(le AND nom AND du AND ven*)}: every word on the title, the
+     * last one truncated. A wildcard term is not analysed by Solr, hence the lower case; the
+     * words are reduced to their letters and digits so no character the user typed can reach
+     * the query syntax.
+     */
+    private static String prefixTitle(String text) {
+        List<String> words = java.util.Arrays.stream(text.toLowerCase(java.util.Locale.ROOT)
+                        .split("[^\\p{L}\\p{N}]+"))
+                .filter(word -> !word.isEmpty())
+                .toList();
+        if (words.isEmpty()) {
+            return "";
+        }
+        return "title:(" + String.join(" AND ", words) + "*)";
     }
 
     /**

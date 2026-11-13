@@ -75,6 +75,15 @@ class OpenLibraryProviderTest {
     }
 
     @Test
+    void truncatesTheLastWordOfTheTitleWhenAsked() {
+        assertEquals("title:(le AND nom AND du AND ven*)",
+                queryFor(CatalogQuery.of("Le nom du ven").withPrefixLastWord()));
+        // Nothing the reader typed reaches the Solr syntax.
+        assertEquals("title:(l AND étranger AND cam*)",
+                queryFor(CatalogQuery.of("l'étranger \"cam)").withPrefixLastWord()));
+    }
+
+    @Test
     void turnsEveryAdvancedCriterionIntoAFieldedTerm() {
         String q = queryFor(new CatalogQuery("dune", "Frank Herbert", 1965, null, "Pocket", null));
 
