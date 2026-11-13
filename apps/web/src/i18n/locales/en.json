@@ -957,7 +957,8 @@
       "starting": "Opening the camera…",
       "unsupported": "This browser has no access to the camera. Type the ISBN below.",
       "denied": "Camera access was refused. Allow it for this site in the browser settings, or type the ISBN below.",
-      "unavailable": "No camera available. Type the ISBN below."
+      "unavailable": "No camera available. Type the ISBN below.",
+      "decoder": "The barcode reader could not load. Check your connection and try again, or type the ISBN below."
     },
     "manual": {
       "label": "Or type the ISBN",

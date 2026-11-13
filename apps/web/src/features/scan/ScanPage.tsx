@@ -247,7 +247,7 @@ function Camera({ onCode }: { onCode: (code: string) => boolean }) {
                 {t(`scan.camera.${state}`)}
               </p>
             )}
-            {(state === 'denied' || state === 'unavailable') && (
+            {(state === 'denied' || state === 'unavailable' || state === 'decoder') && (
               <Button variant="secondary" size="compact" onClick={start}>
                 {t('scan.camera.retry')}
               </Button>

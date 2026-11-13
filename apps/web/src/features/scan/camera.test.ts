@@ -2,11 +2,18 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 /** #436: a browser with a camera and no BarcodeDetector scans through the WebAssembly one. */
 const detect = vi.fn(async () => [{ rawValue: '9782070360024' }]);
+const prepare = vi.fn(async (options: { overrides: { locateFile: (path: string, prefix: string) => string } }) => {
+  locate = options.overrides.locateFile;
+  return {};
+});
+let locate: ((path: string, prefix: string) => string) | undefined;
 vi.mock('barcode-detector/ponyfill', () => ({
   BarcodeDetector: class {
     detect = detect;
   },
+  prepareZXingModule: prepare,
 }));
+vi.mock('zxing-wasm/reader/zxing_reader.wasm?url', () => ({ default: '/assets/zxing_reader-abc.wasm' }));
 
 const { cameraScanSupported, startScanning } = await import('./camera');
 
@@ -14,7 +21,7 @@ function fakeCamera() {
   const stop = vi.fn();
   Object.defineProperty(navigator, 'mediaDevices', {
     configurable: true,
-    value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [{ stop }] })) },
+    value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [{ stop }], getVideoTracks: () => [] })) },
   });
   return stop;
 }
@@ -54,6 +61,23 @@ describe('camera', () => {
     expect(codes).toContain('9782070360024');
 
     stop();
+    expect(stopTrack).toHaveBeenCalled();
+  });
+
+  /** #440: the decoder comes from the app's own origin, not from a CDN a blocker may stop. */
+  test('loads the decoder from the app itself, up front', async () => {
+    fakeCamera();
+    const stop = await startScanning(fakeVideo(), () => undefined);
+    expect(prepare).toHaveBeenCalled();
+    expect(locate?.('zxing_reader.wasm', 'https://fastly.jsdelivr.net/npm/zxing-wasm/')).toBe('/assets/zxing_reader-abc.wasm');
+    stop();
+  });
+
+  /** #440: a decoder that cannot load is said, and the camera is let go. */
+  test('says so when the decoder cannot load', async () => {
+    const stopTrack = fakeCamera();
+    prepare.mockRejectedValueOnce(new Error('both async and sync fetching of the wasm failed'));
+    await expect(startScanning(fakeVideo(), () => undefined)).rejects.toMatchObject({ kind: 'decoder' });
     expect(stopTrack).toHaveBeenCalled();
   });
 

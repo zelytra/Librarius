@@ -105,13 +105,18 @@ const BUDGET_KB = {
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the
   // service worker does not precache it (vite.config.ts), so `total` leaves it out as well.
   decoder: 17,
+  // The decoder itself (#440), ZXing in WebAssembly: 409 kB gzipped measured. Served by the app
+  // since a CDN copy failed wherever the CDN is blocked; fetched only by a browser with no
+  // BarcodeDetector, when the scan screen opens the camera, and never precached.
+  decoderWasm: 430,
 };
 
-/** The one asset with a budget of its own; see `BUDGET_KB.decoder`. */
+/** The barcode decoder's assets, each with a budget of its own; see `BUDGET_KB.decoder*`. */
 const DECODER = /^assets\/ponyfill-[\w-]+\.js$/;
+const DECODER_WASM = /^assets\/zxing_reader-[\w-]+\.wasm$/;
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
-const COMPRESSED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.svg', '.webmanifest']);
+const COMPRESSED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.svg', '.webmanifest', '.wasm']);
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distArg = process.argv.indexOf('--dist');
@@ -180,7 +185,7 @@ if (missing.length > 0) {
 const initial = initialNames.map((name) => byName.get(name));
 const initialBytes = initial.reduce((sum, f) => sum + f.bytes, 0);
 // What the service worker precaches: everything but the decoder it is told to ignore.
-const precached = files.filter((f) => !DECODER.test(f.name));
+const precached = files.filter((f) => !DECODER.test(f.name) && !DECODER_WASM.test(f.name));
 const totalBytes = precached.reduce((sum, f) => sum + f.bytes, 0);
 // Everything the browser fetches later: the lazy routes and the service worker runtime.
 const deferred = files
@@ -207,6 +212,11 @@ for (const f of deferred) {
   check(`Deferred asset ${f.name}`, f.bytes, DECODER.test(f.name) ? BUDGET_KB.decoder : BUDGET_KB.chunk, [f]);
 }
 console.log('');
+
+for (const f of files.filter((file) => DECODER_WASM.test(file.name))) {
+  console.log('Barcode decoder — fetched on demand by the scan screen, never precached');
+  console.log(`  ${pad(f.name)}${check(`Decoder ${f.name}`, f.bytes, BUDGET_KB.decoderWasm, [f])}\n`);
+}
 
 console.log('Whole build — what the service worker precaches after the first load');
 console.log(`  ${pad(`${precached.length} files`)}${check('Whole build', totalBytes, BUDGET_KB.total, precached)}\n`);

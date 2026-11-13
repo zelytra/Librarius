@@ -957,7 +957,8 @@
       "starting": "Ouverture de la caméra…",
       "unsupported": "Ce navigateur n'a pas accès à la caméra. Tape l'ISBN ci-dessous.",
       "denied": "L'accès à la caméra a été refusé. Autorise-le dans les réglages du navigateur pour ce site, ou tape l'ISBN ci-dessous.",
-      "unavailable": "Aucune caméra disponible. Tape l'ISBN ci-dessous."
+      "unavailable": "Aucune caméra disponible. Tape l'ISBN ci-dessous.",
+      "decoder": "Le lecteur de codes-barres n'a pas pu se charger. Vérifie ta connexion et réessaie, ou tape l'ISBN ci-dessous."
     },
     "manual": {
       "label": "Ou tape l'ISBN",
