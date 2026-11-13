@@ -87,4 +87,27 @@ public class EditionRepository implements PanacheRepositoryBase<Edition, UUID> {
                 .setMaxResults(limit)
                 .getResultList();
     }
+
+    /**
+     * The same editions, restricted to those in one user's library or wishlist — what an
+     * import just brought in (#425), looked up straight away rather than behind everybody's.
+     */
+    public List<Edition> needingEnrichmentFor(String userId, java.time.OffsetDateTime retryBefore,
+            int limit) {
+        return getEntityManager()
+                .createQuery("""
+                        select e from Edition e
+                          join fetch e.work w
+                        where e.provider is null
+                          and (e.pageCount is null or e.coverUrl is null or e.isbn13 is null)
+                          and (e.enrichAttemptedAt is null or e.enrichAttemptedAt < :retryBefore)
+                          and (exists (select 1 from LibraryItem li where li.edition = e and li.userId = :userId)
+                               or exists (select 1 from WishlistItem wi where wi.edition = e and wi.userId = :userId))
+                        order by e.enrichAttemptedAt asc nulls first, e.createdAt desc, e.id asc
+                        """, Edition.class)
+                .setParameter("retryBefore", retryBefore)
+                .setParameter("userId", userId)
+                .setMaxResults(limit)
+                .getResultList();
+    }
 }

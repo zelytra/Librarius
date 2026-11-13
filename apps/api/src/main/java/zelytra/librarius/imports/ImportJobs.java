@@ -104,6 +104,9 @@ public class ImportJobs {
     @Inject
     ImportService imports;
 
+    @Inject
+    ImportFollowUp followUp;
+
     @PreDestroy
     void stop() {
         workers.shutdownNow();
@@ -154,6 +157,8 @@ public class ImportJobs {
             job.imported = result.imported();
             job.skipped = result.skipped();
             job.status = Status.DONE;
+            // The job reads as done from here; the data it brought keeps filling in (#425).
+            followUp.afterImport(job.userId);
         } catch (ImportException e) {
             // A bad handle or an unreachable profile carries a message meant for the reader.
             job.error = e.getMessage();
