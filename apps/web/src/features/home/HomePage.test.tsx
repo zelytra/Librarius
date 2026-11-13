@@ -125,7 +125,7 @@ describe('HomePage', () => {
 
   test('shelves the titles the reader owns and has never opened', async () => {
     libraryReturns([
-      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'La Horde du Contrevent' } }),
+      libraryItem({ id: 'pal-1', status: 'TO_READ', book: { kind: 'BOOK', title: 'La Horde du Contrevent' } }),
     ]);
     renderWithProviders(<HomePage />);
 
@@ -143,12 +143,12 @@ describe('HomePage', () => {
 
   /**
    * The pile is what is *waiting*, and a title given up on is not waiting for anything
-   * (#163). The four statuses being exclusive, asking for `OWNED` is enough — this test is
+   * (#163). The four statuses being exclusive, asking for `TO_READ` is enough — this test is
    * what keeps that true the day someone widens the filter.
    */
   test('leaves the titles the reader gave up on out of the pile', async () => {
     libraryReturns([
-      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
+      libraryItem({ id: 'pal-1', status: 'TO_READ', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
       libraryItem({ id: 'abandonne', status: 'ABANDONED', book: { kind: 'BOOK', title: 'Titre abandonné' } }),
     ]);
     renderWithProviders(<HomePage />);
@@ -163,7 +163,7 @@ describe('HomePage', () => {
    */
   test('announces the size of the whole pile, not of the shelf', async () => {
     libraryReturns(Array.from({ length: 20 }, (_, i) =>
-      libraryItem({ id: `pal-${i}`, status: 'OWNED', book: { kind: 'BOOK', title: `Titre ${i}` } })));
+      libraryItem({ id: `pal-${i}`, status: 'TO_READ', book: { kind: 'BOOK', title: `Titre ${i}` } })));
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByText('20 en attente')).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('HomePage', () => {
 
   test('opens a title from the pile on its detail screen', async () => {
     libraryReturns([
-      libraryItem({ id: 'pal-1', status: 'OWNED', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
+      libraryItem({ id: 'pal-1', status: 'TO_READ', book: { kind: 'BOOK', title: 'Titre qui attend' } }),
     ]);
     render(
       <TestProviders>
@@ -287,9 +287,9 @@ describe('HomePage', () => {
 
     expect(statuses).toContain('READING');
     expect(statuses).toContain('READ');
-    // The pile asks for `OWNED` alone: it is a shelf of what is waiting, so it neither
+    // The pile asks for `TO_READ` alone: it is a shelf of what is waiting, so it neither
     // downloads the collection to sort it here nor scoops up the abandoned titles.
-    expect(statuses).toContain('OWNED');
+    expect(statuses).toContain('TO_READ');
     expect(statuses).not.toContain(null);
   });
 
@@ -509,13 +509,35 @@ describe('HomePage', () => {
     expect(await screen.findByText(/Longueur connue pour 120 livres sur 2\s?293/)).toBeInTheDocument();
   });
 
-  test('shows no zero height for books whose lengths are all unknown yet', async () => {
+  /**
+   * #414: a book of unknown length counts at an estimate on the server, so the pile always
+   * has a height — marked as an estimate while some lengths are guessed.
+   */
+  test('gives the pile a height even while lengths are estimated, and says so', async () => {
     server.use(http.get('*/api/stats', () =>
-      HttpResponse.json(stats({ read: 2293, pagesRead: 0, readWithPageCount: 0 }))));
+      HttpResponse.json(stats({ read: 2293, pagesRead: 700_000, readWithPageCount: 44 }))));
     renderWithProviders(<HomePage />);
 
-    expect(await screen.findByText(/se complète depuis les catalogues/)).toBeInTheDocument();
-    expect(screen.queryByText(/de papier empilé/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/sont estimés/)).toBeInTheDocument();
+    expect(screen.getByText(/de papier empilé/)).toBeInTheDocument();
+  });
+
+  /** #415: the sky behind the pile climbs with the pages read — here past Neptune. */
+  test('places the pile in the sky the pages read reach', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 2000, pagesRead: 650_000, readWithPageCount: 2000 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Ta pile atteint Neptune')).toBeInTheDocument();
+    expect(screen.getByText(/pour atteindre Pluton/)).toBeInTheDocument();
+  });
+
+  test('starts on the ground, under a blue sky', async () => {
+    server.use(http.get('*/api/stats', () =>
+      HttpResponse.json(stats({ read: 2, pagesRead: 600, readWithPageCount: 2 }))));
+    renderWithProviders(<HomePage />);
+
+    expect(await screen.findByText('Ta pile atteint le ciel bleu')).toBeInTheDocument();
   });
 
   test('hides the section entirely on a library with nothing read yet', async () => {
@@ -757,6 +779,22 @@ describe('HomePage', () => {
     );
 
     expect(await screen.findByText('Tu as déjà une bibliothèque ?')).toBeInTheDocument();
+  });
+
+  /** #416: the editor is a modal dialog over the dashboard, closed by Escape or its button. */
+  test('opens the customize panel as a modal, closed by Escape or the close button', async () => {
+    renderWithProviders(<HomePage />);
+    await screen.findByText('lus');
+
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+    const dialog = await screen.findByRole('dialog', { name: "Personnaliser l'accueil" });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Fermer' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   test('cancelling the customize panel discards the changes', async () => {

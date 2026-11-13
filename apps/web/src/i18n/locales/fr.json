@@ -21,7 +21,8 @@
     "search": "Rechercher",
     "remove": "Retirer",
     "retry": "Réessayer",
-    "errorWithStatus": "Erreur {{status}}"
+    "errorWithStatus": "Erreur {{status}}",
+    "close": "Fermer"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -181,9 +182,9 @@
       "height": "≈ {{height}} de papier empilé",
       "estimate": "Hauteur estimée : une feuille de papier ≈ {{thickness}} mm, soit deux pages.",
       "alt": "Une pile de livres illustrant {{books}} livres lus, {{pages}} pages, soit environ {{height}} de papier.",
-      "partial_one": "Longueur connue pour {{known}} livre sur {{books}} : les autres se complètent depuis les catalogues.",
-      "partial_other": "Longueur connue pour {{known}} livres sur {{books}} : les autres se complètent depuis les catalogues.",
-      "noLength": "Le nombre de pages de tes livres se complète depuis les catalogues : la pile prendra sa hauteur au fil des heures."
+      "partial_one": "Longueur connue pour {{known}} livre sur {{books}} : les autres sont estimés en attendant les catalogues.",
+      "partial_other": "Longueur connue pour {{known}} livres sur {{books}} : les autres sont estimés en attendant les catalogues.",
+      "noLength": "Le nombre de pages de tes livres est estimé en attendant les catalogues : la pile s'affinera au fil des heures."
     },
     "upcomingReleases": {
       "title": "Prochaines sorties",
@@ -244,6 +245,37 @@
       "now": "En ce moment",
       "progress": "{{percent}} % lu",
       "continue": "Continuer ma lecture"
+    },
+    "sky": {
+      "reached": "Ta pile atteint {{place}}",
+      "distance": "Soit ≈ {{distance}} à l'échelle de l'histoire",
+      "next_one": "Encore {{pages}} page pour atteindre {{place}}",
+      "next_other": "Encore {{pages}} pages pour atteindre {{place}}",
+      "scale": "Échelle imagée : chaque palier est atteint à un nombre de pages réaliste, pas à l'échelle réelle.",
+      "units": {
+        "au": "UA",
+        "ly": "al",
+        "mly": "M al"
+      },
+      "scenes": {
+        "ground": "le ciel bleu",
+        "clouds": "les nuages",
+        "stratosphere": "la stratosphère",
+        "space": "l'espace",
+        "orbit": "l'orbite de l'ISS",
+        "moon": "la Lune",
+        "mars": "Mars",
+        "jupiter": "Jupiter",
+        "saturn": "Saturne",
+        "uranus": "Uranus",
+        "neptune": "Neptune",
+        "pluto": "Pluton",
+        "heliopause": "les confins du système solaire",
+        "stars": "les étoiles voisines",
+        "galaxy": "le cœur de la Voie lactée",
+        "andromeda": "Andromède",
+        "edge": "les confins de l'univers"
+      }
     }
   },
   "onboarding": {
@@ -586,7 +618,8 @@
       "editFailed": "Modification impossible pour le moment.",
       "removeFailed": "Suppression impossible pour le moment.",
       "acquireFailed": "Impossible de déplacer ce titre vers ta bibliothèque."
-    }
+    },
+    "marketPrice": "Prix neuf : {{price}} €"
   },
   "stats": {
     "title": "Statistiques",
@@ -615,12 +648,11 @@
       },
       "paceTitle": "Rythme de lecture",
       "pagesPerDay": "pages par jour",
-      "daysPerBook": "jours par titre",
       "bestMonth": "meilleur mois ({{books}})",
       "noFigure": "—",
       "cumulativeTitle": "Cumul et objectif",
       "cumulativeLabel": "Cumul de l'année comparé à l'objectif de {{target}} {{unit}}",
-      "cumulativeLegend": "La courbe est ton cumul, la ligne pointillée le rythme régulier qui atteint l'objectif au 31 décembre.",
+      "cumulativeLegend": "Chaque courbe est le cumul d'un type, la ligne pointillée le rythme régulier qui atteint son objectif au 31 décembre.",
       "breakdownTitle": "Ce que tu as lu",
       "noBreakdown": "Pas encore de données sur cette période.",
       "breakdowns": {
@@ -639,7 +671,21 @@
       "views": {
         "all": "Tout",
         "byKind": "Par type"
+      },
+      "booksPerMonth": "titres par mois",
+      "kindGoalFigure": "{{current}} / {{target}} {{unit}}",
+      "cumulativeKindLabel": "Cumul des {{kind}} en {{year}} comparé à l'objectif de {{target}} {{unit}}",
+      "scopes": {
+        "all": "Depuis toujours"
       }
+    },
+    "value": {
+      "title": "Valeur estimée",
+      "library": "ta bibliothèque (livres possédés)",
+      "wishlist": "ta liste d'envies",
+      "priced_one": "{{priced}} titre sur {{count}} avec un prix connu",
+      "priced_other": "{{priced}} titres sur {{count}} avec un prix connu",
+      "source": "Prix éditeur d'un exemplaire neuf, relevé dans la notice de la BnF (prix unique du livre en France). Les prix se complètent en arrière-plan ; une envie sans prix connu compte au prix que tu as estimé."
     }
   },
   "detail": {
@@ -674,7 +720,8 @@
       "shelfHint": "Un titre ne porte qu'un seul rang : resélectionne celui qui est retenu pour l'enlever.",
       "confirm": "Enregistrer",
       "skip": "Plus tard",
-      "close": "Fermer"
+      "close": "Fermer",
+      "printSheet": "Valider et créer la fiche de lecture"
     },
     "progress": {
       "title": "Ma progression",
@@ -718,7 +765,9 @@
       "cancel": "Annuler",
       "confirm": "Supprimer",
       "failed": "Suppression impossible pour le moment."
-    }
+    },
+    "statuses": "Statuts",
+    "pagesEstimated": "pages (estimé)"
   },
   "settings": {
     "title": "Réglages",
@@ -901,10 +950,10 @@
     },
     "verdict": {
       "owned": {
-        "OWNED": "Déjà chez toi · pas commencé",
         "READING": "Déjà chez toi · en cours",
         "READ": "Déjà chez toi · lu",
-        "ABANDONED": "Déjà chez toi · abandonné"
+        "ABANDONED": "Déjà chez toi · abandonné",
+        "TO_READ": "Déjà chez toi · pas commencé"
       },
       "wished": "Dans tes souhaits",
       "new": "Pas encore chez toi",
@@ -921,41 +970,28 @@
       "manual": "Ajouter à la main"
     },
     "session": {
-      "label": "Ajouter automatiquement les nouveaux livres à",
-      "targets": {
-        "CHECK": "Vérifier seulement",
-        "OWNED": "Pile à lire",
-        "READ": "Lus",
-        "READING": "En cours",
-        "WISHLIST": "Souhaits"
-      },
-      "added": {
-        "OWNED": "Ajouté à ta pile à lire",
-        "READ": "Ajouté comme lu",
-        "READING": "Ajouté, en cours de lecture",
-        "WISHLIST": "Ajouté à tes souhaits"
-      },
+      "label": "Les nouveaux livres scannés",
       "undo": "Annuler",
       "undone": "Ajout annulé",
       "failed": "Ajout impossible : ajoute-le à la main",
       "count_one": "{{count}} livre ajouté pendant ce scan",
-      "count_other": "{{count}} livres ajoutés pendant ce scan"
+      "count_other": "{{count}} livres ajoutés pendant ce scan",
+      "modes": {
+        "CHECK": "Vérifier seulement",
+        "ADD": "Ajouter directement"
+      }
     }
   },
   "add": {
-    "targets": {
-      "OWNED": "Pile à lire",
-      "READ": "Lu",
-      "WISHLIST": "Souhaits"
-    },
     "added": {
       "READ": "Ajouté à ta bibliothèque, comme lu.",
-      "OWNED": "Ajouté à ta pile à lire.",
-      "WISHLIST": "Ajouté à tes souhaits."
+      "LIBRARY": "Ajouté à ta bibliothèque.",
+      "WISHLIST": "Ajouté à tes souhaits.",
+      "TO_READ": "Ajouté à ta pile à lire."
     },
     "as": "Ajouter comme",
     "open": "Ajouter",
-    "title": "Ajouter à…",
+    "title": "Ajouter à ta bibliothèque",
     "cancel": "Annuler",
     "confirm": "Ajouter"
   },
@@ -995,5 +1031,78 @@
       "title": "Ta pile à lire est vide",
       "description": "Les livres que tu possèdes sans les avoir commencés apparaissent ici."
     }
+  },
+  "sheet": {
+    "title": "Fiche de lecture",
+    "open": "Fiche de lecture",
+    "print": "Imprimer",
+    "withCover": "Inclure la couverture",
+    "inkNote": "Mise en page sobre : traits fins, aucun aplat de couleur. Elle s'imprime aussi bien en noir et blanc qu'en couleur.",
+    "ratingLabel": "Note : {{rating}} sur 5",
+    "unrated": "Non noté",
+    "seriesVolume": "{{series}}, tome {{volume}}",
+    "review": "Mon avis",
+    "blank": "Lignes à compléter à la main",
+    "summary": "Résumé",
+    "notes": "Notes et citations",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "footer": "Ma Bibliothèque · fiche du {{date}}",
+    "facts": {
+      "series": "Série",
+      "publisher": "Éditeur",
+      "pages": "Pages",
+      "year": "Parution",
+      "genres": "Genres",
+      "isbn": "ISBN",
+      "started": "Commencé le",
+      "finished": "Terminé le",
+      "duration": "Durée de lecture",
+      "rank": "Classement"
+    },
+    "coverAlt": "Couverture de {{title}}"
+  },
+  "statuses": {
+    "readingTitle": "Lecture",
+    "ownershipTitle": "Possession",
+    "reading": {
+      "TO_READ": "Pile à lire",
+      "READING": "En cours",
+      "READ": "Lu",
+      "ABANDONED": "Abandonné"
+    },
+    "ownership": {
+      "OWNED": "Possédé",
+      "BORROWED": "Emprunté",
+      "EBOOK": "Livre numérique",
+      "WISHLIST": "Liste d'envies",
+      "NOT_OWNED": "Non possédé"
+    },
+    "ownershipHint": {
+      "OWNED": "Dans ta bibliothèque, en vrai.",
+      "BORROWED": "Eu entre les mains, mais pas sur tes étagères.",
+      "EBOOK": "Lu sur liseuse, tablette ou autre format numérique.",
+      "WISHLIST": "Tu ne l'as pas et tu aimerais l'avoir.",
+      "NOT_OWNED": "Ni sur tes étagères, ni en envie."
+    }
+  },
+  "toasts": {
+    "addedLibrary": "« {{title}} » ajouté à ta bibliothèque",
+    "addedWishlist": "« {{title}} » ajouté à ta liste d'envies",
+    "status": "Statut de lecture : {{status}}",
+    "ownership": "Possession : {{ownership}}",
+    "rank": "Classé dans « {{rank}} »",
+    "rankCleared": "Classement retiré",
+    "rating": "Note enregistrée : {{rating}}/5",
+    "review": "Avis enregistré",
+    "progress": "Progression enregistrée",
+    "edition": "Édition mise à jour",
+    "removed": "Titre retiré de ta bibliothèque",
+    "wishRemoved": "Retiré de ta liste d'envies",
+    "acquired": "« {{title}} » rejoint ta bibliothèque",
+    "wishUpdated": "Envie mise à jour",
+    "layoutSaved": "Accueil personnalisé",
+    "failed": "L'action n'a pas abouti. Réessaie dans un instant.",
+    "goalSaved": "Objectif enregistré"
   }
 }

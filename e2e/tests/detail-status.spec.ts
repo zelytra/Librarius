@@ -17,7 +17,7 @@ test('changes the status of a title from its detail screen', async ({ page }) =>
   await page.getByRole('link', { name: 'Bibliothèque', exact: true }).click();
   await openTitle(page, FIRST_BOOK);
 
-  // OWNED → READING.
+  // TO_READ → READING.
   await page.getByRole('button', { name: 'Commencer la lecture' }).click();
   await expect(page.getByRole('button', { name: 'Lecture en cours' })).toBeVisible();
 

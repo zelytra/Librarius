@@ -272,7 +272,7 @@ describe('WishlistPage', () => {
 
     await waitFor(() => expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument());
     expect(acquired.id).toBe('wish-1');
-    expect(acquired.body).toMatchObject({ status: 'OWNED' });
+    expect(acquired.body).toMatchObject({ status: 'TO_READ' });
   });
 
   test('a failed purchase says so and leaves the wish alone', async () => {

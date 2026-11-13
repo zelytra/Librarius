@@ -80,11 +80,22 @@ export interface BookView {
   originalYear?: number;
   synopsis?: string;
   genres?: string;
+  pageCountEstimated?: boolean;
+  listPrice?: number;
+  listPriceCurrency?: string;
 }
 
 export interface BreakdownCountDto {
   label?: string;
   count?: number;
+}
+
+export interface BreakdownDto {
+  books?: number;
+  byAuthor?: BreakdownCountDto[];
+  byPublisher?: BreakdownCountDto[];
+  byLanguage?: BreakdownCountDto[];
+  byRank?: BreakdownCountDto[];
 }
 
 export type LocalDate = string;
@@ -205,7 +216,7 @@ export type LibraryStatus = typeof LibraryStatus[keyof typeof LibraryStatus];
 
 
 export const LibraryStatus = {
-  OWNED: 'OWNED',
+  TO_READ: 'TO_READ',
   READING: 'READING',
   READ: 'READ',
   ABANDONED: 'ABANDONED',
@@ -218,6 +229,17 @@ export interface ExportProgressDto {
   finishedAt?: LocalDate;
 }
 
+export type Ownership = typeof Ownership[keyof typeof Ownership];
+
+
+export const Ownership = {
+  OWNED: 'OWNED',
+  BORROWED: 'BORROWED',
+  EBOOK: 'EBOOK',
+  WISHLIST: 'WISHLIST',
+  NOT_OWNED: 'NOT_OWNED',
+} as const;
+
 export interface ExportCollectionItemDto {
   book: ManualBookDto;
   status?: LibraryStatus;
@@ -226,6 +248,7 @@ export interface ExportCollectionItemDto {
   acquiredAt?: LocalDate;
   rankCode?: string;
   progress?: ExportProgressDto;
+  ownership?: Ownership;
 }
 
 export type OffsetDateTime = string;
@@ -328,6 +351,14 @@ export interface KindGoalDto {
   current?: number;
 }
 
+export interface KindValueDto {
+  kind?: string;
+  library?: number;
+  libraryPriced?: number;
+  wishlist?: number;
+  wishlistPriced?: number;
+}
+
 export interface LibraryCreateDto {
   book: ManualBookDto;
   status?: LibraryStatus;
@@ -337,6 +368,7 @@ export interface LibraryCreateDto {
      */
   rating?: number;
   acquiredAt?: LocalDate;
+  ownership?: Ownership;
 }
 
 export interface ProgressView {
@@ -356,6 +388,7 @@ export interface LibraryItemDto {
   progress?: ProgressView;
   book?: BookView;
   reviewShared?: boolean;
+  ownership?: string;
 }
 
 export interface LibraryPageDto {
@@ -396,6 +429,10 @@ export interface MemberSummaryDto {
   id?: string;
   displayName?: string;
   trusted?: boolean;
+}
+
+export interface OwnershipDto {
+  ownership: Ownership;
 }
 
 export interface ProgressDto {
@@ -580,11 +617,14 @@ export interface StatsDto {
 
 export type TimelinePointDtoByKind = {[key: string]: number};
 
+export type TimelinePointDtoPagesByKind = {[key: string]: number};
+
 export interface TimelinePointDto {
   period?: string;
   books?: number;
   pages?: number;
   byKind?: TimelinePointDtoByKind;
+  pagesByKind?: TimelinePointDtoPagesByKind;
 }
 
 export interface TimelineDto {
@@ -602,6 +642,7 @@ export interface TimelineDto {
   byPublisher?: BreakdownCountDto[];
   byLanguage?: BreakdownCountDto[];
   byRank?: BreakdownCountDto[];
+  booksPerMonth?: number;
 }
 
 export interface UpcomingReleaseDto {
@@ -631,6 +672,17 @@ export interface UpdateMeDto {
   /** @maxLength 64 */
   timeZone?: string;
   publicAccount: boolean;
+}
+
+export interface ValueDto {
+  currency?: string;
+  library?: number;
+  libraryOwned?: number;
+  libraryPriced?: number;
+  wishlist?: number;
+  wishlistCount?: number;
+  wishlistPriced?: number;
+  byKind?: KindValueDto[];
 }
 
 export interface WishlistAcquireDto {
@@ -713,6 +765,7 @@ export type GetApiLibraryParams = {
 genre?: string;
 kind?: Kind;
 minRating?: number;
+ownership?: Ownership;
 page?: number;
 q?: string;
 rank?: string;
@@ -3204,6 +3257,78 @@ export const usePutApiLibraryIdEdition = <TError = void,
       return useMutation(getPutApiLibraryIdEditionMutationOptions(options), queryClient);
     }
 
+export const getPutApiLibraryIdOwnershipUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/ownership`
+}
+
+/**
+ * @summary Set Ownership
+ */
+export const putApiLibraryIdOwnership = async (id: Uuid,
+    ownershipDto: OwnershipDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdOwnershipUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(ownershipDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdOwnershipMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdOwnership>>, TError,{id: Uuid;data: OwnershipDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdOwnership>>, TError,{id: Uuid;data: OwnershipDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdOwnership'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdOwnership>>, {id: Uuid;data: OwnershipDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdOwnership(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdOwnershipMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdOwnership>>>
+    export type PutApiLibraryIdOwnershipMutationBody = OwnershipDto
+    export type PutApiLibraryIdOwnershipMutationError = void
+
+    /**
+ * @summary Set Ownership
+ */
+export const usePutApiLibraryIdOwnership = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdOwnership>>, TError,{id: Uuid;data: OwnershipDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdOwnership>>,
+        TError,
+        {id: Uuid;data: OwnershipDto},
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdOwnershipMutationOptions(options), queryClient);
+    }
+
 export const getPutApiLibraryIdProgressUrl = (id: Uuid,) => {
 
 
@@ -5208,6 +5333,107 @@ export function useGetApiStats<TData = Awaited<ReturnType<typeof getApiStats>>, 
 
 
 
+export const getGetApiStatsBreakdownUrl = () => {
+
+
+
+
+  return `/api/stats/breakdown`
+}
+
+/**
+ * @summary Breakdown
+ */
+export const getApiStatsBreakdown = async ( options?: RequestInit): Promise<BreakdownDto> => {
+
+  return apiClient<BreakdownDto>(getGetApiStatsBreakdownUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiStatsBreakdownQueryKey = () => {
+    return [
+    `/api/stats/breakdown`
+    ] as const;
+    }
+
+
+export const getGetApiStatsBreakdownQueryOptions = <TData = Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiStatsBreakdownQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiStatsBreakdown>>> = () => getApiStatsBreakdown();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiStatsBreakdownQueryResult = NonNullable<Awaited<ReturnType<typeof getApiStatsBreakdown>>>
+export type GetApiStatsBreakdownQueryError = void
+
+
+export function useGetApiStatsBreakdown<TData = Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsBreakdown>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsBreakdown>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsBreakdown<TData = Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsBreakdown>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsBreakdown>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsBreakdown<TData = Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Breakdown
+ */
+
+export function useGetApiStatsBreakdown<TData = Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsBreakdown>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiStatsBreakdownQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiStatsTimelineUrl = (params?: GetApiStatsTimelineParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -5304,6 +5530,107 @@ export function useGetApiStatsTimeline<TData = Awaited<ReturnType<typeof getApiS
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiStatsTimelineQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiStatsValueUrl = () => {
+
+
+
+
+  return `/api/stats/value`
+}
+
+/**
+ * @summary Value
+ */
+export const getApiStatsValue = async ( options?: RequestInit): Promise<ValueDto> => {
+
+  return apiClient<ValueDto>(getGetApiStatsValueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiStatsValueQueryKey = () => {
+    return [
+    `/api/stats/value`
+    ] as const;
+    }
+
+
+export const getGetApiStatsValueQueryOptions = <TData = Awaited<ReturnType<typeof getApiStatsValue>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiStatsValueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiStatsValue>>> = () => getApiStatsValue();
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiStatsValueQueryResult = NonNullable<Awaited<ReturnType<typeof getApiStatsValue>>>
+export type GetApiStatsValueQueryError = void
+
+
+export function useGetApiStatsValue<TData = Awaited<ReturnType<typeof getApiStatsValue>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsValue>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsValue>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsValue<TData = Awaited<ReturnType<typeof getApiStatsValue>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsValue>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsValue>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiStatsValue<TData = Awaited<ReturnType<typeof getApiStatsValue>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Value
+ */
+
+export function useGetApiStatsValue<TData = Awaited<ReturnType<typeof getApiStatsValue>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsValue>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiStatsValueQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -222,3 +222,14 @@
   justify-content: center;
   margin-top: 20px;
 }
+
+/* The market price of the edition (#421). */
+.marketPrice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--accent-deep);
+}

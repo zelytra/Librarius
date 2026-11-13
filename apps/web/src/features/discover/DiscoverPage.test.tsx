@@ -451,7 +451,8 @@ describe('DiscoverPage', () => {
           pageCount: 48,
           coverUrl: 'https://cover.test/1.jpg',
         },
-        status: 'OWNED',
+        status: 'TO_READ',
+        ownership: 'OWNED',
       });
     });
 

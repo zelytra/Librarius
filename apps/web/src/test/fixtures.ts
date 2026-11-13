@@ -69,7 +69,7 @@ export function wishlistBudget(items: WishlistItemDto[]): WishlistBudgetDto {
 export function libraryItem(overrides: Partial<LibraryItemDto> = {}): LibraryItemDto {
   return {
     id: 'item-1',
-    status: 'OWNED',
+    status: 'TO_READ',
     rating: undefined,
     review: undefined,
     acquiredAt: '2026-01-15',

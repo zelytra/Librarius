@@ -4,6 +4,7 @@ import { activeLanguage } from '../../i18n/languages';
 import { pagesRead } from '../../shared/pagesRead';
 import type { StatsDto } from '../../api/generated/librarius';
 import { SHEET_THICKNESS_MM, formatPaperHeight, stackSpines } from './readingStack';
+import { formatDistance, skyPosition } from './skyAltitude';
 import styles from './BookStack.module.css';
 
 /**
@@ -45,11 +46,27 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
   const books = booksRead.toLocaleString(activeLanguage());
   const pages = (estimate.estimated ? '≈ ' : '') + pagesTotal.toLocaleString(activeLanguage());
   const thickness = SHEET_THICKNESS_MM.toLocaleString(activeLanguage());
+  // The sky behind the pile (#415): how high it would reach, on a story scale.
+  const sky = skyPosition(pagesTotal);
+  const units = { au: t('home.sky.units.au'), ly: t('home.sky.units.ly'), mly: t('home.sky.units.mly') };
+  const reached = t(`home.sky.scenes.${sky.current.scene}`);
+  const distance = formatDistance(sky.km, activeLanguage(), units);
 
   return (
     <section>
       <SectionHeader title={t('home.bookStack.title')} />
-      <div className={styles.card}>
+      <div
+        className={styles.card}
+        data-scene={sky.current.scene}
+        // The blend towards the next milestone is the one value computed at render time.
+        style={{ ['--sky-progress' as string]: sky.progress.toFixed(3) }}
+      >
+        <div className={styles.sky} aria-hidden="true">
+          <span className={styles.body} />
+          <span className={styles.ring} />
+          <span className={styles.cloud} />
+          <span className={styles.ground} />
+        </div>
         {/* One image as far as assistive technology is concerned: a dozen identical
             rectangles read out one by one would be noise, and the label carries the figures
             the drawing is standing in for. */}
@@ -81,6 +98,30 @@ export function BookStack({ stats }: { stats: StatsDto | undefined }) {
           {/* The conversion is an estimate and says so, the way a provider's release date is
               captioned as indicative rather than presented as a fact (PRODUCT.md § 6.5). */}
           <p className={styles.estimate}>{t('home.bookStack.estimate', { thickness })}</p>
+          <div className={styles.altitude}>
+            <p className={styles.reached}>{t('home.sky.reached', { place: reached })}</p>
+            <p className={styles.distance}>{t('home.sky.distance', { distance })}</p>
+            {sky.next && (
+              <>
+                <div
+                  className={styles.altTrack}
+                  role="progressbar"
+                  aria-label={t('home.sky.next', { place: t(`home.sky.scenes.${sky.next.scene}`), count: sky.pagesToNext, pages: sky.pagesToNext.toLocaleString(activeLanguage()) })}
+                  aria-valuenow={Math.round(sky.progress * 100)}
+                >
+                  <span className={styles.altFill} style={{ width: `${Math.round(sky.progress * 100)}%` }} />
+                </div>
+                <p className={styles.nextStep}>
+                  {t('home.sky.next', {
+                    place: t(`home.sky.scenes.${sky.next.scene}`),
+                    count: sky.pagesToNext,
+                    pages: sky.pagesToNext.toLocaleString(activeLanguage()),
+                  })}
+                </p>
+              </>
+            )}
+            <p className={styles.scaleNote}>{t('home.sky.scale')}</p>
+          </div>
         </div>
       </div>
     </section>

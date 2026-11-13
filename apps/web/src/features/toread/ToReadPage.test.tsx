@@ -15,8 +15,8 @@ describe('ToReadPage', () => {
 
   test('lists only the owned titles not started yet, with the total', async () => {
     libraryReturns([
-      libraryItem({ id: 'a', status: 'OWNED', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
-      libraryItem({ id: 'b', status: 'OWNED', book: { kind: 'MANGA', title: 'Berserk 1' } }),
+      libraryItem({ id: 'a', status: 'TO_READ', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'b', status: 'TO_READ', book: { kind: 'MANGA', title: 'Berserk 1' } }),
       libraryItem({ id: 'c', status: 'READING', book: { kind: 'BOOK', title: 'En cours' } }),
       libraryItem({ id: 'd', status: 'READ', book: { kind: 'BOOK', title: 'Déjà fini' } }),
     ]);

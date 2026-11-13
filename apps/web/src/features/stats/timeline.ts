@@ -17,6 +17,8 @@ export interface MonthPoint {
   pages: number;
   /** Titles finished that month, per kind group. */
   byKind: Record<KindGroup, number>;
+  /** Pages finished that month, per kind group (#420). */
+  pagesByKind: Record<KindGroup, number>;
 }
 
 /** The kinds a reader tells apart on the chart; graphic novels and audiobooks share "other". */
@@ -56,6 +58,7 @@ export function monthlySeries(
       books: point?.books ?? 0,
       pages: point?.pages ?? 0,
       byKind: groupKinds(point?.byKind),
+      pagesByKind: groupKinds(point?.pagesByKind),
     };
   });
 }

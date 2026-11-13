@@ -71,7 +71,7 @@ describe('CatalogDetailPage', () => {
 
     expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
     expect(posts[0].book).toMatchObject({ provider: 'openlibrary', providerRef: 'OL123W' });
-    expect(posts[0].status).toBe('OWNED');
+    expect(posts[0].status).toBe('TO_READ');
   });
 
   /** #399: one "Ajouter", and the sheet starts on the to-read pile. */
@@ -88,7 +88,7 @@ describe('CatalogDetailPage', () => {
     expect(sheet.getByRole('radio', { name: 'Pile à lire' })).toHaveAttribute('aria-checked', 'true');
     await userEvent.click(sheet.getByRole('button', { name: 'Ajouter' }));
 
-    await waitFor(() => expect(posts[0]?.status).toBe('OWNED'));
+    await waitFor(() => expect(posts[0]?.status).toBe('TO_READ'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 

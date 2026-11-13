@@ -1,0 +1,99 @@
+/* The outcome messages (#413). Above the bottom bar on a phone, bottom right past it. */
+.region {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+@media (min-width: 600px) {
+  .region {
+    left: auto;
+    bottom: 24px;
+    right: 24px;
+    align-items: flex-end;
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  padding: 11px 16px 11px 12px;
+  border-radius: var(--radius-card);
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow-strong);
+  font-size: var(--fs-14);
+  font-weight: 500;
+  line-height: 1.35;
+  cursor: pointer;
+  animation: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+
+.icon {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.success .icon {
+  color: var(--tint-sage);
+  animation: tick 420ms 80ms ease-out both;
+}
+
+.info .icon {
+  color: var(--tint-sand);
+}
+
+.error {
+  background: var(--danger, #b3261e);
+  color: #fff;
+}
+
+.message {
+  min-width: 0;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes tick {
+  0% {
+    transform: scale(0.4) rotate(-20deg);
+  }
+
+  60% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .success .icon {
+    animation: none;
+  }
+}
+
+/* Never on paper: a reading sheet printed right after an action must not carry the message. */
+@media print {
+  .region {
+    display: none;
+  }
+}

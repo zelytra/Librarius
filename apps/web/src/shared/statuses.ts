@@ -1,0 +1,40 @@
+/**
+ * The two status families of a title (#411), as every screen offers them.
+ *
+ * <p>The reading status says where the reader stands in the book; the ownership whether
+ * they have it, and in what form. One list each, in the order the pickers show them, so the
+ * Detail screen, the add sheet and the scan read the same everywhere.
+ */
+
+export type ReadingStatus = 'TO_READ' | 'READING' | 'READ' | 'ABANDONED';
+export type Ownership = 'OWNED' | 'BORROWED' | 'EBOOK' | 'WISHLIST' | 'NOT_OWNED';
+
+export const READING_STATUSES: { id: ReadingStatus; icon: string }[] = [
+  { id: 'TO_READ', icon: 'library_books' },
+  { id: 'READING', icon: 'auto_stories' },
+  { id: 'READ', icon: 'check_circle' },
+  { id: 'ABANDONED', icon: 'block' },
+];
+
+export const OWNERSHIPS: { id: Ownership; icon: string }[] = [
+  { id: 'OWNED', icon: 'collections_bookmark' },
+  { id: 'BORROWED', icon: 'handshake' },
+  { id: 'EBOOK', icon: 'tablet_android' },
+  { id: 'WISHLIST', icon: 'favorite' },
+  { id: 'NOT_OWNED', icon: 'visibility_off' },
+];
+
+/** i18n key of a reading status's label. */
+export const statusLabelKey = (status: string | undefined) => `statuses.reading.${status ?? 'TO_READ'}`;
+
+/** i18n key of an ownership's label. */
+export const ownershipLabelKey = (ownership: string | undefined) => `statuses.ownership.${ownership ?? 'OWNED'}`;
+
+/**
+ * Where a new title goes: a plain wish when it is wanted and not read in any way — the
+ * wishlist with its priority and price, as before — and the library otherwise, with both
+ * statuses (#411).
+ */
+export function addsToWishlistOnly(status: ReadingStatus, ownership: Ownership): boolean {
+  return ownership === 'WISHLIST' && status === 'TO_READ';
+}

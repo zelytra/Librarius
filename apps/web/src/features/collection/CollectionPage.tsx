@@ -23,8 +23,10 @@ import {
 import { AuthorNames } from '../author/AuthorNames';
 import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
+import { OWNERSHIPS, ownershipLabelKey, type Ownership } from '../../shared/statuses';
 import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort } from './shelfOrder';
+import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /**
@@ -67,7 +69,16 @@ function knownKind(kind: string | undefined): Kind {
  * — the user reads the row as "which shelf am I looking at", not as "which column is
  * filtered".
  */
-type ShelfFilter = { kind: 'all' } | { kind: 'toRead' } | { kind: 'favorites' } | { kind: 'rank'; code: string };
+type ShelfFilter =
+  | { kind: 'all' }
+  | { kind: 'toRead' }
+  | { kind: 'favorites' }
+  | { kind: 'rank'; code: string }
+  /** The titles had in a given form (#411): borrowed, digital, wished, not had. */
+  | { kind: 'ownership'; ownership: Ownership };
+
+/** The ownerships offered as shelves; "owned" is most of a library and is no shelf of its own. */
+const OWNERSHIP_SHELVES: Ownership[] = ['BORROWED', 'EBOOK', 'WISHLIST', 'NOT_OWNED'];
 
 const ALL_SHELVES: ShelfFilter = { kind: 'all' };
 /** The to-read pile: titles in the collection, not started yet. */
@@ -77,6 +88,7 @@ const FAVORITES: ShelfFilter = { kind: 'favorites' };
 /** A shelf as the `shelf` URL parameter spells it: absent for all, `rank:<code>` for a category. */
 function shelfToParam(filter: ShelfFilter): string | null {
   if (filter.kind === 'rank') return `rank:${filter.code}`;
+  if (filter.kind === 'ownership') return `own:${filter.ownership}`;
   return filter.kind === 'all' ? null : filter.kind;
 }
 
@@ -84,11 +96,14 @@ function shelfFromParam(value: string | null): ShelfFilter {
   if (value === 'toRead') return TO_READ;
   if (value === 'favorites') return FAVORITES;
   if (value?.startsWith('rank:') && value.length > 5) return { kind: 'rank', code: value.slice(5) };
+  const owned = value?.startsWith('own:') ? (value.slice(4) as Ownership) : undefined;
+  if (owned && OWNERSHIP_SHELVES.includes(owned)) return { kind: 'ownership', ownership: owned };
   return ALL_SHELVES;
 }
 
 function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
   if (a.kind === 'rank' && b.kind === 'rank') return a.code === b.code;
+  if (a.kind === 'ownership' && b.kind === 'ownership') return a.ownership === b.ownership;
   return a.kind === b.kind;
 }
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
@@ -155,6 +170,17 @@ function CoverTile({
         caption={<AuthorNames text={b.authors} />}
         onClick={onOpen}
       >
+        {/* How the reader has the book, when it is not a copy on the shelves (#411). */}
+        {item.ownership && item.ownership !== 'OWNED' && (
+          <span className={styles.ownershipBadge} title={t(ownershipLabelKey(item.ownership))}>
+            <Icon
+              name={OWNERSHIPS.find((o) => o.id === item.ownership)?.icon ?? 'info'}
+              size={13}
+              color="var(--overlay-ink)"
+            />
+            {t(ownershipLabelKey(item.ownership))}
+          </span>
+        )}
         {rankColor && (
           // The medal colour depends on the rank, so it stays on the element.
           <span className={styles.rankBadge} style={{ background: rankColor }}>
@@ -273,8 +299,9 @@ function CollectionContent() {
     sort: sortBy,
     kind: collType,
     rank: shelfFilter.kind === 'rank' ? shelfFilter.code : undefined,
-    status: shelfFilter.kind === 'toRead' ? 'OWNED' : undefined,
+    status: shelfFilter.kind === 'toRead' ? 'TO_READ' : undefined,
     minRating: shelfFilter.kind === 'favorites' ? FAVORITE_RATING : undefined,
+    ownership: shelfFilter.kind === 'ownership' ? shelfFilter.ownership : undefined,
     q: search || undefined,
     // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
     standalone: grouped || undefined,
@@ -307,10 +334,12 @@ function CollectionContent() {
   const { mutate: removeItem } = useDeleteApiLibraryId({
     mutation: {
       onSuccess: () => {
+        toast.info(t('toasts.removed'), 'delete');
         // Removing a title also changes the counters and the home carousels.
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
         void queryClient.invalidateQueries(STATS_QUERIES);
       },
+      onError: () => toast.error(t('toasts.failed')),
     },
   });
 
@@ -372,6 +401,11 @@ function CollectionContent() {
     { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all') },
     { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead') },
     { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites') },
+    ...OWNERSHIP_SHELVES.map((ownership) => ({
+      key: `own-${ownership}`,
+      filter: { kind: 'ownership' as const, ownership },
+      name: t(ownershipLabelKey(ownership)),
+    })),
     ...categories.map((c: CategoryDto) => ({
       key: c.id!,
       filter: { kind: 'rank' as const, code: c.code! },

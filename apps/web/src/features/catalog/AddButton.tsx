@@ -2,13 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
-import { ADD_TARGETS, type AddTarget } from './addTargets';
+import { StatusPicker } from '../../shared/ui/StatusPicker';
+import { DEFAULT_ADD_TARGET, type AddTarget } from './addTargets';
 import styles from './AddButton.module.css';
 
 /**
  * The one way to add a title (#399): a single "Ajouter" button, then a sheet asking where it
- * goes — the to-read pile (the default), read already, or the wishlist. Every screen that
- * adds a title from the catalog uses it, so the choice reads the same everywhere.
+ * goes — its reading status and whether the reader has it (#411), owned and on the to-read
+ * pile by default. Every screen that adds a title from the catalog uses it, so the choice
+ * reads the same everywhere.
  */
 export function AddButton({
   onAdd,
@@ -43,8 +45,8 @@ function AddSheet({ onAdd, onClose }: { onAdd: (target: AddTarget) => Promise<vo
   const { t } = useTranslation();
   const headingId = useId();
   const panel = useRef<HTMLDivElement>(null);
-  // The to-read pile first and chosen: a title one adds is most often one just bought.
-  const [target, setTarget] = useState<AddTarget>('OWNED');
+  // Owned and on the to-read pile: a title one adds is most often one just bought.
+  const [target, setTarget] = useState<AddTarget>(DEFAULT_ADD_TARGET);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -80,20 +82,14 @@ function AddSheet({ onAdd, onClose }: { onAdd: (target: AddTarget) => Promise<vo
         <h3 id={headingId} className={styles.title}>
           {t('add.title')}
         </h3>
-        <div className={styles.choices} role="radiogroup" aria-label={t('add.as')}>
-          {ADD_TARGETS.map((choice) => (
-            <button
-              key={choice.id}
-              type="button"
-              role="radio"
-              aria-checked={target === choice.id}
-              onClick={() => setTarget(choice.id)}
-              className={`${styles.choice} ${target === choice.id ? styles.choiceOn : ''}`}
-            >
-              <Icon name={choice.icon} size={20} color={target === choice.id ? 'var(--accent-deep)' : 'var(--muted)'} />
-              {t(choice.labelKey)}
-            </button>
-          ))}
+        <div className={styles.choices}>
+          <StatusPicker
+            status={target.status}
+            ownership={target.ownership}
+            onStatus={(status) => setTarget((current) => ({ ...current, status }))}
+            onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+            disabled={pending}
+          />
         </div>
         <div className={styles.actions}>
           <Button variant="secondary" onClick={onClose} disabled={pending}>

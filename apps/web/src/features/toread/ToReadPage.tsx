@@ -18,7 +18,7 @@ import styles from './ToReadPage.module.css';
 const PAGE_SIZE = 60;
 
 /** Owned, not started, not read: the pile of books waiting on the shelf. */
-const CRITERIA: GetApiLibraryParams = { status: 'OWNED', sort: 'recent', size: PAGE_SIZE };
+const CRITERIA: GetApiLibraryParams = { status: 'TO_READ', sort: 'recent', size: PAGE_SIZE };
 
 function ToReadContent() {
   const { t } = useTranslation();

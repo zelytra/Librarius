@@ -41,7 +41,13 @@ export async function addResult(page: Page, target: 'Lu' | 'Pile à lire' | 'Sou
   // One "Ajouter" button, then the sheet that asks where the title goes (#399).
   await page.getByRole('button', { name: 'Ajouter', exact: true }).first().click();
   const sheet = page.getByRole('dialog');
-  await sheet.getByRole('radio', { name: target, exact: true }).click();
+  if (target === 'Souhaits') {
+    // Two status families since #411: a wish is a title on the pile, on the wishlist.
+    await sheet.getByRole('radio', { name: 'Pile à lire', exact: true }).click();
+    await sheet.getByRole('radio', { name: "Liste d'envies", exact: true }).click();
+  } else {
+    await sheet.getByRole('radio', { name: target, exact: true }).click();
+  }
   await sheet.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await sheet.waitFor({ state: 'detached' });
 }

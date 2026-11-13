@@ -13,6 +13,7 @@ import { activeLanguage } from '../../i18n/languages';
 import {
   getGetApiLibraryIdQueryKey,
   getGetApiLibraryQueryKey,
+  getGetApiWishlistQueryKey,
   getGetApiWorksIdEditionsQueryKey,
   useGetApiCategories,
   useDeleteApiLibraryId,
@@ -20,6 +21,7 @@ import {
   useGetApiSeries,
   useGetApiWorksIdEditions,
   usePutApiLibraryIdEdition,
+  usePutApiLibraryIdOwnership,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
   usePutApiLibraryIdReview,
@@ -38,6 +40,9 @@ import { StarRating } from './StarRating';
 import { ReadersReviews } from '../reviews/ReadersReviews';
 import styles from './DetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
+import { StatusPicker } from '../../shared/ui/StatusPicker';
+import { toast } from '../../shared/ui/toast';
+import { ownershipLabelKey, statusLabelKey, type Ownership, type ReadingStatus } from '../../shared/statuses';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
 const WASH_FROM = 'aa';
@@ -428,6 +433,7 @@ function RemoveFromLibrary({ id }: { id: string }) {
   const { mutate: remove, isPending, isError } = useDeleteApiLibraryId({
     mutation: {
       onSuccess: () => {
+        toast.info(t('toasts.removed'), 'delete');
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
         void queryClient.invalidateQueries(STATS_QUERIES);
         navigate('/collection', { replace: true });
@@ -491,11 +497,41 @@ function DetailContent({ id }: { id: string }) {
     void queryClient.invalidateQueries(STATS_QUERIES);
   };
 
+  // Every write says how it went (#413): the change is announced once the server has it,
+  // and a failure is said rather than left to a control that silently springs back.
+  const failed = () => toast.error(t('toasts.failed'));
   const { mutate: mutateRank, isPending: rankSaving } = usePutApiLibraryIdRank({
-    mutation: { onSuccess: invalidateLibrary },
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        const label = cats.find((c) => c.id === data.categoryId)?.label;
+        toast.success(label ? t('toasts.rank', { rank: label }) : t('toasts.rankCleared'), 'military_tech');
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
   });
   const { mutate: mutateProgress, isPending: progressSaving } = usePutApiLibraryIdProgress({
-    mutation: { onSuccess: invalidateLibrary },
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(
+          data.status ? t('toasts.status', { status: t(statusLabelKey(data.status)) }) : t('toasts.progress'),
+          data.status === 'READ' ? 'check_circle' : 'auto_stories',
+        );
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
+  const { mutate: mutateOwnership, isPending: ownershipSaving } = usePutApiLibraryIdOwnership({
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(t('toasts.ownership', { ownership: t(ownershipLabelKey(data.ownership)) }), 'collections_bookmark');
+        invalidateLibrary();
+        // WISHLIST puts the edition on the wishlist and any other value takes it off.
+        void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
+      },
+      onError: failed,
+    },
   });
   const { mutate: mutateReview, isPending: reviewSaving } = usePutApiLibraryIdReview({
     mutation: {
@@ -513,6 +549,15 @@ function DetailContent({ id }: { id: string }) {
               }
             : prev);
       },
+      onSuccess: (_data, { data }) => {
+        toast.success(
+          data.rating != null && data.rating !== item?.rating
+            ? t('toasts.rating', { rating: data.rating })
+            : t('toasts.review'),
+          'star',
+        );
+      },
+      onError: failed,
       onSettled: invalidateLibrary,
     },
   });
@@ -521,6 +566,7 @@ function DetailContent({ id }: { id: string }) {
     mutation: {
       onSuccess: () => {
         setEditionError(null);
+        toast.success(t('toasts.edition'), 'book_2');
         invalidateLibrary();
         // The `owned` flags of the list have just moved, and so has the edition the
         // section calls "yours".
@@ -551,7 +597,7 @@ function DetailContent({ id }: { id: string }) {
    * most there: the page the reader stopped on is the whole point of that status, and the
    * server keeps whatever it is sent rather than completing it.
    */
-  function setStatus(status: 'READING' | 'READ' | 'ABANDONED', onRecorded?: () => void) {
+  function setStatus(status: ReadingStatus, onRecorded?: () => void) {
     const p = item?.progress;
     mutateProgress(
       {
@@ -580,6 +626,15 @@ function DetailContent({ id }: { id: string }) {
    */
   function endReading(status: Outcome) {
     setStatus(status, () => setOutcome(status));
+  }
+
+  /**
+   * A reading status picked on the status chips (#411): finishing or giving up goes through
+   * the end-of-reading sheet like the buttons below; the two others are a plain transition.
+   */
+  function pickStatus(status: ReadingStatus) {
+    if (status === 'READ' || status === 'ABANDONED') endReading(status);
+    else setStatus(status);
   }
 
   /**
@@ -624,11 +679,11 @@ function DetailContent({ id }: { id: string }) {
   const color = colorFor(title);
   // A title nobody has opened has nothing to show yet; the buttons below start it. A title
   // given up on has plenty: the position it was given up at is the point of the status.
-  const tracking = item.status !== 'OWNED' || item.progress != null;
+  const tracking = item.status !== 'TO_READ' || item.progress != null;
 
   const abandoned = item.status === 'ABANDONED';
   // Giving up is only ever a move away from a book still in play.
-  const givingUpPossible = item.status === 'OWNED' || item.status === 'READING';
+  const givingUpPossible = item.status === 'TO_READ' || item.status === 'READING';
   // Picking a book up again is the ordinary move to READING, so the primary button is the
   // same one; only what it is called changes, "commencer" being wrong twice over here.
   const startLabel = item.status === 'READING'
@@ -666,7 +721,10 @@ function DetailContent({ id }: { id: string }) {
         </div>
 
         <div className={styles.stats}>
-          <Stat value={b.pageCount != null ? String(b.pageCount) : '—'} label={t('detail.pages')} />
+          <Stat
+            value={b.pageCount != null ? `${b.pageCountEstimated ? '≈ ' : ''}${b.pageCount}` : '—'}
+            label={t(b.pageCountEstimated ? 'detail.pagesEstimated' : 'detail.pages')}
+          />
           <Stat
             value={b.seriesTitle || t('detail.standalone')}
             label={t('detail.series')}
@@ -676,6 +734,23 @@ function DetailContent({ id }: { id: string }) {
           />
           <Stat value={b.originalYear != null ? String(b.originalYear) : '—'} label={t('detail.released')} last />
         </div>
+
+        {/* The two status families (#411), each one tap away. */}
+        <section className={styles.statuses} aria-label={t('detail.statuses')}>
+          <h3 className={styles.sectionTitle}>
+            {t('detail.statuses')}
+            {/* The ownership's own wait; a reading status rides on the progress endpoint,
+                whose indicator is the progress section's. */}
+            <Loading size="compact" pending={ownershipSaving} />
+          </h3>
+          <StatusPicker
+            status={item.status as ReadingStatus}
+            ownership={(item.ownership ?? 'OWNED') as Ownership}
+            onStatus={pickStatus}
+            onOwnership={(ownership) => mutateOwnership({ id, data: { ownership } })}
+            disabled={progressSaving || ownershipSaving}
+          />
+        </section>
 
         {b.synopsis && (
           <>
@@ -748,6 +823,13 @@ function DetailContent({ id }: { id: string }) {
               {t('detail.giveUp')}
             </Button>
           )}
+          {/* A finished book has a reading sheet to print (#412). */}
+          {item.status === 'READ' && (
+            <Button variant="secondary" size="block" onClick={() => navigate(`/detail/${id}/fiche`)}>
+              <Icon name="print" size={18} color="var(--ink-soft)" />
+              {t('sheet.open')}
+            </Button>
+          )}
         </div>
 
         {/* Flagging a data error is about the shared work, not the private ownership row:
@@ -773,6 +855,14 @@ function DetailContent({ id }: { id: string }) {
           categories={cats}
           onConfirm={applyOutcome}
           onSkip={() => setOutcome(null)}
+          onPrintSheet={
+            outcome === 'READ'
+              ? (choice) => {
+                  applyOutcome(choice);
+                  navigate(`/detail/${id}/fiche`);
+                }
+              : undefined
+          }
         />
       )}
     </div>

@@ -2,7 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
-import { Kind, usePostApiLibrary, type ManualBookDto } from '../../api/generated/librarius';
+import { Kind, usePostApiLibrary, usePostApiWishlist, type ManualBookDto } from '../../api/generated/librarius';
+import { StatusPicker } from '../../shared/ui/StatusPicker';
+import { addsToWishlistOnly } from '../../shared/statuses';
+import { toast } from '../../shared/ui/toast';
+import { DEFAULT_ADD_TARGET, type AddTarget } from '../catalog/addTargets';
 import { Field, FieldGrid, SelectField } from './fields';
 import { ALL_KINDS, KIND_LABEL_KEY } from './medium';
 import styles from './ManualAddForm.module.css';
@@ -44,8 +48,11 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
   const [pageCount, setPageCount] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [failed, setFailed] = useState(false);
+  const [target, setTarget] = useState<AddTarget>(DEFAULT_ADD_TARGET);
 
-  const { mutateAsync: addToLibrary, isPending } = usePostApiLibrary();
+  const { mutateAsync: addToLibrary, isPending: libraryPending } = usePostApiLibrary();
+  const { mutateAsync: addToWishlist, isPending: wishPending } = usePostApiWishlist();
+  const isPending = libraryPending || wishPending;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -64,10 +71,18 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
     };
     setFailed(false);
     try {
-      await addToLibrary({ data: { book, status: 'OWNED' } });
+      // Both status families, as the add sheet offers them (#411).
+      if (addsToWishlistOnly(target.status, target.ownership)) {
+        await addToWishlist({ data: { book, priority: 'SOON' } });
+        toast.success(t('toasts.addedWishlist', { title: trimmed }), 'favorite');
+      } else {
+        await addToLibrary({ data: { book, status: target.status, ownership: target.ownership } });
+        toast.success(t('toasts.addedLibrary', { title: trimmed }), 'library_books');
+      }
       onAdded(trimmed);
     } catch {
       setFailed(true);
+      toast.error(t('toasts.failed'));
     }
   }
 
@@ -103,6 +118,14 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
         />
       </FieldGrid>
       <Field label={t('discover.manual.coverUrl')} value={coverUrl} onChange={setCoverUrl} type="url" />
+
+      <StatusPicker
+        status={target.status}
+        ownership={target.ownership}
+        onStatus={(status) => setTarget((current) => ({ ...current, status }))}
+        onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+        disabled={isPending}
+      />
 
       {failed && <ErrorState message={t('discover.errors.addFailed')} />}
 

@@ -2,17 +2,12 @@ import { useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { Button, Screen } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import {
-  getGetApiLibraryQueryKey,
-  getGetApiWishlistQueryKey,
-  usePostApiLibrary,
-  usePostApiWishlist,
   type CatalogResult,
 } from '../../api/generated/librarius';
 import { AuthorNames } from '../author/AuthorNames';
@@ -20,8 +15,8 @@ import { KIND_LABEL_KEY, knownKind } from '../discover/medium';
 import { toBook } from './catalogBook';
 import { addedKeyOf, type AddTarget } from './addTargets';
 import { AddButton } from './AddButton';
+import { useAddTitle } from './useAddTitle';
 import styles from './CatalogDetailPage.module.css';
-import { STATS_QUERIES } from '../../shared/statsQueries';
 
 
 /** The series line: the run and, when it is one, the volume within it. */
@@ -49,12 +44,10 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
  */
 function CatalogDetailContent({ result }: { result: CatalogResult }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [added, setAdded] = useState<AddTarget | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const { mutateAsync: addToLibrary } = usePostApiLibrary();
-  const { mutateAsync: addToWishlist } = usePostApiWishlist();
+  const addTitle = useAddTitle();
 
   const title = result.title ?? '—';
   const kind = knownKind(result.kind);
@@ -62,20 +55,11 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
   // rather than shown as dashes when the record carries none of them.
   const meta = [result.publisher, result.language, result.isbn13].filter(Boolean).join(' · ');
 
-  /** The title now exists somewhere it did not: Collection, Wishlist, Home and the counters. */
-  function refreshAfterAdd() {
-    void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
-    void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
-    void queryClient.invalidateQueries(STATS_QUERIES);
-  }
 
   async function add(target: AddTarget) {
-    const book = toBook(result);
     try {
-      if (target === 'WISHLIST') await addToWishlist({ data: { book, priority: 'SOON' } });
-      else await addToLibrary({ data: { book, status: target } });
+      await addTitle(toBook(result), target);
       setAdded(target);
-      refreshAfterAdd();
     } catch (error) {
       setAddError(t('discover.errors.addFailed'));
       throw error;

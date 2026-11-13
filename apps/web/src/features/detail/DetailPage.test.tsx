@@ -1,4 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { Toaster } from '../../shared/ui/Toaster';
+import { resetToasts } from '../../shared/ui/toast';
 import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -42,7 +44,49 @@ function servesMutableItem() {
 }
 
 describe('DetailPage', () => {
-  beforeEach(resetAuth);
+  beforeEach(() => {
+    resetAuth();
+    resetToasts();
+  });
+
+  /** #411: both status families on the page, the ownership written on a tap. */
+  test('sets the ownership of a title from its page, and says so', async () => {
+    libraryItemReturns(ITEM);
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/ownership', async ({ request }) => {
+      const body = await request.json();
+      sent.push(body);
+      return HttpResponse.json({ ...ITEM, ownership: 'BORROWED' });
+    }));
+    renderWithProviders(<><DetailPage /><Toaster /></>, { route: '/detail/item-1', path: '/detail/:id' });
+
+    const ownership = await screen.findByRole('radiogroup', { name: 'Possession' });
+    expect(within(ownership).getByRole('radio', { name: 'Possédé' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(within(ownership).getByRole('radio', { name: 'Emprunté' }));
+
+    await waitFor(() => expect(sent).toEqual([{ ownership: 'BORROWED' }]));
+    expect(await screen.findByText('Possession : Emprunté')).toBeInTheDocument();
+  });
+
+  /** #413: a reading status picked on the chips is confirmed out loud. */
+  test('confirms a reading status change with a message', async () => {
+    libraryItemReturns({ ...ITEM, status: 'TO_READ' });
+    server.use(http.put('*/api/library/:id/progress', () => new HttpResponse(null, { status: 204 })));
+    renderWithProviders(<><DetailPage /><Toaster /></>, { route: '/detail/item-1', path: '/detail/:id' });
+
+    const reading = await screen.findByRole('radiogroup', { name: 'Lecture' });
+    await userEvent.click(within(reading).getByRole('radio', { name: 'En cours' }));
+
+    expect(await screen.findByText('Statut de lecture : En cours')).toBeInTheDocument();
+  });
+
+  /** #412: a finished book offers its printable reading sheet. */
+  test('offers the reading sheet of a finished book', async () => {
+    libraryItemReturns({ ...ITEM, status: 'READ' });
+    renderDetail();
+
+    expect(await screen.findByRole('button', { name: 'Fiche de lecture' })).toBeInTheDocument();
+  });
 
   test('renders the title details', async () => {
     libraryItemReturns(ITEM);

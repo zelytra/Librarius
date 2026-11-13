@@ -1,0 +1,250 @@
+/* The reading sheet (#412). Drawn for paper: black on white, hairlines rather than filled
+   areas, the accent only as a thin rule. Every colour here is fixed rather than a theme
+   token on purpose — a sheet printed from the dark theme must still be black on white. */
+
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 16px;
+}
+
+.toolbar {
+  max-width: 210mm;
+  margin: 0 auto 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.print {
+  margin-left: auto;
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: var(--on-accent);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.inkNote {
+  max-width: 210mm;
+  margin: 0 auto 12px;
+  font-size: var(--fs-12);
+  color: var(--muted);
+}
+
+.sheet {
+  --sheet-ink: #1f1b16;
+  --sheet-soft: #55504a;
+  --sheet-rule: #b9b2a8;
+  --sheet-accent: #5f6c57;
+
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 16mm 15mm 14mm;
+  background: #fff;
+  color: var(--sheet-ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: var(--shadow-strong);
+  font-family: var(--font-sans);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--sheet-accent);
+  font-size: 10pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sheet-soft);
+}
+
+.kicker {
+  font-weight: 700;
+  color: var(--sheet-ink);
+}
+
+.identity {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 18px 0 14px;
+}
+
+.cover {
+  width: 28mm;
+  height: auto;
+  border: 0.5pt solid var(--sheet-rule);
+}
+
+.bookTitle {
+  font-family: var(--font-serif);
+  font-size: 24pt;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.authors {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13pt;
+  color: var(--sheet-soft);
+  margin: 4px 0 0;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stars {
+  font-size: 17pt;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.starOn {
+  color: var(--sheet-ink);
+}
+
+.starOff {
+  color: var(--sheet-rule);
+}
+
+.unrated {
+  font-size: 9.5pt;
+  color: var(--sheet-soft);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  margin: 0 0 6px;
+  border-top: 0.5pt solid var(--sheet-rule);
+}
+
+.fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 0.5pt solid var(--sheet-rule);
+  font-size: 10pt;
+}
+
+.fact dt {
+  color: var(--sheet-soft);
+}
+
+.fact dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.block {
+  margin-top: 16px;
+  break-inside: avoid;
+}
+
+.blockTitle {
+  font-family: var(--font-serif);
+  font-size: 13pt;
+  font-weight: 600;
+  margin: 0 0 6px;
+  padding-left: 8px;
+  border-left: 2px solid var(--sheet-accent);
+}
+
+.review,
+.synopsis {
+  font-size: 10.5pt;
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.synopsis {
+  color: var(--sheet-soft);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.line {
+  height: 8mm;
+  border-bottom: 0.5pt dotted var(--sheet-rule);
+}
+
+.footer {
+  margin-top: 18px;
+  padding-top: 6px;
+  border-top: 0.5pt solid var(--sheet-rule);
+  font-size: 8.5pt;
+  color: var(--sheet-soft);
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .sheet {
+    padding: 18px 16px;
+  }
+
+  .facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  .page {
+    padding: 0;
+    background: #fff;
+  }
+
+  .toolbar,
+  .inkNote {
+    display: none;
+  }
+
+  .sheet {
+    max-width: none;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

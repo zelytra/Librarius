@@ -22,6 +22,7 @@ import {
 import { AuthorNames } from '../author/AuthorNames';
 import { seriesIdOf } from '../series/series';
 import styles from './WishlistPage.module.css';
+import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Number of wishes fetched per request. */
@@ -162,7 +163,12 @@ function WishlistContent() {
 
   const { mutate: removeItem } = useDeleteApiWishlistId({
     mutation: {
-      onSuccess: refreshWishlist,
+      onSuccess: () => {
+        toast.info(t('toasts.wishRemoved'), 'delete');
+        refreshWishlist();
+        // A title of the library that pointed at the wish is no longer wanted (#411).
+        void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+      },
       onError: () => setActionError(t('wishlist.errors.removeFailed')),
     },
   });
@@ -171,6 +177,7 @@ function WishlistContent() {
     mutation: {
       onSuccess: () => {
         setEditing(null);
+        toast.success(t('toasts.wishUpdated'));
         refreshWishlist();
       },
       onError: () => setActionError(t('wishlist.errors.editFailed')),
@@ -179,7 +186,8 @@ function WishlistContent() {
 
   const { mutate: acquireItem } = usePostApiWishlistIdAcquire({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (item) => {
+        toast.success(t('toasts.acquired', { title: (item as { book?: { title?: string } } | undefined)?.book?.title ?? '' }), 'shopping_bag');
         refreshWishlist();
         // The title left the wishlist for the collection: both of them moved, and so
         // did the counters the Home screen and the statistics read.
@@ -192,7 +200,7 @@ function WishlistContent() {
 
   /** Bought today, and owned rather than read: the user said nothing more than that. */
   const acquire = (id: string) =>
-    acquireItem({ id, data: { status: 'OWNED', acquiredAt: new Date().toISOString().slice(0, 10) } });
+    acquireItem({ id, data: { status: 'TO_READ', acquiredAt: new Date().toISOString().slice(0, 10) } });
 
   const startEditing = (id: string) => {
     setActionError(null);
@@ -301,6 +309,13 @@ function WishlistContent() {
                           </span>
                         )}
                       </div>
+                      {/* The publisher's price of a new copy (#421), beside the reader's own. */}
+                      {w.book?.listPrice != null && (
+                        <div className={styles.marketPrice}>
+                          <Icon name="sell" size={14} color="var(--accent-deep)" />
+                          {t('wishlist.marketPrice', { price: money(w.book.listPrice) })}
+                        </div>
+                      )}
                       <div className={styles.authors}><AuthorNames text={w.book?.authors} /></div>
                       {w.note && <p className={styles.note}>{w.note}</p>}
 

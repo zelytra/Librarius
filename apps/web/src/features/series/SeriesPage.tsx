@@ -35,6 +35,7 @@ import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import { ReadersReviews } from '../reviews/ReadersReviews';
 import styles from './SeriesPage.module.css';
+import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail. */
@@ -245,13 +246,15 @@ function SeriesContent({ id }: { id: string }) {
     setAddError(null);
     try {
       if (target === 'library') {
-        await addToLibrary({ data: { book: bookOf(volume), status: 'OWNED' } });
+        await addToLibrary({ data: { book: bookOf(volume), status: 'TO_READ' } });
+        toast.success(t('toasts.addedLibrary', { title: bookOf(volume).title ?? '' }), 'library_books');
         // The volume is now owned: the grid, the counters and the collection all move.
         invalidateSeries();
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
         void queryClient.invalidateQueries(STATS_QUERIES);
       } else {
         await addToWishlist({ data: { book: bookOf(volume), priority: 'SOON' } });
+        toast.success(t('toasts.addedWishlist', { title: bookOf(volume).title ?? '' }), 'favorite');
         void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
         if (volume.volumeNumber != null) {
           setWished((w) => ({ ...w, [volume.volumeNumber!]: true }));

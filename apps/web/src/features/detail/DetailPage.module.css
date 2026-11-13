@@ -466,3 +466,12 @@
   display: flex;
   gap: 10px;
 }
+
+/* The two status families (#411). */
+.statuses {
+  margin: 4px 0 22px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}

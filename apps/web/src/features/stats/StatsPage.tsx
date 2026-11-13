@@ -9,6 +9,7 @@ import { goalPace, toUnit } from '../../shared/goal';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiStats } from '../../api/generated/librarius';
 import { TimelineSection } from './TimelineSection';
+import { ValuePanel } from './ValuePanel';
 import { pagesRead } from '../../shared/pagesRead';
 import styles from './StatsPage.module.css';
 
@@ -109,6 +110,9 @@ function StatsContent() {
           </div>
         ))}
       </div>
+
+      {/* What the shelves and the wishlist are worth (#421). */}
+      <ValuePanel />
 
       <div className={styles.panel}>
         <div className={styles.panelTitle}>{t('stats.favoriteGenres')}</div>

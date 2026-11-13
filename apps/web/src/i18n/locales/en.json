@@ -21,7 +21,8 @@
     "search": "Search",
     "remove": "Remove",
     "retry": "Try again",
-    "errorWithStatus": "Error {{status}}"
+    "errorWithStatus": "Error {{status}}",
+    "close": "Close"
   },
   "auth": {
     "signIn": "Sign in",
@@ -181,9 +182,9 @@
       "height": "≈ {{height}} of stacked paper",
       "estimate": "Estimated height: one sheet of paper ≈ {{thickness}} mm, so two pages.",
       "alt": "A stack of books illustrating {{books}} books read, {{pages}} pages, about {{height}} of paper.",
-      "partial_one": "Length known for {{known}} book out of {{books}}: the rest is being filled in from the catalogs.",
-      "partial_other": "Length known for {{known}} books out of {{books}}: the rest is being filled in from the catalogs.",
-      "noLength": "Your books' page counts are being filled in from the catalogs: the stack grows over the next few hours."
+      "partial_one": "Length known for {{known}} book out of {{books}}: the others are estimated until the catalogs fill them in.",
+      "partial_other": "Length known for {{known}} books out of {{books}}: the others are estimated until the catalogs fill them in.",
+      "noLength": "Your books' page counts are estimated until the catalogs fill them in: the stack will sharpen over the hours."
     },
     "upcomingReleases": {
       "title": "Upcoming releases",
@@ -244,6 +245,37 @@
       "now": "Reading now",
       "progress": "{{percent}}% read",
       "continue": "Continue reading"
+    },
+    "sky": {
+      "reached": "Your stack reaches {{place}}",
+      "distance": "That is ≈ {{distance}} on the story scale",
+      "next_one": "{{pages}} more page to reach {{place}}",
+      "next_other": "{{pages}} more pages to reach {{place}}",
+      "scale": "A story scale: each milestone comes at a page count you can reach, not at true scale.",
+      "units": {
+        "au": "AU",
+        "ly": "ly",
+        "mly": "M ly"
+      },
+      "scenes": {
+        "ground": "the blue sky",
+        "clouds": "the clouds",
+        "stratosphere": "the stratosphere",
+        "space": "space",
+        "orbit": "the ISS's orbit",
+        "moon": "the Moon",
+        "mars": "Mars",
+        "jupiter": "Jupiter",
+        "saturn": "Saturn",
+        "uranus": "Uranus",
+        "neptune": "Neptune",
+        "pluto": "Pluto",
+        "heliopause": "the edge of the solar system",
+        "stars": "the nearest stars",
+        "galaxy": "the heart of the Milky Way",
+        "andromeda": "Andromeda",
+        "edge": "the edge of the universe"
+      }
     }
   },
   "onboarding": {
@@ -586,7 +618,8 @@
       "editFailed": "Cannot save the change right now.",
       "removeFailed": "Cannot remove it right now.",
       "acquireFailed": "This title could not be moved to your library."
-    }
+    },
+    "marketPrice": "New price: {{price}} €"
   },
   "stats": {
     "title": "Statistics",
@@ -615,12 +648,11 @@
       },
       "paceTitle": "Reading pace",
       "pagesPerDay": "pages a day",
-      "daysPerBook": "days a title",
       "bestMonth": "best month ({{books}})",
       "noFigure": "—",
       "cumulativeTitle": "Running total and goal",
       "cumulativeLabel": "Running total for the year against the goal of {{target}} {{unit}}",
-      "cumulativeLegend": "The curve is your running total, the dashed line the steady pace that reaches the goal on 31 December.",
+      "cumulativeLegend": "Each curve is one kind's running total; the dotted line is the steady pace that reaches its goal on 31 December.",
       "breakdownTitle": "What you have read",
       "noBreakdown": "No data for this period yet.",
       "breakdowns": {
@@ -639,7 +671,21 @@
       "views": {
         "all": "All",
         "byKind": "By kind"
+      },
+      "booksPerMonth": "titles a month",
+      "kindGoalFigure": "{{current}} / {{target}} {{unit}}",
+      "cumulativeKindLabel": "{{kind}} read in {{year}}, against a goal of {{target}} {{unit}}",
+      "scopes": {
+        "all": "All time"
       }
+    },
+    "value": {
+      "title": "Estimated value",
+      "library": "your library (owned books)",
+      "wishlist": "your wishlist",
+      "priced_one": "{{priced}} of {{count}} title with a known price",
+      "priced_other": "{{priced}} of {{count}} titles with a known price",
+      "source": "Publisher's price of a new copy, from the BnF record (fixed book price in France). Prices fill in in the background; a wish with no known price counts at the price you estimated."
     }
   },
   "detail": {
@@ -674,7 +720,8 @@
       "shelfHint": "A title carries a single rank: select the one in force again to remove it.",
       "confirm": "Save",
       "skip": "Later",
-      "close": "Close"
+      "close": "Close",
+      "printSheet": "Save and make the reading sheet"
     },
     "progress": {
       "title": "My progress",
@@ -718,7 +765,9 @@
       "cancel": "Cancel",
       "confirm": "Remove",
       "failed": "The book cannot be removed right now."
-    }
+    },
+    "statuses": "Statuses",
+    "pagesEstimated": "pages (estimated)"
   },
   "settings": {
     "title": "Settings",
@@ -901,10 +950,10 @@
     },
     "verdict": {
       "owned": {
-        "OWNED": "Already yours · not started",
         "READING": "Already yours · reading",
         "READ": "Already yours · read",
-        "ABANDONED": "Already yours · given up"
+        "ABANDONED": "Already yours · given up",
+        "TO_READ": "Already yours · not started"
       },
       "wished": "On your wishlist",
       "new": "Not yours yet",
@@ -921,41 +970,28 @@
       "manual": "Add by hand"
     },
     "session": {
-      "label": "Automatically add new books to",
-      "targets": {
-        "CHECK": "Check only",
-        "OWNED": "To read",
-        "READ": "Read",
-        "READING": "Reading",
-        "WISHLIST": "Wishlist"
-      },
-      "added": {
-        "OWNED": "Added to your to-read pile",
-        "READ": "Added as read",
-        "READING": "Added, being read",
-        "WISHLIST": "Added to your wishlist"
-      },
+      "label": "New books you scan",
       "undo": "Undo",
       "undone": "Addition undone",
       "failed": "Could not add it: add it by hand",
       "count_one": "{{count}} book added during this scan",
-      "count_other": "{{count}} books added during this scan"
+      "count_other": "{{count}} books added during this scan",
+      "modes": {
+        "CHECK": "Check only",
+        "ADD": "Add straight away"
+      }
     }
   },
   "add": {
-    "targets": {
-      "READ": "Read",
-      "OWNED": "To read",
-      "WISHLIST": "Wishlist"
-    },
     "added": {
       "READ": "Added to your library, as read.",
-      "OWNED": "Added to your to-read pile.",
-      "WISHLIST": "Added to your wishlist."
+      "LIBRARY": "Added to your library.",
+      "WISHLIST": "Added to your wishlist.",
+      "TO_READ": "Added to your to-read pile."
     },
     "as": "Add as",
     "open": "Add",
-    "title": "Add to…",
+    "title": "Add to your library",
     "cancel": "Cancel",
     "confirm": "Add"
   },
@@ -995,5 +1031,78 @@
       "title": "Your to-read pile is empty",
       "description": "The books you own and have not started yet show up here."
     }
+  },
+  "sheet": {
+    "title": "Reading sheet",
+    "open": "Reading sheet",
+    "print": "Print",
+    "withCover": "Include the cover",
+    "inkNote": "A sober layout: thin lines, no solid colour. It prints as well in black and white as in colour.",
+    "ratingLabel": "Rating: {{rating}} out of 5",
+    "unrated": "Not rated",
+    "seriesVolume": "{{series}}, volume {{volume}}",
+    "review": "My review",
+    "blank": "Lines to fill in by hand",
+    "summary": "Summary",
+    "notes": "Notes and quotes",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "footer": "My Library · sheet of {{date}}",
+    "facts": {
+      "series": "Series",
+      "publisher": "Publisher",
+      "pages": "Pages",
+      "year": "Published",
+      "genres": "Genres",
+      "isbn": "ISBN",
+      "started": "Started on",
+      "finished": "Finished on",
+      "duration": "Reading time",
+      "rank": "Rank"
+    },
+    "coverAlt": "Cover of {{title}}"
+  },
+  "statuses": {
+    "readingTitle": "Reading",
+    "ownershipTitle": "Ownership",
+    "reading": {
+      "TO_READ": "To read",
+      "READING": "Reading",
+      "READ": "Read",
+      "ABANDONED": "Abandoned"
+    },
+    "ownership": {
+      "OWNED": "Owned",
+      "BORROWED": "Borrowed",
+      "EBOOK": "Ebook",
+      "WISHLIST": "Wishlist",
+      "NOT_OWNED": "Not owned"
+    },
+    "ownershipHint": {
+      "OWNED": "On your own shelves.",
+      "BORROWED": "Had in hand, but not on your shelves.",
+      "EBOOK": "Read on an e-reader, a tablet or another digital format.",
+      "WISHLIST": "You don't have it and would like to.",
+      "NOT_OWNED": "Neither on your shelves nor wanted."
+    }
+  },
+  "toasts": {
+    "addedLibrary": "“{{title}}” added to your library",
+    "addedWishlist": "“{{title}}” added to your wishlist",
+    "status": "Reading status: {{status}}",
+    "ownership": "Ownership: {{ownership}}",
+    "rank": "Filed under “{{rank}}”",
+    "rankCleared": "Rank removed",
+    "rating": "Rating saved: {{rating}}/5",
+    "review": "Review saved",
+    "progress": "Progress saved",
+    "edition": "Edition updated",
+    "removed": "Title removed from your library",
+    "wishRemoved": "Removed from your wishlist",
+    "acquired": "“{{title}}” joins your library",
+    "wishUpdated": "Wish updated",
+    "layoutSaved": "Home customized",
+    "failed": "That didn't work. Try again in a moment.",
+    "goalSaved": "Goal saved"
   }
 }

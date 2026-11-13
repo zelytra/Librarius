@@ -3,13 +3,17 @@
    nothing that would weigh on the initial payload Home is loaded with. */
 
 .card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   align-items: flex-end;
   gap: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-panel-lg);
-  padding: 16px;
+  padding: 20px 16px 16px;
+  min-height: 220px;
 }
 
 /* The pile itself. `column-reverse` puts the first spine at the bottom, so the stack
@@ -73,9 +77,22 @@
   transform: translateX(6px);
 }
 
+/* The text sits on a frosted panel so it reads on a noon sky and on deep space alike, in
+   every palette: the sky is a picture, the panel is the app. */
 .figures {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.stack {
+  position: relative;
+  z-index: 1;
 }
 
 .books {
@@ -106,6 +123,313 @@
   color: var(--faint);
   line-height: 1.35;
   margin: 8px 0 0;
+}
+
+/* ── The sky behind the pile (#415) ─────────────────────────────────────────────
+   One scene per milestone, picked by `data-scene` on the card. Fixed colours rather than
+   palette tokens: a sky is blue in every theme, and the text never sits on it directly.
+   Every shape is a span with a gradient — no image, nothing added to the initial payload. */
+
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--sky-bottom, #cfe8ff), var(--sky-top, #5aa9f0));
+  transition: background 600ms ease;
+}
+
+/* Stars, drawn once and shown from the edge of space up. */
+.sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--stars, 0);
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 62%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 44% 30%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 58% 78%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 70% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 48%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 92% 84%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 88%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 36% 8%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 64% 44%, #fff 50%, transparent 51%);
+}
+
+/* A galaxy band, from the stars up. */
+.sky::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  opacity: var(--band, 0);
+  background: radial-gradient(ellipse 60% 18% at 50% 50%, rgb(214 190 255 / 55%), transparent 70%);
+  transform: rotate(-24deg);
+}
+
+/* The sun, the Moon or a planet: one disc, dressed per scene. */
+.body {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: var(--body-size, 46px);
+  height: var(--body-size, 46px);
+  border-radius: 50%;
+  background: var(--body-fill, radial-gradient(circle, #fff7c2, #ffd75e 60%, #ffb648));
+  box-shadow: var(--body-glow, 0 0 28px 8px rgb(255 214 94 / 55%));
+  opacity: var(--body-opacity, 1);
+  transform: scale(calc(0.85 + var(--sky-progress, 0) * 0.3));
+  transition: transform 600ms ease;
+}
+
+/* Saturn's ring. */
+.ring {
+  position: absolute;
+  top: calc(14px + var(--body-size, 46px) / 2 - 6px);
+  right: 6px;
+  width: calc(var(--body-size, 46px) + 24px);
+  height: 12px;
+  border-radius: 50%;
+  border: 3px solid rgb(232 210 160 / 85%);
+  transform: rotate(-14deg);
+  display: var(--ring, none);
+}
+
+/* A bank of clouds, low on the ground and in the troposphere. */
+.cloud {
+  position: absolute;
+  left: 38%;
+  top: 30%;
+  width: 90px;
+  height: 26px;
+  border-radius: 20px;
+  background: rgb(255 255 255 / 85%);
+  box-shadow: 30px -10px 0 4px rgb(255 255 255 / 85%), -26px 6px 0 -2px rgb(255 255 255 / 80%);
+  opacity: var(--cloud, 0);
+}
+
+/* The ground on the first scene, the curve of the Earth seen from space after. */
+.ground {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: var(--ground-bottom, -6px);
+  height: var(--ground-height, 34px);
+  border-radius: var(--ground-radius, 0);
+  background: var(--ground-fill, linear-gradient(#8cc56b, #5e9c45));
+  opacity: var(--ground, 1);
+}
+
+.card[data-scene='ground'] {
+  --sky-top: #4f9fe8;
+  --sky-bottom: #cfe8ff;
+  --cloud: 0.7;
+}
+
+.card[data-scene='clouds'] {
+  --sky-top: #3f86d6;
+  --sky-bottom: #e9f4ff;
+  --cloud: 1;
+  --ground: 0;
+  --body-size: 38px;
+}
+
+.card[data-scene='stratosphere'] {
+  --sky-top: #1d4f9a;
+  --sky-bottom: #7fb4ea;
+  --ground: 0;
+  --cloud: 0.35;
+  --body-size: 32px;
+}
+
+.card[data-scene='space'],
+.card[data-scene='orbit'] {
+  --sky-top: #050b1f;
+  --sky-bottom: #12306b;
+  --stars: 0.8;
+  --body-size: 26px;
+  --ground-height: 160px;
+  --ground-bottom: -130px;
+  --ground-radius: 50% 50% 0 0;
+  --ground-fill: radial-gradient(ellipse at 50% 0%, #5fb4ff, #1d5fae 40%, #0d2c5c 70%);
+}
+
+.card[data-scene='orbit'] {
+  --ground-bottom: -142px;
+}
+
+.card[data-scene='moon'] {
+  --sky-top: #03050f;
+  --sky-bottom: #0b1330;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 64px;
+  --body-fill: radial-gradient(circle at 35% 35%, #f4f4f0, #c9c8c0 55%, #9c9a92);
+  --body-glow: 0 0 22px 2px rgb(240 240 230 / 35%);
+}
+
+.card[data-scene='mars'] {
+  --sky-top: #05030c;
+  --sky-bottom: #1a0d14;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 54px;
+  --body-fill: radial-gradient(circle at 35% 35%, #f3a07a, #c4512c 60%, #7d2a17);
+  --body-glow: 0 0 18px 2px rgb(222 110 70 / 35%);
+}
+
+.card[data-scene='jupiter'] {
+  --sky-top: #04040b;
+  --sky-bottom: #17110c;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 72px;
+  --body-fill: linear-gradient(170deg, #e9d3b4 0 18%, #c48a5a 18% 30%, #f0dcc0 30% 46%, #b9774c 46% 58%, #ecd6b8 58% 76%, #c99a6e 76%);
+  --body-glow: 0 0 22px 2px rgb(230 190 140 / 30%);
+}
+
+.card[data-scene='saturn'] {
+  --sky-top: #04040b;
+  --sky-bottom: #15130c;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 52px;
+  --ring: block;
+  --body-fill: linear-gradient(175deg, #f1e2b8, #d8bd84 50%, #b89a62);
+  --body-glow: 0 0 18px 2px rgb(232 210 160 / 30%);
+}
+
+.card[data-scene='uranus'] {
+  --sky-top: #02040a;
+  --sky-bottom: #0a1a22;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 46px;
+  --body-fill: radial-gradient(circle at 35% 35%, #d8fbff, #8ee3ef 60%, #4fb3c4);
+  --body-glow: 0 0 18px 2px rgb(140 225 240 / 30%);
+}
+
+.card[data-scene='neptune'] {
+  --sky-top: #02030a;
+  --sky-bottom: #08122e;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 46px;
+  --body-fill: radial-gradient(circle at 35% 35%, #9cc3ff, #3c6fe0 60%, #213f99);
+  --body-glow: 0 0 18px 2px rgb(80 130 240 / 35%);
+}
+
+.card[data-scene='pluto'] {
+  --sky-top: #020208;
+  --sky-bottom: #0c0b14;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 24px;
+  --body-fill: radial-gradient(circle at 35% 35%, #f3e6d6, #c9ae93 60%, #8b735c);
+  --body-glow: none;
+}
+
+.card[data-scene='heliopause'] {
+  --sky-top: #010106;
+  --sky-bottom: #0a0816;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 8px;
+}
+
+.card[data-scene='stars'] {
+  --sky-top: #000004;
+  --sky-bottom: #070b1c;
+  --stars: 1;
+  --ground: 0;
+  --body-size: 12px;
+  --body-fill: radial-gradient(circle, #fff, #ffcfb0 60%, #ff8a5c);
+  --body-glow: 0 0 14px 4px rgb(255 160 120 / 45%);
+}
+
+.card[data-scene='galaxy'] {
+  --sky-top: #02010a;
+  --sky-bottom: #120a26;
+  --stars: 1;
+  --band: 1;
+  --ground: 0;
+  --body-opacity: 0;
+}
+
+.card[data-scene='andromeda'] {
+  --sky-top: #010008;
+  --sky-bottom: #0b0820;
+  --stars: 1;
+  --band: 0.45;
+  --ground: 0;
+  --body-size: 70px;
+  --body-fill: radial-gradient(ellipse 50% 22% at 50% 50%, #fff8e6, rgb(220 190 255 / 70%) 40%, transparent 72%);
+  --body-glow: none;
+}
+
+.card[data-scene='edge'] {
+  --sky-top: #000;
+  --sky-bottom: #1a0710;
+  --stars: 0.6;
+  --band: 0.2;
+  --ground: 0;
+  --body-size: 120px;
+  --body-fill: radial-gradient(circle, rgb(255 120 80 / 25%), rgb(90 120 255 / 18%) 45%, transparent 70%);
+  --body-glow: none;
+}
+
+.altitude {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.reached {
+  font-family: var(--font-serif);
+  font-size: var(--fs-15);
+  font-weight: 600;
+  margin: 0;
+}
+
+.distance {
+  font-size: var(--fs-12);
+  color: var(--ink-soft);
+  margin: 2px 0 0;
+}
+
+.altTrack {
+  height: 5px;
+  margin-top: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.altFill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+.nextStep {
+  font-size: var(--fs-11);
+  color: var(--ink-soft);
+  margin: 4px 0 0;
+}
+
+.scaleNote {
+  font-size: var(--fs-11);
+  color: var(--faint);
+  margin: 6px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky,
+  .body {
+    transition: none;
+  }
 }
 
 /* The pile settles into place on arrival rather than appearing whole. */

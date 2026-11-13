@@ -75,7 +75,9 @@ function Dashboard() {
     && (restartRequested || shouldShowOnboarding(libraryEmpty));
 
   return (
-    <>
+    // One column with one gap between every block (#417): the showcase and the sections
+    // used to sit in a fragment, so nothing separated the first section from the banner.
+    <div className={styles.dashboard}>
       {!libraryEmpty && <HomeShowcase reading={reading} read={read} stats={stats} />}
       <DashboardSections reading={reading} read={read} stats={stats} libraryEmpty={libraryEmpty} />
       {showOnboarding && (
@@ -83,7 +85,7 @@ function Dashboard() {
           <OnboardingFlow onDismiss={dismissOnboarding} />
         </Suspense>
       )}
-    </>
+    </div>
   );
 }
 

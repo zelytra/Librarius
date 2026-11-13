@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -58,7 +58,7 @@ describe('ScanPage', () => {
   });
 
   test('flags a copy recognised by its title as perhaps another edition', async () => {
-    scanAnswers({ match: 'TITLE', owned: libraryItem({ status: 'OWNED' }), catalog: catalogResult() });
+    scanAnswers({ match: 'TITLE', owned: libraryItem({ status: 'TO_READ' }), catalog: catalogResult() });
     renderScan();
 
     await typeIsbn(ISBN);
@@ -139,16 +139,35 @@ describe('ScanPage', () => {
     );
     renderScan();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Pile à lire' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter directement' }));
     await typeIsbn(ISBN);
 
-    expect(await screen.findByText('Ajouté à ta pile à lire')).toBeInTheDocument();
-    expect(posts[0].status).toBe('OWNED');
+    expect(await screen.findByText('Ajouté à ta pile à lire.')).toBeInTheDocument();
+    expect(posts[0].status).toBe('TO_READ');
+    expect(posts[0].ownership).toBe('OWNED');
     expect(screen.getByText('1 livre ajouté pendant ce scan')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
     expect(await screen.findByText('Ajout annulé')).toBeInTheDocument();
     expect(deletes).toEqual(['item-new']);
+  });
+
+  /** #411: the session files with both status families, e.g. read on an e-reader. */
+  test('files a scanned book with the reading status and the ownership picked', async () => {
+    scanAnswers({ match: 'NONE', catalog: catalogResult({ title: 'Numérique' }) });
+    const posts: Record<string, unknown>[] = [];
+    server.use(http.post('*/api/library', async ({ request }) => {
+      posts.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ id: 'item-ebook' }, { status: 201 });
+    }));
+    renderScan();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter directement' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Lu' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Livre numérique' }));
+    await typeIsbn(ISBN);
+
+    await waitFor(() => expect(posts[0]).toMatchObject({ status: 'READ', ownership: 'EBOOK' }));
   });
 
   test('reports a book already owned during a session instead of adding it again', async () => {
@@ -160,7 +179,8 @@ describe('ScanPage', () => {
     }));
     renderScan();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Lus' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter directement' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Lu' }));
     await typeIsbn(ISBN);
 
     expect(await screen.findByText('Déjà chez toi · lu')).toBeInTheDocument();

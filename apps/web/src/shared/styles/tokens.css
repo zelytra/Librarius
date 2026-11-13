@@ -237,6 +237,8 @@
      responsive blocks at the end of the file are the only place that knows a
      viewport width. */
   --screen-pad-x: 22px;
+  /* Vertical gap between the blocks of a dashboard (#417). */
+  --dashboard-gap: 28px;
   --screen-pad-top: 14px;
   --screen-pad-bottom: 40px;
   /* Horizontal shelves bleed past the screen padding to reach the edge.

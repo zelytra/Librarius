@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
+import { Modal } from '../../shared/ui/Modal';
 import {
   getGetApiDashboardLayoutQueryKey,
   usePutApiDashboardLayout,
 } from '../../api/generated/librarius';
 import { moveSection, toggleHidden, type DashboardSectionPref } from './dashboardLayout';
+import { toast } from '../../shared/ui/toast';
 import styles from './DashboardEditor.module.css';
 
 /**
@@ -51,6 +53,7 @@ export function DashboardEditor({ sections, onClose }: DashboardEditorProps) {
     mutation: {
       onSuccess: (saved) => {
         queryClient.setQueryData(getGetApiDashboardLayoutQueryKey(), saved);
+        toast.success(t('toasts.layoutSaved'), 'tune');
         onClose();
       },
     },
@@ -59,9 +62,9 @@ export function DashboardEditor({ sections, onClose }: DashboardEditorProps) {
   const label = (code: string) => t(SECTION_LABEL_KEY[code] ?? code);
 
   return (
-    <div className={styles.panel} role="dialog" aria-modal="false" aria-label={t('home.customize.title')}>
-      <h3 className={styles.title}>{t('home.customize.title')}</h3>
-      <p className={styles.hint}>{t('home.customize.hint')}</p>
+    // A modal rather than a panel in the page flow (#416): it used to open between the
+    // header and the first section and push the whole dashboard down.
+    <Modal title={t('home.customize.title')} description={t('home.customize.hint')} onClose={onClose}>
 
       <ul className={styles.list}>
         {draft.map((section, index) => (
@@ -122,6 +125,6 @@ export function DashboardEditor({ sections, onClose }: DashboardEditorProps) {
           {t(isPending ? 'common.working' : 'home.customize.save')}
         </Button>
       </div>
-    </div>
+    </Modal>
   );
 }
