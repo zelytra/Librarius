@@ -1,0 +1,16 @@
+/* The level chip of Home's header and of the Stats screen. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 14px 0 10px;
+  border: 1.5px solid var(--chip);
+  border-radius: var(--radius-chip);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  cursor: pointer;
+}

@@ -1,1280 +1,41 @@
 ---
 openapi: 3.1.0
-components:
-  schemas:
-    AccountDeletionDto:
-      type: object
-      properties:
-        libraryItems:
-          type: integer
-          format: int32
-        wishlistItems:
-          type: integer
-          format: int32
-        goals:
-          type: integer
-          format: int32
-        categories:
-          type: integer
-          format: int32
-        seriesFollows:
-          type: integer
-          format: int32
-    AuthorDetailDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        name:
-          type: string
-        photoUrl:
-          type: string
-        followed:
-          type: boolean
-        works:
-          type: array
-          items:
-            $ref: "#/components/schemas/AuthorWorkDto"
-    AuthorSummaryDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        name:
-          type: string
-        photoUrl:
-          type: string
-        workCount:
-          type: integer
-          format: int64
-        followed:
-          type: boolean
-    AuthorWorkDto:
-      type: object
-      properties:
-        workId:
-          $ref: "#/components/schemas/UUID"
-        kind:
-          type: string
-        title:
-          type: string
-        authors:
-          type: string
-        seriesTitle:
-          type: string
-        volumeNumber:
-          type: integer
-          format: int32
-        originalYear:
-          type: integer
-          format: int32
-        coverUrl:
-          type: string
-        libraryItemId:
-          $ref: "#/components/schemas/UUID"
-        seriesId:
-          $ref: "#/components/schemas/UUID"
-    BookView:
-      type: object
-      properties:
-        editionId:
-          $ref: "#/components/schemas/UUID"
-        workId:
-          $ref: "#/components/schemas/UUID"
-        kind:
-          type: string
-        title:
-          type: string
-        authors:
-          type: string
-        seriesTitle:
-          type: string
-        volumeNumber:
-          type: integer
-          format: int32
-        coverUrl:
-          type: string
-        pageCount:
-          type: integer
-          format: int32
-        publisher:
-          type: string
-        language:
-          type: string
-        isbn13:
-          type: string
-        originalYear:
-          type: integer
-          format: int32
-        synopsis:
-          type: string
-        genres:
-          type: string
-        pageCountEstimated:
-          type: boolean
-        listPrice:
-          type: number
-        listPriceCurrency:
-          type: string
-    BreakdownCountDto:
-      type: object
-      properties:
-        label:
-          type: string
-        count:
-          type: integer
-          format: int64
-    BreakdownDto:
-      type: object
-      properties:
-        books:
-          type: integer
-          format: int64
-        byAuthor:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byPublisher:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byLanguage:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byRank:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-    CatalogResult:
-      type: object
-      properties:
-        kind:
-          type: string
-        title:
-          type: string
-        authors:
-          type: string
-        year:
-          type: integer
-          format: int32
-        coverUrl:
-          type: string
-        synopsis:
-          type: string
-        isbn13:
-          type: string
-        publisher:
-          type: string
-        language:
-          type: string
-        releaseDate:
-          $ref: "#/components/schemas/LocalDate"
-        seriesTitle:
-          type: string
-        volumeNumber:
-          type: integer
-          format: int32
-        pageCount:
-          type: integer
-          format: int32
-        provider:
-          type: string
-        providerRef:
-          type: string
-        popularity:
-          type: integer
-          format: int32
-    CategoryCreateDto:
-      type: object
-      required:
-      - label
-      properties:
-        label:
-          type: string
-          pattern: \S
-        color:
-          type: string
-    CategoryDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        code:
-          type: string
-        label:
-          type: string
-        color:
-          type: string
-        builtin:
-          type: boolean
-    CategoryUpdateDto:
-      type: object
-      required:
-      - label
-      properties:
-        label:
-          type: string
-          pattern: \S
-    CollectedRequest:
-      type: object
-      required:
-      - source
-      - pages
-      properties:
-        source:
-          type: string
-          pattern: booknode|babelio
-        pages:
-          type: array
-          items:
-            type: string
-          maxItems: 1000
-    DashboardLayoutDto:
-      type: object
-      required:
-      - sections
-      properties:
-        sections:
-          type: array
-          items:
-            $ref: "#/components/schemas/DashboardSectionDto"
-    DashboardSectionDto:
-      type: object
-      required:
-      - code
-      properties:
-        code:
-          type: string
-          pattern: \S
-        hidden:
-          type: boolean
-    EditionDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        isbn13:
-          type: string
-        publisher:
-          type: string
-        language:
-          type: string
-        pageCount:
-          type: integer
-          format: int32
-        format:
-          type: string
-        releaseDate:
-          $ref: "#/components/schemas/LocalDate"
-        coverUrl:
-          type: string
-        owned:
-          type: boolean
-    EditionSwitchDto:
-      type: object
-      required:
-      - editionId
-      properties:
-        editionId:
-          $ref: "#/components/schemas/UUID"
-    ExportCategoryDto:
-      type: object
-      properties:
-        code:
-          type: string
-        label:
-          type: string
-        color:
-          type: string
-        sortOrder:
-          type: integer
-          format: int32
-    ExportCollectionItemDto:
-      type: object
-      required:
-      - book
-      properties:
-        book:
-          $ref: "#/components/schemas/ManualBookDto"
-        status:
-          $ref: "#/components/schemas/LibraryStatus"
-        rating:
-          type: integer
-          format: int32
-        review:
-          type: string
-        acquiredAt:
-          $ref: "#/components/schemas/LocalDate"
-        rankCode:
-          type: string
-        progress:
-          $ref: "#/components/schemas/ExportProgressDto"
-        ownership:
-          $ref: "#/components/schemas/Ownership"
-        price:
-          type: number
-    ExportDto:
-      type: object
-      properties:
-        schemaVersion:
-          type: integer
-          format: int32
-        exportedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        user:
-          $ref: "#/components/schemas/ExportUserDto"
-        categories:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExportCategoryDto"
-        goals:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExportGoalDto"
-        collection:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExportCollectionItemDto"
-        wishlist:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExportWishDto"
-        followedSeries:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExportSeriesFollowDto"
-    ExportGoalDto:
-      type: object
-      properties:
-        year:
-          type: integer
-          format: int32
-        targetCount:
-          type: integer
-          format: int32
-        unit:
-          $ref: "#/components/schemas/GoalUnit"
-        kind:
-          $ref: "#/components/schemas/Kind"
-    ExportProgressDto:
-      type: object
-      properties:
-        currentPage:
-          type: integer
-          format: int32
-        percent:
-          type: integer
-          format: int32
-        startedAt:
-          $ref: "#/components/schemas/LocalDate"
-        finishedAt:
-          $ref: "#/components/schemas/LocalDate"
-    ExportSeriesFollowDto:
-      type: object
-      properties:
-        kind:
-          $ref: "#/components/schemas/Kind"
-        title:
-          type: string
-    ExportUserDto:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-        displayName:
-          type: string
-        locale:
-          type: string
-    ExportWishDto:
-      type: object
-      required:
-      - book
-      properties:
-        book:
-          $ref: "#/components/schemas/ManualBookDto"
-        priority:
-          $ref: "#/components/schemas/WishPriority"
-        estimatedPrice:
-          type: number
-        note:
-          type: string
-    GenreCount:
-      type: object
-      properties:
-        code:
-          type: string
-        genre:
-          type: string
-        count:
-          type: integer
-          format: int64
-    GoalDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        year:
-          type: integer
-          format: int32
-        targetCount:
-          type: integer
-          format: int32
-        unit:
-          type: string
-        kind:
-          type: string
-    GoalUnit:
-      type: string
-      enum:
-      - BOOKS
-      - VOLUMES
-      - PAGES
-    GoalUpsertDto:
-      type: object
-      required:
-      - targetCount
-      properties:
-        targetCount:
-          type: integer
-          format: int32
-          minimum: 1
-        unit:
-          $ref: "#/components/schemas/GoalUnit"
-    ImportJobDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        status:
-          type: string
-        total:
-          type: integer
-          format: int32
-        imported:
-          type: integer
-          format: int32
-        skipped:
-          type: integer
-          format: int32
-        error:
-          type: string
-    ImportResult:
-      type: object
-      properties:
-        source:
-          type: string
-        imported:
-          type: integer
-          format: int32
-        skipped:
-          type: integer
-          format: int32
-        total:
-          type: integer
-          format: int32
-    Kind:
-      type: string
-      enum:
-      - BOOK
-      - MANGA
-      - COMIC
-      - GRAPHIC_NOVEL
-      - AUDIOBOOK
-    KindGoalDto:
-      type: object
-      properties:
-        kind:
-          type: string
-        target:
-          type: integer
-          format: int32
-        unit:
-          type: string
-        current:
-          type: integer
-          format: int64
-    KindValueDto:
-      type: object
-      properties:
-        kind:
-          type: string
-        library:
-          type: number
-        libraryPriced:
-          type: integer
-          format: int64
-        wishlist:
-          type: number
-        wishlistPriced:
-          type: integer
-          format: int64
-    LibraryCreateDto:
-      type: object
-      required:
-      - book
-      properties:
-        book:
-          $ref: "#/components/schemas/ManualBookDto"
-        status:
-          $ref: "#/components/schemas/LibraryStatus"
-        rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
-        acquiredAt:
-          $ref: "#/components/schemas/LocalDate"
-        ownership:
-          $ref: "#/components/schemas/Ownership"
-    LibraryItemDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        status:
-          type: string
-        rating:
-          type: integer
-          format: int32
-        review:
-          type: string
-        acquiredAt:
-          $ref: "#/components/schemas/LocalDate"
-        rankCode:
-          type: string
-        progress:
-          $ref: "#/components/schemas/ProgressView"
-        book:
-          $ref: "#/components/schemas/BookView"
-        reviewShared:
-          type: boolean
-        ownership:
-          type: string
-        price:
-          type: number
-    LibraryPageDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/LibraryItemDto"
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        total:
-          type: integer
-          format: int64
-    LibraryResetDto:
-      type: object
-      properties:
-        libraryItems:
-          type: integer
-          format: int32
-        wishlistItems:
-          type: integer
-          format: int32
-        goals:
-          type: integer
-          format: int32
-        categories:
-          type: integer
-          format: int32
-        seriesFollows:
-          type: integer
-          format: int32
-        seriesReviews:
-          type: integer
-          format: int32
-        authorFollows:
-          type: integer
-          format: int32
-    LibraryStatus:
-      type: string
-      enum:
-      - TO_READ
-      - READING
-      - READ
-      - ABANDONED
-    LocalDate:
-      type: string
-      format: date
-      examples:
-      - 2022-03-10
-    ManualBookDto:
-      type: object
-      required:
-      - kind
-      - title
-      properties:
-        kind:
-          $ref: "#/components/schemas/Kind"
-        title:
-          type: string
-          pattern: \S
-        authors:
-          type: string
-        seriesTitle:
-          type: string
-        volumeNumber:
-          type: integer
-          format: int32
-        isbn13:
-          type: string
-        publisher:
-          type: string
-        language:
-          type: string
-        pageCount:
-          type: integer
-          format: int32
-        coverUrl:
-          type: string
-        format:
-          type: string
-        releaseDate:
-          $ref: "#/components/schemas/LocalDate"
-        originalYear:
-          type: integer
-          format: int32
-        synopsis:
-          type: string
-        genres:
-          type: string
-        provider:
-          type: string
-          maxLength: 32
-        providerRef:
-          type: string
-          maxLength: 255
-    MeDto:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-        displayName:
-          type: string
-        locale:
-          type: string
-        timeZone:
-          type: string
-        trusted:
-          type: boolean
-        publicAccount:
-          type: boolean
-    MemberSearchDto:
-      type: object
-      properties:
-        id:
-          type: string
-        displayName:
-          type: string
-        trusted:
-          type: boolean
-        following:
-          type: boolean
-    MemberSummaryDto:
-      type: object
-      properties:
-        id:
-          type: string
-        displayName:
-          type: string
-        trusted:
-          type: boolean
-    OffsetDateTime:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T12:15:50-04:00
-    Ownership:
-      type: string
-      enum:
-      - OWNED
-      - BORROWED
-      - EBOOK
-      - WISHLIST
-      - NOT_OWNED
-    OwnershipDto:
-      type: object
-      required:
-      - ownership
-      properties:
-        ownership:
-          $ref: "#/components/schemas/Ownership"
-    PriceDto:
-      type: object
-      properties:
-        price:
-          type: number
-          multipleOf: 0.01
-          minimum: 0
-    ProgressDto:
-      type: object
-      properties:
-        currentPage:
-          type: integer
-          format: int32
-          minimum: 0
-        percent:
-          type: integer
-          format: int32
-          maximum: 100
-          minimum: 0
-        status:
-          $ref: "#/components/schemas/LibraryStatus"
-        startedAt:
-          $ref: "#/components/schemas/LocalDate"
-        finishedAt:
-          $ref: "#/components/schemas/LocalDate"
-    ProgressView:
-      type: object
-      properties:
-        currentPage:
-          type: integer
-          format: int32
-        percent:
-          type: integer
-          format: int32
-        startedAt:
-          $ref: "#/components/schemas/LocalDate"
-        finishedAt:
-          $ref: "#/components/schemas/LocalDate"
-    RankAssignDto:
-      type: object
-      properties:
-        categoryId:
-          $ref: "#/components/schemas/UUID"
-    ReportCreateDto:
-      type: object
-      required:
-      - targetType
-      - targetId
-      - reason
-      properties:
-        targetType:
-          $ref: "#/components/schemas/ReportTargetType"
-        targetId:
-          $ref: "#/components/schemas/UUID"
-        reason:
-          $ref: "#/components/schemas/ReportReason"
-        comment:
-          type: string
-          maxLength: 2000
-    ReportReason:
-      type: string
-      enum:
-      - WRONG_COVER
-      - WRONG_INFO
-      - DUPLICATE
-      - SPOILER
-      - OFFENSIVE
-      - SPAM
-      - OTHER
-    ReportTargetType:
-      type: string
-      enum:
-      - WORK
-      - EDITION
-      - SERIES
-      - REVIEW
-      - SERIES_REVIEW
-    ReviewDto:
-      type: object
-      properties:
-        rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
-        review:
-          type: string
-          maxLength: 5000
-        shared:
-          type: boolean
-    ScanResultDto:
-      type: object
-      properties:
-        isbn13:
-          type: string
-        match:
-          type: string
-        owned:
-          $ref: "#/components/schemas/LibraryItemDto"
-        wished:
-          $ref: "#/components/schemas/WishlistItemDto"
-        catalog:
-          $ref: "#/components/schemas/CatalogResult"
-    ScrapeRequest:
-      type: object
-      required:
-      - handle
-      properties:
-        handle:
-          type: string
-          pattern: \S
-    SeriesDetailDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        kind:
-          type: string
-        title:
-          type: string
-        originalTitle:
-          type: string
-        coverUrl:
-          type: string
-        synopsis:
-          type: string
-        totalVolumes:
-          type: integer
-          format: int32
-        status:
-          type: string
-        ownedCount:
-          type: integer
-          format: int64
-        readCount:
-          type: integer
-          format: int64
-        followed:
-          type: boolean
-        volumes:
-          type: array
-          items:
-            $ref: "#/components/schemas/SeriesVolumeDto"
-    SeriesMissingDto:
-      type: object
-      properties:
-        seriesId:
-          $ref: "#/components/schemas/UUID"
-        title:
-          type: string
-        volumes:
-          type: array
-          items:
-            type: integer
-            format: int32
-    SeriesReviewDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        seriesId:
-          $ref: "#/components/schemas/UUID"
-        rating:
-          type: integer
-          format: int32
-        review:
-          type: string
-        createdAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        updatedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        shared:
-          type: boolean
-    SeriesReviewUpsertDto:
-      type: object
-      required:
-      - rating
-      properties:
-        rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
-        review:
-          type: string
-          maxLength: 5000
-        shared:
-          type: boolean
-    SeriesSummaryDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        kind:
-          type: string
-        title:
-          type: string
-        coverUrl:
-          type: string
-        totalVolumes:
-          type: integer
-          format: int32
-        status:
-          type: string
-        ownedCount:
-          type: integer
-          format: int64
-        readCount:
-          type: integer
-          format: int64
-        followed:
-          type: boolean
-        lastActivity:
-          $ref: "#/components/schemas/LocalDate"
-        authors:
-          type: string
-        genre:
-          type: string
-    SeriesVolumeDto:
-      type: object
-      properties:
-        volumeNumber:
-          type: integer
-          format: int32
-        title:
-          type: string
-        workId:
-          $ref: "#/components/schemas/UUID"
-        libraryItemId:
-          $ref: "#/components/schemas/UUID"
-        owned:
-          type: boolean
-        read:
-          type: boolean
-        missing:
-          type: boolean
-        upcoming:
-          type: boolean
-        coverUrl:
-          type: string
-    SharedReviewDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        authorId:
-          type: string
-        authorName:
-          type: string
-        rating:
-          type: integer
-          format: int32
-        review:
-          type: string
-        updatedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-    SharedReviewsDto:
-      type: object
-      properties:
-        average:
-          type: number
-          format: double
-        count:
-          type: integer
-          format: int64
-        reviews:
-          type: array
-          items:
-            $ref: "#/components/schemas/SharedReviewDto"
-    StatsDto:
-      type: object
-      properties:
-        read:
-          type: integer
-          format: int64
-        reading:
-          type: integer
-          format: int64
-        toRead:
-          type: integer
-          format: int64
-        abandoned:
-          type: integer
-          format: int64
-        pagesRead:
-          type: integer
-          format: int64
-        seriesCount:
-          type: integer
-          format: int64
-        goalTarget:
-          type: integer
-          format: int32
-        goalUnit:
-          type: string
-        goalCurrent:
-          type: integer
-          format: int64
-        byGenre:
-          type: array
-          items:
-            $ref: "#/components/schemas/GenreCount"
-        readWithPageCount:
-          type: integer
-          format: int64
-        goals:
-          type: array
-          items:
-            $ref: "#/components/schemas/KindGoalDto"
-    TimelineDto:
-      type: object
-      properties:
-        from:
-          $ref: "#/components/schemas/LocalDate"
-        to:
-          $ref: "#/components/schemas/LocalDate"
-        granularity:
-          type: string
-        points:
-          type: array
-          items:
-            $ref: "#/components/schemas/TimelinePointDto"
-        books:
-          type: integer
-          format: int64
-        pages:
-          type: integer
-          format: int64
-        pagesPerDay:
-          type: number
-          format: double
-        daysPerBook:
-          type: number
-          format: double
-        bestPeriod:
-          type: string
-        bestPeriodBooks:
-          type: integer
-          format: int64
-        byAuthor:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byPublisher:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byLanguage:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        byRank:
-          type: array
-          items:
-            $ref: "#/components/schemas/BreakdownCountDto"
-        booksPerMonth:
-          type: number
-          format: double
-    TimelinePointDto:
-      type: object
-      properties:
-        period:
-          type: string
-        books:
-          type: integer
-          format: int64
-        pages:
-          type: integer
-          format: int64
-        byKind:
-          type: object
-          additionalProperties:
-            type: integer
-            format: int64
-        pagesByKind:
-          type: object
-          additionalProperties:
-            type: integer
-            format: int64
-    UUID:
-      type: string
-      format: uuid
-      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-    UpcomingReleaseDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        seriesId:
-          $ref: "#/components/schemas/UUID"
-        seriesTitle:
-          type: string
-        kind:
-          type: string
-        coverUrl:
-          type: string
-        volumeNumber:
-          type: integer
-          format: int32
-        title:
-          type: string
-        releaseDate:
-          $ref: "#/components/schemas/LocalDate"
-        datePrecision:
-          type: string
-        region:
-          type: string
-        publisher:
-          type: string
-        source:
-          type: string
-        confidence:
-          type: string
-    UpdateMeDto:
-      type: object
-      required:
-      - displayName
-      - locale
-      - publicAccount
-      properties:
-        displayName:
-          type: string
-          pattern: \S
-          maxLength: 255
-        locale:
-          type: string
-          pattern: fr|en
-        timeZone:
-          type: string
-          maxLength: 64
-        publicAccount:
-          type: boolean
-    ValueDto:
-      type: object
-      properties:
-        currency:
-          type: string
-        library:
-          type: number
-        libraryOwned:
-          type: integer
-          format: int64
-        libraryPriced:
-          type: integer
-          format: int64
-        wishlist:
-          type: number
-        wishlistCount:
-          type: integer
-          format: int64
-        wishlistPriced:
-          type: integer
-          format: int64
-        byKind:
-          type: array
-          items:
-            $ref: "#/components/schemas/KindValueDto"
-    WishPriority:
-      type: string
-      enum:
-      - PRIORITY
-      - SOON
-      - SOMEDAY
-    WishlistAcquireDto:
-      type: object
-      properties:
-        status:
-          $ref: "#/components/schemas/LibraryStatus"
-        rating:
-          type: integer
-          format: int32
-        acquiredAt:
-          $ref: "#/components/schemas/LocalDate"
-    WishlistBudgetDto:
-      type: object
-      properties:
-        total:
-          type: number
-        pricedCount:
-          type: integer
-          format: int64
-        byPriority:
-          type: array
-          items:
-            $ref: "#/components/schemas/WishlistBudgetLineDto"
-    WishlistBudgetLineDto:
-      type: object
-      properties:
-        priority:
-          type: string
-        count:
-          type: integer
-          format: int64
-        pricedCount:
-          type: integer
-          format: int64
-        total:
-          type: number
-    WishlistCreateDto:
-      type: object
-      required:
-      - book
-      properties:
-        book:
-          $ref: "#/components/schemas/ManualBookDto"
-        priority:
-          $ref: "#/components/schemas/WishPriority"
-        estimatedPrice:
-          type: number
-          multipleOf: 0.01
-          minimum: 0
-        note:
-          type: string
-          maxLength: 512
-    WishlistItemDto:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        priority:
-          type: string
-        estimatedPrice:
-          type: number
-        note:
-          type: string
-        book:
-          $ref: "#/components/schemas/BookView"
-    WishlistPageDto:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/WishlistItemDto"
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        total:
-          type: integer
-          format: int64
-        budget:
-          $ref: "#/components/schemas/WishlistBudgetDto"
-    WishlistUpdateDto:
-      type: object
-      required:
-      - priority
-      properties:
-        priority:
-          $ref: "#/components/schemas/WishPriority"
-        estimatedPrice:
-          type: number
-          multipleOf: 0.01
-          minimum: 0
-        note:
-          type: string
-          maxLength: 512
-  securitySchemes:
-    SecurityScheme:
-      type: openIdConnect
-      openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
-      description: Authentication
 paths:
+  /api/achievements:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AchievementsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Overview
+      tags:
+      - Achievement Resource
+      security:
+      - SecurityScheme: []
+  /api/achievements/seen:
+    post:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Seen
+      tags:
+      - Achievement Resource
+      security:
+      - SecurityScheme: []
   /api/authors:
     get:
       parameters:
@@ -3039,6 +1800,1344 @@ paths:
       - Work Resource
       security:
       - SecurityScheme: []
+components:
+  schemas:
+    AccountDeletionDto:
+      type: object
+      properties:
+        libraryItems:
+          type: integer
+          format: int32
+        wishlistItems:
+          type: integer
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        categories:
+          type: integer
+          format: int32
+        seriesFollows:
+          type: integer
+          format: int32
+    AchievementDto:
+      type: object
+      properties:
+        code:
+          type: string
+        family:
+          type: string
+        tiers:
+          type: integer
+          format: int32
+        tier:
+          type: integer
+          format: int32
+        unlockedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        value:
+          type: integer
+          format: int64
+        nextThreshold:
+          type: integer
+          format: int64
+        xpEarned:
+          type: integer
+          format: int32
+        nextXp:
+          type: integer
+          format: int32
+    AchievementUnlockDto:
+      type: object
+      properties:
+        code:
+          type: string
+        tier:
+          type: integer
+          format: int32
+        tiers:
+          type: integer
+          format: int32
+        xp:
+          type: integer
+          format: int32
+    AchievementsDto:
+      type: object
+      properties:
+        xp:
+          type: integer
+          format: int64
+        level:
+          type: integer
+          format: int32
+        levelXp:
+          type: integer
+          format: int64
+        nextLevelXp:
+          type: integer
+          format: int64
+        achievements:
+          type: array
+          items:
+            $ref: "#/components/schemas/AchievementDto"
+        unseen:
+          type: array
+          items:
+            $ref: "#/components/schemas/AchievementUnlockDto"
+    AuthorDetailDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+        photoUrl:
+          type: string
+        followed:
+          type: boolean
+        works:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorWorkDto"
+    AuthorSummaryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+        photoUrl:
+          type: string
+        workCount:
+          type: integer
+          format: int64
+        followed:
+          type: boolean
+    AuthorWorkDto:
+      type: object
+      properties:
+        workId:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        originalYear:
+          type: integer
+          format: int32
+        coverUrl:
+          type: string
+        libraryItemId:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+    BookView:
+      type: object
+      properties:
+        editionId:
+          $ref: "#/components/schemas/UUID"
+        workId:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        coverUrl:
+          type: string
+        pageCount:
+          type: integer
+          format: int32
+        publisher:
+          type: string
+        language:
+          type: string
+        isbn13:
+          type: string
+        originalYear:
+          type: integer
+          format: int32
+        synopsis:
+          type: string
+        genres:
+          type: string
+        pageCountEstimated:
+          type: boolean
+        listPrice:
+          type: number
+        listPriceCurrency:
+          type: string
+    BreakdownCountDto:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+          format: int64
+    BreakdownDto:
+      type: object
+      properties:
+        books:
+          type: integer
+          format: int64
+        byAuthor:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byPublisher:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byLanguage:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byRank:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+    CatalogResult:
+      type: object
+      properties:
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        year:
+          type: integer
+          format: int32
+        coverUrl:
+          type: string
+        synopsis:
+          type: string
+        isbn13:
+          type: string
+        publisher:
+          type: string
+        language:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        pageCount:
+          type: integer
+          format: int32
+        provider:
+          type: string
+        providerRef:
+          type: string
+        popularity:
+          type: integer
+          format: int32
+    CategoryCreateDto:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          type: string
+          pattern: \S
+        color:
+          type: string
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        code:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+        builtin:
+          type: boolean
+    CategoryUpdateDto:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          type: string
+          pattern: \S
+    CollectedRequest:
+      type: object
+      required:
+      - source
+      - pages
+      properties:
+        source:
+          type: string
+          pattern: booknode|babelio
+        pages:
+          type: array
+          items:
+            type: string
+          maxItems: 1000
+    DashboardLayoutDto:
+      type: object
+      required:
+      - sections
+      properties:
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardSectionDto"
+    DashboardSectionDto:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          pattern: \S
+        hidden:
+          type: boolean
+    EditionDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        isbn13:
+          type: string
+        publisher:
+          type: string
+        language:
+          type: string
+        pageCount:
+          type: integer
+          format: int32
+        format:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        coverUrl:
+          type: string
+        owned:
+          type: boolean
+    EditionSwitchDto:
+      type: object
+      required:
+      - editionId
+      properties:
+        editionId:
+          $ref: "#/components/schemas/UUID"
+    ExportCategoryDto:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+          format: int32
+    ExportCollectionItemDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+        rankCode:
+          type: string
+        progress:
+          $ref: "#/components/schemas/ExportProgressDto"
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+        price:
+          type: number
+    ExportDto:
+      type: object
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        exportedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        user:
+          $ref: "#/components/schemas/ExportUserDto"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportCategoryDto"
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportGoalDto"
+        collection:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportCollectionItemDto"
+        wishlist:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportWishDto"
+        followedSeries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExportSeriesFollowDto"
+    ExportGoalDto:
+      type: object
+      properties:
+        year:
+          type: integer
+          format: int32
+        targetCount:
+          type: integer
+          format: int32
+        unit:
+          $ref: "#/components/schemas/GoalUnit"
+        kind:
+          $ref: "#/components/schemas/Kind"
+    ExportProgressDto:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        percent:
+          type: integer
+          format: int32
+        startedAt:
+          $ref: "#/components/schemas/LocalDate"
+        finishedAt:
+          $ref: "#/components/schemas/LocalDate"
+    ExportSeriesFollowDto:
+      type: object
+      properties:
+        kind:
+          $ref: "#/components/schemas/Kind"
+        title:
+          type: string
+    ExportUserDto:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        locale:
+          type: string
+    ExportWishDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        priority:
+          $ref: "#/components/schemas/WishPriority"
+        estimatedPrice:
+          type: number
+        note:
+          type: string
+    GenreCount:
+      type: object
+      properties:
+        code:
+          type: string
+        genre:
+          type: string
+        count:
+          type: integer
+          format: int64
+    GoalDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        year:
+          type: integer
+          format: int32
+        targetCount:
+          type: integer
+          format: int32
+        unit:
+          type: string
+        kind:
+          type: string
+    GoalUnit:
+      type: string
+      enum:
+      - BOOKS
+      - VOLUMES
+      - PAGES
+    GoalUpsertDto:
+      type: object
+      required:
+      - targetCount
+      properties:
+        targetCount:
+          type: integer
+          format: int32
+          minimum: 1
+        unit:
+          $ref: "#/components/schemas/GoalUnit"
+    ImportJobDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        status:
+          type: string
+        total:
+          type: integer
+          format: int32
+        imported:
+          type: integer
+          format: int32
+        skipped:
+          type: integer
+          format: int32
+        error:
+          type: string
+    ImportResult:
+      type: object
+      properties:
+        source:
+          type: string
+        imported:
+          type: integer
+          format: int32
+        skipped:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+    Kind:
+      type: string
+      enum:
+      - BOOK
+      - MANGA
+      - COMIC
+      - GRAPHIC_NOVEL
+      - AUDIOBOOK
+    KindGoalDto:
+      type: object
+      properties:
+        kind:
+          type: string
+        target:
+          type: integer
+          format: int32
+        unit:
+          type: string
+        current:
+          type: integer
+          format: int64
+    KindValueDto:
+      type: object
+      properties:
+        kind:
+          type: string
+        library:
+          type: number
+        libraryPriced:
+          type: integer
+          format: int64
+        wishlist:
+          type: number
+        wishlistPriced:
+          type: integer
+          format: int64
+    LibraryCreateDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        rating:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+    LibraryItemDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        status:
+          type: string
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+        rankCode:
+          type: string
+        progress:
+          $ref: "#/components/schemas/ProgressView"
+        book:
+          $ref: "#/components/schemas/BookView"
+        reviewShared:
+          type: boolean
+        ownership:
+          type: string
+        price:
+          type: number
+    LibraryPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LibraryItemDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    LibraryResetDto:
+      type: object
+      properties:
+        libraryItems:
+          type: integer
+          format: int32
+        wishlistItems:
+          type: integer
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        categories:
+          type: integer
+          format: int32
+        seriesFollows:
+          type: integer
+          format: int32
+        seriesReviews:
+          type: integer
+          format: int32
+        authorFollows:
+          type: integer
+          format: int32
+    LibraryStatus:
+      type: string
+      enum:
+      - TO_READ
+      - READING
+      - READ
+      - ABANDONED
+    LocalDate:
+      type: string
+      format: date
+      examples:
+      - 2022-03-10
+    ManualBookDto:
+      type: object
+      required:
+      - kind
+      - title
+      properties:
+        kind:
+          $ref: "#/components/schemas/Kind"
+        title:
+          type: string
+          pattern: \S
+        authors:
+          type: string
+        seriesTitle:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        isbn13:
+          type: string
+        publisher:
+          type: string
+        language:
+          type: string
+        pageCount:
+          type: integer
+          format: int32
+        coverUrl:
+          type: string
+        format:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        originalYear:
+          type: integer
+          format: int32
+        synopsis:
+          type: string
+        genres:
+          type: string
+        provider:
+          type: string
+          maxLength: 32
+        providerRef:
+          type: string
+          maxLength: 255
+    MeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        locale:
+          type: string
+        timeZone:
+          type: string
+        trusted:
+          type: boolean
+        publicAccount:
+          type: boolean
+    MemberSearchDto:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        trusted:
+          type: boolean
+        following:
+          type: boolean
+    MemberSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        trusted:
+          type: boolean
+    OffsetDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50-04:00
+    Ownership:
+      type: string
+      enum:
+      - OWNED
+      - BORROWED
+      - EBOOK
+      - WISHLIST
+      - NOT_OWNED
+    OwnershipDto:
+      type: object
+      required:
+      - ownership
+      properties:
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+    PriceDto:
+      type: object
+      properties:
+        price:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+    ProgressDto:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+          minimum: 0
+        percent:
+          type: integer
+          format: int32
+          maximum: 100
+          minimum: 0
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        startedAt:
+          $ref: "#/components/schemas/LocalDate"
+        finishedAt:
+          $ref: "#/components/schemas/LocalDate"
+    ProgressView:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          format: int32
+        percent:
+          type: integer
+          format: int32
+        startedAt:
+          $ref: "#/components/schemas/LocalDate"
+        finishedAt:
+          $ref: "#/components/schemas/LocalDate"
+    RankAssignDto:
+      type: object
+      properties:
+        categoryId:
+          $ref: "#/components/schemas/UUID"
+    ReportCreateDto:
+      type: object
+      required:
+      - targetType
+      - targetId
+      - reason
+      properties:
+        targetType:
+          $ref: "#/components/schemas/ReportTargetType"
+        targetId:
+          $ref: "#/components/schemas/UUID"
+        reason:
+          $ref: "#/components/schemas/ReportReason"
+        comment:
+          type: string
+          maxLength: 2000
+    ReportReason:
+      type: string
+      enum:
+      - WRONG_COVER
+      - WRONG_INFO
+      - DUPLICATE
+      - SPOILER
+      - OFFENSIVE
+      - SPAM
+      - OTHER
+    ReportTargetType:
+      type: string
+      enum:
+      - WORK
+      - EDITION
+      - SERIES
+      - REVIEW
+      - SERIES_REVIEW
+    ReviewDto:
+      type: object
+      properties:
+        rating:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        review:
+          type: string
+          maxLength: 5000
+        shared:
+          type: boolean
+    ScanResultDto:
+      type: object
+      properties:
+        isbn13:
+          type: string
+        match:
+          type: string
+        owned:
+          $ref: "#/components/schemas/LibraryItemDto"
+        wished:
+          $ref: "#/components/schemas/WishlistItemDto"
+        catalog:
+          $ref: "#/components/schemas/CatalogResult"
+    ScrapeRequest:
+      type: object
+      required:
+      - handle
+      properties:
+        handle:
+          type: string
+          pattern: \S
+    SeriesDetailDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        originalTitle:
+          type: string
+        coverUrl:
+          type: string
+        synopsis:
+          type: string
+        totalVolumes:
+          type: integer
+          format: int32
+        status:
+          type: string
+        ownedCount:
+          type: integer
+          format: int64
+        readCount:
+          type: integer
+          format: int64
+        followed:
+          type: boolean
+        volumes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeriesVolumeDto"
+    SeriesMissingDto:
+      type: object
+      properties:
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        title:
+          type: string
+        volumes:
+          type: array
+          items:
+            type: integer
+            format: int32
+    SeriesReviewDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        shared:
+          type: boolean
+    SeriesReviewUpsertDto:
+      type: object
+      required:
+      - rating
+      properties:
+        rating:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        review:
+          type: string
+          maxLength: 5000
+        shared:
+          type: boolean
+    SeriesSummaryDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        coverUrl:
+          type: string
+        totalVolumes:
+          type: integer
+          format: int32
+        status:
+          type: string
+        ownedCount:
+          type: integer
+          format: int64
+        readCount:
+          type: integer
+          format: int64
+        followed:
+          type: boolean
+        lastActivity:
+          $ref: "#/components/schemas/LocalDate"
+        authors:
+          type: string
+        genre:
+          type: string
+    SeriesVolumeDto:
+      type: object
+      properties:
+        volumeNumber:
+          type: integer
+          format: int32
+        title:
+          type: string
+        workId:
+          $ref: "#/components/schemas/UUID"
+        libraryItemId:
+          $ref: "#/components/schemas/UUID"
+        owned:
+          type: boolean
+        read:
+          type: boolean
+        missing:
+          type: boolean
+        upcoming:
+          type: boolean
+        coverUrl:
+          type: string
+    SharedReviewDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        authorId:
+          type: string
+        authorName:
+          type: string
+        rating:
+          type: integer
+          format: int32
+        review:
+          type: string
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    SharedReviewsDto:
+      type: object
+      properties:
+        average:
+          type: number
+          format: double
+        count:
+          type: integer
+          format: int64
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/SharedReviewDto"
+    StatsDto:
+      type: object
+      properties:
+        read:
+          type: integer
+          format: int64
+        reading:
+          type: integer
+          format: int64
+        toRead:
+          type: integer
+          format: int64
+        abandoned:
+          type: integer
+          format: int64
+        pagesRead:
+          type: integer
+          format: int64
+        seriesCount:
+          type: integer
+          format: int64
+        goalTarget:
+          type: integer
+          format: int32
+        goalUnit:
+          type: string
+        goalCurrent:
+          type: integer
+          format: int64
+        byGenre:
+          type: array
+          items:
+            $ref: "#/components/schemas/GenreCount"
+        readWithPageCount:
+          type: integer
+          format: int64
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/KindGoalDto"
+    TimelineDto:
+      type: object
+      properties:
+        from:
+          $ref: "#/components/schemas/LocalDate"
+        to:
+          $ref: "#/components/schemas/LocalDate"
+        granularity:
+          type: string
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelinePointDto"
+        books:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+        pagesPerDay:
+          type: number
+          format: double
+        daysPerBook:
+          type: number
+          format: double
+        bestPeriod:
+          type: string
+        bestPeriodBooks:
+          type: integer
+          format: int64
+        byAuthor:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byPublisher:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byLanguage:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        byRank:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownCountDto"
+        booksPerMonth:
+          type: number
+          format: double
+    TimelinePointDto:
+      type: object
+      properties:
+        period:
+          type: string
+        books:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+        byKind:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        pagesByKind:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+    UUID:
+      type: string
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+    UpcomingReleaseDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        seriesId:
+          $ref: "#/components/schemas/UUID"
+        seriesTitle:
+          type: string
+        kind:
+          type: string
+        coverUrl:
+          type: string
+        volumeNumber:
+          type: integer
+          format: int32
+        title:
+          type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        datePrecision:
+          type: string
+        region:
+          type: string
+        publisher:
+          type: string
+        source:
+          type: string
+        confidence:
+          type: string
+    UpdateMeDto:
+      type: object
+      required:
+      - displayName
+      - locale
+      - publicAccount
+      properties:
+        displayName:
+          type: string
+          pattern: \S
+          maxLength: 255
+        locale:
+          type: string
+          pattern: fr|en
+        timeZone:
+          type: string
+          maxLength: 64
+        publicAccount:
+          type: boolean
+    ValueDto:
+      type: object
+      properties:
+        currency:
+          type: string
+        library:
+          type: number
+        libraryOwned:
+          type: integer
+          format: int64
+        libraryPriced:
+          type: integer
+          format: int64
+        wishlist:
+          type: number
+        wishlistCount:
+          type: integer
+          format: int64
+        wishlistPriced:
+          type: integer
+          format: int64
+        byKind:
+          type: array
+          items:
+            $ref: "#/components/schemas/KindValueDto"
+    WishPriority:
+      type: string
+      enum:
+      - PRIORITY
+      - SOON
+      - SOMEDAY
+    WishlistAcquireDto:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        rating:
+          type: integer
+          format: int32
+        acquiredAt:
+          $ref: "#/components/schemas/LocalDate"
+    WishlistBudgetDto:
+      type: object
+      properties:
+        total:
+          type: number
+        pricedCount:
+          type: integer
+          format: int64
+        byPriority:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishlistBudgetLineDto"
+    WishlistBudgetLineDto:
+      type: object
+      properties:
+        priority:
+          type: string
+        count:
+          type: integer
+          format: int64
+        pricedCount:
+          type: integer
+          format: int64
+        total:
+          type: number
+    WishlistCreateDto:
+      type: object
+      required:
+      - book
+      properties:
+        book:
+          $ref: "#/components/schemas/ManualBookDto"
+        priority:
+          $ref: "#/components/schemas/WishPriority"
+        estimatedPrice:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+        note:
+          type: string
+          maxLength: 512
+    WishlistItemDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        priority:
+          type: string
+        estimatedPrice:
+          type: number
+        note:
+          type: string
+        book:
+          $ref: "#/components/schemas/BookView"
+    WishlistPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishlistItemDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+        budget:
+          $ref: "#/components/schemas/WishlistBudgetDto"
+    WishlistUpdateDto:
+      type: object
+      required:
+      - priority
+      properties:
+        priority:
+          $ref: "#/components/schemas/WishPriority"
+        estimatedPrice:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+        note:
+          type: string
+          maxLength: 512
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8081/realms/librarius/.well-known/openid-configuration
+      description: Authentication
 info:
   title: Librarius API
   version: 1.0.0

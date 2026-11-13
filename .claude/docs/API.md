@@ -66,6 +66,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/dashboard/layout` | Replaces it — full replace, same convention as `ProgressDto` |
 | GET | `/api/stats` | Aggregated statistics (`StatsDto`) |
 | GET | `/api/stats/timeline?from=&to=&granularity=` | Reading over time (`TimelineDto`) — see [Timeline](#timeline). Points carry `pagesByKind` (#420); `booksPerMonth` replaces `daysPerBook` on screen (#418); `byRank` lists every rank |
+| GET | `/api/achievements` | The caller's progression (`AchievementsDto`, #287): XP, level and its XP bounds, every achievement with its tier, progress and next threshold, and `unseen` unlocks. Evaluates on read: newly reached tiers are stored then |
+| POST | `/api/achievements/seen` | Marks the unseen unlocks as shown — 204 |
 | GET | `/api/stats/breakdown` | Everything read, all time (`BreakdownDto`): every `READ` title, dated or not, by author, publisher, language and every rank (#419) |
 | GET | `/api/stats/value` | What the library (`ownership = OWNED`, publisher's price) and the wishlist (market price, else the reader's estimate) are worth (`ValueDto`, #421) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |

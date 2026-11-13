@@ -90,6 +90,11 @@ import { fileURLToPath } from 'node:url';
  * (+2 kB) — and the toast region every screen shares. Measured 188.5 kB and 293.0 kB.
  * Re-derived to the measurement plus ~5%, `initial` kept under #79's 200 kB product ceiling.
  *
+ * `total` moves to 320 kB for achievements and levels (#287, 2026-11): measured 304.4 kB, 98% of
+ * 310, the screen and the copy of nineteen achievements in both eager locales. `initial`
+ * measured 192.8 kB and stays at 199, under #79's 200 kB product ceiling — the next eager
+ * addition will have to make room rather than raise it.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -99,7 +104,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 310,
+  total: 320,
   // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
   // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the

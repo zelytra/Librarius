@@ -3,6 +3,8 @@ package zelytra.librarius.library;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zelytra.librarius.domain.LibraryItem;
+import zelytra.librarius.achievement.Achievement;
+import zelytra.librarius.achievement.AchievementService;
 import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.ReadingProgress;
 import zelytra.librarius.domain.repository.ReadingProgressRepository;
@@ -20,6 +22,9 @@ import java.time.LocalDate;
  */
 @ApplicationScoped
 public class ReadingProgressService {
+
+    @jakarta.inject.Inject
+    AchievementService achievements;
 
     /** Reaching the end of a book is 100 %, whatever the page count says. */
     private static final int COMPLETE_PERCENT = 100;
@@ -132,6 +137,15 @@ public class ReadingProgressService {
         }
         if (item.status == LibraryStatus.TO_READ) {
             progress.finishedAt = null;
+        }
+
+        // A title given up on and read to the end after all — straight away or through a
+        // resumed reading — is a comeback (#287), an event the data cannot tell afterwards.
+        if (item.status == LibraryStatus.ABANDONED) {
+            item.wasAbandoned = true;
+        }
+        if (nowRead && item.wasAbandoned) {
+            achievements.unlock(item.userId, Achievement.COMEBACK);
         }
     }
 }

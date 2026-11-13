@@ -54,6 +54,10 @@ export const defaultHandlers = [
   http.get(`${BASE}/categories`, () => HttpResponse.json(BUILTIN_CATEGORIES)),
   http.get(`${BASE}/stats`, () => HttpResponse.json(stats())),
   http.get(`${BASE}/stats/timeline`, () => HttpResponse.json(timeline())),
+  // #287: a reader at level 1 with nothing unlocked, nothing to announce.
+  http.get(`${BASE}/achievements`, () =>
+    HttpResponse.json({ xp: 0, level: 1, levelXp: 0, nextLevelXp: 50, achievements: [], unseen: [] })),
+  http.post(`${BASE}/achievements/seen`, () => new HttpResponse(null, { status: 204 })),
   // #419 and #421: everything read, and what the shelves are worth.
   http.get(`${BASE}/stats/breakdown`, () =>
     HttpResponse.json({ books: 0, byAuthor: [], byPublisher: [], byLanguage: [], byRank: [] })),

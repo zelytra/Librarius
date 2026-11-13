@@ -1132,5 +1132,126 @@
     "goalSaved": "Objectif enregistré",
     "price": "Prix enregistré : {{price}}",
     "priceCleared": "Prix retiré, retour au prix neuf"
+  },
+  "achievements": {
+    "title": "Succès",
+    "prompt": "Connecte-toi pour voir tes succès et ton niveau.",
+    "error": "Succès indisponibles pour le moment.",
+    "level": "Niveau {{level}}",
+    "levelShort": "Niv. {{level}}",
+    "open": "Niveau {{level}} — voir mes succès",
+    "xpLabel": "{{xp}} XP sur {{next}} pour le niveau suivant",
+    "toNext": "{{xp}} XP · encore {{remaining}} XP pour le niveau {{next}}",
+    "count": "{{unlocked}} succès sur {{total}}",
+    "xpTotal": "{{xp}} XP au total",
+    "see": "Voir mes succès",
+    "unlocked": "Succès débloqué : {{name}} (+{{xp}} XP)",
+    "unlockedOn": "Débloqué le {{date}}",
+    "locked": "À débloquer",
+    "xpEarned": "{{xp}} XP gagnés",
+    "xpNext": "+{{xp}} XP au prochain palier",
+    "tiersLabel": "Palier {{tier}} sur {{tiers}}",
+    "tiers": {
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "platinum": "Platine"
+    },
+    "families": {
+      "READING": "Lecture",
+      "CONSISTENCY": "Régularité",
+      "CURATION": "Collection et avis",
+      "DISCOVERY": "Découverte"
+    },
+    "items": {
+      "FIRST_BOOK": {
+        "name": "Première page tournée",
+        "description": "Termine ton premier livre."
+      },
+      "BOOKWORM": {
+        "name": "Rat de bibliothèque",
+        "description_one": "Termine {{value}} livre.",
+        "description_other": "Termine {{value}} livres."
+      },
+      "PAGE_EATER": {
+        "name": "Dévoreur de pages",
+        "description_one": "Lis {{value}} page.",
+        "description_other": "Lis {{value}} pages."
+      },
+      "FINISHER": {
+        "name": "Jusqu'au bout",
+        "description": "Lis tous les tomes que tu possèdes d'une série (au moins deux)."
+      },
+      "MARATHON": {
+        "name": "Marathon",
+        "description": "Commence et termine un livre le même jour."
+      },
+      "COMEBACK": {
+        "name": "Le retour",
+        "description": "Termine un livre que tu avais abandonné."
+      },
+      "ON_A_ROLL": {
+        "name": "Sur la lancée",
+        "description_one": "Termine au moins un livre chaque semaine, {{value}} semaine d'affilée.",
+        "description_other": "Termine au moins un livre chaque semaine, {{value}} semaines d'affilée."
+      },
+      "GOAL_GETTER": {
+        "name": "Objectif atteint",
+        "description": "Atteins ton objectif de lecture annuel."
+      },
+      "AHEAD_OF_THE_CURVE": {
+        "name": "En avance",
+        "description": "Atteins ton objectif annuel avant la fin septembre."
+      },
+      "CRITIC": {
+        "name": "Critique",
+        "description_one": "Note {{value}} livre.",
+        "description_other": "Note {{value}} livres."
+      },
+      "WORDSMITH": {
+        "name": "Plume",
+        "description": "Écris ton premier avis."
+      },
+      "LIBRARIAN": {
+        "name": "Bibliothécaire",
+        "description_one": "Atteins {{value}} titre dans ta bibliothèque.",
+        "description_other": "Atteins {{value}} titres dans ta bibliothèque."
+      },
+      "SORTER": {
+        "name": "Rangement",
+        "description_one": "Classe tes livres dans {{value}} catégorie différente.",
+        "description_other": "Classe tes livres dans {{value}} catégories différentes."
+      },
+      "EXPLORER": {
+        "name": "Explorateur",
+        "description_one": "Possède des livres de {{value}} genre.",
+        "description_other": "Possède des livres de {{value}} genres différents."
+      },
+      "POLYGLOT": {
+        "name": "Polyglotte",
+        "description_one": "Possède des livres en {{value}} langue.",
+        "description_other": "Possède des livres en {{value}} langues."
+      },
+      "OMNIVORE": {
+        "name": "Omnivore",
+        "description": "Possède un roman, un manga, une BD, un roman graphique et un livre audio."
+      },
+      "SCOUT": {
+        "name": "Éclaireur",
+        "description_one": "Ajoute {{value}} titre depuis Découvrir.",
+        "description_other": "Ajoute {{value}} titres depuis Découvrir."
+      },
+      "FAN": {
+        "name": "Fan",
+        "description": "Suis un auteur."
+      },
+      "COMPLETIONIST": {
+        "name": "Collectionneur",
+        "description": "Possède toute la bibliographie connue d'un auteur (au moins trois œuvres)."
+      }
+    },
+    "progress": "{{value}} / {{target}}",
+    "unlockedMany_one": "{{count}} succès débloqué (+{{xp}} XP) — vois-le dans Succès",
+    "unlockedMany_other": "{{count}} succès débloqués (+{{xp}} XP) — vois-les dans Succès"
   }
 }

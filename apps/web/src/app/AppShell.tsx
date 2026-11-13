@@ -5,6 +5,7 @@ import { SideNav } from './SideNav';
 import { useProfileLanguage } from './useProfileLanguage';
 import { Loading } from '../shared/ui/states';
 import { useViewportAtLeast } from '../shared/ui/breakpoints';
+import { AchievementWatcher } from '../shared/AchievementWatcher';
 import styles from './AppShell.module.css';
 
 /**
@@ -46,6 +47,8 @@ export function AppShell() {
         </main>
         {!wide && showBottomNav && <BottomNav />}
       </div>
+      {/* Announces the achievements a write unlocked (#287). */}
+      <AchievementWatcher />
     </div>
   );
 }

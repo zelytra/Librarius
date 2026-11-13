@@ -219,3 +219,19 @@
   font-size: var(--fs-11);
   color: var(--faint);
 }
+
+/* ── Level (#287) ─────────────────────────────────────────────────────────── */
+.xpTrack {
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+  margin: 4px 0 8px;
+}
+
+.xpFill {
+  display: block;
+  height: 100%;
+  background: var(--accent-deep);
+  border-radius: inherit;
+}

@@ -218,6 +218,33 @@ public final class ApiDtos {
             Ownership ownership) {
     }
 
+    /**
+     * One achievement as the reader stands on it (#287).
+     *
+     * @param tiers         how many tiers it has, 1 for a one-shot
+     * @param tier          the highest tier unlocked, 0 when none
+     * @param value         where the reader stands on what it counts
+     * @param nextThreshold the value the next tier needs, null once every tier is unlocked
+     * @param xpEarned      XP its unlocked tiers granted
+     * @param nextXp        XP the next tier grants, null once complete
+     */
+    public record AchievementDto(String code, String family, int tiers, int tier,
+            java.time.OffsetDateTime unlockedAt, long value, Long nextThreshold, int xpEarned,
+            Integer nextXp) {
+    }
+
+    /** An unlock the reader has not been shown yet. */
+    public record AchievementUnlockDto(String code, int tier, int tiers, int xp) {
+    }
+
+    /**
+     * The reader's progression (#287): total XP, the level and the XP bounds of that level, every
+     * achievement, and the unlocks to announce.
+     */
+    public record AchievementsDto(long xp, int level, long levelXp, long nextLevelXp,
+            java.util.List<AchievementDto> achievements, java.util.List<AchievementUnlockDto> unseen) {
+    }
+
     /** The reader's own price for a title (#431); null clears it. */
     public record PriceDto(@PositiveOrZero @Digits(integer = 6, fraction = 2) BigDecimal price) {
     }

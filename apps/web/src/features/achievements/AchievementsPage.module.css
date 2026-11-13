@@ -1,0 +1,261 @@
+/* Achievements, XP and levels (#287). */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.back {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.title {
+  margin: 0;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dashboard-gap);
+}
+
+/* ── Level ───────────────────────────────────────────────────────────────── */
+.levelCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, var(--tint-sand), var(--surface-2));
+}
+
+.levelBadge {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-round);
+  background: var(--gradient-avatar);
+  box-shadow: var(--shadow-accent-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.levelNumber {
+  font-family: var(--font-serif);
+  font-size: var(--fs-27);
+  font-weight: 700;
+  color: var(--on-accent);
+}
+
+.levelBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.levelTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-19);
+  font-weight: 600;
+}
+
+.xpTrack,
+.track {
+  height: 8px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.xpFill,
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-deep);
+  transition: width 500ms ease;
+}
+
+.levelHint {
+  font-size: var(--fs-12);
+  color: var(--ink-soft);
+}
+
+/* ── Families ────────────────────────────────────────────────────────────── */
+.family {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.familyTitle {
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: var(--grid-panel-columns);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  opacity: 0.78;
+}
+
+.cardOn {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+.badge {
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chip);
+  color: var(--muted);
+}
+
+.cardOn .badge {
+  background: var(--accent-deep);
+  color: var(--on-accent);
+}
+
+/* The metal of the tier reached, when the achievement has tiers. */
+.cardOn .bronze {
+  background: var(--metal-bronze);
+}
+
+.cardOn .silver {
+  background: var(--metal-silver);
+}
+
+.cardOn .gold {
+  background: var(--metal-gold);
+}
+
+.cardOn .platinum {
+  background: var(--metal-platinum);
+}
+
+.lock {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.name {
+  font-weight: 700;
+  font-size: var(--fs-14);
+}
+
+.tierName {
+  font-size: var(--fs-11);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-deep);
+}
+
+.description {
+  font-size: var(--fs-12-5);
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+}
+
+.pip {
+  width: 16px;
+  height: 5px;
+  border-radius: var(--radius-bar);
+  background: var(--chip);
+}
+
+.pipOn {
+  background: var(--accent-deep);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressRow .track {
+  flex: 1;
+  height: 6px;
+}
+
+.progressText {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: var(--fs-11);
+  color: var(--faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xpFill,
+  .fill {
+    transition: none;
+  }
+}

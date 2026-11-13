@@ -232,6 +232,21 @@ pages réaliste, pas à la vraie distance. La carte n'affiche que l'essentiel (l
 palier atteint) pour laisser voir le ciel ; le bouton « i » ouvre tous les chiffres : hauteur
 de papier, longueurs estimées, distance et pages restantes avant le palier suivant.
 
+## Succès et niveaux
+
+Lire, noter, classer ou suivre un auteur débloque des **succès** : « Rat de bibliothèque »
+(10, 50, 100 puis 500 livres finis), « Dévoreur de pages », « Sur la lancée » (un livre fini
+chaque semaine plusieurs semaines d'affilée), « Le retour » (finir un livre abandonné),
+« Polyglotte », « Omnivore »… Certains ont des paliers — bronze, argent, or, platine.
+
+Chaque succès rapporte de l'**XP**, chaque livre fini aussi (10 XP), et l'XP fait monter ton
+**niveau**. Le niveau s'affiche en haut de l'accueil ; un appui dessus ouvre l'écran
+**Succès**, avec ceux que tu as débloqués et ceux qui restent, et où tu en es pour chacun.
+
+Un nouveau succès s'annonce par un message en bas de l'écran. À la première ouverture, ce
+que tu avais déjà accompli est débloqué d'un coup, sans message. C'est le serveur qui compte :
+rien ne se règle à la main, et personne d'autre ne voit tes succès.
+
 ## Les statistiques
 
 - **Rythme de lecture** : pages par jour et **titres par mois**, calculés sur la période
