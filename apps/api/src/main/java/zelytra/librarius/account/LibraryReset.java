@@ -27,7 +27,7 @@ public class LibraryReset {
     /** The tables emptied for the reader, in deletion order. Each carries a {@code user_id}. */
     static final List<String> TABLES = List.of(
             "library_item", "wishlist_item", "reading_goal", "rank_category",
-            "series_follow", "series_review", "author_follow");
+            "series_follow", "series_review", "author_follow", "user_achievement");
 
     @Inject
     EntityManager em;
@@ -42,6 +42,11 @@ public class LibraryReset {
                     .setParameter(1, userId)
                     .executeUpdate());
         }
+        // What was earned on the old library goes with it, and the next evaluation is silent
+        // again: a library rebuilt by an import must not greet its owner with a burst of toasts.
+        em.createNativeQuery("update app_user set achievements_evaluated_at = null where id = ?1")
+                .setParameter(1, userId)
+                .executeUpdate();
         em.clear();
         return removed;
     }

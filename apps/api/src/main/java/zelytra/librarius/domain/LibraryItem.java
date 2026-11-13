@@ -73,6 +73,10 @@ public class LibraryItem {
     @Column(precision = 8, scale = 2)
     public java.math.BigDecimal price;
 
+    /** Whether the title was ever abandoned (#287, V31): finishing it then is a comeback. */
+    @Column(name = "was_abandoned", nullable = false)
+    public boolean wasAbandoned;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 }

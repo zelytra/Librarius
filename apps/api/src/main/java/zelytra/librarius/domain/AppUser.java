@@ -60,4 +60,11 @@ public class AppUser {
      */
     @Column(name = "public_account", nullable = false)
     public boolean publicAccount = false;
+
+    /**
+     * When the achievements were first evaluated for this account (#287, V31). Null until then:
+     * that first evaluation unlocks what was already earned silently, as already seen.
+     */
+    @Column(name = "achievements_evaluated_at")
+    public OffsetDateTime achievementsEvaluatedAt;
 }
