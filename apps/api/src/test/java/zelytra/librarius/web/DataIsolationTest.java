@@ -98,7 +98,7 @@ class DataIsolationTest {
 
     @Test
     void libraryItemsAreInvisibleToOtherUsers() {
-        String aliceItem = addLibraryItem("alice", "Isolation - library", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - library", "TO_READ");
 
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library")
@@ -117,7 +117,7 @@ class DataIsolationTest {
      */
     @Test
     void libraryItemOfAnotherUserCannotBeDeleted() {
-        String aliceItem = addLibraryItem("alice", "Isolation - deletion", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - deletion", "TO_READ");
 
         given().auth().oauth2(token("bob"))
                 .when().delete("/api/library/" + aliceItem)
@@ -132,7 +132,7 @@ class DataIsolationTest {
 
     @Test
     void libraryItemOfAnotherUserCannotBeRanked() {
-        String aliceItem = addLibraryItem("alice", "Isolation - rank", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - rank", "TO_READ");
         String orId = given().auth().oauth2(token("bob")).when().get("/api/categories")
                 .then().statusCode(200)
                 .extract().path("find { it.code == 'or' }.id");
@@ -209,7 +209,7 @@ class DataIsolationTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "Isolation Test",
                                     "publisher": "%s", "pageCount": 300 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, publisher))
                 .when().post("/api/library")
                 .then().statusCode(201)
@@ -429,7 +429,7 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .extract().path("id");
 
-        String bobItem = addLibraryItem("bob", "Isolation - cross-user rank", "OWNED");
+        String bobItem = addLibraryItem("bob", "Isolation - cross-user rank", "TO_READ");
 
         given().auth().oauth2(token("bob")).contentType("application/json")
                 .body("{ \"categoryId\": \"" + aliceCategory + "\" }")
@@ -450,7 +450,7 @@ class DataIsolationTest {
                 .when().post("/api/categories")
                 .then().statusCode(200)
                 .extract().path("id");
-        String aliceItem = addLibraryItem("alice", "Isolation - ranked title", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - ranked title", "TO_READ");
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("{ \"categoryId\": \"" + aliceCategory + "\" }")
                 .when().put("/api/library/" + aliceItem + "/rank")
@@ -552,7 +552,7 @@ class DataIsolationTest {
                         { "book": { "kind": "MANGA", "title": "%s vol. %d",
                                     "authors": "Isolation Test", "seriesTitle": "%s",
                                     "volumeNumber": %d },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(seriesTitle, volume, seriesTitle, volume))
                 .when().post("/api/library")
                 .then().statusCode(201);
@@ -723,7 +723,7 @@ class DataIsolationTest {
                         { "book": { "kind": "BOOK", "title": "Isolation - genre",
                                     "authors": "Isolation Test",
                                     "genres": "Isolation Genre Alice" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """)
                 .when().post("/api/library").then().statusCode(201);
 
@@ -823,7 +823,7 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .extract().jsonPath().getInt("goalCurrent");
 
-        String aliceItem = addLibraryItem("alice", "Isolation - goal progress", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - goal progress", "TO_READ");
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("{ \"percent\": 100, \"status\": \"READ\" }")
                 .when().put("/api/library/" + aliceItem + "/progress")
@@ -847,7 +847,7 @@ class DataIsolationTest {
                 .then().statusCode(200)
                 .extract().jsonPath().getInt("books");
 
-        String aliceItem = addLibraryItem("alice", "Isolation - timeline", "OWNED");
+        String aliceItem = addLibraryItem("alice", "Isolation - timeline", "TO_READ");
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("{ \"percent\": 100, \"status\": \"READ\" }")
                 .when().put("/api/library/" + aliceItem + "/progress")

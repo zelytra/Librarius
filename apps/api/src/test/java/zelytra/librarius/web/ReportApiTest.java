@@ -36,7 +36,7 @@ class ReportApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "Report Test",
                                     "publisher": "Report Press", "pageCount": 200 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title))
                 .when().post("/api/library")
                 .then().statusCode(201)
@@ -107,7 +107,7 @@ class ReportApiTest {
                 .body("""
                         { "book": { "kind": "MANGA", "title": "%s vol. 1", "authors": "Report Test",
                                     "seriesTitle": "%s", "volumeNumber": 1 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(seriesTitle, seriesTitle))
                 .when().post("/api/library").then().statusCode(201);
         String series = given().auth().oauth2(token("alice")).when().get("/api/series")

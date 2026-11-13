@@ -25,6 +25,16 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
         return delete("id = ?1 and userId = ?2", id, userId) > 0;
     }
 
+    /** The user's wish on that edition, if any — the other side of ownership WISHLIST (#411). */
+    public Optional<WishlistItem> findByEdition(String userId, UUID editionId) {
+        return find("userId = ?1 and edition.id = ?2", userId, editionId).firstResultOptional();
+    }
+
+    /** Removes the user's wish on that edition; whether there was one. */
+    public boolean deleteByEdition(String userId, UUID editionId) {
+        return delete("userId = ?1 and edition.id = ?2", userId, editionId) > 0;
+    }
+
     /**
      * The whole wishlist of one user, edition and work fetched along the way, ordered by
      * title — same contract, and same reason, as
@@ -104,7 +114,7 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
         TITLE("lower(w.title) asc, wi.id asc"),
         AUTHOR("lower(coalesce(w.authorsText, '')) asc, lower(w.title) asc, wi.id asc"),
         /** Cheapest first; wishes carrying no estimate are pushed to the end. */
-        PRICE("coalesce(wi.estimatedPrice, 1000000) asc, lower(w.title) asc, wi.id asc");
+        PRICE("coalesce(wi.estimatedPrice, e.listPrice, 1000000) asc, lower(w.title) asc, wi.id asc");
 
         private final String clause;
 
@@ -194,8 +204,10 @@ public class WishlistItemRepository implements PanacheRepositoryBase<WishlistIte
         Map<String, Object> params = new LinkedHashMap<>();
         String where = whereClause(filter, params);
         TypedQuery<Object[]> query = getEntityManager().createQuery(
-                "select wi.priority, count(wi), count(wi.estimatedPrice),"
-                        + " coalesce(sum(wi.estimatedPrice), 0)"
+                // The reader's own estimate, else the market price of the edition (#421): a
+                // wish nobody priced by hand no longer counts as free.
+                "select wi.priority, count(wi), count(coalesce(wi.estimatedPrice, e.listPrice)),"
+                        + " coalesce(sum(coalesce(wi.estimatedPrice, e.listPrice)), 0)"
                         + " from WishlistItem wi join wi.edition e join e.work w"
                         + " where " + where
                         + " group by wi.priority",

@@ -57,7 +57,7 @@ class UpcomingReleasesApiTest {
                         { "book": { "kind": "MANGA", "title": "%s vol. %d",
                                     "authors": "Releases Test", "seriesTitle": "%s",
                                     "volumeNumber": %d },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(seriesTitle, volume, seriesTitle, volume))
                 .when().post("/api/library")
                 .then().statusCode(201);

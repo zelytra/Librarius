@@ -77,7 +77,7 @@ class BooknodeImporterTest {
         assertEquals(LibraryStatus.READING, books.get(2).status());    // "en cours de lecture"
         assertEquals(LibraryStatus.ABANDONED, books.get(3).status());  // "abandonné"
         assertTrue(books.get(4).wished());                            // "envies"
-        assertEquals(LibraryStatus.OWNED, books.get(5).status());      // "à lire"
+        assertEquals(LibraryStatus.TO_READ, books.get(5).status());      // "à lire"
     }
 
     /** A read book's tier becomes a rating out of five; an untiered "lu aussi" carries none. */

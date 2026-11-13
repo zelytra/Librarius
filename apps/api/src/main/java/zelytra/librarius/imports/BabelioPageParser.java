@@ -89,7 +89,7 @@ public final class BabelioPageParser {
         String author = authorLink != null ? emptyToNull(authorLink.text()) : null;
         String statusText = textOf(item.selectFirst(".lib-status"));
         boolean wished = statusText != null && fold(statusText).contains("pense");
-        LibraryStatus status = wished ? LibraryStatus.OWNED : status(item, statusText != null ? statusText : "");
+        LibraryStatus status = wished ? LibraryStatus.TO_READ : status(item, statusText != null ? statusText : "");
 
         Integer rating = null;
         Element stars = item.selectFirst(".lib-stars");
@@ -158,7 +158,7 @@ public final class BabelioPageParser {
         Element img = row.selectFirst("img[src]");
         String cover = img != null ? emptyToNull(img.absUrl("src").isEmpty() ? img.attr("src") : img.absUrl("src")) : null;
         Matcher date = DATE.matcher(text);
-        return new ImportedBook(title, author, cover, wished ? LibraryStatus.OWNED : status, null,
+        return new ImportedBook(title, author, cover, wished ? LibraryStatus.TO_READ : status, null,
                 rating(row, text), null,
                 date.find() && status == LibraryStatus.READ ? ImportDates.parse(date.group(1)) : null,
                 null, null, null, null, wished);
@@ -178,12 +178,12 @@ public final class BabelioPageParser {
             return LibraryStatus.READING;
         }
         if (raw.contains("a lire")) {
-            return LibraryStatus.OWNED;
+            return LibraryStatus.TO_READ;
         }
         if (Pattern.compile("(^|[^a-z])lu([^a-z]|$)").matcher(raw).find()) {
             return LibraryStatus.READ;
         }
-        return LibraryStatus.OWNED;
+        return LibraryStatus.TO_READ;
     }
 
     /** A star rating out of five: a rating widget's value, else a "4/5" in the text. */

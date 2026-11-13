@@ -46,7 +46,7 @@ public class ReadingProgressService {
      *       where the reader got to. Completing it, as {@code READ} does, would overwrite
      *       the one thing an abandoned title actually has to say, and would claim a book
      *       was read to the end when it was put down at page 120;</li>
-     *   <li>{@code OWNED} clears the finish date — reverting to "not read" cannot leave one
+     *   <li>{@code TO_READ} clears the finish date — reverting to "not read" cannot leave one
      *       behind.</li>
      * </ul>
      *
@@ -71,7 +71,7 @@ public class ReadingProgressService {
             return created;
         });
 
-        Integer pageCount = item.edition != null ? item.edition.pageCount : null;
+        Integer pageCount = item.edition != null ? item.edition.effectivePageCount() : null;
         // Whichever side the user filled in, the other is derived: the two must never
         // disagree once stored.
         Integer page = dto.currentPage() != null ? dto.currentPage()
@@ -130,7 +130,7 @@ public class ReadingProgressService {
         if (item.status == LibraryStatus.ABANDONED && progress.finishedAt == null) {
             progress.finishedAt = today;
         }
-        if (item.status == LibraryStatus.OWNED) {
+        if (item.status == LibraryStatus.TO_READ) {
             progress.finishedAt = null;
         }
     }

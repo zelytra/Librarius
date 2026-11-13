@@ -53,7 +53,7 @@ class ProviderReferenceApiTest {
                 .body("""
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "provider": %s, "providerRef": %s },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, AUTHOR, quoted(provider), quoted(ref)))
                 .when().post("/api/library")
                 .then().statusCode(201)

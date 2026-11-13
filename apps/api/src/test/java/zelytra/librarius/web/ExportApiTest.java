@@ -154,7 +154,7 @@ class ExportApiTest {
      */
     @Test
     void anExportOnlyEverContainsItsOwnAuthorsData() {
-        addTitle("alice", "Export - alice only", "OWNED");
+        addTitle("alice", "Export - alice only", "TO_READ");
 
         given().auth().oauth2(token("bob")).queryParam("format", "json")
                 .when().get("/api/export")

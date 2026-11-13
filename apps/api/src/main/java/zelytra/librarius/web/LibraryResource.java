@@ -23,6 +23,9 @@ import zelytra.librarius.domain.Edition;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryItem;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.domain.Ownership;
+import zelytra.librarius.library.OwnershipService;
+import zelytra.librarius.web.ApiDtos.OwnershipDto;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
@@ -74,6 +77,9 @@ public class LibraryResource {
     @Inject
     EditionService editions;
 
+    @Inject
+    OwnershipService ownershipService;
+
     /**
      * One page of the collection, filtered and sorted by the database.
      *
@@ -82,7 +88,7 @@ public class LibraryResource {
      * @param sort      {@code added} (default), {@code title}, {@code author},
      *                  {@code genre} or {@code rating}
      * @param kind      {@code BOOK} or {@code MANGA}, no filtering when absent
-     * @param status    {@code OWNED}, {@code READING}, {@code READ} or {@code ABANDONED},
+     * @param status    {@code TO_READ}, {@code READING}, {@code READ} or {@code ABANDONED},
      *                  no filtering when absent — the four are exclusive, so an abandoned
      *                  title is returned by {@code status=ABANDONED} and by nothing else
      * @param rank      code of a rank category ({@code or}, {@code argent}, {@code bronze},
@@ -92,6 +98,8 @@ public class LibraryResource {
      * @param q         free text matched against the title, the authors and the series
      * @param standalone only the titles that belong to no series, the one-shots the grouped
      *                  shelf lists beside its series blocks
+     * @param ownership {@code OWNED}, {@code BORROWED}, {@code EBOOK}, {@code WISHLIST} or
+     *                  {@code NOT_OWNED} (#411), no filtering when absent
      */
     @GET
     public LibraryPageDto list(
@@ -104,7 +112,8 @@ public class LibraryResource {
             @QueryParam("genre") String genre,
             @QueryParam("minRating") Integer minRating,
             @QueryParam("q") String q,
-            @QueryParam("standalone") @DefaultValue("false") boolean standalone) {
+            @QueryParam("standalone") @DefaultValue("false") boolean standalone,
+            @QueryParam("ownership") Ownership ownership) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
@@ -114,7 +123,7 @@ public class LibraryResource {
         PageRequest window = PageRequest.of(page, size);
         LibraryFilter filter =
                 new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q,
-                        standalone);
+                        standalone, ownership);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =
@@ -150,17 +159,18 @@ public class LibraryResource {
         LibraryItem item = new LibraryItem();
         item.userId = currentUser.id();
         item.edition = edition;
-        item.status = dto.status() != null ? dto.status() : LibraryStatus.OWNED;
+        item.status = dto.status() != null ? dto.status() : LibraryStatus.TO_READ;
         item.rating = dto.rating();
         item.acquiredAt = dto.acquiredAt();
         items.persist(item);
+        ownershipService.apply(item, dto.ownership());
         // Added straight as read: read now, as far as anyone can tell. Without a finished
         // reading the title counted in no year, no goal and no monthly statistic.
         if (item.status == LibraryStatus.READ) {
             zelytra.librarius.domain.ReadingProgress progress = new zelytra.librarius.domain.ReadingProgress();
             progress.libraryItem = item;
             progress.percent = 100;
-            progress.currentPage = edition.pageCount;
+            progress.currentPage = edition.effectivePageCount();
             progress.finishedAt = java.time.LocalDate.now();
             progressRepository.persist(progress);
             item.progress = progress;
@@ -175,6 +185,23 @@ public class LibraryResource {
         }
 
         return Response.status(Response.Status.CREATED).entity(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * Whether the reader has the book, and in what form (#411). {@code WISHLIST} puts the
+     * edition on the wishlist as well; any other value takes it off.
+     */
+    @PUT
+    @Path("/{id}/ownership")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setOwnership(@PathParam("id") UUID id, @Valid OwnershipDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        ownershipService.apply(item, dto.ownership());
+        return Response.ok(LibraryItemDto.of(item)).build();
     }
 
     /** Assigns a rank to an owned title (or clears it when categoryId is null). */

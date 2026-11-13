@@ -52,7 +52,7 @@ class EditionEnrichmentApiTest {
                         { "book": { "kind": "BOOK", "title": "%s", "authors": "%s",
                                     "publisher": "Pocket", "isbn13": %s,
                                     "provider": %s, "providerRef": %s },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(title, AUTHOR, quoted(isbn13), quoted(provider), quoted(ref)))
                 .when().post("/api/library")
                 .then().statusCode(201)

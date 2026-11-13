@@ -208,7 +208,7 @@ public class ImportService {
             // Held from now on: a title listed twice in the same file is imported once.
             state.existing().put(key, IMPORTED_IN_THIS_RUN);
 
-            LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.OWNED;
+            LibraryStatus status = book.status() != null ? book.status() : LibraryStatus.TO_READ;
             LibraryItem item = new LibraryItem();
             item.userId = userId;
             item.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
@@ -320,7 +320,7 @@ public class ImportService {
         progress.finishedAt = readAt;
         if (item.status == LibraryStatus.READ) {
             progress.percent = COMPLETE;
-            progress.currentPage = item.edition.pageCount;
+            progress.currentPage = item.edition.effectivePageCount();
         }
         progresses.persist(progress);
         item.progress = progress;
@@ -375,7 +375,7 @@ public class ImportService {
             String shelf = cell(cols, statusCol);
             LibraryStatus status = mapCsvStatus(shelf);
             LocalDate explicitReadAt = ImportDates.parse(cell(cols, readDateCol));
-            if (explicitReadAt != null && status == LibraryStatus.OWNED) {
+            if (explicitReadAt != null && status == LibraryStatus.TO_READ) {
                 // A dated reading is a book that was read, whatever custom shelf it sits on.
                 status = LibraryStatus.READ;
             }
@@ -509,7 +509,7 @@ public class ImportService {
 
     private static LibraryStatus mapCsvStatus(String raw) {
         if (raw == null) {
-            return LibraryStatus.OWNED;
+            return LibraryStatus.TO_READ;
         }
         String s = raw.toLowerCase(Locale.FRENCH);
         // First, and before "cours": Goodreads has no abandoned shelf, so the wording is
@@ -527,12 +527,12 @@ public class ImportService {
         // Goodreads shelf a book sits on before it is opened is called `to-read`, and a
         // library exported from there — or from here — came back entirely marked as read.
         if (s.contains("to-read") || s.contains("to read") || s.contains("lire")) {
-            return LibraryStatus.OWNED;
+            return LibraryStatus.TO_READ;
         }
         if (s.equals("lu") || s.contains("read") || s.contains("terminé")) {
             return LibraryStatus.READ;
         }
-        return LibraryStatus.OWNED;
+        return LibraryStatus.TO_READ;
     }
 
     private static int indexOf(String[] header, String... names) {

@@ -319,6 +319,79 @@ public class BnfProvider implements CatalogProvider {
         return results;
     }
 
+    /** A publisher's price, as the BnF records it: amount and ISO currency. */
+    public record ListPrice(java.math.BigDecimal amount, String currency) {
+    }
+
+    /** "14,95 EUR", "6.90 EUR", "Br. : 15 €", "29,90 euros". */
+    private static final Pattern PRICE = Pattern.compile(
+            "(?iu)(\\d{1,5}(?:[.,]\\d{1,2})?)\\s*(?:EUR\\b|€|euros?\\b)");
+
+    /**
+     * The price of a new copy of the edition carrying this ISBN (#421), from UNIMARC 010$d.
+     *
+     * <p>Under the French fixed book price law, the publisher's price the legal deposit
+     * records is what the book costs new in any shop in France. Empty when the BnF does not
+     * know the ISBN, records no price, or does not answer — a lookup never throws.
+     */
+    public java.util.Optional<ListPrice> priceByIsbn(String isbn13) {
+        if (isbn13 == null || isbn13.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        String xml = call("bib.isbn all \"" + isbn13 + "\"", 5)
+                .await().atMost(callTimeout.plusSeconds(2));
+        if (xml == null || xml.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            return priceIn(xml, isbn13);
+        } catch (Exception e) {
+            Log.warnf("BnF price answer unreadable: %s", e.getMessage());
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * The price recorded for that ISBN in an SRU answer: the 010 whose ISBN matches first,
+     * since a record lists one 010 per binding, then any priced 010.
+     */
+    static java.util.Optional<ListPrice> priceIn(String xml, String isbn13) throws Exception {
+        Document document = documentBuilder().parse(new InputSource(new StringReader(xml)));
+        NodeList records = document.getElementsByTagNameNS(MARC_NS, "record");
+        ListPrice fallback = null;
+        for (int i = 0; i < records.getLength(); i++) {
+            if (!(records.item(i) instanceof Element record)) {
+                continue;
+            }
+            for (Element field : fields(record, "010")) {
+                ListPrice price = parsePrice(sub(field, 'd'));
+                if (price == null) {
+                    continue;
+                }
+                if (isbn13.equals(Isbn.toIsbn13(sub(field, 'a')))) {
+                    return java.util.Optional.of(price);
+                }
+                if (fallback == null) {
+                    fallback = price;
+                }
+            }
+        }
+        return java.util.Optional.ofNullable(fallback);
+    }
+
+    /** The amount in a 010$d, or {@code null} when it states none in euros. */
+    static ListPrice parsePrice(String text) {
+        if (text == null) {
+            return null;
+        }
+        Matcher matcher = PRICE.matcher(text);
+        if (!matcher.find()) {
+            return null;
+        }
+        java.math.BigDecimal amount = new java.math.BigDecimal(matcher.group(1).replace(',', '.'));
+        return amount.signum() > 0 ? new ListPrice(amount.setScale(2, java.math.RoundingMode.HALF_UP), "EUR") : null;
+    }
+
     private static CatalogResult toResult(Element record) {
         Element titleField = field(record, "200");
         String base = titleField == null ? null : clean(sub(titleField, 'a'));

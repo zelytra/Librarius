@@ -256,7 +256,7 @@ public class EditionService {
         }
 
         item.edition = target;
-        reanchor(progresses.findByItem(item.id).orElse(null), target.pageCount);
+        reanchor(progresses.findByItem(item.id).orElse(null), target.effectivePageCount());
         return SwitchOutcome.done(item);
     }
 

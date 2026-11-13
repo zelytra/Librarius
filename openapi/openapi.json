@@ -158,6 +158,15 @@
           },
           "genres" : {
             "type" : "string"
+          },
+          "pageCountEstimated" : {
+            "type" : "boolean"
+          },
+          "listPrice" : {
+            "type" : "number"
+          },
+          "listPriceCurrency" : {
+            "type" : "string"
           }
         }
       },
@@ -170,6 +179,39 @@
           "count" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "BreakdownDto" : {
+        "type" : "object",
+        "properties" : {
+          "books" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "byAuthor" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byPublisher" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byLanguage" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
+          },
+          "byRank" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BreakdownCountDto"
+            }
           }
         }
       },
@@ -400,6 +442,9 @@
           },
           "progress" : {
             "$ref" : "#/components/schemas/ExportProgressDto"
+          },
+          "ownership" : {
+            "$ref" : "#/components/schemas/Ownership"
           }
         }
       },
@@ -656,6 +701,28 @@
           }
         }
       },
+      "KindValueDto" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string"
+          },
+          "library" : {
+            "type" : "number"
+          },
+          "libraryPriced" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "wishlist" : {
+            "type" : "number"
+          },
+          "wishlistPriced" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "LibraryCreateDto" : {
         "type" : "object",
         "required" : [ "book" ],
@@ -674,6 +741,9 @@
           },
           "acquiredAt" : {
             "$ref" : "#/components/schemas/LocalDate"
+          },
+          "ownership" : {
+            "$ref" : "#/components/schemas/Ownership"
           }
         }
       },
@@ -707,6 +777,9 @@
           },
           "reviewShared" : {
             "type" : "boolean"
+          },
+          "ownership" : {
+            "type" : "string"
           }
         }
       },
@@ -768,7 +841,7 @@
       },
       "LibraryStatus" : {
         "type" : "string",
-        "enum" : [ "OWNED", "READING", "READ", "ABANDONED" ]
+        "enum" : [ "TO_READ", "READING", "READ", "ABANDONED" ]
       },
       "LocalDate" : {
         "type" : "string",
@@ -899,6 +972,19 @@
         "type" : "string",
         "format" : "date-time",
         "examples" : [ "2022-03-10T12:15:50-04:00" ]
+      },
+      "Ownership" : {
+        "type" : "string",
+        "enum" : [ "OWNED", "BORROWED", "EBOOK", "WISHLIST", "NOT_OWNED" ]
+      },
+      "OwnershipDto" : {
+        "type" : "object",
+        "required" : [ "ownership" ],
+        "properties" : {
+          "ownership" : {
+            "$ref" : "#/components/schemas/Ownership"
+          }
+        }
       },
       "ProgressDto" : {
         "type" : "object",
@@ -1378,6 +1464,10 @@
             "items" : {
               "$ref" : "#/components/schemas/BreakdownCountDto"
             }
+          },
+          "booksPerMonth" : {
+            "type" : "number",
+            "format" : "double"
           }
         }
       },
@@ -1396,6 +1486,13 @@
             "format" : "int64"
           },
           "byKind" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "pagesByKind" : {
             "type" : "object",
             "additionalProperties" : {
               "type" : "integer",
@@ -1473,6 +1570,42 @@
           },
           "publicAccount" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "ValueDto" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "library" : {
+            "type" : "number"
+          },
+          "libraryOwned" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "libraryPriced" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "wishlist" : {
+            "type" : "number"
+          },
+          "wishlistCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "wishlistPriced" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "byKind" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KindValueDto"
+            }
           }
         }
       },
@@ -2542,6 +2675,12 @@
             "format" : "int32"
           }
         }, {
+          "name" : "ownership",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Ownership"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "schema" : {
@@ -2756,6 +2895,52 @@
           }
         },
         "summary" : "Set Edition",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/library/{id}/ownership" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OwnershipDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Ownership",
         "tags" : [ "Library Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -3558,6 +3743,33 @@
         } ]
       }
     },
+    "/api/stats/breakdown" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BreakdownDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Breakdown",
+        "tags" : [ "Stats Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/stats/timeline" : {
       "get" : {
         "parameters" : [ {
@@ -3598,6 +3810,33 @@
           }
         },
         "summary" : "Timeline",
+        "tags" : [ "Stats Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/stats/value" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValueDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Value",
         "tags" : [ "Stats Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]

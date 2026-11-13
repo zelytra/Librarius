@@ -148,7 +148,7 @@ class ImportPersistTest {
     private static ImportedBook booknodeRow(String title, String rank, zelytra.librarius.domain.Kind kind,
             boolean wished, LocalDate added) {
         return new ImportedBook(title, "Some Author", null,
-                wished ? zelytra.librarius.domain.LibraryStatus.OWNED : zelytra.librarius.domain.LibraryStatus.READ,
+                wished ? zelytra.librarius.domain.LibraryStatus.TO_READ : zelytra.librarius.domain.LibraryStatus.READ,
                 "manga or", 4, added, wished ? null : added, null, null, rank, kind, wished);
     }
 

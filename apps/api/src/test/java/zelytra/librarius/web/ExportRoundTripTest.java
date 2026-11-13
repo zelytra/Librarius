@@ -80,7 +80,7 @@ class ExportRoundTripTest {
                                     "authors": "René Barjavel", "genres": "Science-Fiction",
                                     "isbn13": "9782070612079", "publisher": "Folio",
                                     "format": "Poche", "pageCount": 320 },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """)
                 .when().post("/api/library").then().statusCode(201);
 

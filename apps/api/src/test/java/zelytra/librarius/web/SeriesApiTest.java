@@ -59,9 +59,9 @@ class SeriesApiTest {
     @Test
     void holesInAnOwnedRunAreReported() {
         String title = "Series Test - gaps";
-        addVolume("alice", title, 1, "OWNED");
-        addVolume("alice", title, 2, "OWNED");
-        addVolume("alice", title, 5, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
+        addVolume("alice", title, 2, "TO_READ");
+        addVolume("alice", title, 5, "TO_READ");
 
         String id = seriesId("alice", title);
 
@@ -122,9 +122,9 @@ class SeriesApiTest {
     @Test
     void volumesAboveTheOwnedRunAreUpcomingRatherThanMissing() {
         String title = "Series Test - upcoming";
-        addVolume("alice", title, 1, "OWNED");
-        addVolume("alice", title, 2, "OWNED");
-        addVolume("bob", title, 4, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
+        addVolume("alice", title, 2, "TO_READ");
+        addVolume("bob", title, 4, "TO_READ");
 
         String id = seriesId("alice", title);
 
@@ -158,7 +158,7 @@ class SeriesApiTest {
     @Test
     void aVolumeZeroTheUserOwnsIsListed() {
         String title = "Series Test - prologue";
-        addVolume("alice", title, 0, "OWNED");
+        addVolume("alice", title, 0, "TO_READ");
         addVolume("alice", title, 1, "READ");
 
         String id = seriesId("alice", title);
@@ -182,7 +182,7 @@ class SeriesApiTest {
     @Test
     void aSeriesMadeOnlyOfAVolumeZeroIsNotEmpty() {
         String title = "Series Test - only prologue";
-        addVolume("alice", title, 0, "OWNED");
+        addVolume("alice", title, 0, "TO_READ");
 
         String id = seriesId("alice", title);
 
@@ -201,7 +201,7 @@ class SeriesApiTest {
     @Test
     void followingIsIdempotent() {
         String title = "Series Test - follow";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).when().put("/api/series/" + id + "/follow")
@@ -229,7 +229,7 @@ class SeriesApiTest {
     @Test
     void aFollowedSeriesRemainsListedWithoutAnyVolume() {
         String title = "Series Test - followed only";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).when().put("/api/series/" + id + "/follow")
@@ -284,7 +284,7 @@ class SeriesApiTest {
     void aSeriesTheCallerHasNoStakeInCannotBeReviewed() {
         String title = "Series Test - review no stake";
         // Bob owns a volume so the series row exists, but Alice never touches it.
-        addVolume("bob", title, 1, "OWNED");
+        addVolume("bob", title, 1, "TO_READ");
         String id = seriesId("bob", title);
 
         given().auth().oauth2(token("alice")).contentType("application/json")
@@ -297,7 +297,7 @@ class SeriesApiTest {
     @Test
     void aReviewCanBeWrittenReadUpdatedAndDeleted() {
         String title = "Series Test - review lifecycle";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).when().get("/api/series/" + id + "/review")
@@ -339,7 +339,7 @@ class SeriesApiTest {
     @Test
     void aBlankReviewTextIsStoredAsNothing() {
         String title = "Series Test - review blank text";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).contentType("application/json")
@@ -352,7 +352,7 @@ class SeriesApiTest {
     @Test
     void aReviewWithoutARatingIsRejected() {
         String title = "Series Test - review no rating";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).contentType("application/json")
@@ -364,7 +364,7 @@ class SeriesApiTest {
     @Test
     void anOutOfRangeSeriesRatingIsRejected() {
         String title = "Series Test - review range";
-        addVolume("alice", title, 1, "OWNED");
+        addVolume("alice", title, 1, "TO_READ");
         String id = seriesId("alice", title);
 
         given().auth().oauth2(token("alice")).contentType("application/json")
@@ -393,7 +393,7 @@ class SeriesApiTest {
                                         "authors": "Series Test", "seriesTitle": "%s",
                                         "volumeNumber": %d,
                                         "coverUrl": "https://covers.test/v%d.jpg" },
-                              "status": "OWNED" }
+                              "status": "TO_READ" }
                             """.formatted(title, volume, title, volume, volume))
                     .when().post("/api/library")
                     .then().statusCode(201);
@@ -418,12 +418,12 @@ class SeriesApiTest {
     @Test
     void listsOnlyTheTitlesOfNoSeriesWhenAskedForTheOneShots() {
         String title = "Series Test - standalone " + java.util.UUID.randomUUID();
-        addVolume("bob", title, 1, "OWNED");
+        addVolume("bob", title, 1, "TO_READ");
         String oneShot = "One-shot " + java.util.UUID.randomUUID();
         given().auth().oauth2(token("bob")).contentType("application/json")
                 .body("""
                         { "book": { "kind": "MANGA", "title": "%s", "authors": "Series Test" },
-                          "status": "OWNED" }
+                          "status": "TO_READ" }
                         """.formatted(oneShot))
                 .when().post("/api/library")
                 .then().statusCode(201);
