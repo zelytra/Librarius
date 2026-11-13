@@ -32,7 +32,7 @@ import java.util.function.Function;
 public class AniListProvider implements CatalogProvider {
 
     private static final String FIELDS = """
-            id title { romaji english } startDate { year month day }
+            id title { romaji english native } synonyms popularity startDate { year month day }
             coverImage { large } description(asHtml: false) isAdult volumes
             staff(perPage: 8, sort: RELEVANCE) { edges { role node { name { full } } } }
             """;
@@ -125,7 +125,9 @@ public class AniListProvider implements CatalogProvider {
      */
     private List<CatalogResult> byTitle(CatalogQuery query, int limit) {
         boolean withYear = query.year() != null;
-        String sort = query.text() != null ? "SEARCH_MATCH" : "POPULARITY_DESC";
+        // Among equal matches the most popular first: "demon slayer" is Kimetsu no Yaiba, not its
+        // Kimetsu Academy spin-off.
+        String sort = query.text() != null ? "[SEARCH_MATCH, POPULARITY_DESC]" : "POPULARITY_DESC";
         // format_not_in drops the light novels AniList files under type: MANGA — they polluted
         // a manga search with prose editions of the same franchise. Manga and one-shots stay.
         String gql = "query ($q: String, $n: Int"
@@ -145,9 +147,38 @@ public class AniListProvider implements CatalogProvider {
             variables.put("from", query.year() * 10000 + 101);
             variables.put("to", query.year() * 10000 + 1231);
         }
-        return fetch(gql, variables, AniListProvider::mediaOfPage).stream()
+        List<AniListClient.Media> media = fetch(gql, variables, AniListProvider::mediaOfPage);
+        return mainSeriesFirst(media, seriesOf(query.text())).stream()
                 .map(this::toResult)
                 .toList();
+    }
+
+    /**
+     * The series whose title holds the query first, the most popular then the shortest — the
+     * main series before its spin-offs — then the rest in AniList's order. Popularity leads:
+     * "Demon Slayer: Kimetsu Academy" is one letter shorter than "Demon Slayer: Kimetsu no Yaiba".
+     */
+    static List<AniListClient.Media> mainSeriesFirst(List<AniListClient.Media> media, String text) {
+        if (text == null || media.size() < 2) {
+            return media;
+        }
+        String needle = folded(text);
+        java.util.Comparator<AniListClient.Media> main = java.util.Comparator
+                .comparing((AniListClient.Media m) -> !folded(titleOf(m)).contains(needle))
+                .thenComparingInt(m -> folded(titleOf(m)).contains(needle)
+                        ? -(m.popularity() == null ? 0 : m.popularity()) : 0)
+                .thenComparingInt(m -> folded(titleOf(m)).contains(needle) ? titleOf(m).length() : 0);
+        return media.stream().sorted(main).toList();
+    }
+
+    private static String titleOf(AniListClient.Media m) {
+        String title = m.title() == null ? null : firstNonBlank(m.title().english(), m.title().romaji());
+        return title == null ? "" : title;
+    }
+
+    private static String folded(String text) {
+        return java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]+", " ").trim();
     }
 
     /**
@@ -207,13 +238,44 @@ public class AniListProvider implements CatalogProvider {
         return spellings;
     }
 
-    /** The series a "series + volume marker" search is about; any other text, as typed. */
+    /**
+     * The series a "series + volume" search is about — "one piece tome 3", or the bare "jujutsu
+     * kaisen 12" — any other text, as typed.
+     */
     static String seriesOf(String text) {
         if (text == null) {
             return null;
         }
         VolumeParser.Parsed parsed = VolumeParser.parse(text);
-        return parsed.seriesTitle() != null ? parsed.seriesTitle() : text;
+        if (parsed.seriesTitle() != null) {
+            return parsed.seriesTitle();
+        }
+        java.util.regex.Matcher bare = BARE_VOLUME.matcher(text.trim());
+        // "Kaiju No. 8": a number after "No." or "#" is the title's own.
+        return bare.matches() && !bare.group(1).matches("(?iu).*(?:\\bno\\.?|n°|#)")
+                ? bare.group(1).trim() : text;
+    }
+
+    /** Two words at least, the last one a number: "jujutsu kaisen 12". */
+    private static final java.util.regex.Pattern BARE_VOLUME =
+            java.util.regex.Pattern.compile("^(.*\\p{L}.*?)\\s+\\d{1,4}$");
+
+    /**
+     * The other titles of the series answered lately, by id. Bounded, in memory: what a search
+     * answered from the persistent cache after a restart is matched on its title alone.
+     */
+    private final Map<String, List<String>> alternativeTitles = java.util.Collections.synchronizedMap(
+            new java.util.LinkedHashMap<>(256, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, List<String>> eldest) {
+                    return size() > 5000;
+                }
+            });
+
+    @Override
+    public List<String> alternativeTitles(String providerRef) {
+        List<String> titles = providerRef == null ? null : alternativeTitles.get(providerRef);
+        return titles == null ? List.of() : titles;
     }
 
     private static boolean matchesTitle(AniListClient.Media media, String text) {
@@ -256,6 +318,20 @@ public class AniListProvider implements CatalogProvider {
     }
 
     private CatalogResult toResult(AniListClient.Media m) {
+        List<String> others = new ArrayList<>();
+        if (m.title() != null) {
+            for (String t : new String[] {m.title().romaji(), m.title().english(), m.title().nativeTitle()}) {
+                if (t != null && !t.isBlank()) {
+                    others.add(t.strip());
+                }
+            }
+        }
+        if (m.synonyms() != null) {
+            m.synonyms().stream().filter(t -> t != null && !t.isBlank()).map(String::strip).forEach(others::add);
+        }
+        if (!others.isEmpty()) {
+            alternativeTitles.put(String.valueOf(m.id()), List.copyOf(others));
+        }
         // Trimmed: AniList stores some titles with a trailing line break ("…Volume 0\r\n").
         String title = m.title() == null ? null
                 : trimToNull(firstNonBlank(m.title().english(), m.title().romaji()));

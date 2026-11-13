@@ -16,7 +16,7 @@ round-robin order, merged on series + volume or title + author.
 |---|---|---|
 | **Open Library** | books, every language | one result per **work**, built from its French edition when there is one (`lang=fr`): French title, cover (from a cover id, never guessed from an ISBN), ISBN. `popularity` is the work's edition count (400 for *Harry Potter à l'école des sorciers*, 1 for a pamphlet); the work reference lists its other editions |
 | **BnF** (SRU, UNIMARC) | French books, BD, manga | one result per **edition** (legal-deposit record). Two queries side by side: the exact title phrase first (`bib.title adj`), then every word on title or author. Clean titles ("Blue Lock - Tome 31"), series and volume, authors and illustrators (never the translator), `BOOK`/`COMIC`/`MANGA` from the catalogue's hints, no popularity |
-| **AniList** (GraphQL) | manga | one `MANGA` result per **series**; staff credited by role (story, art), long-vowel spellings folded |
+| **AniList** (GraphQL) | manga | one `MANGA` result per **series**, sorted `[SEARCH_MATCH, POPULARITY_DESC]` then the main series first (the most popular title holding the query, so *Kimetsu no Yaiba* before its *Kimetsu Academy* spin-off); asked without the volume ("jujutsu kaisen 12" → "jujutsu kaisen"); staff credited by role (story, art), long-vowel spellings folded. Its romaji, native titles and synonyms are kept in memory (`CatalogProvider.alternativeTitles`) for the kinds cross-check |
 
 None needs an API key. A criterion a provider cannot honour (publisher on AniList, say) is
 dropped for that provider rather than faked.
@@ -29,22 +29,32 @@ the search answer.
 
 ## Relevance
 
-`CatalogRanker` turns the merged answers into one page, in five steps.
+`CatalogRanker` turns the merged answers into one page, in six steps.
 
 1. **Clean-up** of provider artefacts: a credit glued to a title is cut when it is the credited
    author ("L'étranger Par Albert Camus"), the space after an elision goes ("L' Etranger"), an
    all-capitals title is put in sentence case, a bare initial gets its dot ("J. K Rowling").
-2. **Grouping**: the editions of one work become one result — same ISBN, or same series and
-   volume ("One Piece Tome 1" whatever the wording), or same folded title and first author
+2. **Kinds**: when AniList answered a manga series, every result whose series (or title) is that
+   series — under its title, the part before a colon ("Demon Slayer"), its romaji or native
+   title or a synonym ("L'Attaque des Titans") — becomes `MANGA`. Inside one series, a volume
+   catalogued `MANGA` (else `COMIC`) makes the other volumes so when they credit the same
+   people or carry a credit that cannot be compared (kanji, none): Maxe L'Hermenier's comic
+   "Fantine" does not turn Hugo's volumes into comics. A manga is never downgraded.
+3. **Grouping**: the editions of one work become one result. A book never merges with a comic
+   or manga — Hugo's novel stays apart from its adaptations — and Open Library, which files
+   everything as a book, joins the book group of the same work when there is one, else the
+   comic or manga group. Within a family, results are one work when they share an ISBN, or a
+   series and a volume with a credited person in common (or an uncomparable credit: the Blue
+   Lock spin-off drawn by another artist stays apart), or a folded title and first author
    (initials-insensitive). Only a language-edition statement such as "(French Edition)" is
    dropped from the title: an anniversary edition or "… : Serdaigle" stays apart. The survivor is
    the French edition, then the one with a cover, then the most complete, then Open Library's
-   work; it takes what it lacks (cover, synopsis, pages, series, ISBN) from the others, `MANGA`
-   or `COMIC` if any of them is, and the highest popularity. AniList series are never merged
-   into a book record.
-3. **Kinds cross-check**: when AniList answered a manga series, every result whose series (or
-   title, minus the volume) is that series — or the part of its title before a colon, "Demon
-   Slayer" for "Demon Slayer: Kimetsu no Yaiba" — becomes `MANGA`. A manga is never downgraded.
+   work; it takes what it lacks (cover, synopsis, pages, series, ISBN) from the others and the
+   highest popularity. AniList series are never merged into a book record; a record numbered in
+   a series but marked as merchandise (the "Carnet des pourfendeurs") is never grouped as a volume.
+   A volume the BnF titles by its part ("Romance dawn") is shown under its series, "One piece -
+   Tome 1 : Romance dawn", and a volume credited in kanji only shows the Latin credit of its
+   series.
 4. **Score**. A title tier first — exact title > title starting with the query or "query +
    volume" > title containing the query phrase > every query word > some of them (a title much
    longer than the query that merely contains its words counts as partial). Words are compared
@@ -59,14 +69,25 @@ the search answer.
      with a cover counts as moderately popular) orders a tier, and a work of 50 editions or more
      is lifted one tier — never two;
    - **derivatives** drop below every genuine match of their tier and of the tier below: study
-     guides (étude, analyse, profil, fiche de lecture…), colouring and activity books (coloring,
-     agenda, calendrier, carnet, tarot, poster…), magazines, anime comics and "party" spin-offs
-     unless the query names them, exhibition catalogues, box sets ("coffret", "box set");
+     guides (étude, analyse, profil, fiche de lecture…, a title opening on "Étudier", "Étude
+     sur", "Une lecture de", or quoting the query between quotation marks next to words of its
+     own), colouring and activity books (coloring, agenda, calendrier, carnet, tarot, poster…),
+     magazines, anime comics and "party" spin-offs unless the query names them, exhibition
+     catalogues, box sets ("coffret", "box set", "Gde collection"). "Guide", "lire" and "dossier"
+     only count when somebody else than the best-ranked work's author wrote the book — "Le
+     Guide du voyageur galactique" is Douglas Adams's novel;
    - a title match **by somebody else** than the best-ranked work's author ("Dune" by Brian
-     Herbert, Chaïko's comic "Les misérables") drops one tier;
+     Herbert, Chaïko's comic "Les misérables") drops one tier, and so does a result with **no
+     author** at all;
    - inside a tier: French first (another language lower, an unknown one neutral), a cover, a
-     complete record, and a result with no author at all last.
-5. **Volumes in order**: the volumes of one series are emitted together in ascending order from
+     complete record.
+5. **Trim**: when a genuine result matches the title (exact, prefix, phrase, or an author with
+   the rest of the title), the page loses its padding — everything matching less than every
+   query word, an all-words match much longer than the query, a foreign edition of the
+   best-ranked author's work when a French one is there. A record with neither author nor cover
+   goes when five others have one. The volumes of a series run stay. A short honest page ("le
+   nom du vent" → the novel) beats twenty rows of 18th-century notices.
+6. **Volumes in order**: the volumes of one series are emitted together in ascending order from
    the position of the best-ranked one, AniList's series entry first. When the query names a
    volume ("one piece tome 1", "jujutsu kaisen 12"), that volume leads, then the series, then
    the rest. "Blue Lock 1" is read as volume 1 only because another result is a volume of

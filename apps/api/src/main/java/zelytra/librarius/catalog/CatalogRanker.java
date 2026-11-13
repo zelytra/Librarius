@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Orders the merged answers of a free-text catalog search the way a reader expects them: the
@@ -22,13 +24,18 @@ import java.util.regex.Pattern;
  *   <li><b>Clean-up</b> of provider artefacts ({@link #cleanUp}): "L'étranger Par Albert
  *       Camus" loses the credit glued to its title, "L' Etranger" its space, "LES MISERABLES"
  *       its capitals, "J. K Rowling" gains its missing dot.</li>
- *   <li><b>Grouping</b>: the editions of one work — same folded title, same first author
- *       (initials-insensitive), or same series and volume, or same ISBN — collapse into one
- *       result, the French one with a cover first, filled in from the others.</li>
- *   <li><b>Kinds cross-check</b>: what AniList answered as a manga series makes every volume
- *       of that series a manga, whatever the book catalogues said.</li>
+ *   <li><b>Kinds</b> ({@link #settleKinds}): what AniList answered as a manga series — by its
+ *       title or one of its synonyms — makes every volume of that series a manga, and inside a
+ *       series a manga (else comic) volume makes the others of the same people so.</li>
+ *   <li><b>Grouping</b>: the editions of one work — same kind family (a novel never merges with
+ *       its comic adaptation), and same ISBN, or same series and volume with a credited person
+ *       in common, or same folded title and first author — collapse into one result, the
+ *       French one with a cover first, filled in from the others. A volume the catalogue titles
+ *       by its part ("Romance dawn") is shown under its series, "One piece - Tome 1 : Romance
+ *       dawn", and a kanji-only credit takes the Latin one of its series.</li>
  *   <li><b>Score</b>: each result gets a <em>level</em>, then a <em>secondary score</em>
  *       inside the level (see below).</li>
+ *   <li><b>Trim</b> ({@link #trimmed}): a page that found the title loses its padding.</li>
  *   <li><b>Volumes in order</b>: the volumes of one series are emitted together, in ascending
  *       order, from the position of the best-ranked of them, the series itself first; when
  *       the query names a volume, that volume leads.</li>
@@ -51,14 +58,15 @@ import java.util.regex.Pattern;
  *       — drops a tier and a half, below every genuine match of its tier and of the tier
  *       under it ({@link #isDerivative});</li>
  *   <li>a title match <b>by somebody else</b> than the best-ranked work's author ("Dune" by
- *       Brian Herbert, "Les misérables" adapted by Chaïko) drops one tier.</li>
+ *       Brian Herbert, "Les misérables" adapted by Chaïko) drops one tier;</li>
+ *   <li>a result with <b>no author</b> at all drops one tier.</li>
  * </ul>
  *
  * <p>The <b>secondary score</b> orders a level: popularity on a log scale (400 editions
  * against 100 matter less than 5 against 1; a BnF phrase match with a cover counts as
  * moderately popular, a group of editions counts its size), French first (other languages
- * lower, an unknown one neutral), a cover, a complete record, and a result with no author at
- * all sinks to the bottom of its level. The providers' round-robin order breaks what is left.
+ * lower, an unknown one neutral), a cover, a complete record. The providers' round-robin order
+ * breaks what is left.
  */
 final class CatalogRanker {
 
@@ -91,14 +99,23 @@ final class CatalogRanker {
      *                    ("ven" finds "vent") — only for the retry after a weak whole-word answer
      */
     static Ranking rank(String text, List<CatalogResult> candidates, boolean prefixAware) {
+        return rank(text, candidates, prefixAware, r -> List.of());
+    }
+
+    /**
+     * @param alternativeTitles the other names a provider knows a result by — AniList's
+     *                          synonyms, by which "L'Attaque des Titans" is Shingeki no Kyojin
+     */
+    static Ranking rank(String text, List<CatalogResult> candidates, boolean prefixAware,
+            Function<CatalogResult, List<String>> alternativeTitles) {
         Query query = Query.of(text, prefixAware);
         List<CatalogResult> cleaned = candidates.stream().map(CatalogRanker::cleanUp).toList();
-        Map<String, String> aliases = aniListSeries(cleaned);
+        Map<String, String> aliases = aniListSeries(cleaned, alternativeTitles);
         Set<String> knownSeries = knownSeries(cleaned, aliases);
-        List<Entry> entries = group(cleaned, knownSeries, aliases);
+        List<Entry> entries = group(settleKinds(cleaned, knownSeries, aliases), knownSeries, aliases);
+        lendLatinCredits(entries);
 
         for (Entry entry : entries) {
-            entry.crossCheckKind(aliases);
             entry.scoreTitle(query, aliases);
         }
         boolean weak = entries.stream().noneMatch(e -> e.tier >= PREFIX);
@@ -117,7 +134,7 @@ final class CatalogRanker {
             }
             entries.sort(ORDER);
         }
-        List<CatalogResult> ordered = inVolumeOrder(entries, query, aliases).stream()
+        List<CatalogResult> ordered = inVolumeOrder(entries, query, aliases, canonical).stream()
                 .map(e -> e.result)
                 .toList();
         return new Ranking(ordered, weak);
@@ -223,61 +240,150 @@ final class CatalogRanker {
     private static final Pattern EDITION_STATEMENT = Pattern.compile(
             "(?i)\\s*\\((?:french|english|spanish) edition\\)|\\s*\\([ée]dition fran[cç]aise\\)");
 
+    /** A title that already says which volume it is: "Fantine - Tome I". */
+    private static final Pattern VOLUME_WORD = Pattern.compile("(?iu)(?<!\\p{L})(?:tome|vol\\.?|volume)(?!\\p{L})");
+
     /** "Blue Lock 1", "Demon Slayer 03", "Blue Lock nº 05": a bare number after a known series. */
     private static final Pattern BARE_VOLUME = Pattern.compile(
             "^(.*\\p{L})\\s+(?:n[º°o]\\.?\\s*)?0*(\\d{1,3})$");
 
     /**
-     * Collapses the editions of one work. Two results are one work when they share an ISBN, or
-     * a series and a volume (a title that <em>is</em> "series + volume": every printing of
-     * "One Piece Tome 1", whatever its wording or its author's romanisation), or a folded title
-     * and a first author. AniList answers series, not editions, and is never merged into a
-     * book record.
+     * Collapses the editions of one work. Two results are one work when they are of the same
+     * kind — a novel never merges with its comic adaptation — and share an ISBN, or a series
+     * and a volume with a credited person in common (or a credit that cannot be compared:
+     * kanji, none), or a folded title and a first author. AniList answers series, not editions,
+     * and is never merged into a book record.
+     *
+     * <p>Open Library files everything as a book, manga and comics included, so its book is no
+     * claim: its results are attached last, to the book group of the same work when there is
+     * one, else to the comic or manga group, else to each other.
      */
     private static List<Entry> group(List<CatalogResult> results, Set<String> knownSeries,
             Map<String, String> aliases) {
-        List<Entry> groups = new ArrayList<>();
-        Map<String, Entry> byKey = new HashMap<>();
-        for (int i = 0; i < results.size(); i++) {
-            CatalogResult r = results.get(i);
-            SeriesVolume sv = seriesVolume(r, knownSeries);
-            List<String> keys = keys(r, sv);
+        Grouping grouping = new Grouping(aliases);
+        for (boolean classified : new boolean[] {true, false}) {
+            for (int i = 0; i < results.size(); i++) {
+                CatalogResult r = results.get(i);
+                if (unclassified(r) != classified) {
+                    grouping.add(i, r, seriesVolume(r, knownSeries));
+                }
+            }
+        }
+        for (Entry entry : grouping.groups) {
+            entry.merge(aliases);
+        }
+        return grouping.groups;
+    }
+
+    /** An Open Library book: the provider has no notion of comics or manga. */
+    private static boolean unclassified(CatalogResult r) {
+        return "openlibrary".equals(r.provider()) && "BOOK".equals(r.kind());
+    }
+
+    /** The kind family a group is made of: books apart from comics and manga, which merge together. */
+    private static String family(CatalogResult r) {
+        if (isAniList(r)) {
+            return "series";
+        }
+        if (unclassified(r)) {
+            return "unclassified";
+        }
+        return "BOOK".equals(r.kind()) ? "book" : "drawn";
+    }
+
+    private static final class Grouping {
+        final List<Entry> groups = new ArrayList<>();
+        final Map<String, Entry> byKey = new HashMap<>();
+        final Map<String, List<Entry>> byVolume = new HashMap<>();
+        final Map<String, String> aliases;
+
+        Grouping(Map<String, String> aliases) {
+            this.aliases = aliases;
+        }
+
+        void add(int order, CatalogResult r, SeriesVolume sv) {
             Entry found = null;
-            for (String key : keys) {
-                found = byKey.get(key);
+            List<String> families = unclassified(r)
+                    ? List.of("book", "drawn", "unclassified") : List.of(family(r));
+            for (String f : families) {
+                found = find(f, r, sv);
                 if (found != null) {
                     break;
                 }
             }
             if (found == null) {
-                found = new Entry(i);
+                found = new Entry(order, family(r));
                 groups.add(found);
             }
+            found.order = Math.min(found.order, order);
             found.members.add(new Member(r, sv));
-            for (String key : keys) {
+            for (String key : keys(found.family, r)) {
                 byKey.putIfAbsent(key, found);
             }
+            if (sv != null && !merchandise(r)) {
+                List<Entry> volume = byVolume.computeIfAbsent(volumeKey(found.family, sv, aliases), k -> new ArrayList<>());
+                if (!volume.contains(found)) {
+                    volume.add(found);
+                }
+            }
         }
-        for (Entry entry : groups) {
-            entry.merge(aliases);
+
+        private Entry find(String f, CatalogResult r, SeriesVolume sv) {
+            for (String key : keys(f, r)) {
+                Entry found = byKey.get(key);
+                if (found != null) {
+                    return found;
+                }
+            }
+            if (sv == null || isAniList(r) || merchandise(r)) {
+                return null;
+            }
+            for (Entry candidate : byVolume.getOrDefault(volumeKey(f, sv, aliases), List.of())) {
+                if (candidate.members.stream().anyMatch(m -> comparableCredits(m.result().authors(), r.authors()))) {
+                    return candidate;
+                }
+            }
+            return null;
         }
-        return groups;
     }
 
-    private static List<String> keys(CatalogResult r, SeriesVolume sv) {
+    /**
+     * A record numbered in a series that is not one of its volumes: the BnF files the "Carnet
+     * des pourfendeurs" as volume 2 of Demon Slayer, and it must not swallow the real one.
+     */
+    private static boolean merchandise(CatalogResult r) {
+        String title = fold(r.title()) + ' ' + fold(r.authors());
+        return Stream.of(ACTIVITY, SPIN_OFF, BOX_SET).flatMap(List::stream).anyMatch(m -> contains(title, m));
+    }
+
+    private static List<String> keys(String f, CatalogResult r) {
         if (isAniList(r)) {
             return List.of("anilist:" + r.providerRef());
         }
         List<String> keys = new ArrayList<>(2);
-        if (sv != null && sv.titleIsVolume()) {
-            keys.add("volume:" + fold(sv.series()) + '#' + sv.volume());
-        } else {
-            keys.add("work:" + groupTitle(r.title()) + '|' + authorKey(r.authors()));
-        }
+        keys.add(f + "|work:" + groupTitle(r.title()) + '|' + authorKey(r.authors()));
         if (r.isbn13() != null && r.isbn13().matches("\\d{13}")) {
-            keys.add("isbn:" + r.isbn13());
+            keys.add(f + "|isbn:" + r.isbn13());
         }
         return keys;
+    }
+
+    /** The series by its AniList name when it has one: "Demon Slayer - Kimetsu No Yaiba" is "Demon slayer". */
+    private static String volumeKey(String f, SeriesVolume sv, Map<String, String> aliases) {
+        String series = fold(sv.series());
+        return f + "|volume:" + aliases.getOrDefault(series, series) + '#' + sv.volume();
+    }
+
+    /**
+     * Whether two credit lines may be the same volume's: they share a person, or one of them
+     * cannot be compared — none at all, or written in another script ("尾田栄一郎"). The BnF
+     * credits the Blue Lock spin-off to its own artist, and it is not the main series' volume.
+     */
+    private static boolean comparableCredits(String a, String b) {
+        if (!latin(a) || !latin(b)) {
+            return true;
+        }
+        return creditsAny(names(a), names(b));
     }
 
     /** The title as grouped: folded, its language-edition statement dropped. */
@@ -332,27 +438,83 @@ final class CatalogRanker {
 
     /**
      * The series AniList answered, by every folded name a book catalogue may give it: its
-     * title, and the part before a colon ("Demon Slayer" for "Demon Slayer: Kimetsu no
-     * Yaiba"), which is how French editions title it. Maps each name to the series' own.
+     * title, its other titles and synonyms ("L'Attaque des Titans" for Shingeki no Kyojin), and
+     * the part of its title before a colon ("Demon Slayer" for "Demon Slayer: Kimetsu no
+     * Yaiba"), which is how French editions title it. Maps each name to the series' own. A name
+     * two series share goes to the one AniList answered first, the main series ("Kimetsu no
+     * Yaiba" before its "Kimetsu Academy" spin-off, see {@code AniListProvider.mainSeriesFirst}).
      */
-    private static Map<String, String> aniListSeries(List<CatalogResult> results) {
+    private static Map<String, String> aniListSeries(List<CatalogResult> results,
+            Function<CatalogResult, List<String>> alternativeTitles) {
+        // AniList's own order: the provider puts the main series before its spin-offs.
+        List<CatalogResult> series = results.stream()
+                .filter(r -> isAniList(r) && r.title() != null)
+                .toList();
         Map<String, String> aliases = new LinkedHashMap<>();
-        for (CatalogResult r : results) {
-            if (!isAniList(r) || r.title() == null) {
-                continue;
-            }
+        for (CatalogResult r : series) {
             String own = fold(r.title());
             aliases.putIfAbsent(own, own);
+            List<String> names = new ArrayList<>(alternativeTitles.apply(r));
             int colon = r.title().indexOf(':');
             if (colon > 0) {
-                String before = fold(r.title().substring(0, colon));
-                if (before.length() >= 3) {
-                    aliases.putIfAbsent(before, own);
+                names.add(r.title().substring(0, colon));
+            }
+            for (String name : names) {
+                String folded = fold(name);
+                if (folded.length() >= 3) {
+                    aliases.putIfAbsent(folded, own);
                 }
             }
         }
         aliases.remove("");
         return aliases;
+    }
+
+    /**
+     * Settles the kinds before grouping, so the editions of one manga volume are all of one
+     * family. What AniList answered as a manga series makes every result filed under that
+     * series a manga; and inside one series, a volume catalogued as a manga (else a comic)
+     * makes the others so — those that credit the same people, or whose credit cannot be
+     * compared. A comic "Fantine" by Maxe L'Hermenier does not make Hugo's volumes comics. A
+     * manga is never downgraded.
+     */
+    private static List<CatalogResult> settleKinds(List<CatalogResult> results, Set<String> knownSeries,
+            Map<String, String> aliases) {
+        List<CatalogResult> settled = new ArrayList<>(results.size());
+        Map<String, List<CatalogResult>> drawn = new HashMap<>();
+        List<String> keys = new ArrayList<>(results.size());
+        for (CatalogResult r : results) {
+            CatalogResult result = r;
+            SeriesVolume sv = isAniList(r) ? null : seriesVolume(r, knownSeries);
+            String series = sv == null ? null : fold(sv.series());
+            if (!isAniList(r) && !"MANGA".equals(r.kind())
+                    && ((series != null && aliases.containsKey(series)) || aliases.containsKey(groupTitle(r.title())))) {
+                result = r.withKind("MANGA");
+            }
+            String key = series == null ? null : aliases.getOrDefault(series, series);
+            keys.add(key);
+            settled.add(result);
+            if (key != null && !"BOOK".equals(result.kind())) {
+                drawn.computeIfAbsent(key, k -> new ArrayList<>()).add(result);
+            }
+        }
+        for (int i = 0; i < settled.size(); i++) {
+            CatalogResult r = settled.get(i);
+            String key = keys.get(i);
+            if (key == null || "MANGA".equals(r.kind())) {
+                continue;
+            }
+            String kind = r.kind();
+            for (CatalogResult other : drawn.getOrDefault(key, List.of())) {
+                if (other != r && comparableCredits(other.authors(), r.authors())) {
+                    kind = strongerKind(kind, other.kind());
+                }
+            }
+            if (!kind.equals(r.kind())) {
+                settled.set(i, r.withKind(kind));
+            }
+        }
+        return settled;
     }
 
     private record Member(CatalogResult result, SeriesVolume sv) {
@@ -376,7 +538,19 @@ final class CatalogRanker {
      * when the title also matches the query — "Guide" alone is no study guide.
      */
     private static final List<String> STUDY = List.of("etude", "etudes", "analyse", "commentaire",
-            "profil", "fiche de lecture", "resume", "lecture de", "lire", "comprendre", "guide", "dossier");
+            "profil", "fiche de lecture", "resume", "lecture de", "comprendre");
+
+    /**
+     * Words that make a study guide only when somebody else than the best-ranked work's author
+     * wrote it: "Le Guide du voyageur galactique" is Douglas Adams's novel, not a guide to it.
+     */
+    private static final List<String> STUDY_BY_OTHERS = List.of("guide", "lire", "dossier");
+
+    /** "Étudier « Tintin au Tibet »", "Étude sur J. K. Rowling…", "Une lecture de…". */
+    private static final Pattern STUDY_OPENING = Pattern.compile("^(?:etudier|etude sur|une lecture de) ");
+
+    /** A segment of a title between quotation marks: the work the book is about. */
+    private static final Pattern QUOTED = Pattern.compile("[«\"“”]\\s*([^«»\"“”]+?)\\s*[»\"“”]");
 
     /**
      * Colouring and activity books, calendars and merchandise: printed matter that borrows a
@@ -395,18 +569,38 @@ final class CatalogRanker {
 
     /** Box sets of books the page already lists one by one. */
     private static final List<String> BOX_SET = List.of("coffret", "box set", "collection set",
-            "books collection");
+            "books collection", "gde collection", "grande collection");
 
     /** Whether a result is derived from what was asked rather than being it. Unless the query names the marker. */
     private static boolean isDerivative(CatalogResult r, int tier, Query query) {
         String title = fold(r.title());
-        if (tier >= ALL_WORDS && anyMarker(title, STUDY, query)) {
+        if (tier >= ALL_WORDS && (anyMarker(title, STUDY, query) || STUDY_OPENING.matcher(title).find()
+                || quotesTheQuery(r.title(), query))) {
             return true;
         }
         return anyMarker(title + ' ' + fold(r.authors()), ACTIVITY, query)
                 || anyMarker(title, SPIN_OFF, query)
                 || anyMarker(title, EXHIBITION, query)
                 || anyMarker(title, BOX_SET, query);
+    }
+
+    /**
+     * Whether the title holds the query between quotation marks next to words of its own: the
+     * Douglas DC-3 of "Tintin au Tibet" is a book about the album, not the album.
+     */
+    private static boolean quotesTheQuery(String title, Query query) {
+        if (title == null || query.isEmpty()) {
+            return false;
+        }
+        Matcher quoted = QUOTED.matcher(title);
+        while (quoted.find()) {
+            List<String> inside = tokens(quoted.group(1));
+            String outside = fold(title.substring(0, quoted.start()) + ' ' + title.substring(quoted.end()));
+            if (!outside.isEmpty() && String.join(" ", inside).contains(String.join(" ", query.words()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean anyMarker(String folded, List<String> markers, Query query) {
@@ -523,7 +717,9 @@ final class CatalogRanker {
      * the series is not moved, and anchors the run only when the query names a volume. Then
      * that volume leads, then the series, then the rest of the run.
      */
-    private static List<Entry> inVolumeOrder(List<Entry> ranked, Query query, Map<String, String> aliases) {
+    private static List<Entry> inVolumeOrder(List<Entry> all, Query query, Map<String, String> aliases,
+            List<List<String>> canonical) {
+        List<Entry> ranked = all;
         Map<String, Run> runs = new LinkedHashMap<>();
         for (Entry entry : ranked) {
             if (!entry.derivative && entry.volume != null && entry.seriesKey != null) {
@@ -545,6 +741,9 @@ final class CatalogRanker {
                 byMember.put(run.head, run);
             }
         }
+        Set<Entry> inRuns = new HashSet<>(byMember.keySet());
+        runs.values().stream().map(r -> r.head).filter(java.util.Objects::nonNull).forEach(inRuns::add);
+        ranked = trimmed(ranked, query, canonical, inRuns);
 
         List<Entry> out = new ArrayList<>(ranked.size());
         Set<Entry> emitted = new HashSet<>();
@@ -581,6 +780,67 @@ final class CatalogRanker {
             }
         }
         return out;
+    }
+
+    /**
+     * Drops the padding of a page that found what was asked. When a genuine result matches the
+     * title (exact, prefix, phrase, or an author with the rest of the title), what matches less
+     * than every query word goes, and so does an all-words match much longer than the query: "Au
+     * nom du peuple français" is no answer to "le nom du vent". A foreign edition of the
+     * best-ranked author's work goes when a French one is on the page, and a record with neither
+     * an author nor a cover when five others have one. The volumes of a series run stay, whatever
+     * their own title.
+     */
+    private static List<Entry> trimmed(List<Entry> ranked, Query query, List<List<String>> canonical,
+            Set<Entry> inRuns) {
+        boolean strong = ranked.stream().anyMatch(e -> !e.derivative && e.tier >= PHRASE);
+        boolean frenchByCanonical = canonical != null && ranked.stream().anyMatch(e -> !e.derivative
+                && e.tier >= PHRASE && isFrench(e.result.language())
+                && creditsAny(names(e.result.authors()), canonical));
+        int concise = 2 * content(query.words()).size() + 1;
+        List<Entry> kept = new ArrayList<>(ranked.size());
+        for (Entry e : ranked) {
+            boolean drop = false;
+            if (strong && !inRuns.contains(e)) {
+                drop = e.tier < ALL_WORDS || (e.tier == ALL_WORDS && e.titleLength > concise)
+                        || (frenchByCanonical && e.volume == null && e.tier < EXACT
+                                && !isFrench(e.result.language()) && !isUnknown(e.result.language())
+                                && creditsAny(names(e.result.authors()), canonical));
+            }
+            if (!drop) {
+                kept.add(e);
+            }
+        }
+        long identifiable = kept.stream().filter(e -> has(e.result.authors()) || has(e.result.coverUrl())).count();
+        if (identifiable >= 5) {
+            kept.removeIf(e -> !isAniList(e.result) && !has(e.result.authors()) && !has(e.result.coverUrl()));
+        }
+        return kept;
+    }
+
+    /**
+     * Inside one series, a volume Open Library credits in kanji only ("尾田栄一郎") shows the
+     * Latin-script credit the other volumes carry — the most common one.
+     */
+    private static void lendLatinCredits(List<Entry> entries) {
+        Map<String, Map<String, Integer>> credits = new HashMap<>();
+        for (Entry e : entries) {
+            if (e.seriesKey != null && latin(e.result.authors())) {
+                credits.computeIfAbsent(e.seriesKey, k -> new HashMap<>()).merge(e.result.authors(), 1, Integer::sum);
+            }
+        }
+        for (Entry e : entries) {
+            Map<String, Integer> latinCredits = e.seriesKey == null ? null : credits.get(e.seriesKey);
+            if (latinCredits == null || !has(e.result.authors()) || latin(e.result.authors())) {
+                continue;
+            }
+            String lent = latinCredits.entrySet().stream().max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey).orElseThrow();
+            CatalogResult r = e.result;
+            e.result = new CatalogResult(r.kind(), r.title(), lent, r.year(), r.coverUrl(), r.synopsis(),
+                    r.isbn13(), r.publisher(), r.language(), r.releaseDate(), r.seriesTitle(),
+                    r.volumeNumber(), r.pageCount(), r.provider(), r.providerRef(), r.popularity());
+        }
     }
 
     /** The series itself: AniList's entry when it answered it, else the best-ranked result titled after it. */
@@ -626,9 +886,14 @@ final class CatalogRanker {
     /** One work of the page: the editions grouped into it, and how it scores. */
     private static final class Entry {
 
-        final int order;
+        int order;
+        final String family;
         final List<Member> members = new ArrayList<>();
         CatalogResult result;
+        /** The survivor's own title, before it is shown as "Series - Tome N : Title". */
+        String partTitle;
+        /** Subject words in the closest-matching title: how much longer than the query it is. */
+        int titleLength;
         String seriesKey;
         Integer volume;
         String seriesTitle;
@@ -641,8 +906,9 @@ final class CatalogRanker {
         int level;
         double secondary;
 
-        Entry(int order) {
+        Entry(int order, String family) {
             this.order = order;
+            this.family = family;
         }
 
         /** Picks the survivor and fills what it lacks from the editions collapsed into it. */
@@ -692,12 +958,19 @@ final class CatalogRanker {
                 series = sv.series();
                 volumeNumber = sv.volume();
             }
+            partTitle = best.title();
             String title = best.title();
-            if (members.size() > 1 && sv != null && sv.titleIsVolume()
-                    && !fold(title).startsWith(fold(sv.series() + " tome " + sv.volume()))) {
-                // Two wordings of one volume ("One Piece. 1, À l'aube…", "ONE PIECE Tome 1")
-                // read as the one the reader typed.
-                title = sv.series() + " - Tome " + sv.volume();
+            if (sv != null && title != null && !isAniList(best)) {
+                if (!fold(title).contains(fold(sv.series())) && !VOLUME_WORD.matcher(title).find()) {
+                    // The BnF titles a volume by its own part ("Romance dawn"): shown under its
+                    // series, "One piece - Tome 1 : Romance dawn".
+                    title = sv.series() + " - Tome " + sv.volume() + " : " + title;
+                } else if (members.size() > 1
+                        && !fold(title).startsWith(fold(sv.series() + " tome " + sv.volume()))) {
+                    // Two wordings of one volume ("One Piece. 1, À l'aube…", "ONE PIECE Tome 1")
+                    // read as the one the reader typed.
+                    title = sv.series() + " - Tome " + sv.volume();
+                }
             }
             result = new CatalogResult(kind, title, authors, year, cover, synopsis, isbn, publisher,
                     best.language(), best.releaseDate(), series, volumeNumber, pages, best.provider(),
@@ -711,17 +984,6 @@ final class CatalogRanker {
                 seriesTitle = sv.series();
                 String folded = fold(sv.series());
                 seriesKey = aliases.getOrDefault(folded, folded);
-            }
-        }
-
-        /** A series AniList knows as a manga makes its volumes mangas; a manga is never downgraded. */
-        void crossCheckKind(Map<String, String> aliases) {
-            if (isAniList(result) || "MANGA".equals(result.kind())) {
-                return;
-            }
-            String series = seriesTitle != null ? fold(seriesTitle) : null;
-            if ((series != null && aliases.containsKey(series)) || aliases.containsKey(groupTitle(result.title()))) {
-                result = result.withKind("MANGA");
             }
         }
 
@@ -742,9 +1004,12 @@ final class CatalogRanker {
             if (query.isEmpty()) {
                 return;
             }
-            List<String> title = tokens(result.title());
+            // The title as the catalogue gave it: "Sous le vent du monde - Tome 2 : Le nom perdu du
+            // soleil" must not match "le nom du vent" across its series and its part title.
+            List<String> title = tokens(partTitle != null ? partTitle : result.title());
             titleTier = tier(query, title);
             dice = dice(query.words(), title);
+            titleLength = content(title).size();
             if (seriesTitle != null && volume != null) {
                 // "Fantine" is volume 1 of Les Misérables; "Blue Lock T05" is "blue lock 5".
                 List<String> asVolume = tokens(seriesTitle + ' ' + volume);
@@ -797,6 +1062,10 @@ final class CatalogRanker {
             if (derivative) {
                 level -= 3;
             }
+            if (!has(result.authors()) && !isAniList(result)) {
+                // Nobody credited: a record a reader can hardly tell apart, a full tier down.
+                level -= 2;
+            }
             int popular = evidence;
             if (bnfCovered && titleTier >= PHRASE) {
                 popular = Math.max(popular, COVERED_PHRASE);
@@ -806,8 +1075,7 @@ final class CatalogRanker {
                     + (has(result.coverUrl()) ? 4 : 0)
                     + (has(result.isbn13()) ? 0.5 : 0) + (result.pageCount() != null ? 0.25 : 0)
                     + (has(result.synopsis()) ? 0.25 : 0)
-                    + (tier == PARTIAL ? 6 * dice : 0)
-                    + (has(result.authors()) ? 0 : -20);
+                    + (tier == PARTIAL ? 6 * dice : 0);
         }
 
         /**
@@ -825,7 +1093,8 @@ final class CatalogRanker {
             }
             List<String> first = canonical.get(0);
             String surname = first.get(first.size() - 1);
-            if (surname.length() >= 3 && tokens(result.title()).contains(surname)) {
+            boolean studied = tier >= ALL_WORDS && anyMarker(fold(result.title()), STUDY_BY_OTHERS, query);
+            if (studied || surname.length() >= 3 && tokens(result.title()).contains(surname)) {
                 derivative = true;
                 level -= 3;
             } else if (tier >= PREFIX && volume == null && !credited.isEmpty() && latin(result.authors())) {

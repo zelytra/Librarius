@@ -76,7 +76,8 @@ class CatalogRankerTest {
                 r("Le Nom du Vent", "Patrick Rothfuss").french().cover().from("openlibrary", "OL8479867W").popular(76),
                 r("Le nom du vent", "Patrick Rothfuss").french().synopsis("Kvothe…"));
 
-        assertEquals(2, results.size(), titles(results).toString());
+        // "The Name of the Wind" matches nothing of the query: once the novel is found, it goes.
+        assertEquals(1, results.size(), titles(results).toString());
         CatalogResult novel = results.get(0);
         assertEquals("Le Nom du Vent", novel.title());
         assertEquals("OL8479867W", novel.providerRef());
@@ -119,14 +120,46 @@ class CatalogRankerTest {
     }
 
     @Test
-    void aGroupIsAMangaWhenAnyOfItsEditionsIs() {
+    void aComicAndAMangaRecordOfOneVolumeAreOneManga() {
         List<CatalogResult> results = rank("one piece 1",
-                r("One Piece. 1", "Eiichirō Oda").series("One Piece", 1),
                 r("One Piece - Tome 1", "Eiichirō Oda").series("One Piece", 1).kind("COMIC"),
                 r("ONE PIECE Tome 1", "Eiichirō Oda").series("ONE PIECE", 1).kind("MANGA"));
 
         assertEquals(1, results.size());
         assertEquals("MANGA", results.get(0).kind());
+    }
+
+    @Test
+    void neverMergesANovelWithItsComicAdaptation() {
+        List<CatalogResult> results = rank("les miserables",
+                r("Les misérables", "Victor Hugo").french().cover().from("openlibrary", "OL1063588W").popular(526),
+                r("Les misérables", "Victor Hugo").french().isbn("9782080712325"),
+                r("Les misérables", "Victor Hugo, Kim Jong-hyun").french().kind("COMIC").cover());
+
+        assertEquals(List.of("BOOK", "COMIC"), results.stream().map(CatalogResult::kind).toList());
+        assertEquals(Integer.valueOf(526), results.get(0).popularity());
+    }
+
+    @Test
+    void filesAnOpenLibraryBookWithTheComicWhenNoNovelIsOnThePage() {
+        // Open Library calls every album a book: its "Blacksad" is the BnF's comic.
+        List<CatalogResult> results = rank("blacksad",
+                r("Blacksad", "Juan Díaz Canales").from("openlibrary", "OL1W").cover(),
+                r("Blacksad", "Juan Díaz Canales").french().kind("COMIC"));
+
+        assertEquals(1, results.size());
+        assertEquals("COMIC", results.get(0).kind());
+    }
+
+    @Test
+    void keepsTheSpinOffVolumeOfAnotherArtistApart() {
+        List<CatalogResult> results = rank("blue lock",
+                r("Blue Lock - Tome 8", "Muneyuki Kaneshiro, Yūsuke Nomura").series("Blue Lock", 8).kind("MANGA"),
+                r("Blue lock - Tome 8", "Kōta Sannomiya").series("Blue lock", 8).kind("MANGA"),
+                r("Blue Lock 8", "金城宗幸").from("openlibrary", "OL8W").series("Blue Lock", 8));
+
+        // The kanji credit cannot be compared, so it joins; the other artist's volume does not.
+        assertEquals(2, results.size(), titles(results).toString());
     }
 
     // --- volumes --------------------------------------------------------------------------
@@ -207,6 +240,31 @@ class CatalogRankerTest {
 
         assertEquals("One Piece - Tome 1", rank("one piece", party, series).get(0).title());
         assertEquals("One piece party - Tome 1", rank("one piece party", party, series).get(0).title());
+    }
+
+    @Test
+    void demotesBooksQuotingOrStudyingTheTitle() {
+        List<CatalogResult> results = rank("tintin au tibet",
+                r("Le Douglas DC-3 de \"Tintin au Tibet\"", "Yves Horeau").french().cover(),
+                r("Étudier « Tintin au Tibet »", "Jean-Marie Apostolidès").french().cover(),
+                r("Une lecture de Tintin au Tibet", "Pierre Fresnault-Deruelle").french().cover(),
+                r("Astérix le Gaulois Gde Collection", "René Goscinny").french().cover(),
+                r("Tintin au Tibet", "Hergé").french().kind("COMIC"));
+
+        assertEquals("Tintin au Tibet", results.get(0).title(), titles(results).toString());
+    }
+
+    @Test
+    void aGuideByTheAuthorOfTheWorkIsTheWorkItself() {
+        List<CatalogResult> results = rank("voyageur galactique",
+                r("Le Guide du voyageur galactique", "Douglas Adams").french().cover().popular(60),
+                r("Lire le Guide du voyageur galactique", "Jean Lecteur").french().cover());
+
+        assertEquals("Douglas Adams", results.get(0).authors());
+        assertEquals(2, results.size());
+        // "Guide" belongs to Adams's title: only the reading by somebody else is a study.
+        assertTrue(rank("voyageur galactique",
+                r("Le Guide du voyageur galactique", "Douglas Adams").french()).size() == 1);
     }
 
     @Test
@@ -293,12 +351,102 @@ class CatalogRankerTest {
     }
 
     @Test
-    void leavesKindsAloneWithoutAnAniListSeries() {
-        List<CatalogResult> results = rank("demon slayer",
-                r("Demon slayer - Tome 4", "Koyoharu Gotōge").series("Demon slayer", 4),
-                r("Demon slayer - Tome 3", "Koyoharu Gotōge").series("Demon slayer", 3).kind("MANGA"));
+    void aMangaVolumeMakesTheOthersOfItsSeriesMangas() {
+        List<CatalogResult> results = rank("l'attaque des titans",
+                r("L'attaque des titans - Tome 4", "Hajime Isayama").series("L'attaque des titans", 4),
+                r("L'attaque des titans - Tome 3", "Hajime Isayama").series("L'attaque des titans", 3).kind("MANGA"),
+                r("L'attaque des titans T05", "諫山創").from("openlibrary", "OL5W").series("L'attaque des titans", 5));
 
-        assertEquals(List.of("MANGA", "BOOK"), results.stream().map(CatalogResult::kind).toList());
+        assertEquals(List.of("MANGA", "MANGA", "MANGA"), results.stream().map(CatalogResult::kind).toList());
+        // The kanji-only credit shows the Latin one the rest of the run carries.
+        assertEquals("Hajime Isayama", results.get(2).authors());
+    }
+
+    @Test
+    void aComicVolumeOfSomebodyElseLeavesTheNovelsAlone() {
+        List<CatalogResult> results = rank("les miserables",
+                r("Les misérables - Tome 2", "Victor Hugo").series("Les misérables", 2).french(),
+                r("Fantine", "Maxe L'Hermenier").series("Les misérables", 1).kind("COMIC").french());
+
+        assertTrue(results.stream().anyMatch(r -> "BOOK".equals(r.kind())), results.toString());
+    }
+
+    @Test
+    void recognisesAnAniListSeriesByItsSynonyms() {
+        List<CatalogResult> candidates = List.of(
+                r("Attack on Titan", "Hajime Isayama").from("anilist", "53390").kind("MANGA").build(),
+                r("L'attaque des titans - Tome 1", "Hajime Isayama").series("L'attaque des titans", 1).build());
+
+        List<CatalogResult> results = CatalogRanker.rank("l'attaque des titans", candidates, false,
+                r -> "anilist".equals(r.provider()) ? List.of("Shingeki no Kyojin", "L'Attaque des Titans") : List.of())
+                .results();
+
+        assertTrue(results.stream().allMatch(r -> "MANGA".equals(r.kind())), results.toString());
+        assertEquals("anilist", results.get(0).provider());
+    }
+
+    @Test
+    void namesAVolumeTitledByItsPartUnderItsSeries() {
+        List<CatalogResult> results = rank("one piece tome 1",
+                r("Romance dawn", "Eiichirō Oda").series("One Piece", 1).kind("MANGA").french().cover(),
+                r("One Piece, tome 1", "尾田栄一郎").from("openlibrary", "OL8215661W").popular(18));
+
+        assertEquals(1, results.size(), titles(results).toString());
+        assertEquals("One Piece - Tome 1 : Romance dawn", results.get(0).title());
+        assertEquals("MANGA", results.get(0).kind());
+    }
+
+    // --- trimming -------------------------------------------------------------------------
+
+    @Test
+    void dropsThePaddingOfAPageThatFoundTheTitle() {
+        List<CatalogResult> results = rank("changer l'eau des fleurs",
+                r("Changer l'eau des fleurs", "Valérie Perrin").french().cover().popular(40),
+                r("Les contes de Perrault", "Charles Perrault").french().cover(),
+                r("Une lumière au bout du tunnel", "Anonyme").french().cover(),
+                r("Fleurs : changer l'eau, couper les tiges, et tout ce que l'on sait des bouquets de saison",
+                        "A. Jardinier").french(),
+                r("Changer l'eau des fleurs", "Valérie Perrin").language("swe").cover());
+
+        // The Swedish edition the BnF lists apart is the same author's work: the French one is here.
+        assertEquals(List.of("Changer l'eau des fleurs"), titles(results));
+        assertEquals("fre", results.get(0).language());
+    }
+
+    @Test
+    void keepsEverythingWhenNothingMatchesTheTitle() {
+        List<CatalogResult> results = rank("saga vaughan",
+                r("Secret Surrender", "Vivian Vaughan"),
+                r("Viking archaeology in Iceland", "Davide Zori"));
+
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    void readsAnAuthorTypedAfterAOneWordTitle() {
+        List<CatalogResult> results = rank("saga vaughan",
+                r("Secret Surrender", "Vivian Vaughan"),
+                r("Viking archaeology in Iceland", "Davide Zori"),
+                r("Saga", "Brian K. Vaughan, Fiona Staples").kind("COMIC").french());
+
+        assertEquals(List.of("Saga"), titles(results));
+    }
+
+    @Test
+    void sinksAnAuthorlessResultATierAndDropsItWithoutACoverAmongOthers() {
+        List<CatalogResult> results = rank("dune",
+                r("La Dune", null).french(),
+                r("Dune", "Frank Herbert").french().cover(),
+                r("Le Messie de Dune", "Frank Herbert").french().cover(),
+                r("Les enfants de Dune", "Frank Herbert").french().cover(),
+                r("Dune - Tome 1", "Frank Herbert").series("Dune", 1),
+                r("Dune infos", "Collectif").french(),
+                r("La dune et la plage", null).french().cover());
+
+        List<String> titles = titles(results);
+        assertFalse(titles.contains("La Dune"), titles.toString());
+        // Authorless with a cover stays, below the phrase matches that credit somebody.
+        assertTrue(titles.indexOf("La dune et la plage") > titles.indexOf("Le Messie de Dune"), titles.toString());
     }
 
     // --- display clean-up -----------------------------------------------------------------

@@ -23,12 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class CatalogRelevanceTest {
 
-    /** AniList's series for the manga queries: english title, romaji, staff. */
-    private static final Map<String, String[]> ANILIST = Map.of(
-            "one piece", new String[] {"One Piece", "ONE PIECE", "Eiichiro Oda"},
-            "blue lock", new String[] {"Blue Lock", "Blue Lock", "Muneyuki Kaneshiro, Yusuke Nomura"},
-            "demon slayer", new String[] {"Demon Slayer: Kimetsu no Yaiba", "Kimetsu no Yaiba",
-                    "Koyoharu Gotouge"});
+    /**
+     * AniList's series for the manga queries, in the order AniList's search match puts them:
+     * for "demon slayer" it answered the Kimetsu Academy spin-off first.
+     */
+    private static final Map<String, String[][]> ANILIST = Map.of(
+            "one piece", new String[][] {{"One Piece", "ONE PIECE", "Eiichiro Oda", "500000", "OP"}},
+            "blue lock", new String[][] {{"Blue Lock", "Blue Lock", "Muneyuki Kaneshiro, Yusuke Nomura", "90000", ""}},
+            "demon slayer", new String[][] {
+                    {"Demon Slayer: Kimetsu Academy", "Kimetsu Gakuen!", "Natsuki Hokami", "9000", ""},
+                    {"Demon Slayer: Kimetsu no Yaiba", "Kimetsu no Yaiba", "Koyoharu Gotouge", "300000",
+                            "Les Rôdeurs de la nuit"}});
 
     /** The page the application shows: every provider, no kind named, the default limit. */
     private static List<CatalogResult> page(String slug, String text) {
@@ -65,23 +70,23 @@ class CatalogRelevanceTest {
     @Test
     void leNomDuVent() {
         List<CatalogResult> page = page("le-nom-du-vent", "le nom du vent");
-        String why = describe(page.subList(0, 5));
+        String why = describe(page);
 
         CatalogResult first = page.get(0);
-        assertEquals("le nom du vent", fold(first.title()), why);
+        // Shown under its cycle: "Chronique du tueur de roi - Tome 1 : Le nom du vent".
+        assertTrue(fold(first.title()).contains("le nom du vent"), why);
         assertTrue(credits(first, "rothfuss"), why);
         assertNotNull(first.coverUrl(), why);
+        assertEquals(Integer.valueOf(76), first.popularity(), why);
         // Six BnF editions and the Open Library work: one result.
-        long novel = page.subList(0, 5).stream().filter(r -> fold(r.title()).startsWith("le nom du vent")).count();
-        assertTrue(novel <= 2, why);
-        assertTrue(page.subList(0, 5).stream().noneMatch(r -> r.title().contains("Arrest")), why);
-        // Weakened from "no Rapport in the top 5": the recorded pages hold only one other book
-        // a reader could buy ("Le nom perdu du soleil"), the rest being revolutionary-era
-        // notices ("Au nom du peuple français", "Rapport fait au nom du Comité…"), so ranks 3
-        // to 5 can only be filled by such notices. The two of them that do not merely share
-        // "au nom du" with the query come first.
-        assertTrue(page.subList(0, 3).stream().noneMatch(r -> r.title().contains("Rapport")), why);
-        assertEquals("le nom perdu du soleil", fold(page.get(1).title()), why);
+        assertEquals(1, page.stream().filter(r -> fold(r.title()).contains("le nom du vent")).count(), why);
+        // The page found the novel: the 18th-century notices that merely share "au nom du" with
+        // the query are padding, and go.
+        for (CatalogResult r : page) {
+            for (String noise : List.of("Arrest", "Rapport", "Au nom du")) {
+                assertFalse(r.title().contains(noise), why);
+            }
+        }
     }
 
     @Test
@@ -109,7 +114,10 @@ class CatalogRelevanceTest {
 
         assertTrue(credits(page.get(0), "victor hugo"), why);
         assertEquals("fre", page.get(0).language(), why);
+        // Hugo's novel, never merged with the comic adaptations the BnF also titles "Les misérables".
         assertEquals("BOOK", page.get(0).kind(), why);
+        assertEquals(Integer.valueOf(526), page.get(0).popularity(), why);
+        assertTrue(page.stream().anyMatch(r -> "COMIC".equals(r.kind()) && credits(r, "chaiko")), why);
         // Chaïko's comic adaptation, and the English abridgements, come after Hugo's novel.
         assertTrue(page.subList(0, 3).stream().allMatch(r -> credits(r, "hugo")), why);
     }
@@ -146,7 +154,9 @@ class CatalogRelevanceTest {
         List<CatalogResult> page = page("dune", "dune");
         String why = describe(page.subList(0, 6));
 
-        assertEquals("Dune", page.get(0).title(), why);
+        // The BnF's Pocket edition, volume 1 of "Le cycle de Dune": "Le cycle de Dune - Tome 1 : Dune".
+        assertTrue(page.get(0).title().endsWith("Dune"), why);
+        assertEquals(Integer.valueOf(155), page.get(0).popularity(), why);
         assertTrue(credits(page.get(0), "frank herbert"), why);
         assertTrue(page.subList(0, 5).stream().anyMatch(r -> r.title().equals("Le Messie de Dune")), why);
         // Brian Herbert's and the Catalan "Dune" are other books of the same name.
@@ -168,7 +178,29 @@ class CatalogRelevanceTest {
 
     @Test
     void onePiece() {
-        assertMangaSeries(page("one-piece", "one piece"), "One Piece");
+        List<CatalogResult> page = page("one-piece", "one piece");
+        assertMangaSeries(page, "One Piece");
+        // Open Library credits these volumes in kanji only; the run lends them the BnF's credit.
+        for (CatalogResult r : page.subList(1, 12)) {
+            String title = fold(r.title());
+            assertTrue(title.startsWith("one piece tome " + r.volumeNumber()), why(page));
+            assertEquals("Eiichirō Oda", r.authors(), why(page));
+        }
+    }
+
+    @Test
+    void onePieceTomeOne() {
+        List<CatalogResult> page = page("one-piece", "one piece tome 1");
+        String why = describe(page);
+
+        assertEquals(Integer.valueOf(1), page.get(0).volumeNumber(), why);
+        assertEquals("anilist", page.get(1).provider(), why);
+        assertEquals(1, page.stream().filter(r -> Integer.valueOf(1).equals(r.volumeNumber())
+                && fold(r.seriesTitle()).equals("one piece")).count(), why);
+    }
+
+    private static String why(List<CatalogResult> page) {
+        return describe(page);
     }
 
     @Test
@@ -181,7 +213,11 @@ class CatalogRelevanceTest {
 
     @Test
     void demonSlayer() {
-        assertMangaSeries(page("demon-slayer", "demon slayer"), "Demon Slayer: Kimetsu no Yaiba");
+        // AniList answered its Kimetsu Academy spin-off first: the main series leads all the same.
+        List<CatalogResult> page = page("demon-slayer", "demon slayer");
+        assertMangaSeries(page, "Demon Slayer: Kimetsu no Yaiba");
+        // The "Carnet des pourfendeurs" the BnF numbers as volume 2 stays apart from the real one.
+        assertEquals("Demon Slayer T02", page.get(1).title(), describe(page));
     }
 
     /** AniList's series first, then its volumes in ascending order, every one a manga, no merchandise. */

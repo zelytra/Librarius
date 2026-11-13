@@ -189,4 +189,49 @@ class AniListProviderTest {
         assertEquals(List.of("Eiichirō Oda", "Eiichirou Oda"), AniListProvider.staffSpellings("Eiichirō Oda"));
         assertEquals(List.of("Hajime Isayama"), AniListProvider.staffSpellings("Hajime Isayama"));
     }
+
+    @Test
+    void searchesTheSeriesOfABareVolumeNumber() {
+        assertEquals("jujutsu kaisen", AniListProvider.seriesOf("jujutsu kaisen 12"));
+        assertEquals("Kaiju No. 8", AniListProvider.seriesOf("Kaiju No. 8"));
+        assertEquals("1984", AniListProvider.seriesOf("1984"));
+    }
+
+    @Test
+    void sortsByMatchThenPopularityAndAsksForTheOtherTitles() {
+        provider().search(CatalogQuery.of("demon slayer"), 20);
+
+        String gql = client.request.query();
+        assertTrue(gql.contains("sort: [SEARCH_MATCH, POPULARITY_DESC]"), gql);
+        assertTrue(gql.contains("synonyms"), gql);
+        assertTrue(gql.contains("native"), gql);
+    }
+
+    @Test
+    void putsTheMainSeriesBeforeItsSpinOff() {
+        AniListClient.Media academy = new AniListClient.Media(2, new AniListClient.Title("Kimetsu Gakuen!",
+                "Demon Slayer: Kimetsu Academy"), null, null, null, false, null, null, 9000, List.of());
+        AniListClient.Media main = new AniListClient.Media(1, new AniListClient.Title("Kimetsu no Yaiba",
+                "Demon Slayer: Kimetsu no Yaiba"), null, null, null, false, null, null, 300000, List.of());
+        AniListClient.Media other = new AniListClient.Media(3, new AniListClient.Title("Slayers", "Slayers"),
+                null, null, null, false, null, null, 1000000, List.of());
+
+        assertEquals(List.of(1, 2, 3), AniListProvider.mainSeriesFirst(List.of(other, academy, main), "demon slayer")
+                .stream().map(AniListClient.Media::id).toList());
+    }
+
+    @Test
+    void remembersTheOtherTitlesOfWhatItAnswered() {
+        AniListClient client = body -> Uni.createFrom().item(new AniListClient.GqlResponse(new AniListClient.Data(
+                new AniListClient.Page(List.of(new AniListClient.Media(53390,
+                        new AniListClient.Title("Shingeki no Kyojin", "Attack on Titan", "進撃の巨人"), null, null,
+                        null, false, null, null, 500000, List.of("L'Attaque des Titans")))), null)));
+        AniListProvider provider = provider(client, Duration.ofSeconds(5));
+
+        provider.search(CatalogQuery.of("l'attaque des titans"), 20);
+
+        assertTrue(provider.alternativeTitles("53390").contains("L'Attaque des Titans"));
+        assertTrue(provider.alternativeTitles("53390").contains("Shingeki no Kyojin"));
+        assertTrue(provider.alternativeTitles("1").isEmpty());
+    }
 }

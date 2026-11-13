@@ -59,22 +59,29 @@ public final class RecordedProviders {
 
     /**
      * AniList answering, for a title search, the series given for the query asked ({@code q},
-     * matched case-insensitively), and nothing for any other query.
+     * matched case-insensitively) in the order given, and nothing for any other query.
      *
-     * @param series query → {english title, romaji title, author} of the one series it answers
+     * @param series query → its series, each {english title, romaji title, staff ("A, B"),
+     *               popularity, synonyms ("A|B")}
      */
-    public static CatalogProvider aniList(Map<String, String[]> series) {
+    public static CatalogProvider aniList(Map<String, String[][]> series) {
         AniListProvider provider = new AniListProvider();
         provider.client = body -> {
             Object q = body.variables() == null ? null : body.variables().get("q");
-            String[] hit = q == null ? null : series.get(q.toString().toLowerCase(java.util.Locale.ROOT));
-            List<AniListClient.Media> media = hit == null ? List.of() : List.of(new AniListClient.Media(
-                    Math.abs(hit[0].hashCode()), new AniListClient.Title(hit[1], hit[0]),
-                    new AniListClient.FuzzyDate(2018, 8, 1),
-                    new AniListClient.Cover("https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/x.jpg"),
-                    "A manga.", false, null,
-                    new AniListClient.Staff(List.of(new AniListClient.StaffEdge("Story & Art",
-                            new AniListClient.StaffNode(new AniListClient.Name(hit[2])))))));
+            String[][] hits = q == null ? null : series.get(q.toString().toLowerCase(java.util.Locale.ROOT));
+            List<AniListClient.Media> media = new java.util.ArrayList<>();
+            for (String[] hit : hits == null ? new String[0][] : hits) {
+                List<AniListClient.StaffEdge> staff = new java.util.ArrayList<>();
+                for (String name : hit[2].split(", ")) {
+                    staff.add(new AniListClient.StaffEdge("Story & Art",
+                            new AniListClient.StaffNode(new AniListClient.Name(name))));
+                }
+                media.add(new AniListClient.Media(Math.abs(hit[0].hashCode()),
+                        new AniListClient.Title(hit[1], hit[0], null), new AniListClient.FuzzyDate(2018, 8, 1),
+                        new AniListClient.Cover("https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/x.jpg"),
+                        "A manga.", false, null, new AniListClient.Staff(staff),
+                        Integer.valueOf(hit[3]), hit[4].isEmpty() ? List.of() : List.of(hit[4].split("\\|"))));
+            }
             return Uni.createFrom().item(new AniListClient.GqlResponse(
                     new AniListClient.Data(new AniListClient.Page(media), null)));
         };

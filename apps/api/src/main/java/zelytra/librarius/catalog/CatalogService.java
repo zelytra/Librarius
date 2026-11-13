@@ -79,7 +79,7 @@ public class CatalogService {
             return aggregate(providers, limit, searchCall(query, limit), result -> 0);
         }
         List<CatalogResult> pool = roundRobin(callAll(providers, searchCall(query, limit)));
-        CatalogRanker.Ranking ranking = CatalogRanker.rank(query.text(), pool, false);
+        CatalogRanker.Ranking ranking = CatalogRanker.rank(query.text(), pool, false, this::alternativeTitles);
         if (ranking.weak() && CatalogRanker.prefixRetryApplies(query)) {
             // Nothing matched the title convincingly and the last word may still be being
             // typed ("le nom du ven"): one more round, that word as a prefix, from the
@@ -90,12 +90,18 @@ public class CatalogService {
                     .filter(CatalogProvider::searchesByPrefix).toList();
             List<CatalogResult> widened = new ArrayList<>(pool);
             widened.addAll(roundRobin(callAll(truncating, searchCall(prefixed, limit))));
-            ranking = CatalogRanker.rank(query.text(), widened, true);
+            ranking = CatalogRanker.rank(query.text(), widened, true, this::alternativeTitles);
         }
         return ranking.results().stream()
                 .limit(limit)
                 .map(r -> isbnCovers ? withIsbnCover(r) : r)
                 .toList();
+    }
+
+    /** The other names the result's own provider knows it by (AniList's synonyms). */
+    private List<String> alternativeTitles(CatalogResult result) {
+        CatalogProvider provider = result.provider() == null ? null : byName.get(result.provider());
+        return provider == null ? List.of() : provider.alternativeTitles(result.providerRef());
     }
 
     /** A provider's search, through the cache: the key names the kind, every criterion and the page. */

@@ -54,10 +54,20 @@ public interface AniListClient {
     }
 
     record Media(int id, Title title, FuzzyDate startDate, Cover coverImage, String description,
-            Boolean isAdult, Integer volumes, Staff staff) {
+            Boolean isAdult, Integer volumes, Staff staff, Integer popularity, List<String> synonyms) {
+
+        /** A media as the older tests build it: no popularity, no synonyms. */
+        Media(int id, Title title, FuzzyDate startDate, Cover coverImage, String description,
+                Boolean isAdult, Integer volumes, Staff staff) {
+            this(id, title, startDate, coverImage, description, isAdult, volumes, staff, null, null);
+        }
     }
 
-    record Title(String romaji, String english) {
+    record Title(String romaji, String english, @JsonProperty("native") String nativeTitle) {
+
+        Title(String romaji, String english) {
+            this(romaji, english, null);
+        }
     }
 
     record FuzzyDate(Integer year, Integer month, Integer day) {
