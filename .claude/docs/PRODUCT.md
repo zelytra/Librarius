@@ -123,7 +123,7 @@ Personal dashboard.
 |---|---|---|
 | Header (date, greeting, Settings shortcut) | ✅ | Greeting to be made contextual (morning/evening) |
 | Continue reading | ✅ | Carousel of `READING` titles, each cover carrying its progress |
-| **To-read pile ("PAL")** | ✅ | Carousel of `OWNED` titles — owned and never opened, so neither what is being read nor what was given up on ([#166](https://github.com/zelytra/Librarius/issues/166)). One page of the pile, the header reporting how big the whole of it is; absent, rather than empty, when nothing is waiting |
+| **To-read pile ("PAL")** | ✅ | Carousel of `TO_READ` titles — owned and never opened, so neither what is being read nor what was given up on ([#166](https://github.com/zelytra/Librarius/issues/166)). One page of the pile, the header reporting how big the whole of it is; absent, rather than empty, when nothing is waiting |
 | Counters (read / in progress / to read) | ✅ | |
 | **Stack of books read** | ✅ | The "read" counter drawn out ([#181](https://github.com/zelytra/Librarius/issues/181)): a pile built from the design tokens, beside the number of books, the pages and the paper they come to in centimetres or metres. One spine per book up to eight, then one more per doubling and capped at fourteen, so three books and four hundred both read; the height is labelled as an estimate and names the sheet thickness it assumes. Absent, rather than empty, on a library with nothing read yet |
 | Upcoming releases | ✅ | Personalised to the series the reader owns, wishes on or follows, each date labelled with its market (FR/JP/EN) and its precision ([#57](https://github.com/zelytra/Librarius/issues/57)). No stake in anything → invites the reader towards their collection rather than an empty section. 🔜 admin/CSV ingestion of curated dates — entries are seeded by hand for now |
@@ -267,7 +267,7 @@ Search across the external catalog (Open Library and the BnF for books, AniList 
 - ✅ **Total budget** in the header and budget per priority in the bucket headers — read
   from the server, so they cover the whole wishlist and not the loaded page (#52).
 - ✅ **Conversion to ownership** in one gesture: "Je l'ai acheté" moves the wish into the
-  collection as `OWNED`, dated the day of the purchase (#52).
+  collection as `TO_READ` and `OWNED`, dated the day of the purchase (#52).
 - 🔜 A "one of your wishes is out soon" alert (cross-referenced with upcoming releases).
 
 ### 4.6 Statistics ✅ / 🔜
@@ -511,7 +511,8 @@ year 🔜.
 
 1. A user can own the same edition **only once** (`UNIQUE(user, edition)`). A re-read is not
    a duplicate: it belongs to the reading history 🔜.
-2. Statuses: `OWNED` (owned, unread) → `READING` → `READ`, plus `ABANDONED` for a title
+2. Two status families (#411). The **reading status**: `TO_READ` (on the pile, unread —
+   `OWNED` before V27) → `READING` → `READ`, plus `ABANDONED` for a title
    given up on partway through. Moving to `READ` sets `finished_at` and completes the
    position (100 %, last page); moving to `READING` sets `started_at` if it is empty and
    clears `finished_at` — a title being read again is not a finished one. A date supplied by
@@ -575,6 +576,27 @@ year 🔜.
    evaluation grants in practice and the revocation path, though wired and tested, waits on that
    surface (and on the contribution attribution of
    [#198](https://github.com/zelytra/Librarius/issues/198)) to have real reports to act on.
+
+### Added with #411–#421
+
+- **Ownership** is the second status family: `OWNED` (on the shelves), `BORROWED`, `EBOOK`,
+  `WISHLIST`, `NOT_OWNED`. Picked on Detail, in the add sheet, in the manual form and for a
+  scanning session; Collection filters on it and badges a cover that is not `OWNED`. A title
+  wanted and not read is a plain wish; `WISHLIST` on a title of the library keeps a wish on the
+  same edition in step, and buying it keeps the reading history.
+- **Reading sheet** (`/detail/:id/fiche`): a printable A4 page of a finished title — rating,
+  review (or ruled lines), facts, dates — black on white with hairlines, cover off by default.
+  Offered on Detail once read and from the end-of-reading sheet.
+- **Feedback**: every write announces its outcome in a toast (`shared/ui/toast.ts`, mounted
+  once by `App`); buttons and status chips give under the finger. Reduced motion is honoured.
+- **No hole in the lengths**: an edition without a page count counts at an estimate (series
+  average, else per kind) and is shown with "≈".
+- **Home**: one vertical gap between blocks; the customize panel is a modal; the stack of pages
+  read rises through a sky — ground, clouds, space, the Moon, each planet, the stars, the edge
+  of the universe — on a story scale (`skyAltitude.ts`), not a true one.
+- **Stats**: the pace is titles per month; "What you read" covers everything read by default,
+  every rank listed; the cumulative chart is one curve per kind goal; a value panel prices the
+  owned books and the wishlist at the BnF publisher's price (fixed book price in France).
 
 ## 7. Out of scope (explicit decisions)
 
