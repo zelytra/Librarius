@@ -2,6 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import {
   FORMATS,
+  KINDS,
+  kindLabelKey,
+  type BookKind,
   formatLabelKey,
   type BookFormat,
   OWNERSHIPS,
@@ -67,6 +70,8 @@ export function StatusPicker({
   disabled,
   format,
   onFormat,
+  kind,
+  onKind,
 }: {
   status: ReadingStatus | undefined;
   ownership: Ownership | undefined;
@@ -76,6 +81,9 @@ export function StatusPicker({
   /** The format of the copy (#447), shown when `onFormat` is given; null when unsaid. */
   format?: BookFormat | null;
   onFormat?: (format: BookFormat | null) => void;
+  /** The kind the title is filed under (#454), shown when `onKind` is given. */
+  kind?: BookKind;
+  onKind?: (kind: BookKind) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -105,6 +113,16 @@ export function StatusPicker({
           labelOf={(id) => t(formatLabelKey(id))}
           onChange={onFormat}
           onClear={() => onFormat(null)}
+          disabled={disabled}
+        />
+      )}
+      {onKind && (
+        <ChipGroup
+          label={t('statuses.kindTitle')}
+          options={KINDS}
+          value={kind}
+          labelOf={(id) => t(kindLabelKey(id))}
+          onChange={onKind}
           disabled={disabled}
         />
       )}

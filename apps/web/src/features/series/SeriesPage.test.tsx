@@ -300,4 +300,20 @@ describe('SeriesPage', () => {
 
     expect(await screen.findByText(/strictement privés/)).toBeInTheDocument();
   });
+
+  /** #451: the whole run is filed under one category, for a library split by category. */
+  test('files every volume of the series under the category picked', async () => {
+    seriesDetailReturns(SERIES);
+    const sent: unknown[] = [];
+    server.use(http.get('*/api/series/:id/reviews', () => HttpResponse.json({ count: 0, reviews: [] })));
+    server.use(http.put('*/api/series/:id/rank', async ({ request }) => {
+      sent.push(await request.json());
+      return new HttpResponse(null, { status: 204 });
+    }));
+    renderSeries();
+
+    const section = await screen.findByRole('region', { name: 'Catégorie de la série' });
+    await userEvent.click(await within(section).findByRole('button', { name: 'Or' }));
+    await waitFor(() => expect(sent).toEqual([{ categoryId: 'cat-or' }]));
+  });
 });

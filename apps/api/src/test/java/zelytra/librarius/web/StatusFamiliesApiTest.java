@@ -129,6 +129,19 @@ class StatusFamiliesApiTest {
                 .then().statusCode(200).body("ownership", is("NOT_OWNED"));
     }
 
+    /** An audiobook is an ownership of its own, set and filtered like the others (#455). */
+    @Test
+    void anAudiobookIsAnOwnershipOfItsOwn() {
+        String id = add("alice", "Families - audiobook", "READ", null);
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"ownership\": \"AUDIOBOOK\" }")
+                .when().put("/api/library/" + id + "/ownership")
+                .then().statusCode(200).body("ownership", is("AUDIOBOOK"));
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/library?ownership=AUDIOBOOK&q=Families - audiobook")
+                .then().statusCode(200).body("items.id", org.hamcrest.Matchers.contains(id));
+    }
+
     @Test
     void anotherUsersTitleCannotHaveItsOwnershipChanged() {
         String id = add("alice", "Families - isolation", "TO_READ", null);

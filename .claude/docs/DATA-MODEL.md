@@ -539,6 +539,18 @@ like `price`; `LibraryItem.effectivePageCount()` and every aggregation read
 (`BookFormat`: POCKET, PAPERBACK, HARDCOVER, LARGE, DELUXE, BOX_SET, nullable) is the format of
 the copy. Both travel in the export.
 
+### V33 — library views and the audiobook ownership (#451, #455)
+
+`library_view` holds a reader's saved layouts of the library: `name`, `position`, `kind`,
+`shelf` (the screen's `shelf` parameter, e.g. `rank:or`), `sort` (a `LibrarySort` name or
+`manual`), `layout` (`grouped`/`flat`, checked) and `group_by_category`. `library_view_entry`
+is the manual order: one row per placed entry, either a title (`item_id`) or a series block
+(`series_id`) — exactly one of the two, checked — at a `position`; unique per view and target,
+`ON DELETE CASCADE` from the view, the item and the series. `LibrarySort.MANUAL` orders by the
+entry's position through a subquery bound to `:view`, the unplaced titles after by activity.
+`Ownership.AUDIOBOOK` joins the enum; the column's comment is updated (no constraint to
+change, the column is a plain `VARCHAR(16)`).
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

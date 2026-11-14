@@ -125,6 +125,44 @@
         } ]
       }
     },
+    "/api/authors/{id}/external" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExternalAuthorDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "External",
+        "tags" : [ "Author Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/authors/{id}/follow" : {
       "delete" : {
         "parameters" : [ {
@@ -1063,6 +1101,12 @@
           "schema" : {
             "$ref" : "#/components/schemas/LibraryStatus"
           }
+        }, {
+          "name" : "view",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1321,6 +1365,52 @@
           }
         },
         "summary" : "Set Format",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/library/{id}/kind" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KindDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Kind",
         "tags" : [ "Library Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -2089,6 +2179,52 @@
         } ]
       }
     },
+    "/api/series/{id}/rank" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RankAssignDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Rank",
+        "tags" : [ "Series Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/series/{id}/review" : {
       "put" : {
         "parameters" : [ {
@@ -2526,6 +2662,201 @@
         } ]
       }
     },
+    "/api/views" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LibraryViewDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "List",
+        "tags" : [ "Library View Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LibraryViewInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LibraryViewDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Create",
+        "tags" : [ "Library View Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/views/{id}" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LibraryViewInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LibraryViewDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Update",
+        "tags" : [ "Library View Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "delete" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Delete",
+        "tags" : [ "Library View Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/views/{id}/order" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LibraryViewOrderDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LibraryViewDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Reorder",
+        "tags" : [ "Library View Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/wishlist" : {
       "get" : {
         "parameters" : [ {
@@ -2785,6 +3116,82 @@
           }
         },
         "summary" : "List",
+        "tags" : [ "Work Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/works/{id}/external" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExternalRatingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "External",
+        "tags" : [ "Work Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/works/{id}/friends" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FriendOnWorkDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Friends",
         "tags" : [ "Work Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -3551,11 +3958,94 @@
           }
         }
       },
+      "ExternalAuthorDto" : {
+        "type" : "object",
+        "properties" : {
+          "source" : {
+            "type" : "string"
+          },
+          "extract" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
+          },
+          "licence" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ExternalRatingDto" : {
+        "type" : "object",
+        "properties" : {
+          "source" : {
+            "type" : "string"
+          },
+          "average" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "readers" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wanted" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        }
+      },
       "FormatDto" : {
         "type" : "object",
         "properties" : {
           "format" : {
             "$ref" : "#/components/schemas/BookFormat"
+          }
+        }
+      },
+      "FriendOnWorkDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "trusted" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "ownership" : {
+            "type" : "string"
+          },
+          "wished" : {
+            "type" : "boolean"
+          },
+          "rating" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rankCode" : {
+            "type" : "string"
+          },
+          "rankLabel" : {
+            "type" : "string"
+          },
+          "rankColor" : {
+            "type" : "string"
           }
         }
       },
@@ -3663,6 +4153,15 @@
       "Kind" : {
         "type" : "string",
         "enum" : [ "BOOK", "MANGA", "COMIC", "GRAPHIC_NOVEL", "AUDIOBOOK" ]
+      },
+      "KindDto" : {
+        "type" : "object",
+        "required" : [ "kind" ],
+        "properties" : {
+          "kind" : {
+            "$ref" : "#/components/schemas/Kind"
+          }
+        }
       },
       "KindGoalDto" : {
         "type" : "object",
@@ -3838,6 +4337,80 @@
         "type" : "string",
         "enum" : [ "TO_READ", "READING", "READ", "ABANDONED" ]
       },
+      "LibraryViewDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "shelf" : {
+            "type" : "string"
+          },
+          "sort" : {
+            "type" : "string"
+          },
+          "layout" : {
+            "type" : "string"
+          },
+          "groupByCategory" : {
+            "type" : "boolean"
+          },
+          "order" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "LibraryViewInput" : {
+        "type" : "object",
+        "required" : [ "name" ],
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "pattern" : "\\S",
+            "maxLength" : 60
+          },
+          "kind" : {
+            "$ref" : "#/components/schemas/Kind"
+          },
+          "shelf" : {
+            "type" : "string",
+            "maxLength" : 80
+          },
+          "sort" : {
+            "type" : "string",
+            "pattern" : "recent|added|title|author|genre|rating|manual"
+          },
+          "layout" : {
+            "type" : "string",
+            "pattern" : "grouped|flat"
+          },
+          "groupByCategory" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "LibraryViewOrderDto" : {
+        "type" : "object",
+        "required" : [ "keys" ],
+        "properties" : {
+          "keys" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "maxItems" : 5000
+          }
+        }
+      },
       "LocalDate" : {
         "type" : "string",
         "format" : "date",
@@ -3970,7 +4543,7 @@
       },
       "Ownership" : {
         "type" : "string",
-        "enum" : [ "OWNED", "BORROWED", "EBOOK", "WISHLIST", "NOT_OWNED" ]
+        "enum" : [ "OWNED", "BORROWED", "EBOOK", "AUDIOBOOK", "WISHLIST", "NOT_OWNED" ]
       },
       "OwnershipDto" : {
         "type" : "object",
@@ -4280,6 +4853,9 @@
             "type" : "string"
           },
           "genre" : {
+            "type" : "string"
+          },
+          "rankCode" : {
             "type" : "string"
           }
         }

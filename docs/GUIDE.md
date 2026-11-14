@@ -58,6 +58,7 @@ scan : où tu en es dans ta **lecture**, et comment tu **possèdes** le livre.
 | Possédé | Il est dans ta bibliothèque, en vrai — le seul cas compté dans la valeur de ta bibliothèque |
 | Emprunté | Tu l'as eu entre les mains (médiathèque, ami), mais il n'est pas sur tes étagères |
 | Livre numérique | Lu sur liseuse, tablette ou autre format numérique |
+| Livre audio | Écouté en livre audio |
 | Liste d'envies | Tu ne l'as pas et tu aimerais l'avoir : il apparaît aussi dans tes souhaits |
 | Non possédé | Ni sur tes étagères, ni en envie |
 
@@ -122,8 +123,32 @@ La collection se lit en **Bibliothèque** (romans) ou **Mangathèque**, et se pr
 tri se fait par ajout, titre, auteur, genre ou note ; « Mes coups de cœur » ne garde que
 ce que tu as noté 4 ou plus.
 
+La liste se charge **toute seule** en descendant : plus besoin d'appuyer sur « Voir plus ».
+
+### Tes vues
+
+Une **vue** retient ta façon de ranger la bibliothèque : le type (livres, mangas, BD),
+l'étagère, le tri, les séries regroupées ou tome par tome, et la séparation **par
+catégorie** (une section Or, une Argent… les séries restent d'un seul bloc). Règle l'écran
+comme tu le veux, puis « Nouvelle vue » pour l'enregistrer ; tes vues s'affichent en haut de
+la bibliothèque, « Modifier la vue » la renomme, la met à jour ou la supprime.
+
+Dans une vue, le tri **Manuel** te laisse placer tes livres toi-même : « Réorganiser », puis
+fais glisser un titre par sa poignée (au doigt ou à la souris), ou utilise les flèches ← →.
+L'ordre est enregistré dès que tu lâches. Pour ranger une série entière dans une catégorie,
+choisis-la dans « Catégorie de la série », sur la page de la série.
+
 La petite corbeille d'une couverture retire le titre de ta collection **immédiatement, et
 sans confirmation**. Elle ne touche pas au catalogue partagé.
+
+### Tes amis et l'avis des autres
+
+Sur la page d'un livre, **« Tes amis l'ont aussi »** montre les personnes que tu suis qui
+l'ont lu, le possèdent ou en ont envie, avec la catégorie où elles l'ont rangé — seulement
+celles dont tu peux voir l'activité, et leur note seulement si elles l'ont partagée.
+**« Ailleurs »** donne l'avis des lecteurs d'Open Library (note, nombre de lecteurs, nombre
+de personnes qui veulent le lire) et, pour un manga, la note d'AniList, avec un lien vers la
+source. La page d'un auteur reprend le début de son article Wikipédia, en citant la source.
 
 ## Séries et tomes
 
@@ -203,6 +228,10 @@ Sur la page d'un livre, tu peux aussi saisir **ton nombre de pages** (il remplac
 l'édition dans tes pages lues, tes objectifs et ta progression, pour toi seul) et choisir le
 **format** de ton exemplaire — poche, broché, relié, grand format, collector, coffret — à
 côté des statuts. Un second appui sur le format choisi le retire.
+
+Le **type** — livre, BD ou manga — se change aussi sur la page du livre, pour toi seul : le
+titre passe dans l'autre étagère, avec ses objectifs et ses statistiques, sans rien perdre
+de ce que tu as saisi.
 
 La section **Autres éditions** est toujours là : choisis une édition proposée par le
 catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).

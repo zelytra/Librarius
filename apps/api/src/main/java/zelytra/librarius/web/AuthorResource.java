@@ -56,6 +56,20 @@ public class AuthorResource {
      *
      * @throws NotFoundException when no author carries this identifier
      */
+    @jakarta.inject.Inject
+    zelytra.librarius.opinion.ExternalOpinionService externalOpinions;
+
+    /**
+     * The opening of the author's Wikipedia article (#453), credited and licensed — none, or
+     * one. A disambiguation page or no article answers an empty list.
+     */
+    @GET
+    @Path("/{id}/external")
+    public java.util.List<zelytra.librarius.web.ApiDtos.ExternalAuthorDto> external(@PathParam("id") UUID id) {
+        currentUser.require();
+        return externalOpinions.ofAuthor(id).stream().toList();
+    }
+
     @GET
     @Path("/{id}")
     public AuthorDetailDto get(@PathParam("id") UUID id) {

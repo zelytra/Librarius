@@ -7,7 +7,7 @@
  */
 
 export type ReadingStatus = 'TO_READ' | 'READING' | 'READ' | 'ABANDONED';
-export type Ownership = 'OWNED' | 'BORROWED' | 'EBOOK' | 'WISHLIST' | 'NOT_OWNED';
+export type Ownership = 'OWNED' | 'BORROWED' | 'EBOOK' | 'AUDIOBOOK' | 'WISHLIST' | 'NOT_OWNED';
 
 export const READING_STATUSES: { id: ReadingStatus; icon: string }[] = [
   { id: 'TO_READ', icon: 'library_books' },
@@ -20,6 +20,7 @@ export const OWNERSHIPS: { id: Ownership; icon: string }[] = [
   { id: 'OWNED', icon: 'collections_bookmark' },
   { id: 'BORROWED', icon: 'handshake' },
   { id: 'EBOOK', icon: 'tablet_android' },
+  { id: 'AUDIOBOOK', icon: 'headphones' },
   { id: 'WISHLIST', icon: 'favorite' },
   { id: 'NOT_OWNED', icon: 'visibility_off' },
 ];
@@ -35,6 +36,17 @@ export const FORMATS: { id: BookFormat; icon: string }[] = [
   { id: 'DELUXE', icon: 'workspace_premium' },
   { id: 'BOX_SET', icon: 'collections_bookmark' },
 ];
+
+/** The kind a reader files a title under (#454). */
+export type BookKind = 'BOOK' | 'COMIC' | 'MANGA';
+
+export const KINDS: { id: BookKind; icon: string }[] = [
+  { id: 'BOOK', icon: 'menu_book' },
+  { id: 'COMIC', icon: 'collections_bookmark' },
+  { id: 'MANGA', icon: 'auto_stories' },
+];
+
+export const kindLabelKey = (kind: string | undefined) => `statuses.kind.${kind}`;
 
 export const formatLabelKey = (format: string | undefined) => `statuses.format.${format}`;
 

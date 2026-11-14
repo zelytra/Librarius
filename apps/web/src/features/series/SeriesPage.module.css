@@ -390,3 +390,14 @@
   height: 18px;
   accent-color: var(--accent-deep);
 }
+
+/* Filing the whole run under one category (#451). */
+.category {
+  margin-bottom: 18px;
+}
+
+.categoryHint {
+  margin: -4px 0 10px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}

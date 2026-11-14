@@ -1,3 +1,4 @@
+import { InfiniteMore } from '../../shared/ui/InfiniteMore';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { SearchField } from '../../shared/ui/SearchField';
@@ -376,15 +377,13 @@ function WishlistContent() {
         ))}
       </div>
 
-      {hasNextPage && (
-        <div className={styles.loadMore}>
-          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
-            {isFetchingNextPage
-              ? t('common.loading')
-              : t('collection.loadMore', { loaded: items.length, total: count })}
-          </Button>
-        </div>
-      )}
+      <InfiniteMore
+        className={styles.loadMore}
+        hasMore={!!hasNextPage}
+        loading={isFetchingNextPage}
+        onMore={() => void fetchNextPage()}
+        label={t('collection.loadMore', { loaded: items.length, total: count })}
+      />
     </>
   );
 }

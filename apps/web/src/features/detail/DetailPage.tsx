@@ -25,6 +25,7 @@ import {
   usePutApiLibraryIdPrice,
   usePutApiLibraryIdPages,
   usePutApiLibraryIdFormat,
+  usePutApiLibraryIdKind,
   usePostApiLibraryIdEdition,
   type EditionChoiceDto,
   usePutApiLibraryIdProgress,
@@ -43,11 +44,22 @@ import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
 import { ReadersReviews } from '../reviews/ReadersReviews';
+import { FriendsOnWork } from '../reviews/FriendsOnWork';
+import { ExternalRatings } from '../reviews/ExternalOpinions';
 import styles from './DetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 import { StatusPicker } from '../../shared/ui/StatusPicker';
 import { toast } from '../../shared/ui/toast';
-import { formatLabelKey, ownershipLabelKey, statusLabelKey, type BookFormat, type Ownership, type ReadingStatus } from '../../shared/statuses';
+import {
+  formatLabelKey,
+  kindLabelKey,
+  ownershipLabelKey,
+  statusLabelKey,
+  type BookFormat,
+  type BookKind,
+  type Ownership,
+  type ReadingStatus,
+} from '../../shared/statuses';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
 const WASH_FROM = 'aa';
@@ -801,6 +813,15 @@ function DetailContent({ id }: { id: string }) {
       onError: failed,
     },
   });
+  const { mutate: mutateKind, isPending: kindSaving } = usePutApiLibraryIdKind({
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(t('toasts.kind', { kind: t(kindLabelKey(data.kind)) }), 'category');
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
   const { mutate: mutateNewEdition, isPending: newEditionSaving } = usePostApiLibraryIdEdition({
     mutation: {
       onSuccess: () => {
@@ -1055,7 +1076,9 @@ function DetailContent({ id }: { id: string }) {
             onOwnership={(ownership) => mutateOwnership({ id, data: { ownership } })}
             format={(item.format ?? null) as BookFormat | null}
             onFormat={(format) => mutateFormat({ id, data: { format: format ?? undefined } })}
-            disabled={progressSaving || ownershipSaving || formatSaving}
+            kind={b.kind as BookKind}
+            onKind={(kind) => mutateKind({ id, data: { kind } })}
+            disabled={progressSaving || ownershipSaving || formatSaving || kindSaving}
           />
         </section>
 
@@ -1101,7 +1124,9 @@ function DetailContent({ id }: { id: string }) {
         />
 
         {/* What the readers the caller can see shared about this book (#207). */}
+        <FriendsOnWork workId={workId} />
         <ReadersReviews data={readersReviews.data} loading={readersReviews.isPending && Boolean(workId)} />
+        <ExternalRatings workId={workId} />
 
         {/* Every button in the row writes the same rank, so the heading carries the
             indicator for all of them — the same rule as the review and the editions

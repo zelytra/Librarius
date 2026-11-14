@@ -74,6 +74,10 @@ export const defaultHandlers = [
   http.get(`${BASE}/me`, () =>
     HttpResponse.json({ id: 'alice', displayName: 'alice', email: 'alice@test.fr', locale: 'fr' })),
   http.get(`${BASE}/me/blocked`, () => HttpResponse.json([])),
+  http.get(`${BASE}/works/:id/friends`, () => HttpResponse.json([])),
+  http.get(`${BASE}/views`, () => HttpResponse.json([])),
+  http.get(`${BASE}/works/:id/external`, () => HttpResponse.json([])),
+  http.get(`${BASE}/authors/:id/external`, () => HttpResponse.json([])),
 
   http.post(`${BASE}/library`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),
   http.post(`${BASE}/wishlist`, () => HttpResponse.json({ id: 'nouveau' }, { status: 201 })),

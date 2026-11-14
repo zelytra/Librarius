@@ -383,7 +383,8 @@
       "author": "Author",
       "genre": "Genre",
       "rating": "Rating",
-      "recent": "Recent"
+      "recent": "Recent",
+      "manual": "Manual"
     },
     "ranks": {
       "all": "All",
@@ -491,7 +492,10 @@
       "owned": "Unread",
       "missing": "Not owned",
       "upcoming": "Upcoming"
-    }
+    },
+    "categoryTitle": "Series category",
+    "categoryHint": "Files every volume you hold of the series under the same category.",
+    "categorySaved": "Series filed"
   },
   "author": {
     "follow": "Follow this author",
@@ -1137,6 +1141,7 @@
       "OWNED": "Owned",
       "BORROWED": "Borrowed",
       "EBOOK": "Ebook",
+      "AUDIOBOOK": "Audiobook",
       "WISHLIST": "Wishlist",
       "NOT_OWNED": "Not owned"
     },
@@ -1144,6 +1149,7 @@
       "OWNED": "On your own shelves.",
       "BORROWED": "Had in hand, but not on your shelves.",
       "EBOOK": "Read on an e-reader, a tablet or another digital format.",
+      "AUDIOBOOK": "Listened to as an audiobook.",
       "WISHLIST": "You don't have it and would like to.",
       "NOT_OWNED": "Neither on your shelves nor wanted."
     },
@@ -1155,6 +1161,12 @@
       "LARGE": "Large format",
       "DELUXE": "Deluxe",
       "BOX_SET": "Box set"
+    },
+    "kindTitle": "Kind",
+    "kind": {
+      "BOOK": "Book",
+      "COMIC": "Comic",
+      "MANGA": "Manga"
     }
   },
   "toasts": {
@@ -1181,7 +1193,8 @@
     "formatCleared": "Format removed",
     "pages_one": "{{count}} page saved",
     "pages_other": "{{count}} pages saved",
-    "pagesCleared": "Back to the edition's page count"
+    "pagesCleared": "Back to the edition's page count",
+    "kind": "Filed under: {{kind}}"
   },
   "achievements": {
     "title": "Achievements",
@@ -1303,5 +1316,45 @@
     "progress": "{{value}} / {{target}}",
     "unlockedMany_one": "{{count}} achievement unlocked (+{{xp}} XP) — see it in Achievements",
     "unlockedMany_other": "{{count}} achievements unlocked (+{{xp}} XP) — see them in Achievements"
+  },
+  "friends": {
+    "title": "Your friends have it too",
+    "wished": "Wished for"
+  },
+  "external": {
+    "title": "Elsewhere",
+    "about": "About",
+    "average": "★ {{average}} / 5",
+    "count_one": "{{n}} rating",
+    "count_other": "{{n}} ratings",
+    "readers_one": "{{n}} reader",
+    "readers_other": "{{n}} readers",
+    "wanted_one": "{{n}} wants to read it",
+    "wanted_other": "{{n}} want to read it",
+    "credit": "Source: {{source}} — {{licence}}"
+  },
+  "views": {
+    "title": "My views",
+    "all": "Whole library",
+    "new": "New view",
+    "edit": "Edit view",
+    "newTitle": "New view",
+    "editTitle": "Edit view",
+    "explain": "A view remembers how you lay out your library: the kind, the shelf, the sort (manual order included), series grouped or not, and the split by category.",
+    "name": "View name",
+    "byCategory": "Split by category (Gold, Silver…), series kept whole",
+    "byCategoryShort": "By category",
+    "takeCurrent": "Use the settings on screen",
+    "save": "Save",
+    "delete": "Delete view",
+    "created": "View “{{name}}” created",
+    "saved": "View “{{name}}” saved",
+    "deleted": "View deleted",
+    "arrange": "Arrange",
+    "done": "Done",
+    "drag": "Drag to move",
+    "earlier": "Move earlier",
+    "later": "Move later",
+    "uncategorised": "No category"
   }
 }

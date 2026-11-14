@@ -62,4 +62,29 @@ public class WorkResource {
         currentUser.require();
         return sharedReviews.ofWork(currentUser.id(), id);
     }
+
+    @Inject
+    zelytra.librarius.social.FriendsOnWorkService friendsOnWork;
+
+    /**
+     * The people the caller follows who read, own or want this title (#452), with the category
+     * they filed it under — as far as the caller may see them.
+     */
+    @GET
+    @Path("/{id}/friends")
+    public List<ApiDtos.FriendOnWorkDto> friends(@PathParam("id") UUID id) {
+        currentUser.require();
+        return friendsOnWork.of(currentUser.id(), id);
+    }
+
+    @Inject
+    zelytra.librarius.opinion.ExternalOpinionService externalOpinions;
+
+    /** What other communities think of this title (#453): Open Library, AniList. */
+    @GET
+    @Path("/{id}/external")
+    public List<ApiDtos.ExternalRatingDto> external(@PathParam("id") UUID id) {
+        currentUser.require();
+        return externalOpinions.ofWork(id);
+    }
 }

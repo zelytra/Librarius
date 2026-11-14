@@ -80,6 +80,7 @@ public class SeriesService {
         // with a cover in the catalog, whoever owns it, before the reader's own first volume.
         Map<UUID, String> firstCovers = series.firstVolumeCovers(visible);
         Map<UUID, String[]> sortKeys = items.seriesSortKeys(userId);
+        Map<UUID, String> ranks = items.seriesRanks(userId);
         return series.listByIds(visible).stream()
                 .map(s -> {
                     OwnershipCounters row = counters.get(s.id);
@@ -90,6 +91,9 @@ public class SeriesService {
                     String[] keys = sortKeys.get(s.id);
                     if (keys != null) {
                         dto = dto.withSortKeys(keys[0], keys[1]);
+                    }
+                    if (ranks.containsKey(s.id)) {
+                        dto = dto.withRank(ranks.get(s.id));
                     }
                     // A series carries a cover only when a provider gave it one, which an
                     // imported run never had: its block on the shelf then shows the first

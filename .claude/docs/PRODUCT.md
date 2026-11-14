@@ -608,6 +608,17 @@ year 🔜.
   on Detail, provider printings included, or described by hand (#445); the reader can set
   their own **page count** (#446) and the **format** of their copy (#447). The **scanner**
   adds an enlarged, contrast-stretched pass for laptop webcams and a photo fallback (#444).
+- **Library views** (#451): named layouts saved per reader — kind, shelf, sort, series grouped or
+  flat, split by category — chosen from a chip row over the library. A view adds the **Manual**
+  sort: "Réorganiser" lets the reader drag tiles by a handle (finger or mouse) or step them with
+  ← →, saved on release. A series files under its volumes' most common category, and the Series
+  screen sets one category for the whole run. The library, to-read and wishlist lists load the
+  next page on their own (#450). A title can be moved to another kind, for its reader only (#454);
+  **Audiobook** is an ownership of its own (#455).
+- **On a title** (#452, #453): the followed people who read, own or want it, with their category
+  (rating only when shared); "Ailleurs" credits Open Library's readers and AniList's score; an
+  author page opens with their French Wikipedia summary (CC BY-SA, credited). No review text is
+  imported: no open source licenses one.
 - **Achievements, XP and levels** (#287): nineteen achievements in four families (reading,
   consistency, collection & opinion, discovery), one-shot or tiered (bronze → platinum), the
   issue's starter catalogue. Server-authoritative, evaluated on read, retroactive and silent on

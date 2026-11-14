@@ -74,6 +74,10 @@
 /* As wide as its two labels: a fixed 160px squeezed "Tous les titres" onto two lines. */
 .viewSwitch {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .sortRow {
@@ -183,4 +187,34 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── A view split by category (#451) ─────────────────────────────────────── */
+
+.categorySection + .categorySection {
+  margin-top: 22px;
+}
+
+.categoryTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.categoryDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-round);
+}
+
+.categoryCount {
+  font-family: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--muted);
 }

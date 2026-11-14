@@ -34,6 +34,7 @@ import { StarRating } from '../detail/StarRating';
 import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import { ReadersReviews } from '../reviews/ReadersReviews';
+import { SeriesCategory } from './SeriesCategory';
 import styles from './SeriesPage.module.css';
 import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -333,6 +334,8 @@ function SeriesContent({ id }: { id: string }) {
 
           {series.synopsis && <p className={styles.synopsis}>{series.synopsis}</p>}
         </div>
+
+        {owned > 0 && series.id && <SeriesCategory seriesId={series.id} />}
 
         <h3 className={styles.sectionTitle}>{t('series.volumesTitle')}</h3>
 

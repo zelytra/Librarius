@@ -1,3 +1,4 @@
+import { ExternalAuthor } from '../reviews/ExternalOpinions';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -194,6 +195,8 @@ function AuthorContent({ id }: { id: string }) {
             </Button>
           </div>
         </div>
+
+        <ExternalAuthor authorId={id} />
 
         <h3 className={styles.sectionTitle}>{t('author.bibliography')}</h3>
 
