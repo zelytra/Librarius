@@ -531,6 +531,14 @@ data behind it changes. XP (the unlocked tiers' rewards + 10 per book read) and 
 finishing it later unlocks `COMEBACK`, the one event-borne achievement. The library reset
 deletes the unlocks and clears the evaluation stamp.
 
+### V32 — the reader's own page count and format (#446, #447)
+
+`library_item.page_count` (positive, nullable) is the reader's length for their copy, private
+like `price`; `LibraryItem.effectivePageCount()` and every aggregation read
+`coalesce(li.page_count, e.page_count, e.page_count_estimate)`. `library_item.format`
+(`BookFormat`: POCKET, PAPERBACK, HARDCOVER, LARGE, DELUXE, BOX_SET, nullable) is the format of
+the copy. Both travel in the export.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

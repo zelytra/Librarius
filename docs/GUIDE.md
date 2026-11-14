@@ -197,6 +197,16 @@ Sur la page d'un livre, la section **Prix** montre le prix neuf relevé à la Bn
 toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs.
 Vide, on revient au prix neuf.
 
+## Pages, format et édition de ton exemplaire
+
+Sur la page d'un livre, tu peux aussi saisir **ton nombre de pages** (il remplace celui de
+l'édition dans tes pages lues, tes objectifs et ta progression, pour toi seul) et choisir le
+**format** de ton exemplaire — poche, broché, relié, grand format, collector, coffret — à
+côté des statuts. Un second appui sur le format choisi le retire.
+
+La section **Autres éditions** est toujours là : choisis une édition proposée par le
+catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).
+
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre

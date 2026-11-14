@@ -30,6 +30,9 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=&ownership=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination). `status` is `TO_READ` (`OWNED` still accepted), `READING`, `READ` or `ABANDONED`; `ownership` is `OWNED`, `BORROWED`, `EBOOK`, `WISHLIST` or `NOT_OWNED` (#411) |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`: `book`, `status`, `ownership`, `rating`, `acquiredAt`) — creates `work`+`edition` if needed; `ownership: WISHLIST` also creates the wish |
+| PUT | `/api/library/{id}/pages` | The reader's own page count (`PagesDto`, null clears it, 1–100 000) — used first by their figures, the position re-anchored (#446) |
+| PUT | `/api/library/{id}/format` | The format of the copy (`FormatDto`, null clears it) (#447); `GET /api/library?format=` filters on it |
+| POST | `/api/library/{id}/edition` | Moves the title onto an edition that is not a row yet (`EditionChoiceDto`): a provider's printing or one described by hand, created under the title's work; a known ISBN reuses that edition (#445) |
 | PUT | `/api/library/{id}/price` | The reader's own price (`PriceDto`, null clears it, ≥ 0) — private, the edition's market price untouched (#431); `LibraryItemDto.price` |
 | PUT | `/api/library/{id}/ownership` | Sets the ownership (`OwnershipDto`) — `WISHLIST` puts the edition on the wishlist, any other value takes it off (#411) |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |

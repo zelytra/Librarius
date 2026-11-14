@@ -604,6 +604,10 @@ year 🔜.
   app (gzipped by nginx, not precached): from jsDelivr it failed silently wherever the CDN is
   blocked. Frames are read at up to 1080p, alternately cropped to the aim box and whole.
 - **Reading sheet**: A4, A5 or A6, with a ring-binder inner margin (#432).
+- **Search results** link each author and the series (#443); **edition** is always choosable
+  on Detail, provider printings included, or described by hand (#445); the reader can set
+  their own **page count** (#446) and the **format** of their copy (#447). The **scanner**
+  adds an enlarged, contrast-stretched pass for laptop webcams and a photo fallback (#444).
 - **Achievements, XP and levels** (#287): nineteen achievements in four families (reading,
   consistency, collection & opinion, discovery), one-shot or tiered (bronze → platinum), the
   issue's starter catalogue. Server-authoritative, evaluated on read, retroactive and silent on
