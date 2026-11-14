@@ -5,6 +5,19 @@ The full, exact rules live in
 [`.claude/docs/CONVENTIONS.md`](https://github.com/zelytra/Librarius/blob/main/.claude/docs/CONVENTIONS.md)
 at the root of the repository — this page is the short version.
 
+## Engineering rules
+
+- **No over-engineering**: the smallest change that solves the request, with what the
+  repository already has; no speculative abstraction, option or dependency.
+- **Good practices**: clear names, one responsibility per unit, one source of truth, no dead
+  code, errors handled where they can be acted on.
+- **TDD**: the failing test first, then the least code that passes it, then the refactor. A
+  bug is reproduced by a test before it is fixed.
+- **Regression tests**: every behaviour, edge case, error path and cross-user case a change
+  touches is tested; a test is never deleted, skipped or loosened to get green.
+- **UI/UX**: design tokens and shared components, WCAG 2.1 AA, feedback for every action,
+  mobile first, and a look in a real browser at phone width before the pull request.
+
 ## Git flow
 
 There is no `develop` branch. Every change is a branch cut from an up-to-date `main`, opened
@@ -72,7 +85,7 @@ things worth knowing before relying on it:
 | API integration | `@QuarkusTest` | Every new endpoint |
 | Data isolation | `@QuarkusTest`, two accounts | **Mandatory** on every user-scoped resource — another user's identifier must answer 404 |
 
-A bug fix ships together with the test that was failing before it.
+A bug fix ships together with the test that was failing before it — written first.
 
 ## Keeping this wiki current
 

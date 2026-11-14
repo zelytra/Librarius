@@ -33,7 +33,13 @@ reference: 38 real queries run before, and again after each step.
 ## 3. One branch, one pull request per batch
 
 - Cut the branch from an up-to-date `main`; never commit on `main`.
-- Each fixed or added behaviour is locked by a test (`vitest`, `@QuarkusTest`).
+- Work test-first ([CONVENTIONS § 0](CONVENTIONS.md#0-engineering-rules)): the failing test,
+  then the code, then the refactor. Each fixed or added behaviour is locked by a test
+  (`vitest`, `@QuarkusTest`), its edge cases and its cross-user case included.
+- Keep the change as small as the request allows: no speculative abstraction, no dependency
+  that is not needed.
+- A screen change meets the UI/UX rules of CONVENTIONS § 0 and is looked at in a browser at
+  phone width before the pull request opens.
 - Run the quality gate before every push (commands in `CLAUDE.md`).
 - A change to a resource or a DTO regenerates the client from a **clean** build
   (`./mvnw -B clean package -DskipTests`, then `pnpm gen:api`): a stale `target/` leaks test
@@ -42,6 +48,10 @@ reference: 38 real queries run before, and again after each step.
   stale in the same change: `docs/wiki/` for developers, `.claude/docs/` for agents.
 
 ## 4. Merge on green, then watch the deploy
+
+Dependabot pull requests are part of the work: a green one is merged; a red one is fixed —
+the bump applied on an agent branch with the code it needs, the gates run, and the
+Dependabot pull request left to close itself once the versions are on `main`.
 
 - A pull request is merged (squash) only when every CI check is green. The owner has
   authorised agents to merge their own pull requests on that condition.

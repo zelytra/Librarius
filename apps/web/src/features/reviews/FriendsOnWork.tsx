@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useGetApiWorksIdFriends, type FriendOnWorkDto } from '../../api/generated/librarius';
 import { colorFor } from '../../shared/ui/coverPalette';
 import { initials } from '../author/author';
@@ -6,7 +7,7 @@ import { ownershipLabelKey, statusLabelKey } from '../../shared/statuses';
 import styles from './FriendsOnWork.module.css';
 
 /** What a friend's copy says, in the order a reader looks for it. */
-function facts(friend: FriendOnWorkDto, t: (key: string, options?: Record<string, unknown>) => string): string[] {
+function facts(friend: FriendOnWorkDto, t: TFunction): string[] {
   const out: string[] = [];
   if (friend.status) out.push(t(statusLabelKey(friend.status)));
   if (friend.ownership && friend.ownership !== 'NOT_OWNED') out.push(t(ownershipLabelKey(friend.ownership)));

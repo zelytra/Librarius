@@ -98,6 +98,25 @@ Every fix or request the user reports is written into a GitHub issue (split when
 several things) **before** any work on it starts, so a session cut short leaves a trace. The
 pull request that fixes it closes it (`Closes #n`).
 
+## Development rules — every agent, every change
+
+These five rules come first; [CONVENTIONS § 0](.claude/docs/CONVENTIONS.md#0-engineering-rules)
+details each one with what is checked.
+
+1. **No over-engineering.** The smallest change that solves the request, with the standard
+   tool already in the repository. No speculative abstraction, option or dependency.
+2. **Good practices.** Readable names, one responsibility per unit, one source of truth, no
+   dead code, errors handled where they can be acted on, security rules below always on.
+3. **TDD, always.** Write the failing test first, see it fail for the right reason, make it
+   pass with the least code, then refactor. A bug is reproduced by a test before it is fixed.
+4. **As many tests as it takes to stop regressions.** Every behaviour, edge case, error path
+   and cross-user case a change touches is locked by a test. A test is never deleted, skipped
+   or loosened to get a green build.
+5. **UI/UX good practices on every screen change.** Reuse the design tokens and existing
+   patterns, meet WCAG 2.1 AA (labels, keyboard, focus, contrast, 44 px targets, reduced
+   motion), give every action feedback (loading, empty, error, success), and check the
+   result in a real browser at phone width before calling it done.
+
 ## Code rules
 
 - **No over-engineering.** Reach for the simple, standard solution first.
@@ -108,8 +127,8 @@ pull request that fixes it closes it (`Closes #n`).
   edit to a migration that has already shipped.
 - **Frontend**: no secret nor key in the bundle; user-facing text goes through `i18n`
   (`useTranslation`), no hard-coded string in new screens.
-- **Tests**: every fixed or added behaviour is locked down by a test (`vitest` on the
-  web side, `@QuarkusTest` on the api side).
+- **Tests**: written first (TDD); every fixed or added behaviour is locked down by a test
+  (`vitest` on the web side, `@QuarkusTest` on the api side).
 
 ## Environments
 

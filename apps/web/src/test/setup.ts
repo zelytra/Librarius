@@ -41,7 +41,7 @@ localStorage.setItem('librarius.language', 'fr');
 
 // An unhandled request is an error: it flags a call missing from the handlers, hence a
 // test that does not verify what it thinks it verifies.
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 
 afterEach(() => {
   cleanup();
