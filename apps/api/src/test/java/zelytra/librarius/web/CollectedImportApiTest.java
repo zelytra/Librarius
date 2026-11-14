@@ -61,6 +61,20 @@ class CollectedImportApiTest {
                 .then().statusCode(200);
     }
 
+    /** #456: the bookmarklet saves Mangacollec's collection document as the file's one page. */
+    @Test
+    void importsAMangacollecCollectionCollectedInTheBrowser() throws Exception {
+        Map<String, Object> job = importAndWait("carol", "mangacollec",
+                List.of(fixture("mangacollec-collection.json")));
+
+        org.junit.jupiter.api.Assertions.assertEquals("DONE", job.get("status"));
+        given().auth().oauth2(keycloak.getAccessToken("carol"))
+                .queryParam("size", 100).queryParam("q", "Jujutsu Kaisen")
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("items.book.title", hasItems("Jujutsu Kaisen Tome 1", "Jujutsu Kaisen Tome 3"));
+    }
+
     @Test
     void importsABabelioLibraryCollectedInTheBrowser() throws Exception {
         Map<String, Object> job = importAndWait("bob", "babelio",

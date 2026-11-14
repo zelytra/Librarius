@@ -183,15 +183,16 @@ describe('ImportSection', () => {
     expect(await screen.findByText('2 titre(s) importé(s) · 0 déjà présent(s).')).toBeInTheDocument();
   });
 
-  test('explains where Mangacollec keeps the collection, and offers no handle', async () => {
-    const { container } = renderWithProviders(<ImportSection />);
+  test('imports a Mangacollec collection from a pseudo, with the bookmarklet as the other way', async () => {
+    const calls = captureImports();
+    renderWithProviders(<ImportSection />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Mangacollec' }));
+    expect(screen.getByText(/ouvre ta collection sur mangacollec.com/i)).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Pseudo Mangacollec'), 'alice');
+    await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
 
-    expect(screen.getByText('Depuis Mangacollec')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Pseudo Booknode')).not.toBeInTheDocument();
-    // The site's file is saved with no extension: the picker filters nothing out.
-    expect(fileInputOf(container)).not.toHaveAttribute('accept');
+    await waitFor(() => expect(calls).toEqual([{ route: 'mangacollec', body: '{"handle":"alice"}' }]));
   });
 
   test('sends a Mangacollec collection as the site wrote it, whatever the file is called', async () => {
@@ -202,7 +203,7 @@ describe('ImportSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mangacollec' }));
     await userEvent.upload(fileInputOf(container), new File([collection], 'collection'));
 
-    await waitFor(() => expect(calls).toEqual([{ route: 'mangacollec', body: collection }]));
+    await waitFor(() => expect(calls).toEqual([{ route: 'collected', body: JSON.stringify({ source: 'mangacollec', pages: [collection] }) }]));
     expect(await screen.findByText('3 titre(s) importé(s) · 1 déjà présent(s).')).toBeInTheDocument();
   });
 

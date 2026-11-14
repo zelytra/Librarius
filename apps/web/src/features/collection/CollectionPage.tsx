@@ -33,6 +33,9 @@ import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
 import { ReorderGrid } from './ReorderGrid';
+import { useSelection } from '../../shared/selection/useSelection';
+import { Selectable } from '../../shared/selection/Selectable';
+import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
 import { byCategory, inManualOrder, keyOf, mergedOrder, type ShelfEntry } from './views';
 import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -279,6 +282,8 @@ function CollectionContent() {
     : 'recent';
   const byCategoryOn = params.get('cat') === '1';
   const [arranging, setArranging] = useState(false);
+  // Picking several titles to act on together (#457).
+  const selection = useSelection();
   const setSortBy = (sort: SortBy) => setParam('sort', sort === 'recent' ? null : sort);
   const search = params.get('q') ?? '';
   const [searchInput, setSearchInput] = useState(search);
@@ -486,13 +491,19 @@ function CollectionContent() {
     'series' in entry ? (
       <SeriesBlock key={entry.series.id} series={entry.series} />
     ) : (
-      <CoverTile
+      <Selectable
         key={entry.item.id}
-        item={entry.item}
-        rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
-        onOpen={() => open(entry.item)}
-        onDelete={() => void remove(entry.item.id!)}
-      />
+        id={entry.item.id}
+        label={t('selection.pick', { title: entry.item.book?.title ?? '' })}
+        selection={selection}
+      >
+        <CoverTile
+          item={entry.item}
+          rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
+          onOpen={() => open(entry.item)}
+          onDelete={() => void remove(entry.item.id!)}
+        />
+      </Selectable>
     );
 
   return (
@@ -549,6 +560,7 @@ function CollectionContent() {
             : t('collection.total', { total })}
         </span>
         <div className={styles.viewSwitch}>
+          {!arranging && <SelectButton selection={selection} />}
           {sortBy === 'manual' && activeView && (
             <Button variant={arranging ? 'primary' : 'secondary'} size="compact" onClick={() => setArranging(!arranging)}>
               <Icon name={arranging ? 'check_circle' : 'drag_indicator'} size={16}
@@ -641,6 +653,8 @@ function CollectionContent() {
           // lead and the one-shots follow, each in the order the sort asks for.
           <Grid>{entries.map(renderEntry)}</Grid>
       )}
+
+      <SelectionBar selection={selection} />
 
       <InfiniteMore
         className={styles.loadMore}

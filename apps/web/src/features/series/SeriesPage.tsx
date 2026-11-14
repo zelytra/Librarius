@@ -35,6 +35,9 @@ import { ReportButton } from '../report/ReportButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import { ReadersReviews } from '../reviews/ReadersReviews';
 import { SeriesCategory } from './SeriesCategory';
+import { useSelection } from '../../shared/selection/useSelection';
+import { Selectable } from '../../shared/selection/Selectable';
+import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
 import styles from './SeriesPage.module.css';
 import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -175,6 +178,8 @@ function SeriesContent({ id }: { id: string }) {
   const queryClient = useQueryClient();
 
   const { data, isPending: loading, isError, error, refetch } = useGetApiSeriesId(id);
+  // Picking several volumes to rate or file together (#457).
+  const selection = useSelection();
 
   // The volume the action panel is open on. A missing or upcoming volume is not in the
   // collection yet, so it has nothing to open: it offers the two ways of getting it.
@@ -337,7 +342,10 @@ function SeriesContent({ id }: { id: string }) {
 
         {owned > 0 && series.id && <SeriesCategory seriesId={series.id} />}
 
-        <h3 className={styles.sectionTitle}>{t('series.volumesTitle')}</h3>
+        <div className={styles.volumesHead}>
+          <h3 className={styles.sectionTitle}>{t('series.volumesTitle')}</h3>
+          {owned > 0 && <SelectButton selection={selection} />}
+        </div>
 
         <div className={styles.legend}>
           {LEGEND.map((state) => (
@@ -358,16 +366,24 @@ function SeriesContent({ id }: { id: string }) {
         ) : (
           <div className={styles.grid}>
             {volumes.map((volume, index) => (
-              <VolumeCell
+              <Selectable
                 key={volume.volumeNumber ?? `unnumbered-${index}`}
-                volume={volume}
-                seriesTitle={title}
-                wished={volume.volumeNumber != null && wished[volume.volumeNumber] === true}
-                onClick={() => openVolume(volume)}
-              />
+                id={volume.libraryItemId}
+                label={t('selection.pick', { title: volume.title ?? `${title} ${volume.volumeNumber ?? ''}` })}
+                selection={selection}
+              >
+                <VolumeCell
+                  volume={volume}
+                  seriesTitle={title}
+                  wished={volume.volumeNumber != null && wished[volume.volumeNumber] === true}
+                  onClick={() => openVolume(volume)}
+                />
+              </Selectable>
             ))}
           </div>
         )}
+
+        <SelectionBar selection={selection} />
 
         {missing.length > 0 && (
           <p className={styles.missingSummary}>

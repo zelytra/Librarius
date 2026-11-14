@@ -16,6 +16,11 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { AuthorNames } from '../author/AuthorNames';
 import { SearchField } from '../../shared/ui/SearchField';
 import { useUrlSearch } from '../../shared/useUrlSearch';
+import { KindFilter } from '../../shared/ui/KindFilter';
+import { useSelection } from '../../shared/selection/useSelection';
+import { Selectable } from '../../shared/selection/Selectable';
+import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
+import { useKindFilter } from '../../shared/useKindFilter';
 import styles from './ToReadPage.module.css';
 
 const PAGE_SIZE = 60;
@@ -28,7 +33,9 @@ function ToReadContent() {
   const navigate = useNavigate();
   // Searching the pile (#430), on the server like Collection's, kept in the URL.
   const { input, setInput, search } = useUrlSearch();
-  const criteria: GetApiLibraryParams = { ...CRITERIA, q: search || undefined };
+  const [kind, setKind] = useKindFilter();
+  const selection = useSelection();
+  const criteria: GetApiLibraryParams = { ...CRITERIA, q: search || undefined, kind };
   const { data, isPending, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useInfiniteQuery({
       queryKey: [...getGetApiLibraryQueryKey(criteria), 'infinite'],
@@ -47,15 +54,20 @@ function ToReadContent() {
   const total = data?.pages[0]?.total ?? 0;
   const open = (it: LibraryItemDto) => navigate(`/detail/${it.id}`, { state: { item: it } });
 
-  const field = <SearchField value={input} onChange={setInput} label={t('toRead.searchPlaceholder')} />;
+  const field = (
+    <>
+      <SearchField value={input} onChange={setInput} label={t('toRead.searchPlaceholder')} />
+      <KindFilter value={kind} onChange={setKind} />
+    </>
+  );
 
   if (isPending) return <>{field}<Loading /></>;
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
-  if (items.length === 0 && search) {
+  if (items.length === 0 && (search || kind)) {
     return (
       <>
         {field}
-        <p className={styles.count}>{t('toRead.noMatch', { q: search })}</p>
+        <p className={styles.count}>{search ? t('toRead.noMatch', { q: search }) : t('toRead.noKind')}</p>
       </>
     );
   }
@@ -72,12 +84,16 @@ function ToReadContent() {
   return (
     <>
       {field}
-      <p className={styles.count} aria-live="polite">
-        {t('toRead.count', { count: total })}
-      </p>
+      <div className={styles.countRow}>
+        <p className={styles.count} aria-live="polite">
+          {t('toRead.count', { count: total })}
+        </p>
+        <SelectButton selection={selection} />
+      </div>
       <Grid>
         {items.map((it) => (
-          <div key={it.id} className={styles.cell}>
+          <Selectable key={it.id} id={it.id} label={t('selection.pick', { title: it.book?.title ?? '' })} selection={selection}>
+          <div className={styles.cell}>
             <Cover
               variant="tile"
               title={it.book?.title ?? '—'}
@@ -87,8 +103,10 @@ function ToReadContent() {
               onClick={() => open(it)}
             />
           </div>
+          </Selectable>
         ))}
       </Grid>
+      <SelectionBar selection={selection} />
       <InfiniteMore
         className={styles.more}
         hasMore={!!hasNextPage}

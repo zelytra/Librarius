@@ -17,7 +17,7 @@
 export interface CollectedFile {
   format: 'librarius-collect';
   version: 1;
-  source: 'booknode' | 'babelio';
+  source: 'booknode' | 'babelio' | 'mangacollec';
   collectedAt: string;
   pages: string[];
 }
@@ -26,7 +26,9 @@ export interface CollectedFile {
 export interface CollectorEnv {
   location: { hostname: string; pathname: string; href: string };
   document: Document;
-  fetch: (url: string) => Promise<Response>;
+  fetch: (url: string, headers?: Record<string, string>) => Promise<Response>;
+  /** The page's own storage, where Mangacollec keeps the reader's session. */
+  storage?: Storage[];
   alert: (message: string) => void;
   /** Saves the collected file; the bookmarklet downloads it. */
   save: (file: CollectedFile) => void;
@@ -38,7 +40,9 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
   const e: CollectorEnv = env ?? {
     location: window.location,
     document: window.document,
-    fetch: (url: string) => window.fetch(url, { credentials: 'include' }),
+    fetch: (url: string, headers?: Record<string, string>) =>
+      window.fetch(url, headers ? { headers } : { credentials: 'include' }),
+    storage: [window.localStorage, window.sessionStorage],
     alert: (message: string) => window.alert(message),
     save: (file: CollectedFile) => {
       const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
@@ -53,10 +57,16 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
   };
 
   const host = e.location.hostname;
-  const source = host.includes('babelio') ? 'babelio' : host.includes('booknode') ? 'booknode' : null;
+  const source = host.includes('babelio')
+    ? 'babelio'
+    : host.includes('booknode')
+      ? 'booknode'
+      : host.includes('mangacollec')
+        ? 'mangacollec'
+        : null;
   if (!source) {
     e.alert(
-      'Librarius : ouvre ta bibliothèque sur Booknode ou sur Babelio (connecté à ton compte), puis clique à nouveau sur ce favori.',
+      'Librarius : ouvre ta bibliothèque sur Booknode, Babelio ou Mangacollec (connecté à ton compte), puis clique à nouveau sur ce favori.',
     );
     return;
   }
@@ -147,7 +157,64 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     return urls;
   }
 
+  /**
+   * Mangacollec (#456): the site loads the whole collection as one JSON document from its API,
+   * with the session it keeps in the browser's storage. The collector asks for the same
+   * document — the reader's own when signed in, a public profile's on `/user/<pseudo>` — and
+   * saves it as is; the server reads it.
+   */
+  async function mangacollec(): Promise<string | null> {
+    const api = 'https://api.mangacollec.com/v2/';
+    const profile = /\/user\/([^/?#]+)/.exec(e.location.pathname);
+    const tokens: string[] = [];
+    const visit = (value: unknown, key: string) => {
+      if (typeof value === 'string') {
+        if (/token/i.test(key) && /^[\w.~+/=-]{20,}$/.test(value)) tokens.push(value);
+        else if (value.startsWith('{') || value.startsWith('[')) {
+          try {
+            visit(JSON.parse(value), key);
+          } catch {
+            // Not JSON: nothing to look into.
+          }
+        }
+      } else if (value && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) visit(v, k);
+      }
+    };
+    for (const store of e.storage ?? []) {
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i) ?? '';
+        visit(store.getItem(key), key);
+      }
+    }
+    const attempts: [string, Record<string, string> | undefined][] = [];
+    for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
+    if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
+    for (const [url, headers] of attempts) {
+      try {
+        const response = await e.fetch(url, headers);
+        if (response.ok) return await response.text();
+      } catch {
+        // The next attempt may work.
+      }
+    }
+    return null;
+  }
+
   try {
+    if (source === 'mangacollec') {
+      say('lecture de ta collection…');
+      const collection = await mangacollec();
+      if (!collection) {
+        e.alert(
+          'Librarius : impossible de lire ta collection. Connecte-toi sur mangacollec.com, ouvre ta collection, puis clique à nouveau sur ce favori.',
+        );
+        return;
+      }
+      e.save({ format: 'librarius-collect', version: 1, source, collectedAt: new Date().toISOString(), pages: [collection] });
+      say('collection récupérée : importe le fichier dans Librarius (Réglages → Importer).');
+      return;
+    }
     let firstUrl = e.location.href;
     if (source === 'booknode') {
       const handle = /\/profil\/([^/?#]+)/.exec(e.location.pathname);
@@ -201,7 +268,7 @@ export function isCollectedFile(value: unknown): value is CollectedFile {
   return (
     file != null &&
     file.format === 'librarius-collect' &&
-    (file.source === 'booknode' || file.source === 'babelio') &&
+    (file.source === 'booknode' || file.source === 'babelio' || file.source === 'mangacollec') &&
     Array.isArray(file.pages)
   );
 }

@@ -1,8 +1,13 @@
 # Dependency updates.
 #
-# Everything is weekly and grouped: one pull request per ecosystem per week,
-# rather than a stream of one-line bumps that nobody reviews. Monday early
-# morning, so the week starts with the updates already waiting.
+# Everything is monthly and grouped (#133): at most a few pull requests per
+# ecosystem per month — the version bumps in one, the majors in another, and the
+# security fixes gathered in one of their own — rather than a stream of one-line
+# bumps that nobody reviews. The first day of the month, early morning.
+#
+# Transitive advisories under the toolchain are cleared by refreshing the lockfile
+# (`pnpm update -r --no-save`) and, where a parent pins an old range, by the
+# `pnpm.overrides` of the root package.json.
 #
 # Only labels that exist in the repository are used here: Dependabot silently
 # drops a label it cannot find.
@@ -14,11 +19,10 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "04:00"
       timezone: Europe/Paris
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     commit-message:
       prefix: ci
     labels:
@@ -27,17 +31,20 @@ updates:
       github-actions:
         patterns:
           - "*"
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   # Frontend. A single pnpm workspace lockfile at the root covers apps/web, so
   # one entry is enough.
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "04:15"
       timezone: Europe/Paris
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     versioning-strategy: increase-if-necessary
     commit-message:
       prefix: chore
@@ -65,6 +72,18 @@ updates:
           - patch
         patterns:
           - "*"
+      # The majors still not ignored below, together: judged as one change a month
+      # instead of arriving one pull request each.
+      web-majors:
+        update-types:
+          - major
+        patterns:
+          - "*"
+      # Security fixes, whatever their size, in one pull request.
+      web-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     ignore:
       # Blocked upstream, see INVENTORY debt #20 and #133: typescript-eslint does not
       # support TypeScript 7 yet, and eslint-plugin-react — which carries the
@@ -86,11 +105,10 @@ updates:
   - package-ecosystem: maven
     directory: /apps/api
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "04:30"
       timezone: Europe/Paris
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     commit-message:
       prefix: chore
       include: scope
@@ -100,6 +118,10 @@ updates:
       api:
         patterns:
           - "*"
+      api-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   # Base images of the two deployed containers.
   - package-ecosystem: docker
@@ -107,11 +129,10 @@ updates:
       - /apps/api/src/main/docker
       - /apps/web
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "04:45"
       timezone: Europe/Paris
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     commit-message:
       prefix: chore
       include: scope
@@ -119,5 +140,9 @@ updates:
       - infra
     groups:
       images:
+        patterns:
+          - "*"
+      images-security:
+        applies-to: security-updates
         patterns:
           - "*"

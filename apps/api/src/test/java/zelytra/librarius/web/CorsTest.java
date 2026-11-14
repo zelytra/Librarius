@@ -73,4 +73,28 @@ class CorsTest {
                 .then().statusCode(200)
                 .header("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
     }
+
+    /**
+     * #459: saving the profile is the one write sent as a PATCH, and the allow-list named every
+     * method but that one — the browser's Origin header got the save refused while every other
+     * write went through.
+     */
+    @Test
+    void acceptsAProfileSaveCarryingTheDeployedOrigin() {
+        given().auth().oauth2(keycloak.getAccessToken("alice"))
+                .header("Origin", ALLOWED_ORIGIN)
+                .contentType("application/json")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"publicAccount\": false }")
+                .when().patch("/api/me")
+                .then().statusCode(200);
+    }
+
+    @Test
+    void answersThePreflightOfAPatch() {
+        given().header("Origin", ALLOWED_ORIGIN)
+                .header("Access-Control-Request-Method", "PATCH")
+                .when().options("/api/me")
+                .then().statusCode(200)
+                .header("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PATCH"));
+    }
 }

@@ -13,7 +13,6 @@ import {
   useGetApiImportJobsJobId,
   usePostApiImportCollected,
   usePostApiImportCsv,
-  usePostApiImportMangacollec,
   usePostApiImportSource,
 } from '../../api/generated/librarius';
 import type { ImportJobDto } from '../../api/generated/librarius';
@@ -35,7 +34,7 @@ const POLL_MS = 1500;
  * request that could only fail.
  */
 function importsByHandle(source: Source): boolean {
-  return source === 'booknode';
+  return source !== 'babelio';
 }
 
 /** Reads a file as JSON when it is one — Mangacollec's collection is saved with no extension. */
@@ -78,7 +77,6 @@ export function ImportSection() {
   const { mutateAsync: importFromSource, isPending: startingScrape } = usePostApiImportSource();
   const { mutateAsync: importCsv, isPending: startingCsv } = usePostApiImportCsv();
   const { mutateAsync: importCollected, isPending: startingCollected } = usePostApiImportCollected();
-  const { mutateAsync: importMangacollec, isPending: startingMangacollec } = usePostApiImportMangacollec();
   const [copied, setCopied] = useState(false);
 
   // The collector's link. React refuses a `javascript:` URL in `href` — rightly, for anything
@@ -121,7 +119,7 @@ export function ImportSection() {
   }, [job, queryClient, t]);
 
   const running = jobId != null;
-  const busy = running || startingScrape || startingCsv || startingCollected || startingMangacollec;
+  const busy = running || startingScrape || startingCsv || startingCollected;
 
   function reset() {
     setMessage(null);
@@ -154,8 +152,9 @@ export function ImportSection() {
       const json = asJson(text);
       let started;
       if (isMangacollecCollection(json)) {
-        // Sent as the site wrote it: the API reads Mangacollec's own document.
-        started = await importMangacollec({ data: text });
+        // Sent as the site wrote it, as the one page of a collected file: the API reads
+        // Mangacollec's own document (#448, #456).
+        started = await importCollected({ data: { source: 'mangacollec', pages: [text] } });
       } else if (json !== undefined || name.endsWith('.json')) {
         const parsed: unknown = json ?? JSON.parse(text);
         if (!isCollectedFile(parsed)) {
@@ -220,20 +219,8 @@ export function ImportSection() {
             <p className={styles.note}>{t('settings.import.babelioNote')}</p>
           ) : null}
 
-          {source === 'mangacollec' ? (
-            /* Mangacollec has no export: its site loads the member's collection as one JSON
-               document, which the reader saves from their browser's network panel. */
-            <div className={styles.collector}>
-              <h4 className={styles.collectorTitle}>{t('settings.import.mangacollec.title')}</h4>
-              <ol className={styles.steps}>
-                <li>{t('settings.import.mangacollec.step1')}</li>
-                <li>{t('settings.import.mangacollec.step2')}</li>
-                <li>{t('settings.import.mangacollec.step3')}</li>
-              </ol>
-            </div>
-          ) : (
-          /* The path that works whatever the site does to servers: the reader's own browser,
-              already signed in, collects the library and hands back a file. */
+          {/* The path that works whatever the site does to servers: the reader's own browser,
+              already signed in, collects the library and hands back a file. */}
           <div className={styles.collector}>
             <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
             <ol className={styles.steps}>
@@ -257,7 +244,6 @@ export function ImportSection() {
               {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
             </button>
           </div>
-          )}
 
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />

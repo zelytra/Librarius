@@ -635,30 +635,6 @@ paths:
       - Import Resource
       security:
       - SecurityScheme: []
-  /api/import/mangacollec:
-    post:
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              type: string
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportJobDto"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Mangacollec
-      tags:
-      - Import Resource
-      security:
-      - SecurityScheme: []
   /api/import/{source}:
     post:
       parameters:
@@ -788,6 +764,32 @@ paths:
         "400":
           description: Bad Request
       summary: Add
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/bulk:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUpdateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkResultDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Bulk
       tags:
       - Library Resource
       security:
@@ -2414,6 +2416,44 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BreakdownCountDto"
+    BulkResultDto:
+      type: object
+      properties:
+        updated:
+          type: integer
+          format: int32
+    BulkUpdateDto:
+      type: object
+      required:
+      - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+          minItems: 1
+          maxItems: 500
+        status:
+          $ref: "#/components/schemas/LibraryStatus"
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+        format:
+          $ref: "#/components/schemas/BookFormat"
+        categoryId:
+          $ref: "#/components/schemas/UUID"
+        clearCategory:
+          type: boolean
+        rating:
+          type: integer
+          format: int32
+          maximum: 5
+          minimum: 1
+        clearRating:
+          type: boolean
+        remove:
+          type: boolean
     CatalogResult:
       type: object
       properties:
@@ -2492,7 +2532,7 @@ components:
       properties:
         source:
           type: string
-          pattern: booknode|babelio
+          pattern: booknode|babelio|mangacollec
         pages:
           type: array
           items:

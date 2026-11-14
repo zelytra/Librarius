@@ -125,6 +125,14 @@ ce que tu as noté 4 ou plus.
 
 La liste se charge **toute seule** en descendant : plus besoin d'appuyer sur « Voir plus ».
 
+### Modifier plusieurs titres d'un coup
+
+« **Sélectionner** », dans la bibliothèque, la pile à lire ou la page d'une série, te laisse
+cocher plusieurs titres puis « Modifier » : statut de lecture, possession, format, catégorie,
+note, ou retrait de ta bibliothèque, appliqués à tous d'un coup.
+
+La pile à lire et la liste d'envies se filtrent aussi par type : **Livres, Mangas, BD**.
+
 ### Tes vues
 
 Une **vue** retient ta façon de ranger la bibliothèque : le type (livres, mangas, BD),
@@ -330,17 +338,15 @@ couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arr
 
 ### Depuis Mangacollec
 
-Mangacollec n'a pas de bouton d'export, mais son site charge toute ta collection d'un coup :
-
-1. Sur mangacollec.com, connecté, ouvre les outils de développement (F12), onglet
-   « Réseau », et recharge la page de ta collection.
-2. Repère la requête **« collection »** et enregistre sa réponse dans un fichier (clic droit
-   › Enregistrer la réponse).
-3. Dans Réglages → Importer, choisis **Mangacollec** et importe ce fichier.
+Choisis **Mangacollec** et saisis ton **pseudo** (celui de l'adresse de ton profil,
+mangacollec.com/user/ton-pseudo) : une collection publique est lue directement. Si ton profil
+n'est pas public, utilise le favori **« Librarius : collecter »** (le même que pour Babelio) :
+ouvre ta collection sur mangacollec.com, connecté, clique dessus, puis importe le fichier
+`librarius-mangacollec.json` qu'il télécharge.
 
 Chaque tome possédé ou lu arrive rangé dans sa série, avec son ISBN, sa couverture et sa date
 d'ajout. Un tome lu mais pas possédé est marqué « Lu » et « Non possédé » ; un coffret prend
-le format « Coffret », une édition Deluxe ou Perfect le format « Deluxe ». Mangacollec ne
+le format « Coffret », une édition Deluxe ou Perfect le format « Collector ». Mangacollec ne
 donne pas les auteurs : ils sont retrouvés ensuite grâce à l'ISBN.
 
 ### Depuis un fichier CSV

@@ -628,7 +628,8 @@
     },
     "marketPrice": "New price: {{price}} €",
     "searchPlaceholder": "Search your wishlist…",
-    "noMatch": "No wish matches “{{q}}”."
+    "noMatch": "No wish matches “{{q}}”.",
+    "noKind": "No wish of that kind."
   },
   "stats": {
     "title": "Statistics",
@@ -864,7 +865,8 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Booknode handle"
+        "booknode": "Booknode handle",
+        "mangacollec": "Mangacollec username"
       },
       "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
@@ -877,7 +879,8 @@
         "button": "Librarius: collect",
         "step2": {
           "booknode": "Open your Booknode profile page and click the bookmark: it goes through every page of your library and downloads a librarius-booknode.json file.",
-          "babelio": "Open “Mes livres” on Babelio, signed in, and click the bookmark: it goes through every page of your library and downloads a librarius-babelio.json file."
+          "babelio": "Open “Mes livres” on Babelio, signed in, and click the bookmark: it goes through every page of your library and downloads a librarius-babelio.json file.",
+          "mangacollec": "Open your collection on mangacollec.com, signed in, and click the bookmark: it fetches your whole collection and downloads a librarius-mangacollec.json file."
         },
         "step3": "Import that file with the button below.",
         "copy": "On mobile: copy the bookmark's code",
@@ -889,13 +892,7 @@
       "reading": "Reading the file…",
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
-      "failedTitle": "The import did not go through",
-      "mangacollec": {
-        "title": "From Mangacollec",
-        "step1": "On mangacollec.com, signed in, open your browser's developer tools (F12), “Network” tab, then reload your collection page.",
-        "step2": "Find the request named “collection” and save its response to a file (right click › Save response, or Copy response and paste it into a file).",
-        "step3": "Import that file with the button below: every volume you own or have read lands in your library, filed in its series, with its ISBN and cover."
-      }
+      "failedTitle": "The import did not go through"
     },
     "export": {
       "title": "Export my data",
@@ -1090,7 +1087,8 @@
       "description": "The books you own and have not started yet show up here."
     },
     "searchPlaceholder": "Search your to-read pile…",
-    "noMatch": "No title on your pile matches “{{q}}”."
+    "noMatch": "No title on your pile matches “{{q}}”.",
+    "noKind": "No title of that kind on your pile."
   },
   "sheet": {
     "title": "Reading sheet",
@@ -1356,5 +1354,29 @@
     "earlier": "Move earlier",
     "later": "Move later",
     "uncategorised": "No category"
+  },
+  "kindFilter": {
+    "label": "Kind",
+    "all": "All"
+  },
+  "selection": {
+    "title": "Selection",
+    "start": "Select",
+    "count_one": "{{count}} selected",
+    "count_other": "{{count}} selected",
+    "edit": "Edit",
+    "sheetTitle_one": "Edit {{count}} title",
+    "sheetTitle_other": "Edit {{count}} titles",
+    "category": "Category",
+    "clearCategory": "Remove the category",
+    "rating": "Rating",
+    "remove_one": "Remove {{count}} title from my library",
+    "remove_other": "Remove {{count}} titles from my library",
+    "removeConfirm_one": "Confirm: remove {{count}} title",
+    "removeConfirm_other": "Confirm: remove {{count}} titles",
+    "applied_one": "{{count}} title updated",
+    "applied_other": "{{count}} titles updated",
+    "pick": "Pick “{{title}}”",
+    "cancel": "Cancel"
   }
 }

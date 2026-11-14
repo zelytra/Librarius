@@ -2,7 +2,7 @@
   "name": "librarius",
   "version": "1.0.0",
   "private": true,
-  "description": "Ma Bibliothèque — gestion de bibliothèque personnelle (livres & mangas).",
+  "description": "Ma Biblioth\u00e8que \u2014 gestion de biblioth\u00e8que personnelle (livres & mangas).",
   "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,9 @@
   "pnpm": {
     "overrides": {
       "vite": "^8.1.5",
-      "brace-expansion@<1.1.17": "^1.1.17"
+      "brace-expansion@<1.1.17": "^1.1.17",
+      "workbox-build>glob": "^14.0.2",
+      "minimatch@>=7.0.0 <11.0.1": "^11.0.1"
     }
   },
   "scripts": {
