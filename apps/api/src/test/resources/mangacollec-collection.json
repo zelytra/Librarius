@@ -1,0 +1,52 @@
+{
+  "editions": [
+    {"id": "ed-monster", "title": "Intégral Deluxe", "series_id": "se-monster", "publisher_id": "pu-1", "parent_edition_id": null, "volumes_count": 9, "last_volume_number": 9, "commercial_stop": false, "not_finished": false, "follow_editions_count": 10},
+    {"id": "ed-jjk", "title": null, "series_id": "se-jjk", "publisher_id": "pu-2", "parent_edition_id": null, "volumes_count": 30, "last_volume_number": 30, "commercial_stop": false, "not_finished": false, "follow_editions_count": 10},
+    {"id": "ed-oneshot", "title": null, "series_id": "se-oneshot", "publisher_id": "pu-3", "parent_edition_id": null, "volumes_count": 1, "last_volume_number": 0, "commercial_stop": false, "not_finished": false, "follow_editions_count": 10},
+    {"id": "ed-novel", "title": null, "series_id": "se-novel", "publisher_id": "pu-3", "parent_edition_id": null, "volumes_count": 3, "last_volume_number": 3, "commercial_stop": false, "not_finished": false, "follow_editions_count": 10}
+  ],
+  "series": [
+    {"id": "se-monster", "title": "Monster", "type_id": "ty-manga", "adult_content": false, "editions_count": 2, "tasks_count": 1, "kinds_ids": []},
+    {"id": "se-jjk", "title": "Jujutsu Kaisen", "type_id": "ty-manga", "adult_content": false, "editions_count": 6, "tasks_count": 1, "kinds_ids": []},
+    {"id": "se-oneshot", "title": "L'Amour et la Mort", "type_id": "ty-manga", "adult_content": false, "editions_count": 1, "tasks_count": 1, "kinds_ids": []},
+    {"id": "se-novel", "title": "Spice and Wolf", "type_id": "ty-roman", "adult_content": false, "editions_count": 1, "tasks_count": 1, "kinds_ids": []}
+  ],
+  "types": [
+    {"id": "ty-manga", "title": "Manga", "to_display": false},
+    {"id": "ty-roman", "title": "Roman", "to_display": true}
+  ],
+  "kinds": [],
+  "volumes": [
+    {"id": "vo-monster-1", "title": null, "number": 1, "release_date": "2021-01-06", "isbn": "9782505000001", "asin": null, "edition_id": "ed-monster", "possessions_count": 1, "not_sold": false, "image_url": "https://example.test/monster-1.jpg"},
+    {"id": "vo-jjk-1", "title": null, "number": 1, "release_date": "2018-03-01", "isbn": "9782820332615", "asin": null, "edition_id": "ed-jjk", "possessions_count": 1, "not_sold": false, "image_url": "https://example.test/jjk-1.jpg"},
+    {"id": "vo-jjk-2", "title": null, "number": 2, "release_date": "2018-05-01", "isbn": "9782820332622", "asin": null, "edition_id": "ed-jjk", "possessions_count": 1, "not_sold": false, "image_url": null},
+    {"id": "vo-jjk-3", "title": null, "number": 3, "release_date": "2018-08-22", "isbn": "9782820332639", "asin": null, "edition_id": "ed-jjk", "possessions_count": 1, "not_sold": false, "image_url": null},
+    {"id": "vo-oneshot", "title": null, "number": 0, "release_date": "2020-01-01", "isbn": "9782380000000", "asin": null, "edition_id": "ed-oneshot", "possessions_count": 1, "not_sold": false, "image_url": null},
+    {"id": "vo-novel-1", "title": null, "number": 1, "release_date": "2020-01-01", "isbn": null, "asin": null, "edition_id": "ed-novel", "possessions_count": 1, "not_sold": false, "image_url": null}
+  ],
+  "box_editions": [
+    {"id": "be-berserk", "title": "Berserk", "publisher_id": "pu-1", "boxes_count": 1, "adult_content": false, "box_follow_editions_count": 1}
+  ],
+  "boxes": [
+    {"id": "bo-berserk", "title": "Edition collector Tome 42", "number": 0, "release_date": "2024-07-10", "isbn": "9782344063651", "asin": null, "commercial_stop": false, "box_edition_id": "be-berserk", "box_possessions_count": 1, "image_url": null}
+  ],
+  "box_volumes": [],
+  "follow_editions": [],
+  "possessions": [
+    {"id": "po-1", "volume_id": "vo-monster-1", "user_id": "u", "created_at": "2022-01-20T07:49:45.180Z"},
+    {"id": "po-2", "volume_id": "vo-jjk-1", "user_id": "u", "created_at": "2022-01-21T07:49:45.180Z"},
+    {"id": "po-3", "volume_id": "vo-jjk-2", "user_id": "u", "created_at": "2022-01-21T07:49:49.330Z"},
+    {"id": "po-4", "volume_id": "vo-oneshot", "user_id": "u", "created_at": "2023-03-03T10:00:00.000Z"}
+  ],
+  "box_follow_editions": [],
+  "box_possessions": [
+    {"id": "bp-1", "box_id": "bo-berserk", "user_id": "u", "created_at": "2025-05-20T18:50:24.590Z"}
+  ],
+  "read_editions": [],
+  "reads": [
+    {"id": "re-1", "volume_id": "vo-jjk-1", "user_id": "u", "created_at": "2022-07-14T18:53:46.680Z"},
+    {"id": "re-2", "volume_id": "vo-jjk-3", "user_id": "u", "created_at": "2022-07-15T18:53:46.680Z"}
+  ],
+  "borrowers": [],
+  "loans": []
+}

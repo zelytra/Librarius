@@ -256,8 +256,53 @@ public class EditionService {
         }
 
         item.edition = target;
-        reanchor(progresses.findByItem(item.id).orElse(null), target.effectivePageCount());
+        reanchor(progresses.findByItem(item.id).orElse(null), item.effectivePageCount());
         return SwitchOutcome.done(item);
+    }
+
+    /**
+     * Moves a title onto an edition that is not a row yet (#445): a printing a provider lists,
+     * or one the reader describes. It is created under the title's own work — it is another
+     * materialisation of the same book, never a match for another — then switched to like any
+     * stored edition. An ISBN this work already carries reuses that edition instead.
+     */
+    public SwitchOutcome chooseNewEdition(String userId, UUID itemId,
+            zelytra.librarius.web.ApiDtos.EditionChoiceDto dto) {
+        LibraryItem item = items.findOwned(userId, itemId).orElse(null);
+        if (item == null) {
+            return SwitchOutcome.refused(Refusal.UNKNOWN_ITEM);
+        }
+        if (dto == null) {
+            return SwitchOutcome.refused(Refusal.NOT_AN_EDITION_OF_THIS_WORK);
+        }
+        String isbn = zelytra.librarius.scan.Isbn.toIsbn13(dto.isbn13());
+        if (isbn != null) {
+            Edition known = editions.find("work.id = ?1 and isbn13 = ?2", item.edition.work.id, isbn)
+                    .firstResult();
+            if (known != null) {
+                return switchEdition(userId, itemId, known.id);
+            }
+        }
+        Edition created = new Edition();
+        created.work = item.edition.work;
+        created.isbn13 = isbn;
+        created.publisher = blankToNull(dto.publisher());
+        created.language = blankToNull(dto.language());
+        created.pageCount = dto.pageCount();
+        created.coverUrl = blankToNull(dto.coverUrl());
+        created.format = blankToNull(dto.format());
+        created.releaseDate = dto.releaseDate();
+        // A provider reference is a pair (V12): both, or neither.
+        if (blankToNull(dto.provider()) != null && blankToNull(dto.providerRef()) != null) {
+            created.provider = dto.provider().trim();
+            created.providerRef = dto.providerRef().trim();
+        }
+        editions.persist(created);
+        return switchEdition(userId, itemId, created.id);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /**

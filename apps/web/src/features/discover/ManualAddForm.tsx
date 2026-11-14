@@ -76,7 +76,7 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
         await addToWishlist({ data: { book, priority: 'SOON' } });
         toast.success(t('toasts.addedWishlist', { title: trimmed }), 'favorite');
       } else {
-        await addToLibrary({ data: { book, status: target.status, ownership: target.ownership } });
+        await addToLibrary({ data: { book, status: target.status, ownership: target.ownership, format: target.format ?? undefined } });
         toast.success(t('toasts.addedLibrary', { title: trimmed }), 'library_books');
       }
       onAdded(trimmed);
@@ -124,6 +124,8 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
         ownership={target.ownership}
         onStatus={(status) => setTarget((current) => ({ ...current, status }))}
         onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+        format={target.format}
+        onFormat={(format) => setTarget((current) => ({ ...current, format }))}
         disabled={isPending}
       />
 

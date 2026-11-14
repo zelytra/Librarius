@@ -94,6 +94,18 @@ export interface AuthorSummaryDto {
   followed?: boolean;
 }
 
+export type BookFormat = typeof BookFormat[keyof typeof BookFormat];
+
+
+export const BookFormat = {
+  POCKET: 'POCKET',
+  PAPERBACK: 'PAPERBACK',
+  HARDCOVER: 'HARDCOVER',
+  LARGE: 'LARGE',
+  DELUXE: 'DELUXE',
+  BOX_SET: 'BOX_SET',
+} as const;
+
 export interface BookView {
   editionId?: Uuid;
   workId?: Uuid;
@@ -183,6 +195,29 @@ export interface DashboardSectionDto {
 
 export interface DashboardLayoutDto {
   sections: DashboardSectionDto[];
+}
+
+export interface EditionChoiceDto {
+  /** @maxLength 13 */
+  isbn13?: string;
+  /** @maxLength 255 */
+  publisher?: string;
+  /** @maxLength 16 */
+  language?: string;
+  /**
+     * @maximum 100000
+     * @exclusiveMinimum 0
+     */
+  pageCount?: number;
+  /** @maxLength 1024 */
+  coverUrl?: string;
+  /** @maxLength 32 */
+  format?: string;
+  releaseDate?: LocalDate;
+  /** @maxLength 32 */
+  provider?: string;
+  /** @maxLength 255 */
+  providerRef?: string;
 }
 
 export interface EditionDto {
@@ -280,6 +315,8 @@ export interface ExportCollectionItemDto {
   progress?: ExportProgressDto;
   ownership?: Ownership;
   price?: number;
+  pageCount?: number;
+  format?: BookFormat;
 }
 
 export interface ExportUserDto {
@@ -335,6 +372,10 @@ export interface ExportDto {
   collection?: ExportCollectionItemDto[];
   wishlist?: ExportWishDto[];
   followedSeries?: ExportSeriesFollowDto[];
+}
+
+export interface FormatDto {
+  format?: BookFormat;
 }
 
 export interface GenreCount {
@@ -398,6 +439,7 @@ export interface LibraryCreateDto {
   rating?: number;
   acquiredAt?: LocalDate;
   ownership?: Ownership;
+  format?: BookFormat;
 }
 
 export interface ProgressView {
@@ -419,6 +461,8 @@ export interface LibraryItemDto {
   reviewShared?: boolean;
   ownership?: string;
   price?: number;
+  pageCount?: number;
+  format?: string;
 }
 
 export interface LibraryPageDto {
@@ -463,6 +507,14 @@ export interface MemberSummaryDto {
 
 export interface OwnershipDto {
   ownership: Ownership;
+}
+
+export interface PagesDto {
+  /**
+     * @maximum 100000
+     * @exclusiveMinimum 0
+     */
+  pageCount?: number;
 }
 
 export interface PriceDto {
@@ -797,6 +849,7 @@ kind?: Kind;
 };
 
 export type GetApiLibraryParams = {
+format?: BookFormat;
 genre?: string;
 kind?: Kind;
 minRating?: number;
@@ -2969,6 +3022,77 @@ export const usePostApiImportJson = <TError = void,
       return useMutation(getPostApiImportJsonMutationOptions(options), queryClient);
     }
 
+export const getPostApiImportMangacollecUrl = () => {
+
+
+
+
+  return `/api/import/mangacollec`
+}
+
+/**
+ * @summary Mangacollec
+ */
+export const postApiImportMangacollec = async (postApiImportMangacollecBody: string, options?: RequestInit): Promise<ImportJobDto> => {
+
+  return apiClient<ImportJobDto>(getPostApiImportMangacollecUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', ...options?.headers },
+    body: postApiImportMangacollecBody
+  }
+);}
+
+
+
+
+
+export const getPostApiImportMangacollecMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext> => {
+
+const mutationKey = ['postApiImportMangacollec'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportMangacollec>>, {data: string}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiImportMangacollec(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiImportMangacollecMutationResult = NonNullable<Awaited<ReturnType<typeof postApiImportMangacollec>>>
+    export type PostApiImportMangacollecMutationBody = string
+    export type PostApiImportMangacollecMutationError = void
+
+    /**
+ * @summary Mangacollec
+ */
+export const usePostApiImportMangacollec = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiImportMangacollec>>,
+        TError,
+        {data: string},
+        TContext
+      > => {
+      return useMutation(getPostApiImportMangacollecMutationOptions(options), queryClient);
+    }
+
 export const getPostApiImportSourceUrl = (source: string,) => {
 
 
@@ -3464,6 +3588,150 @@ export const usePutApiLibraryIdEdition = <TError = void,
       return useMutation(getPutApiLibraryIdEditionMutationOptions(options), queryClient);
     }
 
+export const getPostApiLibraryIdEditionUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/edition`
+}
+
+/**
+ * @summary Choose Edition
+ */
+export const postApiLibraryIdEdition = async (id: Uuid,
+    editionChoiceDto: EditionChoiceDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPostApiLibraryIdEditionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(editionChoiceDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiLibraryIdEditionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionChoiceDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionChoiceDto}, TContext> => {
+
+const mutationKey = ['postApiLibraryIdEdition'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiLibraryIdEdition>>, {id: Uuid;data: EditionChoiceDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiLibraryIdEdition(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiLibraryIdEditionMutationResult = NonNullable<Awaited<ReturnType<typeof postApiLibraryIdEdition>>>
+    export type PostApiLibraryIdEditionMutationBody = EditionChoiceDto
+    export type PostApiLibraryIdEditionMutationError = void
+
+    /**
+ * @summary Choose Edition
+ */
+export const usePostApiLibraryIdEdition = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiLibraryIdEdition>>, TError,{id: Uuid;data: EditionChoiceDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiLibraryIdEdition>>,
+        TError,
+        {id: Uuid;data: EditionChoiceDto},
+        TContext
+      > => {
+      return useMutation(getPostApiLibraryIdEditionMutationOptions(options), queryClient);
+    }
+
+export const getPutApiLibraryIdFormatUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/format`
+}
+
+/**
+ * @summary Set Format
+ */
+export const putApiLibraryIdFormat = async (id: Uuid,
+    formatDto: FormatDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdFormatUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(formatDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdFormatMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdFormat>>, TError,{id: Uuid;data: FormatDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdFormat>>, TError,{id: Uuid;data: FormatDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdFormat'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdFormat>>, {id: Uuid;data: FormatDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdFormat(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdFormatMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdFormat>>>
+    export type PutApiLibraryIdFormatMutationBody = FormatDto
+    export type PutApiLibraryIdFormatMutationError = void
+
+    /**
+ * @summary Set Format
+ */
+export const usePutApiLibraryIdFormat = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdFormat>>, TError,{id: Uuid;data: FormatDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdFormat>>,
+        TError,
+        {id: Uuid;data: FormatDto},
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdFormatMutationOptions(options), queryClient);
+    }
+
 export const getPutApiLibraryIdOwnershipUrl = (id: Uuid,) => {
 
 
@@ -3534,6 +3802,78 @@ export const usePutApiLibraryIdOwnership = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiLibraryIdOwnershipMutationOptions(options), queryClient);
+    }
+
+export const getPutApiLibraryIdPagesUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/pages`
+}
+
+/**
+ * @summary Set Pages
+ */
+export const putApiLibraryIdPages = async (id: Uuid,
+    pagesDto: PagesDto, options?: RequestInit): Promise<unknown> => {
+
+  return apiClient<unknown>(getPutApiLibraryIdPagesUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(pagesDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdPagesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,{id: Uuid;data: PagesDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,{id: Uuid;data: PagesDto}, TContext> => {
+
+const mutationKey = ['putApiLibraryIdPages'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdPages>>, {id: Uuid;data: PagesDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdPages(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdPagesMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdPages>>>
+    export type PutApiLibraryIdPagesMutationBody = PagesDto
+    export type PutApiLibraryIdPagesMutationError = void
+
+    /**
+ * @summary Set Pages
+ */
+export const usePutApiLibraryIdPages = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,{id: Uuid;data: PagesDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdPages>>,
+        TError,
+        {id: Uuid;data: PagesDto},
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdPagesMutationOptions(options), queryClient);
     }
 
 export const getPutApiLibraryIdPriceUrl = (id: Uuid,) => {

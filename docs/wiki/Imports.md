@@ -1,7 +1,7 @@
 # Imports
 
-A reader brings their library from Booknode, Babelio, a CSV (Goodreads…) or a Librarius
-export. Every import is a **job**: `POST` starts it and answers an id, the screen polls
+A reader brings their library from Booknode, Babelio, Mangacollec, a CSV (Goodreads…) or a
+Librarius export. Every import is a **job**: `POST` starts it and answers an id, the screen polls
 `GET /api/import/jobs/{id}` for `total`, `imported`, `skipped` and the outcome.
 
 ## Getting the library out of the source site
@@ -14,6 +14,12 @@ export. Every import is a **job**: `POST` starts it and answers an id, the scree
   keeps only the library rows (Babelio's `li.lib-book` items, never the site's menus) and
   downloads `librarius-<source>.json`, imported with `POST /api/import/collected`. It is the
   only way into Babelio, which shows a library to its signed-in owner only.
+- **Mangacollec** (`POST /api/import/mangacollec`, the body is the file as text, #448):
+  Mangacollec has no export, but its site loads a signed-in member's whole collection as one
+  JSON document. The reader saves the response of the `collection` request from the
+  browser's network panel (Settings explains how) and imports it; the file has no extension,
+  so Settings recognises it by its content (`features/settings/mangacollec.ts`) and the
+  picker filters nothing out on that source.
 
 ## What a row becomes
 
@@ -22,6 +28,7 @@ export. Every import is a **job**: `POST` starts it and answers an id, the scree
 | Booknode | title, author, cover, status from the badge's class; tier (diamant, or, argent, bronze) → the built-in Or / Argent / Bronze category (diamant also rated 5); the list ("manga or", "BD", "romance") → kind and genre; "envies" → wishlist; the date added, which is the reading date of a read title |
 | Babelio | title, author, cover, status ("Lu", "En cours", "À lire", "Abandonné"), the reader's own rating, the reading date; "Pense-bête" → wishlist |
 | CSV | title, author, status, rating, dates, ISBN, length — French and English headers |
+| Mangacollec | `MangacollecImporter`: every volume in `possessions` or `reads` becomes "Série [Édition] Tome n" (a one-shot keeps the bare title), with its ISBN, its cover and the day it was added; a volume read is READ on the day of its `reads` row, one held and unread is to read, one **read but not held is `NOT_OWNED`**; a held box set (`box_possessions`) is a `BOX_SET`; the edition name gives the format (Deluxe/Perfect/Intégrale → `DELUXE`, reliée → `HARDCOVER`, Grand format → `LARGE`, poche → `POCKET`); type "Roman" → a book, otherwise a manga. Mangacollec names no author: the enrichment that follows finds them from the ISBN. A named edition ("Berserk Edition Prestige") is a series of its own, so its volume numbers do not collide with the standard edition's |
 
 ## How it is written
 

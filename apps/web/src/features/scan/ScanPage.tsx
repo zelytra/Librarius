@@ -26,7 +26,7 @@ import { DEFAULT_ADD_TARGET, addedKeyOf, type AddTarget } from '../catalog/addTa
 import { StatusPicker } from '../../shared/ui/StatusPicker';
 import { addsToWishlistOnly } from '../../shared/statuses';
 import { toast } from '../../shared/ui/toast';
-import { cameraScanSupported, failureKind, startScanning, type CameraFailure } from './camera';
+import { cameraScanSupported, failureKind, onComputer, scanImage, startScanning, type CameraFailure } from './camera';
 import styles from './ScanPage.module.css';
 
 /** One scanned book and what it turned out to be, newest first on screen. */
@@ -100,7 +100,7 @@ function Scanner() {
       try {
         const created = (addsToWishlistOnly(session.status, session.ownership)
           ? await postApiWishlist({ book, priority: 'SOON' })
-          : await postApiLibrary({ book, status: session.status, ownership: session.ownership })) as
+          : await postApiLibrary({ book, status: session.status, ownership: session.ownership, format: session.format ?? undefined })) as
           | { id?: string }
           | undefined;
         update(isbn, { added: { target: session, id: created?.id } });
@@ -173,10 +173,13 @@ function Scanner() {
               ownership={target.ownership}
               onStatus={(status) => setTarget((current) => ({ ...current, status }))}
               onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+              format={target.format}
+              onFormat={(format) => setTarget((current) => ({ ...current, format }))}
             />
           )}
         </div>
         <Camera onCode={lookUp} />
+        <PhotoEntry onCode={lookUp} />
         <ManualEntry onSubmit={lookUp} />
       </div>
       <section aria-live="polite" className={styles.results}>
@@ -257,11 +260,61 @@ function Camera({ onCode }: { onCode: (code: string) => boolean }) {
       </div>
       {running && (
         <div className={styles.cameraBar}>
-          <span className={styles.hint}>{t('scan.camera.hint')}</span>
+          <span className={styles.hint}>
+            {/* A laptop webcam is fixed-focus and low-resolution (#444): held close the barcode
+                is a blur, held far it is a few pixels wide. */}
+            {t(onComputer() ? 'scan.camera.hintComputer' : 'scan.camera.hint')}
+          </span>
           <Button variant="secondary" size="compact" onClick={turnOff}>
             {t('scan.camera.stop')}
           </Button>
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A picture of the barcode instead of the live camera (#444): a phone photo sent to the
+ * computer reads where a laptop webcam cannot.
+ */
+function PhotoEntry({ onCode }: { onCode: (code: string) => boolean }) {
+  const { t } = useTranslation();
+  const input = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<'idle' | 'reading' | 'none'>('idle');
+
+  async function read(file: File | undefined) {
+    if (!file) return;
+    setState('reading');
+    try {
+      const code = await scanImage(file);
+      if (code && onCode(code)) setState('idle');
+      else setState('none');
+    } catch {
+      setState('none');
+    } finally {
+      if (input.current) input.current.value = '';
+    }
+  }
+
+  return (
+    <div className={styles.photo}>
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        className={styles.photoInput}
+        aria-label={t('scan.photo.label')}
+        onChange={(e) => void read(e.target.files?.[0])}
+      />
+      <Button variant="secondary" size="compact" onClick={() => input.current?.click()} disabled={state === 'reading'}>
+        <Icon name="upload_file" size={18} color="var(--ink-soft)" />
+        {t(state === 'reading' ? 'scan.photo.reading' : 'scan.photo.open')}
+      </Button>
+      {state === 'none' && (
+        <p role="alert" className={styles.manualError}>
+          {t('scan.photo.none')}
+        </p>
       )}
     </div>
   );

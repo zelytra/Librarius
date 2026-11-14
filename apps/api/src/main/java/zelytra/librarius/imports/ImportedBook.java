@@ -1,7 +1,9 @@
 package zelytra.librarius.imports;
 
+import zelytra.librarius.domain.BookFormat;
 import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.LibraryStatus;
+import zelytra.librarius.domain.Ownership;
 
 import java.time.LocalDate;
 
@@ -20,10 +22,22 @@ import java.time.LocalDate;
  *                   {@code argent}, {@code bronze}), or null — it takes precedence over the shelf
  * @param kind       the kind the source tells (a manga list, a comics one), or null for a book
  * @param wished     a title the reader wants rather than holds: it goes to the wishlist
+ * @param ownership  whether the reader has it, or null for the default (owned) — a volume
+ *                   Mangacollec marks read but not held is read and not owned
+ * @param format     the physical format the source tells (a box set, a deluxe edition), or null
  */
 public record ImportedBook(String title, String author, String coverUrl, LibraryStatus status,
         String shelf, Integer rating, LocalDate acquiredAt, LocalDate readAt, String isbn13,
-        Integer pageCount, String rank, Kind kind, boolean wished) {
+        Integer pageCount, String rank, Kind kind, boolean wished, Ownership ownership,
+        BookFormat format) {
+
+    /** A row from a source that tells no ownership nor format. */
+    public ImportedBook(String title, String author, String coverUrl, LibraryStatus status,
+            String shelf, Integer rating, LocalDate acquiredAt, LocalDate readAt, String isbn13,
+            Integer pageCount, String rank, Kind kind, boolean wished) {
+        this(title, author, coverUrl, status, shelf, rating, acquiredAt, readAt, isbn13, pageCount,
+                rank, kind, wished, null, null);
+    }
 
     /** A row from a source that tells neither a tier, a kind nor a wish. */
     public ImportedBook(String title, String author, String coverUrl, LibraryStatus status,

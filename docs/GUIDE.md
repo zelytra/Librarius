@@ -197,6 +197,16 @@ Sur la page d'un livre, la section **Prix** montre le prix neuf relevé à la Bn
 toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs.
 Vide, on revient au prix neuf.
 
+## Pages, format et édition de ton exemplaire
+
+Sur la page d'un livre, tu peux aussi saisir **ton nombre de pages** (il remplace celui de
+l'édition dans tes pages lues, tes objectifs et ta progression, pour toi seul) et choisir le
+**format** de ton exemplaire — poche, broché, relié, grand format, collector, coffret — à
+côté des statuts. Un second appui sur le format choisi le retire.
+
+La section **Autres éditions** est toujours là : choisis une édition proposée par le
+catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).
+
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
@@ -288,6 +298,21 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
 
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
 couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arrière-plan.
+
+### Depuis Mangacollec
+
+Mangacollec n'a pas de bouton d'export, mais son site charge toute ta collection d'un coup :
+
+1. Sur mangacollec.com, connecté, ouvre les outils de développement (F12), onglet
+   « Réseau », et recharge la page de ta collection.
+2. Repère la requête **« collection »** et enregistre sa réponse dans un fichier (clic droit
+   › Enregistrer la réponse).
+3. Dans Réglages → Importer, choisis **Mangacollec** et importe ce fichier.
+
+Chaque tome possédé ou lu arrive rangé dans sa série, avec son ISBN, sa couverture et sa date
+d'ajout. Un tome lu mais pas possédé est marqué « Lu » et « Non possédé » ; un coffret prend
+le format « Coffret », une édition Deluxe ou Perfect le format « Deluxe ». Mangacollec ne
+donne pas les auteurs : ils sont retrouvés ensuite grâce à l'ISBN.
 
 ### Depuis un fichier CSV
 

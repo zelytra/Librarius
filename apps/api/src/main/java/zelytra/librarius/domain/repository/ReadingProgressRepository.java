@@ -129,7 +129,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
 
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select %s, count(rp), sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate))
+                        select %s, count(rp), sum(coalesce(li.pageCount, li.edition.pageCount, li.edition.pageCountEstimate))
                         from ReadingProgress rp
                           join rp.libraryItem li
                         where li.userId = :userId
@@ -165,7 +165,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
                 : "year(rp.finishedAt)";
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select %s, w.kind, count(rp), sum(coalesce(e.pageCount, e.pageCountEstimate))
+                        select %s, w.kind, count(rp), sum(coalesce(li.pageCount, e.pageCount, e.pageCountEstimate))
                         from ReadingProgress rp
                           join rp.libraryItem li
                           join li.edition e
@@ -307,7 +307,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
     public long progressTowards(String userId, LocalDate from, LocalDate to, GoalUnit unit,
             zelytra.librarius.domain.Kind kind) {
         // The unit picks the aggregate and nothing else; it is an enum, never caller input.
-        String aggregate = unit == GoalUnit.PAGES ? "sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate))" : "count(rp)";
+        String aggregate = unit == GoalUnit.PAGES ? "sum(coalesce(li.pageCount, li.edition.pageCount, li.edition.pageCountEstimate))" : "count(rp)";
 
         jakarta.persistence.TypedQuery<Object> query = getEntityManager()
                 .createQuery("""

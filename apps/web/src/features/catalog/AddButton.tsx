@@ -88,6 +88,8 @@ function AddSheet({ onAdd, onClose }: { onAdd: (target: AddTarget) => Promise<vo
             ownership={target.ownership}
             onStatus={(status) => setTarget((current) => ({ ...current, status }))}
             onOwnership={(ownership) => setTarget((current) => ({ ...current, ownership }))}
+            format={target.format}
+            onFormat={(format) => setTarget((current) => ({ ...current, format }))}
             disabled={pending}
           />
         </div>

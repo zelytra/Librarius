@@ -10,6 +10,7 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import {
   type CatalogResult,
 } from '../../api/generated/librarius';
+import { SeriesLink } from '../series/SeriesLink';
 import { AuthorNames } from '../author/AuthorNames';
 import { KIND_LABEL_KEY, knownKind } from '../discover/medium';
 import { toBook } from './catalogBook';
@@ -77,14 +78,25 @@ function CatalogDetailContent({ result }: { result: CatalogResult }) {
         <h1 className={styles.title}>{title}</h1>
         {result.authors && (
           <div className={styles.authors}>
-            <AuthorNames text={result.authors} />
+            <AuthorNames text={result.authors} searchFallback />
           </div>
         )}
       </div>
 
       <div className={styles.facts}>
         <Fact label={t('detail.pages')} value={result.pageCount != null ? String(result.pageCount) : '—'} />
-        <Fact label={t('detail.series')} value={seriesLabel(result, t)} />
+        <Fact
+          label={t('detail.series')}
+          value={
+            result.seriesTitle ? (
+              <SeriesLink title={result.seriesTitle} kind={result.kind}>
+                {seriesLabel(result, t)}
+              </SeriesLink>
+            ) : (
+              seriesLabel(result, t)
+            )
+          }
+        />
         <Fact label={t('detail.released')} value={result.year != null ? String(result.year) : '—'} />
       </div>
 

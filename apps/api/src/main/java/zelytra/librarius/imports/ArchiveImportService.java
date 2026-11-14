@@ -206,6 +206,8 @@ public class ArchiveImportService {
             // An archive written before #411 carries no ownership: every title was owned then.
             item.ownership = dto.ownership() != null ? dto.ownership() : zelytra.librarius.domain.Ownership.OWNED;
             item.price = dto.price();
+            item.pageCount = dto.pageCount();
+            item.format = dto.format();
             item.rating = dto.rating();
             item.review = dto.review();
             item.acquiredAt = dto.acquiredAt();

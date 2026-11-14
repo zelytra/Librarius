@@ -73,6 +73,26 @@ public class LibraryItem {
     @Column(precision = 8, scale = 2)
     public java.math.BigDecimal price;
 
+    /**
+     * The reader's own page count for their copy (#446, V32), private to this row. Every figure
+     * of the reader prefers it — see {@link #effectivePageCount()}.
+     */
+    @Column(name = "page_count")
+    public Integer pageCount;
+
+    /** The format of the reader's copy (#447, V32), {@code null} when unsaid. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16)
+    public BookFormat format;
+
+    /** The length the reader's figures use: theirs, else the edition's, else its estimate. */
+    public Integer effectivePageCount() {
+        if (pageCount != null) {
+            return pageCount;
+        }
+        return edition != null ? edition.effectivePageCount() : null;
+    }
+
     /** Whether the title was ever abandoned (#287, V31): finishing it then is a comeback. */
     @Column(name = "was_abandoned", nullable = false)
     public boolean wasAbandoned;

@@ -1,4 +1,4 @@
-import type { Ownership, ReadingStatus } from '../../shared/statuses';
+import type { BookFormat, Ownership, ReadingStatus } from '../../shared/statuses';
 import { addsToWishlistOnly } from '../../shared/statuses';
 
 /**
@@ -9,6 +9,8 @@ import { addsToWishlistOnly } from '../../shared/statuses';
 export interface AddTarget {
   status: ReadingStatus;
   ownership: Ownership;
+  /** The format of the copy (#447), when the reader says. */
+  format?: BookFormat | null;
 }
 
 export const DEFAULT_ADD_TARGET: AddTarget = { status: 'TO_READ', ownership: 'OWNED' };

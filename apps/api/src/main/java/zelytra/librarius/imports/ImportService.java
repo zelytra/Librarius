@@ -213,6 +213,10 @@ public class ImportService {
             item.userId = userId;
             item.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
             item.status = status;
+            if (book.ownership() != null) {
+                item.ownership = book.ownership();
+            }
+            item.format = book.format();
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();
             item.rankCategory = rankFor(userId, book, state);
@@ -320,7 +324,7 @@ public class ImportService {
         progress.finishedAt = readAt;
         if (item.status == LibraryStatus.READ) {
             progress.percent = COMPLETE;
-            progress.currentPage = item.edition.effectivePageCount();
+            progress.currentPage = item.effectivePageCount();
         }
         progresses.persist(progress);
         item.progress = progress;

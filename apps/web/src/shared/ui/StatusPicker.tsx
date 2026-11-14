@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import {
+  FORMATS,
+  formatLabelKey,
+  type BookFormat,
   OWNERSHIPS,
   READING_STATUSES,
   ownershipLabelKey,
@@ -17,10 +20,12 @@ interface ChipGroupProps<T extends string> {
   labelOf: (id: T) => string;
   onChange: (id: T) => void;
   disabled?: boolean;
+  /** Tapping the chosen chip again clears the choice — for an optional family. */
+  onClear?: () => void;
 }
 
 /** One family of statuses as a row of chips; the chosen one pops when it is picked. */
-function ChipGroup<T extends string>({ label, options, value, labelOf, onChange, disabled }: ChipGroupProps<T>) {
+function ChipGroup<T extends string>({ label, options, value, labelOf, onChange, disabled, onClear }: ChipGroupProps<T>) {
   return (
     <div className={styles.group}>
       <span className={styles.groupLabel}>{label}</span>
@@ -36,6 +41,7 @@ function ChipGroup<T extends string>({ label, options, value, labelOf, onChange,
               disabled={disabled}
               onClick={() => {
                 if (!on) onChange(option.id);
+                else onClear?.();
               }}
               className={`${styles.chip} ${on ? styles.chipOn : ''}`}
             >
@@ -59,12 +65,17 @@ export function StatusPicker({
   onStatus,
   onOwnership,
   disabled,
+  format,
+  onFormat,
 }: {
   status: ReadingStatus | undefined;
   ownership: Ownership | undefined;
   onStatus: (status: ReadingStatus) => void;
   onOwnership: (ownership: Ownership) => void;
   disabled?: boolean;
+  /** The format of the copy (#447), shown when `onFormat` is given; null when unsaid. */
+  format?: BookFormat | null;
+  onFormat?: (format: BookFormat | null) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -86,6 +97,17 @@ export function StatusPicker({
         disabled={disabled}
       />
       {ownership && <p className={styles.hint}>{t(`statuses.ownershipHint.${ownership}`)}</p>}
+      {onFormat && (
+        <ChipGroup
+          label={t('statuses.formatTitle')}
+          options={FORMATS}
+          value={format ?? undefined}
+          labelOf={(id) => t(formatLabelKey(id))}
+          onChange={onFormat}
+          onClear={() => onFormat(null)}
+          disabled={disabled}
+        />
+      )}
     </div>
   );
 }

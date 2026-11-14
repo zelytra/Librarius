@@ -19,6 +19,9 @@ import { Button, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { BookCover } from '../../shared/ui/BookCover';
 import { AuthorMatches } from '../author/AuthorSearch';
+import { AuthorNames } from '../author/AuthorNames';
+import { splitAuthorNames } from '../author/author';
+import { SeriesLink } from '../series/SeriesLink';
 import { catalogPath, toBook } from '../catalog/catalogBook';
 import { addedKeyOf, type AddTarget } from '../catalog/addTargets';
 import { AddButton } from '../catalog/AddButton';
@@ -334,7 +337,7 @@ function DiscoverContent() {
         {results.map((r) => {
           const key = keyOf(r);
           const state = added[key];
-          const meta = [shortCredits(r.authors, t), r.year].filter(Boolean).join(' · ');
+          const credits = splitAuthorNames(r.authors);
           return (
             <div key={key} className={styles.result}>
               <BookCover
@@ -356,7 +359,20 @@ function DiscoverContent() {
                     toggle, so each one names its own medium here. */}
                 <div className={styles.resultMeta}>
                   <span className={styles.kindBadge}>{t(KIND_LABEL_KEY[knownKind(r.kind)])}</span>
-                  {meta && <span>{meta}</span>}
+                  {/* The series and each author lead on (#443): the reader's series or a search
+                      on it, the author's page or a search on their books. */}
+                  {r.seriesTitle && (
+                    <span>
+                      <SeriesLink title={r.seriesTitle} kind={r.kind} />
+                    </span>
+                  )}
+                  {credits.length > 0 && (
+                    <span>
+                      <AuthorNames text={r.authors} searchFallback limit={SHOWN_CREDITS} />
+                      {credits.length > SHOWN_CREDITS && t('discover.moreAuthors', { count: credits.length - SHOWN_CREDITS })}
+                    </span>
+                  )}
+                  {r.year != null && <span>{r.year}</span>}
                 </div>
                 {state ? (
                   <div className={styles.added}>{t(addedKeyOf(state))}</div>
@@ -379,13 +395,6 @@ function DiscoverContent() {
 /** Credits shown on a result card: an anthology's fifteen names grew the card to a screen's
  *  height. The first three, then how many more; the fiche lists them all. */
 const SHOWN_CREDITS = 3;
-
-function shortCredits(authors: string | undefined, t: TFunction): string | undefined {
-  if (!authors) return authors;
-  const names = authors.split(/\s*,\s*/).filter(Boolean);
-  if (names.length <= SHOWN_CREDITS) return authors;
-  return t('discover.moreCredits', { names: names.slice(0, SHOWN_CREDITS).join(', '), count: names.length - SHOWN_CREDITS });
-}
 
 export function DiscoverPage() {
   const { t } = useTranslation();

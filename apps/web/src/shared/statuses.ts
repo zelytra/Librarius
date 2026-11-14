@@ -24,6 +24,20 @@ export const OWNERSHIPS: { id: Ownership; icon: string }[] = [
   { id: 'NOT_OWNED', icon: 'visibility_off' },
 ];
 
+/** The format of the reader's copy (#447), optional. */
+export type BookFormat = 'POCKET' | 'PAPERBACK' | 'HARDCOVER' | 'LARGE' | 'DELUXE' | 'BOX_SET';
+
+export const FORMATS: { id: BookFormat; icon: string }[] = [
+  { id: 'POCKET', icon: 'book_2' },
+  { id: 'PAPERBACK', icon: 'menu_book' },
+  { id: 'HARDCOVER', icon: 'auto_stories' },
+  { id: 'LARGE', icon: 'library_books' },
+  { id: 'DELUXE', icon: 'workspace_premium' },
+  { id: 'BOX_SET', icon: 'collections_bookmark' },
+];
+
+export const formatLabelKey = (format: string | undefined) => `statuses.format.${format}`;
+
 /** i18n key of a reading status's label. */
 export const statusLabelKey = (status: string | undefined) => `statuses.reading.${status ?? 'TO_READ'}`;
 
