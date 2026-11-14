@@ -25,7 +25,7 @@ data:
       "ssoSessionMaxLifespan": {{ .Values.keycloak.sessions.max }},
       "offlineSessionIdleTimeout": {{ .Values.keycloak.sessions.offlineIdle }},
       "roles": { "realm": [{ "name": "user" }] },
-      "defaultRoles": ["user"],
+      "defaultRoles": ["user", "offline_access"],
       "clients": [
         {
           "clientId": "librarius-web", "name": "Librarius PWA", "enabled": true,

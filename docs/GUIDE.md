@@ -128,8 +128,10 @@ La liste se charge **toute seule** en descendant : plus besoin d'appuyer sur « 
 ### Modifier plusieurs titres d'un coup
 
 « **Sélectionner** », dans la bibliothèque, la pile à lire ou la page d'une série, te laisse
-cocher plusieurs titres puis « Modifier » : statut de lecture, possession, format, catégorie,
-note, ou retrait de ta bibliothèque, appliqués à tous d'un coup.
+cocher plusieurs titres — ou une **série entière** dans la bibliothèque, qui compte pour tous
+ses tomes — puis « Modifier ». Choisis autant de changements que tu veux (statut de lecture,
+possession, format, catégorie, note), puis « **Appliquer** » : ils sont faits sur toute la
+sélection d'un coup. Le retrait de ta bibliothèque est à part, avec une confirmation.
 
 La pile à lire et la liste d'envies se filtrent aussi par type : **Livres, Mangas, BD**.
 

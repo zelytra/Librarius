@@ -83,4 +83,33 @@ class BulkUpdateApiTest {
                 .body("{ \"ids\": [\"" + id + "\"], \"rating\": 9 }")
                 .when().post("/api/library/bulk").then().statusCode(400);
     }
+
+    /** #467: a series picked whole stands for every volume of it the caller holds. */
+    @Test
+    void aSeriesPickedWholeChangesEveryVolumeHeld() {
+        String series = "Bulk series " + UUID.randomUUID();
+        for (int volume = 1; volume <= 3; volume++) {
+            given().auth().oauth2(token("bob")).contentType("application/json")
+                    .body("{ \"book\": { \"kind\": \"MANGA\", \"title\": \"" + series + " Tome " + volume
+                            + "\", \"seriesTitle\": \"" + series + "\", \"volumeNumber\": " + volume + " } }")
+                    .when().post("/api/library").then().statusCode(201);
+        }
+        String seriesId = given().auth().oauth2(token("bob")).when().get("/api/series")
+                .then().extract().path("find { it.title == '" + series + "' }.id");
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"seriesIds\": [\"" + seriesId + "\"], \"status\": \"READ\", \"rating\": 5 }")
+                .when().post("/api/library/bulk")
+                .then().statusCode(200).body("updated", is(3));
+        given().auth().oauth2(token("bob")).when().get("/api/library?q=" + series)
+                .then().body("items", hasSize(3))
+                .body("items.status", everyItem(is("READ")))
+                .body("items.rating", everyItem(is(5)));
+
+        // Someone holding nothing of it changes nothing.
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"seriesIds\": [\"" + seriesId + "\"], \"rating\": 1 }")
+                .when().post("/api/library/bulk")
+                .then().statusCode(200).body("updated", is(0));
+    }
 }

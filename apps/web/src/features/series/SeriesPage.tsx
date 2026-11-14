@@ -366,19 +366,24 @@ function SeriesContent({ id }: { id: string }) {
         ) : (
           <div className={styles.grid}>
             {volumes.map((volume, index) => (
-              <Selectable
+              <div
                 key={volume.volumeNumber ?? `unnumbered-${index}`}
-                id={volume.libraryItemId}
-                label={t('selection.pick', { title: volume.title ?? `${title} ${volume.volumeNumber ?? ''}` })}
-                selection={selection}
+                // While selecting, a volume not held has nothing to change: it steps back.
+                className={selection.active && !volume.libraryItemId ? styles.unavailable : undefined}
               >
-                <VolumeCell
-                  volume={volume}
-                  seriesTitle={title}
-                  wished={volume.volumeNumber != null && wished[volume.volumeNumber] === true}
-                  onClick={() => openVolume(volume)}
-                />
-              </Selectable>
+                <Selectable
+                  id={volume.libraryItemId}
+                  label={t('selection.pick', { title: volume.title ?? `${title} ${volume.volumeNumber ?? ''}` })}
+                  selection={selection}
+                >
+                  <VolumeCell
+                    volume={volume}
+                    seriesTitle={title}
+                    wished={volume.volumeNumber != null && wished[volume.volumeNumber] === true}
+                    onClick={() => openVolume(volume)}
+                  />
+                </Selectable>
+              </div>
             ))}
           </div>
         )}

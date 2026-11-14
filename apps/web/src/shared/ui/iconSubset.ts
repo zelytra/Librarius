@@ -79,6 +79,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   military_tech: 0xea3f,
   print: 0xe8ad,
   priority_high: 0xe645,
+  radio_button_unchecked: 0xe836,
   rate_review: 0xe560,
   replay: 0xe042,
   schedule: 0xefd6,

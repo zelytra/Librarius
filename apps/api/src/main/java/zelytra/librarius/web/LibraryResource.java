@@ -453,8 +453,16 @@ public class LibraryResource {
             category = categories.findForUser(userId, dto.categoryId())
                     .orElseThrow(() -> new BadRequestException("Unknown category"));
         }
+        java.util.Set<UUID> targets = new java.util.LinkedHashSet<>(dto.ids() != null ? dto.ids() : List.of());
+        for (UUID seriesId : dto.seriesIds() != null ? dto.seriesIds() : List.<UUID>of()) {
+            items.listBySeries(userId, seriesId).forEach(item -> targets.add(item.id));
+        }
+        if (targets.isEmpty() && (dto.ids() == null || dto.ids().isEmpty())
+                && (dto.seriesIds() == null || dto.seriesIds().isEmpty())) {
+            throw new BadRequestException("Nothing selected");
+        }
         int updated = 0;
-        for (UUID id : new java.util.LinkedHashSet<>(dto.ids())) {
+        for (UUID id : targets) {
             if (Boolean.TRUE.equals(dto.remove())) {
                 if (items.deleteOwned(userId, id)) {
                     updated++;

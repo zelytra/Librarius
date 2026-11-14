@@ -84,7 +84,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
 | POST | `/api/import/mangacollec` | Mangacollec import by pseudo (#456) — `{ "handle": … }` through `/api/import/{source}`: a public profile's collection read by the server; answers a job to poll ([Import](#import)) |
-| POST | `/api/library/bulk` | One action on up to 500 of the caller's titles (`BulkUpdateDto`, #457): `status`, `ownership`, `format`, `categoryId`/`clearCategory`, `rating`/`clearRating`, `remove`; others' ids skipped, a foreign category 400; answers `BulkResultDto.updated` |
+| POST | `/api/library/bulk` | Several changes at once on up to 500 of the caller's titles (`ids`) and every volume held of up to 200 series (`seriesIds`, #467) (`BulkUpdateDto`, #457); nothing selected is a 400: `status`, `ownership`, `format`, `categoryId`/`clearCategory`, `rating`/`clearRating`, `remove`; others' ids skipped, a foreign category 400; answers `BulkResultDto.updated` |
 | POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
 | POST | `/api/reports` | Flags an error in a shared catalog object (`ReportCreateDto`) — write-only, see [Reports](#reports). 201 with the created report, **400** on an unknown target |

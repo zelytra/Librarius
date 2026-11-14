@@ -328,7 +328,11 @@
   --radius-panel-lg: 20px;
   --radius-badge: 20px;
   --radius-chip: 30px;
-  --radius-round: 50%;
+  /* Fully rounded: a circle on a square, a pill on anything wider (#466). It used to be 50 %,
+     which a wide element turns into an ellipse — every button, chip, bar and badge built on
+     it came out oval. A length larger than any element gives both shapes, since a radius is
+     capped at half the shorter side. */
+  --radius-round: 999px;
 
   /* Hairline drawn on a theme swatch, whose colour is the palette it stands
      for rather than the palette in use. */

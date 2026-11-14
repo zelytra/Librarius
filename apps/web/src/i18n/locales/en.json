@@ -1377,6 +1377,13 @@
     "applied_one": "{{count}} title updated",
     "applied_other": "{{count}} titles updated",
     "pick": "Pick “{{title}}”",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "sheetHint": "Pick one or several changes, then apply them to the whole selection.",
+    "clearRating": "Remove the rating",
+    "pending_zero": "No change picked",
+    "pending_one": "{{count}} change picked",
+    "pending_other": "{{count}} changes picked",
+    "apply": "Apply",
+    "pickSeries": "Pick the series “{{title}}”"
   }
 }

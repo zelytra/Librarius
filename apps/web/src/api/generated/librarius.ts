@@ -168,11 +168,15 @@ export const Ownership = {
 
 export interface BulkUpdateDto {
   /**
-     * @minItems 1
      * @maxItems 500
      * @items.pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
      */
-  ids: string[];
+  ids?: string[];
+  /**
+     * @maxItems 200
+     * @items.pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
+     */
+  seriesIds?: string[];
   status?: LibraryStatus;
   ownership?: Ownership;
   format?: BookFormat;

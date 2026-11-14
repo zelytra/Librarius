@@ -24,4 +24,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* Room between the header and the covers (#468). */
+  margin-bottom: 16px;
+}
+
+.countRow .count {
+  margin: 0;
 }

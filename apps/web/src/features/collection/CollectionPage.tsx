@@ -33,7 +33,7 @@ import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
 import { ReorderGrid } from './ReorderGrid';
-import { useSelection } from '../../shared/selection/useSelection';
+import { SERIES_KEY, useSelection } from '../../shared/selection/useSelection';
 import { Selectable } from '../../shared/selection/Selectable';
 import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
 import { byCategory, inManualOrder, keyOf, mergedOrder, type ShelfEntry } from './views';
@@ -154,8 +154,11 @@ function CoverTile({
   rankColor,
   onDelete,
   onOpen,
+  selecting = false,
 }: {
   item: LibraryItemDto;
+  /** While several titles are being picked (#468): the remove button would only get in the way. */
+  selecting?: boolean;
   /** Colour of the category the title is filed under, absent when it carries no rank. */
   rankColor?: string;
   onDelete: () => void;
@@ -198,6 +201,7 @@ function CoverTile({
             <Icon name={rankIcon} size={14} fill color="var(--on-accent)" />
           </span>
         )}
+        {!selecting && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -208,6 +212,7 @@ function CoverTile({
         >
           <Icon name="delete" size={14} color="var(--rose)" />
         </button>
+        )}
       </Cover>
     </div>
   );
@@ -489,7 +494,15 @@ function CollectionContent() {
 
   const renderEntry = (entry: ShelfEntry) =>
     'series' in entry ? (
-      <SeriesBlock key={entry.series.id} series={entry.series} />
+      // A series picked whole stands for every volume of it held (#467).
+      <Selectable
+        key={entry.series.id}
+        id={entry.series.id ? SERIES_KEY + entry.series.id : undefined}
+        label={t('selection.pickSeries', { title: entry.series.title ?? '' })}
+        selection={selection}
+      >
+        <SeriesBlock series={entry.series} />
+      </Selectable>
     ) : (
       <Selectable
         key={entry.item.id}
@@ -502,6 +515,7 @@ function CollectionContent() {
           rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
           onOpen={() => open(entry.item)}
           onDelete={() => void remove(entry.item.id!)}
+          selecting={selection.active}
         />
       </Selectable>
     );
