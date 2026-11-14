@@ -33,7 +33,11 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      // The two rules of hooks themselves. Version 7's recommended set adds the React
+      // Compiler's diagnostics, which only mean something to an app built with the compiler —
+      // this one is not.
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // The interface is French and its copy lives in i18n/locales, nowhere else — see
       // https://github.com/zelytra/Librarius/issues/35.
