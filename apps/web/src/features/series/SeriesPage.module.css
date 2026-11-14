@@ -408,3 +408,8 @@
   justify-content: space-between;
   gap: 12px;
 }
+
+.unavailable {
+  opacity: 0.35;
+  pointer-events: none;
+}

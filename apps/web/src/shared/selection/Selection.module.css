@@ -3,28 +3,52 @@
   min-width: 0;
 }
 
-.overlay {
+/* The whole cell answers the tap, the cover and its caption alike. */
+.hit {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 6px;
-  border: 2px solid transparent;
-  border-radius: var(--radius-panel);
+  z-index: 2;
+  padding: 0;
+  border: none;
   background: transparent;
   cursor: pointer;
 }
 
-.on .overlay {
-  border-color: var(--accent-deep);
-  background: rgb(0 0 0 / 8%);
+.hit:focus-visible {
+  outline: none;
+}
+
+/* Drawn on the cover only: same ratio and radius as the tile art (Cover.module.css). */
+.frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 0.68;
+  border-radius: var(--radius-tile);
+  pointer-events: none;
+  transition: box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.on .frame {
+  box-shadow: 0 0 0 3px var(--accent-deep);
+  background: rgb(0 0 0 / 12%);
+}
+
+.selectable:has(.hit:focus-visible) .frame {
+  box-shadow: 0 0 0 3px var(--accent);
 }
 
 .tick {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: inline-flex;
-  width: 24px;
-  height: 24px;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-round);
   background: var(--surface);
   box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
@@ -67,7 +91,7 @@
 }
 
 .link {
-  margin-top: 6px;
+  margin-top: 8px;
   padding: 0;
   border: none;
   background: none;
@@ -76,4 +100,31 @@
   color: var(--accent-deep);
   text-decoration: underline;
   cursor: pointer;
+}
+
+.linkOn {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.pending {
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.danger {
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
 }

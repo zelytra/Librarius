@@ -94,8 +94,16 @@ describe('ToReadPage', () => {
     expect(screen.getByText('2 sélectionnés')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Modifier' }));
+    // Several changes are picked first (#467): nothing is sent until « Appliquer ».
     await userEvent.click(await screen.findByRole('button', { name: 'Or' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Lu' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Poche' }));
+    expect(sent).toEqual([]);
+    expect(screen.getByText('3 changements choisis')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Appliquer' }));
 
-    await waitFor(() => expect(sent).toEqual([{ ids: ['a', 'c'], categoryId: 'cat-or' }]));
+    await waitFor(() => expect(sent).toEqual([
+      { ids: ['a', 'c'], seriesIds: [], status: 'READ', format: 'POCKET', categoryId: 'cat-or' },
+    ]));
   });
 });

@@ -3558,7 +3558,6 @@
       },
       "BulkUpdateDto" : {
         "type" : "object",
-        "required" : [ "ids" ],
         "properties" : {
           "ids" : {
             "type" : "array",
@@ -3567,8 +3566,16 @@
               "format" : "uuid",
               "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
             },
-            "minItems" : 1,
             "maxItems" : 500
+          },
+          "seriesIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid",
+              "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            },
+            "maxItems" : 200
           },
           "status" : {
             "$ref" : "#/components/schemas/LibraryStatus"

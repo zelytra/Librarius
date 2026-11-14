@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 
+/** How a series is named in a selection, next to the titles' own ids (#467). */
+export const SERIES_KEY = 'series:';
+
 /** A set of titles picked on a screen to act on together (#457). */
 export interface Selection {
   active: boolean;

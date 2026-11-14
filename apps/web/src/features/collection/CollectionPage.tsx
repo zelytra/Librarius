@@ -33,7 +33,7 @@ import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
 import { ReorderGrid } from './ReorderGrid';
-import { useSelection } from '../../shared/selection/useSelection';
+import { SERIES_KEY, useSelection } from '../../shared/selection/useSelection';
 import { Selectable } from '../../shared/selection/Selectable';
 import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
 import { byCategory, inManualOrder, keyOf, mergedOrder, type ShelfEntry } from './views';
@@ -489,7 +489,15 @@ function CollectionContent() {
 
   const renderEntry = (entry: ShelfEntry) =>
     'series' in entry ? (
-      <SeriesBlock key={entry.series.id} series={entry.series} />
+      // A series picked whole stands for every volume of it held (#467).
+      <Selectable
+        key={entry.series.id}
+        id={entry.series.id ? SERIES_KEY + entry.series.id : undefined}
+        label={t('selection.pickSeries', { title: entry.series.title ?? '' })}
+        selection={selection}
+      >
+        <SeriesBlock series={entry.series} />
+      </Selectable>
     ) : (
       <Selectable
         key={entry.item.id}

@@ -1377,6 +1377,13 @@
     "applied_one": "{{count}} titre modifié",
     "applied_other": "{{count}} titres modifiés",
     "pick": "Choisir « {{title}} »",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "sheetHint": "Choisis un ou plusieurs changements, puis applique-les à toute la sélection.",
+    "clearRating": "Retirer la note",
+    "pending_zero": "Aucun changement choisi",
+    "pending_one": "{{count}} changement choisi",
+    "pending_other": "{{count}} changements choisis",
+    "apply": "Appliquer",
+    "pickSeries": "Choisir la série « {{title}} »"
   }
 }

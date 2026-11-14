@@ -144,7 +144,9 @@ public final class ApiDtos {
      * {@code remove} takes the titles out of the library.
      */
     public record BulkUpdateDto(
-            @NotNull @Size(min = 1, max = 500) List<UUID> ids,
+            @Size(max = 500) List<UUID> ids,
+            /** Series picked whole (#467): every volume of them the caller holds. */
+            @Size(max = 200) List<UUID> seriesIds,
             LibraryStatus status,
             Ownership ownership,
             zelytra.librarius.domain.BookFormat format,
