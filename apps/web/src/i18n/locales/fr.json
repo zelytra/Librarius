@@ -587,7 +587,9 @@
     },
     "scan": "Scanner un code-barres",
     "moreCredits_one": "{{names}} et {{count}} autre",
-    "moreCredits_other": "{{names}} et {{count}} autres"
+    "moreCredits_other": "{{names}} et {{count}} autres",
+    "moreAuthors_one": " +{{count}}",
+    "moreAuthors_other": " +{{count}}"
   },
   "wishlist": {
     "title": "Liste de souhaits",
@@ -760,7 +762,16 @@
       "alreadyOwned": "Déjà dans ta bibliothèque",
       "alreadyOwnedError": "Tu as déjà cette édition dans ta bibliothèque.",
       "error": "Impossible de changer d'édition.",
-      "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination."
+      "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination.",
+      "noOther": "Le catalogue ne connaît pas d'autre édition de ce titre. Décris la tienne si elle diffère.",
+      "describe": "Autre édition…",
+      "form": {
+        "publisher": "Éditeur",
+        "isbn": "ISBN",
+        "pages": "Nombre de pages",
+        "year": "Année de parution",
+        "save": "Utiliser cette édition"
+      }
     },
     "remove": {
       "start": "Supprimer de ma bibliothèque",
@@ -784,6 +795,17 @@
       "save": "Enregistrer",
       "cancel": "Annuler",
       "private": "Ce prix n'est que pour toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs. Laisse vide pour revenir au prix neuf."
+    },
+    "pagesOwn": {
+      "title": "Nombre de pages",
+      "unknown": "Inconnu",
+      "yours": "Ton nombre de pages",
+      "edition": "Celui de l'édition",
+      "estimated": "Estimé, faute de mieux",
+      "none": "Aucun nombre de pages connu.",
+      "set": "Saisir",
+      "label": "Nombre de pages de ton exemplaire",
+      "private": "Ce nombre n'est que pour toi : il compte dans tes pages lues, tes objectifs et ta progression, et ne change rien pour les autres lecteurs. Laisse vide pour revenir à celui de l'édition."
     }
   },
   "settings": {
@@ -958,7 +980,8 @@
       "unsupported": "Ce navigateur n'a pas accès à la caméra. Tape l'ISBN ci-dessous.",
       "denied": "L'accès à la caméra a été refusé. Autorise-le dans les réglages du navigateur pour ce site, ou tape l'ISBN ci-dessous.",
       "unavailable": "Aucune caméra disponible. Tape l'ISBN ci-dessous.",
-      "decoder": "Le lecteur de codes-barres n'a pas pu se charger. Vérifie ta connexion et réessaie, ou tape l'ISBN ci-dessous."
+      "decoder": "Le lecteur de codes-barres n'a pas pu se charger. Vérifie ta connexion et réessaie, ou tape l'ISBN ci-dessous.",
+      "hintComputer": "Sur ordinateur, tiens le livre à 15–20 cm, bien éclairé, le code-barres dans le cadre. Si ta webcam ne le lit pas, prends-le en photo avec ton téléphone."
     },
     "manual": {
       "label": "Ou tape l'ISBN",
@@ -998,6 +1021,12 @@
         "CHECK": "Vérifier seulement",
         "ADD": "Ajouter directement"
       }
+    },
+    "photo": {
+      "open": "Lire une photo du code-barres",
+      "label": "Photo du code-barres",
+      "reading": "Lecture de la photo…",
+      "none": "Aucun code-barres lisible sur cette photo. Essaie une photo plus nette, le code-barres bien à plat."
     }
   },
   "add": {
@@ -1110,6 +1139,15 @@
       "EBOOK": "Lu sur liseuse, tablette ou autre format numérique.",
       "WISHLIST": "Tu ne l'as pas et tu aimerais l'avoir.",
       "NOT_OWNED": "Ni sur tes étagères, ni en envie."
+    },
+    "formatTitle": "Format",
+    "format": {
+      "POCKET": "Poche",
+      "PAPERBACK": "Broché",
+      "HARDCOVER": "Relié",
+      "LARGE": "Grand format",
+      "DELUXE": "Collector",
+      "BOX_SET": "Coffret"
     }
   },
   "toasts": {
@@ -1131,7 +1169,12 @@
     "failed": "L'action n'a pas abouti. Réessaie dans un instant.",
     "goalSaved": "Objectif enregistré",
     "price": "Prix enregistré : {{price}}",
-    "priceCleared": "Prix retiré, retour au prix neuf"
+    "priceCleared": "Prix retiré, retour au prix neuf",
+    "format": "Format : {{format}}",
+    "formatCleared": "Format retiré",
+    "pages_one": "{{count}} page enregistrée",
+    "pages_other": "{{count}} pages enregistrées",
+    "pagesCleared": "Retour au nombre de pages de l'édition"
   },
   "achievements": {
     "title": "Succès",

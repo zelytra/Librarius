@@ -113,6 +113,14 @@ describe('ScanPage', () => {
     expect(screen.getAllByText('Pas encore chez toi')).toHaveLength(1);
   });
 
+  /** #444: a photo of the barcode instead of a webcam that cannot read it. */
+  test('offers to read a photo, and says when it holds no readable barcode', async () => {
+    renderScan();
+    const input = screen.getByLabelText('Photo du code-barres');
+    await userEvent.upload(input, new File(['not an image'], 'dos.jpg', { type: 'image/jpeg' }));
+    expect(await screen.findByText(/Aucun code-barres lisible sur cette photo/)).toBeInTheDocument();
+  });
+
   test('explains that this browser has no camera, and keeps the typed ISBN', () => {
     // jsdom has no camera at all. A browser with a camera and no BarcodeDetector (Safari,
     // Firefox) now scans through the WebAssembly decoder — see camera.test.ts.

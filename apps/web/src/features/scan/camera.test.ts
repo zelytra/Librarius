@@ -15,7 +15,7 @@ vi.mock('barcode-detector/ponyfill', () => ({
 }));
 vi.mock('zxing-wasm/reader/zxing_reader.wasm?url', () => ({ default: '/assets/zxing_reader-abc.wasm' }));
 
-const { cameraScanSupported, startScanning } = await import('./camera');
+const { cameraScanSupported, startScanning, stretchContrast, PASSES } = await import('./camera');
 
 function fakeCamera() {
   const stop = vi.fn();
@@ -101,5 +101,13 @@ describe('camera', () => {
     expect(detect).not.toHaveBeenCalled();
     expect(codes).toEqual(['9780441013593']);
     stop();
+  });
+
+  /** #444: the enhanced pass greys the band and stretches it to the full range. */
+  test('stretches a soft image to the full contrast', () => {
+    const data = new Uint8ClampedArray([100, 100, 100, 255, 140, 140, 140, 255, 120, 120, 120, 255]);
+    stretchContrast(data);
+    expect([data[0], data[4], data[8]]).toEqual([0, 255, 128]);
+    expect(PASSES).toEqual(['band', 'whole', 'enhanced']);
   });
 });

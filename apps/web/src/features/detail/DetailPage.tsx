@@ -23,6 +23,10 @@ import {
   usePutApiLibraryIdEdition,
   usePutApiLibraryIdOwnership,
   usePutApiLibraryIdPrice,
+  usePutApiLibraryIdPages,
+  usePutApiLibraryIdFormat,
+  usePostApiLibraryIdEdition,
+  type EditionChoiceDto,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
   usePutApiLibraryIdReview,
@@ -43,7 +47,7 @@ import styles from './DetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 import { StatusPicker } from '../../shared/ui/StatusPicker';
 import { toast } from '../../shared/ui/toast';
-import { ownershipLabelKey, statusLabelKey, type Ownership, type ReadingStatus } from '../../shared/statuses';
+import { formatLabelKey, ownershipLabelKey, statusLabelKey, type BookFormat, type Ownership, type ReadingStatus } from '../../shared/statuses';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen. */
 const WASH_FROM = 'aa';
@@ -344,11 +348,14 @@ function editionLabel(edition: EditionDto, unknown: string): string {
 function EditionsSection({
   item,
   onChoose,
+  onChooseNew,
   switching,
   error,
 }: {
   item: LibraryItemDto;
   onChoose: (editionId: string) => void;
+  /** An edition that is not a row yet — a provider's, or one described by hand (#445). */
+  onChooseNew: (edition: EditionChoiceDto) => void;
   switching: boolean;
   error: string | null;
 }) {
@@ -359,7 +366,8 @@ function EditionsSection({
 
   const current = item.book?.editionId;
   const others = editions.filter((edition) => edition.id !== current);
-  if (others.length === 0) return null;
+  // Always offered (#445): with no other edition known, the reader can still describe theirs.
+  const [describing, setDescribing] = useState(false);
 
   const mine = editions.find((edition) => edition.id === current);
   const unknown = t('detail.editions.unknownPublisher');
@@ -407,17 +415,168 @@ function EditionsSection({
                   {t('detail.editions.choose')}
                 </Button>
               ) : (
-                <div className={styles.editionFromCatalog}>{t('detail.editions.fromCatalog')}</div>
+                // A provider's printing (#445): chosen, it becomes an edition of this work.
+                <Button
+                  variant="secondary"
+                  size="block"
+                  aria-label={t('detail.editions.chooseAria', { edition: label })}
+                  onClick={() =>
+                    onChooseNew({
+                      isbn13: edition.isbn13,
+                      publisher: edition.publisher,
+                      language: edition.language,
+                      pageCount: edition.pageCount,
+                      coverUrl: edition.coverUrl,
+                      format: edition.format,
+                      releaseDate: edition.releaseDate,
+                    })
+                  }
+                >
+                  {t('detail.editions.choose')}
+                </Button>
               )}
             </li>
           );
         })}
       </ul>
 
+      {others.length === 0 && <p className={styles.editionsHint}>{t('detail.editions.noOther')}</p>}
+      {describing ? (
+        <EditionForm
+          onCancel={() => setDescribing(false)}
+          onSubmit={(edition) => {
+            onChooseNew(edition);
+            setDescribing(false);
+          }}
+        />
+      ) : (
+        <Button variant="ghost" size="compact" onClick={() => setDescribing(true)}>
+          <Icon name="add" size={16} color="var(--ink-soft)" />
+          {t('detail.editions.describe')}
+        </Button>
+      )}
+
       {error && <p className={styles.editionsError}>{error}</p>}
       {/* Says what the switch does to the position, because it is not obvious: a page
           number does not survive a change of pagination, a percentage does. */}
       <p className={styles.editionsNote}>{t('detail.editions.keepsProgress')}</p>
+    </section>
+  );
+}
+
+/** The reader describes their edition by hand (#445): publisher, ISBN, pages, year. */
+function EditionForm({ onSubmit, onCancel }: { onSubmit: (edition: EditionChoiceDto) => void; onCancel: () => void }) {
+  const { t } = useTranslation();
+  const [publisher, setPublisher] = useState('');
+  const [isbn, setIsbn] = useState('');
+  const [pages, setPages] = useState('');
+  const [year, setYear] = useState('');
+  const count = Number(pages);
+  const releaseYear = Number(year);
+  const valid = (publisher.trim() || isbn.trim()) && (pages === '' || (count > 0 && count < 100_000));
+  return (
+    <form
+      className={styles.editionForm}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!valid) return;
+        onSubmit({
+          publisher: publisher.trim() || undefined,
+          isbn13: isbn.replace(/[^0-9Xx]/g, '') || undefined,
+          pageCount: pages === '' ? undefined : count,
+          releaseDate: year.length === 4 && releaseYear > 1400 ? `${year}-01-01` : undefined,
+        });
+      }}
+    >
+      <input className={styles.priceInput} value={publisher} onChange={(e) => setPublisher(e.target.value)} aria-label={t('detail.editions.form.publisher')} placeholder={t('detail.editions.form.publisher')} />
+      <input className={styles.priceInput} value={isbn} onChange={(e) => setIsbn(e.target.value)} inputMode="numeric" aria-label={t('detail.editions.form.isbn')} placeholder={t('detail.editions.form.isbn')} />
+      <input className={styles.priceInput} value={pages} onChange={(e) => setPages(e.target.value.replace(/\D/g, ''))} inputMode="numeric" aria-label={t('detail.editions.form.pages')} placeholder={t('detail.editions.form.pages')} />
+      <input className={styles.priceInput} value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" aria-label={t('detail.editions.form.year')} placeholder={t('detail.editions.form.year')} />
+      <div className={styles.priceRow}>
+        <Button type="submit" size="compact" disabled={!valid}>
+          {t('detail.editions.form.save')}
+        </Button>
+        <Button type="button" variant="ghost" size="compact" onClick={onCancel}>
+          {t('detail.price.cancel')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * The reader's own page count (#446): theirs when given, else the edition's (or its estimate),
+ * with a field to set it. Private to them, like the price.
+ */
+function PagesSection({ item, saving, onSave }: { item: LibraryItemDto; saving: boolean; onSave: (pages: number | null) => void }) {
+  const { t } = useTranslation();
+  const own = item.pageCount ?? null;
+  const edition = item.book?.pageCount ?? null;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const parsed = draft.trim() === '' ? null : Number(draft);
+  const valid = parsed === null || (Number.isInteger(parsed) && parsed > 0 && parsed < 100_000);
+  return (
+    <section className={styles.price}>
+      <h3 className={styles.sectionTitle}>
+        {t('detail.pagesOwn.title')}
+        <Loading size="compact" pending={saving} />
+      </h3>
+      {!editing ? (
+        <div className={styles.priceRow}>
+          <div>
+            <div className={styles.priceValue}>
+              {own ?? (edition != null ? `${item.book?.pageCountEstimated ? '≈ ' : ''}${edition}` : t('detail.pagesOwn.unknown'))}
+            </div>
+            <div className={styles.priceSource}>
+              {own != null
+                ? t('detail.pagesOwn.yours')
+                : edition != null
+                  ? t(item.book?.pageCountEstimated ? 'detail.pagesOwn.estimated' : 'detail.pagesOwn.edition')
+                  : t('detail.pagesOwn.none')}
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="compact"
+            onClick={() => {
+              setDraft(own != null ? String(own) : '');
+              setEditing(true);
+            }}
+          >
+            <Icon name="edit" size={16} color="var(--ink-soft)" />
+            {t(own != null ? 'detail.price.edit' : 'detail.pagesOwn.set')}
+          </Button>
+        </div>
+      ) : (
+        <form
+          className={styles.priceRow}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!valid) return;
+            onSave(parsed);
+            setEditing(false);
+          }}
+        >
+          <input
+            className={styles.priceInput}
+            inputMode="numeric"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.replace(/\D/g, ''))}
+            aria-label={t('detail.pagesOwn.label')}
+            aria-invalid={!valid}
+            placeholder={edition != null ? String(edition) : '300'}
+            autoFocus
+          />
+          <Button type="submit" size="compact" disabled={!valid || saving}>
+            {t('detail.price.save')}
+          </Button>
+          <Button type="button" variant="ghost" size="compact" onClick={() => setEditing(false)}>
+            {t('detail.price.cancel')}
+          </Button>
+        </form>
+      )}
+      <p className={styles.privateNote}>{t('detail.pagesOwn.private')}</p>
     </section>
   );
 }
@@ -616,6 +775,44 @@ function DetailContent({ id }: { id: string }) {
         invalidateLibrary();
       },
       onError: failed,
+    },
+  });
+  const { mutate: mutatePages, isPending: pagesSaving } = usePutApiLibraryIdPages({
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(
+          data.pageCount != null ? t('toasts.pages', { count: data.pageCount }) : t('toasts.pagesCleared'),
+          'auto_stories',
+        );
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
+  const { mutate: mutateFormat, isPending: formatSaving } = usePutApiLibraryIdFormat({
+    mutation: {
+      onSuccess: (_data, { data }) => {
+        toast.success(
+          data.format ? t('toasts.format', { format: t(formatLabelKey(data.format)) }) : t('toasts.formatCleared'),
+          'book_2',
+        );
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
+  const { mutate: mutateNewEdition, isPending: newEditionSaving } = usePostApiLibraryIdEdition({
+    mutation: {
+      onSuccess: () => {
+        setEditionError(null);
+        toast.success(t('toasts.edition'), 'book_2');
+        invalidateLibrary();
+        if (workId) {
+          void queryClient.invalidateQueries({ queryKey: getGetApiWorksIdEditionsQueryKey(workId) });
+        }
+      },
+      onError: (failure) =>
+        setEditionError(t(apiErrorStatus(failure) === 409 ? 'detail.editions.alreadyOwnedError' : 'detail.editions.error')),
     },
   });
   const { mutate: mutatePrice, isPending: priceSaving } = usePutApiLibraryIdPrice({
@@ -856,7 +1053,9 @@ function DetailContent({ id }: { id: string }) {
             ownership={(item.ownership ?? 'OWNED') as Ownership}
             onStatus={pickStatus}
             onOwnership={(ownership) => mutateOwnership({ id, data: { ownership } })}
-            disabled={progressSaving || ownershipSaving}
+            format={(item.format ?? null) as BookFormat | null}
+            onFormat={(format) => mutateFormat({ id, data: { format: format ?? undefined } })}
+            disabled={progressSaving || ownershipSaving || formatSaving}
           />
         </section>
 
@@ -870,8 +1069,9 @@ function DetailContent({ id }: { id: string }) {
         <EditionsSection
           item={item}
           error={editionError}
-          switching={editionSwitching}
+          switching={editionSwitching || newEditionSaving}
           onChoose={(editionId) => mutateEdition({ id, data: { editionId } })}
+          onChooseNew={(edition) => mutateNewEdition({ id, data: edition })}
         />
 
         {tracking && (
@@ -881,6 +1081,12 @@ function DetailContent({ id }: { id: string }) {
             onSave={(data) => mutateProgress({ id, data })}
           />
         )}
+
+        <PagesSection
+          item={item}
+          saving={pagesSaving}
+          onSave={(pageCount) => mutatePages({ id, data: { pageCount: pageCount ?? undefined } })}
+        />
 
         <PriceSection
           item={item}

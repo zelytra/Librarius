@@ -67,25 +67,64 @@ async function detectorClass(): Promise<BarcodeDetectorCtor> {
 /**
  * The part of the frame the aim box covers, as the screen draws it: most of the width, a band
  * through the middle. A barcode held in the box fills this crop, which is what the decoders
- * need; the whole frame is still tried every other read, for a barcode held off-centre.
+ * need.
  */
 const CROP = { width: 0.86, height: 0.42 };
 
-function frameSource(video: HTMLVideoElement, canvas: HTMLCanvasElement, cropped: boolean): CanvasImageSource {
+/**
+ * How each read looks at the frame, in turn (#440, #444): the aim band at full resolution;
+ * the whole frame, for a barcode held off-centre; and the band enlarged twice, in grey with its
+ * contrast stretched — what a fixed-focus laptop webcam needs, its 640 × 480 frame drawing a
+ * book's barcode a couple of hundred pixels wide and soft.
+ */
+export type Pass = 'band' | 'whole' | 'enhanced';
+export const PASSES: Pass[] = ['band', 'whole', 'enhanced'];
+
+/** Stretches the grey levels of an image to the full range, in place. */
+export function stretchContrast(data: Uint8ClampedArray): void {
+  let low = 255;
+  let high = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const grey = (data[i] * 299 + data[i + 1] * 587 + data[i + 2] * 114) / 1000;
+    data[i] = grey;
+    if (grey < low) low = grey;
+    if (grey > high) high = grey;
+  }
+  const span = Math.max(1, high - low);
+  for (let i = 0; i < data.length; i += 4) {
+    const value = ((data[i] - low) * 255) / span;
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+  }
+}
+
+function frameSource(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  pass: Pass,
+): CanvasImageSource | ImageData {
   const width = video.videoWidth;
   const height = video.videoHeight;
   const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!width || !height || !context) return video;
-  const w = cropped ? Math.round(width * CROP.width) : width;
-  const h = cropped ? Math.round(height * CROP.height) : height;
-  canvas.width = w;
-  canvas.height = h;
-  context.drawImage(video, (width - w) / 2, (height - h) / 2, w, h, 0, 0, w, h);
-  return canvas;
+  const whole = pass === 'whole';
+  const w = whole ? width : Math.round(width * CROP.width);
+  const h = whole ? height : Math.round(height * CROP.height);
+  const scale = pass === 'enhanced' ? 2 : 1;
+  canvas.width = w * scale;
+  canvas.height = h * scale;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(video, (width - w) / 2, (height - h) / 2, w, h, 0, 0, w * scale, h * scale);
+  if (pass !== 'enhanced') return canvas;
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  stretchContrast(image.data);
+  return image;
 }
 
 /** How often a frame is read: fast enough to feel instant, slow enough to stay cool. */
-const FRAME_MS = 250;
+const FRAME_MS = 180;
 
 /**
  * Starts the rear camera in `video` and calls `onCode` with each barcode it reads; the
@@ -137,7 +176,7 @@ export async function startScanning(
     busy = true;
     reads++;
     detector
-      .detect(frameSource(video, canvas, reads % 2 === 1))
+      .detect(frameSource(video, canvas, PASSES[reads % PASSES.length]) as CanvasImageSource)
       .then((codes) => codes.forEach((c) => onCode(c.rawValue)))
       .catch(() => undefined)
       .finally(() => {
@@ -151,6 +190,47 @@ export async function startScanning(
     stream.getTracks().forEach((track) => track.stop());
     video.srcObject = null;
   };
+}
+
+/**
+ * Reads the barcode of a picture (#444): a photo taken with a phone and sent to the computer,
+ * or any image of the back cover. The same passes as the camera — whole, then the middle band
+ * enlarged with its contrast stretched — and the first code read wins.
+ */
+export async function scanImage(file: Blob): Promise<string | null> {
+  const Detector = await detectorClass();
+  const detector = new Detector({ formats: FORMATS });
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return null;
+  const attempts: { crop: number; scale: number; enhance: boolean }[] = [
+    { crop: 1, scale: 1, enhance: false },
+    { crop: 1, scale: 1, enhance: true },
+    { crop: 0.6, scale: 2, enhance: true },
+  ];
+  for (const attempt of attempts) {
+    const w = Math.round(bitmap.width * attempt.crop);
+    const h = Math.round(bitmap.height * attempt.crop);
+    canvas.width = w * attempt.scale;
+    canvas.height = h * attempt.scale;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(bitmap, (bitmap.width - w) / 2, (bitmap.height - h) / 2, w, h, 0, 0, canvas.width, canvas.height);
+    let source: CanvasImageSource | ImageData = canvas;
+    if (attempt.enhance) {
+      const image = context.getImageData(0, 0, canvas.width, canvas.height);
+      stretchContrast(image.data);
+      source = image;
+    }
+    const codes = await detector.detect(source as CanvasImageSource).catch(() => []);
+    if (codes.length > 0) return codes[0].rawValue;
+  }
+  return null;
+}
+
+/** Whether the pointer is a mouse: a computer, whose webcam wants the book held further off. */
+export function onComputer(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches === true;
 }
 
 function failure(kind: CameraFailure): Error & { kind: CameraFailure } {

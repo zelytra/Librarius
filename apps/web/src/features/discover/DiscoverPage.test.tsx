@@ -91,7 +91,8 @@ describe('DiscoverPage', () => {
 
     // The title is rendered twice: in the card, and on the fallback cover.
     expect((await screen.findAllByText('Fourth Wing')).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Rebecca Yarros · 2023/)).toBeInTheDocument();
+    expect(screen.getAllByText('Rebecca Yarros').length).toBeGreaterThan(0);
+    expect(screen.getByText('2023')).toBeInTheDocument();
   });
 
   /** One bar for everything: an author's name finds the author as well as their books. */
@@ -103,7 +104,10 @@ describe('DiscoverPage', () => {
     await search('yarros');
 
     expect(await screen.findByText('Auteurs')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Rebecca Yarros/ })).toHaveAttribute('href', '/authors/author-1');
+    // The author block above the results, and the credit of each result (#443).
+    for (const link of screen.getAllByRole('link', { name: /Rebecca Yarros/ })) {
+      expect(link).toHaveAttribute('href', '/authors/author-1');
+    }
   });
 
   /** #363: an anthology's fifteen credited names no longer grow the card to a screen's height. */
@@ -113,7 +117,21 @@ describe('DiscoverPage', () => {
 
     await search();
 
-    expect(await screen.findByText('A. Un, B. Deux, C. Trois et 2 autres · 1983')).toBeInTheDocument();
+    expect(await screen.findByText('A. Un')).toBeInTheDocument();
+    expect(screen.getByText('C. Trois')).toBeInTheDocument();
+    expect(screen.queryByText('D. Quatre')).not.toBeInTheDocument();
+    expect(screen.getByText(/\+2/)).toBeInTheDocument();
+  });
+
+  /** #443: the author and the series of a result lead on, even when nobody knows them yet. */
+  test('links the author and the series of a result', async () => {
+    searchReturns([catalogResult({ authors: 'Eiichiro Oda', seriesTitle: 'One Piece', volumeNumber: 3, kind: 'MANGA' })]);
+    renderWithProviders(<DiscoverPage />);
+
+    await search('one piece');
+
+    expect(await screen.findByRole('link', { name: 'Eiichiro Oda' })).toHaveAttribute('href', '/discover?author=Eiichiro%20Oda');
+    expect(screen.getByRole('link', { name: 'One Piece' })).toHaveAttribute('href', '/discover?q=One%20Piece');
   });
 
   test('opens the catalog fiche when a result is clicked', async () => {

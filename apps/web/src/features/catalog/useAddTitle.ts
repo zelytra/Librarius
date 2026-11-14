@@ -32,7 +32,9 @@ export function useAddTitle() {
         await addToWishlist({ data: { book, priority: 'SOON' } });
         toast.success(t('toasts.addedWishlist', { title }), 'favorite');
       } else {
-        await addToLibrary({ data: { book, status: target.status, ownership: target.ownership } });
+        await addToLibrary({
+          data: { book, status: target.status, ownership: target.ownership, format: target.format ?? undefined },
+        });
         toast.success(t('toasts.addedLibrary', { title }), 'library_books');
       }
     } catch (error) {

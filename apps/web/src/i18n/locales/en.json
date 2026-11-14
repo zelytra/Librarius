@@ -587,7 +587,9 @@
     },
     "scan": "Scan a barcode",
     "moreCredits_one": "{{names}} and {{count}} more",
-    "moreCredits_other": "{{names}} and {{count}} more"
+    "moreCredits_other": "{{names}} and {{count}} more",
+    "moreAuthors_one": " +{{count}}",
+    "moreAuthors_other": " +{{count}}"
   },
   "wishlist": {
     "title": "Wishlist",
@@ -760,7 +762,16 @@
       "alreadyOwned": "Already in your library",
       "alreadyOwnedError": "You already have this edition in your library.",
       "error": "The edition could not be changed.",
-      "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination."
+      "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination.",
+      "noOther": "The catalog knows no other edition of this title. Describe yours if it differs.",
+      "describe": "Another edition…",
+      "form": {
+        "publisher": "Publisher",
+        "isbn": "ISBN",
+        "pages": "Page count",
+        "year": "Year published",
+        "save": "Use this edition"
+      }
     },
     "remove": {
       "start": "Remove from my library",
@@ -784,6 +795,17 @@
       "save": "Save",
       "cancel": "Cancel",
       "private": "This price is yours alone: it counts in your library's value and changes nothing for other readers. Leave it empty to go back to the new price."
+    },
+    "pagesOwn": {
+      "title": "Page count",
+      "unknown": "Unknown",
+      "yours": "Your page count",
+      "edition": "The edition's",
+      "estimated": "Estimated, for want of better",
+      "none": "No known page count.",
+      "set": "Enter",
+      "label": "Page count of your copy",
+      "private": "This count is yours alone: it counts in your pages read, goals and progress, and changes nothing for other readers. Leave it empty to go back to the edition's."
     }
   },
   "settings": {
@@ -958,7 +980,8 @@
       "unsupported": "This browser has no access to the camera. Type the ISBN below.",
       "denied": "Camera access was refused. Allow it for this site in the browser settings, or type the ISBN below.",
       "unavailable": "No camera available. Type the ISBN below.",
-      "decoder": "The barcode reader could not load. Check your connection and try again, or type the ISBN below."
+      "decoder": "The barcode reader could not load. Check your connection and try again, or type the ISBN below.",
+      "hintComputer": "On a computer, hold the book 15–20 cm away, well lit, the barcode in the frame. If your webcam cannot read it, take a photo with your phone."
     },
     "manual": {
       "label": "Or type the ISBN",
@@ -998,6 +1021,12 @@
         "CHECK": "Check only",
         "ADD": "Add straight away"
       }
+    },
+    "photo": {
+      "open": "Read a photo of the barcode",
+      "label": "Photo of the barcode",
+      "reading": "Reading the photo…",
+      "none": "No readable barcode in this photo. Try a sharper one, the barcode flat."
     }
   },
   "add": {
@@ -1110,6 +1139,15 @@
       "EBOOK": "Read on an e-reader, a tablet or another digital format.",
       "WISHLIST": "You don't have it and would like to.",
       "NOT_OWNED": "Neither on your shelves nor wanted."
+    },
+    "formatTitle": "Format",
+    "format": {
+      "POCKET": "Pocket",
+      "PAPERBACK": "Paperback",
+      "HARDCOVER": "Hardcover",
+      "LARGE": "Large format",
+      "DELUXE": "Deluxe",
+      "BOX_SET": "Box set"
     }
   },
   "toasts": {
@@ -1131,7 +1169,12 @@
     "failed": "That didn't work. Try again in a moment.",
     "goalSaved": "Goal saved",
     "price": "Price saved: {{price}}",
-    "priceCleared": "Price removed, back to the new price"
+    "priceCleared": "Price removed, back to the new price",
+    "format": "Format: {{format}}",
+    "formatCleared": "Format removed",
+    "pages_one": "{{count}} page saved",
+    "pages_other": "{{count}} pages saved",
+    "pagesCleared": "Back to the edition's page count"
   },
   "achievements": {
     "title": "Achievements",

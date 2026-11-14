@@ -519,3 +519,11 @@
 .priceInput[aria-invalid='true'] {
   border-color: var(--rose);
 }
+
+/* Describing one's own edition (#445). */
+.editionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}

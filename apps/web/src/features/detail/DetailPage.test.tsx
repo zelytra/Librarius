@@ -114,7 +114,7 @@ describe('DetailPage', () => {
     // The title shows up twice: in the header, and on the fallback cover.
     expect(await screen.findByRole('heading', { name: 'Le Nom du vent' })).toBeInTheDocument();
     expect(screen.getByText('Patrick Rothfuss')).toBeInTheDocument();
-    expect(screen.getByText('720')).toBeInTheDocument();
+    expect(screen.getAllByText('720').length).toBeGreaterThan(0);
     expect(screen.getByText('Chronique du tueur de roi')).toBeInTheDocument();
   });
 
@@ -506,14 +506,27 @@ describe('DetailPage', () => {
     },
   ];
 
-  /** Most works are known in a single edition: an "other editions" heading over nothing. */
-  test('hides the editions section when the work is known in one edition', async () => {
+  /**
+   * #445: a work known in a single edition still lets the reader describe theirs — the
+   * section used to vanish, and the edition could not be chosen at all.
+   */
+  test('lets the reader describe their edition when the catalog knows only one', async () => {
     libraryItemReturns(MULTI_EDITION);
     editionsReturn([TWO_EDITIONS[0]]);
+    const sent: unknown[] = [];
+    server.use(http.post('*/api/library/:id/edition', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json(MULTI_EDITION);
+    }));
     renderDetail();
 
-    await screen.findByRole('heading', { name: 'Le Nom du vent' });
-    expect(screen.queryByText('Autres éditions')).not.toBeInTheDocument();
+    expect(await screen.findByText(/ne connaît pas d'autre édition/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Autre édition…' }));
+    await userEvent.type(screen.getByLabelText('Éditeur'), 'Bragelonne');
+    await userEvent.type(screen.getByLabelText('Nombre de pages'), '662');
+    await userEvent.click(screen.getByRole('button', { name: 'Utiliser cette édition' }));
+
+    await waitFor(() => expect(sent).toEqual([{ publisher: 'Bragelonne', pageCount: 662 }]));
   });
 
   test('lists the other editions with what tells them apart', async () => {
@@ -577,7 +590,8 @@ describe('DetailPage', () => {
    * `id` — they are catalog data, not rows — so they are shown for the printing they add,
    * with no "I own this" action, which only moves the collection onto an edition that exists.
    */
-  test('lists a provider edition without offering to own it', async () => {
+  /** #445: a provider's printing can now be chosen; it becomes an edition of the work. */
+  test('lets the reader choose a provider edition', async () => {
     libraryItemReturns(MULTI_EDITION);
     editionsReturn([
       TWO_EDITIONS[0],
@@ -593,11 +607,48 @@ describe('DetailPage', () => {
 
     expect(await screen.findByText('Autres éditions')).toBeInTheDocument();
     expect(screen.getByText(/Gollancz · anglais/)).toBeInTheDocument();
-    // Shown as a catalog suggestion, not as a switch target.
-    expect(screen.getByText('Proposée par le catalogue')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Je possède l'édition Gollancz/ }),
-    ).not.toBeInTheDocument();
+    const sent: unknown[] = [];
+    server.use(http.post('*/api/library/:id/edition', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json(MULTI_EDITION);
+    }));
+    await userEvent.click(screen.getByRole('button', { name: /Je possède l'édition Gollancz/ }));
+    await waitFor(() => expect(sent).toEqual([
+      { isbn13: '9780575081406', publisher: 'Gollancz', language: 'en', coverUrl: 'https://covers/1.jpg' },
+    ]));
+  });
+
+  /** #446: the reader's own page count, beside the edition's. */
+  test('lets the reader enter their own page count', async () => {
+    libraryItemReturns(ITEM);
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/pages', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json({ ...ITEM, pageCount: 702 });
+    }));
+    renderDetail();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Saisir' }));
+    await userEvent.type(screen.getByLabelText('Nombre de pages de ton exemplaire'), '702');
+    await userEvent.click(screen.getAllByRole('button', { name: 'Enregistrer' })[0]);
+    await waitFor(() => expect(sent).toEqual([{ pageCount: 702 }]));
+  });
+
+  /** #447: the format of the copy is a third family of chips, optional. */
+  test('sets the format of the copy, and clears it on a second tap', async () => {
+    libraryItemReturns({ ...ITEM, format: 'POCKET' });
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/format', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json(ITEM);
+    }));
+    renderDetail();
+
+    const formats = await screen.findByRole('radiogroup', { name: 'Format' });
+    expect(within(formats).getByRole('radio', { name: 'Poche' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(within(formats).getByRole('radio', { name: 'Relié' }));
+    await userEvent.click(within(formats).getByRole('radio', { name: 'Poche' }));
+    await waitFor(() => expect(sent).toEqual([{ format: 'HARDCOVER' }, {}]));
   });
 
   /** What a change of edition does to the position is not obvious, so the screen says it. */

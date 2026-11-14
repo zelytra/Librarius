@@ -283,3 +283,15 @@
   font-weight: 700;
   color: var(--accent-deep);
 }
+
+/* A picture of the barcode instead of the camera (#444). */
+.photo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.photoInput {
+  display: none;
+}
