@@ -283,7 +283,13 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
          * Best rated first. Unrated titles come last rather than first: they are the ones
          * the user has not judged, not the ones they judged worst.
          */
-        RATING("li.rating desc nulls last, lower(w.title) asc, li.id asc");
+        RATING("li.rating desc nulls last, lower(w.title) asc, li.id asc"),
+        /**
+         * The order the reader dragged a view's entries into (#451), bound to a {@code :view}
+         * parameter; a title they never placed follows, by latest activity.
+         */
+        MANUAL("(select min(ve.position) from LibraryViewEntry ve where ve.viewId = :view and ve.itemId = li.id)"
+                + " asc nulls last, " + ACTIVITY + " desc nulls last, li.createdAt desc, li.id desc");
 
         private final String clause;
 
@@ -325,7 +331,16 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      */
     public List<LibraryItem> listMatching(LibraryFilter filter, LibrarySort sort, int offset,
             int limit) {
+        return listMatching(filter, sort, offset, limit, null);
+    }
+
+    /** The same page, in the manual order of {@code view} when {@code sort} is {@link LibrarySort#MANUAL}. */
+    public List<LibraryItem> listMatching(LibraryFilter filter, LibrarySort sort, int offset,
+            int limit, UUID view) {
         Map<String, Object> params = new LinkedHashMap<>();
+        if (sort == LibrarySort.MANUAL) {
+            params.put("view", view);
+        }
         String where = whereClause(filter, params);
         TypedQuery<LibraryItem> query = getEntityManager().createQuery(
                 "select li from LibraryItem li join fetch li.edition e join fetch e.work w"
@@ -556,6 +571,45 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             covers.putIfAbsent((UUID) row[0], (String) row[1]);
         }
         return covers;
+    }
+
+    /**
+     * The category most of the reader's volumes of each series carry (#451), by series: a run
+     * sits on one shelf of a view split by category. On a tie, the one the reader ranks higher.
+     */
+    public java.util.Map<UUID, String> seriesRanks(String userId) {
+        List<Object[]> rows = getEntityManager()
+                .createQuery("""
+                        select w.series.id, rc.code, count(li), min(rc.sortOrder)
+                        from LibraryItem li join li.edition e join e.work w join li.rankCategory rc
+                        where li.userId = :userId and w.series is not null
+                        group by w.series.id, rc.code
+                        order by count(li) desc, min(rc.sortOrder) asc
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .getResultList();
+        java.util.Map<UUID, String> ranks = new java.util.HashMap<>();
+        for (Object[] row : rows) {
+            ranks.putIfAbsent((UUID) row[0], (String) row[1]);
+        }
+        return ranks;
+    }
+
+    /**
+     * Files every volume of a series the reader holds under one category (#451), or none.
+     *
+     * @return how many titles moved
+     */
+    public int rankSeries(String userId, UUID seriesId, zelytra.librarius.domain.RankCategory category) {
+        return getEntityManager().createQuery("""
+                        update LibraryItem li set li.rankCategory = :category
+                        where li.userId = :userId and li.edition.id in (
+                          select e.id from Edition e where e.work.series.id = :seriesId)
+                        """)
+                .setParameter("category", category)
+                .setParameter("userId", userId)
+                .setParameter("seriesId", seriesId)
+                .executeUpdate();
     }
 
     /**

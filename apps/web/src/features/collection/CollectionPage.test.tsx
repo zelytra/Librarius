@@ -578,4 +578,86 @@ describe('CollectionPage', () => {
     expect(firstCell?.parentElement?.className).toMatch(/gridCover/);
     expect(secondCell?.parentElement?.className).toMatch(/gridCover/);
   });
+
+  // ── Views (#451) ──────────────────────────────────────────────────────────
+
+  describe('views', () => {
+    const A = libraryItem({ id: 'a', rankCode: 'or', book: { kind: 'BOOK', title: 'Alpha' } });
+    const B = libraryItem({ id: 'b', book: { kind: 'BOOK', title: 'Bravo' } });
+    const C = libraryItem({ id: 'c', rankCode: 'or', book: { kind: 'BOOK', title: 'Charlie' } });
+    const VIEW = {
+      id: 'view-1', name: 'Mon ordre', kind: 'BOOK', sort: 'manual', layout: 'flat',
+      groupByCategory: false, order: ['item:c', 'item:a'],
+    };
+
+    function viewsReturn(views: unknown[]) {
+      server.use(http.get('*/api/views', () => HttpResponse.json(views)));
+    }
+
+    function titlesInOrder(): string[] {
+      return ['Alpha', 'Bravo', 'Charlie']
+        .map((title) => ({ title, at: document.body.innerHTML.indexOf(`>${title}<`) }))
+        .filter((x) => x.at >= 0)
+        .sort((x, y) => x.at - y.at)
+        .map((x) => x.title);
+    }
+
+    test('a saved view brings its layout back, and its manual order lays the shelf out', async () => {
+      libraryReturns([A, B, C]);
+      viewsReturn([VIEW]);
+      renderWithProviders(<CollectionPage />);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Mon ordre' }));
+
+      expect(await screen.findByRole('button', { name: 'Manuel' })).toHaveAttribute('aria-pressed', 'true');
+      await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
+    });
+
+    test('arranging moves a title and saves the new order of the view', async () => {
+      libraryReturns([A, B, C]);
+      viewsReturn([VIEW]);
+      const saved: unknown[] = [];
+      server.use(http.put('*/api/views/:id/order', async ({ request }) => {
+        const body = (await request.json()) as { keys: string[] };
+        saved.push(body);
+        return HttpResponse.json({ ...VIEW, order: body.keys });
+      }));
+      renderWithProviders(<CollectionPage />, { route: '/collection?v=view-1&sort=manual&view=flat' });
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Réorganiser' }));
+      await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
+      // Bravo, last, one place earlier.
+      const later = screen.getAllByRole('button', { name: 'Déplacer avant' });
+      await userEvent.click(later[2]);
+
+      await waitFor(() => expect(saved).toEqual([{ keys: ['item:c', 'item:b', 'item:a'] }]));
+    });
+
+    test('split by category, each category is a section of its own', async () => {
+      libraryReturns([A, B, C]);
+      renderWithProviders(<CollectionPage />, { route: '/collection?cat=1&view=flat' });
+
+      expect(await screen.findByRole('heading', { name: /Sans catégorie/ })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^Or/ })).toBeInTheDocument();
+    });
+
+    test('saves what the screen shows as a new view', async () => {
+      libraryReturns([A]);
+      const created: unknown[] = [];
+      server.use(http.post('*/api/views', async ({ request }) => {
+        const body = await request.json();
+        created.push(body);
+        return HttpResponse.json({ id: 'v2', order: [], ...(body as object) }, { status: 201 });
+      }));
+      renderWithProviders(<CollectionPage />, { route: '/collection?sort=title' });
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle vue' }));
+      await userEvent.type(screen.getByLabelText('Nom de la vue'), 'Par titre');
+      await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+      await waitFor(() => expect(created).toEqual([
+        expect.objectContaining({ name: 'Par titre', sort: 'title', kind: 'BOOK', layout: 'grouped', groupByCategory: false }),
+      ]));
+    });
+  });
 });

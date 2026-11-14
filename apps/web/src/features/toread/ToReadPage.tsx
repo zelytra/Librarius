@@ -1,3 +1,4 @@
+import { InfiniteMore } from '../../shared/ui/InfiniteMore';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -10,7 +11,7 @@ import {
 } from '../../api/generated/librarius';
 import { LoginGate } from '../../shared/LoginGate';
 import { Cover } from '../../shared/ui/Cover';
-import { Button, Grid, Screen, ScreenTitle } from '../../shared/ui/primitives';
+import { Grid, Screen, ScreenTitle } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { AuthorNames } from '../author/AuthorNames';
 import { SearchField } from '../../shared/ui/SearchField';
@@ -88,13 +89,13 @@ function ToReadContent() {
           </div>
         ))}
       </Grid>
-      {hasNextPage && (
-        <div className={styles.more}>
-          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
-            {t(isFetchingNextPage ? 'common.loading' : 'toRead.more')}
-          </Button>
-        </div>
-      )}
+      <InfiniteMore
+        className={styles.more}
+        hasMore={!!hasNextPage}
+        loading={isFetchingNextPage}
+        onMore={() => void fetchNextPage()}
+        label={t('toRead.more')}
+      />
     </>
   );
 }

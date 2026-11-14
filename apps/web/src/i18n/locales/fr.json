@@ -383,7 +383,8 @@
       "author": "Auteur",
       "genre": "Genre",
       "rating": "Note",
-      "recent": "Récents"
+      "recent": "Récents",
+      "manual": "Manuel"
     },
     "ranks": {
       "all": "Tous",
@@ -491,7 +492,10 @@
       "owned": "Non lu",
       "missing": "Pas possédé",
       "upcoming": "À paraître"
-    }
+    },
+    "categoryTitle": "Catégorie de la série",
+    "categoryHint": "Range tous tes tomes de la série dans la même catégorie.",
+    "categorySaved": "Série rangée"
   },
   "author": {
     "follow": "Suivre cet auteur",
@@ -1137,6 +1141,7 @@
       "OWNED": "Possédé",
       "BORROWED": "Emprunté",
       "EBOOK": "Livre numérique",
+      "AUDIOBOOK": "Livre audio",
       "WISHLIST": "Liste d'envies",
       "NOT_OWNED": "Non possédé"
     },
@@ -1144,6 +1149,7 @@
       "OWNED": "Dans ta bibliothèque, en vrai.",
       "BORROWED": "Eu entre les mains, mais pas sur tes étagères.",
       "EBOOK": "Lu sur liseuse, tablette ou autre format numérique.",
+      "AUDIOBOOK": "Écouté en livre audio.",
       "WISHLIST": "Tu ne l'as pas et tu aimerais l'avoir.",
       "NOT_OWNED": "Ni sur tes étagères, ni en envie."
     },
@@ -1155,6 +1161,12 @@
       "LARGE": "Grand format",
       "DELUXE": "Collector",
       "BOX_SET": "Coffret"
+    },
+    "kindTitle": "Type",
+    "kind": {
+      "BOOK": "Livre",
+      "COMIC": "BD",
+      "MANGA": "Manga"
     }
   },
   "toasts": {
@@ -1181,7 +1193,8 @@
     "formatCleared": "Format retiré",
     "pages_one": "{{count}} page enregistrée",
     "pages_other": "{{count}} pages enregistrées",
-    "pagesCleared": "Retour au nombre de pages de l'édition"
+    "pagesCleared": "Retour au nombre de pages de l'édition",
+    "kind": "Rangé dans : {{kind}}"
   },
   "achievements": {
     "title": "Succès",
@@ -1303,5 +1316,45 @@
     "progress": "{{value}} / {{target}}",
     "unlockedMany_one": "{{count}} succès débloqué (+{{xp}} XP) — vois-le dans Succès",
     "unlockedMany_other": "{{count}} succès débloqués (+{{xp}} XP) — vois-les dans Succès"
+  },
+  "friends": {
+    "title": "Tes amis l'ont aussi",
+    "wished": "En envie"
+  },
+  "external": {
+    "title": "Ailleurs",
+    "about": "À propos",
+    "average": "★ {{average}} / 5",
+    "count_one": "{{n}} note",
+    "count_other": "{{n}} notes",
+    "readers_one": "{{n}} lecteur",
+    "readers_other": "{{n}} lecteurs",
+    "wanted_one": "{{n}} veut le lire",
+    "wanted_other": "{{n}} veulent le lire",
+    "credit": "Source : {{source}} — {{licence}}"
+  },
+  "views": {
+    "title": "Mes vues",
+    "all": "Toute la bibliothèque",
+    "new": "Nouvelle vue",
+    "edit": "Modifier la vue",
+    "newTitle": "Nouvelle vue",
+    "editTitle": "Modifier la vue",
+    "explain": "Une vue retient la façon dont tu ranges ta bibliothèque : le type, l'étagère, le tri (dont l'ordre manuel), les séries regroupées ou non, et la séparation par catégorie.",
+    "name": "Nom de la vue",
+    "byCategory": "Séparer par catégorie (Or, Argent…), les séries restent regroupées",
+    "byCategoryShort": "Par catégorie",
+    "takeCurrent": "Reprendre les réglages affichés à l'écran",
+    "save": "Enregistrer",
+    "delete": "Supprimer la vue",
+    "created": "Vue « {{name}} » créée",
+    "saved": "Vue « {{name}} » enregistrée",
+    "deleted": "Vue supprimée",
+    "arrange": "Réorganiser",
+    "done": "Terminer",
+    "drag": "Glisser pour déplacer",
+    "earlier": "Déplacer avant",
+    "later": "Déplacer après",
+    "uncategorised": "Sans catégorie"
   }
 }

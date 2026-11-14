@@ -1,3 +1,4 @@
+import { InfiniteMore } from '../../shared/ui/InfiniteMore';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,11 @@ import {
   useDeleteApiLibraryId,
   useGetApiCategories,
   useGetApiSeries,
+  useGetApiViews,
+  usePutApiViewsIdOrder,
+  getGetApiViewsQueryKey,
   type CategoryDto,
+  type LibraryViewDto,
   type GetApiLibraryParams,
   type LibraryItemDto,
 } from '../../api/generated/librarius';
@@ -26,6 +31,9 @@ import { filterSeries } from '../series/series';
 import { OWNERSHIPS, ownershipLabelKey, type Ownership } from '../../shared/statuses';
 import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort } from './shelfOrder';
+import { ViewsBar, type ViewSettings } from './ViewsBar';
+import { ReorderGrid } from './ReorderGrid';
+import { byCategory, inManualOrder, keyOf, mergedOrder, type ShelfEntry } from './views';
 import { toast } from '../../shared/ui/toast';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
@@ -78,7 +86,7 @@ type ShelfFilter =
   | { kind: 'ownership'; ownership: Ownership };
 
 /** The ownerships offered as shelves; "owned" is most of a library and is no shelf of its own. */
-const OWNERSHIP_SHELVES: Ownership[] = ['BORROWED', 'EBOOK', 'WISHLIST', 'NOT_OWNED'];
+const OWNERSHIP_SHELVES: Ownership[] = ['BORROWED', 'EBOOK', 'AUDIOBOOK', 'WISHLIST', 'NOT_OWNED'];
 
 const ALL_SHELVES: ShelfFilter = { kind: 'all' };
 /** The to-read pile: titles in the collection, not started yet. */
@@ -107,7 +115,7 @@ function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
   return a.kind === b.kind;
 }
 /** Ordering values understood by `GET /api/library`; sent through as they are. */
-type SortBy = 'recent' | 'added' | 'title' | 'author' | 'genre' | 'rating';
+type SortBy = 'recent' | 'added' | 'title' | 'author' | 'genre' | 'rating' | 'manual';
 /** The two ways of reading the collection: title by title, or run by run. */
 type View = 'grouped' | 'flat';
 
@@ -261,8 +269,16 @@ function CollectionContent() {
   const shelfFilter = shelfFromParam(params.get('shelf'));
   const setShelfFilter = (filter: ShelfFilter) => setParam('shelf', shelfToParam(filter));
   // Latest activity first — read, started or added — the way a reader thinks of their shelf.
+  // The saved views (#451): the one in force is named by the `v` parameter.
+  const { data: views = [] } = useGetApiViews();
+  const activeView = views.find((v) => v.id === params.get('v')) ?? null;
   const urlSort = params.get('sort');
-  const sortBy: SortBy = SORTS.some((s) => s.id === urlSort) ? (urlSort as SortBy) : 'recent';
+  // The manual order is a view's: without one in force, it falls back to the default.
+  const sortBy: SortBy = SORTS.some((s) => s.id === urlSort) || (urlSort === 'manual' && activeView)
+    ? (urlSort as SortBy)
+    : 'recent';
+  const byCategoryOn = params.get('cat') === '1';
+  const [arranging, setArranging] = useState(false);
   const setSortBy = (sort: SortBy) => setParam('sort', sort === 'recent' ? null : sort);
   const search = params.get('q') ?? '';
   const [searchInput, setSearchInput] = useState(search);
@@ -303,6 +319,7 @@ function CollectionContent() {
     minRating: shelfFilter.kind === 'favorites' ? FAVORITE_RATING : undefined,
     ownership: shelfFilter.kind === 'ownership' ? shelfFilter.ownership : undefined,
     q: search || undefined,
+    view: sortBy === 'manual' ? activeView?.id : undefined,
     // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
     standalone: grouped || undefined,
   };
@@ -417,8 +434,71 @@ function CollectionContent() {
   /** Colour of each category, by code, to draw the medal on a cover. */
   const rankColors = new Map(categories.map((c: CategoryDto) => [c.code, c.color]));
 
+  // A view brings the whole layout back at once (#451); "Toute la bibliothèque" clears it.
+  const selectView = (view: LibraryViewDto | null) => {
+    setArranging(false);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const key of ['v', 'kind', 'shelf', 'sort', 'view', 'cat']) next.delete(key);
+        if (view?.id) {
+          next.set('v', view.id);
+          if (view.kind) next.set('kind', view.kind);
+          if (view.shelf) next.set('shelf', view.shelf);
+          if (view.sort && view.sort !== 'recent') next.set('sort', view.sort);
+          if (view.layout === 'flat') next.set('view', 'flat');
+          if (view.groupByCategory) next.set('cat', '1');
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const currentSettings: ViewSettings = {
+    kind: collType,
+    shelf: shelfToParam(shelfFilter) ?? undefined,
+    sort: sortBy,
+    layout: view,
+    groupByCategory: byCategoryOn,
+  };
+
+  const entries: ShelfEntry[] = useMemo(() => {
+    const base: ShelfEntry[] =
+      mixed ?? interleaved ?? [...shelf.map((s) => ({ series: s })), ...items.map((it) => ({ item: it }))];
+    return sortBy === 'manual' && activeView ? inManualOrder(base, activeView.order ?? []) : base;
+  }, [mixed, interleaved, shelf, items, sortBy, activeView]);
+  const entryByKey = useMemo(() => new Map(entries.map((e) => [keyOf(e), e])), [entries]);
+  const entryKeys = useMemo(() => entries.map(keyOf), [entries]);
+
+  const { mutate: saveOrder } = usePutApiViewsIdOrder({
+    mutation: {
+      onSuccess: (saved) => {
+        // The order is in: the view's cache entry takes it at once, the page re-sorts.
+        queryClient.setQueryData<LibraryViewDto[]>(getGetApiViewsQueryKey(), (old) =>
+          old?.map((v) => (v.id === saved.id ? saved : v)));
+        void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
+      },
+      onError: () => toast.error(t('toasts.failed')),
+    },
+  });
+
+  const renderEntry = (entry: ShelfEntry) =>
+    'series' in entry ? (
+      <SeriesBlock key={entry.series.id} series={entry.series} />
+    ) : (
+      <CoverTile
+        key={entry.item.id}
+        item={entry.item}
+        rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
+        onOpen={() => open(entry.item)}
+        onDelete={() => void remove(entry.item.id!)}
+      />
+    );
+
   return (
     <>
+      <ViewsBar views={views} activeId={activeView?.id ?? null} current={currentSettings} onSelect={selectView} />
+
       <div className={styles.kindSwitch}>
         <Segmented<Kind>
           value={collType}
@@ -469,6 +549,16 @@ function CollectionContent() {
             : t('collection.total', { total })}
         </span>
         <div className={styles.viewSwitch}>
+          {sortBy === 'manual' && activeView && (
+            <Button variant={arranging ? 'primary' : 'secondary'} size="compact" onClick={() => setArranging(!arranging)}>
+              <Icon name={arranging ? 'check_circle' : 'drag_indicator'} size={16}
+                color={arranging ? 'var(--on-accent)' : 'var(--accent-deep)'} />
+              {t(arranging ? 'views.done' : 'views.arrange')}
+            </Button>
+          )}
+          <Chip selected={byCategoryOn} onClick={() => setParam('cat', byCategoryOn ? null : '1')}>
+            {t('views.byCategoryShort')}
+          </Chip>
           <Segmented<View>
             value={view}
             onChange={setView}
@@ -487,6 +577,12 @@ function CollectionContent() {
             {t(s.labelKey)}
           </Chip>
         ))}
+        {/* The order the reader arranged by hand belongs to a view (#451). */}
+        {activeView && (
+          <Chip selected={sortBy === 'manual'} onClick={() => setSortBy('manual')}>
+            {t('collection.sorts.manual')}
+          </Chip>
+        )}
       </div>
 
       {showLoading && <Loading />}
@@ -512,37 +608,47 @@ function CollectionContent() {
         />
       )}
 
-      {(shelf.length > 0 || items.length > 0) && (
+      {entries.length > 0 && arranging && activeView?.id && (
+        <ReorderGrid
+          keys={entryKeys}
+          render={(key) => {
+            const entry = entryByKey.get(key);
+            return entry ? renderEntry(entry) : null;
+          }}
+          onCommit={(keys) => saveOrder({ id: activeView.id!, data: { keys: mergedOrder(keys, activeView.order ?? []) } })}
+        />
+      )}
+
+      {entries.length > 0 && !arranging && byCategoryOn && (
+        // Split by category (#451): a series stays one block, on the shelf most of its volumes
+        // are filed under.
+        byCategory(entries, categories).map((section) => (
+          <section key={section.code ?? 'none'} className={styles.categorySection}>
+            <h3 className={styles.categoryTitle}>
+              {section.color && <span className={styles.categoryDot} style={{ background: section.color }} />}
+              {section.label ?? t('views.uncategorised')}
+              <span className={styles.categoryCount}>{section.entries.length}</span>
+            </h3>
+            <Grid>{section.entries.map(renderEntry)}</Grid>
+          </section>
+        ))
+      )}
+
+      {entries.length > 0 && !arranging && !byCategoryOn && (
           // The shared cover grid (shared/ui/primitives.tsx): three fixed columns on a
           // phone, as many as the width holds past --bp-tablet — see the Grid block of
           // tokens.css for the reasoning behind the track sizes. Grouped, the series blocks
           // lead and the one-shots follow, each in the order the sort asks for.
-          <Grid>
-            {(mixed ?? interleaved ?? [...shelf.map((s) => ({ series: s })), ...items.map((it) => ({ item: it }))]).map((entry) =>
-              'series' in entry ? (
-                <SeriesBlock key={entry.series.id} series={entry.series} />
-              ) : (
-                <CoverTile
-                  key={entry.item.id}
-                  item={entry.item}
-                  rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
-                  onOpen={() => open(entry.item)}
-                  onDelete={() => void remove(entry.item.id!)}
-                />
-              ),
-            )}
-          </Grid>
+          <Grid>{entries.map(renderEntry)}</Grid>
       )}
 
-      {hasNextPage && (
-        <div className={styles.loadMore}>
-          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => void fetchNextPage()}>
-            {isFetchingNextPage
-              ? t('common.loading')
-              : t('collection.loadMore', { loaded: items.length, total })}
-          </Button>
-        </div>
-      )}
+      <InfiniteMore
+        className={styles.loadMore}
+        hasMore={!!hasNextPage}
+        loading={isFetchingNextPage}
+        onMore={() => void fetchNextPage()}
+        label={t('collection.loadMore', { loaded: items.length, total })}
+      />
     </>
   );
 }

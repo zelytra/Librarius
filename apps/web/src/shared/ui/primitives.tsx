@@ -149,6 +149,8 @@ export function Chip({
       // might sit in (the discover medium filter is the first one that does).
       type="button"
       onClick={onClick}
+      // A chip is a choice: assistive technology hears whether it is the one in force.
+      aria-pressed={onClick ? selected : undefined}
       className={cx(styles.chip, onClick && styles.chipClickable, selected && styles.chipSelected)}
     >
       {/* The dot carries the rank colour, which only the caller knows. */}

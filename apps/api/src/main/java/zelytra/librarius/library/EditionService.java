@@ -49,6 +49,9 @@ public class EditionService {
     @Inject
     RateLimiter rateLimiter;
 
+    @Inject
+    zelytra.librarius.catalog.CatalogEntryService entries;
+
     /** How many provider editions to merge in at most, so a large work cannot flood the list. */
     private static final int PROVIDER_EDITION_LIMIT = 40;
 
@@ -299,6 +302,32 @@ public class EditionService {
         }
         editions.persist(created);
         return switchEdition(userId, itemId, created.id);
+    }
+
+    /**
+     * Files the reader's title under another kind — a book, a comic, a manga (#454). The kind
+     * belongs to the shared work, so it is never changed for everyone: the reader's copy moves
+     * to an edition of a work of that kind (found, or created) carrying what the old edition
+     * knew — ISBN, publisher, length, cover — and the same title, authors, series and volume.
+     * Everything of the reader's own (status, progress, rating, price, format) stays on the
+     * item, and every figure keyed on the kind (goals, statistics, filters) follows at once.
+     */
+    public java.util.Optional<LibraryItem> moveToKind(String userId, UUID itemId,
+            zelytra.librarius.domain.Kind kind) {
+        LibraryItem item = items.findOwned(userId, itemId).orElse(null);
+        if (item == null || kind == null) {
+            return java.util.Optional.ofNullable(item);
+        }
+        Edition old = item.edition;
+        var work = old.work;
+        if (work.kind == kind) {
+            return java.util.Optional.of(item);
+        }
+        item.edition = entries.createManualEdition(new zelytra.librarius.web.ApiDtos.ManualBookDto(kind,
+                work.title, work.authorsText, work.seriesTitle, work.volumeNumber, old.isbn13,
+                old.publisher, old.language, old.pageCount, old.coverUrl, old.format, old.releaseDate,
+                work.originalYear, work.synopsis, work.genresText, null, null), userId);
+        return java.util.Optional.of(item);
     }
 
     private static String blankToNull(String value) {

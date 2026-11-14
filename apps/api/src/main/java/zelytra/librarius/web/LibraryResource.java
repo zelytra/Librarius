@@ -87,6 +87,9 @@ public class LibraryResource {
     @Inject
     zelytra.librarius.series.SeriesVolumeRefresher seriesVolumes;
 
+    @Inject
+    zelytra.librarius.library.LibraryViewService libraryViews;
+
     /**
      * One page of the collection, filtered and sorted by the database.
      *
@@ -105,9 +108,10 @@ public class LibraryResource {
      * @param q         free text matched against the title, the authors and the series
      * @param standalone only the titles that belong to no series, the one-shots the grouped
      *                  shelf lists beside its series blocks
-     * @param ownership {@code OWNED}, {@code BORROWED}, {@code EBOOK}, {@code WISHLIST} or
+     * @param ownership {@code OWNED}, {@code BORROWED}, {@code EBOOK}, {@code AUDIOBOOK}, {@code WISHLIST} or
      *                  {@code NOT_OWNED} (#411), no filtering when absent
      * @param format    the format of the reader's copy (#447), no filtering when absent
+     * @param view      the view whose manual order {@code sort=manual} follows (#451)
      */
     @GET
     public LibraryPageDto list(
@@ -122,12 +126,17 @@ public class LibraryResource {
             @QueryParam("q") String q,
             @QueryParam("standalone") @DefaultValue("false") boolean standalone,
             @QueryParam("ownership") Ownership ownership,
-            @QueryParam("format") zelytra.librarius.domain.BookFormat format) {
+            @QueryParam("format") zelytra.librarius.domain.BookFormat format,
+            @QueryParam("view") UUID view) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
         if (minRating != null && (minRating < MIN_RATING || minRating > MAX_RATING)) {
             throw new BadRequestException("minRating must be between 1 and 5");
+        }
+        // The manual order is a view's (#451): it needs one, and one of the caller's.
+        if (ordering == LibrarySort.MANUAL && libraryViews.find(currentUser.id(), view).isEmpty()) {
+            throw new BadRequestException("sort=manual needs one of your views");
         }
         PageRequest window = PageRequest.of(page, size);
         LibraryFilter filter =
@@ -136,7 +145,7 @@ public class LibraryResource {
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =
-                items.listMatching(filter, ordering, window.offset(), window.size())
+                items.listMatching(filter, ordering, window.offset(), window.size(), view)
                         .stream().map(LibraryItemDto::of).toList();
         return new LibraryPageDto(slice, window.page(), window.size(), total);
     }
@@ -255,6 +264,20 @@ public class LibraryResource {
                     item.progress.percent, item.effectivePageCount());
         }
         return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * Files the title under another kind for this reader (#454): its copy moves to an edition
+     * of a work of that kind, keeping everything the reader set.
+     */
+    @PUT
+    @Path("/{id}/kind")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setKind(@PathParam("id") UUID id, @Valid zelytra.librarius.web.ApiDtos.KindDto dto) {
+        return editions.moveToKind(currentUser.id(), id, dto.kind())
+                .map(item -> Response.ok(LibraryItemDto.of(item)).build())
+                .orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
     /** The format of the reader's copy (#447). Null clears it. */

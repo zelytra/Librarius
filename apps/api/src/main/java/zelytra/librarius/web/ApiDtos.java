@@ -34,6 +34,7 @@ import zelytra.librarius.domain.repository.WishlistItemRepository.PriorityBudget
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /** REST API transfer objects (DTOs), grouped together to stay compact. */
@@ -71,6 +72,70 @@ public final class ApiDtos {
      */
     /** A member found by name (#202): the follow-list surface, plus whether the caller follows them. */
     public record MemberSearchDto(String id, String displayName, boolean trusted, boolean following) {
+    }
+
+    /**
+     * Someone the caller follows who has a title too (#452).
+     *
+     * @param status    their reading status, or null when they only wish for it
+     * @param ownership their ownership, or null when they only wish for it
+     * @param wished    whether it is on their wishlist
+     * @param rating    their rating, only when they shared it
+     * @param rankCode  the category they filed it under ("or", "argent"…), or null
+     */
+    public record FriendOnWorkDto(String id, String displayName, boolean trusted, String status,
+            String ownership, boolean wished, Integer rating, String rankCode, String rankLabel,
+            String rankColor) {
+        public FriendOnWorkDto withWish() {
+            return new FriendOnWorkDto(id, displayName, trusted, status, ownership, true, rating,
+                    rankCode, rankLabel, rankColor);
+        }
+    }
+
+    /**
+     * A rating another community gave a title (#453), credited and linked to its source.
+     *
+     * @param average out of five, or null when the source has a readership but no rating
+     * @param count   how many ratings (or, for AniList, members) the average stands on
+     * @param readers how many said they read it, when the source counts them
+     * @param wanted  how many want to read it, when the source counts them
+     */
+    public record ExternalRatingDto(String source, Double average, Integer count, Integer readers,
+            Integer wanted, String url) {
+    }
+
+    /** The opening of an author's article in an open encyclopedia (#453), with its licence. */
+    public record ExternalAuthorDto(String source, String extract, String description, String url,
+            String licence) {
+    }
+
+    /**
+     * A saved library view (#451).
+     *
+     * @param order the manual order, as {@code item:<id>} and {@code series:<id>} keys
+     */
+    public record LibraryViewDto(UUID id, String name, String kind, String shelf, String sort,
+            String layout, boolean groupByCategory, List<String> order) {
+        public static LibraryViewDto of(zelytra.librarius.domain.LibraryView v, List<String> order) {
+            return new LibraryViewDto(v.id, v.name, v.kind != null ? v.kind.name() : null, v.shelf, v.sort,
+                    v.layout, v.groupByCategory, order);
+        }
+    }
+
+    /** What a view is made of (#451); the sort is one of the library's, or {@code manual}. */
+    public record LibraryViewInput(
+            @NotBlank @Size(max = 60) String name,
+            Kind kind,
+            @Size(max = 80) String shelf,
+            @jakarta.validation.constraints.Pattern(regexp = "recent|added|title|author|genre|rating|manual")
+            String sort,
+            @jakarta.validation.constraints.Pattern(regexp = "grouped|flat") String layout,
+            Boolean groupByCategory) {
+    }
+
+    /** A view's manual order (#451), first entry first. */
+    public record LibraryViewOrderDto(@jakarta.validation.constraints.NotNull
+            @Size(max = zelytra.librarius.library.LibraryViewService.MAX_ENTRIES) List<String> keys) {
     }
 
     public record MemberSummaryDto(String id, String displayName, boolean trusted) {
@@ -252,6 +317,10 @@ public final class ApiDtos {
     }
 
     /** The format of the reader's copy (#447); null clears it. */
+    /** The kind a reader files their title under (#454). */
+    public record KindDto(@NotNull Kind kind) {
+    }
+
     public record FormatDto(zelytra.librarius.domain.BookFormat format) {
     }
 
@@ -312,7 +381,7 @@ public final class ApiDtos {
      * @param status    reading status: {@code TO_READ}, {@code READING}, {@code READ} or
      *                  {@code ABANDONED}
      * @param ownership whether the reader has the book (#411): {@code OWNED}, {@code BORROWED},
-     *                  {@code EBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
+     *                  {@code EBOOK}, {@code AUDIOBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
      */
     /**
      * @param price     the reader's own price for their copy (#431), private to them; the
@@ -674,7 +743,7 @@ public final class ApiDtos {
      */
     public record SeriesSummaryDto(UUID id, String kind, String title, String coverUrl,
             Integer totalVolumes, String status, long ownedCount, long readCount,
-            boolean followed, LocalDate lastActivity, String authors, String genre) {
+            boolean followed, LocalDate lastActivity, String authors, String genre, String rankCode) {
         public static SeriesSummaryDto of(Series s, long ownedCount, long readCount,
                 boolean followed) {
             return of(s, ownedCount, readCount, followed, null);
@@ -683,7 +752,13 @@ public final class ApiDtos {
         /** The same summary, with what the shelf sorts it on by author or genre (#387). */
         public SeriesSummaryDto withSortKeys(String authors, String genre) {
             return new SeriesSummaryDto(id, kind, title, coverUrl, totalVolumes, status, ownedCount,
-                    readCount, followed, lastActivity, authors, genre);
+                    readCount, followed, lastActivity, authors, genre, rankCode);
+        }
+
+        /** The same summary, filed under the category most of the reader's volumes carry (#451). */
+        public SeriesSummaryDto withRank(String rank) {
+            return new SeriesSummaryDto(id, kind, title, coverUrl, totalVolumes, status, ownedCount,
+                    readCount, followed, lastActivity, authors, genre, rank);
         }
 
         /** @param lastActivity the latest activity on the volumes held, to order the shelf by */
@@ -691,13 +766,13 @@ public final class ApiDtos {
                 boolean followed, LocalDate lastActivity) {
             return new SeriesSummaryDto(s.id, s.kind.name(), s.title, s.coverUrl, s.totalVolumes,
                     s.status != null ? s.status.name() : null, ownedCount, readCount, followed, lastActivity,
-                    null, null);
+                    null, null, null);
         }
 
         /** The same summary, drawn with another cover. */
         public SeriesSummaryDto withCover(String cover) {
             return new SeriesSummaryDto(id, kind, title, cover, totalVolumes, status, ownedCount,
-                    readCount, followed, lastActivity, authors, genre);
+                    readCount, followed, lastActivity, authors, genre, rankCode);
         }
     }
 

@@ -651,6 +651,22 @@ describe('DetailPage', () => {
     await waitFor(() => expect(sent).toEqual([{ format: 'HARDCOVER' }, {}]));
   });
 
+  /** #454: the reader files the title under another kind, like they set its format. */
+  test('files the title under another kind', async () => {
+    libraryItemReturns(ITEM);
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/kind', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json(ITEM);
+    }));
+    renderDetail();
+
+    const kinds = await screen.findByRole('radiogroup', { name: 'Type' });
+    expect(within(kinds).getByRole('radio', { name: 'Livre' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(within(kinds).getByRole('radio', { name: 'BD' }));
+    await waitFor(() => expect(sent).toEqual([{ kind: 'COMIC' }]));
+  });
+
   /** What a change of edition does to the position is not obvious, so the screen says it. */
   test('states what a change of edition does to the reading progress', async () => {
     libraryItemReturns(MULTI_EDITION);

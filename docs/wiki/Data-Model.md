@@ -28,7 +28,8 @@ for how that matching happens on the way in.
 | Entity | What it is |
 |---|---|
 | `app_user` | A Keycloak identity, provisioned on first login. No credential is stored here — Keycloak owns those |
-| `library_item` | A title of the user's library: its own `price` (V30), `page_count` and `format` (V32), all private to the reader, reading status (`TO_READ`, `READING`, `READ`, `ABANDONED`), ownership (`OWNED`, `BORROWED`, `EBOOK`, `WISHLIST`, `NOT_OWNED` — V27), rating, review (private unless `review_shared`), acquisition date, rank |
+| `library_item` | A title of the user's library: its own `price` (V30), `page_count` and `format` (V32), all private to the reader, reading status (`TO_READ`, `READING`, `READ`, `ABANDONED`), ownership (`OWNED`, `BORROWED`, `EBOOK`, `AUDIOBOOK`, `WISHLIST`, `NOT_OWNED` — V27, V33), rating, review (private unless `review_shared`), acquisition date, rank |
+| `library_view`, `library_view_entry` | A reader's saved library layouts (V33, #451) — kind, shelf, sort, `layout`, `group_by_category` — and the manual order of each: one entry per placed title (`item_id`) or series block (`series_id`), by `position`, cascading away with the view, the title or the series |
 | `reading_progress` | Current page or percentage, start and finish dates — one row per `library_item` |
 | `wishlist_item` | Priority, estimated price, a note |
 | `series_follow` | "Tell me about the next volumes of this series" |

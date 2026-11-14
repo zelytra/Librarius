@@ -146,4 +146,30 @@ public class SeriesResource {
     private static String blankToNull(String text) {
         return text == null || text.isBlank() ? null : text.trim();
     }
+
+    @Inject
+    zelytra.librarius.domain.repository.LibraryItemRepository libraryItems;
+
+    @Inject
+    zelytra.librarius.domain.repository.RankCategoryRepository categories;
+
+    /**
+     * Files every volume of the series the caller holds under one category, or none (#451):
+     * the run then sits on that shelf as a whole. 404 when the caller holds nothing of it.
+     */
+    @PUT
+    @Path("/{id}/rank")
+    @jakarta.ws.rs.Consumes(MediaType.APPLICATION_JSON)
+    @jakarta.transaction.Transactional
+    public Response rank(@PathParam("id") UUID id, ApiDtos.RankAssignDto dto) {
+        zelytra.librarius.domain.RankCategory category = null;
+        if (dto != null && dto.categoryId() != null) {
+            category = categories.findForUser(currentUser.id(), dto.categoryId()).orElse(null);
+            if (category == null) {
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+        }
+        int moved = libraryItems.rankSeries(currentUser.id(), id, category);
+        return moved == 0 ? Response.status(Response.Status.NOT_FOUND).build() : Response.noContent().build();
+    }
 }

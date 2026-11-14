@@ -14,6 +14,8 @@ public enum Ownership {
     BORROWED,
     /** Read on an e-reader or another digital format. */
     EBOOK,
+    /** Listened to as an audiobook (#455). */
+    AUDIOBOOK,
     /**
      * Not had, and wanted: the edition also sits on the wishlist, which keeps its priority
      * and price. Reached on a title already in the library, e.g. read from a borrowed copy.

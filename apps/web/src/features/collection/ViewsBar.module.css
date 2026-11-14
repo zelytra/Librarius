@@ -1,0 +1,64 @@
+.bar {
+  margin-bottom: 14px;
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-round);
+  background: transparent;
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
+  cursor: pointer;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  font: inherit;
+  font-size: var(--fs-15);
+  color: var(--ink);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-14);
+  color: var(--ink);
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

@@ -1,0 +1,60 @@
+.cell {
+  position: relative;
+  min-width: 0;
+  /* Arranging is about places, not the books: a tap on a cover must not open it. */
+  touch-action: none;
+}
+
+.cell > :first-child {
+  pointer-events: none;
+}
+
+.dragging {
+  opacity: 0.55;
+  transform: scale(0.97);
+  transition: transform 0.12s ease;
+}
+
+.controls {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+.step,
+.handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: transparent;
+  cursor: pointer;
+}
+
+.handle {
+  cursor: grab;
+  touch-action: none;
+  background: var(--accent-soft, var(--line));
+}
+
+.step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dragging {
+    transform: none;
+    transition: none;
+  }
+}
