@@ -644,6 +644,10 @@ paths:
   /api/library:
     get:
       parameters:
+      - name: format
+        in: query
+        schema:
+          $ref: "#/components/schemas/BookFormat"
       - name: genre
         in: query
         schema:
@@ -811,6 +815,67 @@ paths:
       - Library Resource
       security:
       - SecurityScheme: []
+    post:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditionChoiceDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Choose Edition
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/format:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FormatDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Set Format
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
   /api/library/{id}/ownership:
     put:
       parameters:
@@ -838,6 +903,37 @@ paths:
         "400":
           description: Bad Request
       summary: Set Ownership
+      tags:
+      - Library Resource
+      security:
+      - SecurityScheme: []
+  /api/library/{id}/pages:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PagesDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Set Pages
       tags:
       - Library Resource
       security:
@@ -1938,6 +2034,15 @@ components:
           $ref: "#/components/schemas/UUID"
         seriesId:
           $ref: "#/components/schemas/UUID"
+    BookFormat:
+      type: string
+      enum:
+      - POCKET
+      - PAPERBACK
+      - HARDCOVER
+      - LARGE
+      - DELUXE
+      - BOX_SET
     BookView:
       type: object
       properties:
@@ -2113,6 +2218,37 @@ components:
           pattern: \S
         hidden:
           type: boolean
+    EditionChoiceDto:
+      type: object
+      properties:
+        isbn13:
+          type: string
+          maxLength: 13
+        publisher:
+          type: string
+          maxLength: 255
+        language:
+          type: string
+          maxLength: 16
+        pageCount:
+          type: integer
+          format: int32
+          maximum: 100000
+          exclusiveMinimum: 0
+        coverUrl:
+          type: string
+          maxLength: 1024
+        format:
+          type: string
+          maxLength: 32
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
+        provider:
+          type: string
+          maxLength: 32
+        providerRef:
+          type: string
+          maxLength: 255
     EditionDto:
       type: object
       properties:
@@ -2178,6 +2314,11 @@ components:
           $ref: "#/components/schemas/Ownership"
         price:
           type: number
+        pageCount:
+          type: integer
+          format: int32
+        format:
+          $ref: "#/components/schemas/BookFormat"
     ExportDto:
       type: object
       properties:
@@ -2265,6 +2406,11 @@ components:
           type: number
         note:
           type: string
+    FormatDto:
+      type: object
+      properties:
+        format:
+          $ref: "#/components/schemas/BookFormat"
     GenreCount:
       type: object
       properties:
@@ -2393,6 +2539,8 @@ components:
           $ref: "#/components/schemas/LocalDate"
         ownership:
           $ref: "#/components/schemas/Ownership"
+        format:
+          $ref: "#/components/schemas/BookFormat"
     LibraryItemDto:
       type: object
       properties:
@@ -2419,6 +2567,11 @@ components:
           type: string
         price:
           type: number
+        pageCount:
+          type: integer
+          format: int32
+        format:
+          type: string
     LibraryPageDto:
       type: object
       properties:
@@ -2574,6 +2727,14 @@ components:
       properties:
         ownership:
           $ref: "#/components/schemas/Ownership"
+    PagesDto:
+      type: object
+      properties:
+        pageCount:
+          type: integer
+          format: int32
+          maximum: 100000
+          exclusiveMinimum: 0
     PriceDto:
       type: object
       properties:

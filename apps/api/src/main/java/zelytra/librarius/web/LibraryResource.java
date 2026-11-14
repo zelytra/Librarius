@@ -27,6 +27,9 @@ import zelytra.librarius.domain.Ownership;
 import zelytra.librarius.library.OwnershipService;
 import zelytra.librarius.web.ApiDtos.OwnershipDto;
 import zelytra.librarius.web.ApiDtos.PriceDto;
+import zelytra.librarius.web.ApiDtos.PagesDto;
+import zelytra.librarius.web.ApiDtos.FormatDto;
+import zelytra.librarius.web.ApiDtos.EditionChoiceDto;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibraryFilter;
 import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
@@ -104,6 +107,7 @@ public class LibraryResource {
      *                  shelf lists beside its series blocks
      * @param ownership {@code OWNED}, {@code BORROWED}, {@code EBOOK}, {@code WISHLIST} or
      *                  {@code NOT_OWNED} (#411), no filtering when absent
+     * @param format    the format of the reader's copy (#447), no filtering when absent
      */
     @GET
     public LibraryPageDto list(
@@ -117,7 +121,8 @@ public class LibraryResource {
             @QueryParam("minRating") Integer minRating,
             @QueryParam("q") String q,
             @QueryParam("standalone") @DefaultValue("false") boolean standalone,
-            @QueryParam("ownership") Ownership ownership) {
+            @QueryParam("ownership") Ownership ownership,
+            @QueryParam("format") zelytra.librarius.domain.BookFormat format) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
@@ -127,7 +132,7 @@ public class LibraryResource {
         PageRequest window = PageRequest.of(page, size);
         LibraryFilter filter =
                 new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q,
-                        standalone, ownership);
+                        standalone, ownership, format);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =
@@ -166,6 +171,7 @@ public class LibraryResource {
         item.status = dto.status() != null ? dto.status() : LibraryStatus.TO_READ;
         item.rating = dto.rating();
         item.acquiredAt = dto.acquiredAt();
+        item.format = dto.format();
         items.persist(item);
         ownershipService.apply(item, dto.ownership());
         // A run this title opens learns its length once the add commits (#429).
@@ -178,7 +184,7 @@ public class LibraryResource {
             zelytra.librarius.domain.ReadingProgress progress = new zelytra.librarius.domain.ReadingProgress();
             progress.libraryItem = item;
             progress.percent = 100;
-            progress.currentPage = edition.effectivePageCount();
+            progress.currentPage = item.effectivePageCount();
             progress.finishedAt = java.time.LocalDate.now();
             progressRepository.persist(progress);
             item.progress = progress;
@@ -227,6 +233,64 @@ public class LibraryResource {
         }
         item.price = dto != null ? dto.price() : null;
         return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * The reader's own page count for their copy (#446), private to this title: every figure
+     * of the reader uses it before the edition's. Null clears it.
+     */
+    @PUT
+    @Path("/{id}/pages")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setPages(@PathParam("id") UUID id, @Valid PagesDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        item.pageCount = dto != null ? dto.pageCount() : null;
+        // The position follows the new length, as it does on a change of edition.
+        if (item.progress != null && item.progress.percent != null) {
+            item.progress.currentPage = zelytra.librarius.domain.ReadingProgress.pageOf(
+                    item.progress.percent, item.effectivePageCount());
+        }
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /** The format of the reader's copy (#447). Null clears it. */
+    @PUT
+    @Path("/{id}/format")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setFormat(@PathParam("id") UUID id, FormatDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        item.format = dto != null ? dto.format() : null;
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * Moves the title onto an edition that is not a row yet (#445) — a provider's printing, or
+     * one the reader describes — created under the title's own work.
+     */
+    @POST
+    @Path("/{id}/edition")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response chooseEdition(@PathParam("id") UUID id, @Valid EditionChoiceDto dto) {
+        EditionService.SwitchOutcome outcome = editions.chooseNewEdition(currentUser.id(), id, dto);
+        if (outcome.ok()) {
+            return Response.ok(LibraryItemDto.of(outcome.item())).build();
+        }
+        return switch (outcome.refusal()) {
+            case UNKNOWN_ITEM -> Response.status(Response.Status.NOT_FOUND).build();
+            case NOT_AN_EDITION_OF_THIS_WORK -> error(Response.Status.BAD_REQUEST,
+                    "Cette édition n'appartient pas à la même œuvre.");
+            case ALREADY_OWNED -> error(Response.Status.CONFLICT,
+                    "Cette édition est déjà dans ta collection.");
+        };
     }
 
     /** Assigns a rank to an owned title (or clears it when categoryId is null). */

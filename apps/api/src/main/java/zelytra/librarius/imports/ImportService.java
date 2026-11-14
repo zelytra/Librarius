@@ -320,7 +320,7 @@ public class ImportService {
         progress.finishedAt = readAt;
         if (item.status == LibraryStatus.READ) {
             progress.percent = COMPLETE;
-            progress.currentPage = item.edition.effectivePageCount();
+            progress.currentPage = item.effectivePageCount();
         }
         progresses.persist(progress);
         item.progress = progress;

@@ -76,7 +76,7 @@ public class ReadingProgressService {
             return created;
         });
 
-        Integer pageCount = item.edition != null ? item.edition.effectivePageCount() : null;
+        Integer pageCount = item.effectivePageCount();
         // Whichever side the user filled in, the other is derived: the two must never
         // disagree once stored.
         Integer page = dto.currentPage() != null ? dto.currentPage()

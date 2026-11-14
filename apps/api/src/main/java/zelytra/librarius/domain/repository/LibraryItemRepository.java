@@ -238,16 +238,22 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
             String genre, Integer minRating, String search, boolean standalone,
-            zelytra.librarius.domain.Ownership ownership) {
+            zelytra.librarius.domain.Ownership ownership, zelytra.librarius.domain.BookFormat format) {
+
+        public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
+                String genre, Integer minRating, String search, boolean standalone,
+                zelytra.librarius.domain.Ownership ownership) {
+            this(userId, kind, status, rank, genre, minRating, search, standalone, ownership, null);
+        }
 
         public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
                 String genre, Integer minRating, String search, boolean standalone) {
-            this(userId, kind, status, rank, genre, minRating, search, standalone, null);
+            this(userId, kind, status, rank, genre, minRating, search, standalone, null, null);
         }
 
         public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
                 String genre, Integer minRating, String search) {
-            this(userId, kind, status, rank, genre, minRating, search, false, null);
+            this(userId, kind, status, rank, genre, minRating, search, false, null, null);
         }
     }
 
@@ -358,6 +364,10 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             clauses.add("li.ownership = :ownership");
             params.put("ownership", filter.ownership());
         }
+        if (filter.format() != null) {
+            clauses.add("li.format = :format");
+            params.put("format", filter.format());
+        }
         if (filter.rank() != null && !filter.rank().isBlank()) {
             clauses.add("rc.code = :rank");
             params.put("rank", filter.rank().trim());
@@ -440,7 +450,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     public StatusTotals statusTotals(String userId) {
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select li.status, count(li), sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate)), count(li.edition.pageCount)
+                        select li.status, count(li), sum(coalesce(li.pageCount, li.edition.pageCount, li.edition.pageCountEstimate)), count(coalesce(li.pageCount, li.edition.pageCount))
                         from LibraryItem li
                         where li.userId = :userId
                         group by li.status

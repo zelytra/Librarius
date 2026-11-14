@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import zelytra.librarius.domain.AppUser;
@@ -215,7 +216,8 @@ public final class ApiDtos {
             LibraryStatus status,
             @Min(1) @Max(5) Integer rating,
             LocalDate acquiredAt,
-            Ownership ownership) {
+            Ownership ownership,
+            zelytra.librarius.domain.BookFormat format) {
     }
 
     /**
@@ -243,6 +245,30 @@ public final class ApiDtos {
      */
     public record AchievementsDto(long xp, int level, long levelXp, long nextLevelXp,
             java.util.List<AchievementDto> achievements, java.util.List<AchievementUnlockDto> unseen) {
+    }
+
+    /** The reader's own page count for a title (#446); null clears it. */
+    public record PagesDto(@Positive @Max(100_000) Integer pageCount) {
+    }
+
+    /** The format of the reader's copy (#447); null clears it. */
+    public record FormatDto(zelytra.librarius.domain.BookFormat format) {
+    }
+
+    /**
+     * An edition the reader picks for their title (#445) that is not a row yet: a provider's
+     * printing, or one they describe by hand. It is created under the title's own work.
+     */
+    public record EditionChoiceDto(
+            @Size(max = 13) String isbn13,
+            @Size(max = 255) String publisher,
+            @Size(max = 16) String language,
+            @Positive @Max(100_000) Integer pageCount,
+            @Size(max = 1024) String coverUrl,
+            @Size(max = 32) String format,
+            LocalDate releaseDate,
+            @Size(max = 32) String provider,
+            @Size(max = 255) String providerRef) {
     }
 
     /** The reader's own price for a title (#431); null clears it. */
@@ -289,18 +315,23 @@ public final class ApiDtos {
      *                  {@code EBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
      */
     /**
-     * @param price the reader's own price for their copy (#431), private to them; the market
-     *              price is {@code book.listPrice}
+     * @param price     the reader's own price for their copy (#431), private to them; the
+     *                  market price is {@code book.listPrice}
+     * @param pageCount the reader's own page count for their copy (#446), null when unsaid;
+     *                  {@code book.pageCount} is the edition's
+     * @param format    the format of the reader's copy (#447), null when unsaid
      */
     public record LibraryItemDto(UUID id, String status, Integer rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
-            boolean reviewShared, String ownership, BigDecimal price) {
+            boolean reviewShared, String ownership, BigDecimal price, Integer pageCount,
+            String format) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
-                    it.progress != null ? ProgressView.of(it.progress, it.edition.effectivePageCount()) : null,
+                    it.progress != null ? ProgressView.of(it.progress, it.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
-                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price);
+                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price,
+                    it.pageCount, it.format != null ? it.format.name() : null);
         }
     }
 
@@ -878,7 +909,8 @@ public final class ApiDtos {
      */
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Integer rating, String review, LocalDate acquiredAt,
-            String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price) {
+            String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price,
+            Integer pageCount, zelytra.librarius.domain.BookFormat format) {
     }
 
     /** One wish, with the note the user attached to it. */

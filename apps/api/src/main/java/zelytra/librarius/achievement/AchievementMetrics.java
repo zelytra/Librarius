@@ -39,7 +39,7 @@ public class AchievementMetrics {
         values.put(Metric.BOOKS_READ, count("""
                 select count(*) from library_item li where li.user_id = :u and li.status = 'READ'""", userId));
         values.put(Metric.PAGES_READ, count("""
-                select coalesce(sum(coalesce(e.page_count, e.page_count_estimate)), 0)
+                select coalesce(sum(coalesce(li.page_count, e.page_count, e.page_count_estimate)), 0)
                 from library_item li join edition e on e.id = li.edition_id
                 where li.user_id = :u and li.status = 'READ'""", userId));
         // A run the reader holds at least two volumes of, every one of them read.

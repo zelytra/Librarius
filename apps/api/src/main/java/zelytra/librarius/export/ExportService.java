@@ -130,7 +130,9 @@ public class ExportService {
                         item.rankCategory != null ? item.rankCategory.code : null,
                         progress(item.progress),
                         item.ownership,
-                        item.price))
+                        item.price,
+                        item.pageCount,
+                        item.format))
                 .toList();
 
         List<ExportWishDto> wishlist = wishes.listForExport(userId).stream()
