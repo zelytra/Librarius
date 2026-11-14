@@ -8,7 +8,7 @@ function booknodePage(titles: string[], last: number): string {
   return `<html><body>${rows}<ul class="pagination">${links}</ul></body></html>`;
 }
 
-function response(html: string, contentType = 'text/html; charset=utf-8', bytes?: Uint8Array): Response {
+function response(html: string, contentType = 'text/html; charset=utf-8', bytes?: Uint8Array<ArrayBuffer>): Response {
   return new Response(bytes ?? new TextEncoder().encode(html), { status: 200, headers: { 'content-type': contentType } });
 }
 
