@@ -104,10 +104,13 @@ describe('DiscoverPage', () => {
     await search('yarros');
 
     expect(await screen.findByText('Auteurs')).toBeInTheDocument();
-    // The author block above the results, and the credit of each result (#443).
-    for (const link of screen.getAllByRole('link', { name: /Rebecca Yarros/ })) {
-      expect(link).toHaveAttribute('href', '/authors/author-1');
-    }
+    // The author block above the results, and the credit of each result (#443) — the credit
+    // resolves its author by its own request, so it is waited for rather than read at once.
+    await waitFor(() => {
+      for (const link of screen.getAllByRole('link', { name: /Rebecca Yarros/ })) {
+        expect(link).toHaveAttribute('href', '/authors/author-1');
+      }
+    });
   });
 
   /** #363: an anthology's fifteen credited names no longer grow the card to a screen's height. */
