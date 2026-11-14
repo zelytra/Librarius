@@ -32,6 +32,10 @@ public class CollectedLibrary {
         if (pages.size() > MAX_PAGES) {
             throw new ImportException("Le fichier contient trop de pages (" + pages.size() + ").");
         }
+        // Mangacollec's collection is one JSON document, saved as the site's API gave it (#456).
+        if (MangacollecImporter.SOURCE.equals(source)) {
+            return MangacollecImporter.parse(pages.get(0));
+        }
         List<ImportedBook> books = new ArrayList<>();
         for (String page : pages) {
             if (page == null || page.isBlank()) {

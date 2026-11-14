@@ -21,7 +21,10 @@ Browser (React 19 PWA)
 
 On the deployed environment, **a single host** `librarius.zelytra.fr` sits behind Traefik:
 `/auth` → Keycloak · `/api` → API · `/` → nginx (the PWA). `/q` (health, metrics) is not routed by the ingress: the kubelet probes hit the pod directly, and **a Prometheus deployed by the chart in the same namespace** scrapes `librarius-api:8080/q/metrics` from inside the cluster — no RBAC, no CRD, one Service DNS name. It evaluates `infra/helm/librarius/files/librarius.rules.yml` and posts to an Alertmanager next to it.
-The front end and the API are therefore *same-origin*: no CORS preflight.
+The front end and the API are therefore *same-origin*: no CORS preflight. The CORS filter
+still runs, though: browsers send an `Origin` header on every write, so
+`quarkus.http.cors.methods` must list each method the client sends — `PATCH` included, which
+only the profile save uses and whose absence refused it with a 403 (#459, `CorsTest`).
 
 Alerting is deliberately two paths, because they fail differently: the in-cluster pair sees the API's own metrics, and `.github/workflows/uptime.yml` watches the public URL from a GitHub runner — the only one that still works when the cluster is what broke. The in-cluster half **notifies nothing until a webhook Secret exists**, which is why [#60](https://github.com/zelytra/Librarius/issues/60) is still open; `docs/DEPLOYMENT.md` § "Alerting" has the one command. The Prometheus and Grafana in `infra/docker-compose.yml` remain local-only.
 
@@ -356,6 +359,7 @@ regeneration.
 | Static analysis | CodeQL on `javascript-typescript` and `java-kotlin`, weekly and on every pull request (`codeql.yml`) |
 | Dependency vulnerabilities | `pnpm audit --prod --audit-level high` blocks the pull request (`audit.yml`); Maven is covered by Dependabot alerts only — no keyless CI gate exists (see below) |
 | Supply chain | Every GitHub Action pinned by commit SHA, version in a trailing comment; Dependabot bumps SHA and comment together |
+| Dependency updates | Dependabot monthly, condensed (#133): per ecosystem one group of minor/patch bumps (npm: runtime and toolchain apart), one of majors, one of security fixes (`applies-to: security-updates`), 3 open PRs at most. Transitive npm advisories: `pnpm update -r --no-save`, then `pnpm.overrides` (root `package.json`) where a parent pins a vulnerable range — `glob` under `workbox-build`, `minimatch` 7–11, `brace-expansion` 1.x. Left: `deepmerge` (low, no patched release) |
 
 The Maven side has no CI gate: OWASP dependency-check now needs an NVD API key, and the
 keyless alternatives (Sonatype OSS Index anonymous, GitHub's dependency-review) either

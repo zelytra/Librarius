@@ -107,7 +107,7 @@ describe('collectLibrary', () => {
     await collectLibrary(e);
 
     expect(saved).toHaveLength(0);
-    expect(alerts[0]).toContain('Booknode ou sur Babelio');
+    expect(alerts[0]).toContain('Booknode, Babelio ou Mangacollec');
   });
 
   test('saves nothing for a Babelio page holding no book, signed out for instance', async () => {
@@ -124,6 +124,47 @@ describe('collectLibrary', () => {
 });
 
 describe('bookmarkletHref', () => {
+  /** #456: on Mangacollec, the session in the page's storage reads the reader's collection. */
+  test("reads a Mangacollec collection with the session the site keeps, and saves it as is", async () => {
+    const store = new Map([['persist:auth', JSON.stringify({ auth: JSON.stringify({ access_token: 'abcdefghijklmnopqrstuvwxyz0123' }) })]]);
+    const storage = {
+      length: store.size,
+      key: (i: number) => [...store.keys()][i] ?? null,
+      getItem: (k: string) => store.get(k) ?? null,
+    } as unknown as Storage;
+    const collection = '{"editions":[],"volumes":[],"possessions":[]}';
+    const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
+      Promise.resolve(headers?.Authorization === 'Bearer abcdefghijklmnopqrstuvwxyz0123'
+        ? response(collection, 'application/json')
+        : new Response('', { status: 401 })));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/collection', href: 'https://www.mangacollec.com/collection' },
+      fetch,
+      storage: [storage],
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch).toHaveBeenCalledWith('https://api.mangacollec.com/v2/users/me/collection',
+      { Authorization: 'Bearer abcdefghijklmnopqrstuvwxyz0123' });
+    expect(saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
+  });
+
+  test('falls back on the public profile the reader is on, and says so when nothing reads', async () => {
+    const fetch = vi.fn(() => Promise.resolve(new Response('', { status: 403 })));
+    const { env: e, saved, alerts } = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/user/alice/collection', href: 'https://www.mangacollec.com/user/alice/collection' },
+      fetch,
+      storage: [],
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch).toHaveBeenCalledWith('https://api.mangacollec.com/v2/user/alice/collection', undefined);
+    expect(saved).toHaveLength(0);
+    expect(alerts[0]).toContain('mangacollec.com');
+  });
+
   test('is the collector, self-contained, run on the page', () => {
     // The scheme and the code, split apart: what follows the colon is the collector itself.
     const [scheme, encoded] = [bookmarkletHref().split(':', 1)[0], bookmarkletHref().slice(bookmarkletHref().indexOf(':') + 1)];

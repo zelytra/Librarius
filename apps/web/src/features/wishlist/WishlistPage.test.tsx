@@ -352,4 +352,18 @@ describe('WishlistPage', () => {
     expect(screen.getByText('Souhait 00')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText(/Voir plus/)).not.toBeInTheDocument());
   });
+
+  /** #458: the wishlist narrows to books, manga or comics, like the library. */
+  test('narrows the wishlist to one kind', async () => {
+    wishlistReturns([
+      wishlistItem({ id: 'w1', book: { kind: 'BOOK', title: 'Un roman voulu' } }),
+      wishlistItem({ id: 'w2', book: { kind: 'MANGA', title: 'Un manga voulu' } }),
+    ]);
+    renderWithProviders(<WishlistPage />);
+
+    await screen.findByText('Un roman voulu');
+    await userEvent.click(screen.getByRole('button', { name: 'Mangas' }));
+    await waitFor(() => expect(screen.queryByText('Un roman voulu')).not.toBeInTheDocument());
+    expect(screen.getByText('Un manga voulu')).toBeInTheDocument();
+  });
 });

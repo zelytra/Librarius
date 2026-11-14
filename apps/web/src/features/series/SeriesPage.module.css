@@ -401,3 +401,10 @@
   font-size: var(--fs-13);
   color: var(--muted);
 }
+
+.volumesHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { libraryItem } from '../../test/fixtures';
-import { libraryReturns } from '../../test/server';
+import { http, HttpResponse, libraryReturns, server } from '../../test/server';
 import { resetAuth } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
@@ -54,5 +54,48 @@ describe('ToReadPage', () => {
     await userEvent.clear(screen.getByLabelText('Rechercher dans ma pile à lire…'));
     await userEvent.type(screen.getByLabelText('Rechercher dans ma pile à lire…'), 'zzz');
     expect(await screen.findByText('Aucun titre de ta pile ne correspond à « zzz ».')).toBeInTheDocument();
+  });
+
+  /** #458: the pile narrows to books, manga or comics, like the library. */
+  test('narrows the pile to one kind', async () => {
+    libraryReturns([
+      libraryItem({ id: 'a', status: 'TO_READ', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'b', status: 'TO_READ', book: { kind: 'MANGA', title: 'Berserk 1' } }),
+    ]);
+    renderWithProviders(<ToReadPage />);
+
+    await screen.findByText('Pas encore ouvert');
+    await userEvent.click(screen.getByRole('button', { name: 'Mangas' }));
+    await waitFor(() => expect(screen.queryByText('Pas encore ouvert')).not.toBeInTheDocument());
+    expect(screen.getByText('Berserk 1')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'BD' }));
+    expect(await screen.findByText('Aucun titre de ce type dans ta pile.')).toBeInTheDocument();
+  });
+
+  /** #457: several titles of the pile are picked, then rated and filed in one go. */
+  test('selects several titles and applies one action to all of them', async () => {
+    libraryReturns([
+      libraryItem({ id: 'a', status: 'TO_READ', book: { kind: 'BOOK', title: 'Premier' } }),
+      libraryItem({ id: 'b', status: 'TO_READ', book: { kind: 'BOOK', title: 'Deuxième' } }),
+      libraryItem({ id: 'c', status: 'TO_READ', book: { kind: 'BOOK', title: 'Troisième' } }),
+    ]);
+    const sent: unknown[] = [];
+    server.use(http.post('*/api/library/bulk', async ({ request }) => {
+      const body = await request.json();
+      sent.push(body);
+      return HttpResponse.json({ updated: 2 });
+    }));
+    renderWithProviders(<ToReadPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Sélectionner' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Choisir « Premier »' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Choisir « Troisième »' }));
+    expect(screen.getByText('2 sélectionnés')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Modifier' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Or' }));
+
+    await waitFor(() => expect(sent).toEqual([{ ids: ['a', 'c'], categoryId: 'cat-or' }]));
   });
 });

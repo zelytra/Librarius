@@ -82,7 +82,9 @@ GitHub Actions workflows (path-filtered):
 
 Actions are pinned by commit SHA (the tag is kept in a trailing comment): a moved tag must
 not be able to change what runs. Dependency updates come from Dependabot, grouped and
-weekly — see `.github/dependabot.yml`.
+monthly — minor and patch bumps, majors, and security fixes each in one pull request per
+ecosystem — see `.github/dependabot.yml`. Transitive advisories are cleared by refreshing the
+lockfile and, where a parent pins an old range, by `pnpm.overrides` in the root `package.json`.
 
 Every pull request must be green before it is merged.
 

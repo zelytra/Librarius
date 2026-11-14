@@ -1,3 +1,5 @@
+import { KindFilter } from '../../shared/ui/KindFilter';
+import { useKindFilter } from '../../shared/useKindFilter';
 import { InfiniteMore } from '../../shared/ui/InfiniteMore';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
@@ -130,6 +132,8 @@ function WishlistContent() {
   // Searching the wishlist (#424): the server filters on title, authors and series, so the
   // count and the budget follow the search. The term lives in the URL, like Collection's.
   const { input: searchInput, setInput: setSearchInput, search } = useUrlSearch();
+  // Books, manga or comics (#458), like the library's switch.
+  const [kind, setKind] = useKindFilter();
 
   // The server pages the wishlist; the screen asks for the next page on demand.
   const {
@@ -143,9 +147,9 @@ function WishlistContent() {
   } = useInfiniteQuery({
     // Marked so an infinite result never lands under the key of a plain page query,
     // while staying under the `/api/wishlist` prefix the mutations invalidate.
-    queryKey: [...getGetApiWishlistQueryKey({ size: PAGE_SIZE, q: search || undefined }), 'infinite'],
+    queryKey: [...getGetApiWishlistQueryKey({ size: PAGE_SIZE, q: search || undefined, kind }), 'infinite'],
     queryFn: ({ pageParam }) =>
-      getApiWishlist({ size: PAGE_SIZE, page: pageParam, q: search || undefined }),
+      getApiWishlist({ size: PAGE_SIZE, page: pageParam, q: search || undefined, kind }),
     // The previous results stay while a new search is answered: no flash of a spinner
     // on every keystroke.
     placeholderData: keepPreviousData,
@@ -233,7 +237,10 @@ function WishlistContent() {
   );
 
   const searchBar = (
-    <SearchField value={searchInput} onChange={setSearchInput} label={t('wishlist.searchPlaceholder')} />
+    <>
+      <SearchField value={searchInput} onChange={setSearchInput} label={t('wishlist.searchPlaceholder')} />
+      <KindFilter value={kind} onChange={setKind} />
+    </>
   );
 
   if (loading) return <>{searchBar}<Loading /></>;
@@ -243,11 +250,11 @@ function WishlistContent() {
   }
 
   // A search that matches nothing is not an empty wishlist: the field stays, and says so.
-  if (items.length === 0 && search) {
+  if (items.length === 0 && (search || kind)) {
     return (
       <>
         {searchBar}
-        <p className={styles.summary}>{t('wishlist.noMatch', { q: search })}</p>
+        <p className={styles.summary}>{search ? t('wishlist.noMatch', { q: search }) : t('wishlist.noKind')}</p>
       </>
     );
   }

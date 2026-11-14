@@ -435,4 +435,59 @@ public class LibraryResource {
         boolean removed = items.deleteOwned(currentUser.id(), id);
         return removed ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
     }
+
+    /**
+     * Applies one action to several titles at once (#457): a reading status, an ownership, a
+     * format, a category, a rating, or removal. Only the caller's titles are touched — an
+     * identifier of someone else's is skipped like an unknown one — and a category must be
+     * one of theirs (400 otherwise).
+     */
+    @POST
+    @Path("/bulk")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ApiDtos.BulkResultDto bulk(@Valid ApiDtos.BulkUpdateDto dto) {
+        String userId = currentUser.id();
+        zelytra.librarius.domain.RankCategory category = null;
+        if (dto.categoryId() != null) {
+            category = categories.findForUser(userId, dto.categoryId())
+                    .orElseThrow(() -> new BadRequestException("Unknown category"));
+        }
+        int updated = 0;
+        for (UUID id : new java.util.LinkedHashSet<>(dto.ids())) {
+            if (Boolean.TRUE.equals(dto.remove())) {
+                if (items.deleteOwned(userId, id)) {
+                    updated++;
+                }
+                continue;
+            }
+            LibraryItem item = items.findOwned(userId, id).orElse(null);
+            if (item == null) {
+                continue;
+            }
+            if (dto.status() != null && dto.status() != item.status) {
+                var p = item.progress;
+                progress.apply(item, new ProgressDto(p != null ? p.currentPage : null, p != null ? p.percent : null,
+                        dto.status(), p != null ? p.startedAt : null, p != null ? p.finishedAt : null));
+            }
+            if (dto.ownership() != null) {
+                ownershipService.apply(item, dto.ownership());
+            }
+            if (dto.format() != null) {
+                item.format = dto.format();
+            }
+            if (category != null) {
+                item.rankCategory = category;
+            } else if (Boolean.TRUE.equals(dto.clearCategory())) {
+                item.rankCategory = null;
+            }
+            if (dto.rating() != null) {
+                item.rating = dto.rating();
+            } else if (Boolean.TRUE.equals(dto.clearRating())) {
+                item.rating = null;
+            }
+            updated++;
+        }
+        return new ApiDtos.BulkResultDto(updated);
+    }
 }

@@ -83,7 +83,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats/value` | What the library (`ownership = OWNED`, publisher's price) and the wishlist (market price, else the reader's estimate) are worth (`ValueDto`, #421) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
-| POST | `/api/import/mangacollec` | Mangacollec import (#448) — the body is the site's collection JSON, as text; answers a job to poll ([Import](#import)) |
+| POST | `/api/import/mangacollec` | Mangacollec import by pseudo (#456) — `{ "handle": … }` through `/api/import/{source}`: a public profile's collection read by the server; answers a job to poll ([Import](#import)) |
+| POST | `/api/library/bulk` | One action on up to 500 of the caller's titles (`BulkUpdateDto`, #457): `status`, `ownership`, `format`, `categoryId`/`clearCategory`, `rating`/`clearRating`, `remove`; others' ids skipped, a foreign category 400; answers `BulkResultDto.updated` |
 | POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
 | POST | `/api/reports` | Flags an error in a shared catalog object (`ReportCreateDto`) — write-only, see [Reports](#reports). 201 with the created report, **400** on an unknown target |
@@ -830,10 +831,12 @@ skips a "Pense-bête". At most 1 000 pages are accepted, and `quarkus.http.limit
 is 32 MB. The import runs as a background job like the CSV one. Pages saved from the browser
 (`.html`) go through the same route.
 
-**Mangacollec (`POST /api/import/mangacollec`, #448).** `text/plain`, the body is the JSON
-document mangacollec.com loads for a signed-in member (normalised arrays: `series`,
+**Mangacollec (#448, #456).** The document mangacollec.com loads for a member (normalised arrays: `series`,
 `editions`, `volumes`, `possessions`, `reads`, `boxes`, `box_possessions`…), read as it is
-rather than bound to a DTO. `MangacollecImporter` turns each volume held or read into an
+rather than bound to a DTO. It arrives by pseudo (`MangacollecUserImporter` reads
+`api.mangacollec.com/v2/user/<pseudo>/collection`, a pseudo of `[\w.-]{1,40}` only) or as the
+single page of a collected file (`source: mangacollec`, saved by the collector on
+mangacollec.com with the session the site keeps in the page's storage). `MangacollecImporter` turns each volume held or read into an
 `ImportedBook` titled "Série [Édition] Tome n" with its ISBN, cover and dates, and carries two
 fields only this source fills: `ownership` (`NOT_OWNED` for a volume read and not held) and
 `format` (from the edition name; `BOX_SET` for a box). A document of another shape fails the

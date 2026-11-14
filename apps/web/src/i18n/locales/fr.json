@@ -628,7 +628,8 @@
     },
     "marketPrice": "Prix neuf : {{price}} €",
     "searchPlaceholder": "Rechercher dans mes souhaits…",
-    "noMatch": "Aucun souhait ne correspond à « {{q}} »."
+    "noMatch": "Aucun souhait ne correspond à « {{q}} ».",
+    "noKind": "Aucun souhait de ce type."
   },
   "stats": {
     "title": "Statistiques",
@@ -864,7 +865,8 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Pseudo Booknode"
+        "booknode": "Pseudo Booknode",
+        "mangacollec": "Pseudo Mangacollec"
       },
       "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
@@ -877,7 +879,8 @@
         "button": "Librarius : collecter",
         "step2": {
           "booknode": "Ouvre ta page de profil Booknode et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-booknode.json.",
-          "babelio": "Ouvre « Mes livres » sur Babelio, connecté à ton compte, et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-babelio.json."
+          "babelio": "Ouvre « Mes livres » sur Babelio, connecté à ton compte, et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-babelio.json.",
+          "mangacollec": "Ouvre ta collection sur mangacollec.com, connecté à ton compte, et clique sur le favori : il récupère toute ta collection et télécharge un fichier librarius-mangacollec.json."
         },
         "step3": "Importe ce fichier avec le bouton ci-dessous.",
         "copy": "Sur mobile : copier le code du favori",
@@ -889,13 +892,7 @@
       "reading": "Lecture du fichier…",
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
-      "failedTitle": "L'import n'a pas abouti",
-      "mangacollec": {
-        "title": "Depuis Mangacollec",
-        "step1": "Sur mangacollec.com, connecté à ton compte, ouvre les outils de développement du navigateur (F12), onglet « Réseau », puis recharge la page de ta collection.",
-        "step2": "Repère la requête nommée « collection » et enregistre sa réponse dans un fichier (clic droit › Enregistrer la réponse, ou Copier la réponse puis colle-la dans un fichier).",
-        "step3": "Importe ce fichier avec le bouton ci-dessous : chaque tome possédé ou lu arrive dans ta bibliothèque, rangé dans sa série, avec son ISBN et sa couverture."
-      }
+      "failedTitle": "L'import n'a pas abouti"
     },
     "export": {
       "title": "Exporter mes données",
@@ -1090,7 +1087,8 @@
       "description": "Les livres que tu possèdes sans les avoir commencés apparaissent ici."
     },
     "searchPlaceholder": "Rechercher dans ma pile à lire…",
-    "noMatch": "Aucun titre de ta pile ne correspond à « {{q}} »."
+    "noMatch": "Aucun titre de ta pile ne correspond à « {{q}} ».",
+    "noKind": "Aucun titre de ce type dans ta pile."
   },
   "sheet": {
     "title": "Fiche de lecture",
@@ -1356,5 +1354,29 @@
     "earlier": "Déplacer avant",
     "later": "Déplacer après",
     "uncategorised": "Sans catégorie"
+  },
+  "kindFilter": {
+    "label": "Type",
+    "all": "Tout"
+  },
+  "selection": {
+    "title": "Sélection",
+    "start": "Sélectionner",
+    "count_one": "{{count}} sélectionné",
+    "count_other": "{{count}} sélectionnés",
+    "edit": "Modifier",
+    "sheetTitle_one": "Modifier {{count}} titre",
+    "sheetTitle_other": "Modifier {{count}} titres",
+    "category": "Catégorie",
+    "clearCategory": "Retirer la catégorie",
+    "rating": "Note",
+    "remove_one": "Retirer {{count}} titre de ma bibliothèque",
+    "remove_other": "Retirer {{count}} titres de ma bibliothèque",
+    "removeConfirm_one": "Confirmer : retirer {{count}} titre",
+    "removeConfirm_other": "Confirmer : retirer {{count}} titres",
+    "applied_one": "{{count}} titre modifié",
+    "applied_other": "{{count}} titres modifiés",
+    "pick": "Choisir « {{title}} »",
+    "cancel": "Annuler"
   }
 }

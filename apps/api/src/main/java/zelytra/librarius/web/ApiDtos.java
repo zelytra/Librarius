@@ -138,6 +138,27 @@ public final class ApiDtos {
             @Size(max = zelytra.librarius.library.LibraryViewService.MAX_ENTRIES) List<String> keys) {
     }
 
+    /**
+     * One action applied to several of the reader's titles at once (#457). Every field left out
+     * is left alone; {@code clearCategory} and {@code clearRating} remove them, and
+     * {@code remove} takes the titles out of the library.
+     */
+    public record BulkUpdateDto(
+            @NotNull @Size(min = 1, max = 500) List<UUID> ids,
+            LibraryStatus status,
+            Ownership ownership,
+            zelytra.librarius.domain.BookFormat format,
+            UUID categoryId,
+            Boolean clearCategory,
+            @Min(1) @Max(5) Integer rating,
+            Boolean clearRating,
+            Boolean remove) {
+    }
+
+    /** How many of the titles asked for were the caller's and changed (#457). */
+    public record BulkResultDto(int updated) {
+    }
+
     public record MemberSummaryDto(String id, String displayName, boolean trusted) {
         public static MemberSummaryDto of(AppUser u) {
             return new MemberSummaryDto(u.id, u.displayName, u.trusted);

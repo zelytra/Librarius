@@ -51,7 +51,7 @@ public class ImportResource {
      * the reader's library, as their own browser displayed them.
      */
     public record CollectedRequest(
-            @NotBlank @jakarta.validation.constraints.Pattern(regexp = "booknode|babelio") String source,
+            @NotBlank @jakarta.validation.constraints.Pattern(regexp = "booknode|babelio|mangacollec") String source,
             @jakarta.validation.constraints.NotNull
             @jakarta.validation.constraints.Size(max = zelytra.librarius.imports.CollectedLibrary.MAX_PAGES)
             java.util.List<String> pages) {
@@ -81,20 +81,6 @@ public class ImportResource {
         currentUser.require();
         return dto(importJobs.submit(currentUser.id(), req.source(),
                 () -> collectedLibrary.parse(req.source(), req.pages())));
-    }
-
-    /**
-     * Starts the import of a Mangacollec collection (#448): the JSON its site loads for a
-     * signed-in member, saved by the reader from their browser. Sent as text — the file is the
-     * site's own document, read as it is rather than bound to a DTO of ours.
-     */
-    @POST
-    @Path("/mangacollec")
-    @Consumes(MediaType.TEXT_PLAIN)
-    public ImportJobDto mangacollec(String body) {
-        currentUser.require();
-        return dto(importJobs.submit(currentUser.id(), zelytra.librarius.imports.MangacollecImporter.SOURCE,
-                () -> zelytra.librarius.imports.MangacollecImporter.parse(body)));
     }
 
     /** Starts a CSV import, deferred the same way — a Goodreads export is thousands of rows too. */
