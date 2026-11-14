@@ -1,5 +1,79 @@
 # Working conventions — Librarius
 
+## 0. Engineering rules
+
+The owner's standing rules for every agent and every change. They outrank convenience: a
+change that breaks one of them is not finished, whatever else it does.
+
+### No over-engineering
+
+- Solve the request in front of you, with the **smallest change** that does it well.
+- Use what the repository already has — a shared component, a service, a library already in
+  `package.json` or the Quarkus BOM — before writing or adding anything.
+- **No speculative generality**: no abstraction, configuration flag, extension point or
+  dependency for a need nobody has expressed. Three similar lines beat a premature helper.
+- A new dependency is justified in the pull request (what it replaces, its size in the
+  bundle — the budget is near full).
+- Say no to scope creep: a worthwhile idea outside the request becomes an issue, not code.
+
+### Good practices
+
+- Names say what a thing is or does, in English; a comment says *why*, never *what*.
+- One responsibility per function, component, resource or service; thin resources, logic in
+  services, data access in repositories (§ 5).
+- One source of truth: tokens for styles, generated client for the API, migrations for the
+  schema, `i18n` for copy.
+- No dead code, no commented-out code, no `TODO` without an issue number.
+- Errors are handled where something can be done about them, and surfaced to the reader in
+  French; nothing is swallowed silently.
+- The security rules (§ 7) and the data-isolation rule apply to every change, always.
+
+### TDD — test first, always
+
+1. **Red**: write the test that states the behaviour; run it; see it fail, for the expected
+   reason (not a typo, not a missing import).
+2. **Green**: write the least code that makes it pass.
+3. **Refactor**: clean up with the tests green; run the whole suite.
+
+A bug report starts with a test that reproduces it. The test is committed with the fix —
+never after, never in a separate pull request. When a test cannot come first (a layout only
+visible in a browser), the pull request says so and shows the browser check instead.
+
+### Regression tests — as many as it takes
+
+- Every behaviour a change adds or touches has a test: the nominal case, the edge cases
+  (empty, one, many, limits, invalid input), the error paths, and — for anything user-scoped
+  — another user's data (§ 6).
+- Front end: component tests with Testing Library through roles and labels (what a user and
+  a screen reader see), MSW with `onUnhandledFrame: 'error'`, no snapshot-only tests.
+- API: `@QuarkusTest` per endpoint, status codes included (400, 404 for another user's id).
+- A failing test is fixed at its cause. **Never** delete, skip, quarantine or loosen a test
+  to get green; never mark one flaky without finding why.
+- A race found in a test (an assertion read before an async answer) is fixed in the test with
+  a proper wait, and the product checked for the same race.
+
+### UI/UX good practices
+
+Every change to a screen meets these before it is called done:
+
+- **Consistency**: design tokens (`tokens.css`) and the shared components (`shared/ui/`) —
+  `Button`, `Chip`, `Modal`, `StatusPicker`, `Loading`/`EmptyState`/`ErrorState`, toasts —
+  before anything new. A new pattern is reused across the screens that need it, not one-off.
+- **Accessibility (WCAG 2.1 AA)**: every control has an accessible name; state is exposed
+  (`aria-pressed`, `aria-checked`, `aria-expanded`); everything works with the keyboard, with
+  a visible focus; text contrast ≥ 4.5:1; touch targets ≥ 44 × 44 px; motion respects
+  `prefers-reduced-motion`.
+- **Feedback for every action**: a loading state for anything over ~300 ms, an empty state
+  that says what to do, an error state that says what happened and offers a retry, and a
+  confirmation (toast) for a write. Destructive actions are confirmed or undoable.
+- **Mobile first**: designed at 360–420 px wide, then wider; no horizontal scroll, no layout
+  shift when data arrives, nothing hidden behind the bottom bar.
+- **Copy**: French, short, through `i18n`; buttons say what they do (« Appliquer », not
+  « OK »).
+- **Seen, not assumed**: the change is checked in a real browser (Playwright screenshots of
+  the local stack at phone width), and what was not seen is said in the report. The
+  `ux-review` agent (`.claude/agents/ux-review.md`) audits a screen against these rules.
+
 ## 1. Language
 
 | Item | Language |
@@ -377,7 +451,8 @@ the evidence in the PR (rendered text, computed styles, no console error).
 | API integration | `@QuarkusTest` + Dev Services | Every new endpoint, including the "another user's data" case |
 | Data isolation | `@QuarkusTest` with `alice` and `bob` | **Mandatory** on every user-scoped resource |
 
-A bug fix ships with the test that was failing before it.
+A bug fix ships with the test that was failing before it. Tests are written **first**
+(§ 0, TDD), and are never removed or skipped to get a green build.
 
 ### End-to-end suite
 
