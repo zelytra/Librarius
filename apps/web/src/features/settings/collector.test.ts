@@ -126,7 +126,10 @@ describe('collectLibrary', () => {
 describe('bookmarkletHref', () => {
   /** #456: on Mangacollec, the session in the page's storage reads the reader's collection. */
   test("reads a Mangacollec collection with the session the site keeps, and saves it as is", async () => {
-    const store = new Map([['persist:auth', JSON.stringify({ auth: JSON.stringify({ access_token: 'abcdefghijklmnopqrstuvwxyz0123' }) })]]);
+    // A stand-in session, deliberately without entropy: a random-looking literal would read
+    // as a leaked key to the secret scanner.
+    const session = 'x'.repeat(24);
+    const store = new Map([['persist:auth', JSON.stringify({ auth: JSON.stringify({ access_token: session }) })]]);
     const storage = {
       length: store.size,
       key: (i: number) => [...store.keys()][i] ?? null,
@@ -134,7 +137,7 @@ describe('bookmarkletHref', () => {
     } as unknown as Storage;
     const collection = '{"editions":[],"volumes":[],"possessions":[]}';
     const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
-      Promise.resolve(headers?.Authorization === 'Bearer abcdefghijklmnopqrstuvwxyz0123'
+      Promise.resolve(headers?.Authorization === `Bearer ${session}`
         ? response(collection, 'application/json')
         : new Response('', { status: 401 })));
     const { env: e, saved } = env({
@@ -146,7 +149,7 @@ describe('bookmarkletHref', () => {
     await collectLibrary(e);
 
     expect(fetch).toHaveBeenCalledWith('https://api.mangacollec.com/v2/users/me/collection',
-      { Authorization: 'Bearer abcdefghijklmnopqrstuvwxyz0123' });
+      { Authorization: `Bearer ${session}` });
     expect(saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
   });
 
