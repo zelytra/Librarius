@@ -850,13 +850,14 @@
     },
     "import": {
       "title": "Importer ma bibliothèque",
-      "description": "Depuis Booknode ou Babelio — par pseudo, ou avec la collecte depuis ton navigateur — ou depuis un fichier CSV (Goodreads…).",
+      "description": "Depuis Booknode, Babelio ou Mangacollec — par pseudo, ou avec la collecte depuis ton navigateur — ou depuis un fichier CSV (Goodreads…).",
       "signIn": "Se connecter pour importer",
       "submit": "Importer",
       "csv": "Importer un fichier CSV",
       "sources": {
         "booknode": "Booknode",
-        "babelio": "Babelio"
+        "babelio": "Babelio",
+        "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
         "booknode": "Pseudo Booknode"
@@ -865,7 +866,7 @@
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible.",
-      "file": "Importer un fichier (collecte, CSV ou pages enregistrées)",
+      "file": "Importer un fichier (collecte, Mangacollec, CSV ou pages enregistrées)",
       "collector": {
         "title": "Collecte depuis ton navigateur — fonctionne toujours",
         "step1": "Glisse ce bouton dans ta barre de favoris :",
@@ -884,7 +885,13 @@
       "reading": "Lecture du fichier…",
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
-      "failedTitle": "L'import n'a pas abouti"
+      "failedTitle": "L'import n'a pas abouti",
+      "mangacollec": {
+        "title": "Depuis Mangacollec",
+        "step1": "Sur mangacollec.com, connecté à ton compte, ouvre les outils de développement du navigateur (F12), onglet « Réseau », puis recharge la page de ta collection.",
+        "step2": "Repère la requête nommée « collection » et enregistre sa réponse dans un fichier (clic droit › Enregistrer la réponse, ou Copier la réponse puis colle-la dans un fichier).",
+        "step3": "Importe ce fichier avec le bouton ci-dessous : chaque tome possédé ou lu arrive dans ta bibliothèque, rangé dans sa série, avec son ISBN et sa couverture."
+      }
     },
     "export": {
       "title": "Exporter mes données",

@@ -213,6 +213,10 @@ public class ImportService {
             item.userId = userId;
             item.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
             item.status = status;
+            if (book.ownership() != null) {
+                item.ownership = book.ownership();
+            }
+            item.format = book.format();
             item.rating = book.rating();
             item.acquiredAt = book.acquiredAt();
             item.rankCategory = rankFor(userId, book, state);

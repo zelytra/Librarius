@@ -13,14 +13,16 @@ import {
   useGetApiImportJobsJobId,
   usePostApiImportCollected,
   usePostApiImportCsv,
+  usePostApiImportMangacollec,
   usePostApiImportSource,
 } from '../../api/generated/librarius';
 import type { ImportJobDto } from '../../api/generated/librarius';
 import { bookmarkletHref, isCollectedFile } from './collector';
+import { isMangacollecCollection } from './mangacollec';
 import styles from './ImportSection.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
-type Source = 'booknode' | 'babelio';
+type Source = 'booknode' | 'babelio' | 'mangacollec';
 
 /** How often a running import is polled — brisk enough to feel live, gentle on the server. */
 const POLL_MS = 1500;
@@ -33,7 +35,17 @@ const POLL_MS = 1500;
  * request that could only fail.
  */
 function importsByHandle(source: Source): boolean {
-  return source !== 'babelio';
+  return source === 'booknode';
+}
+
+/** Reads a file as JSON when it is one — Mangacollec's collection is saved with no extension. */
+function asJson(text: string): unknown {
+  if (!text.trimStart().startsWith('{')) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
 }
 
 /** The API reports import problems through the message of a 400 response. */
@@ -66,6 +78,7 @@ export function ImportSection() {
   const { mutateAsync: importFromSource, isPending: startingScrape } = usePostApiImportSource();
   const { mutateAsync: importCsv, isPending: startingCsv } = usePostApiImportCsv();
   const { mutateAsync: importCollected, isPending: startingCollected } = usePostApiImportCollected();
+  const { mutateAsync: importMangacollec, isPending: startingMangacollec } = usePostApiImportMangacollec();
   const [copied, setCopied] = useState(false);
 
   // The collector's link. React refuses a `javascript:` URL in `href` — rightly, for anything
@@ -108,7 +121,7 @@ export function ImportSection() {
   }, [job, queryClient, t]);
 
   const running = jobId != null;
-  const busy = running || startingScrape || startingCsv || startingCollected;
+  const busy = running || startingScrape || startingCsv || startingCollected || startingMangacollec;
 
   function reset() {
     setMessage(null);
@@ -137,9 +150,14 @@ export function ImportSection() {
     try {
       const first = files[0];
       const name = first.name.toLowerCase();
+      const text = await first.text();
+      const json = asJson(text);
       let started;
-      if (name.endsWith('.json')) {
-        const parsed: unknown = JSON.parse(await first.text());
+      if (isMangacollecCollection(json)) {
+        // Sent as the site wrote it: the API reads Mangacollec's own document.
+        started = await importMangacollec({ data: text });
+      } else if (json !== undefined || name.endsWith('.json')) {
+        const parsed: unknown = json ?? JSON.parse(text);
         if (!isCollectedFile(parsed)) {
           setError(t('settings.import.collector.notCollected'));
           return;
@@ -149,7 +167,7 @@ export function ImportSection() {
         const pages = await Promise.all(files.map((f) => f.text()));
         started = await importCollected({ data: { source, pages } });
       } else {
-        started = await importCsv({ data: await first.text() });
+        started = await importCsv({ data: text });
       }
       if (started.id) setJobId(started.id);
     } catch (err) {
@@ -180,6 +198,7 @@ export function ImportSection() {
             options={[
               { id: 'booknode', label: t('settings.import.sources.booknode') },
               { id: 'babelio', label: t('settings.import.sources.babelio') },
+              { id: 'mangacollec', label: t('settings.import.sources.mangacollec') },
             ]}
           />
           {importsByHandle(source) ? (
@@ -197,12 +216,24 @@ export function ImportSection() {
                 <Loading size="compact" pending={busy} />
               </Button>
             </div>
-          ) : (
+          ) : source === 'babelio' ? (
             <p className={styles.note}>{t('settings.import.babelioNote')}</p>
-          )}
+          ) : null}
 
-          {/* The path that works whatever the site does to servers: the reader's own browser,
-              already signed in, collects the library and hands back a file. */}
+          {source === 'mangacollec' ? (
+            /* Mangacollec has no export: its site loads the member's collection as one JSON
+               document, which the reader saves from their browser's network panel. */
+            <div className={styles.collector}>
+              <h4 className={styles.collectorTitle}>{t('settings.import.mangacollec.title')}</h4>
+              <ol className={styles.steps}>
+                <li>{t('settings.import.mangacollec.step1')}</li>
+                <li>{t('settings.import.mangacollec.step2')}</li>
+                <li>{t('settings.import.mangacollec.step3')}</li>
+              </ol>
+            </div>
+          ) : (
+          /* The path that works whatever the site does to servers: the reader's own browser,
+              already signed in, collects the library and hands back a file. */
           <div className={styles.collector}>
             <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
             <ol className={styles.steps}>
@@ -226,6 +257,7 @@ export function ImportSection() {
               {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
             </button>
           </div>
+          )}
 
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
@@ -235,7 +267,8 @@ export function ImportSection() {
             ref={fileInput}
             type="file"
             multiple
-            accept=".json,.csv,.html,.htm,application/json,text/csv,text/plain,text/html"
+            // Mangacollec's collection is saved with no extension: no filter for it.
+            accept={source === 'mangacollec' ? undefined : '.json,.csv,.html,.htm,application/json,text/csv,text/plain,text/html'}
             onChange={onFile}
             aria-label={t('settings.import.file')}
             className={styles.hiddenInput}

@@ -850,13 +850,14 @@
     },
     "import": {
       "title": "Import my library",
-      "description": "From Booknode or Babelio — by username, or with the collector in your browser — or from a CSV file (Goodreads…).",
+      "description": "From Booknode, Babelio or Mangacollec — by username, or with the collector in your browser — or from a CSV file (Goodreads…).",
       "signIn": "Sign in to import",
       "submit": "Import",
       "csv": "Import a CSV file",
       "sources": {
         "booknode": "Booknode",
-        "babelio": "Babelio"
+        "babelio": "Babelio",
+        "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
         "booknode": "Booknode handle"
@@ -865,7 +866,7 @@
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
       "unavailable": "Import is unavailable right now.",
       "unreadableFile": "Unreadable file.",
-      "file": "Import a file (collected, CSV or saved pages)",
+      "file": "Import a file (collected, Mangacollec, CSV or saved pages)",
       "collector": {
         "title": "Collect from your browser — always works",
         "step1": "Drag this button to your bookmarks bar:",
@@ -884,7 +885,13 @@
       "reading": "Reading the file…",
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
-      "failedTitle": "The import did not go through"
+      "failedTitle": "The import did not go through",
+      "mangacollec": {
+        "title": "From Mangacollec",
+        "step1": "On mangacollec.com, signed in, open your browser's developer tools (F12), “Network” tab, then reload your collection page.",
+        "step2": "Find the request named “collection” and save its response to a file (right click › Save response, or Copy response and paste it into a file).",
+        "step3": "Import that file with the button below: every volume you own or have read lands in your library, filed in its series, with its ISBN and cover."
+      }
     },
     "export": {
       "title": "Export my data",

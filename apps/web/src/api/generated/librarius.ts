@@ -3022,6 +3022,77 @@ export const usePostApiImportJson = <TError = void,
       return useMutation(getPostApiImportJsonMutationOptions(options), queryClient);
     }
 
+export const getPostApiImportMangacollecUrl = () => {
+
+
+
+
+  return `/api/import/mangacollec`
+}
+
+/**
+ * @summary Mangacollec
+ */
+export const postApiImportMangacollec = async (postApiImportMangacollecBody: string, options?: RequestInit): Promise<ImportJobDto> => {
+
+  return apiClient<ImportJobDto>(getPostApiImportMangacollecUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', ...options?.headers },
+    body: postApiImportMangacollecBody
+  }
+);}
+
+
+
+
+
+export const getPostApiImportMangacollecMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext> => {
+
+const mutationKey = ['postApiImportMangacollec'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiImportMangacollec>>, {data: string}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiImportMangacollec(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiImportMangacollecMutationResult = NonNullable<Awaited<ReturnType<typeof postApiImportMangacollec>>>
+    export type PostApiImportMangacollecMutationBody = string
+    export type PostApiImportMangacollecMutationError = void
+
+    /**
+ * @summary Mangacollec
+ */
+export const usePostApiImportMangacollec = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiImportMangacollec>>, TError,{data: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiImportMangacollec>>,
+        TError,
+        {data: string},
+        TContext
+      > => {
+      return useMutation(getPostApiImportMangacollecMutationOptions(options), queryClient);
+    }
+
 export const getPostApiImportSourceUrl = (source: string,) => {
 
 

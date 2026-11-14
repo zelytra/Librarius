@@ -299,6 +299,21 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
 couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arrière-plan.
 
+### Depuis Mangacollec
+
+Mangacollec n'a pas de bouton d'export, mais son site charge toute ta collection d'un coup :
+
+1. Sur mangacollec.com, connecté, ouvre les outils de développement (F12), onglet
+   « Réseau », et recharge la page de ta collection.
+2. Repère la requête **« collection »** et enregistre sa réponse dans un fichier (clic droit
+   › Enregistrer la réponse).
+3. Dans Réglages → Importer, choisis **Mangacollec** et importe ce fichier.
+
+Chaque tome possédé ou lu arrive rangé dans sa série, avec son ISBN, sa couverture et sa date
+d'ajout. Un tome lu mais pas possédé est marqué « Lu » et « Non possédé » ; un coffret prend
+le format « Coffret », une édition Deluxe ou Perfect le format « Deluxe ». Mangacollec ne
+donne pas les auteurs : ils sont retrouvés ensuite grâce à l'ISBN.
+
 ### Depuis un fichier CSV
 
 Le bouton « Importer un fichier » accepte aussi l'export de Babelio, de Goodreads, ou un
