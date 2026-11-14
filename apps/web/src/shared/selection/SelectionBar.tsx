@@ -61,6 +61,8 @@ export function SelectionBar({ selection }: { selection: Selection }) {
   if (!selection.active) return null;
   return (
     <>
+      {/* Hidden while the sheet is open: it would sit over the sheet's own footer. */}
+      {!open && (
       <div className={styles.bar} role="region" aria-label={t('selection.title')}>
         <span className={styles.count}>{t('selection.count', { count })}</span>
         <Button variant="secondary" size="compact" onClick={selection.stop}>
@@ -70,6 +72,7 @@ export function SelectionBar({ selection }: { selection: Selection }) {
           {t('selection.edit')}
         </Button>
       </div>
+      )}
       {open && (
         <Modal title={t('selection.sheetTitle', { count })} onClose={close} description={t('selection.sheetHint')}>
           <div className={styles.sheet}>

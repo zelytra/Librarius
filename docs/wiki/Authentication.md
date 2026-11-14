@@ -14,6 +14,12 @@ file). The refresh token lives in `localStorage` and is renewed silently. Signin
 it (`revokeTokensOnSignout`). The ordinary browser session is lengthened too (7 days idle, 30
 at most).
 
+Asking for `offline_access` needs the user to hold the realm role of that name, or Keycloak
+refuses the code exchange (`CODE_TO_TOKEN_ERROR`, "Offline tokens not allowed") and the app
+comes back signed out. The realm's `defaultRoles` and the local test users therefore carry
+`offline_access` next to `user`: a `defaultRoles` of `["user"]` alone replaced Keycloak's own
+default and left a freshly imported realm unable to sign anyone in.
+
 The realm is imported **once**, on an empty database: a change to
 `infra/keycloak/realm-librarius.json` or to the realm in the Helm chart reaches a running
 Keycloak only by hand — the `kcadm` lines are in

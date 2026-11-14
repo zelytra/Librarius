@@ -42,8 +42,9 @@
 
 .tick {
   position: absolute;
+  /* Top left: the top right carries the series' volume count and the remove button. */
   top: 6px;
-  right: 6px;
+  left: 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

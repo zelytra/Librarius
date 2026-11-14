@@ -154,8 +154,11 @@ function CoverTile({
   rankColor,
   onDelete,
   onOpen,
+  selecting = false,
 }: {
   item: LibraryItemDto;
+  /** While several titles are being picked (#468): the remove button would only get in the way. */
+  selecting?: boolean;
   /** Colour of the category the title is filed under, absent when it carries no rank. */
   rankColor?: string;
   onDelete: () => void;
@@ -198,6 +201,7 @@ function CoverTile({
             <Icon name={rankIcon} size={14} fill color="var(--on-accent)" />
           </span>
         )}
+        {!selecting && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -208,6 +212,7 @@ function CoverTile({
         >
           <Icon name="delete" size={14} color="var(--rose)" />
         </button>
+        )}
       </Cover>
     </div>
   );
@@ -510,6 +515,7 @@ function CollectionContent() {
           rankColor={entry.item.rankCode ? rankColors.get(entry.item.rankCode) : undefined}
           onOpen={() => open(entry.item)}
           onDelete={() => void remove(entry.item.id!)}
+          selecting={selection.active}
         />
       </Selectable>
     );

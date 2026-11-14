@@ -15,7 +15,7 @@
   "roles": {
     "realm": [{ "name": "user", "description": "Utilisateur de Ma Bibliothèque" }]
   },
-  "defaultRoles": ["user"],
+  "defaultRoles": ["user", "offline_access"],
   "users": [
     {
       "username": "alice",
@@ -25,7 +25,7 @@
       "firstName": "Alice",
       "lastName": "Lectrice",
       "credentials": [{ "type": "password", "value": "alice", "temporary": false }],
-      "realmRoles": ["user"]
+      "realmRoles": ["user", "offline_access"]
     },
     {
       "username": "bob",
@@ -35,7 +35,7 @@
       "firstName": "Bob",
       "lastName": "Lecteur",
       "credentials": [{ "type": "password", "value": "bob", "temporary": false }],
-      "realmRoles": ["user"]
+      "realmRoles": ["user", "offline_access"]
     }
   ],
   "clients": [
