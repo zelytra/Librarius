@@ -36,6 +36,82 @@ paths:
       - Achievement Resource
       security:
       - SecurityScheme: []
+  /api/admin/feedback:
+    get:
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackPageDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Feedback
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/admin/feedback/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackDetailDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Feedback
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/admin/monitoring:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonitoringDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Monitoring
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
   /api/authors:
     get:
       parameters:
@@ -432,6 +508,53 @@ paths:
       summary: Job
       tags:
       - Export Resource
+      security:
+      - SecurityScheme: []
+  /api/feedback:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Submit
+      tags:
+      - Feedback Resource
+      security:
+      - SecurityScheme: []
+  /api/feedback/errors:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientErrorDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Error
+      tags:
+      - Feedback Resource
       security:
       - SecurityScheme: []
   /api/genres:
@@ -2555,6 +2678,27 @@ components:
         label:
           type: string
           pattern: \S
+    ClientErrorDto:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          pattern: \S
+          maxLength: 2000
+        stack:
+          type: string
+          maxLength: 20000
+        page:
+          type: string
+          maxLength: 1024
+        appVersion:
+          type: string
+          maxLength: 64
+        userAgent:
+          type: string
+          maxLength: 512
     CollectedRequest:
       type: object
       required:
@@ -2808,6 +2952,99 @@ components:
           format: int32
         url:
           type: string
+    FeedbackCreateDto:
+      type: object
+      required:
+      - kind
+      - message
+      properties:
+        kind:
+          type: string
+          pattern: BUG|IDEA|OTHER
+        message:
+          type: string
+          pattern: \S
+          maxLength: 5000
+        page:
+          type: string
+          maxLength: 1024
+        appVersion:
+          type: string
+          maxLength: 64
+        userAgent:
+          type: string
+          maxLength: 512
+        logs:
+          type: string
+          maxLength: 20000
+    FeedbackDetailDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        source:
+          type: string
+        message:
+          type: string
+        page:
+          type: string
+        appVersion:
+          type: string
+        userAgent:
+          type: string
+        details:
+          type: string
+        reporterName:
+          type: string
+        occurrences:
+          type: integer
+          format: int32
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        lastSeenAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    FeedbackDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        source:
+          type: string
+        message:
+          type: string
+        page:
+          type: string
+        appVersion:
+          type: string
+        reporterName:
+          type: string
+        occurrences:
+          type: integer
+          format: int32
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        lastSeenAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    FeedbackPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedbackDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
     FormatDto:
       type: object
       properties:
@@ -3171,6 +3408,8 @@ components:
           type: boolean
         publicAccount:
           type: boolean
+        admin:
+          type: boolean
     MemberSearchDto:
       type: object
       properties:
@@ -3191,6 +3430,34 @@ components:
           type: string
         trusted:
           type: boolean
+    MonitoringDayDto:
+      type: object
+      properties:
+        day:
+          $ref: "#/components/schemas/LocalDate"
+        reports:
+          type: integer
+          format: int64
+        errors:
+          type: integer
+          format: int64
+        activeUsers:
+          type: integer
+          format: int64
+    MonitoringDto:
+      type: object
+      properties:
+        activeNow:
+          type: integer
+          format: int64
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonitoringDayDto"
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceStatusDto"
     OffsetDateTime:
       type: string
       format: date-time
@@ -3475,6 +3742,15 @@ components:
         upcoming:
           type: boolean
         coverUrl:
+          type: string
+    ServiceStatusDto:
+      type: object
+      properties:
+        name:
+          type: string
+        up:
+          type: boolean
+        detail:
           type: string
     SharedReviewDto:
       type: object
