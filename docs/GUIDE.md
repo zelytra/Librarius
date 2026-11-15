@@ -444,6 +444,25 @@ navigateur, ensuite elle garde le choix fait ici, sur cet appareil. Cinq thèmes
 **Système** — qui suit ton téléphone ou ton ordinateur, et c'est le réglage par défaut —,
 Crème, Sauge, Rose et Nuit.
 
+## Signaler un problème
+
+Le bouton rond en bas à droite, sur chaque écran, ouvre « **Signaler un problème** » :
+choisis Problème, Idée ou Autre, décris ce qui se passe, puis « Envoyer ». Les informations
+techniques — la page, la version de l'application, ton navigateur et un court journal des
+écrans visités et des erreurs récentes — sont jointes pour aider à reproduire le problème ;
+« Voir ce qui sera joint » les montre, et la case permet de ne pas les envoyer. Ton message va
+aux administrateurs de Librarius, et à eux seuls.
+
+L'application signale aussi d'elle-même les erreurs qu'elle n'attendait pas, côté serveur
+comme dans ton navigateur, pour qu'un bug soit vu même quand personne ne l'écrit.
+
+### Administration
+
+Les comptes qui ont le rôle administrateur (attribué dans Keycloak) voient « Administration »
+dans les réglages : la liste des signalements et des erreurs, chacun avec son journal, et la
+supervision — membres actifs en ce moment et par jour, signalements et erreurs par jour sur
+30 jours, état de la base de données et de Keycloak.
+
 ## Questions fréquentes
 
 ### Pourquoi ce livre est-il introuvable ?

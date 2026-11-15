@@ -1018,3 +1018,23 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | A11 | ✅ Time-based statistics (`/api/stats/timeline`) (#55) | Core product |
 | A12 | **Provider enrichment** of a work's editions is wired but mostly dormant (#197). `GET /api/works/{id}/editions` now asks the work's provider for its other printings and merges them in, cached and rate-limited, degrading to the stored list when there is no reference or the provider is down. Open Library feeds it since 2026-11: its search results carry the work key, so a book added from Discover is enriched with the printings Open Library knows (verified live). What is left: BnF stores an ark but exposes no per-work edition list, AniList describes works, not editions, and entries stored before V12 — or before the Open Library fix — carry no reference and never will | Core product |
 | A13 | **Live author bibliography.** `GET /api/authors/{id}` adds the works a provider credits to the author (`librarius.author.enrich-bibliography`), kept only when one of the result's credited names *is* the author — family name in last position and spelled out, given names possibly as initials or with a romanisation suffix — since a provider's author search matches words: the BnF answered "Frank Herbert" with F. T. H. Fletcher and the German writer Herbert Frank. A provider work opens its catalog page on the Author screen. Left: Open Library's `/authors/{id}/works.json` is not used, the author search stands in for it | Universal search, authors & editions |
+
+## Reports and admin (#488–#491)
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/api/feedback` | `FeedbackCreateDto(kind BUG\|IDEA\|OTHER, message ≤5000, page, appVersion, userAgent, logs ≤20000)` → 201 `FeedbackCreatedDto(id)` |
+| POST | `/api/feedback/errors` | `ClientErrorDto(message ≤2000, stack, page, appVersion, userAgent)` → 204; `FeedbackService.recordError` upserts on `fingerprint` = SHA-256 of `WEB\|message\|first stack line` (`INSERT … ON CONFLICT` — `occurrences + 1`, `last_seen_at = now()`) |
+| GET | `/api/admin/feedback?page=&size=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user` |
+| GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown |
+| GET | `/api/admin/monitoring` | `MonitoringDto(activeNow, days[30] of MonitoringDayDto(day, reports, errors, activeUsers), services[ServiceStatusDto(name, up, detail)])` — `database` (`select 1`), `keycloak` (the realm's discovery document, 3 s timeout) |
+
+`MeDto.admin` is `CurrentUser.isAdmin()` (`SecurityIdentity.hasRole("admin")`).
+`ServerErrorMapper` (`@ServerExceptionMapper` on `Throwable`) passes a
+`WebApplicationException`'s own response through; anything else is logged, recorded with
+source `API` (signature = exception class + `Resource#method` + first `zelytra.` frame; page =
+`METHOD /path`; details = stack trace) in a `REQUIRES_NEW` transaction, and answered 500
+`{"message": "Erreur interne du serveur."}`. `ActivityTracker` (`@ServerResponseFilter`)
+upserts `user_activity` for an authenticated caller off the request (Mutiny worker pool), at
+most once a minute per member; a write that finds no `app_user` yet is retried next request.
+

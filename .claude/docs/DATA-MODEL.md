@@ -558,6 +558,20 @@ every half exactly), checked `BETWEEN 0.5 AND 5` and on the half step (`rating *
 floor(rating * 2)`); `library_item`, which had no check, first loses any value outside 1–5.
 The API mirrors the check with `@HalfStar`; the CSV export writes a whole rating as `5`.
 
+### V35 — reports (#489, #490)
+
+`feedback`: `id`, `user_id` (→ `app_user`, `ON DELETE SET NULL`), `kind` (`BUG`, `IDEA`,
+`OTHER`, `ERROR`, checked), `source` (`USER`, `WEB`, `API`, checked), `message`, `details`
+(logs or stack trace), `page`, `app_version`, `user_agent`, `fingerprint` (unique where not
+null — one row per error), `occurrences`, `created_at`, `last_seen_at` (indexed desc). Read
+by the admins only.
+
+### V36 — user activity (#491)
+
+`user_activity(user_id → app_user ON DELETE CASCADE, day, last_seen_at)`, PK `(user_id,
+day)`, idx `last_seen_at`. Active per day = rows per day; active now = `last_seen_at` within
+5 minutes.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

@@ -357,6 +357,21 @@ the next boot, so there is no manual migration. Persistent sessions add write vo
 concurrent connections — leave `keycloak.dbPoolMaxSize` at its value and watch
 `pg_stat_activity` if the shared pool is ever under pressure (§ "Scaling out").
 
+### 🛡️ Granting the admin role (manual action)
+
+The admin screens (#488) need the realm role `admin`. The `keycloak-setup` Job creates the
+role on the live realm and grants it to nobody. To make someone an admin: the console
+(`/auth/admin`, realm *librarius*, *Users* → the account → *Role mapping* → *Assign role* →
+filter by realm roles → `admin`), or
+
+```bash
+k exec deploy/librarius-keycloak -- /opt/keycloak/bin/kcadm.sh add-roles -r librarius \
+  --uusername <their Keycloak username> --rolename admin
+```
+
+after the `config credentials` line of the next section. They see « Administration » in
+Settings once they sign in again.
+
 ### 🎨 Changing the realm of a running Keycloak (manual action)
 
 **The realm is imported once, on an empty database, and never again.** Both the chart and
