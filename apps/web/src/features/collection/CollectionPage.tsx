@@ -30,7 +30,7 @@ import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
 import { OWNERSHIPS, ownershipLabelKey, type Ownership } from '../../shared/statuses';
 import styles from './CollectionPage.module.css';
-import { interleave, isKeyedSort } from './shelfOrder';
+import { interleave, isKeyedSort, mergeByActivity } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
 import { ReorderGrid } from './ReorderGrid';
 import { SERIES_KEY, useSelection } from '../../shared/selection/useSelection';
@@ -141,13 +141,6 @@ const SORTS: { id: SortBy; labelKey: string }[] = [
   { id: 'rating', labelKey: 'collection.sorts.rating' },
 ];
 
-/** The date of the last thing that happened to a title: finished, started or added. */
-function activityOf(item: LibraryItemDto): string {
-  return [item.progress?.finishedAt, item.progress?.startedAt, item.acquiredAt]
-    .filter((d): d is string => Boolean(d))
-    .sort()
-    .pop() ?? '';
-}
 
 function CoverTile({
   item,
@@ -396,15 +389,10 @@ function CollectionContent() {
   // Grouped and by latest activity, the series blocks take their place among the one-shots
   // by the date of what last happened in them, instead of all leading the shelf. A series
   // older than every title loaded so far waits for the page that reaches its date.
-  const mixed = useMemo(() => {
-    if (!grouped || sortBy !== 'recent') return null;
-    const dated = items.map((it) => ({ item: it, date: activityOf(it) }));
-    const floor = hasNextPage && dated.length > 0 ? dated[dated.length - 1].date : '';
-    const series = shelf
-      .map((s) => ({ series: s, date: s.lastActivity ?? '' }))
-      .filter((s) => !hasNextPage || s.date >= floor);
-    return [...series, ...dated].sort((a, b) => b.date.localeCompare(a.date));
-  }, [grouped, sortBy, items, shelf, hasNextPage]);
+  const mixed = useMemo(
+    () => (grouped && sortBy === 'recent' ? mergeByActivity(shelf, items, hasNextPage) : null),
+    [grouped, sortBy, items, shelf, hasNextPage],
+  );
 
   // Grouped and by title, author or genre (#387): the series blocks are filed among the
   // one-shots by the same key, instead of all leading the shelf in title order — which made
@@ -424,14 +412,15 @@ function CollectionContent() {
   // is where the French wording of Or / Argent / Bronze lives.
   const { data: categories = [] } = useGetApiCategories();
 
-  const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string }[] = [
-    { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all') },
-    { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead') },
-    { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites') },
+  const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string; icon?: string }[] = [
+    { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all'), icon: 'collections_bookmark' },
+    { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead'), icon: 'library_books' },
+    { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites'), icon: 'favorite' },
     ...OWNERSHIP_SHELVES.map((ownership) => ({
       key: `own-${ownership}`,
       filter: { kind: 'ownership' as const, ownership },
       name: t(ownershipLabelKey(ownership)),
+      icon: OWNERSHIPS.find((o) => o.id === ownership)?.icon,
     })),
     ...categories.map((c: CategoryDto) => ({
       key: c.id!,
@@ -551,6 +540,7 @@ function CollectionContent() {
             key={s.key}
             selected={sameShelf(shelfFilter, s.filter)}
             dotColor={s.dot}
+            icon={s.icon}
             onClick={() => setShelfFilter(s.filter)}
           >
             {s.name}

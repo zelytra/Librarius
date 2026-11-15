@@ -9,6 +9,14 @@ import { Loading } from './states';
  * <p>A browser without `IntersectionObserver` (and the test DOM) keeps the button, so the list
  * is never stuck at its first page.
  */
+/** The nearest ancestor that scrolls, or null for the viewport. The app scrolls in its <main>. */
+function scrollParent(node: HTMLElement): HTMLElement | null {
+  for (let el = node.parentElement; el; el = el.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(el).overflowY)) return el;
+  }
+  return null;
+}
+
 export function InfiniteMore({
   hasMore,
   loading,
@@ -37,8 +45,9 @@ export function InfiniteMore({
         const { hasMore: more, loading: busy, onMore: load } = state.current;
         if (entries.some((e) => e.isIntersecting) && more && !busy) load();
       },
-      // Start a screen ahead, so the next covers are there when the reader gets to them.
-      { rootMargin: '0px 0px 800px 0px' },
+      // Start a screen ahead, so the next covers are there when the reader gets to them. The
+      // margin only extends the root, so the root is the element that actually scrolls (#473).
+      { root: scrollParent(node), rootMargin: '0px 0px 800px 0px' },
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -52,7 +61,9 @@ export function InfiniteMore({
     wasLoading.current = loading;
     const node = sentinel.current;
     if (!finished || !node || !observes || !hasMore) return;
-    if (node.getBoundingClientRect().top < window.innerHeight + 800) state.current.onMore();
+    const root = scrollParent(node);
+    const bottom = root ? root.getBoundingClientRect().bottom : window.innerHeight;
+    if (node.getBoundingClientRect().top < bottom + 800) state.current.onMore();
   }, [loading, observes, hasMore]);
 
   if (!hasMore) return null;

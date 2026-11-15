@@ -212,7 +212,10 @@ function DiscoverContent() {
           tablet breakpoint they settle at a reading-form measure instead of stretching the
           full content width — see `.searchColumn` in the module CSS. */}
       <div className={styles.searchColumn}>
-        <form onSubmit={onSubmit} className={styles.searchForm}>
+        <form onSubmit={onSubmit} className={styles.searchForm} role="search">
+          {/* Searching and scanning, side by side and of equal weight (#474): the barcode is
+              the quickest way in with a book in hand. */}
+          <div className={styles.searchRow}>
           <div className={styles.searchBar}>
             <Icon name="search" size={21} color="var(--faint)" />
             <input
@@ -225,6 +228,11 @@ function DiscoverContent() {
             <button type="submit" aria-label={t('common.search')} className={styles.submit}>
               <Icon name="arrow_forward" size={20} color="var(--accent-deep)" />
             </button>
+          </div>
+          <Button type="button" variant="primary" className={styles.scanButton} onClick={() => navigate('/scan')}>
+            <Icon name="barcode_scanner" size={22} color="var(--on-accent)" />
+            {t('discover.scanShort')}
+          </Button>
           </div>
 
           {detectedIsbn && (
@@ -240,11 +248,6 @@ function DiscoverContent() {
             >
               <Icon name={advancedOpen ? 'expand_less' : 'tune'} size={18} color="var(--accent-deep)" />
               {t(advancedOpen ? 'discover.advanced.close' : 'discover.advanced.open')}
-            </button>
-            {/* The bookshop path: a barcode instead of a typed title (#68). */}
-            <button type="button" onClick={() => navigate('/scan')} className={styles.advancedToggle}>
-              <Icon name="barcode_scanner" size={18} color="var(--accent-deep)" />
-              {t('discover.scan')}
             </button>
           </div>
 

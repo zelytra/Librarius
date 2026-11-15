@@ -60,7 +60,7 @@ describe('OnboardingFlow', () => {
     const onDismiss = renderFlow();
 
     await userEvent.click(sheet().getByText('Suivant'));
-    await userEvent.click(sheet().getByText('Découvrir des titres'));
+    await userEvent.click(sheet().getByText('Ajouter un livre'));
 
     expect(await screen.findByText('écran de découverte')).toBeInTheDocument();
     expect(onDismiss).toHaveBeenCalledTimes(1);

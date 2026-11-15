@@ -27,7 +27,8 @@ test('renders the translated navigation', () => {
   renderAt('/collection');
   expect(screen.getByText('Accueil')).toBeInTheDocument();
   expect(screen.getByText('Bibliothèque')).toBeInTheDocument();
-  expect(screen.getByText('Découvrir')).toBeInTheDocument();
+  // #474: the tab is named for what it is for.
+  expect(screen.getByText('Ajouter un livre')).toBeInTheDocument();
 });
 
 // Settings is code split, so the click has to wait for its chunk to resolve.

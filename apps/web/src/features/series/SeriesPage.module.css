@@ -155,31 +155,17 @@
 
 /* The legend spells out what the fills and the icons mean; the grid itself stays
    readable without it, which is the point of pairing a colour with an icon. */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
 
-.legendItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: var(--radius-badge);
-  font-size: var(--fs-10-5);
-  font-weight: 600;
-}
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-  gap: 14px 10px;
+.cell {
+  /* A grid item of the shared cover grid: the min-width its track needs (see Grid). */
+  min-width: 0;
 }
 
 /* One volume: a cover (or its ghost) over a chip naming the state. */
 .volume {
+  /* A button shrinks to its content: it fills its grid cell like a cover tile does. */
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -208,6 +194,8 @@
 
 /* A volume not on the shelf: the outline of a cover, faded, with its number. */
 .ghost {
+  /* The width of a cover, so a missing volume holds its place in the grid (#472). */
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -229,14 +217,13 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: var(--radius-chip);
-  font-size: var(--fs-10);
+  /* Readable at arm's length (#472): the state is what the grid is for. */
+  font-size: var(--fs-12);
   font-weight: 700;
-  white-space: nowrap;
+  text-align: center;
 }
-
-
 
 /* ── The four states ──────────────────────────────────────────────────────────
    Each pairs a fill with an icon, and the two states the user does not own are

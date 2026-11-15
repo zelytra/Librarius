@@ -8,7 +8,7 @@ import { apiErrorStatus } from '../../shared/apiClient';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
 import { colorFor } from '../../shared/ui/coverPalette';
-import { Button } from '../../shared/ui/primitives';
+import { Button, Grid } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import {
   getGetApiLibraryQueryKey,
@@ -61,9 +61,6 @@ const VOLUME_VISUALS: Record<VolumeState, { cell: string; icon: string; fill: bo
   missing: { cell: styles.missing, icon: 'priority_high', fill: false },
   upcoming: { cell: styles.upcoming, icon: 'schedule', fill: false },
 };
-
-/** The states, in the order the legend lists them. */
-const LEGEND: VolumeState[] = ['read', 'owned', 'missing', 'upcoming'];
 
 /** Where an "add" lands. The wording differs, the payload does not. */
 type AddTarget = 'library' | 'wishlist';
@@ -347,14 +344,6 @@ function SeriesContent({ id }: { id: string }) {
           {owned > 0 && <SelectButton selection={selection} />}
         </div>
 
-        <div className={styles.legend}>
-          {LEGEND.map((state) => (
-            <span key={state} className={`${styles.legendItem} ${VOLUME_VISUALS[state].cell}`}>
-              <Icon name={VOLUME_VISUALS[state].icon} size={13} fill={VOLUME_VISUALS[state].fill} />
-              {t(`series.states.${state}`)}
-            </span>
-          ))}
-        </div>
 
         {volumes.length === 0 ? (
           <EmptyState
@@ -364,12 +353,14 @@ function SeriesContent({ id }: { id: string }) {
             description={t('series.emptyVolumes.description')}
           />
         ) : (
-          <div className={styles.grid}>
+          // The library's own cover grid (#472): three covers across on a phone, readable,
+          // instead of four or five thumbnails.
+          <Grid>
             {volumes.map((volume, index) => (
               <div
                 key={volume.volumeNumber ?? `unnumbered-${index}`}
                 // While selecting, a volume not held has nothing to change: it steps back.
-                className={selection.active && !volume.libraryItemId ? styles.unavailable : undefined}
+                className={`${styles.cell} ${selection.active && !volume.libraryItemId ? styles.unavailable : ''}`}
               >
                 <Selectable
                   id={volume.libraryItemId}
@@ -385,7 +376,7 @@ function SeriesContent({ id }: { id: string }) {
                 </Selectable>
               </div>
             ))}
-          </div>
+          </Grid>
         )}
 
         <SelectionBar selection={selection} />
@@ -500,11 +491,26 @@ function VolumeCell({
       )}
       <span className={`${styles.stateChip} ${visual.cell}`}>
         <Icon name={visual.icon} size={12} fill={visual.fill} />
-        {t(`series.tile.${state}`)}
+        {tileLabel(volume, state, t)}
         {wished && <Icon name="favorite" size={11} fill style={{ color: 'var(--rose)' }} />}
       </span>
     </button>
   );
+}
+
+/**
+ * What a volume's tile says (#472). A volume in the library says both families, the way
+ * Detail does — had or not, read or not — so « non lu » can no longer pass for « not had »;
+ * a volume outside it is missing (a hole in the run) or still to come.
+ */
+function tileLabel(volume: SeriesVolumeDto, state: VolumeState, t: TFunction): string {
+  if (volume.libraryItemId || volume.owned || volume.read) {
+    return t('series.tile.held', {
+      ownership: t(volume.owned ? 'series.tile.owned' : 'series.tile.notOwned'),
+      reading: t(volume.read ? 'series.tile.read' : 'series.tile.toRead'),
+    });
+  }
+  return t(`series.tile.${state}`);
 }
 
 /** Publication status, or the kind of the series when the catalog does not know it. */

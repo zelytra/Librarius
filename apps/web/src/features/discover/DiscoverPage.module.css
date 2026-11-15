@@ -21,6 +21,24 @@
   margin-bottom: 22px;
 }
 
+.searchRow {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.searchRow .searchBar {
+  flex: 1;
+  min-width: 0;
+}
+
+.scanButton {
+  flex-shrink: 0;
+  /* The field's own height, so the two read as one control row. */
+  min-height: 46px;
+  border-radius: var(--radius-field);
+}
+
 .searchBar {
   display: flex;
   align-items: center;

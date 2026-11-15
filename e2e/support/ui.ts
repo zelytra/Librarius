@@ -27,7 +27,7 @@ export function figure(page: Page, label: string): Locator {
  * sentence made four journeys fail on a wording change that broke nothing.
  */
 export async function searchCatalog(page: Page, query: string): Promise<void> {
-  await page.getByPlaceholder(/^Rechercher un titre/).fill(query);
+  await page.getByPlaceholder(/^Titre, auteur ou ISBN/).fill(query);
   await page.getByRole('button', { name: 'Rechercher' }).click();
   await page.getByRole('button', { name: 'Pile à lire', exact: true }).first().waitFor();
 }

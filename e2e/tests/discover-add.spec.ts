@@ -10,7 +10,7 @@ import { addResult, FIRST_BOOK, searchCatalog } from '../support/ui';
  */
 test('adds a book found on Discover to the collection', async ({ page }) => {
   await page.goto('/discover');
-  await expect(page.getByRole('heading', { name: 'Découvrir' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ajouter un livre' })).toBeVisible();
 
   await searchCatalog(page, 'dune');
   await expect(page.getByText(FIRST_BOOK, { exact: true }).first()).toBeVisible();

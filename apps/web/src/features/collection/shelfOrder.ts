@@ -52,3 +52,40 @@ export function interleave(
   return out;
 }
 
+
+/** The latest thing that happened to a title as the screen sees it: finished, started or added. */
+export function activityOf(item: LibraryItemDto): string {
+  return [item.progress?.finishedAt, item.progress?.startedAt, item.acquiredAt]
+    .filter((d): d is string => Boolean(d))
+    .sort()
+    .pop() ?? '';
+}
+
+/**
+ * Files the series blocks among the one-shots of the latest-activity shelf (#473). The titles
+ * keep the server's order — it knows the day each was added, which the screen does not, and a
+ * client-side re-sort used to drop undated titles below the next page's. A series goes before
+ * the first dated title less recent than it; while more pages remain, a series older than
+ * every loaded title waits for the page that reaches its date.
+ */
+export function mergeByActivity(
+  series: SeriesSummaryDto[],
+  items: LibraryItemDto[],
+  hasNextPage: boolean,
+): ({ series: SeriesSummaryDto } | { item: LibraryItemDto })[] {
+  const queue = [...series].sort((a, b) => (b.lastActivity ?? '').localeCompare(a.lastActivity ?? ''));
+  const out: ({ series: SeriesSummaryDto } | { item: LibraryItemDto })[] = [];
+  let next = 0;
+  for (const item of items) {
+    const date = activityOf(item);
+    // An undated title is no boundary: the server placed it by a date the screen cannot read.
+    while (date && next < queue.length && (queue[next].lastActivity ?? '') >= date) {
+      out.push({ series: queue[next++] });
+    }
+    out.push({ item });
+  }
+  if (!hasNextPage) {
+    while (next < queue.length) out.push({ series: queue[next++] });
+  }
+  return out;
+}
