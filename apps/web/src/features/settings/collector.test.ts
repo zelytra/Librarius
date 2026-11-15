@@ -224,6 +224,12 @@ describe('bookmarkletHref', () => {
     expect(() => new Function(code)).not.toThrow();
     expect(code.endsWith(')()')).toBe(true);
   });
+
+  test('is a bookmark address with no line break in it', () => {
+    const href = bookmarkletHref();
+    expect(href.startsWith('javascript:')).toBe(true);
+    expect(decodeURIComponent(href)).not.toMatch(/[\r\n]/);
+  });
 });
 
 describe('isCollectedFile', () => {
