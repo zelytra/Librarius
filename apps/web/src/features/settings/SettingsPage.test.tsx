@@ -238,3 +238,24 @@ describe('SettingsPage — session', () => {
     expect(screen.queryByRole('button', { name: 'Se déconnecter' })).not.toBeInTheDocument();
   });
 });
+
+/** #488: the way into the admin screens, for the admin role alone. */
+describe('SettingsPage — administration', () => {
+  beforeEach(() => setAuthenticated(true));
+  afterEach(() => resetAuth());
+
+  test('offers the administration to an admin', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
+    renderWithProviders(<SettingsPage />);
+
+    expect(await screen.findByRole('button', { name: "Ouvrir l'administration" })).toBeInTheDocument();
+  });
+
+  test('says nothing of it to anyone else', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })));
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByDisplayValue('Bob');
+    expect(screen.queryByRole('button', { name: "Ouvrir l'administration" })).not.toBeInTheDocument();
+  });
+});
