@@ -482,19 +482,37 @@ function CollectionContent() {
 
   const { mutate: saveOrder } = usePutApiViewsIdOrder({
     mutation: {
+      // The move shows the moment it is made (#486): the view's cached order takes it at once,
+      // and goes back to what it was if the server refuses it.
+      onMutate: async ({ id, data }) => {
+        const key = getGetApiViewsQueryKey();
+        await queryClient.cancelQueries({ queryKey: key });
+        const previous = queryClient.getQueryData<LibraryViewDto[]>(key);
+        queryClient.setQueryData<LibraryViewDto[]>(key, (old) =>
+          old?.map((v) => (v.id === id ? { ...v, order: data.keys } : v)));
+        return { previous };
+      },
       onSuccess: (saved) => {
-        // The order is in: the view's cache entry takes it at once, the page re-sorts.
         queryClient.setQueryData<LibraryViewDto[]>(getGetApiViewsQueryKey(), (old) =>
           old?.map((v) => (v.id === saved.id ? saved : v)));
         void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
       },
-      onError: () => toast.error(t('toasts.failed')),
+      onError: (_error, _variables, context) => {
+        if (context?.previous) queryClient.setQueryData(getGetApiViewsQueryKey(), context.previous);
+        toast.error(t('toasts.failed'));
+      },
     },
   });
+  const arrange = (shownKeys: string[]) => {
+    if (!activeView?.id) return;
+    saveOrder({ id: activeView.id, data: { keys: mergedOrder(shownKeys, activeView.order ?? []) } });
+    // The order just arranged is the one the view shows from now on.
+    if (sortBy !== 'manual') setSortBy('manual');
+  };
 
-  // In a view, titles are moved straight on the shelf (#482); not while picking titles, and
-  // not across category sections, where a title's place is its category.
-  const draggable = Boolean(activeView) && !byCategoryOn && !selection.active;
+  // In a view, titles are moved straight on the shelf (#482), and split by category within
+  // their own section, where a title's place is its category (#486); not while picking titles.
+  const draggable = Boolean(activeView?.id) && !selection.active;
 
   const renderEntry = (entry: ShelfEntry) =>
     'series' in entry ? (
@@ -523,6 +541,12 @@ function CollectionContent() {
         />
       </Selectable>
     );
+
+  const renderKey = (key: string) => {
+    const entry = entryByKey.get(key);
+    return entry ? renderEntry(entry) : null;
+  };
+  const categorySections = byCategoryOn ? byCategory(entries, categories) : [];
 
   return (
     <>
@@ -632,34 +656,33 @@ function CollectionContent() {
         />
       )}
 
-      {entries.length > 0 && draggable && activeView?.id && (
-        <ReorderGrid
-          keys={entryKeys}
-          render={(key) => {
-            const entry = entryByKey.get(key);
-            return entry ? renderEntry(entry) : null;
-          }}
-          onCommit={(keys) => {
-            saveOrder({ id: activeView.id!, data: { keys: mergedOrder(keys, activeView.order ?? []) } });
-            // The order just arranged is the one the view shows from now on.
-            if (sortBy !== 'manual') setSortBy('manual');
-          }}
-        />
-      )}
-
-      {entries.length > 0 && !draggable && byCategoryOn && (
+      {entries.length > 0 && byCategoryOn && (
         // Split by category (#451): a series stays one block, on the shelf most of its volumes
         // are filed under.
-        byCategory(entries, categories).map((section) => (
+        categorySections.map((section) => (
           <section key={section.code ?? 'none'} className={styles.categorySection}>
             <h3 className={styles.categoryTitle}>
               {section.color && <span className={styles.categoryDot} style={{ background: section.color }} />}
               {section.label ?? t('views.uncategorised')}
               <span className={styles.categoryCount}>{section.entries.length}</span>
             </h3>
-            <Grid>{section.entries.map(renderEntry)}</Grid>
+            {draggable ? (
+              <ReorderGrid
+                keys={section.entries.map(keyOf)}
+                render={renderKey}
+                onCommit={(keys) =>
+                  // The whole shelf as shown, this section in its new order.
+                  arrange(categorySections.flatMap((other) => (other === section ? keys : other.entries.map(keyOf))))}
+              />
+            ) : (
+              <Grid>{section.entries.map(renderEntry)}</Grid>
+            )}
           </section>
         ))
+      )}
+
+      {entries.length > 0 && draggable && !byCategoryOn && (
+        <ReorderGrid keys={entryKeys} render={renderKey} onCommit={arrange} />
       )}
 
       {entries.length > 0 && !draggable && !byCategoryOn && (

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Stars } from '../detail/StarRating';
 import type { SharedReviewsDto } from '../../api/generated/librarius';
 import { ReportButton } from '../report/ReportButton';
 import { activeLanguage } from '../../i18n/languages';
@@ -54,10 +55,7 @@ export function ReadersReviews({
                   <div className={styles.head}>
                     <span className={styles.name}>{name}</span>
                     {review.rating != null && (
-                      <span className={styles.stars} aria-label={t('reviews.stars', { rating: review.rating })}>
-                        {'★'.repeat(review.rating)}
-                        <span className={styles.starsOff}>{'★'.repeat(5 - review.rating)}</span>
-                      </span>
+                      <Stars value={review.rating} />
                     )}
                   </div>
                   {review.review && <p className={styles.text}>{review.review}</p>}

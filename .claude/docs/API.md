@@ -111,20 +111,20 @@ ManualBookDto(Kind kind, String title, String authors, String seriesTitle,
               Integer originalYear, String synopsis, String genres,
               String provider, String providerRef)   // where the entry came from, or null
 
-LibraryCreateDto(ManualBookDto book, LibraryStatus status, Integer rating, LocalDate acquiredAt)
-LibraryItemDto(UUID id, String status, Integer rating, String review, LocalDate acquiredAt,
+LibraryCreateDto(ManualBookDto book, LibraryStatus status, Double rating, LocalDate acquiredAt)
+LibraryItemDto(UUID id, String status, Double rating, String review, LocalDate acquiredAt,
                String rankCode, ProgressView progress, BookView book)
 LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
 ProgressView(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt)
 ProgressDto(Integer currentPage, Integer percent, LibraryStatus status,
             LocalDate startedAt, LocalDate finishedAt)
-ReviewDto(Integer rating, String review)
+ReviewDto(@HalfStar Double rating, String review)   // 0.5-5 by halves (#484)
 RankAssignDto(UUID categoryId)
 
 WishlistCreateDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
 WishlistUpdateDto(WishPriority priority, BigDecimal estimatedPrice, String note)
-WishlistAcquireDto(LibraryStatus status, Integer rating, LocalDate acquiredAt)
+WishlistAcquireDto(LibraryStatus status, Double rating, LocalDate acquiredAt)
 WishlistItemDto(UUID id, String priority, BigDecimal estimatedPrice, String note, BookView book)
 WishlistPageDto(List<WishlistItemDto> items, int page, int size, long total,
                 WishlistBudgetDto budget)
@@ -149,7 +149,7 @@ ExportDto(int schemaVersion, OffsetDateTime exportedAt, ExportUserDto user,
           List<ExportCategoryDto> categories, List<ExportGoalDto> goals,
           List<ExportCollectionItemDto> collection, List<ExportWishDto> wishlist,
           List<ExportSeriesFollowDto> followedSeries)
-ExportCollectionItemDto(ManualBookDto book, LibraryStatus status, Integer rating,
+ExportCollectionItemDto(ManualBookDto book, LibraryStatus status, Double rating,
                         String review, LocalDate acquiredAt, String rankCode,
                         ExportProgressDto progress)
 ExportWishDto(ManualBookDto book, WishPriority priority, BigDecimal estimatedPrice, String note)
@@ -170,9 +170,9 @@ SeriesDetailDto(UUID id, String kind, String title, String originalTitle, String
                 String synopsis, Integer totalVolumes, String status, long ownedCount,
                 long readCount, boolean followed, List<SeriesVolumeDto> volumes)
 SeriesMissingDto(UUID seriesId, String title, List<Integer> volumes)
-SeriesReviewDto(UUID id, UUID seriesId, int rating, String review,
+SeriesReviewDto(UUID id, UUID seriesId, double rating, String review,
                 OffsetDateTime createdAt, OffsetDateTime updatedAt)
-SeriesReviewUpsertDto(Integer rating, String review)   // rating required, 1-5
+SeriesReviewUpsertDto(Double rating, String review)   // rating required, 0.5-5 by halves
 
 AuthorSummaryDto(UUID id, String name, String photoUrl, long workCount, boolean followed)
 AuthorWorkDto(UUID workId, String kind, String title, String authors, String seriesTitle,
@@ -383,7 +383,8 @@ collection.
 
 ## Rating and review
 
-`PUT /api/library/{id}/review` takes a rating from 1 to 5 and free text, and replaces both:
+`PUT /api/library/{id}/review` takes a rating from 0.5 to 5 by half stars (`@HalfStar`, #484;
+4.3 is a 400) and free text, and replaces both:
 sending a null rating removes it. A blank review is stored as nothing rather than as an
 empty string.
 

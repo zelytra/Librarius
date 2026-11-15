@@ -49,13 +49,72 @@
 }
 
 .day {
+  position: relative;
   aspect-ratio: 1;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  border: none;
   border-radius: var(--radius-thumb);
+  font: inherit;
   font-size: var(--fs-13);
   color: var(--ink-soft);
+}
+
+button.day {
+  cursor: pointer;
+}
+
+button.day:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* The book finished that day, as its cover (#485); the date stays readable over it. */
+.dayCover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dayCover + .dayNumber {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  min-width: 18px;
+  padding: 0 3px;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-11);
+  line-height: 18px;
+}
+
+.dayFinished:not(:has(.dayCover)) {
+  box-shadow: inset 0 -3px 0 var(--accent-deep);
+}
+
+.dayMore {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--fs-11);
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.dayPicked {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }
 
 .dayRead {
@@ -102,4 +161,17 @@
 .itemSpan {
   font-size: var(--fs-13);
   color: var(--muted);
+}
+
+.more {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
+  cursor: pointer;
 }

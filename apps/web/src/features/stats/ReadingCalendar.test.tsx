@@ -29,4 +29,57 @@ describe('ReadingCalendar', () => {
     expect(await screen.findByText('Aucune lecture terminée ce mois-ci.')).toBeInTheDocument();
     await waitFor(() => expect(asked).toContain('2021-04-01..2021-04-30'));
   });
+
+  const reading = (id: string, title: string, startedAt: string | undefined, finishedAt: string, coverUrl?: string) =>
+    ({ itemId: id, title, kind: 'BOOK', startedAt, finishedAt, days: 1, coverUrl });
+
+  function readingsReturn(readings: unknown[]) {
+    server.use(http.get('*/api/stats/readings', () => HttpResponse.json(readings)));
+  }
+
+  /** #485: a book shows in the day it was finished, as its cover. */
+  test('places each finished book in its day, as its cover', async () => {
+    readingsReturn([
+      reading('i1', 'Dune', '2021-03-05', '2021-03-19', 'https://covers.example/dune.jpg'),
+      reading('i2', 'Hyperion', undefined, '2021-03-19'),
+    ]);
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    const day = await screen.findByRole('button', { name: '19 mars : 2 lectures' });
+    expect(day.querySelector('img')).toHaveAttribute('src', 'https://covers.example/dune.jpg');
+    // The second book of the day is counted on the cell, not hidden.
+    expect(day).toHaveTextContent('+1');
+    // A day covered by a reading but not its last carries no cover.
+    expect(screen.getByRole('button', { name: '12 mars : 1 lecture' }).querySelector('img')).toBeNull();
+  });
+
+  /** #485: a day picked lists its own readings only; picked again, the month comes back. */
+  test('lists the readings of the day picked on the grid', async () => {
+    readingsReturn([
+      reading('i1', 'Dune', '2021-03-05', '2021-03-08'),
+      reading('i2', 'Hyperion', '2021-03-20', '2021-03-22'),
+    ]);
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    const day = await screen.findByRole('button', { name: '21 mars : 1 lecture' });
+    await userEvent.click(day);
+    expect(day).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Hyperion')).toBeInTheDocument();
+    expect(screen.queryByText('Dune')).not.toBeInTheDocument();
+
+    await userEvent.click(day);
+    expect(day).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Dune')).toBeInTheDocument();
+  });
+
+  /** #485: a busy month no longer runs down the page. */
+  test('lists the first readings of the month and the rest on demand', async () => {
+    readingsReturn(Array.from({ length: 7 }, (_, i) => reading(`i${i}`, `Livre ${i}`, undefined, `2021-03-1${i}`)));
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    expect(await screen.findByText('Livre 0')).toBeInTheDocument();
+    expect(screen.queryByText('Livre 4')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Voir les 3 autres lectures' }));
+    expect(screen.getByText('Livre 6')).toBeInTheDocument();
+  });
 });

@@ -56,7 +56,7 @@ class ImportPersistTest {
             List<LibraryItem> owned = items.listByUser(userId);
             assertEquals(1, owned.size());
             LibraryItem item = owned.get(0);
-            assertEquals(Integer.valueOf(4), item.rating);
+            assertEquals(Double.valueOf(4), item.rating);
             // A dated reading: the title is read, finished on that day, and counted in the
             // reading history rather than filed as an acquisition.
             assertEquals(zelytra.librarius.domain.LibraryStatus.READ, item.status);

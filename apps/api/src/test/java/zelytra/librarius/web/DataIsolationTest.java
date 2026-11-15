@@ -181,7 +181,7 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library/" + aliceItem)
                 .then().statusCode(200)
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Note privée d'Alice."));
     }
 
@@ -650,7 +650,7 @@ class DataIsolationTest {
                 .body("{ \"rating\": 1, \"review\": \"Avis de Bob.\" }")
                 .when().put("/api/series/" + shared + "/review")
                 .then().statusCode(200)
-                .body("rating", is(1))
+                .body("rating", is(1.0f))
                 .body("review", is("Avis de Bob."));
 
         given().auth().oauth2(token("bob")).when().delete("/api/series/" + shared + "/review")
@@ -659,7 +659,7 @@ class DataIsolationTest {
         // Alice's own review came through every one of Bob's calls untouched.
         given().auth().oauth2(token("alice")).when().get("/api/series/" + shared + "/review")
                 .then().statusCode(200)
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Avis privé d'Alice."));
 
         // And Bob's own delete really did remove what he wrote, not Alice's row.

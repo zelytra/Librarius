@@ -224,6 +224,11 @@ describe('bookmarkletHref', () => {
     expect(() => new Function(code)).not.toThrow();
     expect(code.endsWith(')()')).toBe(true);
   });
+
+  test('is a bookmark address with no line break in it', () => {
+    // The scheme is checked by the test above; this one is about the line breaks only.
+    expect(decodeURIComponent(bookmarkletHref())).not.toMatch(/[\r\n]/);
+  });
 });
 
 describe('isCollectedFile', () => {

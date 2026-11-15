@@ -40,7 +40,7 @@ class SharedReviewsApiTest {
         return new String[] {item.getString("id"), item.getString("book.workId")};
     }
 
-    private static void review(String user, String itemId, int rating, String text, Boolean shared) {
+    private static void review(String user, String itemId, double rating, String text, Boolean shared) {
         given().auth().oauth2(token(user)).contentType("application/json")
                 .body("{ \"rating\": " + rating + ", \"review\": \"" + text + "\""
                         + (shared == null ? "" : ", \"shared\": " + shared) + " }")
@@ -85,6 +85,21 @@ class SharedReviewsApiTest {
         relation("bob", "alice", "block", true);
         assertEquals(0, reviews("alice", bobs[1]).getInt("count"));
         assertNull(reviews("alice", bobs[1]).get("average"));
+    }
+
+    /** #484: half stars count at their value in the average. */
+    @Test
+    void halfStarsCountInTheAverage() {
+        String title = "Halves " + UUID.randomUUID();
+        String[] bobs = add("bob", title);
+        String[] alices = add("alice", title);
+        review("bob", bobs[0], 4.5, "Très bien", true);
+        review("alice", alices[0], 3.5, "Pas mal", true);
+        relation("alice", "bob", "follow", true);
+        relation("bob", "alice", "follow", true);
+
+        assertEquals(4.0, reviews("alice", bobs[1]).getDouble("average"));
+        assertEquals(4.5f, reviews("alice", bobs[1]).getFloat("reviews.find { it.review == 'Très bien' }.rating"));
     }
 
     @Test

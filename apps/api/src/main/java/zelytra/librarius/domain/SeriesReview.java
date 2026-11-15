@@ -33,7 +33,7 @@ public class SeriesReview {
     public UUID seriesId;
 
     @Column(nullable = false)
-    public Integer rating;
+    public Double rating;
 
     @Column(columnDefinition = "text")
     public String review;

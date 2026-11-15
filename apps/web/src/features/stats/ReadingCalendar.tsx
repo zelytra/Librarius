@@ -15,6 +15,14 @@ function monthStart(month: string, delta = 0): Date {
   return new Date(Date.UTC(y, m - 1 + delta, 1));
 }
 
+/** Whether a reading covered `day`, from its start (or its finish alone) to its finish. */
+function covers(r: ReadingSpanDto, day: string): boolean {
+  return !!r.finishedAt && (r.startedAt ?? r.finishedAt) <= day && day <= r.finishedAt;
+}
+
+/** How many month readings show before « voir plus ». */
+const LIST_SHOWN = 4;
+
 /** How many readings cover each day of the month, by `YYYY-MM-DD`. */
 function coverage(readings: ReadingSpanDto[], first: Date, last: Date): Map<string, number> {
   const counts = new Map<string, number>();
@@ -32,8 +40,9 @@ function coverage(readings: ReadingSpanDto[], first: Date, last: Date): Map<stri
 
 /**
  * The readings finished in a month (#479), on a calendar: each day a reading covered is
- * tinted — deeper where several overlap — and the month's readings are listed under it, with
- * when each started and finished and how many days that took.
+ * tinted — deeper where several overlap — and a book shows as its cover in the day it was
+ * finished (#485). The readings are listed under it, with when each started and finished and
+ * how many days that took: a few of the month's, or those of the day picked on the grid.
  */
 export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
   const { t } = useTranslation();
@@ -43,6 +52,10 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
   const last = new Date(monthStart(month, 1).getTime() - 86_400_000);
   const { data: readings = [] } = useGetApiStatsReadings({ from: iso(first), to: iso(last) });
   const counts = coverage(readings, first, last);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const listed = picked ? readings.filter((r) => covers(r, picked)) : readings;
+  const shown = picked || showAll ? listed : listed.slice(0, LIST_SHOWN);
 
   const fmt = (d: Date, options: Intl.DateTimeFormatOptions) =>
     d.toLocaleDateString(locale, { timeZone: 'UTC', ...options });
@@ -51,7 +64,11 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
   const lead = (first.getUTCDay() + 6) % 7;
   const days = Array.from({ length: last.getUTCDate() }, (_, i) => new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), i + 1)));
   const weekdays = Array.from({ length: 7 }, (_, i) => fmt(new Date(Date.UTC(2024, 0, 1 + i)), { weekday: 'narrow' }));
-  const go = (delta: number) => setMonth(iso(monthStart(month, delta)).slice(0, 7));
+  const go = (delta: number) => {
+    setMonth(iso(monthStart(month, delta)).slice(0, 7));
+    setPicked(null);
+    setShowAll(false);
+  };
 
   const span = (r: ReadingSpanDto) => {
     const end = parse(r.finishedAt!);
@@ -82,15 +99,34 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
         ))}
         {Array.from({ length: lead }, (_, i) => <span key={`pad${i}`} />)}
         {days.map((d) => {
-          const n = counts.get(iso(d)) ?? 0;
+          const key = iso(d);
+          const n = counts.get(key) ?? 0;
+          const className = `${styles.day} ${n > 0 ? (n > 1 ? styles.dayMany : styles.dayRead) : ''}`;
+          if (n === 0) return <span key={key} className={className}>{d.getUTCDate()}</span>;
+          const finished = readings.filter((r) => r.finishedAt === key);
+          const cover = finished.find((r) => r.coverUrl)?.coverUrl;
           return (
-            <span
-              key={iso(d)}
-              className={`${styles.day} ${n > 0 ? (n > 1 ? styles.dayMany : styles.dayRead) : ''}`}
-              aria-label={n > 0 ? t('stats.calendar.day', { date: fmt(d, { day: 'numeric', month: 'long' }), count: n }) : undefined}
+            <button
+              key={key}
+              type="button"
+              className={`${className} ${finished.length > 0 ? styles.dayFinished : ''} ${picked === key ? styles.dayPicked : ''}`}
+              aria-label={t('stats.calendar.day', { date: fmt(d, { day: 'numeric', month: 'long' }), count: n })}
+              aria-pressed={picked === key}
+              onClick={() => setPicked(picked === key ? null : key)}
             >
-              {d.getUTCDate()}
-            </span>
+              {cover && (
+                <img
+                  className={styles.dayCover}
+                  src={cover}
+                  // The day's label names the readings: the cover is decorative.
+                  // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+                  alt=""
+                  loading="lazy"
+                />
+              )}
+              <span className={styles.dayNumber}>{d.getUTCDate()}</span>
+              {finished.length > 1 && <span className={styles.dayMore}>{t('stats.calendar.moreOnDay', { count: finished.length - 1 })}</span>}
+            </button>
           );
         })}
       </div>
@@ -98,13 +134,18 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
         <p className={styles.empty}>{t('stats.calendar.empty')}</p>
       ) : (
         <ul className={styles.list}>
-          {readings.map((r) => (
+          {shown.map((r) => (
             <li key={r.itemId} className={styles.item}>
               <span className={styles.itemTitle}>{r.title}</span>
               <span className={styles.itemSpan}>{span(r)}</span>
             </li>
           ))}
         </ul>
+      )}
+      {listed.length > shown.length && (
+        <button type="button" className={styles.more} onClick={() => setShowAll(true)}>
+          {t('stats.calendar.more', { count: listed.length - shown.length })}
+        </button>
       )}
     </section>
   );

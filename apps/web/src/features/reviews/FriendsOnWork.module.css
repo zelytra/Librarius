@@ -72,8 +72,3 @@
   color: var(--accent-deep);
 }
 
-.stars {
-  flex-shrink: 0;
-  font-size: var(--fs-13);
-  color: var(--accent);
-}

@@ -543,6 +543,39 @@ describe('DetailPage', () => {
     expect(screen.getByText(/Pocket · français/)).toBeInTheDocument();
   });
 
+  /** #485: each edition shows its cover, so the reader recognises theirs at a glance. */
+  test('shows the cover of each edition, or a placeholder when it has none', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn([
+      TWO_EDITIONS[0],
+      { ...TWO_EDITIONS[1], coverUrl: 'https://covers.example/relie.jpg' },
+      { id: 'edition-poche', publisher: 'J\'ai lu', language: 'fr', owned: false },
+    ]);
+    renderDetail();
+
+    const laffont = (await screen.findByText('Robert Laffont · français · Relié')).closest('li')!;
+    // Decorative next to the edition's name: no alternative text to read twice.
+    expect(laffont.querySelector('img')).toHaveAttribute('src', 'https://covers.example/relie.jpg');
+    const jaiLu = screen.getByText(/J'ai lu/).closest('li')!;
+    expect(jaiLu.querySelector('img')).toBeNull();
+  });
+
+  /** #485: a work with many printings no longer runs down the whole screen. */
+  test('shows the first editions and the rest on demand', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    const many = Array.from({ length: 9 }, (_, i) => ({
+      id: `edition-${i}`, publisher: `Éditeur ${i}`, language: 'fr', owned: false,
+    }));
+    editionsReturn([TWO_EDITIONS[0], ...many]);
+    renderDetail();
+
+    await screen.findByText(/Éditeur 0/);
+    expect(screen.getAllByRole('button', { name: /Je possède l'édition/ })).toHaveLength(3);
+    await userEvent.click(screen.getByRole('button', { name: 'Voir les 6 autres éditions' }));
+    expect(screen.getAllByRole('button', { name: /Je possède l'édition/ })).toHaveLength(9);
+    expect(screen.queryByRole('button', { name: /autres éditions/ })).not.toBeInTheDocument();
+  });
+
   test('switches the collection row to the chosen edition', async () => {
     const bodies: Record<string, unknown>[] = [];
     libraryItemReturns(MULTI_EDITION);

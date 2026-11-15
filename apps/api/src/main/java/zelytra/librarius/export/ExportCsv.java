@@ -73,7 +73,7 @@ final class ExportCsv {
                 text(book.publisher()),
                 text(book.pageCount()),
                 text(book.originalYear()),
-                text(item.rating()),
+                rating(item.rating()),
                 text(item.review()),
                 shelf(item.status()),
                 "collection",
@@ -148,6 +148,14 @@ final class ExportCsv {
             case TO_READ -> "to-read";
             case ABANDONED -> "abandoned";
         };
+    }
+
+    /** A rating as Goodreads writes one, 4 rather than 4.0; a half star keeps its half (#484). */
+    static String rating(Double value) {
+        if (value == null) {
+            return "";
+        }
+        return value == Math.rint(value) ? String.valueOf(value.intValue()) : String.valueOf(value);
     }
 
     private static String text(Object value) {

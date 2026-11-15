@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -636,6 +636,50 @@ describe('CollectionPage', () => {
       expect((saved[0] as { keys: string[] }).keys[0]).toBe('item:b');
       // The view now shows its manual order.
       expect(await screen.findByRole('button', { name: 'Manuel' })).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    /** #486: the move shows the moment it is made, not once the server has answered. */
+    test('shows a move at once, and puts the shelf back when it cannot be saved', async () => {
+      libraryReturns([A, B, C]);
+      viewsReturn([VIEW]);
+      let answer!: () => void;
+      server.use(http.put('*/api/views/:id/order', () =>
+        new Promise<Response>((resolve) => {
+          answer = () => resolve(HttpResponse.json({ message: 'boom' }, { status: 500 }));
+        })));
+      renderWithProviders(<CollectionPage />, { route: '/collection?v=view-1&view=flat&sort=manual' });
+
+      await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
+      const earlier = screen.getAllByRole('button', { name: 'Déplacer avant' });
+      await userEvent.click(earlier[2]);
+
+      expect(titlesInOrder()).toEqual(['Charlie', 'Bravo', 'Alpha']);
+      await waitFor(() => expect(answer).toBeTypeOf('function'));
+      answer();
+      await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
+    });
+
+    /** #486: split by category, a title moves within its own category. */
+    test('moves a title within its category when the view is split by category', async () => {
+      libraryReturns([A, B, C]);
+      viewsReturn([{ ...VIEW, groupByCategory: true }]);
+      const saved: { keys: string[] }[] = [];
+      server.use(http.put('*/api/views/:id/order', async ({ request }) => {
+        const body = (await request.json()) as { keys: string[] };
+        saved.push(body);
+        return HttpResponse.json({ ...VIEW, groupByCategory: true, order: body.keys });
+      }));
+      renderWithProviders(<CollectionPage />, { route: '/collection?v=view-1&view=flat&sort=manual&cat=1' });
+
+      const gold = (await screen.findByRole('heading', { name: /^Or/ })).closest('section')!;
+      // Charlie leads the « Or » section; one place later puts Alpha first.
+      await userEvent.click(within(gold).getAllByRole('button', { name: 'Déplacer après' })[0]);
+
+      await waitFor(() => expect(saved).toHaveLength(1));
+      const keys = saved[0].keys;
+      expect(keys.indexOf('item:a')).toBeLessThan(keys.indexOf('item:c'));
+      expect(keys).toEqual(expect.arrayContaining(['item:a', 'item:b', 'item:c']));
+      await waitFor(() => expect(titlesInOrder().indexOf('Alpha')).toBeLessThan(titlesInOrder().indexOf('Charlie')));
     });
 
     /** #482: « Par catégorie » is a layout like « Par série » and « Tous les titres ». */

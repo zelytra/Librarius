@@ -84,7 +84,7 @@ public final class ApiDtos {
      * @param rankCode  the category they filed it under ("or", "argent"…), or null
      */
     public record FriendOnWorkDto(String id, String displayName, boolean trusted, String status,
-            String ownership, boolean wished, Integer rating, String rankCode, String rankLabel,
+            String ownership, boolean wished, Double rating, String rankCode, String rankLabel,
             String rankColor) {
         public FriendOnWorkDto withWish() {
             return new FriendOnWorkDto(id, displayName, trusted, status, ownership, true, rating,
@@ -152,7 +152,7 @@ public final class ApiDtos {
             zelytra.librarius.domain.BookFormat format,
             UUID categoryId,
             Boolean clearCategory,
-            @Min(1) @Max(5) Integer rating,
+            @HalfStar Double rating,
             Boolean clearRating,
             Boolean remove) {
     }
@@ -310,7 +310,7 @@ public final class ApiDtos {
     public record LibraryCreateDto(
             @NotNull @Valid ManualBookDto book,
             LibraryStatus status,
-            @Min(1) @Max(5) Integer rating,
+            @HalfStar Double rating,
             LocalDate acquiredAt,
             Ownership ownership,
             zelytra.librarius.domain.BookFormat format) {
@@ -421,7 +421,7 @@ public final class ApiDtos {
      *                  {@code book.pageCount} is the edition's
      * @param format    the format of the reader's copy (#447), null when unsaid
      */
-    public record LibraryItemDto(UUID id, String status, Integer rating, String review,
+    public record LibraryItemDto(UUID id, String status, Double rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
             boolean reviewShared, String ownership, BigDecimal price, Integer pageCount,
             String format) {
@@ -512,14 +512,14 @@ public final class ApiDtos {
      * @param shared whether the rating and review are shared with whoever can see the reader's
      *               activity (#205); absent leaves the current choice as it is
      */
-    public record ReviewDto(@Min(1) @Max(5) Integer rating, @Size(max = 5000) String review, Boolean shared) {
-        public ReviewDto(Integer rating, String review) {
+    public record ReviewDto(@HalfStar Double rating, @Size(max = 5000) String review, Boolean shared) {
+        public ReviewDto(Double rating, String review) {
             this(rating, review, null);
         }
     }
 
     /** One review another reader shared (#206): who, how many stars, what they wrote, when. */
-    public record SharedReviewDto(UUID id, String authorId, String authorName, Integer rating, String review,
+    public record SharedReviewDto(UUID id, String authorId, String authorName, Double rating, String review,
             java.time.OffsetDateTime updatedAt) {
     }
 
@@ -683,7 +683,7 @@ public final class ApiDtos {
      * What the user knows about the purchase when a wish becomes a book they own. Every
      * field is optional, body included: the title itself comes from the wish.
      */
-    public record WishlistAcquireDto(LibraryStatus status, Integer rating, LocalDate acquiredAt) {
+    public record WishlistAcquireDto(LibraryStatus status, @HalfStar Double rating, LocalDate acquiredAt) {
     }
 
     /**
@@ -858,7 +858,7 @@ public final class ApiDtos {
      * never folded into anything the per-title review reports on. Sharing it with other
      * members (#205) and rolling it into a public score (#206) are both out of scope here.
      */
-    public record SeriesReviewDto(UUID id, UUID seriesId, int rating, String review,
+    public record SeriesReviewDto(UUID id, UUID seriesId, double rating, String review,
             java.time.OffsetDateTime createdAt, java.time.OffsetDateTime updatedAt, boolean shared) {
         public static SeriesReviewDto of(zelytra.librarius.domain.SeriesReview r) {
             return new SeriesReviewDto(r.id, r.seriesId, r.rating, r.review, r.createdAt,
@@ -873,9 +873,9 @@ public final class ApiDtos {
      * whether it is reviewed; a series review row exists only because the caller chose to
      * leave one, so removing it is a {@code DELETE}, not a rating of {@code null}.
      */
-    public record SeriesReviewUpsertDto(@NotNull @Min(1) @Max(5) Integer rating,
+    public record SeriesReviewUpsertDto(@NotNull @HalfStar Double rating,
             @Size(max = 5000) String review, Boolean shared) {
-        public SeriesReviewUpsertDto(Integer rating, String review) {
+        public SeriesReviewUpsertDto(Double rating, String review) {
             this(rating, review, null);
         }
     }
@@ -1014,7 +1014,7 @@ public final class ApiDtos {
      *                 it carries no rank
      */
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
-            LibraryStatus status, Integer rating, String review, LocalDate acquiredAt,
+            LibraryStatus status, Double rating, String review, LocalDate acquiredAt,
             String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price,
             Integer pageCount, zelytra.librarius.domain.BookFormat format) {
     }

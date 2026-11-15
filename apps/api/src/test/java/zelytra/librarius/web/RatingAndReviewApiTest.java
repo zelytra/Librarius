@@ -68,13 +68,13 @@ class RatingAndReviewApiTest {
 
         putReview(itemId, "{ \"rating\": 5, \"review\": \"Relu trois fois.\" }")
                 .statusCode(200)
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Relu trois fois."));
 
         given().auth().oauth2(token())
                 .when().get("/api/library/" + itemId)
                 .then().statusCode(200)
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Relu trois fois."));
     }
 
@@ -92,7 +92,7 @@ class RatingAndReviewApiTest {
     @Test
     void theRatingCanBeCleared() {
         String itemId = addBook("Rating - cleared", "Rating Cleared");
-        putReview(itemId, "{ \"rating\": 4 }").statusCode(200).body("rating", is(4));
+        putReview(itemId, "{ \"rating\": 4 }").statusCode(200).body("rating", is(4.0f));
 
         putReview(itemId, "{}").statusCode(200).body("rating", nullValue());
     }
@@ -103,6 +103,42 @@ class RatingAndReviewApiTest {
 
         putReview(itemId, "{ \"rating\": 0 }").statusCode(400);
         putReview(itemId, "{ \"rating\": 6 }").statusCode(400);
+    }
+
+    /** #484: a rating goes by half stars, from half a star to five. */
+    @Test
+    void aHalfStarRatingIsKept() {
+        String itemId = addBook("Rating - half", "Rating Half");
+
+        putReview(itemId, "{ \"rating\": 4.5 }").statusCode(200).body("rating", is(4.5f));
+        putReview(itemId, "{ \"rating\": 0.5 }").statusCode(200).body("rating", is(0.5f));
+        given().auth().oauth2(token())
+                .when().get("/api/library/" + itemId)
+                .then().statusCode(200).body("rating", is(0.5f));
+    }
+
+    /** #484: anything between two half stars is no rating the stars can show. */
+    @Test
+    void aRatingOffTheHalfStarsIsRejected() {
+        String itemId = addBook("Rating - off step", "Rating Step");
+
+        putReview(itemId, "{ \"rating\": 4.3 }").statusCode(400);
+        putReview(itemId, "{ \"rating\": 0.25 }").statusCode(400);
+        putReview(itemId, "{ \"rating\": 5.5 }").statusCode(400);
+    }
+
+    /** #484: four and a half stars counts among the favourites and sorts between 4 and 5. */
+    @Test
+    void halfStarsSortAndFilterInPlace() {
+        String author = "Rating Halves";
+        putReview(addBook("Halves - four", author), "{ \"rating\": 4 }").statusCode(200);
+        putReview(addBook("Halves - four and a half", author), "{ \"rating\": 4.5 }").statusCode(200);
+        putReview(addBook("Halves - five", author), "{ \"rating\": 5 }").statusCode(200);
+        putReview(addBook("Halves - three and a half", author), "{ \"rating\": 3.5 }").statusCode(200);
+
+        listByAuthor(author, "minRating", 4, "sort", "rating")
+                .statusCode(200)
+                .body("items.book.title", contains("Halves - five", "Halves - four and a half", "Halves - four"));
     }
 
     @Test

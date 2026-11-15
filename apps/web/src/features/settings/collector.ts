@@ -104,22 +104,22 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     if (source === 'booknode') {
       return Array.from(page.querySelectorAll('.book-item'))
         .map((row) => row.outerHTML)
-        .join('\n');
+        .join(' ');
     }
-    // Babelio's current list: one `li.lib-book` per title. Taken as is when the page has it.
+    /* Babelio's current list: one `li.lib-book` per title. Taken as is when the page has it. */
     const items = Array.from(page.querySelectorAll('li.lib-book'));
-    if (items.length > 0) return items.map((item) => item.outerHTML).join('\n');
+    if (items.length > 0) return items.map((item) => item.outerHTML).join(' ');
     const rows: Element[] = [];
     page.querySelectorAll('a[href*="/livres/"]').forEach((link) => {
-      // The site's menus, header and footer link to promoted books on every page: not the
-      // reader's library.
+      /* The site's menus, header and footer link to promoted books on every page: not the */
+      /* reader's library. */
       if (link.closest('[class*="megamenu"], nav, header, footer')) return;
       const row = link.closest('tr') ?? link.closest('li') ?? link.parentElement;
       if (row && !rows.includes(row)) rows.push(row);
     });
     const tableRows = rows.filter((row) => row.tagName === 'TR').map((row) => row.outerHTML);
     const others = rows.filter((row) => row.tagName !== 'TR').map((row) => row.outerHTML);
-    return (tableRows.length ? '<table><tbody>' + tableRows.join('') + '</tbody></table>' : '') + others.join('\n');
+    return (tableRows.length ? '<table><tbody>' + tableRows.join('') + '</tbody></table>' : '') + others.join(' ');
   }
 
   /**
@@ -174,7 +174,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
           try {
             visit(JSON.parse(value), key);
           } catch {
-            // Not JSON: nothing to look into.
+            /* Not JSON: nothing to look into. */
           }
         }
       } else if (value && typeof value === 'object') {
@@ -187,15 +187,15 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         visit(store.getItem(key), key);
       }
     }
-    // A session kept in a readable cookie counts too (#478).
+    /* A session kept in a readable cookie counts too (#478). */
     for (const pair of (e.document.cookie ?? '').split(';')) {
       const at = pair.indexOf('=');
       if (at > 0) visit(decodeURIComponent(pair.slice(at + 1).trim()), pair.slice(0, at).trim());
     }
     const attempts: [string, Record<string, string> | undefined][] = [];
     for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
-    // The reader's own collection with the site's cookies, for a session the page cannot read:
-    // no public profile needed (#478).
+    /* The reader's own collection with the site's cookies, for a session the page cannot read: */
+    /* no public profile needed (#478). */
     attempts.push([api + 'users/me/collection', undefined]);
     if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
     for (const [url, headers] of attempts) {
@@ -203,7 +203,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         const response = await e.fetch(url, headers);
         if (response.ok) return await response.text();
       } catch {
-        // The next attempt may work.
+        /* The next attempt may work. */
       }
     }
     return null;
@@ -241,8 +241,8 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
       pages.push(rowsOf(await load(urls[i])));
     }
-    // Babelio files the wished books under their own « Pense-bête » filter, which the list the
-    // reader stands on may leave out (#477): that filter is walked too, its pages included.
+    /* Babelio files the wished books under their own « Pense-bête » filter, which the list the */
+    /* reader stands on may leave out (#477): that filter is walked too, its pages included. */
     if (source === 'babelio') {
       const seen = new Set(urls);
       const wishLinks = Array.from(first.querySelectorAll('a[href]'))
@@ -292,7 +292,9 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
 
 /** The bookmarklet: the collector, serialized and run on the page it is clicked on. */
 export function bookmarkletHref(): string {
-  return 'javascript:' + encodeURIComponent('(' + collectLibrary.toString() + ')()');
+  // One line: some browsers drop or refuse a bookmark whose address holds a line break (#487).
+  const source = collectLibrary.toString().replace(/\s*[\r\n]+\s*/g, ' ');
+  return 'javascript:' + encodeURIComponent('(' + source + ')()');
 }
 
 /** Whether a parsed file is one the collector saved. */

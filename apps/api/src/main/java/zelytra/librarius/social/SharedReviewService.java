@@ -66,11 +66,11 @@ public class SharedReviewService {
                 .filter(row -> gate.canView(viewerId, (String) row[0]))
                 .limit(LIMIT)
                 .map(row -> new SharedReviewDto((UUID) row[5], (String) row[0], (String) row[1],
-                        (Integer) row[2], (String) row[3], (OffsetDateTime) row[4]))
+                        (Double) row[2], (String) row[3], (OffsetDateTime) row[4]))
                 .toList();
-        List<Integer> ratings = reviews.stream().map(SharedReviewDto::rating).filter(r -> r != null).toList();
+        List<Double> ratings = reviews.stream().map(SharedReviewDto::rating).filter(r -> r != null).toList();
         Double average = ratings.isEmpty() ? null
-                : Math.round(ratings.stream().mapToInt(Integer::intValue).average().orElse(0) * 10) / 10.0;
+                : Math.round(ratings.stream().mapToDouble(Double::doubleValue).average().orElse(0) * 10) / 10.0;
         return new SharedReviewsDto(average, reviews.size(), reviews);
     }
 }

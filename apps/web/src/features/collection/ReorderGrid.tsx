@@ -8,7 +8,8 @@ import styles from './ReorderGrid.module.css';
 /**
  * The shelf of a view (#451, #482): each entry keeps opening on a tap, and gets a handle to
  * drag it — with a finger or a mouse, pointer events serving both — and two buttons that move
- * it one place either way, for the keyboard. The new order is handed back once the drag ends.
+ * it one place either way, for the keyboard. The new order is handed back once the drag ends;
+ * the parent shows it by passing it back as `keys`.
  */
 export function ReorderGrid({
   keys,
@@ -20,37 +21,46 @@ export function ReorderGrid({
   onCommit: (keys: string[]) => void;
 }) {
   const { t } = useTranslation();
-  const [order, setOrder] = useState(keys);
-  const [dragging, setDragging] = useState<string | null>(null);
-  // The order being dragged, read by the pointer handlers without waiting for a render.
-  const live = useRef(order);
-  live.current = order;
+  // The order being dragged, or null: outside a drag the shelf is exactly `keys`, so a new
+  // sort, filter or page shows at once and nothing arranged earlier lingers (#486).
+  const [drag, setDrag] = useState<{ key: string; order: string[] } | null>(null);
+  const order = drag?.order ?? keys;
+  const dragging = drag?.key ?? null;
+  const live = useRef(drag);
+  live.current = drag;
 
-  // A page that loads while arranging brings new entries: they join at the end.
+  // The gesture is followed on the window, not the handle: the handle moves in the page as
+  // the entries swap and may lose the pointer, and a release must end the drag wherever it
+  // lands (#486).
   useEffect(() => {
-    setOrder((previous) => [...previous.filter((k) => keys.includes(k)), ...keys.filter((k) => !previous.includes(k))]);
-  }, [keys]);
-
-  const commit = (next: string[]) => {
-    setOrder(next);
-    onCommit(next);
-  };
-
-  const onMove = (event: React.PointerEvent) => {
     if (!dragging) return;
-    const target = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest<HTMLElement>('[data-reorder-key]')?.dataset.reorderKey;
-    if (!target || target === dragging) return;
-    const current = live.current;
-    setOrder(moveKey(current, current.indexOf(dragging), current.indexOf(target)));
-  };
-
-  const onEnd = () => {
-    if (!dragging) return;
-    setDragging(null);
-    onCommit(live.current);
-  };
+    const onMove = (event: PointerEvent) => {
+      const current = live.current;
+      if (!current) return;
+      const target = document
+        .elementFromPoint(event.clientX, event.clientY)
+        ?.closest<HTMLElement>('[data-reorder-key]')?.dataset.reorderKey;
+      if (!target || target === current.key) return;
+      const next = moveKey(current.order, current.order.indexOf(current.key), current.order.indexOf(target));
+      setDrag({ key: current.key, order: next });
+    };
+    const onUp = () => {
+      const current = live.current;
+      setDrag(null);
+      if (current && current.order.some((key, i) => key !== keys[i])) onCommit(current.order);
+    };
+    const onCancel = () => setDrag(null);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    window.addEventListener('blur', onCancel);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      window.removeEventListener('blur', onCancel);
+    };
+  }, [dragging, keys, onCommit]);
 
   return (
     <Grid>
@@ -67,7 +77,7 @@ export function ReorderGrid({
               className={styles.step}
               aria-label={t('views.earlier')}
               disabled={index === 0}
-              onClick={() => commit(moveKey(order, index, index - 1))}
+              onClick={() => onCommit(moveKey(order, index, index - 1))}
             >
               <Icon name="arrow_back" size={16} color="var(--ink)" />
             </button>
@@ -77,12 +87,8 @@ export function ReorderGrid({
               aria-label={t('views.drag')}
               onPointerDown={(event) => {
                 event.preventDefault();
-                (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
-                setDragging(key);
+                setDrag({ key, order: keys });
               }}
-              onPointerMove={onMove}
-              onPointerUp={onEnd}
-              onPointerCancel={onEnd}
             >
               <Icon name="drag_indicator" size={18} color="var(--ink)" />
             </button>
@@ -91,7 +97,7 @@ export function ReorderGrid({
               className={styles.step}
               aria-label={t('views.later')}
               disabled={index === order.length - 1}
-              onClick={() => commit(moveKey(order, index, index + 1))}
+              onClick={() => onCommit(moveKey(order, index, index + 1))}
             >
               <Icon name="arrow_forward" size={16} color="var(--ink)" />
             </button>
