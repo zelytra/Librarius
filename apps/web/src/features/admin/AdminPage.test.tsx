@@ -92,7 +92,7 @@ describe('AdminPage', () => {
     meIs(true);
     renderWithProviders(<AdminPage />, { route: '/admin?tab=monitoring' });
 
-    const active = (await screen.findByText(/actifs en ce moment/)).parentElement!;
+    const active = (await screen.findByText('actifs maintenant')).parentElement!;
     expect(active).toHaveTextContent('3');
     expect(screen.getByRole('img', { name: /Signalements par jour/ })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /Membres actifs par jour/ })).toBeInTheDocument();
@@ -109,6 +109,6 @@ describe('AdminPage', () => {
 
     await screen.findByText('Le tri ne marche plus');
     await userEvent.click(screen.getByRole('button', { name: 'Supervision' }));
-    await waitFor(() => expect(screen.getByText(/actifs en ce moment/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('actifs maintenant')).toBeInTheDocument());
   });
 });

@@ -40,6 +40,7 @@ export function AdminMonitoring() {
           <span className={styles.tileLabel}>{t('admin.monitoring.errors30')}</span>
         </div>
       </div>
+      <p className={styles.note}>{t('admin.monitoring.note')}</p>
 
       <section className={styles.panel}>
         <h3 className={styles.subtitle}>{t('admin.monitoring.reportsTitle')}</h3>

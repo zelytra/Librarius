@@ -274,3 +274,9 @@
 .serviceDown {
   color: var(--rose);
 }
+
+.note {
+  margin: -6px 0 0;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}

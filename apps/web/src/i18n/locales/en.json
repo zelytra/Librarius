@@ -1476,7 +1476,7 @@
     },
     "monitoring": {
       "error": "The monitoring could not be loaded.",
-      "activeNow": "members active right now (5 min)",
+      "activeNow": "active now",
       "reports30": "reports over 30 days",
       "errors30": "errors over 30 days",
       "reportsTitle": "Reports and errors per day",
@@ -1488,7 +1488,8 @@
       "servicesTitle": "Service status",
       "up": "Operational",
       "down": "Unavailable {{detail}}",
-      "barTitle": "{{date}}: {{values}}"
+      "barTitle": "{{date}}: {{values}}",
+      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds."
     },
     "services": {
       "database": "Database",

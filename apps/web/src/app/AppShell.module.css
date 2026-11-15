@@ -44,4 +44,6 @@
      title would push the page out rather than scroll inside it, and take the width off
      the navigation beside it. */
   min-width: 0;
+  /* Room to scroll the last line of a screen past the report button (#489). */
+  padding-bottom: 72px;
 }

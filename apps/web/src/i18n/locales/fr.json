@@ -1476,7 +1476,7 @@
     },
     "monitoring": {
       "error": "Impossible de charger la supervision.",
-      "activeNow": "membres actifs en ce moment (5 min)",
+      "activeNow": "actifs maintenant",
       "reports30": "signalements sur 30 jours",
       "errors30": "erreurs sur 30 jours",
       "reportsTitle": "Signalements et erreurs par jour",
@@ -1488,7 +1488,8 @@
       "servicesTitle": "État des services",
       "up": "Opérationnel",
       "down": "Indisponible {{detail}}",
-      "barTitle": "{{date}} : {{values}}"
+      "barTitle": "{{date}} : {{values}}",
+      "note": "« Maintenant » : vus dans les 5 dernières minutes. La page se rafraîchit toutes les 30 secondes."
     },
     "services": {
       "database": "Base de données",
