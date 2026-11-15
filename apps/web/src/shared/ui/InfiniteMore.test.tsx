@@ -6,15 +6,18 @@ import { InfiniteMore } from './InfiniteMore';
 /** An IntersectionObserver the test drives: `show()` brings the sentinel into view. */
 function stubObserver() {
   let callback: IntersectionObserverCallback = () => {};
+  const roots: (Element | Document | null | undefined)[] = [];
   class Observer {
-    constructor(cb: IntersectionObserverCallback) {
+    constructor(cb: IntersectionObserverCallback, options?: IntersectionObserverInit) {
       callback = cb;
+      roots.push(options?.root);
     }
     observe() {}
     disconnect() {}
   }
   vi.stubGlobal('IntersectionObserver', Observer);
   return {
+    roots,
     show: () => callback([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver),
   };
 }
@@ -49,5 +52,19 @@ describe('InfiniteMore', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Voir plus' }));
     expect(onMore).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * #473: the app scrolls inside its <main>, not the window. Observed against the viewport,
+   * the look-ahead margin was ignored and a page only loaded once the reader hit the bottom.
+   */
+  test('watches the end of the list against the element that scrolls', () => {
+    const observer = stubObserver();
+    render(
+      <main style={{ overflowY: 'auto' }} data-testid="scroller">
+        <InfiniteMore hasMore loading={false} onMore={vi.fn()} label="Voir plus" />
+      </main>,
+    );
+    expect(observer.roots.at(-1)).toBe(screen.getByTestId('scroller'));
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -44,7 +44,7 @@ function capturedLibraryPosts(): Record<string, unknown>[] {
 }
 
 async function search(term = 'fourth wing') {
-  await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), term);
+  await userEvent.type(screen.getByPlaceholderText(/Titre, auteur ou ISBN/), term);
   await userEvent.click(screen.getByLabelText('Rechercher'));
 }
 
@@ -70,9 +70,9 @@ describe('DiscoverPage', () => {
     renderWithProviders(<><DiscoverPage /><Spy /></>, { route: '/discover?q=dune', path: '/discover' });
 
     expect((await screen.findAllByText('Dune')).length).toBeGreaterThan(0);
-    expect(screen.getByPlaceholderText(/Rechercher un titre/)).toHaveValue('dune');
+    expect(screen.getByPlaceholderText(/Titre, auteur ou ISBN/)).toHaveValue('dune');
 
-    await userEvent.clear(screen.getByPlaceholderText(/Rechercher un titre/));
+    await userEvent.clear(screen.getByPlaceholderText(/Titre, auteur ou ISBN/));
     await search('fourth wing');
     await waitFor(() => expect(location).toBe('?q=fourth+wing'));
   });
@@ -188,7 +188,7 @@ describe('DiscoverPage', () => {
     searchReturns([catalogResult()]);
     renderWithProviders(<DiscoverPage />);
 
-    const searchInput = screen.getByPlaceholderText(/Rechercher un titre/);
+    const searchInput = screen.getByPlaceholderText(/Titre, auteur ou ISBN/);
     expect(searchInput.closest('[class*="searchColumn"]')).toBeInTheDocument();
 
     await search();
@@ -359,7 +359,7 @@ describe('DiscoverPage', () => {
       const calls = capturedSearches();
       renderWithProviders(<DiscoverPage />);
 
-      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'dune');
+      await userEvent.type(screen.getByPlaceholderText(/Titre, auteur ou ISBN/), 'dune');
 
       // The debounce folds the keystrokes into a single query, fired on its own once the
       // typing settles — no button press.
@@ -374,7 +374,7 @@ describe('DiscoverPage', () => {
       renderWithProviders(<DiscoverPage />);
 
       await openAdvanced();
-      await userEvent.type(screen.getByPlaceholderText(/Rechercher un titre/), 'du');
+      await userEvent.type(screen.getByPlaceholderText(/Titre, auteur ou ISBN/), 'du');
       await userEvent.type(screen.getByLabelText('Auteur'), 'Herbert');
 
       // Past the debounce window, and still nothing fired on its own.
@@ -534,5 +534,14 @@ describe('DiscoverPage', () => {
 
       expect(await screen.findByText(/Ajout impossible/)).toBeInTheDocument();
     });
+  });
+
+  /** #474: the screen is « Ajouter un livre », and scanning weighs as much as searching. */
+  test('names the screen for adding, and offers the scan beside the search field', async () => {
+    renderWithProviders(<DiscoverPage />);
+
+    const search = await screen.findByRole('search');
+    expect(within(search).getByLabelText('Titre, auteur ou ISBN…')).toBeInTheDocument();
+    expect(within(search).getByRole('button', { name: 'Scanner' })).toBeInTheDocument();
   });
 });

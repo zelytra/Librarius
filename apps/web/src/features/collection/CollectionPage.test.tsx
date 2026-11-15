@@ -660,4 +660,15 @@ describe('CollectionPage', () => {
       ]));
     });
   });
+
+  /** #474: each shelf filter wears an icon next to its name. */
+  test('shows an icon on the shelf filters', async () => {
+    libraryReturns([ROMAN]);
+    renderWithProviders(<CollectionPage />);
+
+    for (const name of ['Pile à lire', 'Mes coups de cœur', 'Emprunté']) {
+      const chip = await screen.findByRole('button', { name });
+      expect(chip.querySelector('[data-fill]')).not.toBeNull();
+    }
+  });
 });

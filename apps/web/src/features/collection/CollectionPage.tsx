@@ -412,14 +412,15 @@ function CollectionContent() {
   // is where the French wording of Or / Argent / Bronze lives.
   const { data: categories = [] } = useGetApiCategories();
 
-  const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string }[] = [
-    { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all') },
-    { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead') },
-    { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites') },
+  const shelves: { key: string; filter: ShelfFilter; name: string; dot?: string; icon?: string }[] = [
+    { key: 'all', filter: ALL_SHELVES, name: t('collection.ranks.all'), icon: 'collections_bookmark' },
+    { key: 'toRead', filter: TO_READ, name: t('collection.ranks.toRead'), icon: 'library_books' },
+    { key: 'favorites', filter: FAVORITES, name: t('collection.ranks.favorites'), icon: 'favorite' },
     ...OWNERSHIP_SHELVES.map((ownership) => ({
       key: `own-${ownership}`,
       filter: { kind: 'ownership' as const, ownership },
       name: t(ownershipLabelKey(ownership)),
+      icon: OWNERSHIPS.find((o) => o.id === ownership)?.icon,
     })),
     ...categories.map((c: CategoryDto) => ({
       key: c.id!,
@@ -539,6 +540,7 @@ function CollectionContent() {
             key={s.key}
             selected={sameShelf(shelfFilter, s.filter)}
             dotColor={s.dot}
+            icon={s.icon}
             onClick={() => setShelfFilter(s.filter)}
           >
             {s.name}

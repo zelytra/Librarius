@@ -8,7 +8,7 @@
     "home": "Accueil",
     "collection": "Bibliothèque",
     "toRead": "Pile à lire",
-    "discover": "Découvrir",
+    "discover": "Ajouter un livre",
     "wishlist": "Souhaits",
     "stats": "Stats"
   },
@@ -210,8 +210,8 @@
     },
     "empty": {
       "title": "Ta bibliothèque est vide.",
-      "description": "Ajoute tes premiers titres depuis l'onglet Découvrir.",
-      "action": "Découvrir des titres"
+      "description": "Ajoute tes premiers titres depuis l'onglet Ajouter un livre.",
+      "action": "Ajouter un livre"
     },
     "error": "Impossible de charger ton tableau de bord.",
     "customize": {
@@ -294,7 +294,7 @@
       "discover": {
         "title": "Trouve tes premiers titres",
         "description": "Cherche un livre ou un manga dans notre catalogue et ajoute-le à ta bibliothèque ou à tes souhaits.",
-        "action": "Découvrir des titres"
+        "action": "Ajouter un livre"
       },
       "goal": {
         "title": "Fixe-toi un objectif (facultatif)",
@@ -394,8 +394,8 @@
     },
     "empty": {
       "title": "Aucun titre ici.",
-      "description": "Ajoute des livres depuis l'onglet Découvrir.",
-      "action": "Découvrir des titres"
+      "description": "Ajoute des livres depuis l'onglet Ajouter un livre.",
+      "action": "Ajouter un livre"
     },
     "error": "Impossible de charger ta bibliothèque.",
     "grouped": "Par série",
@@ -488,9 +488,12 @@
       "owned_other": "{{count}} tomes · {{read}} lus"
     },
     "tile": {
+      "held": "{{ownership}} · {{reading}}",
+      "owned": "Possédé",
+      "notOwned": "Non possédé",
       "read": "Lu",
-      "owned": "Non lu",
-      "missing": "Pas possédé",
+      "toRead": "À lire",
+      "missing": "Manquant",
       "upcoming": "À paraître"
     },
     "categoryTitle": "Catégorie de la série",
@@ -529,8 +532,8 @@
     }
   },
   "discover": {
-    "title": "Découvrir",
-    "searchPlaceholder": "Rechercher un titre, un auteur, un ISBN…",
+    "title": "Ajouter un livre",
+    "searchPlaceholder": "Titre, auteur ou ISBN…",
     "popularGenres": "Genres populaires",
     "recommended": "Recommandé pour vous",
     "start": "Lancez une recherche pour trouver des titres à ajouter.",
@@ -593,7 +596,8 @@
     "moreCredits_one": "{{names}} et {{count}} autre",
     "moreCredits_other": "{{names}} et {{count}} autres",
     "moreAuthors_one": " +{{count}}",
-    "moreAuthors_other": " +{{count}}"
+    "moreAuthors_other": " +{{count}}",
+    "scanShort": "Scanner"
   },
   "wishlist": {
     "title": "Liste de souhaits",
@@ -618,7 +622,7 @@
     "empty": {
       "title": "Ta liste de souhaits est vide.",
       "description": "Ajoute des titres depuis l'onglet Découvrir.",
-      "action": "Découvrir des titres"
+      "action": "Ajouter un livre"
     },
     "error": "Impossible de charger tes souhaits.",
     "errors": {

@@ -90,9 +90,11 @@ describe('SeriesPage', () => {
 
     // Each volume says where the reader stands in words, under its cover or its ghost:
     // four distinct words and four distinct styles — no channel carries the state alone.
-    expect(within(read).getByText('Lu')).toBeInTheDocument();
-    expect(within(owned).getByText('Non lu')).toBeInTheDocument();
-    expect(within(missing).getByText('Pas possédé')).toBeInTheDocument();
+    // #472: a volume held says both families — whether it is had, and whether it is read —
+    // the way Detail does, instead of one word standing for either.
+    expect(within(read).getByText('Possédé · Lu')).toBeInTheDocument();
+    expect(within(owned).getByText('Possédé · À lire')).toBeInTheDocument();
+    expect(within(missing).getByText('Manquant')).toBeInTheDocument();
     expect(within(upcoming).getByText('À paraître')).toBeInTheDocument();
     const chips = [read, owned, missing, upcoming].map(
       (cell) => cell.querySelector('[class*="stateChip"]')?.className,
@@ -316,4 +318,16 @@ describe('SeriesPage', () => {
     await userEvent.click(await within(section).findByRole('button', { name: 'Or' }));
     await waitFor(() => expect(sent).toEqual([{ categoryId: 'cat-or' }]));
   });
+
+  /** #472: a volume read without being held says so, rather than passing for an owned one. */
+  test('says when a volume is read but not held', async () => {
+    seriesDetailReturns(seriesDetail({
+      volumes: [{ volumeNumber: 1, owned: false, read: true, libraryItemId: 'item-1', title: 'Vinland Saga Tome 1' }],
+    }));
+    renderSeries();
+
+    const cell = await screen.findByLabelText(/^Tome 1/);
+    expect(within(cell).getByText('Non possédé · Lu')).toBeInTheDocument();
+  });
+
 });

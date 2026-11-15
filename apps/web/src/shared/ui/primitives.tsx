@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import styles from './primitives.module.css';
+import { Icon } from './Icon';
 
 /** Joins the class names that are actually set. */
 function cx(...names: (string | false | undefined)[]): string {
@@ -136,11 +137,14 @@ export function Chip({
   selected = false,
   onClick,
   dotColor,
+  icon,
 }: {
   children: ReactNode;
   selected?: boolean;
   onClick?: () => void;
   dotColor?: string;
+  /** A glyph that says what the chip filters on at a glance (#474). */
+  icon?: string;
 }) {
   return (
     <button
@@ -155,6 +159,7 @@ export function Chip({
     >
       {/* The dot carries the rank colour, which only the caller knows. */}
       {dotColor && <span className={styles.chipDot} style={{ background: dotColor }} />}
+      {icon && <Icon name={icon} size={16} fill={selected} color="currentColor" />}
       {children}
     </button>
   );

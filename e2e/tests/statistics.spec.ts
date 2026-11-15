@@ -14,7 +14,7 @@ test('keeps the statistics consistent after an addition', async ({ page }) => {
   await expect(figure(page, 'Livres lus')).toHaveText('0');
   await expect(figure(page, 'En cours')).toHaveText('0');
 
-  await page.getByRole('link', { name: 'Découvrir' }).click();
+  await page.getByRole('link', { name: 'Ajouter un livre' }).click();
   await searchCatalog(page, 'science-fiction');
   await addResult(page, 'Pile à lire');
   // Waiting for the first confirmation before the second click: an added result swaps

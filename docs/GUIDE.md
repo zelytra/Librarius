@@ -175,12 +175,14 @@ ses prochains tomes dans « Prochaines sorties », sur l'accueil.
 
 ## Trouver et ajouter un titre
 
-L'onglet **Découvrir** cherche dans les catalogues extérieurs : Open Library pour les
+L'onglet **Ajouter un livre** cherche dans les catalogues extérieurs : Open Library pour les
 livres, AniList pour les mangas.
 
 - **La recherche avancée** ajoute l'auteur, l'année, l'éditeur et la langue. Les critères
   qu'une source n'indexe pas sont ignorés plutôt que simulés, et l'écran le dit : AniList
   ne connaît ni éditeur ni langue, donc un manga ne se filtre que sur l'auteur et l'année.
+- **« Scanner »**, à côté du champ de recherche, lit le code-barres d'un livre avec
+  l'appareil photo : le moyen le plus rapide quand tu as le livre en main.
 - **Coller un ISBN** dans le champ de recherche suffit : il est reconnu et cherché comme
   un ISBN. Si le numéro n'est pas un ISBN valide, il repart en recherche ordinaire.
 - **« Ajouter manuellement »** existe pour ce que les catalogues ne connaissent pas —
@@ -206,7 +208,7 @@ prix neuf. Les prix se complètent tout seuls, en arrière-plan, dans les minute
 l'ajout.
 
 « Je l'ai acheté » fait passer le souhait dans ta collection, daté du jour. Un titre
-ajouté depuis Découvrir ou depuis une série arrive en priorité **Bientôt** ; la priorité
+ajouté depuis « Ajouter un livre » ou depuis une série arrive en priorité **Bientôt** ; la priorité
 se change ensuite avec le crayon.
 
 ## L'objectif de l'année

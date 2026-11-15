@@ -61,6 +61,8 @@ export function SelectionBar({ selection }: { selection: Selection }) {
   if (!selection.active) return null;
   return (
     <>
+      {/* Room under the last row, so the floating bar never hides the last titles (#472). */}
+      <div className={styles.spacer} aria-hidden="true" />
       {/* Hidden while the sheet is open: it would sit over the sheet's own footer. */}
       {!open && (
       <div className={styles.bar} role="region" aria-label={t('selection.title')}>

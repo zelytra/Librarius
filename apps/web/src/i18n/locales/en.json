@@ -8,7 +8,7 @@
     "home": "Home",
     "collection": "Library",
     "toRead": "To read",
-    "discover": "Discover",
+    "discover": "Add a book",
     "wishlist": "Wishlist",
     "stats": "Stats"
   },
@@ -210,8 +210,8 @@
     },
     "empty": {
       "title": "Your library is empty.",
-      "description": "Add your first titles from the Discover tab.",
-      "action": "Discover titles"
+      "description": "Add your first titles from the Add a book tab.",
+      "action": "Add a book"
     },
     "error": "Your dashboard could not be loaded.",
     "customize": {
@@ -294,7 +294,7 @@
       "discover": {
         "title": "Find your first titles",
         "description": "Search our catalog for a book or a manga and add it to your library or your wishlist.",
-        "action": "Discover titles"
+        "action": "Add a book"
       },
       "goal": {
         "title": "Set a goal (optional)",
@@ -394,8 +394,8 @@
     },
     "empty": {
       "title": "Nothing here.",
-      "description": "Add books from the Discover tab.",
-      "action": "Discover titles"
+      "description": "Add books from the Add a book tab.",
+      "action": "Add a book"
     },
     "error": "Your library could not be loaded.",
     "grouped": "By series",
@@ -488,9 +488,12 @@
       "owned_other": "{{count}} volumes · {{read}} read"
     },
     "tile": {
+      "held": "{{ownership}} · {{reading}}",
+      "owned": "Owned",
+      "notOwned": "Not owned",
       "read": "Read",
-      "owned": "Unread",
-      "missing": "Not owned",
+      "toRead": "To read",
+      "missing": "Missing",
       "upcoming": "Upcoming"
     },
     "categoryTitle": "Series category",
@@ -529,8 +532,8 @@
     }
   },
   "discover": {
-    "title": "Discover",
-    "searchPlaceholder": "Search a title, an author, an ISBN…",
+    "title": "Add a book",
+    "searchPlaceholder": "Title, author or ISBN…",
     "popularGenres": "Popular genres",
     "recommended": "Recommended for you",
     "start": "Run a search to find titles to add.",
@@ -593,7 +596,8 @@
     "moreCredits_one": "{{names}} and {{count}} more",
     "moreCredits_other": "{{names}} and {{count}} more",
     "moreAuthors_one": " +{{count}}",
-    "moreAuthors_other": " +{{count}}"
+    "moreAuthors_other": " +{{count}}",
+    "scanShort": "Scan"
   },
   "wishlist": {
     "title": "Wishlist",
@@ -618,7 +622,7 @@
     "empty": {
       "title": "Your wishlist is empty.",
       "description": "Add titles from the Discover tab.",
-      "action": "Discover titles"
+      "action": "Add a book"
     },
     "error": "Your wishlist could not be loaded.",
     "errors": {

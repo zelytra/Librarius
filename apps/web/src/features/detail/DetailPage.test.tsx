@@ -535,7 +535,8 @@ describe('DetailPage', () => {
     renderDetail();
 
     expect(await screen.findByText('Autres éditions')).toBeInTheDocument();
-    expect(screen.getByText('Robert Laffont · français · Relié')).toBeInTheDocument();
+    // The section is drawn before its editions arrive: their own request is waited for.
+    expect(await screen.findByText('Robert Laffont · français · Relié')).toBeInTheDocument();
     expect(screen.getByText(/640 pages/)).toBeInTheDocument();
     expect(screen.getByText(/9782221252000/)).toBeInTheDocument();
     // The one already on the shelf is named as the reference, not offered again.
@@ -606,7 +607,7 @@ describe('DetailPage', () => {
     renderDetail();
 
     expect(await screen.findByText('Autres éditions')).toBeInTheDocument();
-    expect(screen.getByText(/Gollancz · anglais/)).toBeInTheDocument();
+    expect(await screen.findByText(/Gollancz · anglais/)).toBeInTheDocument();
     const sent: unknown[] = [];
     server.use(http.post('*/api/library/:id/edition', async ({ request }) => {
       sent.push(await request.json());
