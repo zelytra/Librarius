@@ -182,10 +182,6 @@ export interface BulkUpdateDto {
   format?: BookFormat;
   categoryId?: Uuid;
   clearCategory?: boolean;
-  /**
-     * @minimum 1
-     * @maximum 5
-     */
   rating?: number;
   clearRating?: boolean;
   remove?: boolean;
@@ -496,10 +492,6 @@ export interface KindValueDto {
 export interface LibraryCreateDto {
   book: ManualBookDto;
   status?: LibraryStatus;
-  /**
-     * @minimum 1
-     * @maximum 5
-     */
   rating?: number;
   acquiredAt?: LocalDate;
   ownership?: Ownership;
@@ -678,10 +670,6 @@ export interface ReportCreateDto {
 }
 
 export interface ReviewDto {
-  /**
-     * @minimum 1
-     * @maximum 5
-     */
   rating?: number;
   /** @maxLength 5000 */
   review?: string;
@@ -753,10 +741,6 @@ export interface SeriesReviewDto {
 }
 
 export interface SeriesReviewUpsertDto {
-  /**
-     * @minimum 1
-     * @maximum 5
-     */
   rating: number;
   /** @maxLength 5000 */
   review?: string;

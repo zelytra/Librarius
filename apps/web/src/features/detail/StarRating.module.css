@@ -1,12 +1,18 @@
 .stars {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .star {
+  /* 44 px a star (WCAG 2.5.5): the halves are 22 px each, still a finger's width. */
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
-  padding: 2px;
+  padding: 0;
   cursor: pointer;
   line-height: 0;
 }
@@ -19,4 +25,23 @@
 .empty {
   fill: none;
   stroke: var(--line);
+}
+
+/* A half star (#484): the empty outline, its left half filled over it. */
+.half {
+  fill: none;
+  stroke: var(--gold);
+}
+
+.halfFill {
+  fill: var(--gold);
+  stroke: none;
+  clip-path: inset(0 50% 0 0);
+}
+
+.shown {
+  display: inline-flex;
+  gap: 1px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }

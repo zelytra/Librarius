@@ -307,13 +307,13 @@ class SeriesApiTest {
                 .body("{ \"rating\": 4, \"review\": \"Un bon départ.\" }")
                 .when().put("/api/series/" + id + "/review")
                 .then().statusCode(200)
-                .body("rating", is(4))
+                .body("rating", is(4.0f))
                 .body("review", is("Un bon départ."))
                 .body("seriesId", is(id));
 
         given().auth().oauth2(token("alice")).when().get("/api/series/" + id + "/review")
                 .then().statusCode(200)
-                .body("rating", is(4))
+                .body("rating", is(4.0f))
                 .body("review", is("Un bon départ."));
 
         // A second PUT updates the same row rather than creating another one.
@@ -321,7 +321,7 @@ class SeriesApiTest {
                 .body("{ \"rating\": 5, \"review\": \"Encore mieux au tome 2.\" }")
                 .when().put("/api/series/" + id + "/review")
                 .then().statusCode(200)
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Encore mieux au tome 2."));
 
         given().auth().oauth2(token("alice")).when().delete("/api/series/" + id + "/review")
@@ -373,6 +373,23 @@ class SeriesApiTest {
                 .then().statusCode(400);
         given().auth().oauth2(token("alice")).contentType("application/json")
                 .body("{ \"rating\": 6 }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(400);
+    }
+
+    /** #484: a series is rated by half stars too, and nothing in between. */
+    @Test
+    void aSeriesTakesAHalfStarRating() {
+        String title = "Series Test - review half";
+        addVolume("alice", title, 1, "TO_READ");
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 3.5 }")
+                .when().put("/api/series/" + id + "/review")
+                .then().statusCode(200).body("rating", is(3.5f));
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"rating\": 3.2 }")
                 .when().put("/api/series/" + id + "/review")
                 .then().statusCode(400);
     }

@@ -209,7 +209,7 @@ class EditionApiTest {
                 .body("book.editionId", is(target))
                 .body("book.publisher", is("Le Livre de Poche"))
                 .body("status", is("READING"))
-                .body("rating", is(5))
+                .body("rating", is(5.0f))
                 .body("review", is("Relu trois fois."))
                 .body("rankCode", is("or"))
                 .body("progress.startedAt", is("2026-02-01"));

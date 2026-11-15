@@ -124,6 +124,8 @@ class ExportApiTest {
         // The private review, with its own quotes doubled as RFC 4180 wants them.
         assertTrue(csv.contains("\"Une \"\"merveille\"\" ; à relire.\""),
                 "the review is missing or its quoting is broken:\n" + csv);
+        // #484: a whole rating is written as Goodreads writes it, 5 and not 5.0.
+        assertTrue(csv.contains(";5;\"Une"), "the rating is not written as a whole number:\n" + csv);
     }
 
     /** A wish is a book the user does not own: it lands on the `to-read` shelf. */

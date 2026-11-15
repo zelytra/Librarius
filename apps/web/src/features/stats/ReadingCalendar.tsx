@@ -114,9 +114,18 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
               aria-pressed={picked === key}
               onClick={() => setPicked(picked === key ? null : key)}
             >
-              {cover && <img className={styles.dayCover} src={cover} alt="" loading="lazy" />}
+              {cover && (
+                <img
+                  className={styles.dayCover}
+                  src={cover}
+                  // The day's label names the readings: the cover is decorative.
+                  // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+                  alt=""
+                  loading="lazy"
+                />
+              )}
               <span className={styles.dayNumber}>{d.getUTCDate()}</span>
-              {finished.length > 1 && <span className={styles.dayMore}>+{finished.length - 1}</span>}
+              {finished.length > 1 && <span className={styles.dayMore}>{t('stats.calendar.moreOnDay', { count: finished.length - 1 })}</span>}
             </button>
           );
         })}

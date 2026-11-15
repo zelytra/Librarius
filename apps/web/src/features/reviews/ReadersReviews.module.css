@@ -80,15 +80,7 @@
   color: var(--ink);
 }
 
-.stars {
-  color: #d9a93a;
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
 
-.starsOff {
-  color: var(--line);
-}
 
 .text {
   margin: 4px 0 0;

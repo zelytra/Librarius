@@ -209,13 +209,13 @@ public class SeriesService {
      * @return empty when the series is not visible to the caller, turned into a 404
      */
     @Transactional
-    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, int rating, String text) {
+    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, double rating, String text) {
         return rate(userId, seriesId, rating, text, null);
     }
 
     /** @param shared whether the review is shared (#205); null keeps the current choice */
     @Transactional
-    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, int rating, String text, Boolean shared) {
+    public Optional<SeriesReviewDto> rate(String userId, UUID seriesId, double rating, String text, Boolean shared) {
         if (!isVisible(userId, seriesId)) {
             return Optional.empty();
         }

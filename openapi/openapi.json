@@ -3636,10 +3636,8 @@
             "type" : "boolean"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 5,
-            "minimum" : 1
+            "type" : "number",
+            "format" : "double"
           },
           "clearRating" : {
             "type" : "boolean"
@@ -3904,8 +3902,8 @@
             "$ref" : "#/components/schemas/LibraryStatus"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string"
@@ -4140,8 +4138,8 @@
             "type" : "boolean"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "rankCode" : {
             "type" : "string"
@@ -4320,10 +4318,8 @@
             "$ref" : "#/components/schemas/LibraryStatus"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 5,
-            "minimum" : 1
+            "type" : "number",
+            "format" : "double"
           },
           "acquiredAt" : {
             "$ref" : "#/components/schemas/LocalDate"
@@ -4346,8 +4342,8 @@
             "type" : "string"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string"
@@ -4790,10 +4786,8 @@
         "type" : "object",
         "properties" : {
           "rating" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 5,
-            "minimum" : 1
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string",
@@ -4909,8 +4903,8 @@
             "$ref" : "#/components/schemas/UUID"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string"
@@ -4931,10 +4925,8 @@
         "required" : [ "rating" ],
         "properties" : {
           "rating" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 5,
-            "minimum" : 1
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string",
@@ -5038,8 +5030,8 @@
             "type" : "string"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "review" : {
             "type" : "string"
@@ -5344,8 +5336,8 @@
             "$ref" : "#/components/schemas/LibraryStatus"
           },
           "rating" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "acquiredAt" : {
             "$ref" : "#/components/schemas/LocalDate"

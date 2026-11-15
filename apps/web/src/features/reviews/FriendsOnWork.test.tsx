@@ -20,6 +20,17 @@ describe('FriendsOnWork', () => {
     expect(screen.getByText('En envie')).toBeInTheDocument();
   });
 
+  /** #484: a friend's half star shows, and reads out as a decimal. */
+  test("shows a friend's half-star rating", async () => {
+    server.use(http.get('*/api/works/:id/friends', () => HttpResponse.json([
+      { id: 'u1', displayName: 'Bob', trusted: false, status: 'READ', ownership: 'OWNED', wished: false, rating: 4.5 },
+    ])));
+    renderWithProviders(<FriendsOnWork workId="w1" />);
+
+    const stars = await screen.findByLabelText('4,5 étoiles sur 5');
+    expect(stars.querySelectorAll('svg')).toHaveLength(5);
+  });
+
   test('says nothing when no friend has it', async () => {
     renderWithProviders(<FriendsOnWork workId="w1" />);
     await new Promise((r) => setTimeout(r, 50));

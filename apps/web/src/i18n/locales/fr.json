@@ -703,6 +703,7 @@
     },
     "calendar": {
       "title": "Calendrier de lecture",
+      "moreOnDay": "+{{count}}",
       "more_one": "Voir l'autre lecture",
       "more_other": "Voir les {{count}} autres lectures",
       "previous": "Mois précédent",
@@ -766,6 +767,8 @@
     "review": {
       "title": "Ma note",
       "star": "Noter {{rating}} sur 5",
+      "current": "Ma note : {{rating}} sur 5",
+      "none": "Pas encore de note",
       "clear": "Retirer ma note",
       "placeholder": "Ce que j'en ai pensé…",
       "private": "Note et avis strictement privés : personne d'autre ne les voit.",

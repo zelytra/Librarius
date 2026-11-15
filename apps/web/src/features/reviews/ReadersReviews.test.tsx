@@ -46,6 +46,19 @@ describe('readers reviews', () => {
     expect(screen.getByText(/4,5/)).toBeInTheDocument();
   });
 
+  /** #484: a half-star rating reads as one, not rounded down. */
+  test('shows a half-star rating as such', () => {
+    renderWithProviders(
+      <ReadersReviews data={{ average: 3.5, count: 1, reviews: [{ id: 'r', authorId: 'dan', authorName: 'Dan', rating: 3.5 }] }} />,
+    );
+
+    const stars = screen.getByLabelText('3,5 étoiles sur 5');
+    const classes = [...stars.querySelectorAll('svg')].map((svg) => svg.getAttribute('class') ?? '');
+    expect(classes).toHaveLength(5);
+    expect(classes.filter((c) => c.includes('filled'))).toHaveLength(3);
+    expect(classes[3]).toContain('half');
+  });
+
   test('reports a review with a review reason, targeting the review itself', async () => {
     const posted: unknown[] = [];
     server.use(

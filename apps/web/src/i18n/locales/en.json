@@ -703,6 +703,7 @@
     },
     "calendar": {
       "title": "Reading calendar",
+      "moreOnDay": "+{{count}}",
       "more_one": "Show the other reading",
       "more_other": "Show the {{count}} other readings",
       "previous": "Previous month",
@@ -766,6 +767,8 @@
     "review": {
       "title": "My rating",
       "star": "Rate {{rating}} out of 5",
+      "current": "My rating: {{rating}} out of 5",
+      "none": "Not rated yet",
       "clear": "Clear my rating",
       "placeholder": "What I thought of it…",
       "private": "Rating and review are strictly private: nobody else sees them.",

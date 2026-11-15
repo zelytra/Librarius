@@ -217,7 +217,7 @@ public class ImportService {
                 item.ownership = book.ownership();
             }
             item.format = book.format();
-            item.rating = book.rating();
+            item.rating = book.rating() == null ? null : book.rating().doubleValue();
             item.acquiredAt = book.acquiredAt();
             item.rankCategory = rankFor(userId, book, state);
             items.persist(item);
@@ -274,7 +274,7 @@ public class ImportService {
             item.rankCategory = rankFor(userId, book, state);
         }
         if (item.rating == null && book.rating() != null) {
-            item.rating = book.rating();
+            item.rating = book.rating() == null ? null : book.rating().doubleValue();
         }
         if (item.acquiredAt == null && book.acquiredAt() != null) {
             item.acquiredAt = book.acquiredAt();

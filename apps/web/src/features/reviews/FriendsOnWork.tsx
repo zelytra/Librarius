@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Stars } from '../detail/StarRating';
 import type { TFunction } from 'i18next';
 import { useGetApiWorksIdFriends, type FriendOnWorkDto } from '../../api/generated/librarius';
 import { colorFor } from '../../shared/ui/coverPalette';
@@ -49,9 +50,7 @@ export function FriendsOnWork({ workId }: { workId: string | undefined }) {
                 </span>
               )}
               {friend.rating != null && (
-                <span className={styles.stars} aria-label={t('reviews.stars', { rating: friend.rating })}>
-                  {'★'.repeat(friend.rating)}
-                </span>
+                <Stars value={friend.rating} />
               )}
             </li>
           );

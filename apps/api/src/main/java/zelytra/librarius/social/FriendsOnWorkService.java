@@ -81,7 +81,7 @@ public class FriendsOnWorkService {
             boolean shared = Boolean.TRUE.equals(row[6]);
             friends.put(id, new FriendOnWorkDto(id, (String) row[1], (Boolean) row[2],
                     String.valueOf(row[3]), String.valueOf(row[4]), false,
-                    shared ? (Integer) row[5] : null, (String) row[7], (String) row[8], (String) row[9]));
+                    shared ? (Double) row[5] : null, (String) row[7], (String) row[8], (String) row[9]));
         }
         for (Object[] row : wished) {
             String id = (String) row[0];

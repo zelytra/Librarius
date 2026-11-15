@@ -25,6 +25,7 @@ import zelytra.librarius.domain.repository.WishlistItemRepository;
 import zelytra.librarius.export.ExportService;
 import zelytra.librarius.imports.ImportService.ImportResult;
 import zelytra.librarius.web.ApiDtos.ExportCategoryDto;
+import zelytra.librarius.web.HalfStar;
 import zelytra.librarius.web.ApiDtos.ExportCollectionItemDto;
 import zelytra.librarius.web.ApiDtos.ExportDto;
 import zelytra.librarius.web.ApiDtos.ExportGoalDto;
@@ -208,7 +209,7 @@ public class ArchiveImportService {
             item.price = dto.price();
             item.pageCount = dto.pageCount();
             item.format = dto.format();
-            item.rating = dto.rating();
+            item.rating = dto.rating() != null && HalfStar.Validator.isRating(dto.rating()) ? dto.rating() : null;
             item.review = dto.review();
             item.acquiredAt = dto.acquiredAt();
             item.rankCategory = categories.findForUserByCode(userId, dto.rankCode()).orElse(null);

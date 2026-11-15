@@ -45,7 +45,7 @@ public class LibraryItem {
     public RankCategory rankCategory;
 
     /** Personal rating, 1 to 5. Private to the owner: never shared, never aggregated. */
-    public Integer rating;
+    public Double rating;
 
     /** Free-text notes on the title, as private as the rating above. */
     @Column(columnDefinition = "text")

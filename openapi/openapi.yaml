@@ -2479,10 +2479,8 @@ components:
         clearCategory:
           type: boolean
         rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
+          type: number
+          format: double
         clearRating:
           type: boolean
         remove:
@@ -2672,8 +2670,8 @@ components:
         status:
           $ref: "#/components/schemas/LibraryStatus"
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         review:
           type: string
         acquiredAt:
@@ -2831,8 +2829,8 @@ components:
         wished:
           type: boolean
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         rankCode:
           type: string
         rankLabel:
@@ -2966,10 +2964,8 @@ components:
         status:
           $ref: "#/components/schemas/LibraryStatus"
         rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
+          type: number
+          format: double
         acquiredAt:
           $ref: "#/components/schemas/LocalDate"
         ownership:
@@ -2984,8 +2980,8 @@ components:
         status:
           type: string
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         review:
           type: string
         acquiredAt:
@@ -3323,10 +3319,8 @@ components:
       type: object
       properties:
         rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
+          type: number
+          format: double
         review:
           type: string
           maxLength: 5000
@@ -3405,8 +3399,8 @@ components:
         seriesId:
           $ref: "#/components/schemas/UUID"
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         review:
           type: string
         createdAt:
@@ -3421,10 +3415,8 @@ components:
       - rating
       properties:
         rating:
-          type: integer
-          format: int32
-          maximum: 5
-          minimum: 1
+          type: number
+          format: double
         review:
           type: string
           maxLength: 5000
@@ -3494,8 +3486,8 @@ components:
         authorName:
           type: string
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         review:
           type: string
         updatedAt:
@@ -3713,8 +3705,8 @@ components:
         status:
           $ref: "#/components/schemas/LibraryStatus"
         rating:
-          type: integer
-          format: int32
+          type: number
+          format: double
         acquiredAt:
           $ref: "#/components/schemas/LocalDate"
     WishlistBudgetDto:

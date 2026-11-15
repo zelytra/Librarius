@@ -425,7 +425,12 @@ function EditionsSection({
                   the rest, so the picture stays decorative. */}
               <div className={styles.editionCover}>
                 {edition.coverUrl ? (
-                  <img src={edition.coverUrl} alt="" loading="lazy" />
+                  <img
+                    src={edition.coverUrl}
+                    // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+                    alt=""
+                    loading="lazy"
+                  />
                 ) : (
                   <Icon name="menu_book" size={18} color="var(--faint)" />
                 )}
@@ -911,7 +916,7 @@ function DetailContent({ id }: { id: string }) {
       onSuccess: (_data, { data }) => {
         toast.success(
           data.rating != null && data.rating !== item?.rating
-            ? t('toasts.rating', { rating: data.rating })
+            ? t('toasts.rating', { rating: data.rating.toLocaleString(activeLanguage()) })
             : t('toasts.review'),
           'star',
         );

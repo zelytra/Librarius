@@ -49,7 +49,7 @@ class BulkUpdateApiTest {
                 .body("items.ownership", everyItem(is("EBOOK")))
                 .body("items.format", everyItem(is("POCKET")))
                 .body("items.rankCode", everyItem(is("or")))
-                .body("items.rating", everyItem(is(4)));
+                .body("items.rating", everyItem(is(4.0f)));
         // Another reader's title, named in the same request, is untouched.
         given().auth().oauth2(token("alice")).when().get("/api/library/" + alices)
                 .then().statusCode(200).body("status", is("TO_READ")).body("rating", org.hamcrest.Matchers.nullValue());
@@ -82,6 +82,15 @@ class BulkUpdateApiTest {
         given().auth().oauth2(token("bob")).contentType("application/json")
                 .body("{ \"ids\": [\"" + id + "\"], \"rating\": 9 }")
                 .when().post("/api/library/bulk").then().statusCode(400);
+        // #484: half stars only.
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"ids\": [\"" + id + "\"], \"rating\": 2.7 }")
+                .when().post("/api/library/bulk").then().statusCode(400);
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"ids\": [\"" + id + "\"], \"rating\": 2.5 }")
+                .when().post("/api/library/bulk").then().statusCode(200);
+        given().auth().oauth2(token("bob")).when().get("/api/library/" + id)
+                .then().body("rating", is(2.5f));
     }
 
     /** #467: a series picked whole stands for every volume of it the caller holds. */
@@ -104,7 +113,7 @@ class BulkUpdateApiTest {
         given().auth().oauth2(token("bob")).when().get("/api/library?q=" + series)
                 .then().body("items", hasSize(3))
                 .body("items.status", everyItem(is("READ")))
-                .body("items.rating", everyItem(is(5)));
+                .body("items.rating", everyItem(is(5.0f)));
 
         // Someone holding nothing of it changes nothing.
         given().auth().oauth2(token("alice")).contentType("application/json")
