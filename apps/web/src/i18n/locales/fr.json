@@ -1406,5 +1406,94 @@
     "pending_other": "{{count}} changements choisis",
     "apply": "Appliquer",
     "pickSeries": "Choisir la série « {{title}} »"
+  },
+  "feedback": {
+    "open": "Signaler un problème",
+    "intro": "Un bug, une idée, une remarque : dis-nous tout. Ton message va aux administrateurs de Librarius.",
+    "kinds": {
+      "BUG": "Problème",
+      "IDEA": "Idée",
+      "OTHER": "Autre"
+    },
+    "description": "Description",
+    "placeholders": {
+      "BUG": "Ce que tu faisais, ce qui s'est passé, ce que tu attendais…",
+      "IDEA": "Ce qui te serait utile, et pourquoi…",
+      "OTHER": "Ton message…"
+    },
+    "attach": "Joindre les informations techniques (page, version, navigateur, journal récent)",
+    "preview": "Voir ce qui sera joint",
+    "send": "Envoyer",
+    "sent": "Merci, ton signalement est envoyé.",
+    "error": "Le signalement n'a pas pu être envoyé. Ton texte est gardé : réessaie dans un instant."
+  },
+  "admin": {
+    "title": "Administration",
+    "prompt": "Connecte-toi pour accéder à l'administration.",
+    "restricted": "Réservé aux administrateurs",
+    "restrictedHint": "Cette page demande le rôle administrateur, attribué dans Keycloak.",
+    "entry": "Administration",
+    "entryDescription": "Signalements des membres, erreurs enregistrées et supervision de l'instance.",
+    "open": "Ouvrir l'administration",
+    "tabs": {
+      "reports": "Signalements",
+      "monitoring": "Supervision"
+    },
+    "kinds": {
+      "BUG": "Problème",
+      "IDEA": "Idée",
+      "OTHER": "Autre",
+      "ERROR": "Erreur"
+    },
+    "sources": {
+      "USER": "Membre",
+      "WEB": "Erreur web",
+      "API": "Erreur API"
+    },
+    "reports": {
+      "total_one": "{{count}} signalement",
+      "total_other": "{{count}} signalements",
+      "empty": "Aucun signalement pour l'instant.",
+      "error": "Impossible de charger les signalements.",
+      "occurrences": "×{{count}}",
+      "by": "Par {{name}}",
+      "deleted": "compte supprimé",
+      "previous": "Précédents",
+      "next": "Suivants",
+      "page": "Page {{page}} sur {{pages}}"
+    },
+    "detail": {
+      "title": "Signalement",
+      "origin": "Origine",
+      "reporter": "Membre",
+      "first": "Première fois",
+      "last": "Dernière fois",
+      "occurrences": "Occurrences",
+      "page": "Page",
+      "version": "Version",
+      "browser": "Navigateur",
+      "logs": "Journal et détails techniques"
+    },
+    "monitoring": {
+      "error": "Impossible de charger la supervision.",
+      "activeNow": "actifs maintenant",
+      "reports30": "signalements sur 30 jours",
+      "errors30": "erreurs sur 30 jours",
+      "reportsTitle": "Signalements et erreurs par jour",
+      "reportsChart": "Signalements par jour sur 30 jours : {{reports}} signalements de membres, {{errors}} erreurs",
+      "legendReports": "Membres",
+      "legendErrors": "Erreurs",
+      "activeTitle": "Membres actifs par jour",
+      "activeChart": "Membres actifs par jour sur 30 jours : jusqu'à {{max}}, {{today}} aujourd'hui",
+      "servicesTitle": "État des services",
+      "up": "Opérationnel",
+      "down": "Indisponible {{detail}}",
+      "barTitle": "{{date}} : {{values}}",
+      "note": "« Maintenant » : vus dans les 5 dernières minutes. La page se rafraîchit toutes les 30 secondes."
+    },
+    "services": {
+      "database": "Base de données",
+      "keycloak": "Keycloak"
+    }
   }
 }

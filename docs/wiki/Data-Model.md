@@ -36,7 +36,13 @@ for how that matching happens on the way in.
 | `reading_goal` | An annual target for one kind of book (`kind`, unique per user, year and kind — V25), in books, volumes or pages |
 | `cover_cache` | Resized BnF cover thumbnails by ark (`content` NULL = known miss) — V26 |
 | `user_achievement` | One unlocked achievement tier (V31), `seen_at` once announced; the catalogue, XP and levels live in code |
+| `user_activity` | One row per member and day they used the instance (V36, #491), `last_seen_at` moved forward at most once a minute, after the response — the monitoring's active members |
 | `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
+
+`feedback` (V35, #489, #490) is the one table read across users, by the admins only: the
+members' reports and the errors recorded by the web app and the API, one row per error
+fingerprint with its `occurrences`. Its `user_id` is `ON DELETE SET NULL`: a report outlives
+its author's account, which only forgets who sent it.
 
 Every one of these carries a `user_id`, and every API resource filters on it: no query ever
 returns another user's row. That is also what makes account deletion a single cascading

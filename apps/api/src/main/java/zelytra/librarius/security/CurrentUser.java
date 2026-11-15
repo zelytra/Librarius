@@ -17,6 +17,12 @@ import zelytra.librarius.domain.repository.AppUserRepository;
 @RequestScoped
 public class CurrentUser {
 
+    /**
+     * The Keycloak realm role of the people who run the instance (#488), granted by hand in the
+     * Keycloak console; Quarkus reads it from the token's {@code realm_access.roles}.
+     */
+    public static final String ADMIN = "admin";
+
     @Inject
     SecurityIdentity identity;
 
@@ -39,6 +45,11 @@ public class CurrentUser {
             throw new ForbiddenException("Token without a usable user identifier.");
         }
         return sub;
+    }
+
+    /** Whether the caller holds the {@link #ADMIN} role. */
+    public boolean isAdmin() {
+        return identity.hasRole(ADMIN);
     }
 
     /** Returns the application user, creating it when it does not exist yet. */

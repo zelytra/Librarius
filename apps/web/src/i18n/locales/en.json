@@ -1406,5 +1406,94 @@
     "pending_other": "{{count}} changes picked",
     "apply": "Apply",
     "pickSeries": "Pick the series “{{title}}”"
+  },
+  "feedback": {
+    "open": "Report a problem",
+    "intro": "A bug, an idea, a remark: tell us everything. Your message goes to Librarius's administrators.",
+    "kinds": {
+      "BUG": "Problem",
+      "IDEA": "Idea",
+      "OTHER": "Other"
+    },
+    "description": "Description",
+    "placeholders": {
+      "BUG": "What you were doing, what happened, what you expected…",
+      "IDEA": "What would help you, and why…",
+      "OTHER": "Your message…"
+    },
+    "attach": "Attach technical details (page, version, browser, recent log)",
+    "preview": "See what will be attached",
+    "send": "Send",
+    "sent": "Thanks, your report is sent.",
+    "error": "The report could not be sent. Your text is kept: try again in a moment."
+  },
+  "admin": {
+    "title": "Administration",
+    "prompt": "Sign in to reach the administration.",
+    "restricted": "Administrators only",
+    "restrictedHint": "This page needs the administrator role, granted in Keycloak.",
+    "entry": "Administration",
+    "entryDescription": "Members' reports, recorded errors and monitoring of the instance.",
+    "open": "Open the administration",
+    "tabs": {
+      "reports": "Reports",
+      "monitoring": "Monitoring"
+    },
+    "kinds": {
+      "BUG": "Problem",
+      "IDEA": "Idea",
+      "OTHER": "Other",
+      "ERROR": "Error"
+    },
+    "sources": {
+      "USER": "Member",
+      "WEB": "Web error",
+      "API": "API error"
+    },
+    "reports": {
+      "total_one": "{{count}} report",
+      "total_other": "{{count}} reports",
+      "empty": "No report yet.",
+      "error": "The reports could not be loaded.",
+      "occurrences": "×{{count}}",
+      "by": "By {{name}}",
+      "deleted": "deleted account",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{pages}}"
+    },
+    "detail": {
+      "title": "Report",
+      "origin": "Origin",
+      "reporter": "Member",
+      "first": "First seen",
+      "last": "Last seen",
+      "occurrences": "Occurrences",
+      "page": "Page",
+      "version": "Version",
+      "browser": "Browser",
+      "logs": "Log and technical details"
+    },
+    "monitoring": {
+      "error": "The monitoring could not be loaded.",
+      "activeNow": "active now",
+      "reports30": "reports over 30 days",
+      "errors30": "errors over 30 days",
+      "reportsTitle": "Reports and errors per day",
+      "reportsChart": "Reports per day over 30 days: {{reports}} from members, {{errors}} errors",
+      "legendReports": "Members",
+      "legendErrors": "Errors",
+      "activeTitle": "Members active per day",
+      "activeChart": "Members active per day over 30 days: up to {{max}}, {{today}} today",
+      "servicesTitle": "Service status",
+      "up": "Operational",
+      "down": "Unavailable {{detail}}",
+      "barTitle": "{{date}}: {{values}}",
+      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds."
+    },
+    "services": {
+      "database": "Database",
+      "keycloak": "Keycloak"
+    }
   }
 }

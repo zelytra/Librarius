@@ -56,6 +56,9 @@ const ReadingSheetPage = lazy(() =>
 const AchievementsPage = lazy(() =>
   import('./features/achievements/AchievementsPage').then((m) => ({ default: m.AchievementsPage })),
 );
+const AdminPage = lazy(() =>
+  import('./features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
+);
 const StatsPage = lazy(() =>
   import('./features/stats/StatsPage').then((m) => ({ default: m.StatsPage })),
 );
@@ -139,6 +142,7 @@ function App() {
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="admin" element={<AdminPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>

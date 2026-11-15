@@ -48,6 +48,19 @@ class MeApiTest {
                 .then().statusCode(200);
     }
 
+    /**
+     * #488: the admin role is granted by hand in Keycloak, and {@code /api/me} says whether the
+     * caller holds it, so the app shows its admin screens to them alone. In the tests alice is
+     * an admin, bob is not.
+     */
+    @Test
+    void tellsWhetherTheCallerIsAnAdmin() {
+        given().auth().oauth2(token("alice")).when().get("/api/me")
+                .then().statusCode(200).body("admin", is(true));
+        given().auth().oauth2(token("bob")).when().get("/api/me")
+                .then().statusCode(200).body("admin", is(false));
+    }
+
     @Test
     void requiresAuthentication() {
         given().contentType("application/json")

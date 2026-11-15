@@ -5,6 +5,17 @@ the web app (`react-oidc-context`, `apps/web/src/auth/oidc.ts`). The API validat
 token and reads the user from its `sub` (`security/CurrentUser.java`); the first request of a
 new account creates its `app_user` row.
 
+## The admin role
+
+The realm role **`admin`** (#488) opens the admin screens — the members' reports, the
+recorded errors and the monitoring — and the `/api/admin/*` endpoints
+(`@RolesAllowed("admin")`, read from the token's `realm_access.roles`). `GET /api/me` answers
+`admin: true` to whoever holds it, so the app shows the way in to them alone. The role exists
+in the realm (the realm files and the `keycloak-setup` Job, for a realm created before it)
+but is **granted to nobody**: the owner gives it by hand in the Keycloak console, *Users* →
+the account → *Role mapping* → *Assign role* → `admin`, and the member signs in again for a
+token that carries it. Locally `alice` holds it, as in the tests; `bob` does not.
+
 ## Long sessions
 
 The web app asks for the `offline_access` scope. Keycloak then keeps the session in its

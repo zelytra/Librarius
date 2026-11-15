@@ -10,8 +10,11 @@ import { createQueryClient } from './shared/queryClient';
 import { oidcConfig } from './auth/oidc';
 import './i18n';
 import './shared/styles/global.css';
+import { installErrorReporting } from './shared/feedback/diagnostics';
 
 const queryClient = createQueryClient();
+// Errors thrown outside React, and promises nobody awaited, are reported by themselves (#490).
+installErrorReporting();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

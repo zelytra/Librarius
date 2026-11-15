@@ -1,0 +1,282 @@
+.count {
+  margin: 16px 0 8px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.reports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+.reportHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: var(--fs-11);
+  font-weight: 700;
+}
+
+.badgeError {
+  background: color-mix(in srgb, var(--rose) 15%, transparent);
+  color: var(--rose);
+}
+
+.occurrences {
+  font-size: var(--fs-12-5);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.date {
+  margin-left: auto;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.message {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.error {
+  color: var(--rose);
+  font-size: var(--fs-13);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailMessage {
+  margin: 0;
+  font-size: var(--fs-15);
+  font-weight: 600;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 8px;
+  font-size: var(--fs-13);
+}
+
+.field dt {
+  color: var(--muted);
+}
+
+.field dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  margin: 0 0 8px;
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.logs {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--radius-panel);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: var(--fs-11);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.monitoring {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tile,
+.panel {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tileValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-24, 24px);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tileLabel {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.bars {
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.barColumn {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  min-width: 0;
+}
+
+.barReports,
+.barErrors,
+.barActive {
+  display: block;
+  border-radius: 2px;
+}
+
+.barReports {
+  background: var(--accent-deep);
+}
+
+.barErrors {
+  background: var(--rose);
+}
+
+.barActive {
+  background: var(--accent);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+}
+
+.services {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font-size: var(--fs-14);
+}
+
+.serviceName {
+  font-weight: 600;
+}
+
+.serviceUp,
+.serviceDown {
+  margin-left: auto;
+  font-size: var(--fs-13);
+  text-align: right;
+}
+
+.serviceUp {
+  color: var(--accent-deep);
+}
+
+.serviceDown {
+  color: var(--rose);
+}
+
+.note {
+  margin: -6px 0 0;
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}

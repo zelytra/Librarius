@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { reportError } from '../feedback/diagnostics';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -27,8 +28,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Nothing collects front-end errors yet, so the console is the only trace left.
     console.error('Unhandled render error', error, info.componentStack);
+    // Reported by itself (#490): the reader is looking at the fallback, not at a console.
+    reportError(error);
   }
 
   render() {

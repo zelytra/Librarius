@@ -53,11 +53,16 @@ public final class ApiDtos {
      *                      through a mutual follow. Unlike {@code trusted} this one <em>is</em>
      *                      editable, through {@link UpdateMeDto}
      */
+    /**
+     * The caller's own profile. {@code admin} says whether they hold the Keycloak realm role
+     * {@code admin} (#488), granted by hand: the app shows its admin screens to them alone, and
+     * the admin endpoints check the role themselves.
+     */
     public record MeDto(String id, String email, String displayName, String locale,
-                        String timeZone, boolean trusted, boolean publicAccount) {
-        public static MeDto of(AppUser u) {
+                        String timeZone, boolean trusted, boolean publicAccount, boolean admin) {
+        public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount);
+                    u.publicAccount, admin);
         }
     }
 
@@ -1163,5 +1168,63 @@ public final class ApiDtos {
             return new ReportDto(r.id, r.targetType, r.targetId, r.reason, r.comment, r.status,
                     r.createdAt);
         }
+    }
+
+    // ── Reports (#489, #490) ─────────────────────────────────────────────────
+
+    /**
+     * What a member sends from the bug button: a problem, an idea or anything else, and what
+     * the app knew at that moment — the screen, its version, the browser, and its recent log.
+     */
+    public record FeedbackCreateDto(
+            @NotNull
+            @Pattern(regexp = "BUG|IDEA|OTHER") String kind,
+            @NotBlank @Size(max = 5000) String message,
+            @Size(max = 1024) String page,
+            @Size(max = 64) String appVersion,
+            @Size(max = 512) String userAgent,
+            @Size(max = 20000) String logs) {
+    }
+
+    /** An error the web app did not expect (#490), sent by itself. */
+    public record ClientErrorDto(
+            @NotBlank @Size(max = 2000) String message,
+            @Size(max = 20000) String stack,
+            @Size(max = 1024) String page,
+            @Size(max = 64) String appVersion,
+            @Size(max = 512) String userAgent) {
+    }
+
+    public record FeedbackCreatedDto(UUID id) {
+    }
+
+    /** A report as the admin list shows it; {@code reporterName} is null once the account is gone. */
+    public record FeedbackDto(UUID id, String kind, String source, String message, String page,
+            String appVersion, String reporterName, int occurrences, java.time.OffsetDateTime createdAt,
+            java.time.OffsetDateTime lastSeenAt) {
+    }
+
+    /** One report in full, with its logs or stack trace and the browser it came from. */
+    public record FeedbackDetailDto(UUID id, String kind, String source, String message, String page,
+            String appVersion, String userAgent, String details, String reporterName, int occurrences,
+            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime lastSeenAt) {
+    }
+
+    public record FeedbackPageDto(java.util.List<FeedbackDto> items, int page, int size, long total) {
+    }
+
+    // ── Monitoring (#491) ────────────────────────────────────────────────────
+
+    /** One day of the monitoring: the members' reports, the errors recorded, the members active. */
+    public record MonitoringDayDto(java.time.LocalDate day, long reports, long errors, long activeUsers) {
+    }
+
+    /** Whether a service the API depends on answers, and why not when it does not. */
+    public record ServiceStatusDto(String name, boolean up, String detail) {
+    }
+
+    /** The monitoring screen: members active right now, the last 30 days (today last), the services. */
+    public record MonitoringDto(long activeNow, java.util.List<MonitoringDayDto> days,
+            java.util.List<ServiceStatusDto> services) {
     }
 }

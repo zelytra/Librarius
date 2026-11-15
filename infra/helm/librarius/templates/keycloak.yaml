@@ -24,7 +24,7 @@ data:
       "ssoSessionIdleTimeout": {{ .Values.keycloak.sessions.idle }},
       "ssoSessionMaxLifespan": {{ .Values.keycloak.sessions.max }},
       "offlineSessionIdleTimeout": {{ .Values.keycloak.sessions.offlineIdle }},
-      "roles": { "realm": [{ "name": "user" }] },
+      "roles": { "realm": [{ "name": "user" }, { "name": "admin" }] },
       "defaultRoles": ["user", "offline_access"],
       "clients": [
         {

@@ -49,7 +49,7 @@ public class MeResource {
 
     @GET
     public MeDto me() {
-        return MeDto.of(currentUser.require());
+        return MeDto.of(currentUser.require(), currentUser.isAdmin());
     }
 
     /**
@@ -104,7 +104,7 @@ public class MeResource {
         user.locale = dto.locale();
         user.timeZone = parseZone(dto.timeZone());
         user.publicAccount = dto.publicAccount();
-        return MeDto.of(user);
+        return MeDto.of(user, currentUser.isAdmin());
     }
 
     /** A blank zone clears the preference; anything else must be a valid IANA identifier. */

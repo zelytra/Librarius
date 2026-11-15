@@ -227,6 +227,22 @@ export interface CategoryUpdateDto {
   label: string;
 }
 
+export interface ClientErrorDto {
+  /**
+     * @maxLength 2000
+     * @pattern \S
+     */
+  message: string;
+  /** @maxLength 20000 */
+  stack?: string;
+  /** @maxLength 1024 */
+  page?: string;
+  /** @maxLength 64 */
+  appVersion?: string;
+  /** @maxLength 512 */
+  userAgent?: string;
+}
+
 export interface CollectedRequest {
   /** @pattern booknode|babelio|mangacollec */
   source: string;
@@ -417,6 +433,59 @@ export interface ExternalRatingDto {
   url?: string;
 }
 
+export interface FeedbackCreateDto {
+  /** @pattern BUG|IDEA|OTHER */
+  kind: string;
+  /**
+     * @maxLength 5000
+     * @pattern \S
+     */
+  message: string;
+  /** @maxLength 1024 */
+  page?: string;
+  /** @maxLength 64 */
+  appVersion?: string;
+  /** @maxLength 512 */
+  userAgent?: string;
+  /** @maxLength 20000 */
+  logs?: string;
+}
+
+export interface FeedbackDetailDto {
+  id?: Uuid;
+  kind?: string;
+  source?: string;
+  message?: string;
+  page?: string;
+  appVersion?: string;
+  userAgent?: string;
+  details?: string;
+  reporterName?: string;
+  occurrences?: number;
+  createdAt?: OffsetDateTime;
+  lastSeenAt?: OffsetDateTime;
+}
+
+export interface FeedbackDto {
+  id?: Uuid;
+  kind?: string;
+  source?: string;
+  message?: string;
+  page?: string;
+  appVersion?: string;
+  reporterName?: string;
+  occurrences?: number;
+  createdAt?: OffsetDateTime;
+  lastSeenAt?: OffsetDateTime;
+}
+
+export interface FeedbackPageDto {
+  items?: FeedbackDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export interface FormatDto {
   format?: BookFormat;
 }
@@ -578,6 +647,7 @@ export interface MeDto {
   timeZone?: string;
   trusted?: boolean;
   publicAccount?: boolean;
+  admin?: boolean;
 }
 
 export interface MemberSearchDto {
@@ -591,6 +661,25 @@ export interface MemberSummaryDto {
   id?: string;
   displayName?: string;
   trusted?: boolean;
+}
+
+export interface MonitoringDayDto {
+  day?: LocalDate;
+  reports?: number;
+  errors?: number;
+  activeUsers?: number;
+}
+
+export interface ServiceStatusDto {
+  name?: string;
+  up?: boolean;
+  detail?: string;
+}
+
+export interface MonitoringDto {
+  activeNow?: number;
+  days?: MonitoringDayDto[];
+  services?: ServiceStatusDto[];
 }
 
 export interface OwnershipDto {
@@ -907,6 +996,11 @@ export interface WishlistUpdateDto {
   note?: string;
 }
 
+export type GetApiAdminFeedbackParams = {
+  page?: number;
+  size?: number;
+};
+
 export type GetApiAuthorsParams = {
   q?: string;
 };
@@ -1175,6 +1269,316 @@ export const usePostApiAchievementsSeen = <TError = void,
       > => {
       return useMutation(getPostApiAchievementsSeenMutationOptions(options), queryClient);
     }
+
+export const getGetApiAdminFeedbackUrl = (params?: GetApiAdminFeedbackParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/feedback?${stringifiedParams}` : `/api/admin/feedback`
+}
+
+/**
+ * @summary Feedback
+ */
+export const getApiAdminFeedback = async (params?: GetApiAdminFeedbackParams, options?: Parameters<typeof apiClient>[1]): Promise<FeedbackPageDto> => {
+
+  return apiClient<FeedbackPageDto>(getGetApiAdminFeedbackUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminFeedbackQueryKey = (params?: GetApiAdminFeedbackParams,) => {
+    return [
+    `/api/admin/feedback`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAdminFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminFeedback>>, TError = void>(params?: GetApiAdminFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminFeedbackQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminFeedback>>> = () => getApiAdminFeedback(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminFeedback>>>
+export type GetApiAdminFeedbackQueryError = void
+
+
+/** @summary Feedback */
+export function useGetApiAdminFeedback<TData = Awaited<ReturnType<typeof getApiAdminFeedback>>, TError = void>(
+ params: undefined |  GetApiAdminFeedbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedback<TData = Awaited<ReturnType<typeof getApiAdminFeedback>>, TError = void>(
+ params?: GetApiAdminFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedback<TData = Awaited<ReturnType<typeof getApiAdminFeedback>>, TError = void>(
+ params?: GetApiAdminFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedback<TData = Awaited<ReturnType<typeof getApiAdminFeedback>>, TError = void>(
+ params?: GetApiAdminFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminFeedbackQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiAdminFeedbackIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/feedback/${id}`
+}
+
+/**
+ * @summary Feedback
+ */
+export const getApiAdminFeedbackId = async (id: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<FeedbackDetailDto> => {
+
+  return apiClient<FeedbackDetailDto>(getGetApiAdminFeedbackIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminFeedbackIdQueryKey = (id: Uuid,) => {
+    return [
+    `/api/admin/feedback/${id}`
+    ] as const;
+    }
+
+
+export const getGetApiAdminFeedbackIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminFeedbackIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminFeedbackId>>> = () => getApiAdminFeedbackId(id, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminFeedbackIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminFeedbackId>>>
+export type GetApiAdminFeedbackIdQueryError = void
+
+
+/** @summary Feedback */
+export function useGetApiAdminFeedbackId<TData = Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminFeedbackId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminFeedbackId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedbackId<TData = Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminFeedbackId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminFeedbackId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedbackId<TData = Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feedback */
+export function useGetApiAdminFeedbackId<TData = Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminFeedbackId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminFeedbackIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiAdminMonitoringUrl = () => {
+
+
+
+
+  return `/api/admin/monitoring`
+}
+
+/**
+ * @summary Monitoring
+ */
+export const getApiAdminMonitoring = async ( options?: Parameters<typeof apiClient>[1]): Promise<MonitoringDto> => {
+
+  return apiClient<MonitoringDto>(getGetApiAdminMonitoringUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminMonitoringQueryKey = () => {
+    return [
+    `/api/admin/monitoring`
+    ] as const;
+    }
+
+
+export const getGetApiAdminMonitoringQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminMonitoringQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminMonitoring>>> = () => getApiAdminMonitoring(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminMonitoringQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminMonitoring>>>
+export type GetApiAdminMonitoringQueryError = void
+
+
+/** @summary Monitoring */
+export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminMonitoring>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminMonitoring>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Monitoring */
+export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminMonitoring>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminMonitoring>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Monitoring */
+export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Monitoring */
+export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminMonitoring>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminMonitoringQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -2595,6 +2999,178 @@ export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExp
 
 
 
+
+export const getPostApiFeedbackUrl = () => {
+
+
+
+
+  return `/api/feedback`
+}
+
+/**
+ * @summary Submit
+ */
+export const postApiFeedback = async (feedbackCreateDto: FeedbackCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<unknown>(getPostApiFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedbackCreateDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiFeedbackMutationKey = () => ['postApiFeedback'] as const;
+
+export const getPostApiFeedbackMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedback>>, TError,PostApiFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiFeedback>>, TError,PostApiFeedbackMutationVariables, TContext> => {
+
+const mutationKey = getPostApiFeedbackMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiFeedback>>, PostApiFeedbackMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof postApiFeedback>>>
+    export type PostApiFeedbackMutationBody = FeedbackCreateDto
+    export type PostApiFeedbackMutationError = void
+    export type PostApiFeedbackMutationVariables = {data: FeedbackCreateDto}
+
+    /** @summary Submit */
+export const usePostApiFeedback = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedback>>, TError,PostApiFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiFeedback>>,
+        TError,
+        PostApiFeedbackMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiFeedbackMutationOptions(options), queryClient);
+    }
+
+export const getPostApiFeedbackErrorsUrl = () => {
+
+
+
+
+  return `/api/feedback/errors`
+}
+
+/**
+ * @summary Error
+ */
+export const postApiFeedbackErrors = async (clientErrorDto: ClientErrorDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPostApiFeedbackErrorsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(clientErrorDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiFeedbackErrorsMutationKey = () => ['postApiFeedbackErrors'] as const;
+
+export const getPostApiFeedbackErrorsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedbackErrors>>, TError,PostApiFeedbackErrorsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiFeedbackErrors>>, TError,PostApiFeedbackErrorsMutationVariables, TContext> => {
+
+const mutationKey = getPostApiFeedbackErrorsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiFeedbackErrors>>, PostApiFeedbackErrorsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiFeedbackErrors(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiFeedbackErrorsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiFeedbackErrors>>>
+    export type PostApiFeedbackErrorsMutationBody = ClientErrorDto
+    export type PostApiFeedbackErrorsMutationError = void
+    export type PostApiFeedbackErrorsMutationVariables = {data: ClientErrorDto}
+
+    /** @summary Error */
+export const usePostApiFeedbackErrors = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedbackErrors>>, TError,PostApiFeedbackErrorsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiFeedbackErrors>>,
+        TError,
+        PostApiFeedbackErrorsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiFeedbackErrorsMutationOptions(options), queryClient);
+    }
 
 export const getGetApiGenresUrl = () => {
 

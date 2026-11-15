@@ -1,4 +1,5 @@
 import { getAccessToken, redirectToSignIn, tryRenewSession } from './authToken';
+import { note } from './feedback/diagnostics';
 
 /**
  * HTTP client backing the generated React Query hooks (orval `mutator`).
@@ -62,6 +63,8 @@ export async function apiClient<T>(url: string, init: RequestInit = {}): Promise
   }
 
   if (!response.ok) {
+    // Written to the log a report carries (#489): what failed just before the reader wrote.
+    note(`${response.status} ${init.method ?? 'GET'} ${url}`);
     const body = await response.text().catch(() => undefined);
     throw new ApiError(response.status, url, body);
   }
