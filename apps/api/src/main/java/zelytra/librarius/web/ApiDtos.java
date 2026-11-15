@@ -53,11 +53,16 @@ public final class ApiDtos {
      *                      through a mutual follow. Unlike {@code trusted} this one <em>is</em>
      *                      editable, through {@link UpdateMeDto}
      */
+    /**
+     * The caller's own profile. {@code admin} says whether they hold the Keycloak realm role
+     * {@code admin} (#488), granted by hand: the app shows its admin screens to them alone, and
+     * the admin endpoints check the role themselves.
+     */
     public record MeDto(String id, String email, String displayName, String locale,
-                        String timeZone, boolean trusted, boolean publicAccount) {
-        public static MeDto of(AppUser u) {
+                        String timeZone, boolean trusted, boolean publicAccount, boolean admin) {
+        public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount);
+                    u.publicAccount, admin);
         }
     }
 

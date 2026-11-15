@@ -13,7 +13,10 @@
   "ssoSessionMaxLifespan": 2592000,
   "offlineSessionIdleTimeout": 7776000,
   "roles": {
-    "realm": [{ "name": "user", "description": "Utilisateur de Ma Bibliothèque" }]
+    "realm": [
+      { "name": "user", "description": "Utilisateur de Ma Bibliothèque" },
+      { "name": "admin", "description": "Administration de l'instance (signalements, supervision)" }
+    ]
   },
   "defaultRoles": ["user", "offline_access"],
   "users": [
@@ -25,7 +28,7 @@
       "firstName": "Alice",
       "lastName": "Lectrice",
       "credentials": [{ "type": "password", "value": "alice", "temporary": false }],
-      "realmRoles": ["user", "offline_access"]
+      "realmRoles": ["user", "offline_access", "admin"]
     },
     {
       "username": "bob",

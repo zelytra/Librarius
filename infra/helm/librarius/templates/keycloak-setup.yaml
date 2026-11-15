@@ -75,6 +75,13 @@ spec:
                 -s offlineSessionIdleTimeout={{ .Values.keycloak.sessions.offlineIdle }}
               echo "realm session lifetimes applied"
 
+              # The admin role (#488): created on a realm imported before it existed, granted
+              # to no one — the owner gives it by hand in the Keycloak console.
+              $kc get roles/admin -r librarius >/dev/null 2>&1 \
+                || $kc create roles -r librarius -s name=admin \
+                     -s "description=Instance administration (reports, monitoring)"
+              echo "admin role present"
+
               {{- if $apiAdmin.enabled }}
 
               # Account deletion (#73): a confidential client with a service account that
