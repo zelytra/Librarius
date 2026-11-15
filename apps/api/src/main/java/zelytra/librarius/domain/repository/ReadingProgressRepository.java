@@ -192,6 +192,26 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
     }
 
     /**
+     * The readings finished between {@code from} and {@code to}, oldest first (#479): what the
+     * Stats calendar draws. A title given up on is no finished reading and is left out.
+     */
+    public List<Object[]> finishedBetween(String userId, LocalDate from, LocalDate to) {
+        return getEntityManager().createQuery("""
+                        select li.id, w.title, e.coverUrl, w.kind, rp.startedAt, rp.finishedAt
+                        from ReadingProgress rp join rp.libraryItem li join li.edition e join e.work w
+                        where li.userId = :userId
+                          and rp.finishedAt between :from and :to
+                          and li.status <> :abandoned
+                        order by rp.finishedAt asc, w.title asc
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .setParameter("abandoned", LibraryStatus.ABANDONED)
+                .getResultList();
+    }
+
+    /**
      * How long the user took, on average, to finish a title in the window.
      *
      * <p>Only the titles carrying both dates count: a title marked read without ever having

@@ -161,6 +161,14 @@ public final class ApiDtos {
     public record BulkResultDto(int updated) {
     }
 
+    /**
+     * One reading of the Stats calendar (#479): the title, when it was started and finished,
+     * and how many days that covered, both ends counted — null when the start is unknown.
+     */
+    public record ReadingSpanDto(UUID itemId, String title, String coverUrl, String kind,
+            LocalDate startedAt, LocalDate finishedAt, Integer days) {
+    }
+
     public record MemberSummaryDto(String id, String displayName, boolean trusted) {
         public static MemberSummaryDto of(AppUser u) {
             return new MemberSummaryDto(u.id, u.displayName, u.trusted);

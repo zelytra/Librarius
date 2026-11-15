@@ -635,6 +635,16 @@ export interface RankAssignDto {
   categoryId?: Uuid;
 }
 
+export interface ReadingSpanDto {
+  itemId?: Uuid;
+  title?: string;
+  coverUrl?: string;
+  kind?: string;
+  startedAt?: LocalDate;
+  finishedAt?: LocalDate;
+  days?: number;
+}
+
 export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];
 
 
@@ -964,6 +974,11 @@ export type GetApiLibraryParams = {
 export type GetApiReleasesUpcomingParams = {
   kind?: Kind;
   limit?: number;
+};
+
+export type GetApiStatsReadingsParams = {
+  from?: string;
+  to?: string;
 };
 
 export type GetApiStatsTimelineParams = {
@@ -6759,6 +6774,114 @@ export function useGetApiStatsBreakdown<TData = Awaited<ReturnType<typeof getApi
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiStatsBreakdownQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiStatsReadingsUrl = (params?: GetApiStatsReadingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stats/readings?${stringifiedParams}` : `/api/stats/readings`
+}
+
+/**
+ * @summary Readings
+ */
+export const getApiStatsReadings = async (params?: GetApiStatsReadingsParams, options?: Parameters<typeof apiClient>[1]): Promise<ReadingSpanDto[]> => {
+
+  return apiClient<ReadingSpanDto[]>(getGetApiStatsReadingsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiStatsReadingsQueryKey = (params?: GetApiStatsReadingsParams,) => {
+    return [
+    `/api/stats/readings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiStatsReadingsQueryOptions = <TData = Awaited<ReturnType<typeof getApiStatsReadings>>, TError = void>(params?: GetApiStatsReadingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiStatsReadingsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiStatsReadings>>> = () => getApiStatsReadings(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiStatsReadingsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiStatsReadings>>>
+export type GetApiStatsReadingsQueryError = void
+
+
+/** @summary Readings */
+export function useGetApiStatsReadings<TData = Awaited<ReturnType<typeof getApiStatsReadings>>, TError = void>(
+ params: undefined |  GetApiStatsReadingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsReadings>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsReadings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Readings */
+export function useGetApiStatsReadings<TData = Awaited<ReturnType<typeof getApiStatsReadings>>, TError = void>(
+ params?: GetApiStatsReadingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiStatsReadings>>,
+          TError,
+          Awaited<ReturnType<typeof getApiStatsReadings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Readings */
+export function useGetApiStatsReadings<TData = Awaited<ReturnType<typeof getApiStatsReadings>>, TError = void>(
+ params?: GetApiStatsReadingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Readings */
+export function useGetApiStatsReadings<TData = Awaited<ReturnType<typeof getApiStatsReadings>>, TError = void>(
+ params?: GetApiStatsReadingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiStatsReadings>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiStatsReadingsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -10,6 +10,7 @@ import { activeLanguage } from '../../i18n/languages';
 import { useGetApiStats } from '../../api/generated/librarius';
 import { TimelineSection } from './TimelineSection';
 import { ValuePanel } from './ValuePanel';
+import { ReadingCalendar } from './ReadingCalendar';
 import { AchievementsPanel } from './AchievementsPanel';
 import { pagesRead } from '../../shared/pagesRead';
 import styles from './StatsPage.module.css';
@@ -117,6 +118,8 @@ function StatsContent() {
 
       {/* What the shelves and the wishlist are worth (#421). */}
       <ValuePanel />
+
+      <ReadingCalendar />
 
       <div className={styles.panel}>
         <div className={styles.panelTitle}>{t('stats.favoriteGenres')}</div>

@@ -76,6 +76,7 @@ export const defaultHandlers = [
   http.get(`${BASE}/me/blocked`, () => HttpResponse.json([])),
   http.get(`${BASE}/works/:id/friends`, () => HttpResponse.json([])),
   http.get(`${BASE}/views`, () => HttpResponse.json([])),
+  http.get(`${BASE}/stats/readings`, () => HttpResponse.json([])),
   http.get(`${BASE}/works/:id/external`, () => HttpResponse.json([])),
   http.get(`${BASE}/authors/:id/external`, () => HttpResponse.json([])),
 
