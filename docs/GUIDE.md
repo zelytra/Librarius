@@ -93,9 +93,11 @@ La progression se retrouve sur les couvertures de « Reprendre la lecture », su
 
 ### Ta note et ton avis
 
-Cinq étoiles et un texte libre, sur l'écran du titre. **Strictement privés** : ils ne
-sont montrés à personne et ne sont agrégés dans aucune moyenne. Recliquer sur la même
-étoile retire la note.
+Cinq étoiles et un texte libre, sur l'écran du titre. La note va par **demi-étoiles** :
+touche la moitié gauche d'une étoile pour une demi-étoile (4,5), sa moitié droite pour
+l'étoile entière ; au clavier, les flèches ← → changent la note d'une demi-étoile. **Strictement
+privés** : ils ne sont montrés à personne et ne sont agrégés dans aucune moyenne. Recliquer
+sur la note en place la retire.
 
 ### Étagères et genres
 
@@ -145,7 +147,9 @@ la bibliothèque, « Modifier la vue » la renomme, la met à jour ou la supprim
 
 Dans une vue, chaque couverture a une **poignée** : fais glisser un titre (au doigt ou à la
 souris), ou utilise les flèches ← →, pour le placer où tu veux. L'ordre est enregistré dès que
-tu lâches, et la vue passe en tri **Manuel**. « Par série », « Tous les titres » et « Par
+tu lâches — où que tu lâches —, et la vue passe en tri **Manuel**. Changer de tri ou de filtre
+réaffiche aussitôt la vue dans le nouvel ordre. En « Par catégorie », un titre se déplace
+dans sa catégorie. « Par série », « Tous les titres » et « Par
 catégorie » se choisissent dans le même sélecteur. Pour ranger une série entière dans une catégorie,
 choisis-la dans « Catégorie de la série », sur la page de la série.
 
@@ -246,8 +250,9 @@ Le **type** — livre, BD ou manga — se change aussi sur la page du livre, pou
 titre passe dans l'autre étagère, avec ses objectifs et ses statistiques, sans rien perdre
 de ce que tu as saisi.
 
-Les éditions connues des catalogues sont listées avec leur éditeur, leur langue, leur nombre
-de pages et leur année — la tienne d'abord, puis les éditions françaises. Choisir une autre
+Les éditions connues des catalogues sont listées avec leur couverture, leur éditeur, leur langue,
+leur nombre de pages et leur année — la tienne d'abord, puis les éditions françaises ; les
+trois premières s'affichent, « Voir les autres éditions » montre le reste. Choisir une autre
 édition change la couverture partout : bibliothèque, fiche et séries.
 
 La section **Autres éditions** est toujours là : choisis une édition proposée par le
@@ -306,8 +311,10 @@ rien ne se règle à la main, et personne d'autre ne voit tes succès.
 ## Les statistiques
 
 Le **calendrier de lecture** montre, mois par mois, les jours où tu lisais chaque livre terminé
-(plus foncé quand plusieurs lectures se chevauchent), et liste les lectures du mois avec leurs
-dates et leur durée.
+(plus foncé quand plusieurs lectures se chevauchent) ; un livre apparaît en couverture dans le
+jour où tu l'as fini. Touche un jour pour lister ses lectures ; sinon, les quatre premières
+lectures du mois sont listées avec leurs dates et leur durée, et « Voir les autres lectures »
+montre le reste.
 
 - **Rythme de lecture** : pages par jour et **titres par mois**, calculés sur la période
   écoulée de l'année choisie.

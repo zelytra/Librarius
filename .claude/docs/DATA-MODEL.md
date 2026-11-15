@@ -28,7 +28,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `work` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `authors` (raw credit line, normalised into `work_author` in V13), `series_title`, `series_id` FK **nullable** (V4), `volume_number`, `synopsis`, `genres` (raw wording, normalised into `work_genre` in V6), `original_year`, `provider`, `provider_ref` (V12) | idx on `kind` and on `lower(title)`, `lower(authors)`, `lower(genres)` (V3), `(series_id, volume_number)` (V4). `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `series` | `id UUID` | `kind` (BOOK\|MANGA\|COMIC\|GRAPHIC_NOVEL\|AUDIOBOOK, the last three V15/#178), `title`, `original_title`, `total_volumes`, `status` (ONGOING\|COMPLETED\|HIATUS), `cover_url`, `synopsis`, `provider`, `provider_ref` | `UNIQUE(kind, lower(title))` — the key the import path attaches a new volume by |
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
-| `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating INT NOT NULL` (1–5), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
+| `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating DOUBLE PRECISION NOT NULL` (0.5–5 by halves, V34), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `page_count_estimate` (V28), `cover_url`, `format`, `release_date`, `provider`, `provider_ref`, `enrich_attempted_at` (V23), `list_price NUMERIC(8,2)` + `list_price_currency` + `price_checked_at` (V29) | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
 | `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (TO_READ\|READING\|READ\|ABANDONED — `OWNED` renamed `TO_READ` in V27), `ownership` (OWNED\|BORROWED\|EBOOK\|WISHLIST\|NOT_OWNED, V27, default OWNED), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7), `(user_id, ownership)` (V27) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
@@ -550,6 +550,13 @@ is the manual order: one row per placed entry, either a title (`item_id`) or a s
 entry's position through a subquery bound to `:view`, the unplaced titles after by activity.
 `Ownership.AUDIOBOOK` joins the enum; the column's comment is updated (no constraint to
 change, the column is a plain `VARCHAR(16)`).
+
+### V34 — half-star ratings (#484)
+
+`library_item.rating` and `series_review.rating` become `DOUBLE PRECISION` (a double holds
+every half exactly), checked `BETWEEN 0.5 AND 5` and on the half step (`rating * 2 =
+floor(rating * 2)`); `library_item`, which had no check, first loses any value outside 1–5.
+The API mirrors the check with `@HalfStar`; the CSV export writes a whole rating as `5`.
 
 ### Cascades
 
