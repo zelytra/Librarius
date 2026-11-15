@@ -1406,5 +1406,25 @@
     "pending_other": "{{count}} changes picked",
     "apply": "Apply",
     "pickSeries": "Pick the series “{{title}}”"
+  },
+  "feedback": {
+    "open": "Report a problem",
+    "intro": "A bug, an idea, a remark: tell us everything. Your message goes to Librarius's administrators.",
+    "kinds": {
+      "BUG": "Problem",
+      "IDEA": "Idea",
+      "OTHER": "Other"
+    },
+    "description": "Description",
+    "placeholders": {
+      "BUG": "What you were doing, what happened, what you expected…",
+      "IDEA": "What would help you, and why…",
+      "OTHER": "Your message…"
+    },
+    "attach": "Attach technical details (page, version, browser, recent log)",
+    "preview": "See what will be attached",
+    "send": "Send",
+    "sent": "Thanks, your report is sent.",
+    "error": "The report could not be sent. Your text is kept: try again in a moment."
   }
 }

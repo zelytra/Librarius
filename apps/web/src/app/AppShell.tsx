@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
@@ -6,6 +6,8 @@ import { useProfileLanguage } from './useProfileLanguage';
 import { Loading } from '../shared/ui/states';
 import { useViewportAtLeast } from '../shared/ui/breakpoints';
 import { AchievementWatcher } from '../shared/AchievementWatcher';
+import { FeedbackButton } from '../shared/feedback/FeedbackButton';
+import { note } from '../shared/feedback/diagnostics';
 import styles from './AppShell.module.css';
 
 /**
@@ -29,6 +31,8 @@ export function AppShell() {
   // with the column or hidden by CSS while still in the accessibility tree.
   const wide = useViewportAtLeast('tablet');
   const showBottomNav = !HIDDEN_NAV_PREFIXES.some((p) => location.pathname.startsWith(p));
+  // The screens visited go to the log a report carries (#489).
+  useEffect(() => note(`→ ${location.pathname}${location.search}`), [location.pathname, location.search]);
 
   return (
     <div className={styles.viewport}>
@@ -49,6 +53,8 @@ export function AppShell() {
       </div>
       {/* Announces the achievements a write unlocked (#287). */}
       <AchievementWatcher />
+      {/* Report a problem from any screen (#489), above the phone's bottom bar. */}
+      <FeedbackButton raised={!wide && showBottomNav} />
     </div>
   );
 }

@@ -1406,5 +1406,25 @@
     "pending_other": "{{count}} changements choisis",
     "apply": "Appliquer",
     "pickSeries": "Choisir la série « {{title}} »"
+  },
+  "feedback": {
+    "open": "Signaler un problème",
+    "intro": "Un bug, une idée, une remarque : dis-nous tout. Ton message va aux administrateurs de Librarius.",
+    "kinds": {
+      "BUG": "Problème",
+      "IDEA": "Idée",
+      "OTHER": "Autre"
+    },
+    "description": "Description",
+    "placeholders": {
+      "BUG": "Ce que tu faisais, ce qui s'est passé, ce que tu attendais…",
+      "IDEA": "Ce qui te serait utile, et pourquoi…",
+      "OTHER": "Ton message…"
+    },
+    "attach": "Joindre les informations techniques (page, version, navigateur, journal récent)",
+    "preview": "Voir ce qui sera joint",
+    "send": "Envoyer",
+    "sent": "Merci, ton signalement est envoyé.",
+    "error": "Le signalement n'a pas pu être envoyé. Ton texte est gardé : réessaie dans un instant."
   }
 }

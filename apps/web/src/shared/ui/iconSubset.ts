@@ -37,6 +37,7 @@
  */
 export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   add: 0xe145,
+  admin_panel_settings: 0xef3d,
   arrow_back: 0xe5c4,
   arrow_forward: 0xe5c8,
   auto_stories: 0xe666,
@@ -46,6 +47,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   book_2: 0xf53e,
   bookmark_add: 0xe598,
   bookmark_added: 0xe599,
+  bug_report: 0xe868,
   calendar_month: 0xebcc,
   category: 0xe72c,
   check_circle: 0xf0be,
@@ -77,6 +79,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   login: 0xea77,
   menu_book: 0xea19,
   military_tech: 0xea3f,
+  monitoring: 0xf190,
   print: 0xe8ad,
   priority_high: 0xe645,
   radio_button_unchecked: 0xe836,

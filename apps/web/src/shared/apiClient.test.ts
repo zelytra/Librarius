@@ -6,6 +6,7 @@ import {
   postApiLibrary,
 } from '../api/generated/librarius';
 import { apiClient, ApiError } from './apiClient';
+import { recentLog, resetDiagnostics } from './feedback/diagnostics';
 
 // The call goes through the generated function rather than straight to the mutator:
 // since orval 8 the request body and the query string are built by the generated code,
@@ -92,5 +93,14 @@ describe('apiClient', () => {
     server.use(http.get('*/api/stats', () => new HttpResponse(null, { status: 500 })));
 
     await expect(apiClient('/api/stats', { method: 'GET' })).rejects.toBeInstanceOf(ApiError);
+  });
+
+  /** #489: a failed call is written to the log a report carries. */
+  test('notes a failed call in the recent log', async () => {
+    resetDiagnostics();
+    server.use(http.get('*/api/library/:id', () => new HttpResponse('boom', { status: 503 })));
+
+    await expect(apiClient('/api/library/x', { method: 'GET' })).rejects.toBeInstanceOf(ApiError);
+    expect(recentLog()).toContain('503 GET /api/library/x');
   });
 });

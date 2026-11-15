@@ -1,0 +1,102 @@
+/* Always at hand, out of the way (#489): a round button in the bottom-right corner. */
+.trigger {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--accent-deep);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 22%);
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  opacity: 1;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Above the phone's bottom navigation bar (84 px). */
+.raised {
+  bottom: calc(84px + 16px + env(safe-area-inset-bottom));
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.text {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-14);
+}
+
+.attach {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.attach input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-deep);
+}
+
+.details summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: var(--fs-13);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.log {
+  max-height: 180px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--radius-panel);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: var(--fs-11);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--rose);
+}
