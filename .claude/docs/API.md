@@ -1037,4 +1037,3 @@ source `API` (signature = exception class + `Resource#method` + first `zelytra.`
 `{"message": "Erreur interne du serveur."}`. `ActivityTracker` (`@ServerResponseFilter`)
 upserts `user_activity` for an authenticated caller off the request (Mutiny worker pool), at
 most once a minute per member; a write that finds no `app_user` yet is retried next request.
-
