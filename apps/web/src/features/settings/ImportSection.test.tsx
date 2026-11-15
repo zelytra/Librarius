@@ -193,6 +193,8 @@ describe('ImportSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
 
     await waitFor(() => expect(calls).toEqual([{ route: 'mangacollec', body: '{"handle":"alice"}' }]));
+    // #478: a private profile has nothing to read by pseudo; the screen says so, and where to go.
+    expect(screen.getByText(/profil public/)).toBeInTheDocument();
   });
 
   test('sends a Mangacollec collection as the site wrote it, whatever the file is called', async () => {

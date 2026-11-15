@@ -181,6 +181,25 @@ describe('bookmarkletHref', () => {
     expect(saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
   });
 
+  /** #478: a private profile still reads, with a session kept in a cookie or by the browser. */
+  test('reads a private Mangacollec collection with the site cookies, no public profile needed', async () => {
+    const collection = '{"editions":[],"volumes":[],"possessions":[]}';
+    const fetch = vi.fn((url: string, headers?: Record<string, string>) =>
+      Promise.resolve(url.endsWith('users/me/collection') && !headers
+        ? response(collection, 'application/json')
+        : new Response('', { status: 401 })));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/collection', href: 'https://www.mangacollec.com/collection' },
+      fetch,
+      storage: [],
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch).toHaveBeenCalledWith('https://api.mangacollec.com/v2/users/me/collection', undefined);
+    expect(saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
+  });
+
   test('falls back on the public profile the reader is on, and says so when nothing reads', async () => {
     const fetch = vi.fn(() => Promise.resolve(new Response('', { status: 403 })));
     const { env: e, saved, alerts } = env({

@@ -896,7 +896,8 @@
       "reading": "Lecture du fichier…",
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
-      "failedTitle": "L'import n'a pas abouti"
+      "failedTitle": "L'import n'a pas abouti",
+      "mangacollecNote": "Le pseudo ne fonctionne qu'avec un profil public. Profil privé ? Utilise le favori ci-dessous sur mangacollec.com, connecté : il lit ta collection avec ta propre session."
     },
     "export": {
       "title": "Exporter mes données",

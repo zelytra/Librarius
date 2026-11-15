@@ -187,8 +187,16 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         visit(store.getItem(key), key);
       }
     }
+    // A session kept in a readable cookie counts too (#478).
+    for (const pair of (e.document.cookie ?? '').split(';')) {
+      const at = pair.indexOf('=');
+      if (at > 0) visit(decodeURIComponent(pair.slice(at + 1).trim()), pair.slice(0, at).trim());
+    }
     const attempts: [string, Record<string, string> | undefined][] = [];
     for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
+    // The reader's own collection with the site's cookies, for a session the page cannot read:
+    // no public profile needed (#478).
+    attempts.push([api + 'users/me/collection', undefined]);
     if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
     for (const [url, headers] of attempts) {
       try {

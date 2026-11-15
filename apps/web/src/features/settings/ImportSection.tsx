@@ -215,7 +215,9 @@ export function ImportSection() {
                 <Loading size="compact" pending={busy} />
               </Button>
             </div>
-          ) : source === 'babelio' ? (
+          ) : null}
+          {source === 'mangacollec' && <p className={styles.note}>{t('settings.import.mangacollecNote')}</p>}
+          {source === 'babelio' ? (
             <p className={styles.note}>{t('settings.import.babelioNote')}</p>
           ) : null}
 
