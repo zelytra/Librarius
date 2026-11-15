@@ -10,10 +10,9 @@
 }
 
 .controls {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  transform: translateX(-50%);
+  /* Under the cover, not over it: the title and the author stay readable (#482). */
+  width: fit-content;
+  margin: 6px auto 0;
   display: flex;
   gap: 4px;
   padding: 3px;

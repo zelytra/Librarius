@@ -258,11 +258,14 @@ node apps/web/scripts/check-bundle-size.mjs
 
 Three budgets, all measured **gzipped** — what nginx puts on the wire:
 
-| Budget | Covers | Ceiling | Measured on 2026-07-29 |
+| Budget | Covers | Ceiling | Measured on 2026-11-15 |
 |---|---|---|---|
-| initial | everything `index.html` loads before the first paint | 155 kB | 147.1 kB |
-| deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | 5.2 kB |
-| whole build | every file, i.e. what the service worker precaches | 230 kB | 199.8 kB |
+| initial | everything `index.html` loads before the first paint | 199 kB (#79's product ceiling is 200) | 195.4 kB |
+| deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | under 6 kB |
+| whole build | every file, i.e. what the service worker precaches | 340 kB | 321.1 kB |
+
+The history of every re-derivation, with its reason, is the header of
+`apps/web/scripts/check-bundle-size.mjs`.
 
 The rule matters more than the figures: **the measurement plus about 15%**. A budget
 with 60% of slack catches nothing, and one set flush against the current size gets

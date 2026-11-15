@@ -143,9 +143,10 @@ catégorie** (une section Or, une Argent… les séries restent d'un seul bloc).
 comme tu le veux, puis « Nouvelle vue » pour l'enregistrer ; tes vues s'affichent en haut de
 la bibliothèque, « Modifier la vue » la renomme, la met à jour ou la supprime.
 
-Dans une vue, le tri **Manuel** te laisse placer tes livres toi-même : « Réorganiser », puis
-fais glisser un titre par sa poignée (au doigt ou à la souris), ou utilise les flèches ← →.
-L'ordre est enregistré dès que tu lâches. Pour ranger une série entière dans une catégorie,
+Dans une vue, chaque couverture a une **poignée** : fais glisser un titre (au doigt ou à la
+souris), ou utilise les flèches ← →, pour le placer où tu veux. L'ordre est enregistré dès que
+tu lâches, et la vue passe en tri **Manuel**. « Par série », « Tous les titres » et « Par
+catégorie » se choisissent dans le même sélecteur. Pour ranger une série entière dans une catégorie,
 choisis-la dans « Catégorie de la série », sur la page de la série.
 
 La petite corbeille d'une couverture retire le titre de ta collection **immédiatement, et
@@ -245,6 +246,10 @@ Le **type** — livre, BD ou manga — se change aussi sur la page du livre, pou
 titre passe dans l'autre étagère, avec ses objectifs et ses statistiques, sans rien perdre
 de ce que tu as saisi.
 
+Les éditions connues des catalogues sont listées avec leur éditeur, leur langue, leur nombre
+de pages et leur année — la tienne d'abord, puis les éditions françaises. Choisir une autre
+édition change la couverture partout : bibliothèque, fiche et séries.
+
 La section **Autres éditions** est toujours là : choisis une édition proposée par le
 catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).
 
@@ -300,6 +305,10 @@ rien ne se règle à la main, et personne d'autre ne voit tes succès.
 
 ## Les statistiques
 
+Le **calendrier de lecture** montre, mois par mois, les jours où tu lisais chaque livre terminé
+(plus foncé quand plusieurs lectures se chevauchent), et liste les lectures du mois avec leurs
+dates et leur durée.
+
 - **Rythme de lecture** : pages par jour et **titres par mois**, calculés sur la période
   écoulée de l'année choisie.
 - **Cumul et objectifs** : une courbe par type (romans, mangas, BD) qui a un objectif, chacune
@@ -334,7 +343,8 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
    favoris (sur mobile : « copier le code du favori », puis crée un favori avec ce code).
 2. Ouvre ta bibliothèque — ta page de profil Booknode, ou « Mes livres » sur Babelio,
    connecté — et clique sur ce favori. Il parcourt toutes les pages et télécharge un
-   fichier `librarius-booknode.json` ou `librarius-babelio.json`.
+   fichier `librarius-booknode.json` ou `librarius-babelio.json`. Sur Babelio, il récupère
+   aussi tes **pense-bêtes**, qui arrivent dans ta liste d'envies.
 3. Reviens dans Réglages et importe ce fichier.
 
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
@@ -347,6 +357,9 @@ mangacollec.com/user/ton-pseudo) : une collection publique est lue directement. 
 n'est pas public, utilise le favori **« Librarius : collecter »** (le même que pour Babelio) :
 ouvre ta collection sur mangacollec.com, connecté, clique dessus, puis importe le fichier
 `librarius-mangacollec.json` qu'il télécharge.
+
+Le pseudo ne fonctionne qu'avec un **profil public**. Profil privé ? Le favori suffit : il lit
+ta collection avec ta propre session, sans rien rendre public.
 
 Chaque tome possédé ou lu arrive rangé dans sa série, avec son ISBN, sa couverture et sa date
 d'ajout. Un tome lu mais pas possédé est marqué « Lu » et « Non possédé » ; un coffret prend

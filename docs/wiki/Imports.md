@@ -13,7 +13,9 @@ Librarius export. Every import is a **job**: `POST` starts it and answers an id,
   Booknode or on Babelio's "Mes livres", in their own signed-in browser. It walks every page,
   keeps only the library rows (Babelio's `li.lib-book` items, never the site's menus) and
   downloads `librarius-<source>.json`, imported with `POST /api/import/collected`. It is the
-  only way into Babelio, which shows a library to its signed-in owner only.
+  only way into Babelio, which shows a library to its signed-in owner only. On Babelio it also
+  follows the page's « Pense-bête » filter and its pages (#477), so the wished books reach the
+  import — a « Pense-bête » row is filed on the wishlist.
 - **Mangacollec** (#448, #456): Mangacollec has no export, but its site loads a member's
   whole collection as one JSON document from `api.mangacollec.com/v2/…/collection`. Two ways
   in, both one step:
@@ -21,8 +23,9 @@ Librarius export. Every import is a **job**: `POST` starts it and answers an id,
     the server reads a public profile's collection; a 404, a 401/403 or a refusal of our
     server says so and points at the collector;
   - **the collector** on mangacollec.com: it finds the session the site keeps in the page's
-    storage, asks for `users/me/collection` with it — or, on a `/user/<pseudo>` page, for that
-    public profile's — and downloads `librarius-mangacollec.json`, whose single page is the
+    storage or in a readable cookie, asks for `users/me/collection` with it, then with the
+    site's own cookies (a private profile needs nothing more, #478) — or, on a `/user/<pseudo>`
+    page, for that public profile's — and downloads `librarius-mangacollec.json`, whose single page is the
     document itself, imported with `POST /api/import/collected` like the others.
   A raw collection document saved by hand is still accepted by the file picker, recognised by
   its content (`features/settings/mangacollec.ts`).
