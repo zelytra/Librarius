@@ -39,7 +39,7 @@ describe('FeedbackButton', () => {
     renderWithProviders(<FeedbackButton />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
-    const dialog = screen.getByRole('dialog', { name: 'Signaler un problème' });
+    const dialog = await screen.findByRole('dialog', { name: 'Signaler un problème' });
     expect(dialog).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Idée' }));
     await userEvent.type(screen.getByLabelText('Description'), 'Un tri par éditeur');
@@ -58,6 +58,7 @@ describe('FeedbackButton', () => {
     renderWithProviders(<FeedbackButton />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
+    await screen.findByRole('dialog');
     await userEvent.type(screen.getByLabelText('Description'), 'Ça plante');
     await userEvent.click(screen.getByRole('checkbox', { name: /informations techniques/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
@@ -71,7 +72,7 @@ describe('FeedbackButton', () => {
   test('cannot be sent without a description', async () => {
     renderWithProviders(<FeedbackButton />);
     await userEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
-    expect(screen.getByRole('button', { name: 'Envoyer' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Envoyer' })).toBeDisabled();
   });
 
   test('keeps what was written when sending fails, and says so', async () => {
@@ -79,6 +80,7 @@ describe('FeedbackButton', () => {
     renderWithProviders(<FeedbackButton />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
+    await screen.findByRole('dialog');
     await userEvent.type(screen.getByLabelText('Description'), 'Texte précieux');
     await userEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
 
