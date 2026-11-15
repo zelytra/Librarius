@@ -226,9 +226,8 @@ describe('bookmarkletHref', () => {
   });
 
   test('is a bookmark address with no line break in it', () => {
-    const href = bookmarkletHref();
-    expect(href.startsWith('javascript:')).toBe(true);
-    expect(decodeURIComponent(href)).not.toMatch(/[\r\n]/);
+    // The scheme is checked by the test above; this one is about the line breaks only.
+    expect(decodeURIComponent(bookmarkletHref())).not.toMatch(/[\r\n]/);
   });
 });
 
