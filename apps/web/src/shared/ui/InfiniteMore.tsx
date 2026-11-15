@@ -33,17 +33,24 @@ export function InfiniteMore({
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const observes = typeof IntersectionObserver !== 'undefined';
-  // The latest state, read by an observer created once.
-  const state = useRef({ hasMore, loading, onMore });
-  state.current = { hasMore, loading, onMore };
+  // The latest callback, read by the observer without re-creating it when only it changes.
+  const more = useRef(onMore);
+  more.current = onMore;
 
+  // One observer per page (#481): none while a page loads, a fresh one once it has landed.
+  // A new observer's first notification says where the end of the list stands right now, so
+  // a page that lands with the end still in view — after a fast fling — asks for the next one;
+  // an observer kept across loads only spoke on a crossing, and after a fling none came.
   useEffect(() => {
     const node = sentinel.current;
-    if (!node || !observes || !hasMore) return;
+    if (!node || !observes || !hasMore || loading) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        const { hasMore: more, loading: busy, onMore: load } = state.current;
-        if (entries.some((e) => e.isIntersecting) && more && !busy) load();
+        if (entries.some((e) => e.isIntersecting)) {
+          // One request per observer: the next observer takes over once the page lands.
+          observer.disconnect();
+          more.current();
+        }
       },
       // Start a screen ahead, so the next covers are there when the reader gets to them. The
       // margin only extends the root, so the root is the element that actually scrolls (#473).
@@ -51,20 +58,7 @@ export function InfiniteMore({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [observes, hasMore]);
-
-  // Once a page lands with the sentinel still in view, the observer does not fire again on
-  // its own: ask for the next one while the end is still showing.
-  const wasLoading = useRef(loading);
-  useEffect(() => {
-    const finished = wasLoading.current && !loading;
-    wasLoading.current = loading;
-    const node = sentinel.current;
-    if (!finished || !node || !observes || !hasMore) return;
-    const root = scrollParent(node);
-    const bottom = root ? root.getBoundingClientRect().bottom : window.innerHeight;
-    if (node.getBoundingClientRect().top < bottom + 800) state.current.onMore();
-  }, [loading, observes, hasMore]);
+  }, [observes, hasMore, loading]);
 
   if (!hasMore) return null;
   return (
