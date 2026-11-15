@@ -3,14 +3,7 @@
    a fixed dark rather than a token, because it dims both palettes — a theme-following
    veil over the dark surface would be no veil at all. */
 .scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: rgba(28, 24, 20, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  composes: scrim from '../../shared/ui/dialog.module.css';
 }
 
 /* 440px is the phone frame's own width, so on a phone the sheet covers the shell edge
@@ -19,16 +12,13 @@
    tablet breakpoint — exactly where the cap is needed most. Scrollable on its own: a
    short landscape viewport must not push the buttons out of reach. */
 .panel {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
-  max-height: 100%;
-  overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel-lg);
-  box-shadow: var(--shadow-strong);
-  padding: 22px 20px 20px;
+  composes: panel from '../../shared/ui/dialog.module.css';
+}
+
+@media (min-width: 600px) {
+  .panel {
+    max-width: 440px;
+  }
 }
 
 .close {

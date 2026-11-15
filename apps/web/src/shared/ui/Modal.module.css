@@ -2,44 +2,22 @@
    inside it would slide away with the screen. The scrim is a fixed dark, dimming every
    palette alike. */
 .scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  background: rgb(28 24 20 / 55%);
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
+  composes: scrim from './dialog.module.css';
   animation: fade 160ms ease-out both;
 }
 
-/* Full screen on a phone: the dialog is the screen while it is open. */
+/* Full screen on a phone, a centred panel past 600 px: the shared dialog frame (#476). */
 .panel {
-  position: relative;
-  width: 100%;
-  max-height: 100%;
-  overflow-y: auto;
-  background: var(--bg);
-  padding: 20px var(--screen-pad-x) 24px;
+  composes: panel from './dialog.module.css';
   display: flex;
   flex-direction: column;
   gap: 12px;
-  outline: none;
   animation: rise 200ms ease-out both;
 }
 
 @media (min-width: 600px) {
-  .scrim {
-    align-items: center;
-    padding: 24px;
-  }
-
   .panel {
     max-width: 520px;
-    max-height: calc(100vh - 48px);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-panel-lg);
-    box-shadow: var(--shadow-strong);
-    padding: 22px 22px 20px;
   }
 }
 

@@ -2,28 +2,18 @@
    absolute so the shell frame's own scroll never carries it away, and a dark scrim
    that is not a token because it has to dim both palettes alike. */
 .scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: rgba(28, 24, 20, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  composes: scrim from '../../shared/ui/dialog.module.css';
 }
 
 .panel {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  max-height: 100%;
-  overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel-lg);
-  box-shadow: var(--shadow-strong);
-  padding: 26px 22px 22px;
+  composes: panel from '../../shared/ui/dialog.module.css';
   text-align: center;
+}
+
+@media (min-width: 600px) {
+  .panel {
+    max-width: 400px;
+  }
 }
 
 .close {
