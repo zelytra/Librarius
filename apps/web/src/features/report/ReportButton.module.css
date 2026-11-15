@@ -24,27 +24,17 @@
    the scrim is a fixed dark rather than a themed token, and why the panel caps at the phone
    frame's own width instead of stretching across a desktop window. */
 .scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: rgba(28, 24, 20, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  composes: scrim from '../../shared/ui/dialog.module.css';
 }
 
 .panel {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
-  max-height: 100%;
-  overflow-y: auto;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel-lg);
-  box-shadow: var(--shadow-strong);
-  padding: 22px 20px 20px;
+  composes: panel from '../../shared/ui/dialog.module.css';
+}
+
+@media (min-width: 600px) {
+  .panel {
+    max-width: 440px;
+  }
 }
 
 .close {

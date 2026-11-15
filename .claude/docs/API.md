@@ -36,6 +36,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT/DELETE | `/api/views/{id}` | Updates / deletes a view of the caller's; 404 for anyone else's |
 | PUT | `/api/views/{id}/order` | Replaces the view's manual order (`LibraryViewOrderDto.keys`: `item:<id>` / `series:<id>`, at most 5 000); duplicates, malformed keys and titles not the caller's are dropped |
 | PUT | `/api/series/{id}/rank` | Files every volume of the series the caller holds under one category (`RankAssignDto`, null clears), 204; 404 when they hold none (#451). `SeriesSummaryDto.rankCode` is the category most of their volumes carry |
+| GET | `/api/stats/readings?from=&to=` | The readings finished in a window, oldest first (`ReadingSpanDto`: item, title, cover, kind, `startedAt`, `finishedAt`, `days` both ends counted, null without a start); abandoned titles left out; current month by default, 400 for a window ending before it starts (#479) |
 | GET | `/api/works/{id}/friends` | People the caller follows who read, own or wish for the title (`FriendOnWorkDto`), each through `VisibilityGate`; same work, or a work with the same title and authors; rating only when shared (#452) |
 | GET | `/api/works/{id}/external` | Other communities' ratings (`ExternalRatingDto`): Open Library by work key or ISBN, AniList for a manga by id or exact title; credited, linked, cached 12 h (#453) |
 | GET | `/api/authors/{id}/external` | The opening of the author's French Wikipedia article (`ExternalAuthorDto`, CC BY-SA 4.0), zero or one; a disambiguation page gives none (#453) |

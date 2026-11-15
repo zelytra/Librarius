@@ -95,6 +95,12 @@ import { fileURLToPath } from 'node:url';
  * measured 192.8 kB and stays at 199, under #79's 200 kB product ceiling — the next eager
  * addition will have to make room rather than raise it.
  *
+ * `total` moves to 340 kB for the batches #450–#482 (2026-11): saved views and the manual
+ * order, bulk selection, the friends and outside ratings on a title, the kind filters, the
+ * reading calendar — screens and copy in both eager locales. `main` sat at 99% of 320 for
+ * several merges and this batch measured 321.1 kB; re-derived to the measurement plus ~6%.
+ * `initial` measured 195.4 kB and stays at 199, under #79's 200 kB product ceiling.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -104,7 +110,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 320,
+  total: 340,
   // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
   // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the

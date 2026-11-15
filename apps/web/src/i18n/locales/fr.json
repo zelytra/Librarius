@@ -700,6 +700,17 @@
       "priced_one": "{{priced}} titre sur {{count}} avec un prix connu",
       "priced_other": "{{priced}} titres sur {{count}} avec un prix connu",
       "source": "Prix éditeur d'un exemplaire neuf, relevé dans la notice de la BnF (prix unique du livre en France). Les prix se complètent en arrière-plan ; une envie sans prix connu compte au prix que tu as estimé."
+    },
+    "calendar": {
+      "title": "Calendrier de lecture",
+      "previous": "Mois précédent",
+      "next": "Mois suivant",
+      "day_one": "{{date}} : {{count}} lecture",
+      "day_other": "{{date}} : {{count}} lectures",
+      "span_one": "Du {{from}} au {{to}} · {{count}} jour",
+      "span_other": "Du {{from}} au {{to}} · {{count}} jours",
+      "finishedOn": "Terminé le {{date}}",
+      "empty": "Aucune lecture terminée ce mois-ci."
     }
   },
   "detail": {
@@ -896,7 +907,8 @@
       "reading": "Lecture du fichier…",
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
-      "failedTitle": "L'import n'a pas abouti"
+      "failedTitle": "L'import n'a pas abouti",
+      "mangacollecNote": "Le pseudo ne fonctionne qu'avec un profil public. Profil privé ? Utilise le favori ci-dessous sur mangacollec.com, connecté : il lit ta collection avec ta propre session."
     },
     "export": {
       "title": "Exporter mes données",
@@ -1352,8 +1364,6 @@
     "created": "Vue « {{name}} » créée",
     "saved": "Vue « {{name}} » enregistrée",
     "deleted": "Vue supprimée",
-    "arrange": "Réorganiser",
-    "done": "Terminer",
     "drag": "Glisser pour déplacer",
     "earlier": "Déplacer avant",
     "later": "Déplacer après",

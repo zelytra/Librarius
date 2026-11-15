@@ -187,8 +187,16 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         visit(store.getItem(key), key);
       }
     }
+    // A session kept in a readable cookie counts too (#478).
+    for (const pair of (e.document.cookie ?? '').split(';')) {
+      const at = pair.indexOf('=');
+      if (at > 0) visit(decodeURIComponent(pair.slice(at + 1).trim()), pair.slice(0, at).trim());
+    }
     const attempts: [string, Record<string, string> | undefined][] = [];
     for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
+    // The reader's own collection with the site's cookies, for a session the page cannot read:
+    // no public profile needed (#478).
+    attempts.push([api + 'users/me/collection', undefined]);
     if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
     for (const [url, headers] of attempts) {
       try {
@@ -232,6 +240,31 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       say('lecture de la page ' + (i + 1) + ' sur ' + urls.length + '…');
       await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
       pages.push(rowsOf(await load(urls[i])));
+    }
+    // Babelio files the wished books under their own « Pense-bête » filter, which the list the
+    // reader stands on may leave out (#477): that filter is walked too, its pages included.
+    if (source === 'babelio') {
+      const seen = new Set(urls);
+      const wishLinks = Array.from(first.querySelectorAll('a[href]'))
+        .filter((link) => {
+          const text = (link.textContent ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          const href = link.getAttribute('href') ?? '';
+          return text.includes('pense') && !/\/(livres|auteur)\//.test(href);
+        })
+        .map((link) => new URL(link.getAttribute('href') ?? '', firstUrl).toString())
+        .filter((url) => !seen.has(url));
+      for (const wishUrl of new Set(wishLinks)) {
+        say('lecture des pense-bêtes…');
+        const wishFirst = await load(wishUrl);
+        const wishUrls = pageUrls(wishFirst, wishUrl);
+        pages.push(rowsOf(wishFirst));
+        for (let i = 1; i < wishUrls.length; i++) {
+          if (seen.has(wishUrls[i])) continue;
+          seen.add(wishUrls[i]);
+          await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
+          pages.push(rowsOf(await load(wishUrls[i])));
+        }
+      }
     }
     const kept = pages.filter((page) => page.trim().length > 0);
     if (kept.length === 0) {

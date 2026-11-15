@@ -613,24 +613,42 @@ describe('CollectionPage', () => {
       await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
     });
 
-    test('arranging moves a title and saves the new order of the view', async () => {
+    /** #482: in a view, titles are moved straight on the shelf — no mode to enter first. */
+    test('moves a title straight on the shelf of a view, which then follows that order', async () => {
       libraryReturns([A, B, C]);
-      viewsReturn([VIEW]);
+      viewsReturn([{ ...VIEW, sort: 'recent' }]);
       const saved: unknown[] = [];
       server.use(http.put('*/api/views/:id/order', async ({ request }) => {
         const body = (await request.json()) as { keys: string[] };
         saved.push(body);
         return HttpResponse.json({ ...VIEW, order: body.keys });
       }));
-      renderWithProviders(<CollectionPage />, { route: '/collection?v=view-1&sort=manual&view=flat' });
+      renderWithProviders(<CollectionPage />, { route: '/collection?v=view-1&view=flat' });
 
-      await userEvent.click(await screen.findByRole('button', { name: 'Réorganiser' }));
-      await waitFor(() => expect(titlesInOrder()).toEqual(['Charlie', 'Alpha', 'Bravo']));
-      // Bravo, last, one place earlier.
-      const later = screen.getAllByRole('button', { name: 'Déplacer avant' });
-      await userEvent.click(later[2]);
+      await screen.findByText('Bravo');
+      expect(screen.queryByRole('button', { name: 'Réorganiser' })).not.toBeInTheDocument();
+      // Bravo, second in this order, one place earlier.
+      const order = titlesInOrder();
+      const earlier = screen.getAllByRole('button', { name: 'Déplacer avant' });
+      await userEvent.click(earlier[order.indexOf('Bravo')]);
 
-      await waitFor(() => expect(saved).toEqual([{ keys: ['item:c', 'item:b', 'item:a'] }]));
+      await waitFor(() => expect(saved).toHaveLength(1));
+      expect((saved[0] as { keys: string[] }).keys[0]).toBe('item:b');
+      // The view now shows its manual order.
+      expect(await screen.findByRole('button', { name: 'Manuel' })).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    /** #482: « Par catégorie » is a layout like « Par série » and « Tous les titres ». */
+    test('offers « Par catégorie » in the same control as the series and titles layouts', async () => {
+      libraryReturns([A, B, C]);
+      renderWithProviders(<CollectionPage />);
+
+      await screen.findByText('Bravo');
+      await userEvent.click(screen.getByRole('button', { name: 'Par catégorie' }));
+
+      expect(await screen.findByRole('heading', { name: /Sans catégorie/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Par catégorie' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Par série' })).toHaveAttribute('aria-pressed', 'false');
     });
 
     test('split by category, each category is a section of its own', async () => {

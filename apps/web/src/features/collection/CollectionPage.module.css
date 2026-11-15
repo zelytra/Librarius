@@ -73,11 +73,22 @@
 
 /* As wide as its two labels: a fixed 160px squeezed "Tous les titres" onto two lines. */
 .viewSwitch {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* The layout control (#482): its three options on a row of their own on a phone rather than
+   cut off, each taking an equal share. */
+.viewSwitch > :last-child {
+  flex: 1 1 300px;
+}
+
+.viewSwitch > :last-child > * {
+  flex: 1;
 }
 
 .sortRow {

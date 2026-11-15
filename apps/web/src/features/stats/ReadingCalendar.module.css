@@ -1,0 +1,105 @@
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius-panel-lg);
+  padding: 20px;
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.nav {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.weekday {
+  font-size: var(--fs-11);
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-thumb);
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.dayRead {
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.dayMany {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+.empty {
+  margin: 14px 0 0;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.itemTitle {
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.itemSpan {
+  font-size: var(--fs-13);
+  color: var(--muted);
+}

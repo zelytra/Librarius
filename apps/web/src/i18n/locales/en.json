@@ -700,6 +700,17 @@
       "priced_one": "{{priced}} of {{count}} title with a known price",
       "priced_other": "{{priced}} of {{count}} titles with a known price",
       "source": "Publisher's price of a new copy, from the BnF record (fixed book price in France). Prices fill in in the background; a wish with no known price counts at the price you estimated."
+    },
+    "calendar": {
+      "title": "Reading calendar",
+      "previous": "Previous month",
+      "next": "Next month",
+      "day_one": "{{date}}: {{count}} reading",
+      "day_other": "{{date}}: {{count}} readings",
+      "span_one": "From {{from}} to {{to}} · {{count}} day",
+      "span_other": "From {{from}} to {{to}} · {{count}} days",
+      "finishedOn": "Finished on {{date}}",
+      "empty": "No reading finished this month."
     }
   },
   "detail": {
@@ -896,7 +907,8 @@
       "reading": "Reading the file…",
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
-      "failedTitle": "The import did not go through"
+      "failedTitle": "The import did not go through",
+      "mangacollecNote": "The username only works with a public profile. Private profile? Use the bookmark below on mangacollec.com, signed in: it reads your collection with your own session."
     },
     "export": {
       "title": "Export my data",
@@ -1352,8 +1364,6 @@
     "created": "View “{{name}}” created",
     "saved": "View “{{name}}” saved",
     "deleted": "View deleted",
-    "arrange": "Arrange",
-    "done": "Done",
     "drag": "Drag to move",
     "earlier": "Move earlier",
     "later": "Move later",

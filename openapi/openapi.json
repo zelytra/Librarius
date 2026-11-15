@@ -2427,6 +2427,49 @@
         } ]
       }
     },
+    "/api/stats/readings" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "from",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReadingSpanDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Readings",
+        "tags" : [ "Stats Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/stats/timeline" : {
       "get" : {
         "parameters" : [ {
@@ -4686,6 +4729,33 @@
         "properties" : {
           "categoryId" : {
             "$ref" : "#/components/schemas/UUID"
+          }
+        }
+      },
+      "ReadingSpanDto" : {
+        "type" : "object",
+        "properties" : {
+          "itemId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "coverUrl" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "startedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "finishedAt" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

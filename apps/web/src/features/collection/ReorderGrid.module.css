@@ -1,12 +1,6 @@
 .cell {
   position: relative;
   min-width: 0;
-  /* Arranging is about places, not the books: a tap on a cover must not open it. */
-  touch-action: none;
-}
-
-.cell > :first-child {
-  pointer-events: none;
 }
 
 .dragging {
@@ -16,10 +10,9 @@
 }
 
 .controls {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  transform: translateX(-50%);
+  /* Under the cover, not over it: the title and the author stay readable (#482). */
+  width: fit-content;
+  margin: 6px auto 0;
   display: flex;
   gap: 4px;
   padding: 3px;

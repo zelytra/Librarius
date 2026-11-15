@@ -268,10 +268,44 @@ public class OpenLibraryProvider implements CatalogProvider {
             return null;
         }
         String publisher = e.publishers() == null || e.publishers().isEmpty() ? null : e.publishers().get(0);
-        String language = marcLanguage(e.languages());
+        String language = isoLanguage(marcLanguage(e.languages()));
         String ref = editionKey(e.key());
+        Integer pages = e.numberOfPages() != null && e.numberOfPages() > 0 ? e.numberOfPages() : null;
         return new CatalogResult("BOOK", null, null, null, cover, null, isbn13, publisher,
-                language, null, "openlibrary", ref);
+                language, publishDate(e.publishDate()), null, null, pages, "openlibrary", ref);
+    }
+
+    /** The MARC codes Open Library uses, as the ISO 639-1 ones the screen can name (#480). */
+    private static final java.util.Map<String, String> MARC_TO_ISO = java.util.Map.ofEntries(
+            java.util.Map.entry("fre", "fr"), java.util.Map.entry("eng", "en"), java.util.Map.entry("ger", "de"),
+            java.util.Map.entry("spa", "es"), java.util.Map.entry("ita", "it"), java.util.Map.entry("jpn", "ja"),
+            java.util.Map.entry("por", "pt"), java.util.Map.entry("dut", "nl"), java.util.Map.entry("rus", "ru"),
+            java.util.Map.entry("chi", "zh"), java.util.Map.entry("kor", "ko"), java.util.Map.entry("pol", "pl"),
+            java.util.Map.entry("swe", "sv"), java.util.Map.entry("dan", "da"), java.util.Map.entry("nor", "no"),
+            java.util.Map.entry("fin", "fi"), java.util.Map.entry("cat", "ca"), java.util.Map.entry("gre", "el"),
+            java.util.Map.entry("tur", "tr"), java.util.Map.entry("ara", "ar"), java.util.Map.entry("heb", "he"),
+            java.util.Map.entry("hun", "hu"), java.util.Map.entry("cze", "cs"), java.util.Map.entry("slv", "sl"));
+
+    static String isoLanguage(String marc) {
+        return marc == null ? null : MARC_TO_ISO.getOrDefault(marc.toLowerCase(java.util.Locale.ROOT), marc);
+    }
+
+    private static final java.util.regex.Pattern YEAR = java.util.regex.Pattern.compile("\\b(1[5-9]\\d{2}|20\\d{2})\\b");
+
+    /**
+     * An edition's date: kept whole when Open Library wrote it as an ISO date, its year alone
+     * (as the first of January) when it is free text — « 12 octobre 2006 », « March 2002 ».
+     */
+    static java.time.LocalDate publishDate(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return java.time.LocalDate.parse(raw.trim());
+        } catch (java.time.format.DateTimeParseException e) {
+            java.util.regex.Matcher year = YEAR.matcher(raw);
+            return year.find() ? java.time.LocalDate.of(Integer.parseInt(year.group(1)), 1, 1) : null;
+        }
     }
 
     /** The MARC code of the first language, read out of a {@code /languages/fre} key. */

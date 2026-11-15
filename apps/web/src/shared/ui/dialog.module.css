@@ -1,0 +1,43 @@
+/*
+ * The frame every dialog shares (#476): a page of its own on a phone — full screen, no rounded
+ * corners, scrolling inside — and a centred panel past 600 px. `Modal` uses the same rules;
+ * the hand-built sheets (add, outcome, report, onboarding) compose these two classes and keep
+ * only what is theirs, such as their width on a large screen.
+ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(28 24 20 / 55%);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 22px var(--screen-pad-x) 24px;
+  /* Clear of the notch and the home indicator once the dialog is the whole screen. */
+  padding-top: max(22px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  outline: none;
+}
+
+@media (min-width: 600px) {
+  .scrim {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .panel {
+    max-height: calc(100vh - 48px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel-lg);
+    box-shadow: var(--shadow-strong);
+    padding: 22px 20px 20px;
+  }
+}

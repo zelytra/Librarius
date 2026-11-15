@@ -6,9 +6,9 @@ import { moveKey } from './views';
 import styles from './ReorderGrid.module.css';
 
 /**
- * The shelf in "arrange" mode (#451): each entry gets a handle to drag it — with a finger or
- * a mouse, pointer events serving both — and two buttons that move it one place either way,
- * for the keyboard. The new order is handed back once the drag ends.
+ * The shelf of a view (#451, #482): each entry keeps opening on a tap, and gets a handle to
+ * drag it — with a finger or a mouse, pointer events serving both — and two buttons that move
+ * it one place either way, for the keyboard. The new order is handed back once the drag ends.
  */
 export function ReorderGrid({
   keys,

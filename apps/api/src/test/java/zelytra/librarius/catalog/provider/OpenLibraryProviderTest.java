@@ -168,11 +168,32 @@ class OpenLibraryProviderTest {
         assertEquals("OL111M", edition.providerRef());
         assertEquals("9780575081406", edition.isbn13());
         assertEquals("Gollancz", edition.publisher());
-        assertEquals("eng", edition.language());
+        // #480: the MARC code becomes the ISO one the screen names (« anglais »).
+        assertEquals("en", edition.language());
         assertEquals("https://covers.openlibrary.org/b/id/42-M.jpg", edition.coverUrl());
         // The edition list carries no title of its own: the work names the title, the row a
         // printing of it.
         assertNull(edition.title());
+    }
+
+    /** #480: an edition carries its length and its date, which the editions list shows. */
+    @Test
+    void readsTheLengthAndTheDateOfAnEdition() {
+        OpenLibraryProvider provider = provider(editionsClient(
+                new OpenLibraryClient.EditionEntry("/books/OL7M", List.of("9782266154116"), null,
+                        List.of("Pocket"), List.of(new OpenLibraryClient.LanguageRef("/languages/fre")),
+                        List.of(7L), "Mass Market Paperback", 1046, "12 octobre 2006"),
+                new OpenLibraryClient.EditionEntry("/books/OL8M", List.of("9780618640157"), null,
+                        List.of("Houghton"), null, null, null, null, "2005-10-12")),
+                Duration.ofSeconds(5));
+
+        List<CatalogResult> editions = provider.editionsOf("OL27513W", 20);
+
+        assertEquals(1046, editions.get(0).pageCount());
+        assertEquals("fr", editions.get(0).language());
+        // A free-text date gives its year; an ISO one is kept whole.
+        assertEquals(java.time.LocalDate.of(2006, 1, 1), editions.get(0).releaseDate());
+        assertEquals(java.time.LocalDate.of(2005, 10, 12), editions.get(1).releaseDate());
     }
 
     @Test

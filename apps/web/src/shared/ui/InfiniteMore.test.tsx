@@ -4,20 +4,26 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { InfiniteMore } from './InfiniteMore';
 
 /** An IntersectionObserver the test drives: `show()` brings the sentinel into view. */
-function stubObserver() {
+function stubObserver(inView = { current: false }) {
   let callback: IntersectionObserverCallback = () => {};
   const roots: (Element | Document | null | undefined)[] = [];
+  let created = 0;
   class Observer {
     constructor(cb: IntersectionObserverCallback, options?: IntersectionObserverInit) {
       callback = cb;
       roots.push(options?.root);
+      created++;
     }
-    observe() {}
+    // Like a real observer, the first notification reports where the target stands now.
+    observe() {
+      callback([{ isIntersecting: inView.current } as IntersectionObserverEntry], {} as IntersectionObserver);
+    }
     disconnect() {}
   }
   vi.stubGlobal('IntersectionObserver', Observer);
   return {
     roots,
+    created: () => created,
     show: () => callback([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver),
   };
 }
@@ -66,5 +72,26 @@ describe('InfiniteMore', () => {
       </main>,
     );
     expect(observer.roots.at(-1)).toBe(screen.getByTestId('scroller'));
+  });
+
+  /**
+   * #481: after a fast fling the end of the list is still in view when a page lands. No new
+   * crossing happens, so an observer kept across loads never spoke again and the list stalled;
+   * a fresh one after each page reports where the end stands, and the next page follows.
+   */
+  test('asks for the next page when one lands with the end of the list still in view', () => {
+    const inView = { current: true };
+    const observer = stubObserver(inView);
+    const onMore = vi.fn();
+    const { rerender } = render(<InfiniteMore hasMore loading onMore={onMore} label="Voir plus" />);
+    expect(onMore).not.toHaveBeenCalled();
+
+    rerender(<InfiniteMore hasMore loading={false} onMore={onMore} label="Voir plus" />);
+    expect(onMore).toHaveBeenCalledTimes(1);
+
+    rerender(<InfiniteMore hasMore loading onMore={onMore} label="Voir plus" />);
+    rerender(<InfiniteMore hasMore loading={false} onMore={onMore} label="Voir plus" />);
+    expect(onMore).toHaveBeenCalledTimes(2);
+    expect(observer.created()).toBeGreaterThanOrEqual(2);
   });
 });

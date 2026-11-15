@@ -80,6 +80,35 @@ public class StatsResource {
         return stats.timeline(currentUser.id(), start, end, bucket);
     }
 
+    @jakarta.inject.Inject
+    zelytra.librarius.domain.repository.ReadingProgressRepository progresses;
+
+    /**
+     * The readings finished in a window, with when each was started and how long it took
+     * (#479) — the Stats calendar. Defaults to the current month.
+     */
+    @GET
+    @Path("/readings")
+    public java.util.List<zelytra.librarius.web.ApiDtos.ReadingSpanDto> readings(
+            @QueryParam("from") String from, @QueryParam("to") String to) {
+        LocalDate today = LocalDate.now();
+        LocalDate start = parseDate("from", from, today.withDayOfMonth(1));
+        LocalDate end = parseDate("to", to, today.withDayOfMonth(today.lengthOfMonth()));
+        if (end.isBefore(start)) {
+            throw new BadRequestException("The window ends before it starts: " + start + " > " + end);
+        }
+        return progresses.finishedBetween(currentUser.id(), start, end).stream()
+                .map(row -> {
+                    LocalDate started = (LocalDate) row[4];
+                    LocalDate finished = (LocalDate) row[5];
+                    Integer days = started != null && !finished.isBefore(started)
+                            ? (int) java.time.temporal.ChronoUnit.DAYS.between(started, finished) + 1 : null;
+                    return new zelytra.librarius.web.ApiDtos.ReadingSpanDto((java.util.UUID) row[0],
+                            (String) row[1], (String) row[2], String.valueOf(row[3]), started, finished, days);
+                })
+                .toList();
+    }
+
     /**
      * What the reader has read, all time (#419): every title marked read, dated or not, by
      * author, publisher, language and rank.

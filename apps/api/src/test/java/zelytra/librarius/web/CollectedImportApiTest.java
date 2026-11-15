@@ -88,6 +88,12 @@ class CollectedImportApiTest {
                 .body("items.book.title", hasItems("La Horde du Contrevent"))
                 .body("items.find { it.book.title == 'La Horde du Contrevent' }.status", is("READ"))
                 .body("items.find { it.book.title == 'La Horde du Contrevent' }.rating", is(5));
+        // #477: a « Pense-bête » is a wish — it lands on the wishlist, not in the library.
+        given().auth().oauth2(keycloak.getAccessToken("bob"))
+                .queryParam("size", 100).queryParam("q", "Assassin royal")
+                .when().get("/api/wishlist")
+                .then().statusCode(200)
+                .body("items.book.title", hasItems("L'Assassin royal, tome 1"));
     }
 
     @Test
