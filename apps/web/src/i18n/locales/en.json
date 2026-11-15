@@ -1352,8 +1352,6 @@
     "created": "View “{{name}}” created",
     "saved": "View “{{name}}” saved",
     "deleted": "View deleted",
-    "arrange": "Arrange",
-    "done": "Done",
     "drag": "Drag to move",
     "earlier": "Move earlier",
     "later": "Move later",

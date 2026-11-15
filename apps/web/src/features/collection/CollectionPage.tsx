@@ -121,6 +121,8 @@ function sameShelf(a: ShelfFilter, b: ShelfFilter): boolean {
 type SortBy = 'recent' | 'added' | 'title' | 'author' | 'genre' | 'rating' | 'manual';
 /** The two ways of reading the collection: title by title, or run by run. */
 type View = 'grouped' | 'flat';
+/** The layout control: the two views, or the split by category (#482). */
+type Layout = View | 'category';
 
 /** Number of titles fetched per request — one shelf worth of covers. */
 const PAGE_SIZE = 24;
@@ -279,14 +281,24 @@ function CollectionContent() {
     ? (urlSort as SortBy)
     : 'recent';
   const byCategoryOn = params.get('cat') === '1';
-  const [arranging, setArranging] = useState(false);
+  const setLayout = (layout: Layout) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('cat');
+        next.delete('view');
+        if (layout === 'category') next.set('cat', '1');
+        if (layout === 'flat') next.set('view', 'flat');
+        return next;
+      },
+      { replace: true },
+    );
   // Picking several titles to act on together (#457).
   const selection = useSelection();
   const setSortBy = (sort: SortBy) => setParam('sort', sort === 'recent' ? null : sort);
   const search = params.get('q') ?? '';
   const [searchInput, setSearchInput] = useState(search);
   const view: View = params.get('view') === 'flat' ? 'flat' : 'grouped';
-  const setView = (next: View) => setParam('view', next === 'flat' ? 'flat' : null);
   // By series by default: a run is one block, a one-shot one tile. A category or the
   // favourites shelf filters titles one by one — a rank or a rating belongs to a volume, not
   // to its run — so those shelves always list the titles themselves.
@@ -435,7 +447,6 @@ function CollectionContent() {
 
   // A view brings the whole layout back at once (#451); "Toute la bibliothèque" clears it.
   const selectView = (view: LibraryViewDto | null) => {
-    setArranging(false);
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -480,6 +491,10 @@ function CollectionContent() {
       onError: () => toast.error(t('toasts.failed')),
     },
   });
+
+  // In a view, titles are moved straight on the shelf (#482); not while picking titles, and
+  // not across category sections, where a title's place is its category.
+  const draggable = Boolean(activeView) && !byCategoryOn && !selection.active;
 
   const renderEntry = (entry: ShelfEntry) =>
     'series' in entry ? (
@@ -564,23 +579,16 @@ function CollectionContent() {
             : t('collection.total', { total })}
         </span>
         <div className={styles.viewSwitch}>
-          {!arranging && <SelectButton selection={selection} />}
-          {sortBy === 'manual' && activeView && (
-            <Button variant={arranging ? 'primary' : 'secondary'} size="compact" onClick={() => setArranging(!arranging)}>
-              <Icon name={arranging ? 'check_circle' : 'drag_indicator'} size={16}
-                color={arranging ? 'var(--on-accent)' : 'var(--accent-deep)'} />
-              {t(arranging ? 'views.done' : 'views.arrange')}
-            </Button>
-          )}
-          <Chip selected={byCategoryOn} onClick={() => setParam('cat', byCategoryOn ? null : '1')}>
-            {t('views.byCategoryShort')}
-          </Chip>
-          <Segmented<View>
-            value={view}
-            onChange={setView}
+          <SelectButton selection={selection} />
+          {/* The three layouts in one control (#482): series as blocks, every title, or one
+              section per category with the series kept whole. */}
+          <Segmented<Layout>
+            value={byCategoryOn ? 'category' : view}
+            onChange={setLayout}
             options={[
               { id: 'grouped', label: t('collection.grouped') },
               { id: 'flat', label: t('collection.flat') },
+              { id: 'category', label: t('views.byCategoryShort') },
             ]}
           />
         </div>
@@ -624,18 +632,22 @@ function CollectionContent() {
         />
       )}
 
-      {entries.length > 0 && arranging && activeView?.id && (
+      {entries.length > 0 && draggable && activeView?.id && (
         <ReorderGrid
           keys={entryKeys}
           render={(key) => {
             const entry = entryByKey.get(key);
             return entry ? renderEntry(entry) : null;
           }}
-          onCommit={(keys) => saveOrder({ id: activeView.id!, data: { keys: mergedOrder(keys, activeView.order ?? []) } })}
+          onCommit={(keys) => {
+            saveOrder({ id: activeView.id!, data: { keys: mergedOrder(keys, activeView.order ?? []) } });
+            // The order just arranged is the one the view shows from now on.
+            if (sortBy !== 'manual') setSortBy('manual');
+          }}
         />
       )}
 
-      {entries.length > 0 && !arranging && byCategoryOn && (
+      {entries.length > 0 && !draggable && byCategoryOn && (
         // Split by category (#451): a series stays one block, on the shelf most of its volumes
         // are filed under.
         byCategory(entries, categories).map((section) => (
@@ -650,7 +662,7 @@ function CollectionContent() {
         ))
       )}
 
-      {entries.length > 0 && !arranging && !byCategoryOn && (
+      {entries.length > 0 && !draggable && !byCategoryOn && (
           // The shared cover grid (shared/ui/primitives.tsx): three fixed columns on a
           // phone, as many as the width holds past --bp-tablet — see the Grid block of
           // tokens.css for the reasoning behind the track sizes. Grouped, the series blocks

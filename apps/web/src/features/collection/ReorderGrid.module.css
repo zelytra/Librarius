@@ -1,12 +1,6 @@
 .cell {
   position: relative;
   min-width: 0;
-  /* Arranging is about places, not the books: a tap on a cover must not open it. */
-  touch-action: none;
-}
-
-.cell > :first-child {
-  pointer-events: none;
 }
 
 .dragging {

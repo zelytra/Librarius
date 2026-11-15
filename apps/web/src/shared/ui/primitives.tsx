@@ -183,6 +183,7 @@ export function Segmented<T extends string>({
           // Explicit, because a button inside a form submits it by default: picking an
           // option is a choice, never the validation of the form around it.
           type="button"
+          aria-pressed={opt.id === value}
           onClick={() => onChange(opt.id)}
           className={cx(styles.segment, opt.id === value && styles.segmentOn)}
         >

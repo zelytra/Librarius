@@ -1352,8 +1352,6 @@
     "created": "Vue « {{name}} » créée",
     "saved": "Vue « {{name}} » enregistrée",
     "deleted": "Vue supprimée",
-    "arrange": "Réorganiser",
-    "done": "Terminer",
     "drag": "Glisser pour déplacer",
     "earlier": "Déplacer avant",
     "later": "Déplacer après",
