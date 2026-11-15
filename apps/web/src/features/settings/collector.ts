@@ -233,6 +233,31 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
       pages.push(rowsOf(await load(urls[i])));
     }
+    // Babelio files the wished books under their own « Pense-bête » filter, which the list the
+    // reader stands on may leave out (#477): that filter is walked too, its pages included.
+    if (source === 'babelio') {
+      const seen = new Set(urls);
+      const wishLinks = Array.from(first.querySelectorAll('a[href]'))
+        .filter((link) => {
+          const text = (link.textContent ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          const href = link.getAttribute('href') ?? '';
+          return text.includes('pense') && !/\/(livres|auteur)\//.test(href);
+        })
+        .map((link) => new URL(link.getAttribute('href') ?? '', firstUrl).toString())
+        .filter((url) => !seen.has(url));
+      for (const wishUrl of new Set(wishLinks)) {
+        say('lecture des pense-bêtes…');
+        const wishFirst = await load(wishUrl);
+        const wishUrls = pageUrls(wishFirst, wishUrl);
+        pages.push(rowsOf(wishFirst));
+        for (let i = 1; i < wishUrls.length; i++) {
+          if (seen.has(wishUrls[i])) continue;
+          seen.add(wishUrls[i]);
+          await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
+          pages.push(rowsOf(await load(wishUrls[i])));
+        }
+      }
+    }
     const kept = pages.filter((page) => page.trim().length > 0);
     if (kept.length === 0) {
       e.alert(

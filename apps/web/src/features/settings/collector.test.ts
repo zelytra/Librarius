@@ -99,6 +99,34 @@ describe('collectLibrary', () => {
     expect(saved[0].pages.map((p) => /Titre \d/.exec(p)?.[0])).toEqual(['Titre 1', 'Titre 2', 'Titre 3']);
   });
 
+  /**
+   * #477: Babelio files the wished books under their own « Pense-bête » filter, which the
+   * list the reader stands on may leave out. The collector walks that filter too, its pages
+   * included, so the wishes reach the import and the wishlist.
+   */
+  test('walks the « Pense-bête » filter of a Babelio library too', async () => {
+    const library = (n: number) =>
+      `<html><body><ul><li class="lib-book"><a href="/livres/L${n}/${n}">Lu ${n}</a></li></ul>` +
+      '<a href="/mabibliotheque.php?statut=pense">Pense-bête (2)</a></body></html>';
+    const wishes = (n: number) =>
+      `<html><body><ul><li class="lib-book"><a href="/livres/W${n}/${n}">Voulu ${n}</a>` +
+      '<span class="lib-status">Pense-bête</span></li></ul>' +
+      '<a href="/mabibliotheque.php?statut=pense&pageN=2">2</a></body></html>';
+    const fetch = vi.fn((url: string) => {
+      const n = Number(/pageN=(\d)/.exec(url)?.[1] ?? 1);
+      return Promise.resolve(response(url.includes('statut=pense') ? wishes(n) : library(n)));
+    });
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch,
+    });
+
+    await collectLibrary(e);
+
+    const titles = saved[0].pages.map((p) => /(Lu|Voulu) \d/.exec(p)?.[0]);
+    expect(titles).toEqual(['Lu 1', 'Voulu 1', 'Voulu 2']);
+  });
+
   test('says where to go when run anywhere else', async () => {
     const { env: e, saved, alerts } = env({
       location: { hostname: 'example.org', pathname: '/', href: 'https://example.org/' },
