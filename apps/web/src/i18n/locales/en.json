@@ -703,6 +703,8 @@
     },
     "calendar": {
       "title": "Reading calendar",
+      "more_one": "Show the other reading",
+      "more_other": "Show the {{count}} other readings",
       "previous": "Previous month",
       "next": "Next month",
       "day_one": "{{date}}: {{count}} reading",
@@ -776,7 +778,7 @@
       "unknownPublisher": "Unknown publisher",
       "pages": "{{pages}} pages",
       "isbn": "ISBN {{isbn}}",
-      "choose": "This is the edition I own",
+      "chooseShort": "It's mine",
       "chooseAria": "I own the {{edition}} edition",
       "fromCatalog": "Suggested by the catalog",
       "alreadyOwned": "Already in your library",
@@ -784,6 +786,8 @@
       "error": "The edition could not be changed.",
       "keepsProgress": "Switching edition leaves your rating, your review and your ranking untouched. Your progress carries over as a percentage, and the page is recomputed on the new pagination.",
       "noOther": "The catalog knows no other edition of this title. Describe yours if it differs.",
+      "more_one": "Show the other edition",
+      "more_other": "Show the {{count}} other editions",
       "describe": "Another edition…",
       "form": {
         "publisher": "Publisher",

@@ -359,6 +359,9 @@ function editionLabel(edition: EditionDto, unknown: string): string {
  * shown for what they add — another printing, another cover — without the "I own this"
  * action, which moves the collection onto an edition that exists as a row.
  */
+/** How many other editions show before « voir plus ». */
+const EDITIONS_SHOWN = 3;
+
 function EditionsSection({
   item,
   onChoose,
@@ -385,6 +388,9 @@ function EditionsSection({
 
   const mine = editions.find((edition) => edition.id === current);
   const unknown = t('detail.editions.unknownPublisher');
+  // A few at first (#485): a work with many printings would otherwise fill the screen.
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? others : others.slice(0, EDITIONS_SHOWN);
 
   return (
     <section className={styles.editions}>
@@ -401,7 +407,7 @@ function EditionsSection({
       )}
 
       <ul className={styles.editionList}>
-        {others.map((edition, index) => {
+        {shown.map((edition, index) => {
           const label = editionLabel(edition, unknown);
           const meta = [
             edition.pageCount != null
@@ -415,24 +421,37 @@ function EditionsSection({
             // A provider edition has no `id`, so it falls back to its ISBN or its position for
             // a stable key — several may share the empty publisher label.
             <li key={edition.id ?? edition.isbn13 ?? `provider-${index}`} className={styles.edition}>
-              <div className={styles.editionLabel}>{label}</div>
-              {meta.length > 0 && <div className={styles.editionMeta}>{meta.join(' · ')}</div>}
+              {/* The cover tells a printing apart at a glance (#485); the name beside it says
+                  the rest, so the picture stays decorative. */}
+              <div className={styles.editionCover}>
+                {edition.coverUrl ? (
+                  <img src={edition.coverUrl} alt="" loading="lazy" />
+                ) : (
+                  <Icon name="menu_book" size={18} color="var(--faint)" />
+                )}
+              </div>
+              <div className={styles.editionBody}>
+                <div className={styles.editionLabel}>{label}</div>
+                {meta.length > 0 && <div className={styles.editionMeta}>{meta.join(' · ')}</div>}
+              </div>
               {edition.owned ? (
                 <div className={styles.editionOwned}>{t('detail.editions.alreadyOwned')}</div>
               ) : edition.id ? (
                 <Button
                   variant="secondary"
-                  size="block"
+                  size="compact"
+                  className={styles.editionChoose}
                   aria-label={t('detail.editions.chooseAria', { edition: label })}
                   onClick={() => onChoose(edition.id!)}
                 >
-                  {t('detail.editions.choose')}
+                  {t('detail.editions.chooseShort')}
                 </Button>
               ) : (
                 // A provider's printing (#445): chosen, it becomes an edition of this work.
                 <Button
                   variant="secondary"
-                  size="block"
+                  size="compact"
+                  className={styles.editionChoose}
                   aria-label={t('detail.editions.chooseAria', { edition: label })}
                   onClick={() =>
                     onChooseNew({
@@ -446,13 +465,18 @@ function EditionsSection({
                     })
                   }
                 >
-                  {t('detail.editions.choose')}
+                  {t('detail.editions.chooseShort')}
                 </Button>
               )}
             </li>
           );
         })}
       </ul>
+      {others.length > shown.length && (
+        <Button variant="ghost" size="compact" onClick={() => setShowAll(true)}>
+          {t('detail.editions.more', { count: others.length - shown.length })}
+        </Button>
+      )}
 
       {others.length === 0 && <p className={styles.editionsHint}>{t('detail.editions.noOther')}</p>}
       {describing ? (

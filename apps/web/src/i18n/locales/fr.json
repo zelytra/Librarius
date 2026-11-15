@@ -703,6 +703,8 @@
     },
     "calendar": {
       "title": "Calendrier de lecture",
+      "more_one": "Voir l'autre lecture",
+      "more_other": "Voir les {{count}} autres lectures",
       "previous": "Mois précédent",
       "next": "Mois suivant",
       "day_one": "{{date}} : {{count}} lecture",
@@ -776,7 +778,7 @@
       "unknownPublisher": "Éditeur inconnu",
       "pages": "{{pages}} pages",
       "isbn": "ISBN {{isbn}}",
-      "choose": "C'est l'édition que je possède",
+      "chooseShort": "C'est la mienne",
       "chooseAria": "Je possède l'édition {{edition}}",
       "fromCatalog": "Proposée par le catalogue",
       "alreadyOwned": "Déjà dans ta bibliothèque",
@@ -784,6 +786,8 @@
       "error": "Impossible de changer d'édition.",
       "keepsProgress": "Changer d'édition ne touche ni à ta note, ni à ton avis, ni à ton rang. Ta progression est reprise en pourcentage, et la page recalculée sur la nouvelle pagination.",
       "noOther": "Le catalogue ne connaît pas d'autre édition de ce titre. Décris la tienne si elle diffère.",
+      "more_one": "Voir l'autre édition",
+      "more_other": "Voir les {{count}} autres éditions",
       "describe": "Autre édition…",
       "form": {
         "publisher": "Éditeur",

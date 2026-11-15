@@ -192,18 +192,49 @@
 
 .editionList {
   list-style: none;
-  margin: 0;
+  margin: 0 0 6px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
+/* One compact row per printing (#485): its cover, what tells it apart, and the action. */
 .edition {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  padding: 12px 14px;
+  padding: 8px 10px;
+}
+
+.editionCover {
+  width: 40px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editionCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editionBody {
+  min-width: 0;
+}
+
+.editionChoose {
+  padding: 0 12px;
+  font-size: var(--fs-13, 13px);
 }
 
 .editionLabel {
@@ -215,7 +246,6 @@
   font-size: var(--fs-12-5);
   color: var(--muted);
   margin-top: 3px;
-  margin-bottom: 10px;
 }
 
 /* An edition already on the shelf under another entry: named, never offered —
