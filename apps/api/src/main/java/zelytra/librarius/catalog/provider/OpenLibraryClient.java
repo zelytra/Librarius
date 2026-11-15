@@ -98,7 +98,16 @@ public interface OpenLibraryClient {
             List<String> publishers,
             List<LanguageRef> languages,
             List<Long> covers,
-            @JsonProperty("physical_format") String physicalFormat) {
+            @JsonProperty("physical_format") String physicalFormat,
+            /** The length and the publication date, free text (#480). */
+            @JsonProperty("number_of_pages") Integer numberOfPages,
+            @JsonProperty("publish_date") String publishDate) {
+
+        /** A record as the older tests build it: no length, no date. */
+        EditionEntry(String key, List<String> isbn13, List<String> isbn10, List<String> publishers,
+                List<LanguageRef> languages, List<Long> covers, String physicalFormat) {
+            this(key, isbn13, isbn10, publishers, languages, covers, physicalFormat, null, null);
+        }
     }
 
     record LanguageRef(String key) {

@@ -12,6 +12,8 @@ import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { activeLanguage } from '../../i18n/languages';
 import {
   getGetApiLibraryIdQueryKey,
+  getGetApiSeriesIdQueryKey,
+  getGetApiSeriesQueryKey,
   getGetApiLibraryQueryKey,
   getGetApiWishlistQueryKey,
   getGetApiWorksIdEditionsQueryKey,
@@ -756,6 +758,12 @@ function DetailContent({ id }: { id: string }) {
   /** Which end-of-reading sheet is open, if any. Null is the ordinary state of the screen. */
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
+  // A change of edition changes the cover the series screens draw too (#480).
+  const invalidateSeries = () => {
+    void queryClient.invalidateQueries({ queryKey: getGetApiSeriesQueryKey() });
+    if (seriesId) void queryClient.invalidateQueries({ queryKey: getGetApiSeriesIdQueryKey(seriesId) });
+  };
+
   const invalidateLibrary = () => {
     // The item has its own cache entry, whose key is not a prefix of the collection's:
     // invalidating the list alone would leave this very screen showing a stale rank.
@@ -828,6 +836,7 @@ function DetailContent({ id }: { id: string }) {
         setEditionError(null);
         toast.success(t('toasts.edition'), 'book_2');
         invalidateLibrary();
+        invalidateSeries();
         if (workId) {
           void queryClient.invalidateQueries({ queryKey: getGetApiWorksIdEditionsQueryKey(workId) });
         }
@@ -894,6 +903,7 @@ function DetailContent({ id }: { id: string }) {
         setEditionError(null);
         toast.success(t('toasts.edition'), 'book_2');
         invalidateLibrary();
+        invalidateSeries();
         // The `owned` flags of the list have just moved, and so has the edition the
         // section calls "yours".
         if (workId) {

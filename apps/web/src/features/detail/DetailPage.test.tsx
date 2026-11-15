@@ -668,6 +668,36 @@ describe('DetailPage', () => {
     await waitFor(() => expect(sent).toEqual([{ kind: 'COMIC' }]));
   });
 
+  /** #480: the cover follows the edition chosen everywhere, the series screens included. */
+  test('refreshes the series once another edition is chosen', async () => {
+    libraryItemReturns(MULTI_EDITION);
+    editionsReturn([
+      TWO_EDITIONS[0],
+      { publisher: 'Gollancz', language: 'en', isbn13: '9780575081406', coverUrl: 'https://covers/1.jpg', owned: false },
+    ]);
+    let seriesReads = 0;
+    server.use(
+      http.get('*/api/series', () => {
+        seriesReads++;
+        return HttpResponse.json([]);
+      }),
+      http.post('*/api/library/:id/edition', () => {
+        posted++;
+        return HttpResponse.json(MULTI_EDITION);
+      }),
+    );
+    let posted = 0;
+    renderDetail();
+
+    const before = await waitFor(() => {
+      expect(seriesReads).toBeGreaterThan(0);
+      return seriesReads;
+    });
+    await userEvent.click(await screen.findByRole('button', { name: /Je possède l'édition Gollancz/ }));
+    await waitFor(() => expect(posted).toBe(1));
+    await waitFor(() => expect(seriesReads).toBeGreaterThan(before));
+  });
+
   /** What a change of edition does to the position is not obvious, so the screen says it. */
   test('states what a change of edition does to the reading progress', async () => {
     libraryItemReturns(MULTI_EDITION);

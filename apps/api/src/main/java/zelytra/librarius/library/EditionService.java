@@ -110,6 +110,11 @@ public class EditionService {
                 .map(edition -> EditionDto.of(edition, owned.contains(edition.id)))
                 .toList());
         enrichFromProvider(userId, stored, result);
+        // The reader's own printing first, then the French ones, then those with a cover (#480):
+        // a work with thirty printings around the world opens on the ones a reader here wants.
+        result.sort(java.util.Comparator.comparing((EditionDto e) -> !e.owned())
+                .thenComparing(e -> !"fr".equalsIgnoreCase(e.language()))
+                .thenComparing(e -> e.coverUrl() == null));
         return Optional.of(result);
     }
 
@@ -222,7 +227,7 @@ public class EditionService {
     /** A provider printing as an unowned, unpersisted edition — no {@code id}, its own cover. */
     private static EditionDto providerEdition(CatalogResult candidate) {
         return new EditionDto(null, candidate.isbn13(), candidate.publisher(), candidate.language(),
-                null, null, candidate.releaseDate(), candidate.coverUrl(), false);
+                candidate.pageCount(), null, candidate.releaseDate(), candidate.coverUrl(), false);
     }
 
     /**

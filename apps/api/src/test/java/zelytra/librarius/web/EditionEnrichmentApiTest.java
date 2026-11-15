@@ -13,6 +13,7 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -103,6 +104,28 @@ class EditionEnrichmentApiTest {
                 .body("find { it.publisher == 'Gollancz' }.owned", is(false))
                 .body("find { it.publisher == 'Gollancz' }.id", nullValue())
                 .body("find { it.publisher == 'Gollancz' }.coverUrl", is("https://covers/gollancz.jpg"));
+    }
+
+    /**
+     * #480: each printing carries what tells it apart — its length and its date — and the
+     * list leads with the reader's own, then the French printings, then those with a cover.
+     */
+    @Test
+    void listsPrintingsWithTheirMetadataTheReadersOwnAndTheFrenchOnesFirst() {
+        Mockito.when(catalog.editionsOf(anyString(), anyString(), anyInt())).thenReturn(List.of(
+                new CatalogResult("BOOK", null, null, null, null, null, "9780000000017", "Bare",
+                        "en", null, null, null, null, "openlibrary", "OL1M"),
+                new CatalogResult("BOOK", null, null, null, "https://covers/eng.jpg", null, "9780000000024", "Cover",
+                        "en", null, null, null, 320, "openlibrary", "OL2M"),
+                new CatalogResult("BOOK", null, null, null, null, null, "9782000000013", "Francais",
+                        "fr", java.time.LocalDate.of(2006, 1, 1), null, null, 1046, "openlibrary", "OL3M")));
+
+        String item = add("alice", "Enrichissement - ordre", "openlibrary", "OL45805W", "9781111111124");
+
+        editions("alice", item).then()
+                .body("publisher", contains("Pocket", "Francais", "Cover", "Bare"))
+                .body("find { it.publisher == 'Francais' }.pageCount", is(1046))
+                .body("find { it.publisher == 'Francais' }.releaseDate", is("2006-01-01"));
     }
 
     /**
