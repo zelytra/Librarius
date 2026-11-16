@@ -1,0 +1,70 @@
+package zelytra.librarius.account;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+import zelytra.librarius.web.ApiDtos.AdminUserDto;
+import zelytra.librarius.web.ApiDtos.AdminUserPageDto;
+import zelytra.librarius.web.PageRequest;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+
+/**
+ * The admins' view of the members (#499): who has an account, since when, and how much they
+ * keep here. Deleting one goes through {@link AccountDeletionService}, the same path as a
+ * member deleting themself — Keycloak first, then every row.
+ */
+@ApplicationScoped
+public class AdminUserService {
+
+    @Inject
+    EntityManager em;
+
+    /** The members, newest first; {@code query} narrows on username, display name or email. */
+    @Transactional
+    public AdminUserPageDto list(PageRequest window, String query) {
+        String filter = query == null || query.isBlank() ? ""
+                : " where lower(coalesce(u.username, '')) like :q or lower(coalesce(u.display_name, '')) like :q"
+                        + " or lower(coalesce(u.email, '')) like :q";
+        var rows = em.createNativeQuery("""
+                        select u.id, u.username, u.display_name, u.email, u.created_at, u.avatar_version,
+                               (select count(*) from library_item li where li.user_id = u.id),
+                               (select max(a.last_seen_at) from user_activity a where a.user_id = u.id)
+                        from app_user u""" + filter + " order by u.created_at desc nulls last, u.id");
+        var count = em.createNativeQuery("select count(*) from app_user u" + filter);
+        if (!filter.isEmpty()) {
+            String like = "%" + query.trim().toLowerCase().replace("%", "\\%").replace("_", "\\_") + "%";
+            rows.setParameter("q", like);
+            count.setParameter("q", like);
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> result = rows.setFirstResult(window.offset()).setMaxResults(window.size()).getResultList();
+        List<AdminUserDto> items = result.stream().map(row -> new AdminUserDto((String) row[0], (String) row[1],
+                (String) row[2], (String) row[3], toOffset(row[4]),
+                row[5] == null ? null : ((Number) row[5]).longValue(), ((Number) row[6]).longValue(),
+                toOffset(row[7]))).toList();
+        return new AdminUserPageDto(items, window.page(), window.size(), ((Number) count.getSingleResult()).longValue());
+    }
+
+    @Transactional
+    public boolean exists(String id) {
+        return !em.createNativeQuery("select 1 from app_user where id = :id").setParameter("id", id)
+                .getResultList().isEmpty();
+    }
+
+    private static OffsetDateTime toOffset(Object value) {
+        if (value instanceof OffsetDateTime odt) {
+            return odt;
+        }
+        if (value instanceof java.time.Instant instant) {
+            return instant.atOffset(ZoneOffset.UTC);
+        }
+        if (value instanceof java.sql.Timestamp ts) {
+            return ts.toInstant().atOffset(ZoneOffset.UTC);
+        }
+        return null;
+    }
+}

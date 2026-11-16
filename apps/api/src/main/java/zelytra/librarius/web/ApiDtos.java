@@ -1280,6 +1280,17 @@ public final class ApiDtos {
     public record FeedCommentCreatedDto(UUID id) {
     }
 
+    // ── Admin: members (#499) ──────────────────────────────────────────────
+
+    /** A member as the admins' list shows them. */
+    public record AdminUserDto(String id, String username, String displayName, String email,
+            java.time.OffsetDateTime createdAt, Long avatarVersion, long libraryItems,
+            java.time.OffsetDateTime lastSeenAt) {
+    }
+
+    public record AdminUserPageDto(java.util.List<AdminUserDto> items, int page, int size, long total) {
+    }
+
     // ── Monitoring (#491) ────────────────────────────────────────────────────
 
     /** One day of the monitoring: the members' reports, the errors recorded, the members active. */

@@ -36,6 +36,15 @@ public class AdminResource {
     @Inject
     MonitoringService monitoring;
 
+    @Inject
+    zelytra.librarius.account.AdminUserService users;
+
+    @Inject
+    zelytra.librarius.account.AccountDeletionService deletion;
+
+    @Inject
+    CurrentUser currentUser;
+
     /**
      * Every report, the latest seen first — only those in {@code status} when it is given
      * ({@code NEW}, {@code SEEN}, {@code HANDLED} or {@code IRRELEVANT}, #495; 400 otherwise).
@@ -69,6 +78,31 @@ public class AdminResource {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Unknown status: " + status);
         }
+    }
+
+    /** The members, newest first (#499); {@code q} narrows on username, display name or email. */
+    @GET
+    @Path("/users")
+    public ApiDtos.AdminUserPageDto users(@QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("50") int size, @QueryParam("q") String q) {
+        return users.list(PageRequest.of(page, size), q);
+    }
+
+    /**
+     * Deletes a member and everything they own, their Keycloak account first (#499) — the
+     * erasure a member runs on themself. 204; 400 for the caller (Settings is their way), 404
+     * unknown, 503 when Keycloak refuses and nothing was erased.
+     */
+    @jakarta.ws.rs.DELETE
+    @Path("/users/{id}")
+    public void deleteUser(@PathParam("id") String id) {
+        if (id.equals(currentUser.id())) {
+            throw new BadRequestException("An admin deletes their own account from Settings.");
+        }
+        if (!users.exists(id)) {
+            throw new NotFoundException();
+        }
+        deletion.delete(id);
     }
 
     /** Reports and active members over the last 30 days, members active now, the services. */
