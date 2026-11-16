@@ -1,7 +1,9 @@
 # REST API — Librarius
 
 Base path: `/api`. Every resource is `@Authenticated` (Keycloak JWT in
-`Authorization: Bearer …`).
+`Authorization: Bearer …`), with two documented exceptions: the BnF cover proxy
+(`@PermitAll`, an `<img>` sends no token) and the agents' reports endpoint (`@PermitAll`
+behind an `X-Api-Key`, #518).
 Reference contract: `openapi/openapi.yaml` (generated at build time).
 
 > ⚠️ Any change to a resource or a DTO requires regenerating the schema **and** the TS
@@ -1037,6 +1039,8 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 | GET | `/api/admin/feedback?page=&size=&status=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user`, `status` + `statusChangedAt` (#495); `status=` filters (`NEW`/`SEEN`/`HANDLED`/`IRRELEVANT`, 400 otherwise) |
 | GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown. Opening a `NEW` report sets it `SEEN` |
 | PUT | `/api/admin/feedback/{id}/status` | `FeedbackStatusDto(status)` → 204; 400 unknown status, 404 unknown report. `recordError`'s upsert sets a `HANDLED` error back to `NEW` when it recurs |
+| GET | `/api/agent/feedback?page=&size=&status=` | **For agents, outside Keycloak (#518)**: `@PermitAll`, but `X-Api-Key` must equal `librarius.agent.api-key` (`LIBRARIUS_AGENT_API_KEY`; compared in constant time by `AgentKey`) — 401 otherwise, and always while no key is set. `AgentFeedbackPageDto` of `FeedbackDetailDto` (logs and user agent included), same order and `status=` filter as the admin list; reading changes no status. The key goes in `X-Api-Key`, not `Authorization`: the OIDC layer would read a bearer as a Keycloak token and refuse it |
+| PUT | `/api/agent/feedback/{id}/status` | Same key. `FeedbackStatusDto(status)` → 204; 400 unknown status, 404 unknown report |
 | GET | `/api/admin/monitoring` | `MonitoringDto(activeNow, days[30] of MonitoringDayDto(day, reports, errors, activeUsers), services[ServiceStatusDto(name, up, detail)])` — `database` (`select 1`), `keycloak` (the realm's discovery document, 3 s timeout) |
 
 `MeDto.admin` is `CurrentUser.isAdmin()` (`SecurityIdentity.hasRole("admin")`).

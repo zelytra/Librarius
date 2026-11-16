@@ -105,6 +105,14 @@ api:
     # A Secret of your own holding the client secret; empty, the chart generates one.
     existingSecret: ""
     secretKey: admin-client-secret
+  # Key opening /api/agent/feedback — the reports read and triaged by agents (#518), sent in
+  # the X-Api-Key header. Read from this Secret if it exists; while it does not, the endpoint
+  # refuses everyone, so the chart deploys unchanged. Create it, then restart the api:
+  #   kubectl -n librarius create secret generic librarius-agent-api-key \
+  #     --from-literal=api-key="$(openssl rand -hex 32)"
+  agentApiKey:
+    secretName: librarius-agent-api-key
+    secretKey: api-key
 
 # ── Horizontal autoscaling ────────────────────────────────────────────────────
 # Off by default, and that is a statement about the node rather than a

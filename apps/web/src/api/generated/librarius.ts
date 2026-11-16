@@ -83,6 +83,30 @@ export interface AdminUserPageDto {
  */
 export type Uuid = string;
 
+export interface FeedbackDetailDto {
+  id?: Uuid;
+  kind?: string;
+  source?: string;
+  message?: string;
+  page?: string;
+  appVersion?: string;
+  userAgent?: string;
+  details?: string;
+  reporterName?: string;
+  occurrences?: number;
+  createdAt?: OffsetDateTime;
+  lastSeenAt?: OffsetDateTime;
+  status?: string;
+  statusChangedAt?: OffsetDateTime;
+}
+
+export interface AgentFeedbackPageDto {
+  items?: FeedbackDetailDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export interface AuthorWorkDto {
   workId?: Uuid;
   kind?: string;
@@ -536,23 +560,6 @@ export interface FeedbackCreateDto {
   userAgent?: string;
   /** @maxLength 20000 */
   logs?: string;
-}
-
-export interface FeedbackDetailDto {
-  id?: Uuid;
-  kind?: string;
-  source?: string;
-  message?: string;
-  page?: string;
-  appVersion?: string;
-  userAgent?: string;
-  details?: string;
-  reporterName?: string;
-  occurrences?: number;
-  createdAt?: OffsetDateTime;
-  lastSeenAt?: OffsetDateTime;
-  status?: string;
-  statusChangedAt?: OffsetDateTime;
 }
 
 export interface FeedbackDto {
@@ -1174,6 +1181,12 @@ export type GetApiAdminUsersParams = {
   page?: number;
   q?: string;
   size?: number;
+};
+
+export type GetApiAgentFeedbackParams = {
+  page?: number;
+  size?: number;
+  status?: string;
 };
 
 export type GetApiAuthorsParams = {
@@ -2037,6 +2050,201 @@ export const useDeleteApiAdminUsersId = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiAdminUsersIdMutationOptions(options), queryClient);
+    }
+
+export const getGetApiAgentFeedbackUrl = (params?: GetApiAgentFeedbackParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/agent/feedback?${stringifiedParams}` : `/api/agent/feedback`
+}
+
+/**
+ * @summary List
+ */
+export const getApiAgentFeedback = async (params?: GetApiAgentFeedbackParams, options?: Parameters<typeof apiClient>[1]): Promise<AgentFeedbackPageDto> => {
+
+  return apiClient<AgentFeedbackPageDto>(getGetApiAgentFeedbackUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAgentFeedbackQueryKey = (params?: GetApiAgentFeedbackParams,) => {
+    return [
+    `/api/agent/feedback`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAgentFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof getApiAgentFeedback>>, TError = unknown>(params?: GetApiAgentFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAgentFeedbackQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAgentFeedback>>> = () => getApiAgentFeedback(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAgentFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAgentFeedback>>>
+export type GetApiAgentFeedbackQueryError = unknown
+
+
+/** @summary List */
+export function useGetApiAgentFeedback<TData = Awaited<ReturnType<typeof getApiAgentFeedback>>, TError = unknown>(
+ params: undefined |  GetApiAgentFeedbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAgentFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAgentFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiAgentFeedback<TData = Awaited<ReturnType<typeof getApiAgentFeedback>>, TError = unknown>(
+ params?: GetApiAgentFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAgentFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAgentFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiAgentFeedback<TData = Awaited<ReturnType<typeof getApiAgentFeedback>>, TError = unknown>(
+ params?: GetApiAgentFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiAgentFeedback<TData = Awaited<ReturnType<typeof getApiAgentFeedback>>, TError = unknown>(
+ params?: GetApiAgentFeedbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAgentFeedback>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAgentFeedbackQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutApiAgentFeedbackIdStatusUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/agent/feedback/${id}/status`
+}
+
+/**
+ * @summary Status
+ */
+export const putApiAgentFeedbackIdStatus = async (id: Uuid,
+    feedbackStatusDto: FeedbackStatusDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiAgentFeedbackIdStatusUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedbackStatusDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiAgentFeedbackIdStatusMutationKey = () => ['putApiAgentFeedbackIdStatus'] as const;
+
+export const getPutApiAgentFeedbackIdStatusMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>, TError,PutApiAgentFeedbackIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>, TError,PutApiAgentFeedbackIdStatusMutationVariables, TContext> => {
+
+const mutationKey = getPutApiAgentFeedbackIdStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>, PutApiAgentFeedbackIdStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiAgentFeedbackIdStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAgentFeedbackIdStatusMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>>
+    export type PutApiAgentFeedbackIdStatusMutationBody = FeedbackStatusDto
+    export type PutApiAgentFeedbackIdStatusMutationError = void
+    export type PutApiAgentFeedbackIdStatusMutationVariables = {id: Uuid;data: FeedbackStatusDto}
+
+    /** @summary Status */
+export const usePutApiAgentFeedbackIdStatus = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>, TError,PutApiAgentFeedbackIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAgentFeedbackIdStatus>>,
+        TError,
+        PutApiAgentFeedbackIdStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiAgentFeedbackIdStatusMutationOptions(options), queryClient);
     }
 
 export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
