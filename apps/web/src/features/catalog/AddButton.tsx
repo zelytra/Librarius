@@ -27,12 +27,12 @@ export function AddButton({
     <>
       {compact ? (
         <button type="button" className={styles.compact} onClick={() => setOpen(true)}>
-          <Icon name="add" size={16} color="var(--on-accent)" />
+          <Icon name="add" size={16} color="var(--on-accent-fill)" />
           {t('add.open')}
         </button>
       ) : (
         <Button size="block" onClick={() => setOpen(true)}>
-          <Icon name="add" size={18} color="var(--on-accent)" />
+          <Icon name="add" size={18} color="var(--on-accent-fill)" />
           {t('add.open')}
         </Button>
       )}

@@ -124,8 +124,8 @@ button.day:focus-visible {
 }
 
 .dayMany {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   font-weight: 700;
 }
 

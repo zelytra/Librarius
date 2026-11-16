@@ -30,7 +30,7 @@ export function FeedbackButton({ raised = false }: { raised?: boolean }) {
         title={t('feedback.open')}
         onClick={() => setOpen(true)}
       >
-        <Icon name="bug_report" size={22} color="var(--on-accent)" />
+        <Icon name="bug_report" size={22} color="var(--on-accent-fill)" />
       </button>
       {open && (
         <Suspense fallback={null}>

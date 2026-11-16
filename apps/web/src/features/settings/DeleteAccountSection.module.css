@@ -95,7 +95,7 @@
    the wording. */
 .confirmButton {
   background: var(--rose);
-  color: var(--on-accent);
+  color: var(--on-accent-fill);
 }
 
 .confirmButton:disabled {

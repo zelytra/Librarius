@@ -1186,7 +1186,7 @@ function DetailContent({ id }: { id: string }) {
         <div className={styles.actions}>
           {item.status !== 'READ' && (
             <Button variant="primary" size="lg" onClick={() => setStatus('READING')}>
-              <Icon name="auto_stories" size={20} fill color="var(--on-accent)" />
+              <Icon name="auto_stories" size={20} fill color="var(--on-accent-fill)" />
               {t(startLabel)}
             </Button>
           )}

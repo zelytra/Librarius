@@ -257,8 +257,8 @@
 }
 
 .actionPrimary {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   border: none;
 }
 

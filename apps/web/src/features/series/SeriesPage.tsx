@@ -328,7 +328,7 @@ function SeriesContent({ id }: { id: string }) {
                 name={series.followed ? 'bookmark_added' : 'bookmark_add'}
                 size={20}
                 fill={series.followed}
-                color={series.followed ? 'var(--accent-deep)' : 'var(--on-accent)'}
+                color={series.followed ? 'var(--accent-deep)' : 'var(--on-accent-fill)'}
               />
               {t(series.followed ? 'series.following' : 'series.follow')}
             </Button>
@@ -413,7 +413,7 @@ function SeriesContent({ id }: { id: string }) {
             </div>
             <div className={styles.actionsButtons}>
               <Button variant="primary" onClick={() => void add(selected, 'wishlist')}>
-                <Icon name="favorite" size={18} fill color="var(--on-accent)" />
+                <Icon name="favorite" size={18} fill color="var(--on-accent-fill)" />
                 {t('series.addToWishlist')}
               </Button>
               <Button variant="secondary" onClick={() => void add(selected, 'library')}>

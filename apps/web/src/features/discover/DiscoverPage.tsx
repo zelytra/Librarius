@@ -230,7 +230,7 @@ function DiscoverContent() {
             </button>
           </div>
           <Button type="button" variant="primary" className={styles.scanButton} onClick={() => navigate('/scan')}>
-            <Icon name="barcode_scanner" size={22} color="var(--on-accent)" />
+            <Icon name="barcode_scanner" size={22} color="var(--on-accent-fill)" />
             {t('discover.scanShort')}
           </Button>
           </div>

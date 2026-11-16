@@ -31,6 +31,13 @@
   --accent: #9aab92;
   --accent-deep: #5f6c57;
   --accent-soft: #e6ece0;
+  /* A filled control — primary button, add, read, the selected chip (#519): the deep
+     accent with white text, the way a light page reads. The pastel --accent under a dark
+     ink is the dark theme's pairing; light palettes showing it looked stuck in dark mode.
+     Resolved on <html>, so it follows the --accent-deep of sauge and rose too. The danger
+     fill (--rose) carries the same white text. */
+  --accent-fill: var(--accent-deep);
+  --on-accent-fill: #ffffff;
   --line: #e4dbcb;
   --chip: #ece3d5;
   --rose: #83635f;
@@ -128,6 +135,9 @@
   --accent: #9aab92;
   --accent-deep: #b6c4ad;
   --accent-soft: #3a4335;
+  /* The pastel fill and its dark ink: on a dark page the deep accent is the light one. */
+  --accent-fill: var(--accent);
+  --on-accent-fill: #1b2416;
   --line: #443d34;
   --chip: #3a352e;
   --rose: #dda29b;
@@ -354,10 +364,9 @@
      one. */
   --overlay-ink: var(--ink);
 
-  /* Text and icons drawn on an accent-coloured surface. A deep ink rather than
-     white: the accent is a pastel, and so are the surfaces this lands on that
-     no palette owns — the rank medals and the avatar gradient below. White
-     text on any of them sits around 2:1. */
+  /* Text and icons drawn on the pastels no palette owns — the rank medals and
+     the avatar gradient below. A deep ink rather than white: white on any of
+     them sits around 2:1. A filled control reads --on-accent-fill instead. */
   --on-accent: #1b2416;
 
   /* ── Gradients ──────────────────────────────────────────────────────────────

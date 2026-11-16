@@ -189,7 +189,7 @@ function AuthorContent({ id }: { id: string }) {
                 name={author.followed ? 'bookmark_added' : 'bookmark_add'}
                 size={20}
                 fill={author.followed}
-                color={author.followed ? 'var(--accent-deep)' : 'var(--on-accent)'}
+                color={author.followed ? 'var(--accent-deep)' : 'var(--on-accent-fill)'}
               />
               {t(author.followed ? 'author.following' : 'author.follow')}
             </Button>

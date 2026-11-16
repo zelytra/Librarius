@@ -212,8 +212,8 @@
   margin-top: 4px;
   padding: 5px 10px;
   border-radius: var(--radius-chip);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   font-weight: 700;
   text-decoration: none;
   cursor: grab;

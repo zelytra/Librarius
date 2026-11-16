@@ -233,8 +233,8 @@
 
 /* Read: the strongest fill of the four — the run is done here. */
 .read {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   border: 1.5px solid var(--accent);
 }
 
