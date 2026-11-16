@@ -36,6 +36,7 @@ import zelytra.librarius.domain.repository.LibraryItemRepository.LibrarySort;
 import zelytra.librarius.domain.repository.RankCategoryRepository;
 import zelytra.librarius.library.EditionService;
 import zelytra.librarius.library.ReadingProgressService;
+import zelytra.librarius.social.FeedService;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.web.ApiDtos.EditionSwitchDto;
 import zelytra.librarius.web.ApiDtos.LibraryCreateDto;
@@ -77,6 +78,9 @@ public class LibraryResource {
 
     @Inject
     ReadingProgressService progress;
+
+    @Inject
+    FeedService feed;
 
     @Inject
     EditionService editions;
@@ -197,6 +201,7 @@ public class LibraryResource {
             progress.finishedAt = java.time.LocalDate.now();
             progressRepository.persist(progress);
             item.progress = progress;
+            feed.record(item.userId, FeedService.Type.FINISHED_READING, edition.id);
         }
         // Added as being read: started today (#392), so the reading has a start to count from.
         if (item.status == LibraryStatus.READING) {
@@ -354,8 +359,14 @@ public class LibraryResource {
         if (item == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+        LibraryStatus before = item.status;
         // An empty body clears the progress, the same way a null field does.
         progress.apply(item, dto != null ? dto : new ProgressDto(null, null, null, null, null));
+        // Finishing a title is news for the feed (#209) — here, not in the service, which the
+        // bulk edit also goes through.
+        if (before != LibraryStatus.READ && item.status == LibraryStatus.READ) {
+            feed.record(item.userId, FeedService.Type.FINISHED_READING, item.edition.id);
+        }
         return Response.noContent().build();
     }
 
@@ -380,8 +391,13 @@ public class LibraryResource {
         item.review = blankToNull(update.review());
         // Absent leaves the reader's choice as it was: a client that predates sharing never
         // turns a shared review private, or the reverse.
+        boolean wasShared = item.reviewShared;
         if (update.shared() != null) {
             item.reviewShared = update.shared();
+        }
+        // A review becoming shared is news for the feed (#209); editing one already shared is not.
+        if (!wasShared && item.reviewShared && (item.rating != null || item.review != null)) {
+            feed.record(item.userId, FeedService.Type.REVIEW_SHARED, item.edition.id);
         }
         return Response.ok(LibraryItemDto.of(item)).build();
     }

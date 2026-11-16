@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import zelytra.librarius.domain.Feedback;
 import zelytra.librarius.domain.Feedback.Kind;
 import zelytra.librarius.domain.Feedback.Source;
+import zelytra.librarius.domain.Feedback.Status;
 import zelytra.librarius.web.ApiDtos.FeedbackDetailDto;
 import zelytra.librarius.web.ApiDtos.FeedbackDto;
 import zelytra.librarius.web.ApiDtos.FeedbackPageDto;
@@ -57,7 +58,8 @@ public class FeedbackService {
     /**
      * Records an error, or counts it once more when its {@code signature} — what makes two
      * occurrences the same error — was seen before. One statement, so that two requests failing
-     * at once count twice rather than racing to insert. A caller with no account yet is left
+     * at once count twice rather than racing to insert. An error an admin marked handled that
+     * comes back is reopened as new (#495); one set aside as irrelevant stays aside. A caller with no account yet is left
      * out rather than failing the insert. In a transaction of its own: the one of
      * the request that failed is being rolled back.
      */
@@ -71,6 +73,7 @@ public class FeedbackService {
                                 :agent, :fingerprint, 1, now(), now())
                         on conflict (fingerprint) where fingerprint is not null
                         do update set occurrences = feedback.occurrences + 1, last_seen_at = now(),
+                                      status = case when feedback.status = 'HANDLED' then 'NEW' else feedback.status end,
                                       details = excluded.details, page = excluded.page,
                                       app_version = excluded.app_version, user_agent = excluded.user_agent""")
                 .setParameter("id", UUID.randomUUID())
@@ -85,25 +88,31 @@ public class FeedbackService {
                 .executeUpdate();
     }
 
+    /** The reports, the latest seen first; only those in {@code status} when it is given (#495). */
     @Transactional
-    public FeedbackPageDto list(PageRequest window) {
-        List<Object[]> rows = em.createQuery("""
-                        select f, u.displayName from Feedback f left join AppUser u on u.id = f.userId
-                        order by f.lastSeenAt desc, f.id""", Object[].class)
-                .setFirstResult(window.offset())
-                .setMaxResults(window.size())
-                .getResultList();
-        long total = em.createQuery("select count(f) from Feedback f", Long.class).getSingleResult();
-        List<FeedbackDto> items = rows.stream().map(row -> {
-            Feedback f = (Feedback) row[0];
-            return new FeedbackDto(f.id, f.kind.name(), f.source.name(), f.message, f.page, f.appVersion,
-                    (String) row[1], f.occurrences, f.createdAt, f.lastSeenAt);
-        }).toList();
-        return new FeedbackPageDto(items, window.page(), window.size(), total);
+    public FeedbackPageDto list(PageRequest window, Status status) {
+        String filter = status == null ? "" : " where f.status = :status";
+        var rows = em.createQuery("""
+                        select f, u.displayName from Feedback f left join AppUser u on u.id = f.userId"""
+                        + filter + " order by f.lastSeenAt desc, f.id", Object[].class);
+        var count = em.createQuery("select count(f) from Feedback f" + filter, Long.class);
+        if (status != null) {
+            rows.setParameter("status", status);
+            count.setParameter("status", status);
+        }
+        List<FeedbackDto> items = rows.setFirstResult(window.offset()).setMaxResults(window.size())
+                .getResultList().stream().map(row -> {
+                    Feedback f = (Feedback) row[0];
+                    return new FeedbackDto(f.id, f.kind.name(), f.source.name(), f.message, f.page, f.appVersion,
+                            (String) row[1], f.occurrences, f.createdAt, f.lastSeenAt, f.status.name(),
+                            f.statusChangedAt);
+                }).toList();
+        return new FeedbackPageDto(items, window.page(), window.size(), count.getSingleResult());
     }
 
+    /** One report in full. An admin opening a new one has now seen it (#495). */
     @Transactional
-    public Optional<FeedbackDetailDto> get(UUID id) {
+    public Optional<FeedbackDetailDto> open(UUID id) {
         return em.createQuery("""
                         select f, u.displayName from Feedback f left join AppUser u on u.id = f.userId
                         where f.id = :id""", Object[].class)
@@ -112,10 +121,29 @@ public class FeedbackService {
                 .findFirst()
                 .map(row -> {
                     Feedback f = (Feedback) row[0];
+                    if (f.status == Status.NEW) {
+                        changeStatus(f, Status.SEEN);
+                    }
                     return new FeedbackDetailDto(f.id, f.kind.name(), f.source.name(), f.message, f.page,
                             f.appVersion, f.userAgent, f.details, (String) row[1], f.occurrences,
-                            f.createdAt, f.lastSeenAt);
+                            f.createdAt, f.lastSeenAt, f.status.name(), f.statusChangedAt);
                 });
+    }
+
+    /** Sets a report's triage status (#495); false when there is no such report. */
+    @Transactional
+    public boolean setStatus(UUID id, Status status) {
+        Feedback feedback = em.find(Feedback.class, id);
+        if (feedback == null) {
+            return false;
+        }
+        changeStatus(feedback, status);
+        return true;
+    }
+
+    private static void changeStatus(Feedback feedback, Status status) {
+        feedback.status = status;
+        feedback.statusChangedAt = OffsetDateTime.now();
     }
 
     static String fingerprint(String signature) {

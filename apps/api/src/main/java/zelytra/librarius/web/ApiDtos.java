@@ -1201,16 +1201,80 @@ public final class ApiDtos {
     /** A report as the admin list shows it; {@code reporterName} is null once the account is gone. */
     public record FeedbackDto(UUID id, String kind, String source, String message, String page,
             String appVersion, String reporterName, int occurrences, java.time.OffsetDateTime createdAt,
-            java.time.OffsetDateTime lastSeenAt) {
+            java.time.OffsetDateTime lastSeenAt, String status, java.time.OffsetDateTime statusChangedAt) {
     }
 
     /** One report in full, with its logs or stack trace and the browser it came from. */
     public record FeedbackDetailDto(UUID id, String kind, String source, String message, String page,
             String appVersion, String userAgent, String details, String reporterName, int occurrences,
-            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime lastSeenAt) {
+            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime lastSeenAt, String status,
+            java.time.OffsetDateTime statusChangedAt) {
+    }
+
+    /** An admin's triage of a report (#495): {@code NEW}, {@code SEEN}, {@code HANDLED} or {@code IRRELEVANT}. */
+    public record FeedbackStatusDto(@jakarta.validation.constraints.NotNull
+            @jakarta.validation.constraints.Pattern(regexp = "NEW|SEEN|HANDLED|IRRELEVANT") String status) {
     }
 
     public record FeedbackPageDto(java.util.List<FeedbackDto> items, int page, int size, long total) {
+    }
+
+    // ── Member profile (#497) ───────────────────────────────────────────────
+
+    /**
+     * A member's profile as one caller sees it. The public surface — name, badge, how the two
+     * relate, the follow counts — is for any signed-in member; {@code reading} only when
+     * {@code VisibilityGate} lets the caller see the member's shared content, null otherwise.
+     */
+    public record MemberProfileDto(String id, String displayName, boolean trusted,
+            java.time.OffsetDateTime memberSince, boolean self, boolean following, boolean followsYou,
+            long followers, long followingCount, boolean visible, ProfileReadingDto reading) {
+    }
+
+    /** What a member reads, for whoever may see it. A rating shows only when its owner shared it. */
+    public record ProfileReadingDto(long read, long reading, long toRead, long abandoned, long wished,
+            long pagesRead, long readThisYear, java.util.List<String> topGenres,
+            java.util.List<ProfileTitleDto> currentlyReading, java.util.List<ProfileTitleDto> recentlyFinished,
+            java.util.List<ProfileTitleDto> reviews) {
+    }
+
+    /** A title on a profile: the book, and what the list it sits in needs of it. */
+    public record ProfileTitleDto(UUID editionId, UUID workId, String kind, String title, String authors,
+            String coverUrl, Double rating, String review, LocalDate finishedAt, Integer percent) {
+    }
+
+    // ── Social feed (#209, #210) ────────────────────────────────────────────
+
+    /** The book a feed event is about. */
+    public record FeedBookDto(UUID editionId, UUID workId, String kind, String title, String authors,
+            String coverUrl) {
+    }
+
+    /**
+     * One thing a followed member did: finished a title, wished one, or shared a review of it
+     * ({@code rating} and {@code review} are then the shared ones). {@code reactions} counts each
+     * emote; {@code myReaction} is the caller's, null when none.
+     */
+    public record FeedItemDto(UUID id, String type, java.time.OffsetDateTime createdAt, MemberSummaryDto actor,
+            FeedBookDto book, Double rating, String review, java.util.Map<String, Long> reactions,
+            String myReaction, java.util.List<FeedCommentDto> comments) {
+    }
+
+    public record FeedCommentDto(UUID id, MemberSummaryDto author, String comment,
+            java.time.OffsetDateTime createdAt, boolean mine) {
+    }
+
+    public record FeedPageDto(java.util.List<FeedItemDto> items, int page, int size, boolean hasMore) {
+    }
+
+    /** A reaction, one of a small fixed set. */
+    public record FeedReactionDto(@NotNull @Pattern(regexp = "LOVE|FUNNY|WOW|CLAP|SAD") String emote) {
+    }
+
+    public record FeedCommentCreateDto(@NotBlank @Size(max = 2000) String comment) {
+    }
+
+    public record FeedCommentCreatedDto(UUID id) {
     }
 
     // ── Monitoring (#491) ────────────────────────────────────────────────────

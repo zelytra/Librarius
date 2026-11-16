@@ -24,6 +24,9 @@ public class Feedback {
     /** Who wrote it: a member, the web app, or the API. */
     public enum Source { USER, WEB, API }
 
+    /** Where an admin stands with it (#495): not opened yet, opened, dealt with, or set aside. */
+    public enum Status { NEW, SEEN, HANDLED, IRRELEVANT }
+
     @Id
     public UUID id;
 
@@ -68,4 +71,12 @@ public class Feedback {
 
     @Column(name = "last_seen_at", nullable = false)
     public OffsetDateTime lastSeenAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    public Status status = Status.NEW;
+
+    /** When an admin last changed {@link #status}; null while it is untouched. */
+    @Column(name = "status_changed_at")
+    public OffsetDateTime statusChangedAt;
 }
