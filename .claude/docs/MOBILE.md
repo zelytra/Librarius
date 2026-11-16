@@ -212,12 +212,17 @@ Two more things that a native build will hit, neither of them auth:
   the API's `CORS_ORIGINS` accepts `https://localhost` and `capacitor://localhost`
   (`application.properties` default and `infra/helm/librarius/templates/api.yaml`, locked by
   `CorsTest`).
-- **Safe areas and the status bar.** `index.html` already carries `viewport-fit=cover`, but
-  no rule reads `env(safe-area-inset-*)`, so the bottom navigation would sit under the
-  gesture bar. The fix belongs with the native project: Capacitor 7 can handle Android 15
-  edge-to-edge itself (`android.adjustMarginsForEdgeToEdge`), and that decision determines
-  whether the insets reach the CSS at all. The native project #70 adds does not set this
-  either way — still open, and now unblocked rather than guessed at here.
+- **Safe areas** — handled since [#529](https://github.com/zelytra/Librarius/issues/529). An
+  app that targets API 35 or later is edge-to-edge: the WebView fills the window, status bar
+  and gesture bar included. Capacitor 8 has no `adjustMarginsForEdgeToEdge` to hand that back
+  to the native side; its `SystemBars` plugin fills `env(safe-area-inset-*)` in instead
+  (`insetsHandling: "css"`, its default), and `capacitor.config.ts` adds
+  `initialViewportFitValueHint: "cover"` so the first frame is not laid out and then shifted.
+  The shell reads the insets: `AppShell.module.css` holds the top and the two sides off the
+  frame, `BottomNav.module.css` reserves the gesture bar under the bar — every one with a
+  `0px` fallback, so a browser lays the app out exactly as before (`app/safeAreas.test.ts`).
+  **The status bar's own icons are not handled**: they follow the device's dark mode, not the
+  palette the reader chose — [#533](https://github.com/zelytra/Librarius/issues/533).
 
 ## 7. Continuous integration
 

@@ -27,6 +27,15 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--app-frame-shadow);
+  /* The native container draws edge to edge from API 35 on (#529): the WebView fills the
+     window, status bar and notch included, so the frame holds them off itself — every
+     screen's header is inside it, and so is the side navigation. `box-sizing: border-box`
+     (global.css) keeps `100dvh` the outer height, so nothing grows past the viewport.
+     In a browser all three insets are `0px` and this frame is the one it has always been;
+     the bottom is the bottom bar's own, below. */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 /* Set by AppShell when it mounts the side navigation, from the same breakpoint that
