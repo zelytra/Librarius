@@ -37,6 +37,7 @@ export function ProfileSection() {
   const [displayName, setDisplayName] = useState('');
   const [locale, setLocale] = useState<LanguageId>('fr');
   const [timeZone, setTimeZone] = useState('');
+  const [notifyComments, setNotifyComments] = useState(true);
   const [saved, setSaved] = useState(false);
 
   // The profile arrives after the first render. Syncing on its identity fills the fields
@@ -48,7 +49,8 @@ export function ProfileSection() {
     setDisplayName(me.displayName ?? '');
     setLocale(isLanguageId(stored) ? stored : 'fr');
     setTimeZone(me.timeZone ?? '');
-  }, [me?.id, me?.displayName, me?.locale, me?.timeZone]);
+    setNotifyComments(me.notifyComments ?? true);
+  }, [me?.id, me?.displayName, me?.locale, me?.timeZone, me?.notifyComments]);
 
   const { mutate: saveProfile, isPending, isError } = usePatchApiMe({
     mutation: {
@@ -136,6 +138,19 @@ export function ProfileSection() {
           </select>
         </label>
 
+        {/* #211: comments on my activity notify me, unless turned off here. */}
+        <label className={styles.check}>
+          <input
+            type="checkbox"
+            checked={notifyComments}
+            onChange={(e) => {
+              setNotifyComments(e.target.checked);
+              setSaved(false);
+            }}
+          />
+          {t('settings.profile.notifyComments')}
+        </label>
+
         <Button
           variant="primary"
           size="compact"
@@ -151,6 +166,7 @@ export function ProfileSection() {
                 // form. Its own toggle control lands with the profile screens (#202); until
                 // then a profile save preserves whatever the account already chose.
                 publicAccount: me?.publicAccount ?? false,
+                notifyComments,
               },
             })
           }

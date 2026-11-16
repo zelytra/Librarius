@@ -1,6 +1,6 @@
 import { useGetApiMe } from '../api/generated/librarius';
 import { useApiAuth } from '../shared/api';
-import { ADMIN_DESTINATION, NAV_DESTINATIONS, PEOPLE_DESTINATION, type Destination } from './navigation';
+import { ADMIN_DESTINATION, NAV_DESTINATIONS, NOTIFICATIONS_DESTINATION, PEOPLE_DESTINATION, type Destination } from './navigation';
 
 /**
  * The destinations both navigations draw: the six of the application — plus the readers,
@@ -14,6 +14,8 @@ export function useNavDestinations(withPeople = false): readonly Destination[] {
   return [
     ...NAV_DESTINATIONS,
     ...(withPeople ? [PEOPLE_DESTINATION] : []),
+    // The notifications are a signed-in reader's (#516).
+    ...(withPeople && authed ? [NOTIFICATIONS_DESTINATION] : []),
     ...(authed && me?.admin ? [ADMIN_DESTINATION] : []),
   ];
 }

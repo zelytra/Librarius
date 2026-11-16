@@ -201,4 +201,35 @@ describe('ProfilePage', () => {
     await screen.findByText('Profil privé');
     expect(screen.queryByRole('button', { name: 'Souhaits' })).not.toBeInTheDocument();
   });
+
+  /** #516: a followed member's activity notifies by default; the profile switches it off. */
+  test("switches off the notifications of a followed member's activity", async () => {
+    let sent: unknown;
+    let notify = true;
+    server.use(
+      http.get('*/api/users/bob/profile', () => HttpResponse.json({ ...BOB, notifyActivity: notify })),
+      http.put('*/api/users/bob/follow/notify', async ({ request }) => {
+        sent = await request.json();
+        notify = false;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderProfile();
+
+    const toggle = await screen.findByRole('switch', { name: 'Me notifier de ses activités' });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(toggle);
+
+    await waitFor(() => expect(sent).toEqual({ notifyActivity: false }));
+    expect(await screen.findByText('Tu ne seras plus notifié des activités de Bob.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Me notifier de ses activités' })).toHaveAttribute('aria-checked', 'false'));
+  });
+
+  test('offers no switch for a member one does not follow', async () => {
+    server.use(http.get('*/api/users/bob/profile', () => HttpResponse.json({ ...BOB, following: false, notifyActivity: null })));
+    renderProfile();
+
+    await screen.findByRole('heading', { name: /Bob/ });
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
 });

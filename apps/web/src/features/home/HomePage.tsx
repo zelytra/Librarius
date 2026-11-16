@@ -5,6 +5,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { LoginGate } from '../../shared/LoginGate';
+import { NotificationBell } from '../notifications/NotificationBell';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiLibrary, useGetApiStats } from '../../api/generated/librarius';
 import { markOnboardingSeen, shouldShowOnboarding } from '../onboarding/onboarding';
@@ -115,6 +116,8 @@ export function HomePage() {
           >
             <Icon name="tune" size={22} color="var(--ink-soft)" />
           </button>
+          {/* The bell (#516): what happened around the reader's activity and the readers they follow. */}
+          <NotificationBell />
           {/* The readers (#210, #497): a header icon on a phone, like Settings — the side
               navigation lists them on a wide screen. */}
           <button

@@ -101,3 +101,32 @@
   background: var(--accent-soft);
   color: var(--accent-deep);
 }
+
+/* #516: the unread notifications — a count on the sheet's bell, a dot on « Plus ». */
+.badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-round);
+  background: var(--rose);
+  color: #fff;
+  font-size: var(--fs-11);
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.tabContent {
+  position: relative;
+}
+
+.dot {
+  position: absolute;
+  top: 0;
+  right: calc(50% - 16px);
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-round);
+  background: var(--rose);
+}

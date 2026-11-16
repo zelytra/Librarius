@@ -8,6 +8,7 @@ import {
   getGetApiUsersIdProfileQueryKey,
   putApiUsersIdBlock,
   putApiUsersIdFollow,
+  putApiUsersIdFollowNotify,
   useGetApiUsersIdProfile,
   type MemberProfileDto,
   type ProfileReadingDto,
@@ -119,6 +120,19 @@ function Identity({ profile }: { profile: MemberProfileDto }) {
     void queryClient.invalidateQueries({ queryKey: getGetApiMeFollowingQueryKey() });
   };
 
+  async function toggleNotify(on: boolean) {
+    setBusy(true);
+    try {
+      await putApiUsersIdFollowNotify(id, { notifyActivity: on });
+      toast.success(t(on ? 'profile.notifyOn' : 'profile.notifyOff', { name }));
+      refresh();
+    } catch {
+      toast.error(t('profile.actionFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function toggleFollow() {
     setBusy(true);
     try {
@@ -198,6 +212,22 @@ function Identity({ profile }: { profile: MemberProfileDto }) {
           </>
         )}
       </div>
+      {/* #516: following notifies of the member's activity, unless switched off here. */}
+      {profile.notifyActivity != null && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={profile.notifyActivity}
+          disabled={busy}
+          className={styles.switch}
+          onClick={() => void toggleNotify(!profile.notifyActivity)}
+        >
+          <span className={`${styles.track} ${profile.notifyActivity ? styles.trackOn : ''}`} aria-hidden="true">
+            <span className={styles.thumb} />
+          </span>
+          {t('profile.notifyActivity')}
+        </button>
+      )}
       {confirmBlock && (
         <Modal title={t('profile.blockTitle', { name })} onClose={() => setConfirmBlock(false)}>
           <p className={styles.blockText}>{t('profile.blockText', { name })}</p>

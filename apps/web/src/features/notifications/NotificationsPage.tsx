@@ -1,0 +1,115 @@
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  getApiNotifications,
+  getGetApiNotificationsUnreadQueryKey,
+  postApiNotificationsRead,
+  type NotificationDto,
+} from '../../api/generated/librarius';
+import { activeLanguage } from '../../i18n/languages';
+import { LoginGate } from '../../shared/LoginGate';
+import { Avatar } from '../../shared/ui/Avatar';
+import { Icon } from '../../shared/ui/Icon';
+import { Button, Screen } from '../../shared/ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
+import styles from './Notifications.module.css';
+
+const PAGE_SIZE = 30;
+const EMOJI: Record<string, string> = { LOVE: '❤️', FUNNY: '😂', WOW: '😮', CLAP: '👏', SAD: '😢' };
+
+/**
+ * The notifications (#516, #211), newest first: a followed reader's activity, a reaction or a
+ * comment on mine. Each opens the event it is about; opening the list reads them all.
+ */
+export function NotificationsPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return (
+    <Screen>
+      <div className={styles.header}>
+        <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
+          <Icon name="arrow_back" size={24} color="var(--ink)" />
+        </button>
+        <h2 className={styles.title}>{t('notifications.title')}</h2>
+      </div>
+      <LoginGate prompt={t('notifications.prompt')}>
+        <Notifications />
+      </LoginGate>
+    </Screen>
+  );
+}
+
+function Notifications() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const list = useInfiniteQuery({
+    queryKey: ['notifications'],
+    queryFn: ({ pageParam }) => getApiNotifications({ page: pageParam, size: PAGE_SIZE }),
+    initialPageParam: 0,
+    getNextPageParam: (last, _all, lastParam) => (last.hasMore ? lastParam + 1 : undefined),
+  });
+  const loaded = list.isSuccess;
+
+  // Seen once the list is on screen: the badge empties, the entries keep their unread mark
+  // until the next visit.
+  useEffect(() => {
+    if (!loaded) return;
+    void postApiNotificationsRead().then(() =>
+      queryClient.invalidateQueries({ queryKey: getGetApiNotificationsUnreadQueryKey() }),
+    );
+  }, [loaded, queryClient]);
+
+  if (list.isPending) return <Loading />;
+  if (list.isError) return <ErrorState message={t('notifications.error')} onRetry={() => void list.refetch()} />;
+  const items = list.data.pages.flatMap((page) => page.items ?? []);
+  if (items.length === 0) {
+    return <EmptyState icon="notifications" title={t('notifications.empty')} description={t('notifications.emptyHint')} />;
+  }
+  return (
+    <>
+      <ul className={styles.list}>
+        {items.map((item) => (
+          <li key={item.id}>
+            <Entry item={item} />
+          </li>
+        ))}
+      </ul>
+      {list.hasNextPage && (
+        <Button variant="secondary" disabled={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
+          {list.isFetchingNextPage ? t('common.loading') : t('feed.more')}
+        </Button>
+      )}
+    </>
+  );
+}
+
+const when = (value?: string) =>
+  value ? new Date(value).toLocaleString(activeLanguage(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+
+function Entry({ item }: { item: NotificationDto }) {
+  const { t } = useTranslation();
+  const name = item.actor?.displayName ?? '—';
+  const title = item.book?.title ?? '';
+  const text =
+    item.type === 'REACTION'
+      ? t('notifications.reaction', { name, emoji: EMOJI[item.emote ?? ''] ?? '', title })
+      : item.type === 'COMMENT'
+        ? t('notifications.comment', { name, title })
+        : t(`notifications.activity.${item.eventType}`, { name, title });
+  const unread = !item.readAt;
+  return (
+    <Link to={`/feed/${item.eventId}`} className={`${styles.entry} ${unread ? styles.unread : ''}`}>
+      <Avatar id={item.actor?.id} name={name} version={item.actor?.avatarVersion} size={40} decorative />
+      <span className={styles.body}>
+        <span className={styles.text}>{text}</span>
+        {item.comment && <span className={styles.quote}>{t('notifications.quote', { comment: item.comment })}</span>}
+        <span className={styles.meta}>
+          <time dateTime={item.createdAt}>{when(item.createdAt)}</time>
+          {unread && <span className={styles.unreadMark}>{t('notifications.unread')}</span>}
+        </span>
+      </span>
+    </Link>
+  );
+}

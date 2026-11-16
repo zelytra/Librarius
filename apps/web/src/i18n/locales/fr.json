@@ -13,7 +13,8 @@
     "stats": "Stats",
     "admin": "Admin",
     "people": "Lecteurs",
-    "more": "Plus"
+    "more": "Plus",
+    "notifications": "Notifications"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -870,7 +871,8 @@
       "timeZoneAuto": "Suivre cet appareil",
       "submit": "Enregistrer",
       "saved": "Profil enregistré.",
-      "failed": "Impossible d'enregistrer le profil pour le moment."
+      "failed": "Impossible d'enregistrer le profil pour le moment.",
+      "notifyComments": "Me notifier des commentaires sur mes activités"
     },
     "themes": {
       "systeme": "Système",
@@ -1604,7 +1606,10 @@
       "empty": "Rien sur cette étagère.",
       "total_one": "{{count}} titre",
       "total_other": "{{count}} titres"
-    }
+    },
+    "notifyActivity": "Me notifier de ses activités",
+    "notifyOn": "Tu seras notifié des activités de {{name}}.",
+    "notifyOff": "Tu ne seras plus notifié des activités de {{name}}."
   },
   "feed": {
     "error": "Impossible de charger le fil.",
@@ -1633,5 +1638,26 @@
     "deleteComment": "Supprimer mon commentaire",
     "releases": "Sorties à venir",
     "reaction": "{{emote}} ({{count}})"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "prompt": "Connecte-toi pour voir tes notifications.",
+    "bellUnread_one": "Notifications, {{count}} non lue",
+    "bellUnread_other": "Notifications, {{count}} non lues",
+    "error": "Impossible de charger les notifications.",
+    "empty": "Aucune notification pour l’instant",
+    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, et des réactions et commentaires sur les tiennes.",
+    "activity": {
+      "FINISHED_READING": "{{name}} a terminé « {{title}} »",
+      "WISHLIST_ADDED": "{{name}} a ajouté « {{title}} » à ses souhaits",
+      "REVIEW_SHARED": "{{name}} a partagé son avis sur « {{title}} »"
+    },
+    "reaction": "{{name}} a réagi {{emoji}} à ton activité « {{title}} »",
+    "comment": "{{name}} a commenté ton activité « {{title}} »",
+    "quote": "« {{comment}} »",
+    "unread": "Non lue",
+    "event": "Activité",
+    "gone": "Cette activité n’est plus disponible",
+    "goneHint": "Son auteur ne la partage plus avec toi, ou elle a été retirée."
   }
 }

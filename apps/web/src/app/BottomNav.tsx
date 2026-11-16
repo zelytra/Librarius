@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
-import { PHONE_PRIMARY, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { NOTIFICATIONS_DESTINATION, PHONE_PRIMARY, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { useUnreadCount } from '../features/notifications/useUnread';
 import { useNavDestinations } from './useNavDestinations';
 import styles from './BottomNav.module.css';
 
@@ -19,6 +20,7 @@ export function BottomNav() {
   const primary = all.filter((d) => PHONE_PRIMARY.includes(d.to));
   const more = [...all.filter((d) => !PHONE_PRIMARY.includes(d.to)), SETTINGS_DESTINATION];
   const [open, setOpen] = useState(false);
+  const unread = useUnreadCount();
   const button = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const current = more.some((d) => pathname === d.to || pathname.startsWith(`${d.to}/`));
@@ -53,11 +55,20 @@ export function BottomNav() {
           <ul className={styles.sheetList}>
             {more.map((destination) => (
               <li key={destination.to}>
-                <NavLink to={destination.to} className={styles.sheetEntry} onClick={() => close(false)}>
+                <NavLink
+                  to={destination.to}
+                  className={styles.sheetEntry}
+                  onClick={() => close(false)}
+                  aria-label={destination.to === NOTIFICATIONS_DESTINATION.to && unread > 0
+                    ? t('notifications.bellUnread', { count: unread }) : undefined}
+                >
                   {({ isActive }) => (
                     <>
                       <Icon name={destination.icon} size={22} fill={isActive} />
                       <span>{t(destination.labelKey)}</span>
+                      {destination.to === NOTIFICATIONS_DESTINATION.to && unread > 0 && (
+                        <span className={styles.badge} aria-hidden="true">{unread > 99 ? '99+' : unread}</span>
+                      )}
                     </>
                   )}
                 </NavLink>
@@ -80,6 +91,8 @@ export function BottomNav() {
           onClick={() => setOpen((value) => !value)}
         >
           <span className={`${styles.tabContent} ${current || open ? styles.tabContentActive : ''}`}>
+            {/* A dot when something is unread: the sheet's bell entry says how many (#516). */}
+            {unread > 0 && <span className={styles.dot} aria-hidden="true" />}
             <Icon name="menu" size={25} />
             <span className={styles.label}>{t('nav.more')}</span>
           </span>

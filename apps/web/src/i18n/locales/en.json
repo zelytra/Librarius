@@ -13,7 +13,8 @@
     "stats": "Stats",
     "admin": "Admin",
     "people": "Readers",
-    "more": "More"
+    "more": "More",
+    "notifications": "Notifications"
   },
   "common": {
     "seeAll": "See all",
@@ -870,7 +871,8 @@
       "timeZoneAuto": "Follow this device",
       "submit": "Save",
       "saved": "Profile saved.",
-      "failed": "The profile could not be saved right now."
+      "failed": "The profile could not be saved right now.",
+      "notifyComments": "Notify me of comments on my activity"
     },
     "themes": {
       "systeme": "System",
@@ -1604,7 +1606,10 @@
       "empty": "Nothing on this shelf.",
       "total_one": "{{count}} title",
       "total_other": "{{count}} titles"
-    }
+    },
+    "notifyActivity": "Notify me of their activity",
+    "notifyOn": "You will be notified of {{name}}'s activity.",
+    "notifyOff": "You will no longer be notified of {{name}}'s activity."
   },
   "feed": {
     "error": "Could not load the feed.",
@@ -1633,5 +1638,26 @@
     "deleteComment": "Delete my comment",
     "releases": "Coming releases",
     "reaction": "{{emote}} ({{count}})"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "prompt": "Sign in to see your notifications.",
+    "bellUnread_one": "Notifications, {{count}} unread",
+    "bellUnread_other": "Notifications, {{count}} unread",
+    "error": "Could not load the notifications.",
+    "empty": "No notification yet",
+    "emptyHint": "You will be told here of the activity of the readers you follow, and of reactions and comments on yours.",
+    "activity": {
+      "FINISHED_READING": "{{name}} finished “{{title}}”",
+      "WISHLIST_ADDED": "{{name}} added “{{title}}” to their wishlist",
+      "REVIEW_SHARED": "{{name}} shared a review of “{{title}}”"
+    },
+    "reaction": "{{name}} reacted {{emoji}} to your activity “{{title}}”",
+    "comment": "{{name}} commented on your activity “{{title}}”",
+    "quote": "“{{comment}}”",
+    "unread": "Unread",
+    "event": "Activity",
+    "gone": "This activity is no longer available",
+    "goneHint": "Its author no longer shares it with you, or it was removed."
   }
 }

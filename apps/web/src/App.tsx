@@ -51,6 +51,12 @@ const PeoplePage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('./features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
+const NotificationsPage = lazy(() =>
+  import('./features/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage })),
+);
+const EventPage = lazy(() =>
+  import('./features/notifications/EventPage').then((m) => ({ default: m.EventPage })),
+);
 const ScanPage = lazy(() =>
   import('./features/scan/ScanPage').then((m) => ({ default: m.ScanPage })),
 );
@@ -144,6 +150,8 @@ function App() {
           <Route path="scan" element={<ScanPage />} />
           <Route path="people" element={<PeoplePage />} />
           <Route path="people/:id" element={<ProfilePage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="feed/:eventId" element={<EventPage />} />
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />
