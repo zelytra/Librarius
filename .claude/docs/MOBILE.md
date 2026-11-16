@@ -17,8 +17,10 @@ gets — `android/` is packaging around that bundle, not a second copy of the ap
 
 What is deliberately **not** here yet:
 
-- `apps/mobile/ios/` — the iOS native project, needing Xcode and a paid Apple developer
-  account. Comes with [#71](https://github.com/zelytra/Librarius/issues/71).
+- `apps/mobile/ios/` — the iOS native project. `cap add ios` needs macOS, and nobody on this
+  project has a Mac, so it is created **in CI**: the `ios-bootstrap` workflow runs it on a
+  GitHub-hosted macOS runner and hands back the generated project to commit
+  ([#531](https://github.com/zelytra/Librarius/issues/531), § 10). Nobody has run it yet.
 - ~~**Librarius' own icon and splash screen.**~~ Done by
   [#526](https://github.com/zelytra/Librarius/issues/526) — see § 9.
 - Status bar colour and edge-to-edge / safe-area handling: real settings of the native
@@ -114,7 +116,7 @@ that build happens locally or in CI:
 | Platform | Requirements | Where they come from in CI |
 |---|---|---|
 | Android | Android Studio (for local development only), the Android SDK (API 24+), a JDK 21 — the one already used by `apps/api` | `ubuntu-latest` ships a recent SDK (platforms and build-tools past API 36) out of the box; `actions/setup-java` installs Temurin 21. Nothing to configure. |
-| iOS | macOS, Xcode, CocoaPods, a paid Apple developer account for a device or TestFlight | Not built in CI yet — [#71](https://github.com/zelytra/Librarius/issues/71). |
+| iOS | macOS and Xcode — Capacitor 8 uses Swift Package Manager, so no CocoaPods — plus a paid Apple Developer Program membership to reach a device or TestFlight | `macos-latest`, which carries Xcode: `ios-bootstrap.yml` creates the project, `ios-release.yml` builds and uploads it (§ 10). Free on this public repository. |
 
 No Windows machine used on this project has the Android SDK, and none is expected to: the
 Android build is verified on the GitHub-hosted runner, not locally — § 7.
@@ -234,6 +236,7 @@ Three workflows touch this workspace now:
   `librarius-debug-apk` workflow artifact (7-day retention). Runs on every push to `main` and
   every pull request touching the same paths as `sync`, so a reviewer can pull the APK from
   the run and sideload it without owning an Android SDK.
+- **`ios-bootstrap.yml`** and **`ios-release.yml`** — the iOS pair, on `macos-latest`; § 10.
 - **`mobile-release.yml`** — a separate, tag-triggered workflow (`push: tags: v*`, the same
   pattern `release.yml` uses), which builds a **signed** release APK once the keystore
   secrets exist. § 8 is the procedure to create them; until it has been followed, the
@@ -402,3 +405,35 @@ use: `icon-512.png` (512 × 512, no alpha — Play refuses one) and `feature-gra
 wants between two and eight real ones per form factor, and only a run on a device or a signed
 -in browser at phone width can produce them — `docs/wiki/Mobile-Play-Store.md` says what to
 shoot.
+
+## 10. iOS, with no Mac anywhere
+
+The owner has an iPhone and no Mac, and every Apple tool that matters — `xcodebuild`, the
+signing machinery, the uploader — is macOS-only. The way through is to rent the Mac by the
+minute and let Apple issue the signing material itself. Two workflows, neither of which has
+run yet ([#531](https://github.com/zelytra/Librarius/issues/531)):
+
+| Workflow | When | What it does |
+|---|---|---|
+| `ios-bootstrap.yml` | By hand, once | `cap add ios` on `macos-latest`, then `scripts/patch-ios-project.sh`, then hands the project back as an artifact (or pushes it to a branch). It refuses to run while `apps/mobile/ios` exists. |
+| `ios-release.yml` | Every `v*` tag | Web build, `cap sync`, `xcodebuild archive`, `xcodebuild -exportArchive` with `destination: upload` — straight into TestFlight. Skips with an annotation while the project or the secrets are missing. |
+
+What makes it work without a Mac is **cloud-managed signing**: `xcodebuild` is given
+`-allowProvisioningUpdates` and an App Store Connect **API key** (Admin role — the lesser
+roles are refused), and asks Apple for the distribution certificate and the provisioning
+profile during the build. No `.p12`, no `fastlane match` repository, nothing to renew.
+
+Three facts about the Capacitor 8 iOS scaffold that the workflows depend on:
+
+- it is a **Swift Package Manager** project (`ios-spm-template`), so there is no `Podfile`,
+  no `App.xcworkspace`, and `xcodebuild -project App.xcodeproj` is the right invocation;
+- the version is read from the **build settings**, not from `Info.plist`
+  (`CFBundleShortVersionString` is `$(MARKETING_VERSION)`), so the tag's version is passed to
+  `xcodebuild` rather than written into the plist;
+- the hand edits — `CFBundleURLTypes` for `fr.zelytra.librarius://auth` and the French
+  `NSCameraUsageDescription` — are applied by `scripts/patch-ios-project.sh`, which is
+  idempotent and has to be re-run after any `cap add ios`.
+
+The procedure, with costs and lead times, is `docs/wiki/Mobile-iOS-Pipeline.md`. The device
+checks that none of this can prove — sign-in, the scanner, the safe areas — stay on
+[#71](https://github.com/zelytra/Librarius/issues/71).

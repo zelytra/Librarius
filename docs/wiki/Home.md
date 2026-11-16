@@ -32,6 +32,10 @@ know what you need.
    the collector, and how a library is written and completed.
 9. **[Authentication & sessions](https://github.com/zelytra/Librarius/wiki/Authentication)**
    — Keycloak, long-lived offline sessions, changing the realm.
+10. **[Publishing the Android app](https://github.com/zelytra/Librarius/wiki/Mobile-Android-Play-Store)**
+    — the Play Console, from the keystore to the first release.
+11. **[Building and publishing the iOS app without a Mac](https://github.com/zelytra/Librarius/wiki/Mobile-iOS-Pipeline)**
+    — a rented macOS runner, cloud signing and TestFlight.
 
 ## Beyond this wiki
 

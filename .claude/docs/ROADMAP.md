@@ -158,8 +158,17 @@ release notification actually received.
 | [#67](https://github.com/zelytra/Librarius/issues/67) | ✅ Capacitor bootstrap: apps/mobile application — shell over the web bundle; native sign-in still blocked, see [MOBILE](MOBILE.md) | #30, #31 |
 | [#68](https://github.com/zelytra/Librarius/issues/68) | ISBN barcode scanning | #67, #53 |
 | [#69](https://github.com/zelytra/Librarius/issues/69) | Push notifications: releases and wishlist | #57, #67 |
-| [#70](https://github.com/zelytra/Librarius/issues/70) | 🔴 Android build pipeline: CI builds and publishes a debug APK on every push and pull request; release signing is wired but blocked on a keystore only the project owner can create, see [MOBILE](MOBILE.md) § 8 | #67 |
-| [#71](https://github.com/zelytra/Librarius/issues/71) | iOS build and publishing procedure | #67, #70 |
+| [#70](https://github.com/zelytra/Librarius/issues/70) | ✅ Android build pipeline: a tag builds the signed app bundle Play takes and a signed APK to sideload; publishing documented in `docs/wiki/Mobile-Android-Play-Store.md`. Creating the keystore and the Play account stays with the owner, see [MOBILE](MOBILE.md) § 8 | #67 |
+| [#524](https://github.com/zelytra/Librarius/issues/524) | ✅ Capacitor 8 and API 36, which Play requires of every new app and every update | #70 |
+| [#525](https://github.com/zelytra/Librarius/issues/525) | ✅ The signed `.aab` Play takes, beside the APK | #70 |
+| [#526](https://github.com/zelytra/Librarius/issues/526) | ✅ Librarius' own launcher icon, splash screen and store artwork | #70 |
+| [#527](https://github.com/zelytra/Librarius/issues/527) | ✅ The installed app talks to the deployed API instead of its own assets | #67 |
+| [#528](https://github.com/zelytra/Librarius/issues/528) | ✅ Sign-in in the system browser, callback on the app's own scheme — the open point of the bootstrap. Device run still owed | #67 |
+| [#529](https://github.com/zelytra/Librarius/issues/529) | ✅ Safe areas: nothing drawn under the status bar or the gesture bar | #524 |
+| [#530](https://github.com/zelytra/Librarius/issues/530) | ✅ Play Console procedure: account, listing, data safety, first upload | #70 |
+| [#531](https://github.com/zelytra/Librarius/issues/531) | ✅ iOS built, signed and uploaded to TestFlight from CI, with no Mac anywhere | #70 |
+| [#533](https://github.com/zelytra/Librarius/issues/533) | Status bar icons follow the chosen palette, not the device's dark mode | #529 |
+| [#71](https://github.com/zelytra/Librarius/issues/71) | iOS build and publishing procedure — what is left of it is the device checks: sign-in, scanning, safe areas on a real iPhone | #531 |
 | [#185](https://github.com/zelytra/Librarius/issues/185) | Over-the-air updates for the mobile app's web bundle — ship a web fix without a store review | #67, #70 |
 
 ---

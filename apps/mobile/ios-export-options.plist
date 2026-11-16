@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  How `xcodebuild -exportArchive` turns the archive into something App Store Connect accepts
+  (#531). Kept outside apps/mobile/ios/ on purpose: it is CI's file, it has to exist before
+  the project does, and a `cap add ios` must never be able to overwrite it.
+
+  `destination: upload` uploads the build straight from the export step, so no separate
+  altool or Transporter call is needed. `signingStyle: automatic` is what lets the runner
+  sign with no certificate installed: xcodebuild asks App Store Connect for the distribution
+  certificate and the provisioning profile, with the API key ios-release.yml hands it.
+
+  `teamID` is replaced at run time from the APPLE_TEAM_ID secret — the placeholder below is
+  not a real team.
+-->
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>destination</key>
+    <string>upload</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>teamID</key>
+    <string>REPLACED_AT_BUILD_TIME</string>
+    <key>uploadSymbols</key>
+    <true/>
+    <!-- TestFlight's own "what to test" notes are written in App Store Connect, not here. -->
+    <key>manageAppVersionAndBuildNumber</key>
+    <false/>
+</dict>
+</plist>
