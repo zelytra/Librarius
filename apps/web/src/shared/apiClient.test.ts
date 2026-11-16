@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { http, HttpResponse, server } from '../test/server';
 import {
   getApiCatalogSearch,
@@ -7,6 +7,7 @@ import {
 } from '../api/generated/librarius';
 import { apiClient, ApiError } from './apiClient';
 import { recentLog, resetDiagnostics } from './feedback/diagnostics';
+import { resetSession, setAccessToken, setSessionHandlers } from './authToken';
 
 // The call goes through the generated function rather than straight to the mutator:
 // since orval 8 the request body and the query string are built by the generated code,
@@ -102,5 +103,41 @@ describe('apiClient', () => {
 
     await expect(apiClient('/api/library/x', { method: 'GET' })).rejects.toBeInstanceOf(ApiError);
     expect(recentLog()).toContain('503 GET /api/library/x');
+  });
+
+  /**
+   * #494: a session that cannot be renewed ends where the reader is. It used to throw them
+   * onto the Keycloak page in the middle of a screen; now the local session is dropped and
+   * the screen's own sign-in prompt takes over.
+   */
+  describe('when the session cannot be renewed', () => {
+    afterEach(() => resetSession());
+
+    test('ends the session in place rather than redirecting to sign-in', async () => {
+      const endSession = vi.fn();
+      setAccessToken('expired');
+      setSessionHandlers({ renew: () => Promise.reject(new Error('invalid_grant')), endSession });
+      server.use(http.get('*/api/stats', () => new HttpResponse(null, { status: 401 })));
+
+      await expect(apiClient('/api/stats', { method: 'GET' })).rejects.toBeInstanceOf(ApiError);
+
+      expect(endSession).toHaveBeenCalledTimes(1);
+    });
+
+    test('replays the call once the session is renewed, and keeps it', async () => {
+      const endSession = vi.fn();
+      setAccessToken('expired');
+      setSessionHandlers({ renew: async () => setAccessToken('fresh'), endSession });
+      server.use(
+        http.get('*/api/stats', ({ request }) =>
+          request.headers.get('authorization') === 'Bearer fresh'
+            ? HttpResponse.json({ ok: true })
+            : new HttpResponse(null, { status: 401 }),
+        ),
+      );
+
+      await expect(apiClient('/api/stats', { method: 'GET' })).resolves.toEqual({ ok: true });
+      expect(endSession).not.toHaveBeenCalled();
+    });
   });
 });

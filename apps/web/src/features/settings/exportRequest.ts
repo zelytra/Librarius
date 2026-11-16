@@ -1,5 +1,5 @@
 import { ApiError } from '../../shared/apiClient';
-import { getAccessToken, redirectToSignIn, tryRenewSession } from '../../shared/authToken';
+import { getAccessToken, endExpiredSession, tryRenewSession } from '../../shared/authToken';
 
 /**
  * Downloads the account export.
@@ -42,7 +42,7 @@ async function authorisedGet(url: string): Promise<Response> {
     if (await tryRenewSession()) {
       response = await send(url, getAccessToken());
     } else {
-      redirectToSignIn();
+      endExpiredSession();
     }
   }
   return response;

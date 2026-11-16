@@ -8,6 +8,7 @@ import { ThemeProvider } from './shared/theme/ThemeProvider';
 import { createTestQueryClient } from './test/utils';
 import { oidcConfig } from './auth/oidc';
 import './i18n';
+import { forgetSession, markSessionSeen } from './shared/authToken';
 
 function renderAt(path: string) {
   return render(
@@ -66,6 +67,24 @@ test('a signed-out visitor at the root is shown the landing page', async () => {
   expect(await screen.findByText('Ta bibliothèque, tome par tome.')).toBeInTheDocument();
   // Outside the shell: a public page is not a screen of the application.
   expect(screen.queryByText('Accueil')).not.toBeInTheDocument();
+});
+
+/**
+ * #494: a reader whose session ends stays where they were. The root used to send them to the
+ * landing page as if they were a stranger; once a session has been seen on this device, it
+ * shows Home's own sign-in prompt instead.
+ */
+test('a reader whose session ended stays on Home with a sign-in prompt', async () => {
+  markSessionSeen();
+  try {
+    renderAt('/');
+    expect(
+      await screen.findByText('Connecte-toi pour retrouver ta bibliothèque et tes lectures.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Ta bibliothèque, tome par tome.')).not.toBeInTheDocument();
+  } finally {
+    forgetSession();
+  }
 });
 
 test('the landing page is reachable at its own address', async () => {

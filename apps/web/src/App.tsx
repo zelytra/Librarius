@@ -6,6 +6,7 @@ import { Toaster } from './shared/ui/Toaster';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { ErrorState, Loading } from './shared/ui/states';
 import { useApiAuth } from './shared/api';
+import { sessionSeen } from './shared/authToken';
 import { HomePage } from './features/home/HomePage';
 
 // Home is imported eagerly: it is the landing route and the `*` fallback, so making it
@@ -83,7 +84,8 @@ const LandingPage = lazy(() =>
  */
 function RootRoute() {
   const { authed, loading } = useApiAuth();
-  if (!loading && !authed) return <Navigate to="/welcome" replace />;
+  // Only a stranger: a reader whose session ended stays on Home's sign-in prompt (#494).
+  if (!loading && !authed && !sessionSeen()) return <Navigate to="/welcome" replace />;
   return <HomePage />;
 }
 

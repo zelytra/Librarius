@@ -31,7 +31,8 @@ export function AuthTokenBridge() {
         const user = await auth.signinSilent();
         setAccessToken(user?.access_token ?? undefined);
       },
-      signIn: () => void auth.signinRedirect(),
+      // Dropping the stored user is what turns every gate back into its sign-in prompt.
+      endSession: () => void auth.removeUser(),
     });
   }, [auth]);
 
