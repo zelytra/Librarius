@@ -450,6 +450,33 @@ Not a screen: what every screen shows while it has nothing yet.
   the mobile shell, which opens straight onto whatever route the router lands on.
 - 🔜 The animated logo itself, in place of the placeholder ring.
 
+### 4.13 Readers: feed and profiles ✅
+
+Reached from the side navigation, and on a phone from an icon in Home's header — a seventh
+tab would cut « Bibliothèque » short in a 360 px bar.
+
+- ✅ **Feed** (the first tab of `/people`, [#209](https://github.com/zelytra/Librarius/issues/209),
+  [#210](https://github.com/zelytra/Librarius/issues/210)): what the members the reader follows
+  *and may see* (#201) finished, wished or shared a review of, newest first. Five reactions
+  (one per reader, a second one replaces it, the same one takes it back) and a flat comment
+  thread; a reader deletes only their own comments. Imports and bulk edits log nothing. The
+  coming releases of the reader's series sit apart, on their own card, with nothing to react
+  to. Empty → an invitation to find readers.
+- ✅ **Profile** (`/people/:id`, [#497](https://github.com/zelytra/Librarius/issues/497)): name,
+  trusted badge, member since, follower counts and how the two relate for anyone; follow and
+  block (behind a confirmation) for someone else, « Modifier mon profil » for oneself. The
+  reading — counts, pages read, read this year, favourite genres, current reads, latest
+  finished, shared reviews — only when the visibility gate allows it, « Profil privé »
+  otherwise; an account out of reach answers « Ce profil n'est pas disponible ». Every reader's
+  name — in People, a title's friends and reviews, the feed — opens their profile.
+
+### 4.14 When the session ends ✅
+
+A session that cannot be renewed ends where the reader is
+([#494](https://github.com/zelytra/Librarius/issues/494)): no jump to Keycloak, no jump to the
+landing page — the screen shows its own sign-in prompt. The landing page is only for a
+visitor who has never been signed in on this device.
+
 ### 4.12 Widths, on every screen ✅ / 🔜
 
 Not a screen either: how much of the window the application is allowed to use.

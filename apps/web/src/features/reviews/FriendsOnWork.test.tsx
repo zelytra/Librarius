@@ -18,6 +18,8 @@ describe('FriendsOnWork', () => {
     expect(screen.getByText('Or')).toBeInTheDocument();
     expect(screen.getByText('Carol')).toBeInTheDocument();
     expect(screen.getByText('En envie')).toBeInTheDocument();
+    // #497: a friend's name opens their profile.
+    expect(screen.getByRole('link', { name: 'Bob' })).toHaveAttribute('href', '/people/u1');
   });
 
   /** #484: a friend's half star shows, and reads out as a decimal. */

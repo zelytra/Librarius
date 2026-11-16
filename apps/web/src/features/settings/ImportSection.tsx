@@ -28,13 +28,11 @@ const POLL_MS = 1500;
 
 /**
  * Booknode publishes its members' libraries, so one can be fetched from a handle alone.
- * Babelio does not: it has no API, and a member's shelves need a session, which is why
- * `BabelioImporter` refuses every handle. The source stays offered — that is where a
- * reader coming from Babelio looks — but it leads to the CSV export instead of to a
- * request that could only fail.
+ * Babelio and Mangacollec do not (#503): a member's shelves need their session, so both lead
+ * to the collector, which reads the library in the reader's own browser.
  */
 function importsByHandle(source: Source): boolean {
-  return source !== 'babelio';
+  return source === 'booknode';
 }
 
 /** Reads a file as JSON when it is one — Mangacollec's collection is saved with no extension. */

@@ -6,6 +6,7 @@ import { Toaster } from './shared/ui/Toaster';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { ErrorState, Loading } from './shared/ui/states';
 import { useApiAuth } from './shared/api';
+import { sessionSeen } from './shared/authToken';
 import { HomePage } from './features/home/HomePage';
 
 // Home is imported eagerly: it is the landing route and the `*` fallback, so making it
@@ -47,6 +48,9 @@ const WishlistPage = lazy(() =>
 const PeoplePage = lazy(() =>
   import('./features/people/PeoplePage').then((m) => ({ default: m.PeoplePage })),
 );
+const ProfilePage = lazy(() =>
+  import('./features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
 const ScanPage = lazy(() =>
   import('./features/scan/ScanPage').then((m) => ({ default: m.ScanPage })),
 );
@@ -83,7 +87,8 @@ const LandingPage = lazy(() =>
  */
 function RootRoute() {
   const { authed, loading } = useApiAuth();
-  if (!loading && !authed) return <Navigate to="/welcome" replace />;
+  // Only a stranger: a reader whose session ended stays on Home's sign-in prompt (#494).
+  if (!loading && !authed && !sessionSeen()) return <Navigate to="/welcome" replace />;
   return <HomePage />;
 }
 
@@ -138,6 +143,7 @@ function App() {
           <Route path="achievements" element={<AchievementsPage />} />
           <Route path="scan" element={<ScanPage />} />
           <Route path="people" element={<PeoplePage />} />
+          <Route path="people/:id" element={<ProfilePage />} />
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />

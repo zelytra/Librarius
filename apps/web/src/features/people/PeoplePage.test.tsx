@@ -16,6 +16,9 @@ describe('PeoplePage', () => {
       http.get('*/api/me/following', () => HttpResponse.json([])),
       http.get('*/api/me/followers', () =>
         HttpResponse.json([{ id: 'u-3', displayName: 'Camille', trusted: false }])),
+      http.get('*/api/me', () => HttpResponse.json({ id: 'me-1', displayName: 'Moi' })),
+      http.get('*/api/feed', () => HttpResponse.json({ items: [], page: 0, size: 20, hasMore: false })),
+      http.get('*/api/releases/upcoming', () => HttpResponse.json([])),
     );
   });
 
@@ -34,7 +37,7 @@ describe('PeoplePage', () => {
         return new HttpResponse(null, { status: 204 });
       }),
     );
-    renderWithProviders(<PeoplePage />);
+    renderWithProviders(<PeoplePage />, { route: '/people?tab=search' });
 
     await userEvent.type(screen.getByLabelText('Chercher un lecteur par son nom…'), 'mar');
 
@@ -48,12 +51,30 @@ describe('PeoplePage', () => {
   });
 
   test('asks for two letters before searching, and lists who follows the reader', async () => {
-    renderWithProviders(<PeoplePage />);
+    renderWithProviders(<PeoplePage />, { route: '/people?tab=search' });
 
     expect(await screen.findByText("Tape au moins deux lettres du nom d'un lecteur.")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Abonnés' }));
     expect(await screen.findByText('Camille')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Suivre Camille' })).toBeInTheDocument();
+  });
+
+  /** #210: the feed is what the screen opens on. */
+  test('opens on the feed, and its empty state leads to the search', async () => {
+    renderWithProviders(<PeoplePage />, { route: '/people' });
+
+    expect(await screen.findByText('Rien de neuf pour l’instant')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Fil' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Trouver des lecteurs' }));
+    expect(await screen.findByLabelText('Chercher un lecteur par son nom…')).toBeInTheDocument();
+  });
+
+  /** #497: every reader listed opens their profile, and yours is one tap away. */
+  test('links each reader, and the reader themself, to a profile', async () => {
+    renderWithProviders(<PeoplePage />, { route: '/people?tab=followers' });
+
+    expect(await screen.findByRole('link', { name: 'Camille' })).toHaveAttribute('href', '/people/u-3');
+    expect(await screen.findByRole('link', { name: 'Mon profil' })).toHaveAttribute('href', '/people/me-1');
   });
 });

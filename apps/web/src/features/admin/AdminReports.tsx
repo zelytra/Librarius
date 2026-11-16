@@ -1,17 +1,45 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import {
+  getGetApiAdminFeedbackIdQueryKey,
+  getGetApiAdminFeedbackQueryKey,
+  putApiAdminFeedbackIdStatus,
   useGetApiAdminFeedback,
   useGetApiAdminFeedbackId,
   type FeedbackDto,
 } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
+import { Icon } from '../../shared/ui/Icon';
 import { Modal } from '../../shared/ui/Modal';
-import { Button } from '../../shared/ui/primitives';
+import { Button, Chip } from '../../shared/ui/primitives';
+import { toast } from '../../shared/ui/toast';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import styles from './AdminPage.module.css';
 
 const PAGE_SIZE = 50;
+
+/** Where an admin stands with a report (#495), each told by an icon and a word, never colour alone. */
+const STATUSES = ['NEW', 'SEEN', 'HANDLED', 'IRRELEVANT'] as const;
+type Status = (typeof STATUSES)[number];
+const STATUS_ICON: Record<Status, string> = {
+  NEW: 'radio_button_unchecked',
+  SEEN: 'visibility',
+  HANDLED: 'check_circle',
+  IRRELEVANT: 'do_not_disturb_on',
+};
+const statusOf = (report: FeedbackDto): Status =>
+  (STATUSES as readonly string[]).includes(report.status ?? '') ? (report.status as Status) : 'NEW';
+
+function StatusBadge({ status }: { status: Status }) {
+  const { t } = useTranslation();
+  return (
+    <span className={`${styles.status} ${styles[`status${status}`]}`}>
+      <Icon name={STATUS_ICON[status]} size={14} color="currentColor" />
+      {t(`admin.status.${status}`)}
+    </span>
+  );
+}
 
 /** Who a report comes from: a member, the web app or the API. */
 const originKey = (report: FeedbackDto) =>
@@ -24,17 +52,48 @@ const when = (value?: string) =>
 export function AdminReports() {
   const { t } = useTranslation();
   const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<Status | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const { data, isPending, isError, refetch } = useGetApiAdminFeedback({ page, size: PAGE_SIZE });
+  const queryClient = useQueryClient();
+  // Opening a new report marked it seen: the list is read again once the dialog closes.
+  const close = () => {
+    setOpenId(null);
+    void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackQueryKey().slice(0, 1) });
+  };
+  const { data, isPending, isError, refetch } = useGetApiAdminFeedback({
+    page,
+    size: PAGE_SIZE,
+    ...(filter ? { status: filter } : {}),
+  });
+  const choose = (next: Status | null) => {
+    setFilter(next);
+    setPage(0);
+  };
 
-  if (isPending) return <Loading />;
-  if (isError) return <ErrorState message={t('admin.reports.error')} onRetry={() => void refetch()} />;
+  // The filter stays on screen whatever the list holds: an empty "handled" list is no reason
+  // to lose the way back to the others.
+  const filters = (
+    <div className={styles.filters} role="group" aria-label={t('admin.status.filter')}>
+      <Chip selected={filter === null} onClick={() => choose(null)}>
+        {t('admin.status.all')}
+      </Chip>
+      {STATUSES.map((status) => (
+        <Chip key={status} icon={STATUS_ICON[status]} selected={filter === status} onClick={() => choose(status)}>
+          {t(`admin.status.filters.${status}`)}
+        </Chip>
+      ))}
+    </div>
+  );
+
+  if (isPending) return <>{filters}<Loading /></>;
+  if (isError) return <>{filters}<ErrorState message={t('admin.reports.error')} onRetry={() => void refetch()} /></>;
   const reports = data?.items ?? [];
-  if (reports.length === 0) return <EmptyState icon="check_circle" title={t('admin.reports.empty')} />;
+  if (reports.length === 0) return <>{filters}<EmptyState icon="check_circle" title={t('admin.reports.empty')} /></>;
   const pages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
   return (
     <>
+      {filters}
       <p className={styles.count}>{t('admin.reports.total', { count: data?.total ?? 0 })}</p>
       <ul className={styles.reports}>
         {reports.map((report) => (
@@ -47,6 +106,7 @@ export function AdminReports() {
                 {(report.occurrences ?? 1) > 1 && (
                   <span className={styles.occurrences}>{t('admin.reports.occurrences', { count: report.occurrences })}</span>
                 )}
+                <StatusBadge status={statusOf(report)} />
                 <span className={styles.date}>{when(report.lastSeenAt)}</span>
               </span>
               <span className={styles.message}>{report.message}</span>
@@ -70,14 +130,34 @@ export function AdminReports() {
           </Button>
         </div>
       )}
-      {openId && <ReportDetail id={openId} onClose={() => setOpenId(null)} />}
+      {openId && <ReportDetail id={openId} onClose={close} />}
     </>
   );
 }
 
 function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  // Opening a new report marks it seen on the server: the list behind is refreshed for it.
   const { data: report, isPending, isError } = useGetApiAdminFeedbackId(id);
+  const [chosen, setChosen] = useState<Status | null>(null);
+  const current = chosen ?? (report ? statusOf(report) : null);
+
+  async function setStatus(status: Status) {
+    setSaving(true);
+    try {
+      await putApiAdminFeedbackIdStatus(id, { status });
+      setChosen(status);
+      toast.success(t(`admin.status.saved.${status}`));
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackIdQueryKey(id) });
+    } catch {
+      toast.error(t('admin.status.failed'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const rows: [string, string | undefined][] = report
     ? [
         [t('admin.detail.origin'), t(originKey(report))],
@@ -98,6 +178,24 @@ function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {report && (
         <div className={styles.detail}>
           <p className={styles.detailMessage}>{report.message}</p>
+          <div className={styles.triage} role="group" aria-label={t('admin.status.label')}>
+            {current && <StatusBadge status={current} />}
+            <div className={styles.triageActions}>
+              {(['SEEN', 'HANDLED', 'IRRELEVANT'] as const).map((status) => (
+                <Button
+                  key={status}
+                  variant={current === status ? 'primary' : 'secondary'}
+                  size="compact"
+                  aria-pressed={current === status}
+                  disabled={saving}
+                  onClick={() => void setStatus(status)}
+                >
+                  <Icon name={STATUS_ICON[status]} size={16} color="currentColor" />
+                  {t(`admin.status.mark.${status}`)}
+                </Button>
+              ))}
+            </div>
+          </div>
           <dl className={styles.fields}>
             {rows
               .filter(([, value]) => value)

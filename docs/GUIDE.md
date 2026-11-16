@@ -359,14 +359,12 @@ couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arr
 
 ### Depuis Mangacollec
 
-Choisis **Mangacollec** et saisis ton **pseudo** (celui de l'adresse de ton profil,
-mangacollec.com/user/ton-pseudo) : une collection publique est lue directement. Si ton profil
-n'est pas public, utilise le favori **« Librarius : collecter »** (le même que pour Babelio) :
-ouvre ta collection sur mangacollec.com, connecté, clique dessus, puis importe le fichier
-`librarius-mangacollec.json` qu'il télécharge.
-
-Le pseudo ne fonctionne qu'avec un **profil public**. Profil privé ? Le favori suffit : il lit
-ta collection avec ta propre session, sans rien rendre public.
+Utilise le favori **« Librarius : collecter »** (le même que pour Babelio) : sur
+mangacollec.com, connecté, ouvre ta collection depuis le menu du site, clique sur le favori,
+puis importe le fichier `librarius-mangacollec.json` qu'il télécharge. Si c'est le premier
+clic après avoir chargé la page, il peut te demander d'ouvrir ta collection et de cliquer à
+nouveau : il lit ta collection avec la session que le site utilise lui-même, sans rien rendre
+public. L'import par pseudo n'existe plus.
 
 Chaque tome possédé ou lu arrive rangé dans sa série, avec son ISBN, sa couverture et sa date
 d'ajout. Un tome lu mais pas possédé est marqué « Lu » et « Non possédé » ; un coffret prend

@@ -5,19 +5,25 @@
 .nav {
   flex: 0 0 auto;
   width: 100%;
-  height: 84px;
+  height: var(--bottom-nav-height);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--chip);
   display: flex;
-  align-items: flex-start;
-  /* Six tabs since the to-read pile (#391): the side padding gives way to them. */
-  padding: 11px 2px 0;
+  align-items: center;
+  /* Four pages and « Plus » (#504): room enough for every label on one line. */
+  padding: 0 4px;
 }
 
 .tab {
   flex: 1;
   min-width: 0;
+  min-height: 44px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
   text-decoration: none;
 }
 
@@ -38,6 +44,11 @@
   font-weight: 600;
   /* "Bibliothèque" has to fit a sixth of a 375px phone. */
   letter-spacing: -0.03em;
+  /* A seventh of a 360px phone once an admin has the Admin tab (#496) is narrower than the
+     word: it breaks onto the second line — hyphenated where the browser can — rather than
+     losing its last letters. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
   max-width: 100%;
   /* Two lines rather than an ellipsis (#474): « Ajouter un livre » is a sixth of a phone too. */
   text-align: center;
@@ -46,4 +57,47 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* « Plus » (#504): the other destinations, in a sheet that rises above the bar. */
+.sheet {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--bottom-nav-height) + 8px);
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-strong);
+  padding: 6px;
+}
+
+.sheetList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.sheetEntry {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sheetEntry:hover,
+.sheetEntry:focus-visible,
+.sheetEntry[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }

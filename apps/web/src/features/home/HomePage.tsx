@@ -115,6 +115,16 @@ export function HomePage() {
           >
             <Icon name="tune" size={22} color="var(--ink-soft)" />
           </button>
+          {/* The readers (#210, #497): a header icon on a phone, like Settings — the side
+              navigation lists them on a wide screen. */}
+          <button
+            onClick={() => navigate('/people')}
+            aria-label={t('nav.people')}
+            title={t('nav.people')}
+            className={styles.customizeHeaderButton}
+          >
+            <Icon name="group" size={22} color="var(--ink-soft)" />
+          </button>
           <button
             onClick={() => navigate('/settings')}
             aria-label={t('settings.title')}

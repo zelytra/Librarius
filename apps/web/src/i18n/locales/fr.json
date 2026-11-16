@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Ma Bibliothèque",
+    "name": "Librarius",
     "tagline": "Votre bibliothèque personnelle de livres et mangas."
   },
   "nav": {
@@ -10,7 +10,10 @@
     "toRead": "Pile à lire",
     "discover": "Ajouter un livre",
     "wishlist": "Souhaits",
-    "stats": "Stats"
+    "stats": "Stats",
+    "admin": "Admin",
+    "people": "Lecteurs",
+    "more": "Plus"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -22,7 +25,8 @@
     "remove": "Retirer",
     "retry": "Réessayer",
     "errorWithStatus": "Erreur {{status}}",
-    "close": "Fermer"
+    "close": "Fermer",
+    "cancel": "Annuler"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -847,7 +851,7 @@
     "language": "Langue",
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",
     "notifications": "Notifications",
-    "version": "Ma Bibliothèque · version {{version}}",
+    "version": "Librarius · version {{version}}",
     "blocked": {
       "title": "Membres bloqués",
       "description": "Un membre bloqué ne voit plus ton contenu partagé et ne peut plus te suivre, et tu ne vois plus le sien. Il n'en est pas averti.",
@@ -887,8 +891,7 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Pseudo Booknode",
-        "mangacollec": "Pseudo Mangacollec"
+        "booknode": "Pseudo Booknode"
       },
       "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
@@ -915,7 +918,7 @@
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
       "failedTitle": "L'import n'a pas abouti",
-      "mangacollecNote": "Le pseudo ne fonctionne qu'avec un profil public. Profil privé ? Utilise le favori ci-dessous sur mangacollec.com, connecté : il lit ta collection avec ta propre session."
+      "mangacollecNote": "Mangacollec ne donne ta collection qu'à toi, connecté : utilise le favori ci-dessous sur mangacollec.com, il la lit avec ta propre session."
     },
     "export": {
       "title": "Exporter mes données",
@@ -952,11 +955,21 @@
       "confirmLabel": "Pour confirmer, tape ton nom d'utilisateur : {{username}}",
       "cancel": "Annuler",
       "confirm": "Supprimer définitivement",
-      "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Ma Bibliothèque.",
+      "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Librarius.",
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     },
     "community": "Communauté",
-    "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit."
+    "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit.",
+    "avatar": {
+      "choose": "Choisir une photo",
+      "replace": "Changer la photo",
+      "remove": "Retirer la photo",
+      "saved": "Photo de profil mise à jour.",
+      "removed": "Photo de profil retirée.",
+      "format": "Ce fichier n’est pas une image JPEG ou PNG.",
+      "tooBig": "Cette image est trop lourde ou trop grande.",
+      "failed": "La photo n’a pas pu être enregistrée. Réessaie."
+    }
   },
   "report": {
     "trigger": "Signaler une erreur",
@@ -1068,10 +1081,10 @@
       "TO_READ": "Ajouté à ta pile à lire."
     },
     "as": "Ajouter comme",
-    "open": "Ajouter",
     "title": "Ajouter à ta bibliothèque",
     "cancel": "Annuler",
-    "confirm": "Ajouter"
+    "confirm": "Ajouter",
+    "open": "Ajouter"
   },
   "people": {
     "title": "Lecteurs",
@@ -1082,9 +1095,9 @@
     "noFollowing": "Tu ne suis encore personne : cherche des lecteurs dans l'onglet Rechercher.",
     "noFollowers": "Personne ne te suit pour l'instant.",
     "tabs": {
-      "search": "Rechercher",
-      "following_one": "Abonnement ({{count}})",
-      "following_other": "Abonnements ({{count}})",
+      "feed": "Fil",
+      "search": "Chercher",
+      "following": "Suivis ({{count}})",
       "followers": "Abonnés"
     },
     "follow": "Suivre",
@@ -1128,7 +1141,7 @@
     "notes": "Notes et citations",
     "days_one": "{{count}} jour",
     "days_other": "{{count}} jours",
-    "footer": "Ma Bibliothèque · fiche du {{date}}",
+    "footer": "Librarius · fiche du {{date}}",
     "facts": {
       "series": "Série",
       "publisher": "Éditeur",
@@ -1432,12 +1445,10 @@
     "prompt": "Connecte-toi pour accéder à l'administration.",
     "restricted": "Réservé aux administrateurs",
     "restrictedHint": "Cette page demande le rôle administrateur, attribué dans Keycloak.",
-    "entry": "Administration",
-    "entryDescription": "Signalements des membres, erreurs enregistrées et supervision de l'instance.",
-    "open": "Ouvrir l'administration",
     "tabs": {
-      "reports": "Signalements",
-      "monitoring": "Supervision"
+      "reports": "Tickets",
+      "monitoring": "Supervision",
+      "users": "Membres"
     },
     "kinds": {
       "BUG": "Problème",
@@ -1494,6 +1505,121 @@
     "services": {
       "database": "Base de données",
       "keycloak": "Keycloak"
+    },
+    "status": {
+      "label": "Statut du signalement",
+      "filter": "Filtrer par statut",
+      "all": "Tous",
+      "NEW": "Nouveau",
+      "SEEN": "Vu",
+      "HANDLED": "Traité",
+      "IRRELEVANT": "Non pertinent",
+      "filters": {
+        "NEW": "Nouveaux",
+        "SEEN": "Vus",
+        "HANDLED": "Traités",
+        "IRRELEVANT": "Non pertinents"
+      },
+      "mark": {
+        "SEEN": "Marquer vu",
+        "HANDLED": "Marquer traité",
+        "IRRELEVANT": "Marquer non pertinent"
+      },
+      "saved": {
+        "SEEN": "Signalement marqué vu.",
+        "HANDLED": "Signalement marqué traité.",
+        "IRRELEVANT": "Signalement marqué non pertinent."
+      },
+      "failed": "Le statut n'a pas pu être enregistré."
+    },
+    "users": {
+      "search": "Chercher un membre",
+      "error": "Impossible de charger les membres.",
+      "empty": "Aucun membre ne correspond.",
+      "total_one": "{{count}} membre",
+      "total_other": "{{count}} membres",
+      "since": "Inscrit le {{date}}",
+      "titles_one": "{{count}} titre",
+      "titles_other": "{{count}} titres",
+      "delete": "Supprimer",
+      "deleteAria": "Supprimer {{name}}",
+      "deleteTitle": "Supprimer {{name}} ?",
+      "deleteText": "Son compte Keycloak et toutes ses données — bibliothèque, souhaits, lectures, avis, abonnements, photo — seront supprimés définitivement. Le catalogue partagé reste intact.",
+      "confirmLabel": "Tape « {{username}} » pour confirmer",
+      "confirm": "Supprimer définitivement",
+      "deleted": "{{name}} a été supprimé, avec toutes ses données.",
+      "deleteFailed": "La suppression a échoué : rien n’a été effacé.",
+      "handle": "@{{username}}"
     }
+  },
+  "profile": {
+    "prompt": "Connecte-toi pour voir le profil de ce lecteur.",
+    "unavailable": "Ce profil n'est pas disponible",
+    "unavailableHint": "Ce lecteur n'existe pas, ou son profil ne t'est pas accessible.",
+    "error": "Impossible de charger ce profil.",
+    "private": "Profil privé",
+    "privateHint": "Ses lectures sont visibles quand vous vous suivez l'un l'autre, ou s'il rend son compte public.",
+    "since": "Membre depuis {{date}}",
+    "followers_one": "{{count}} abonné",
+    "followers_other": "{{count}} abonnés",
+    "followingCount_one": "{{count}} abonnement",
+    "followingCount_other": "{{count}} abonnements",
+    "mutual": "Vous vous suivez",
+    "followsYou": "Te suit",
+    "edit": "Modifier mon profil",
+    "mine": "Mon profil",
+    "followed": "Tu suis {{name}}.",
+    "unfollowed": "Tu ne suis plus {{name}}.",
+    "actionFailed": "L'action n'a pas abouti. Réessaie.",
+    "block": "Bloquer",
+    "blockTitle": "Bloquer {{name}} ?",
+    "blockText": "Vous ne verrez plus vos lectures, avis et commentaires respectifs, et aucun de vous ne pourra suivre l'autre. {{name}} n'en est pas averti. Tu pourras le débloquer depuis les paramètres.",
+    "blockConfirm": "Bloquer {{name}}",
+    "blocked": "{{name}} est bloqué.",
+    "stats": {
+      "label": "Ses lectures en chiffres",
+      "read": "Lus",
+      "readThisYear": "Lus cette année",
+      "reading": "En cours",
+      "toRead": "À lire",
+      "wished": "Souhaits",
+      "pagesRead": "Pages lues"
+    },
+    "genres": "Genres préférés",
+    "current": "En cours de lecture",
+    "currentEmpty": "Aucune lecture en cours.",
+    "percent": "{{percent}} %",
+    "finished": "Derniers livres finis",
+    "finishedEmpty": "Aucun livre fini pour l'instant.",
+    "reviews": "Avis partagés",
+    "reviewsEmpty": "Aucun avis partagé."
+  },
+  "feed": {
+    "error": "Impossible de charger le fil.",
+    "empty": "Rien de neuf pour l’instant",
+    "emptyHint": "Le fil montre ce que finissent, souhaitent et partagent les lecteurs que tu suis — quand vous vous suivez l'un l'autre, ou que leur compte est public.",
+    "more": "Voir plus",
+    "react": "Réagir",
+    "verbs": {
+      "FINISHED_READING": "a terminé",
+      "WISHLIST_ADDED": "a ajouté à ses souhaits",
+      "REVIEW_SHARED": "a partagé son avis sur"
+    },
+    "emotes": {
+      "LOVE": "J'adore",
+      "FUNNY": "Drôle",
+      "WOW": "Waouh",
+      "CLAP": "Bravo",
+      "SAD": "Triste"
+    },
+    "comments": "Commentaires",
+    "comment": "Commenter",
+    "commentPlaceholder": "Écrire un commentaire…",
+    "send": "Envoyer",
+    "commented": "Commentaire publié.",
+    "commentDeleted": "Commentaire supprimé.",
+    "deleteComment": "Supprimer mon commentaire",
+    "releases": "Sorties à venir",
+    "reaction": "{{emote}} ({{count}})"
   }
 }

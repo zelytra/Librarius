@@ -129,7 +129,7 @@ describe('SettingsPage — language', () => {
     // The two strings React does not own: the `lang` a screen reader reads from, and the
     // tab title `index.html` shipped in French.
     expect(document.documentElement.lang).toBe('en');
-    expect(document.title).toBe('My Library');
+    expect(document.title).toBe('Librarius');
   });
 
   test('labels each language in its own words, so it can be found from the other one',
@@ -239,23 +239,17 @@ describe('SettingsPage — session', () => {
   });
 });
 
-/** #488: the way into the admin screens, for the admin role alone. */
+/** #496: the administration moved to the navigation; Settings no longer carries a way in. */
 describe('SettingsPage — administration', () => {
   beforeEach(() => setAuthenticated(true));
   afterEach(() => resetAuth());
 
-  test('offers the administration to an admin', async () => {
+  test('leaves the administration to the navigation, even for an admin', async () => {
     server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
     renderWithProviders(<SettingsPage />);
 
-    expect(await screen.findByRole('button', { name: "Ouvrir l'administration" })).toBeInTheDocument();
-  });
-
-  test('says nothing of it to anyone else', async () => {
-    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })));
-    renderWithProviders(<SettingsPage />);
-
-    await screen.findByDisplayValue('Bob');
+    await screen.findByDisplayValue('Alice');
     expect(screen.queryByRole('button', { name: "Ouvrir l'administration" })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 });

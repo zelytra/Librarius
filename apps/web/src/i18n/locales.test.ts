@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import i18n from './index';
 import { LANGUAGES } from './languages';
 import { monthLabels } from '../features/stats/timeline';
@@ -70,10 +70,16 @@ describe('locale parity', () => {
     expect(diverging).toEqual([]);
   });
 
-  test('every language offered in Settings has a resource bundle', () => {
+  // Only French is bundled; the others load on first use (#497 made room in the eager payload).
+  test('every language offered in Settings has a resource bundle, loaded on demand', async () => {
     for (const { id } of LANGUAGES) {
+      await i18n.loadLanguages(id);
       expect(i18n.getResourceBundle(id, 'translation')).toBeTruthy();
     }
+  });
+
+  test('French is bundled, ready before anything is loaded', () => {
+    expect(i18n.getResourceBundle('fr', 'translation')).toBeTruthy();
   });
 });
 
@@ -153,6 +159,7 @@ describe('keys the code uses', () => {
  * both files at once.
  */
 describe('plurals', () => {
+  beforeAll(() => i18n.loadLanguages('en'));
   const t = { en: i18n.getFixedT('en'), fr: i18n.getFixedT('fr') };
 
   test('every plural key exists in both the one and the other form', () => {

@@ -38,6 +38,11 @@ public final class BabelioPageParser {
     private BabelioPageParser() {
     }
 
+    /** Whether the page is Babelio's current library list. */
+    static boolean isLibraryList(Document page) {
+        return !page.select("li.lib-book").isEmpty();
+    }
+
     public static List<ImportedBook> parse(Document page) {
         List<ImportedBook> books = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
@@ -60,6 +65,11 @@ public final class BabelioPageParser {
             // header, a footer — and every page of the library carries it: eight promoted books
             // were imported into every reader's library, each glued to its blurb.
             if (link.closest("[class*=megamenu], nav, header, footer") != null) {
+                continue;
+            }
+            // Babelio's lists of other people's books — a selection, a ranking — use `list-item`
+            // rows (seen live, #502): a hundred strangers' books once came in that way.
+            if (link.closest(".list-item, [class*=selection]") != null) {
                 continue;
             }
             rows.add(rowOf(link));
@@ -87,8 +97,11 @@ public final class BabelioPageParser {
         }
         Element authorLink = item.selectFirst(".lib-book-author a[href*=/auteur/]");
         String author = authorLink != null ? emptyToNull(authorLink.text()) : null;
-        String statusText = textOf(item.selectFirst(".lib-status"));
-        boolean wished = statusText != null && fold(statusText).contains("pense");
+        Element statusTag = item.selectFirst(".lib-status");
+        String statusText = textOf(statusTag);
+        // « Pense-bête » is `lib-status--3`, whatever its label reads (#502).
+        boolean wished = (statusTag != null && statusTag.hasClass("lib-status--3"))
+                || (statusText != null && fold(statusText).contains("pense"));
         LibraryStatus status = wished ? LibraryStatus.TO_READ : status(item, statusText != null ? statusText : "");
 
         Integer rating = null;

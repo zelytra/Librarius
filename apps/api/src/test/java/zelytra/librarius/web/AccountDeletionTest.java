@@ -132,6 +132,8 @@ class AccountDeletionTest {
         assertEquals(1L, before.get("series_follow"));
         assertEquals(1L, before.get("reading_progress"));
         assertEquals(1L, before.get("dashboard_layout"));
+        // The wish is news for the feed (#209): its event goes with the account.
+        assertEquals(1L, before.get("feed_event"));
 
         given().auth().oauth2(token())
                 .when().delete("/api/me")

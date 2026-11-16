@@ -1,4 +1,4 @@
-import { getAccessToken, redirectToSignIn, tryRenewSession } from './authToken';
+import { getAccessToken, endExpiredSession, tryRenewSession } from './authToken';
 import { note } from './feedback/diagnostics';
 
 /**
@@ -51,14 +51,15 @@ async function send(url: string, init: RequestInit, token: string | undefined): 
 export async function apiClient<T>(url: string, init: RequestInit = {}): Promise<T> {
   let response = await send(url, init, getAccessToken());
 
-  // A 401 usually means the token expired mid-session. Renew once and replay; only
-  // send the user back to sign-in when that fails, so a stale token is invisible.
+  // A 401 usually means the token expired mid-session. Renew once and replay, so a stale
+  // token is invisible; when that fails the session ends in place and the screen's sign-in
+  // prompt shows — never a redirect (#494).
   if (response.status === 401) {
     const renewed = await tryRenewSession();
     if (renewed) {
       response = await send(url, init, getAccessToken());
     } else {
-      redirectToSignIn();
+      endExpiredSession();
     }
   }
 

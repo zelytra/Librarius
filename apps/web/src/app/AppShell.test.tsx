@@ -125,19 +125,20 @@ describe('the navigation the shell mounts', () => {
     expect(sideNav()).toBeInTheDocument();
   });
 
-  test('the bar carries the five destinations, and no way to Settings', () => {
+  /** #504: four main pages on a phone, the rest behind « Plus ». */
+  test('the bar carries the four main destinations and a way to the others', () => {
     viewport(390);
     renderAt('/');
 
-    expect(destinations()).toEqual(DESTINATIONS);
-    expect(screen.queryByRole('link', { name: 'Réglages' })).toBeNull();
+    expect(destinations()).toEqual(['/', '/collection', '/discover', '/wishlist']);
+    expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('aria-expanded', 'false');
   });
 
-  test('the side navigation carries the same five in the same order, plus Settings', () => {
+  test('the side navigation carries the same six in the same order, plus the readers and Settings', () => {
     viewport(1440);
     renderAt('/');
 
-    expect(destinations()).toEqual([...DESTINATIONS, '/settings']);
+    expect(destinations()).toEqual([...DESTINATIONS, '/people', '/settings']);
     expect(screen.getByRole('link', { name: 'Réglages' })).toBeInTheDocument();
   });
 

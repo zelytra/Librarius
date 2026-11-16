@@ -3,7 +3,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   z-index: 40;
   display: flex;
   flex-direction: column;

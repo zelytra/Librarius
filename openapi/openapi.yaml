@@ -51,6 +51,10 @@ paths:
           type: integer
           format: int32
           default: 50
+      - name: status
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -93,6 +97,35 @@ paths:
       security:
       - SecurityScheme:
         - admin
+  /api/admin/feedback/{id}/status:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackStatusDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Status
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
   /api/admin/monitoring:
     get:
       responses:
@@ -107,6 +140,63 @@ paths:
         "403":
           description: Not Allowed
       summary: Monitoring
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/admin/users:
+    get:
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserPageDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Users
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/admin/users/{id}:
+    delete:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete User
       tags:
       - Admin Resource
       security:
@@ -508,6 +598,140 @@ paths:
       summary: Job
       tags:
       - Export Resource
+      security:
+      - SecurityScheme: []
+  /api/feed:
+    get:
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedPageDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Feed
+      tags:
+      - Feed Resource
+      security:
+      - SecurityScheme: []
+  /api/feed/{eventId}/comments:
+    post:
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedCommentCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Comment
+      tags:
+      - Feed Resource
+      security:
+      - SecurityScheme: []
+  /api/feed/{eventId}/comments/{commentId}:
+    delete:
+      parameters:
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Comment
+      tags:
+      - Feed Resource
+      security:
+      - SecurityScheme: []
+  /api/feed/{eventId}/reaction:
+    delete:
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Unreact
+      tags:
+      - Feed Resource
+      security:
+      - SecurityScheme: []
+    put:
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedReactionDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: React
+      tags:
+      - Feed Resource
       security:
       - SecurityScheme: []
   /api/feedback:
@@ -1330,6 +1554,48 @@ paths:
       - Me Resource
       security:
       - SecurityScheme: []
+  /api/me/avatar:
+    put:
+      requestBody:
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Set Avatar
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Remove Avatar
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
   /api/me/blocked:
     get:
       responses:
@@ -1871,6 +2137,28 @@ paths:
       - User Resource
       security:
       - SecurityScheme: []
+  /api/users/{id}/avatar:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            image/jpeg: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Avatar
+      tags:
+      - User Resource
+      security:
+      - SecurityScheme: []
   /api/users/{id}/block:
     delete:
       parameters:
@@ -1957,6 +2245,30 @@ paths:
         "403":
           description: Not Allowed
       summary: Follow
+      tags:
+      - User Resource
+      security:
+      - SecurityScheme: []
+  /api/users/{id}/profile:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberProfileDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Profile
       tags:
       - User Resource
       security:
@@ -2433,6 +2745,43 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AchievementUnlockDto"
+    AdminUserDto:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        avatarVersion:
+          type: integer
+          format: int64
+        libraryItems:
+          type: integer
+          format: int64
+        lastSeenAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    AdminUserPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUserDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
     AuthorDetailDto:
       type: object
       properties:
@@ -2952,6 +3301,95 @@ components:
           format: int32
         url:
           type: string
+    FeedBookDto:
+      type: object
+      properties:
+        editionId:
+          $ref: "#/components/schemas/UUID"
+        workId:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        coverUrl:
+          type: string
+    FeedCommentCreateDto:
+      type: object
+      required:
+      - comment
+      properties:
+        comment:
+          type: string
+          pattern: \S
+          maxLength: 2000
+    FeedCommentDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        author:
+          $ref: "#/components/schemas/MemberSummaryDto"
+        comment:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        mine:
+          type: boolean
+    FeedItemDto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        type:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        actor:
+          $ref: "#/components/schemas/MemberSummaryDto"
+        book:
+          $ref: "#/components/schemas/FeedBookDto"
+        rating:
+          type: number
+          format: double
+        review:
+          type: string
+        reactions:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        myReaction:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedCommentDto"
+    FeedPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedItemDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        hasMore:
+          type: boolean
+    FeedReactionDto:
+      type: object
+      required:
+      - emote
+      properties:
+        emote:
+          type: string
+          pattern: LOVE|FUNNY|WOW|CLAP|SAD
     FeedbackCreateDto:
       type: object
       required:
@@ -3005,6 +3443,10 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         lastSeenAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        status:
+          type: string
+        statusChangedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
     FeedbackDto:
       type: object
       properties:
@@ -3029,6 +3471,10 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         lastSeenAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        status:
+          type: string
+        statusChangedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
     FeedbackPageDto:
       type: object
       properties:
@@ -3045,6 +3491,14 @@ components:
         total:
           type: integer
           format: int64
+    FeedbackStatusDto:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          pattern: NEW|SEEN|HANDLED|IRRELEVANT
     FormatDto:
       type: object
       properties:
@@ -3410,6 +3864,39 @@ components:
           type: boolean
         admin:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
+    MemberProfileDto:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        trusted:
+          type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
+        memberSince:
+          $ref: "#/components/schemas/OffsetDateTime"
+        self:
+          type: boolean
+        following:
+          type: boolean
+        followsYou:
+          type: boolean
+        followers:
+          type: integer
+          format: int64
+        followingCount:
+          type: integer
+          format: int64
+        visible:
+          type: boolean
+        reading:
+          $ref: "#/components/schemas/ProfileReadingDto"
     MemberSearchDto:
       type: object
       properties:
@@ -3421,6 +3908,9 @@ components:
           type: boolean
         following:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
     MemberSummaryDto:
       type: object
       properties:
@@ -3430,6 +3920,9 @@ components:
           type: string
         trusted:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
     MonitoringDayDto:
       type: object
       properties:
@@ -3494,6 +3987,71 @@ components:
           type: number
           multipleOf: 0.01
           minimum: 0
+    ProfileReadingDto:
+      type: object
+      properties:
+        read:
+          type: integer
+          format: int64
+        reading:
+          type: integer
+          format: int64
+        toRead:
+          type: integer
+          format: int64
+        abandoned:
+          type: integer
+          format: int64
+        wished:
+          type: integer
+          format: int64
+        pagesRead:
+          type: integer
+          format: int64
+        readThisYear:
+          type: integer
+          format: int64
+        topGenres:
+          type: array
+          items:
+            type: string
+        currentlyReading:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileTitleDto"
+        recentlyFinished:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileTitleDto"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileTitleDto"
+    ProfileTitleDto:
+      type: object
+      properties:
+        editionId:
+          $ref: "#/components/schemas/UUID"
+        workId:
+          $ref: "#/components/schemas/UUID"
+        kind:
+          type: string
+        title:
+          type: string
+        authors:
+          type: string
+        coverUrl:
+          type: string
+        rating:
+          type: number
+          format: double
+        review:
+          type: string
+        finishedAt:
+          $ref: "#/components/schemas/LocalDate"
+        percent:
+          type: integer
+          format: int32
     ProgressDto:
       type: object
       properties:

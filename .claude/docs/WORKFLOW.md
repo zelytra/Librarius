@@ -33,6 +33,13 @@ reference: 38 real queries run before, and again after each step.
 ## 3. One branch, one pull request per batch
 
 - Cut the branch from an up-to-date `main`; never commit on `main`.
+- **Open the pull request first** ([#505](https://github.com/zelytra/Librarius/issues/505)): as
+  soon as the issues are written and the branch exists, push it and open a **draft** pull
+  request that lists the issues it will close. The work is then visible from its first step,
+  and a session cut short leaves its state on GitHub rather than in a container.
+- **Commit and push often**: every step that is green — a test and the code that passes it, a
+  fix measured, a doc updated — is its own commit, pushed at once. Never sit on a pile of
+  uncommitted changes; the pull request is marked ready when the batch is done.
 - Work test-first ([CONVENTIONS § 0](CONVENTIONS.md#0-engineering-rules)): the failing test,
   then the code, then the refactor. Each fixed or added behaviour is locked by a test
   (`vitest`, `@QuarkusTest`), its edge cases and its cross-user case included.

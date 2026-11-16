@@ -18,6 +18,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
 | GET | `/api/me/blocked` | The members the caller blocks (`MemberSummaryDto`) — see [Blocking members](#blocking-members) |
+| GET | `/api/users/{id}/profile` | A member's profile (`MemberProfileDto`, #497) — public surface for anyone signed in, `reading` (`ProfileReadingDto`) only when `VisibilityGate.canView`; 404 unknown or across a block either way |
 | PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 400 while a block stands, 404 on an unknown id |
 | DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | PUT | `/api/users/{id}/block` | Block another member — 204, idempotent. 400 on self, 404 on an unknown id |
@@ -84,7 +85,12 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats/value` | What the library (`ownership = OWNED`, publisher's price) and the wishlist (market price, else the reader's estimate) are worth (`ValueDto`, #421) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
-| POST | `/api/import/mangacollec` | Mangacollec import by pseudo (#456) — `{ "handle": … }` through `/api/import/{source}`: a public profile's collection read by the server; answers a job to poll ([Import](#import)) |
+| POST | `/api/import/mangacollec` | Removed by #503: answers a job that fails with the way to the collector (`MangacollecUserImporter`), like Babelio |
+| PUT | `/api/me/avatar` | Profile picture (#500): raw `image/jpeg`, `image/png` or `application/octet-stream` body → 204. 400 empty, 413 over 2 MB or 8000 px a side / 40 MP, 415 not a JPEG/PNG by magic bytes or undecodable. `AvatarService` crops to the centre square and re-encodes a 256 px JPEG |
+| DELETE | `/api/me/avatar` | 204, idempotent |
+| GET | `/api/users/{id}/avatar` | `image/jpeg`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'`, `Cache-Control: private, max-age=86400`; 404 none, unknown or across a block |
+| GET | `/api/admin/users?page=&size=&q=` | `@RolesAllowed("admin")` — `AdminUserPageDto` of `AdminUserDto(id, username, displayName, email, createdAt, avatarVersion, libraryItems, lastSeenAt)`, newest first; `q` = case-insensitive substring of username, display name or email (#499) |
+| DELETE | `/api/admin/users/{id}` | `AccountDeletionService.delete` (Keycloak, then `AccountEraser`) → 204; 400 on the caller, 404 unknown, 503 when Keycloak refuses (nothing erased) |
 | POST | `/api/library/bulk` | Several changes at once on up to 500 of the caller's titles (`ids`) and every volume held of up to 200 series (`seriesIds`, #467) (`BulkUpdateDto`, #457); nothing selected is a 400: `status`, `ownership`, `format`, `categoryId`/`clearCategory`, `rating`/`clearRating`, `remove`; others' ids skipped, a foreign category 400; answers `BulkResultDto.updated` |
 | POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
@@ -835,10 +841,11 @@ is 32 MB. The import runs as a background job like the CSV one. Pages saved from
 
 **Mangacollec (#448, #456).** The document mangacollec.com loads for a member (normalised arrays: `series`,
 `editions`, `volumes`, `possessions`, `reads`, `boxes`, `box_possessions`…), read as it is
-rather than bound to a DTO. It arrives by pseudo (`MangacollecUserImporter` reads
-`api.mangacollec.com/v2/user/<pseudo>/collection`, a pseudo of `[\w.-]{1,40}` only) or as the
-single page of a collected file (`source: mangacollec`, saved by the collector on
-mangacollec.com with the session the site keeps in the page's storage). `MangacollecImporter` turns each volume held or read into an
+rather than bound to a DTO. It arrives only as the single page of a collected file
+(`source: mangacollec`, #503): the collector on mangacollec.com replays the `Authorization`
+header the site's own requests carried (a `fetch`/`XMLHttpRequest` hook), then a stored token,
+then the cookies, and saves a body only if it has `volumes`, `editions` and
+`possessions`/`reads`. `MangacollecImporter` turns each volume held or read into an
 `ImportedBook` titled "Série [Édition] Tome n" with its ISBN, cover and dates, and carries two
 fields only this source fills: `ownership` (`NOT_OWNED` for a volume read and not held) and
 `format` (from the edition name; `BOX_SET` for a box). A document of another shape fails the
@@ -1025,8 +1032,9 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 |---|---|---|
 | POST | `/api/feedback` | `FeedbackCreateDto(kind BUG\|IDEA\|OTHER, message ≤5000, page, appVersion, userAgent, logs ≤20000)` → 201 `FeedbackCreatedDto(id)` |
 | POST | `/api/feedback/errors` | `ClientErrorDto(message ≤2000, stack, page, appVersion, userAgent)` → 204; `FeedbackService.recordError` upserts on `fingerprint` = SHA-256 of `WEB\|message\|first stack line` (`INSERT … ON CONFLICT` — `occurrences + 1`, `last_seen_at = now()`) |
-| GET | `/api/admin/feedback?page=&size=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user` |
-| GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown |
+| GET | `/api/admin/feedback?page=&size=&status=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user`, `status` + `statusChangedAt` (#495); `status=` filters (`NEW`/`SEEN`/`HANDLED`/`IRRELEVANT`, 400 otherwise) |
+| GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown. Opening a `NEW` report sets it `SEEN` |
+| PUT | `/api/admin/feedback/{id}/status` | `FeedbackStatusDto(status)` → 204; 400 unknown status, 404 unknown report. `recordError`'s upsert sets a `HANDLED` error back to `NEW` when it recurs |
 | GET | `/api/admin/monitoring` | `MonitoringDto(activeNow, days[30] of MonitoringDayDto(day, reports, errors, activeUsers), services[ServiceStatusDto(name, up, detail)])` — `database` (`select 1`), `keycloak` (the realm's discovery document, 3 s timeout) |
 
 `MeDto.admin` is `CurrentUser.isAdmin()` (`SecurityIdentity.hasRole("admin")`).
@@ -1037,3 +1045,18 @@ source `API` (signature = exception class + `Resource#method` + first `zelytra.`
 `{"message": "Erreur interne du serveur."}`. `ActivityTracker` (`@ServerResponseFilter`)
 upserts `user_activity` for an authenticated caller off the request (Mutiny worker pool), at
 most once a minute per member; a write that finds no `app_user` yet is retried next request.
+
+## Social feed (#209, #210)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)])`. Actors = the caller's followees that pass `VisibilityGate.canView`; a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
+| PUT | `/api/feed/{eventId}/reaction` | `FeedReactionDto(emote LOVE\|FUNNY\|WOW\|CLAP\|SAD)` → 204, upsert on `(feed_event_id, user_id)`; 404 when the event's author is not visible to the caller |
+| DELETE | `/api/feed/{eventId}/reaction` | 204; 404 as above |
+| POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |
+| DELETE | `/api/feed/{eventId}/comments/{commentId}` | 204 for the comment's author, 404 for anyone else |
+
+`FeedService.record(user, type, edition)` (`INSERT … ON CONFLICT DO NOTHING`) is called from
+`LibraryResource` (an add straight as read; a `/progress` update that moves the status to
+`READ`; a review flipped to shared with a rating or a text) and `WishlistResource.add` — not
+from `ReadingProgressService`, which the bulk edit also goes through, nor from the imports.

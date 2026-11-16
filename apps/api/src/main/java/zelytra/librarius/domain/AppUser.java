@@ -67,4 +67,12 @@ public class AppUser {
      */
     @Column(name = "achievements_evaluated_at")
     public OffsetDateTime achievementsEvaluatedAt;
+
+    /** Set while the member has a profile picture (#500, V39), changing with each one. */
+    @Column(name = "avatar_version")
+    public Long avatarVersion;
+
+    /** The Keycloak username (#499, V40), shown to the admins only. */
+    @Column(length = 255)
+    public String username;
 }

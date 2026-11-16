@@ -27,7 +27,8 @@ for how that matching happens on the way in.
 
 | Entity | What it is |
 |---|---|
-| `app_user` | A Keycloak identity, provisioned on first login. No credential is stored here — Keycloak owns those |
+| `app_user` | A Keycloak identity, provisioned on first login, with its Keycloak `username` (V40, #499, kept in step at each request) and `avatar_version` (V39) while it has a picture. No credential is stored here — Keycloak owns those |
+| `user_avatar` | The member's profile picture (V39, #500): a 256 px JPEG the API wrote itself from the upload, never the upload. In the database like the cover thumbnails — a few tens of kB each, covered by the backups and the erasure with nothing else to run; one service (`AvatarService`) owns it, should it move to object storage one day |
 | `library_item` | A title of the user's library: its own `price` (V30), `page_count` and `format` (V32), all private to the reader, reading status (`TO_READ`, `READING`, `READ`, `ABANDONED`), ownership (`OWNED`, `BORROWED`, `EBOOK`, `AUDIOBOOK`, `WISHLIST`, `NOT_OWNED` — V27, V33), rating (0.5 to 5 by half stars, a double checked in V34), review (private unless `review_shared`), acquisition date, rank |
 | `library_view`, `library_view_entry` | A reader's saved library layouts (V33, #451) — kind, shelf, sort, `layout`, `group_by_category` — and the manual order of each: one entry per placed title (`item_id`) or series block (`series_id`), by `position`, cascading away with the view, the title or the series |
 | `reading_progress` | Current page or percentage, start and finish dates — one row per `library_item` |
@@ -37,11 +38,15 @@ for how that matching happens on the way in.
 | `cover_cache` | Resized BnF cover thumbnails by ark (`content` NULL = known miss) — V26 |
 | `user_achievement` | One unlocked achievement tier (V31), `seen_at` once announced; the catalogue, XP and levels live in code |
 | `user_activity` | One row per member and day they used the instance (V36, #491), `last_seen_at` moved forward at most once a minute, after the response — the monitoring's active members |
+| `feed_event` | What a member did that the feed shows (V38, #209): `FINISHED_READING`, `WISHLIST_ADDED` or `REVIEW_SHARED` on an `edition`, once per member, type and edition. Logged where the action happens — finishing a title, adding a wish, sharing a review — never by an import or a bulk edit |
+| `feed_reaction`, `feed_comment` | A member's reaction to a feed event (one per member and event, `PRIMARY KEY (feed_event_id, user_id)`) and their flat comments (V38, #210); both cascade away with the event or the account |
 | `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
 
 `feedback` (V35, #489, #490) is the one table read across users, by the admins only: the
 members' reports and the errors recorded by the web app and the API, one row per error
-fingerprint with its `occurrences`. Its `user_id` is `ON DELETE SET NULL`: a report outlives
+fingerprint with its `occurrences`, and where an admin stands with each (`status`, V37, #495:
+`NEW`, `SEEN`, `HANDLED`, `IRRELEVANT`; an error marked handled that comes back is `NEW`
+again). Its `user_id` is `ON DELETE SET NULL`: a report outlives
 its author's account, which only forgets who sent it.
 
 Every one of these carries a `user_id`, and every API resource filters on it: no query ever

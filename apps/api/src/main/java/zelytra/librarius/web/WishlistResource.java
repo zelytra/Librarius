@@ -26,6 +26,7 @@ import zelytra.librarius.domain.repository.WishlistItemRepository;
 import zelytra.librarius.domain.repository.WishlistItemRepository.WishlistFilter;
 import zelytra.librarius.domain.repository.WishlistItemRepository.WishlistSort;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.social.FeedService;
 import zelytra.librarius.web.ApiDtos.WishlistAcquireDto;
 import zelytra.librarius.web.ApiDtos.WishlistBudgetDto;
 import zelytra.librarius.web.ApiDtos.WishlistCreateDto;
@@ -42,6 +43,9 @@ import java.util.UUID;
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
 public class WishlistResource {
+
+    @Inject
+    FeedService feed;
 
     @Inject
     CurrentUser currentUser;
@@ -104,6 +108,7 @@ public class WishlistResource {
         item.note = dto.note();
         items.persist(item);
         wishlist.linkToLibrary(currentUser.id(), item);
+        feed.record(item.userId, FeedService.Type.WISHLIST_ADDED, edition.id);
 
         return Response.status(Response.Status.CREATED).entity(WishlistItemDto.of(item)).build();
     }

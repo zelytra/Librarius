@@ -47,9 +47,30 @@ public class MeResource {
     @Inject
     UserBlockService blocks;
 
+    @Inject
+    zelytra.librarius.account.AvatarService avatars;
+
     @GET
     public MeDto me() {
         return MeDto.of(currentUser.require(), currentUser.isAdmin());
+    }
+
+    /**
+     * Sets the caller's profile picture (#500): a JPEG or PNG of 2 MB at most, re-encoded to a
+     * 256-pixel square — 204; 400 empty, 413 too heavy or too large, 415 anything else.
+     */
+    @jakarta.ws.rs.PUT
+    @Path("/avatar")
+    @Consumes({"image/jpeg", "image/png", MediaType.APPLICATION_OCTET_STREAM})
+    public void setAvatar(byte[] image) {
+        avatars.store(currentUser.require().id, image);
+    }
+
+    /** Removes the caller's profile picture. 204, whether there was one or not. */
+    @jakarta.ws.rs.DELETE
+    @Path("/avatar")
+    public void removeAvatar() {
+        avatars.remove(currentUser.require().id);
     }
 
     /**

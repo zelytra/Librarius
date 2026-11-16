@@ -51,8 +51,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Ma Bibliothèque',
-        short_name: 'Bibliothèque',
+        name: 'Librarius',
+        short_name: 'Librarius',
         description: 'Votre bibliothèque personnelle de livres et mangas.',
         lang: 'fr',
         theme_color: '#9aab92',

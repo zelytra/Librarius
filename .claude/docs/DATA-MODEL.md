@@ -572,6 +572,33 @@ by the admins only.
 day)`, idx `last_seen_at`. Active per day = rows per day; active now = `last_seen_at` within
 5 minutes.
 
+### V37 — report triage status (#495)
+
+`feedback.status VARCHAR(10) NOT NULL DEFAULT 'NEW'` checked in (`NEW`, `SEEN`, `HANDLED`,
+`IRRELEVANT`), `feedback.status_changed_at TIMESTAMPTZ`, idx `(status, last_seen_at DESC)`.
+
+### V38 — social feed (#209, #210)
+
+`feed_event(id, user_id → app_user CASCADE, type FINISHED_READING|WISHLIST_ADDED|REVIEW_SHARED,
+edition_id → edition CASCADE, created_at)`, unique `(user_id, type, edition_id)`, idx
+`(user_id, created_at DESC)`. `feed_reaction(feed_event_id → feed_event CASCADE, user_id →
+app_user CASCADE, emote LOVE|FUNNY|WOW|CLAP|SAD, created_at)`, PK `(feed_event_id, user_id)`.
+`feed_comment(id, feed_event_id → feed_event CASCADE, user_id → app_user CASCADE, comment,
+created_at)`, idx `(feed_event_id, created_at)`. An edition rather than a generic
+`target_type/target_id`: every event is about a book, and a real foreign key keeps the log
+from pointing at a row that is gone.
+
+### V39 — profile pictures (#500)
+
+`app_user.avatar_version BIGINT` (null = no picture; epoch millis of the last upload, so a
+screen keys its cache on it) and `user_avatar(user_id PK → app_user CASCADE, content BYTEA,
+updated_at)`. The content is always the API's own 256 px JPEG, never the upload.
+
+### V40 — Keycloak username (#499)
+
+`app_user.username VARCHAR(255)`, written at creation and refreshed by `CurrentUser.require()`
+when the token's `preferred_username` (else the principal name) differs. Shown to admins only.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

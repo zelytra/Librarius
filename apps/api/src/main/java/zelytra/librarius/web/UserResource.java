@@ -3,6 +3,7 @@ package zelytra.librarius.web;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
@@ -12,6 +13,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import zelytra.librarius.security.CurrentUser;
+import zelytra.librarius.social.ProfileService;
 import zelytra.librarius.social.UserBlockService;
 import zelytra.librarius.social.UserFollowService;
 
@@ -20,9 +22,8 @@ import java.util.List;
 /**
  * Acting on another member: following (#200) and blocking (#203).
  *
- * <p>The only thing a caller does to another account here is follow, unfollow, block or
- * unblock it — no profile of somebody else is read through this resource, so there is nothing
- * to gate on the mutual-follow visibility rule the later issue (#201) adds. The caller's own
+ * <p>A caller follows, unfollows, blocks or unblocks another account here, and reads its
+ * profile (#497), whose reading side goes through the #201 visibility gate. The caller's own
  * relationship lists live on {@code /api/me} instead, since they are metadata about the
  * caller, not about the target.
  *
@@ -45,6 +46,12 @@ public class UserResource {
     UserBlockService blocks;
 
     @Inject
+    ProfileService profiles;
+
+    @Inject
+    zelytra.librarius.account.AvatarService avatars;
+
+    @Inject
     zelytra.librarius.domain.repository.AppUserRepository users;
 
     @Inject
@@ -65,8 +72,37 @@ public class UserResource {
         String me = currentUser.id();
         return users.searchByName(me, q, 30).stream()
                 .map(u -> new ApiDtos.MemberSearchDto(u.id, u.displayName, u.trusted,
-                        followRepository.isFollowing(me, u.id)))
+                        followRepository.isFollowing(me, u.id), u.avatarVersion))
                 .toList();
+    }
+
+    /**
+     * A member's profile (#497): who they are to anyone signed in, and what they read when the
+     * caller may see it. 404 for an unknown id and across a block, either way — the same answer.
+     */
+    @GET
+    @Path("/{id}/profile")
+    public ApiDtos.MemberProfileDto profile(@PathParam("id") String id) {
+        currentUser.require();
+        return profiles.of(currentUser.id(), id).orElseThrow(NotFoundException::new);
+    }
+
+    /**
+     * A member's profile picture (#500), for any signed-in member, never across a block (404, the
+     * same answer as no picture). Served so that a browser can only ever show it as an image.
+     */
+    @GET
+    @Path("/{id}/avatar")
+    @Produces("image/jpeg")
+    public Response avatar(@PathParam("id") String id) {
+        currentUser.require();
+        byte[] image = avatars.read(currentUser.id(), id).orElseThrow(NotFoundException::new);
+        return Response.ok(image, "image/jpeg")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Security-Policy", "default-src 'none'")
+                .header("Content-Disposition", "inline")
+                .header("Cache-Control", "private, max-age=86400")
+                .build();
     }
 
     /** The caller starts following the member. Idempotent, 204. */

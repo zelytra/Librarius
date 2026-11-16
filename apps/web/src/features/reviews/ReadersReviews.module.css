@@ -89,3 +89,13 @@
   color: var(--ink-soft);
   white-space: pre-line;
 }
+
+/* #497: the name opens the reader's profile. */
+.name {
+  text-decoration: none;
+}
+
+.name:hover,
+.name:focus-visible {
+  text-decoration: underline;
+}

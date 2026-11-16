@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
-import { NAV_DESTINATIONS, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { SETTINGS_DESTINATION, type Destination } from './navigation';
+import { useNavDestinations } from './useNavDestinations';
 import styles from './SideNav.module.css';
 
 /**
@@ -16,10 +17,11 @@ import styles from './SideNav.module.css';
  */
 export function SideNav() {
   const { t } = useTranslation();
+  const destinations = useNavDestinations(true);
 
   return (
     <nav className={styles.nav} aria-label={t('nav.label')}>
-      {NAV_DESTINATIONS.map((destination) => (
+      {destinations.map((destination) => (
         <Entry key={destination.to} destination={destination} />
       ))}
       {/* Pushed to the bottom and set behind a hairline: Settings configures the

@@ -30,6 +30,13 @@ export const NAV_DESTINATIONS: readonly Destination[] = [
 ];
 
 /**
+ * The readers (#210, #497): the feed, finding people, profiles — it used to hide in Settings.
+ * The side navigation lists it with the others; on a phone it is an icon in Home's header,
+ * like Settings, because a seventh tab would cut « Bibliothèque » short in a 360px bar.
+ */
+export const PEOPLE_DESTINATION: Destination = { to: '/people', icon: 'group', labelKey: 'nav.people' };
+
+/**
  * Settings, which is not one of the five: it configures the application rather than
  * being a part of it, and the side navigation draws it apart from the others at the
  * bottom of the rail.
@@ -46,3 +53,22 @@ export const SETTINGS_DESTINATION: Destination = {
   icon: 'settings',
   labelKey: 'settings.title',
 };
+
+/**
+ * The administration (#496), a destination of the navigation rather than a link buried in
+ * Settings — and only for the admin role: `useNavDestinations` appends it when `/api/me`
+ * says so. The API checks the role on every call; hiding the entry only spares everyone
+ * else a screen they cannot use.
+ */
+export const ADMIN_DESTINATION: Destination = {
+  to: '/admin',
+  icon: 'admin_panel_settings',
+  labelKey: 'nav.admin',
+};
+
+/**
+ * The phone's bar (#504): the four pages a reader goes back to all day. Every other
+ * destination sits in the bar's « Plus » sheet, so the bar stays compact and nothing is out of
+ * reach.
+ */
+export const PHONE_PRIMARY: readonly string[] = ['/', '/collection', '/discover', '/wishlist'];

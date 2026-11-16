@@ -64,7 +64,14 @@ public class CurrentUser {
             user.displayName = firstNonBlank(claim("name"), claim("preferred_username"),
                     principalName(), "Lecteur");
             user.locale = firstNonBlank(claim("locale"), "fr");
+            user.username = firstNonBlank(claim("preferred_username"), principalName());
             users.persist(user);
+        } else {
+            // Kept in step with Keycloak for the admins' list (#499); a no-op once it matches.
+            String username = firstNonBlank(claim("preferred_username"), principalName());
+            if (username != null && !username.equals(user.username)) {
+                user.username = username;
+            }
         }
         return user;
     }

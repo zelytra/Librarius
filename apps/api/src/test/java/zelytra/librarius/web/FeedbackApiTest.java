@@ -150,6 +150,78 @@ class FeedbackApiTest {
         assertNull(listed("NotFoundException"));
     }
 
+    // ── Triage status (#495) ──────────────────────────────────────────────────
+
+    private String report(String message) {
+        return given().auth().oauth2(token("bob")).contentType("application/json")
+                .body(Map.of("kind", "BUG", "message", message))
+                .when().post("/api/feedback").then().statusCode(201).extract().path("id");
+    }
+
+    private void setStatus(String id, String status, int expected) {
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body(Map.of("status", status))
+                .when().put("/api/admin/feedback/" + id + "/status").then().statusCode(expected);
+    }
+
+    @Test
+    void aNewReportIsNewAndOpeningItMarksItSeen() {
+        String message = "À trier " + UUID.randomUUID();
+        String id = report(message);
+        assertEquals("NEW", listed(message).get("status"));
+
+        given().auth().oauth2(token("alice")).when().get("/api/admin/feedback/" + id)
+                .then().statusCode(200).body("status", is("SEEN"));
+        assertEquals("SEEN", listed(message).get("status"));
+    }
+
+    @Test
+    void anAdminMarksAReportHandledOrIrrelevantAndFiltersOnIt() {
+        String handled = "Traité " + UUID.randomUUID();
+        String irrelevant = "Hors sujet " + UUID.randomUUID();
+        setStatus(report(handled), "HANDLED", 204);
+        setStatus(report(irrelevant), "IRRELEVANT", 204);
+
+        assertEquals("HANDLED", listed(handled).get("status"));
+        assertEquals("IRRELEVANT", listed(irrelevant).get("status"));
+        assertNotNull(listed(handled).get("statusChangedAt"));
+
+        java.util.List<String> handledOnes = given().auth().oauth2(token("alice"))
+                .queryParam("status", "HANDLED").queryParam("size", 100)
+                .when().get("/api/admin/feedback").then().statusCode(200)
+                .extract().jsonPath().getList("items.message");
+        assertTrue(handledOnes.contains(handled));
+        assertTrue(!handledOnes.contains(irrelevant), "the filter keeps only that status");
+
+        given().auth().oauth2(token("alice")).queryParam("status", "NOPE")
+                .when().get("/api/admin/feedback").then().statusCode(400);
+    }
+
+    @Test
+    void settingAStatusIsForAnAdminOnAKnownReportWithAKnownStatus() {
+        String id = report("Statut " + UUID.randomUUID());
+        setStatus(id, "SOLVED", 400);
+        setStatus(UUID.randomUUID().toString(), "HANDLED", 404);
+        given().auth().oauth2(token("bob")).contentType("application/json").body(Map.of("status", "HANDLED"))
+                .when().put("/api/admin/feedback/" + id + "/status").then().statusCode(403);
+        given().auth().oauth2(token("alice")).contentType("application/json").body(Map.of())
+                .when().put("/api/admin/feedback/" + id + "/status").then().statusCode(400);
+    }
+
+    /** An error marked handled that happens again is not handled: it comes back as new. */
+    @Test
+    void anErrorThatComesBackAfterBeingHandledIsNewAgain() {
+        String message = "RangeError: encore " + UUID.randomUUID();
+        Map<String, Object> error = Map.of("message", message, "stack", "at loop (A.tsx:1)", "page", "/");
+        given().auth().oauth2(token("bob")).contentType("application/json").body(error)
+                .when().post("/api/feedback/errors").then().statusCode(204);
+        setStatus((String) listed(message).get("id"), "HANDLED", 204);
+
+        given().auth().oauth2(token("bob")).contentType("application/json").body(error)
+                .when().post("/api/feedback/errors").then().statusCode(204);
+        assertEquals("NEW", listed(message).get("status"));
+    }
+
     // ── Monitoring (#491) ─────────────────────────────────────────────────────
 
     /**

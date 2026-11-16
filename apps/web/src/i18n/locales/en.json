@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "My Library",
+    "name": "Librarius",
     "tagline": "Your personal library of books and manga."
   },
   "nav": {
@@ -10,7 +10,10 @@
     "toRead": "To read",
     "discover": "Add a book",
     "wishlist": "Wishlist",
-    "stats": "Stats"
+    "stats": "Stats",
+    "admin": "Admin",
+    "people": "Readers",
+    "more": "More"
   },
   "common": {
     "seeAll": "See all",
@@ -22,7 +25,8 @@
     "remove": "Remove",
     "retry": "Try again",
     "errorWithStatus": "Error {{status}}",
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel"
   },
   "auth": {
     "signIn": "Sign in",
@@ -847,7 +851,7 @@
     "language": "Language",
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
     "notifications": "Notifications",
-    "version": "My Library · version {{version}}",
+    "version": "Librarius · version {{version}}",
     "blocked": {
       "title": "Blocked members",
       "description": "Blocked members cannot see your shared content or follow you, and you cannot see theirs. They are not told.",
@@ -887,8 +891,7 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Booknode handle",
-        "mangacollec": "Mangacollec username"
+        "booknode": "Booknode handle"
       },
       "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
@@ -915,7 +918,7 @@
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
       "failedTitle": "The import did not go through",
-      "mangacollecNote": "The username only works with a public profile. Private profile? Use the bookmark below on mangacollec.com, signed in: it reads your collection with your own session."
+      "mangacollecNote": "Mangacollec only gives your collection to you, signed in: use the bookmark below on mangacollec.com, it reads it with your own session."
     },
     "export": {
       "title": "Export my data",
@@ -952,11 +955,21 @@
       "confirmLabel": "To confirm, type your username: {{username}}",
       "cancel": "Cancel",
       "confirm": "Delete permanently",
-      "done": "Your account and all your data have been deleted. Thank you for using My Library.",
+      "done": "Your account and all your data have been deleted. Thank you for using Librarius.",
       "failed": "Cannot delete it right now. Nothing has been deleted."
     },
     "community": "Community",
-    "communityDescription": "Find other readers by name, follow them and see who follows you."
+    "communityDescription": "Find other readers by name, follow them and see who follows you.",
+    "avatar": {
+      "choose": "Choose a photo",
+      "replace": "Change the photo",
+      "remove": "Remove the photo",
+      "saved": "Profile picture updated.",
+      "removed": "Profile picture removed.",
+      "format": "This file is not a JPEG or PNG image.",
+      "tooBig": "This image is too heavy or too large.",
+      "failed": "The photo could not be saved. Try again."
+    }
   },
   "report": {
     "trigger": "Report an error",
@@ -1068,10 +1081,10 @@
       "TO_READ": "Added to your to-read pile."
     },
     "as": "Add as",
-    "open": "Add",
     "title": "Add to your library",
     "cancel": "Cancel",
-    "confirm": "Add"
+    "confirm": "Add",
+    "open": "Add"
   },
   "people": {
     "title": "Readers",
@@ -1082,9 +1095,9 @@
     "noFollowing": "You follow nobody yet: find readers in the Search tab.",
     "noFollowers": "Nobody follows you yet.",
     "tabs": {
+      "feed": "Feed",
       "search": "Search",
-      "following_one": "Following ({{count}})",
-      "following_other": "Following ({{count}})",
+      "following": "Following ({{count}})",
       "followers": "Followers"
     },
     "follow": "Follow",
@@ -1128,7 +1141,7 @@
     "notes": "Notes and quotes",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
-    "footer": "My Library · sheet of {{date}}",
+    "footer": "Librarius · sheet of {{date}}",
     "facts": {
       "series": "Series",
       "publisher": "Publisher",
@@ -1432,12 +1445,10 @@
     "prompt": "Sign in to reach the administration.",
     "restricted": "Administrators only",
     "restrictedHint": "This page needs the administrator role, granted in Keycloak.",
-    "entry": "Administration",
-    "entryDescription": "Members' reports, recorded errors and monitoring of the instance.",
-    "open": "Open the administration",
     "tabs": {
-      "reports": "Reports",
-      "monitoring": "Monitoring"
+      "reports": "Tickets",
+      "monitoring": "Monitoring",
+      "users": "Members"
     },
     "kinds": {
       "BUG": "Problem",
@@ -1494,6 +1505,121 @@
     "services": {
       "database": "Database",
       "keycloak": "Keycloak"
+    },
+    "status": {
+      "label": "Report status",
+      "filter": "Filter by status",
+      "all": "All",
+      "NEW": "New",
+      "SEEN": "Seen",
+      "HANDLED": "Handled",
+      "IRRELEVANT": "Not relevant",
+      "filters": {
+        "NEW": "New",
+        "SEEN": "Seen",
+        "HANDLED": "Handled",
+        "IRRELEVANT": "Not relevant"
+      },
+      "mark": {
+        "SEEN": "Mark seen",
+        "HANDLED": "Mark handled",
+        "IRRELEVANT": "Mark not relevant"
+      },
+      "saved": {
+        "SEEN": "Report marked seen.",
+        "HANDLED": "Report marked handled.",
+        "IRRELEVANT": "Report marked not relevant."
+      },
+      "failed": "The status could not be saved."
+    },
+    "users": {
+      "search": "Find a member",
+      "error": "Could not load the members.",
+      "empty": "No member matches.",
+      "total_one": "{{count}} member",
+      "total_other": "{{count}} members",
+      "since": "Joined {{date}}",
+      "titles_one": "{{count}} title",
+      "titles_other": "{{count}} titles",
+      "delete": "Delete",
+      "deleteAria": "Delete {{name}}",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteText": "Their Keycloak account and all their data — library, wishes, readings, reviews, follows, picture — will be deleted for good. The shared catalog stays as it is.",
+      "confirmLabel": "Type “{{username}}” to confirm",
+      "confirm": "Delete for good",
+      "deleted": "{{name}} was deleted, with all their data.",
+      "deleteFailed": "The deletion failed: nothing was erased.",
+      "handle": "@{{username}}"
     }
+  },
+  "profile": {
+    "prompt": "Sign in to see this reader's profile.",
+    "unavailable": "This profile is not available",
+    "unavailableHint": "This reader does not exist, or their profile is not open to you.",
+    "error": "Could not load this profile.",
+    "private": "Private profile",
+    "privateHint": "Their reading shows once you follow each other, or if they make their account public.",
+    "since": "Member since {{date}}",
+    "followers_one": "{{count}} follower",
+    "followers_other": "{{count}} followers",
+    "followingCount_one": "{{count}} following",
+    "followingCount_other": "{{count}} following",
+    "mutual": "You follow each other",
+    "followsYou": "Follows you",
+    "edit": "Edit my profile",
+    "mine": "My profile",
+    "followed": "You follow {{name}}.",
+    "unfollowed": "You no longer follow {{name}}.",
+    "actionFailed": "That did not work. Try again.",
+    "block": "Block",
+    "blockTitle": "Block {{name}}?",
+    "blockText": "Neither of you will see the other's reading, reviews or comments, and neither can follow the other. {{name}} is not told. You can unblock them from the settings.",
+    "blockConfirm": "Block {{name}}",
+    "blocked": "{{name}} is blocked.",
+    "stats": {
+      "label": "Their reading in figures",
+      "read": "Read",
+      "readThisYear": "Read this year",
+      "reading": "Reading",
+      "toRead": "To read",
+      "wished": "Wishes",
+      "pagesRead": "Pages read"
+    },
+    "genres": "Favorite genres",
+    "current": "Currently reading",
+    "currentEmpty": "Nothing being read.",
+    "percent": "{{percent}}%",
+    "finished": "Recently finished",
+    "finishedEmpty": "No book finished yet.",
+    "reviews": "Shared reviews",
+    "reviewsEmpty": "No shared review."
+  },
+  "feed": {
+    "error": "Could not load the feed.",
+    "empty": "Nothing new yet",
+    "emptyHint": "The feed shows what the readers you follow finish, wish for and share — once you follow each other, or when their account is public.",
+    "more": "Show more",
+    "react": "React",
+    "verbs": {
+      "FINISHED_READING": "finished",
+      "WISHLIST_ADDED": "added to their wishlist",
+      "REVIEW_SHARED": "shared a review of"
+    },
+    "emotes": {
+      "LOVE": "Love it",
+      "FUNNY": "Funny",
+      "WOW": "Wow",
+      "CLAP": "Bravo",
+      "SAD": "Sad"
+    },
+    "comments": "Comments",
+    "comment": "Comment",
+    "commentPlaceholder": "Write a comment…",
+    "send": "Send",
+    "commented": "Comment posted.",
+    "commentDeleted": "Comment deleted.",
+    "deleteComment": "Delete my comment",
+    "releases": "Coming releases",
+    "reaction": "{{emote}} ({{count}})"
   }
 }

@@ -40,7 +40,7 @@ describe('readers reviews', () => {
 
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
-    expect(within(items[0]).getByText('Bob')).toBeInTheDocument();
+    expect(within(items[0]).getByRole('link', { name: 'Bob' })).toHaveAttribute('href', '/people/bob');
     expect(within(items[0]).getByText('Un chef-d’œuvre.')).toBeInTheDocument();
     expect(within(items[1]).getByText('Carol')).toBeInTheDocument();
     expect(screen.getByText(/4,5/)).toBeInTheDocument();

@@ -298,8 +298,9 @@ public.
 | [#206](https://github.com/zelytra/Librarius/issues/206) | Review aggregation for books, and the visibility gate on series reviews | #190, #205 |
 | [#207](https://github.com/zelytra/Librarius/issues/207) | Reviews and ratings on the Detail and Series screens | #206 |
 | [#208](https://github.com/zelytra/Librarius/issues/208) | Report and hide public reviews | #205, #192 |
-| [#209](https://github.com/zelytra/Librarius/issues/209) | Social feed: activity log and API | #200, #201 |
-| [#210](https://github.com/zelytra/Librarius/issues/210) | Social feed screen with reactions and comments | #209 |
+| [#209](https://github.com/zelytra/Librarius/issues/209) | ✅ Social feed: activity log and API — `feed_event` (V38), `GET /api/feed`; releases are not logged, the feed screen shows the reader's coming releases apart | #200, #201 |
+| [#210](https://github.com/zelytra/Librarius/issues/210) | ✅ Social feed screen with reactions and comments — `feed_reaction`, `feed_comment` (V38), the feed tab of `/people` | #209 |
+| [#497](https://github.com/zelytra/Librarius/issues/497) | ✅ Member profile pages — `GET /api/users/{id}/profile`, `/people/:id` | #201, #203 |
 | [#211](https://github.com/zelytra/Librarius/issues/211) | Notify on a comment received on a review | #69, #210 |
 
 ---

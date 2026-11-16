@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Segmented } from '../../shared/ui/primitives';
@@ -23,6 +23,10 @@ import styles from './ProfileSection.module.css';
  * interface at once through {@link changeLanguage}, which keeps the two in step, and
  * invalidates the profile so the account-deletion confirmation reads the new display name.
  */
+// Its own chunk: the Settings screen was at its 10 kB budget, and the picture is the one part
+// of the profile a reader does not touch on every visit (#500).
+const AvatarPicker = lazy(() => import('./AvatarPicker').then((m) => ({ default: m.AvatarPicker })));
+
 export function ProfileSection() {
   const { t } = useTranslation();
   const auth = useApiAuth();
@@ -74,6 +78,9 @@ export function ProfileSection() {
     <>
       <h3 className={styles.title}>{t('settings.profile.title')}</h3>
       <p className={styles.intro}>{t('settings.profile.description')}</p>
+      <Suspense fallback={null}>
+        <AvatarPicker />
+      </Suspense>
 
       <div className={styles.form}>
         <label className={styles.field}>

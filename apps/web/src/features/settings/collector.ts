@@ -20,6 +20,11 @@ export interface CollectedFile {
   source: 'booknode' | 'babelio' | 'mangacollec';
   collectedAt: string;
   pages: string[];
+  /**
+   * Babelio only: the filters its library page offers (label and address), kept so that a
+   * file a reader sends says what the live site calls them (#502). Ignored by the import.
+   */
+  filters?: { text: string; url: string }[];
 }
 
 /** The browser surface the collector touches, injectable for the tests. */
@@ -34,6 +39,8 @@ export interface CollectorEnv {
   save: (file: CollectedFile) => void;
   /** Pause between two pages, so a 100-page library is read at a reader's pace. */
   pauseMs?: number;
+  /** The page's global object, whose requests the Mangacollec collector listens to (#503). */
+  global?: typeof globalThis;
 }
 
 export async function collectLibrary(env?: CollectorEnv): Promise<void> {
@@ -54,6 +61,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       link.remove();
     },
     pauseMs: 400,
+    global: window,
   };
 
   const host = e.location.hostname;
@@ -99,6 +107,9 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     return new DOMParser().parseFromString(text, 'text/html');
   }
 
+  /** Whether the library is Babelio's current list (`li.lib-book`): then nothing else is read. */
+  let libraryList = false;
+
   /** The rows describing one book each, as HTML the server parses. */
   function rowsOf(page: Document): string {
     if (source === 'booknode') {
@@ -109,11 +120,13 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     /* Babelio's current list: one `li.lib-book` per title. Taken as is when the page has it. */
     const items = Array.from(page.querySelectorAll('li.lib-book'));
     if (items.length > 0) return items.map((item) => item.outerHTML).join(' ');
+    /* A page without the list, in a library that has one, is not the library (#502). */
+    if (libraryList) return '';
     const rows: Element[] = [];
     page.querySelectorAll('a[href*="/livres/"]').forEach((link) => {
-      /* The site's menus, header and footer link to promoted books on every page: not the */
-      /* reader's library. */
-      if (link.closest('[class*="megamenu"], nav, header, footer')) return;
+      /* The site's menus, header and footer link to promoted books on every page, and its */
+      /* selections list other people's books (`list-item`): not the reader's library. */
+      if (link.closest('[class*="megamenu"], nav, header, footer, .list-item, [class*="selection"]')) return;
       const row = link.closest('tr') ?? link.closest('li') ?? link.parentElement;
       if (row && !rows.includes(row)) rows.push(row);
     });
@@ -158,14 +171,79 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
   }
 
   /**
-   * Mangacollec (#456): the site loads the whole collection as one JSON document from its API,
-   * with the session it keeps in the browser's storage. The collector asks for the same
-   * document — the reader's own when signed in, a public profile's on `/user/<pseudo>` — and
-   * saves it as is; the server reads it.
+   * Mangacollec (#456, #503): the site loads the whole collection as one JSON document from
+   * its API. Where it keeps its session has changed under us before, so the collector does not
+   * depend on it: it listens to the site's own requests to its API — `fetch` and
+   * `XMLHttpRequest`, the hook staying installed between two clicks — and replays the
+   * `Authorization` header the site sent. A token found in the page's storage or cookies, and
+   * the site's cookies alone, are tried next. A body is kept only if it is a collection;
+   * otherwise `notes` says what each attempt answered, for the reader and for a report.
    */
+  type HookedGlobal = typeof globalThis & {
+    __librariusHooked?: boolean;
+    __librariusAuth?: [string, string];
+  };
+  const page = (e.global ?? window) as HookedGlobal;
+  const notes: string[] = [];
+
+  function listenToTheSite(): void {
+    if (page.__librariusHooked) return;
+    page.__librariusHooked = true;
+    const keep = (url: string, name: string, value: string) => {
+      let host = '';
+      try {
+        host = new URL(url, 'https://www.mangacollec.com/').hostname;
+      } catch {
+        return;
+      }
+      /* The API's own host, exactly: a look-alike address must never lend its header. */
+      if (host === 'api.mangacollec.com' && /^authorization$/i.test(name) && value) {
+        page.__librariusAuth = [name, value];
+      }
+    };
+    const siteFetch = page.fetch;
+    if (typeof siteFetch === 'function') {
+      page.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        try {
+          const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+          const headers = new Headers(init?.headers ?? (typeof input === 'object' && 'headers' in input ? input.headers : undefined));
+          headers.forEach((value, name) => keep(url, name, value));
+        } catch {
+          /* A request we cannot read is none of ours. */
+        }
+        return siteFetch.call(page, input, init);
+      }) as typeof fetch;
+    }
+    const xhr = page.XMLHttpRequest?.prototype as
+      | (XMLHttpRequest & { __librariusUrl?: string })
+      | undefined;
+    if (xhr && typeof xhr.open === 'function' && typeof xhr.setRequestHeader === 'function') {
+      const open = xhr.open;
+      const setHeader = xhr.setRequestHeader;
+      xhr.open = function (this: XMLHttpRequest & { __librariusUrl?: string }, ...args: unknown[]) {
+        this.__librariusUrl = String(args[1]);
+        return (open as (...a: unknown[]) => void).apply(this, args);
+      } as typeof xhr.open;
+      xhr.setRequestHeader = function (this: XMLHttpRequest & { __librariusUrl?: string }, name: string, value: string) {
+        keep(this.__librariusUrl ?? '', name, value);
+        return setHeader.call(this, name, value);
+      };
+    }
+  }
+
+  function isCollection(text: string): boolean {
+    try {
+      const doc = JSON.parse(text) as Record<string, unknown>;
+      return Array.isArray(doc.volumes) && Array.isArray(doc.editions)
+        && (Array.isArray(doc.possessions) || Array.isArray(doc.reads));
+    } catch {
+      return false;
+    }
+  }
+
   async function mangacollec(): Promise<string | null> {
-    const api = 'https://api.mangacollec.com/v2/';
-    const profile = /\/user\/([^/?#]+)/.exec(e.location.pathname);
+    listenToTheSite();
+    const url = 'https://api.mangacollec.com/v2/users/me/collection';
     const tokens: string[] = [];
     const visit = (value: unknown, key: string) => {
       if (typeof value === 'string') {
@@ -187,23 +265,27 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         visit(store.getItem(key), key);
       }
     }
-    /* A session kept in a readable cookie counts too (#478). */
     for (const pair of (e.document.cookie ?? '').split(';')) {
       const at = pair.indexOf('=');
       if (at > 0) visit(decodeURIComponent(pair.slice(at + 1).trim()), pair.slice(0, at).trim());
     }
     const attempts: [string, Record<string, string> | undefined][] = [];
-    for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
-    /* The reader's own collection with the site's cookies, for a session the page cannot read: */
-    /* no public profile needed (#478). */
-    attempts.push([api + 'users/me/collection', undefined]);
-    if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
-    for (const [url, headers] of attempts) {
+    const heard = page.__librariusAuth;
+    if (heard) attempts.push(['session du site', { [heard[0]]: heard[1] }]);
+    for (const token of tokens) attempts.push(['jeton enregistré', { Authorization: 'Bearer ' + token }]);
+    attempts.push(['cookies', undefined]);
+    for (const [label, headers] of attempts) {
       try {
         const response = await e.fetch(url, headers);
-        if (response.ok) return await response.text();
-      } catch {
-        /* The next attempt may work. */
+        if (!response.ok) {
+          notes.push(label + ' : ' + response.status);
+          continue;
+        }
+        const text = await response.text();
+        if (isCollection(text)) return text;
+        notes.push(label + ' : ' + response.status + ' mais pas une collection');
+      } catch (error) {
+        notes.push(label + ' : ' + String(error));
       }
     }
     return null;
@@ -215,7 +297,8 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       const collection = await mangacollec();
       if (!collection) {
         e.alert(
-          'Librarius : impossible de lire ta collection. Connecte-toi sur mangacollec.com, ouvre ta collection, puis clique à nouveau sur ce favori.',
+          'Librarius : impossible de lire ta collection (' + notes.join(', ') + '). ' +
+            'Sur mangacollec.com, connecté à ton compte, ouvre ta collection depuis le menu du site, puis clique à nouveau sur ce favori.',
         );
         return;
       }
@@ -234,6 +317,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     }
     say('lecture de la page 1…');
     const first = await load(firstUrl);
+    libraryList = source === 'babelio' && first.querySelectorAll('li.lib-book').length > 0;
     const urls = pageUrls(first, firstUrl);
     const pages = [rowsOf(first)];
     for (let i = 1; i < urls.length; i++) {
@@ -242,27 +326,45 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       pages.push(rowsOf(await load(urls[i])));
     }
     /* Babelio files the wished books under their own « Pense-bête » filter, which the list the */
-    /* reader stands on may leave out (#477): that filter is walked too, its pages included. */
+    /* reader stands on leaves out (#477). Only a filter of the library page itself is followed — */
+    /* same address, another query, as a link or an htmx `hx-get` — never another page whose */
+    /* label merely contains « pense » (#502: a readers' selection came in that way). */
+    let filters: { text: string; url: string }[] | undefined;
     if (source === 'babelio') {
       const seen = new Set(urls);
-      const wishLinks = Array.from(first.querySelectorAll('a[href]'))
-        .filter((link) => {
-          const text = (link.textContent ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-          const href = link.getAttribute('href') ?? '';
-          return text.includes('pense') && !/\/(livres|auteur)\//.test(href);
+      const libraryPath = new URL(firstUrl).pathname;
+      const found = new Map<string, string>();
+      first.querySelectorAll('a[href], [hx-get]').forEach((element) => {
+        const raw = element.getAttribute('hx-get') ?? element.getAttribute('href') ?? '';
+        let target: URL;
+        try {
+          target = new URL(raw, firstUrl);
+        } catch {
+          return;
+        }
+        if (target.pathname !== libraryPath || !target.search) return;
+        if (Array.from(target.searchParams.keys()).some((key) => /page|part/i.test(key))) return;
+        const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (text && !found.has(target.toString())) found.set(target.toString(), text);
+      });
+      filters = Array.from(found, ([url, text]) => ({ text, url })).slice(0, 40);
+      const wishUrls = filters
+        .filter((filter) => {
+          const folded = filter.text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          return /pense.?bete|envie de lire/.test(folded);
         })
-        .map((link) => new URL(link.getAttribute('href') ?? '', firstUrl).toString())
+        .map((filter) => filter.url)
         .filter((url) => !seen.has(url));
-      for (const wishUrl of new Set(wishLinks)) {
+      for (const wishUrl of wishUrls) {
         say('lecture des pense-bêtes…');
         const wishFirst = await load(wishUrl);
-        const wishUrls = pageUrls(wishFirst, wishUrl);
+        const wishPages = pageUrls(wishFirst, wishUrl);
         pages.push(rowsOf(wishFirst));
-        for (let i = 1; i < wishUrls.length; i++) {
-          if (seen.has(wishUrls[i])) continue;
-          seen.add(wishUrls[i]);
+        for (let i = 1; i < wishPages.length; i++) {
+          if (seen.has(wishPages[i])) continue;
+          seen.add(wishPages[i]);
           await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
-          pages.push(rowsOf(await load(wishUrls[i])));
+          pages.push(rowsOf(await load(wishPages[i])));
         }
       }
     }
@@ -281,6 +383,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       source,
       collectedAt: new Date().toISOString(),
       pages: kept,
+      ...(filters ? { filters } : {}),
     });
     say(urls.length + ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).');
   } catch (error) {

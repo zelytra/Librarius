@@ -1,5 +1,5 @@
 import { ApiError } from '../../shared/apiClient';
-import { getAccessToken, redirectToSignIn, tryRenewSession } from '../../shared/authToken';
+import { authorisedGet } from '../../shared/authorisedGet';
 
 /**
  * Downloads the account export.
@@ -26,26 +26,6 @@ const POLL_TIMEOUT_MS = 120_000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function send(url: string, token: string | undefined): Promise<Response> {
-  return fetch(url, {
-    method: 'GET',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-}
-
-/** Same 401 handling as `apiClient`: renew once, replay, and only then give up. */
-async function authorisedGet(url: string): Promise<Response> {
-  let response = await send(url, getAccessToken());
-  if (response.status === 401) {
-    if (await tryRenewSession()) {
-      response = await send(url, getAccessToken());
-    } else {
-      redirectToSignIn();
-    }
-  }
-  return response;
 }
 
 /** Name the API asked the browser to save the file under. */

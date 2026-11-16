@@ -60,6 +60,24 @@ export interface AchievementsDto {
   unseen?: AchievementUnlockDto[];
 }
 
+export interface AdminUserDto {
+  id?: string;
+  username?: string;
+  displayName?: string;
+  email?: string;
+  createdAt?: OffsetDateTime;
+  avatarVersion?: number;
+  libraryItems?: number;
+  lastSeenAt?: OffsetDateTime;
+}
+
+export interface AdminUserPageDto {
+  items?: AdminUserDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -433,6 +451,65 @@ export interface ExternalRatingDto {
   url?: string;
 }
 
+export interface FeedBookDto {
+  editionId?: Uuid;
+  workId?: Uuid;
+  kind?: string;
+  title?: string;
+  authors?: string;
+  coverUrl?: string;
+}
+
+export interface FeedCommentCreateDto {
+  /**
+     * @maxLength 2000
+     * @pattern \S
+     */
+  comment: string;
+}
+
+export interface MemberSummaryDto {
+  id?: string;
+  displayName?: string;
+  trusted?: boolean;
+  avatarVersion?: number;
+}
+
+export interface FeedCommentDto {
+  id?: Uuid;
+  author?: MemberSummaryDto;
+  comment?: string;
+  createdAt?: OffsetDateTime;
+  mine?: boolean;
+}
+
+export type FeedItemDtoReactions = {[key: string]: number};
+
+export interface FeedItemDto {
+  id?: Uuid;
+  type?: string;
+  createdAt?: OffsetDateTime;
+  actor?: MemberSummaryDto;
+  book?: FeedBookDto;
+  rating?: number;
+  review?: string;
+  reactions?: FeedItemDtoReactions;
+  myReaction?: string;
+  comments?: FeedCommentDto[];
+}
+
+export interface FeedPageDto {
+  items?: FeedItemDto[];
+  page?: number;
+  size?: number;
+  hasMore?: boolean;
+}
+
+export interface FeedReactionDto {
+  /** @pattern LOVE|FUNNY|WOW|CLAP|SAD */
+  emote: string;
+}
+
 export interface FeedbackCreateDto {
   /** @pattern BUG|IDEA|OTHER */
   kind: string;
@@ -464,6 +541,8 @@ export interface FeedbackDetailDto {
   occurrences?: number;
   createdAt?: OffsetDateTime;
   lastSeenAt?: OffsetDateTime;
+  status?: string;
+  statusChangedAt?: OffsetDateTime;
 }
 
 export interface FeedbackDto {
@@ -477,6 +556,8 @@ export interface FeedbackDto {
   occurrences?: number;
   createdAt?: OffsetDateTime;
   lastSeenAt?: OffsetDateTime;
+  status?: string;
+  statusChangedAt?: OffsetDateTime;
 }
 
 export interface FeedbackPageDto {
@@ -484,6 +565,11 @@ export interface FeedbackPageDto {
   page?: number;
   size?: number;
   total?: number;
+}
+
+export interface FeedbackStatusDto {
+  /** @pattern NEW|SEEN|HANDLED|IRRELEVANT */
+  status: string;
 }
 
 export interface FormatDto {
@@ -648,6 +734,49 @@ export interface MeDto {
   trusted?: boolean;
   publicAccount?: boolean;
   admin?: boolean;
+  avatarVersion?: number;
+}
+
+export interface ProfileTitleDto {
+  editionId?: Uuid;
+  workId?: Uuid;
+  kind?: string;
+  title?: string;
+  authors?: string;
+  coverUrl?: string;
+  rating?: number;
+  review?: string;
+  finishedAt?: LocalDate;
+  percent?: number;
+}
+
+export interface ProfileReadingDto {
+  read?: number;
+  reading?: number;
+  toRead?: number;
+  abandoned?: number;
+  wished?: number;
+  pagesRead?: number;
+  readThisYear?: number;
+  topGenres?: string[];
+  currentlyReading?: ProfileTitleDto[];
+  recentlyFinished?: ProfileTitleDto[];
+  reviews?: ProfileTitleDto[];
+}
+
+export interface MemberProfileDto {
+  id?: string;
+  displayName?: string;
+  trusted?: boolean;
+  avatarVersion?: number;
+  memberSince?: OffsetDateTime;
+  self?: boolean;
+  following?: boolean;
+  followsYou?: boolean;
+  followers?: number;
+  followingCount?: number;
+  visible?: boolean;
+  reading?: ProfileReadingDto;
 }
 
 export interface MemberSearchDto {
@@ -655,12 +784,7 @@ export interface MemberSearchDto {
   displayName?: string;
   trusted?: boolean;
   following?: boolean;
-}
-
-export interface MemberSummaryDto {
-  id?: string;
-  displayName?: string;
-  trusted?: boolean;
+  avatarVersion?: number;
 }
 
 export interface MonitoringDayDto {
@@ -999,6 +1123,13 @@ export interface WishlistUpdateDto {
 export type GetApiAdminFeedbackParams = {
   page?: number;
   size?: number;
+  status?: string;
+};
+
+export type GetApiAdminUsersParams = {
+  page?: number;
+  q?: string;
+  size?: number;
 };
 
 export type GetApiAuthorsParams = {
@@ -1023,6 +1154,11 @@ export type GetApiCatalogUpcomingParams = {
 
 export type GetApiExportParams = {
   format?: string;
+};
+
+export type GetApiFeedParams = {
+  page?: number;
+  size?: number;
 };
 
 export type PutApiGoalsYearParams = {
@@ -1479,6 +1615,93 @@ export function useGetApiAdminFeedbackId<TData = Awaited<ReturnType<typeof getAp
 
 
 
+export const getPutApiAdminFeedbackIdStatusUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/feedback/${id}/status`
+}
+
+/**
+ * @summary Status
+ */
+export const putApiAdminFeedbackIdStatus = async (id: Uuid,
+    feedbackStatusDto: FeedbackStatusDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiAdminFeedbackIdStatusUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedbackStatusDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiAdminFeedbackIdStatusMutationKey = () => ['putApiAdminFeedbackIdStatus'] as const;
+
+export const getPutApiAdminFeedbackIdStatusMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>, TError,PutApiAdminFeedbackIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>, TError,PutApiAdminFeedbackIdStatusMutationVariables, TContext> => {
+
+const mutationKey = getPutApiAdminFeedbackIdStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>, PutApiAdminFeedbackIdStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiAdminFeedbackIdStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAdminFeedbackIdStatusMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>>
+    export type PutApiAdminFeedbackIdStatusMutationBody = FeedbackStatusDto
+    export type PutApiAdminFeedbackIdStatusMutationError = void
+    export type PutApiAdminFeedbackIdStatusMutationVariables = {id: Uuid;data: FeedbackStatusDto}
+
+    /** @summary Status */
+export const usePutApiAdminFeedbackIdStatus = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>, TError,PutApiAdminFeedbackIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAdminFeedbackIdStatus>>,
+        TError,
+        PutApiAdminFeedbackIdStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiAdminFeedbackIdStatusMutationOptions(options), queryClient);
+    }
+
 export const getGetApiAdminMonitoringUrl = () => {
 
 
@@ -1579,6 +1802,186 @@ export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getAp
 
 
 
+
+export const getGetApiAdminUsersUrl = (params?: GetApiAdminUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/users?${stringifiedParams}` : `/api/admin/users`
+}
+
+/**
+ * @summary Users
+ */
+export const getApiAdminUsers = async (params?: GetApiAdminUsersParams, options?: Parameters<typeof apiClient>[1]): Promise<AdminUserPageDto> => {
+
+  return apiClient<AdminUserPageDto>(getGetApiAdminUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminUsersQueryKey = (params?: GetApiAdminUsersParams,) => {
+    return [
+    `/api/admin/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAdminUsersQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminUsers>>> = () => getApiAdminUsers(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminUsers>>>
+export type GetApiAdminUsersQueryError = void
+
+
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params: undefined |  GetApiAdminUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteApiAdminUsersIdUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/users/${id}`
+}
+
+/**
+ * @summary Delete User
+ */
+export const deleteApiAdminUsersId = async (id: string, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiAdminUsersIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiAdminUsersIdMutationKey = () => ['deleteApiAdminUsersId'] as const;
+
+export const getDeleteApiAdminUsersIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiAdminUsersIdMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, DeleteApiAdminUsersIdMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiAdminUsersId(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiAdminUsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiAdminUsersId>>>
+
+    export type DeleteApiAdminUsersIdMutationError = void
+    export type DeleteApiAdminUsersIdMutationVariables = {id: string}
+
+    /** @summary Delete User */
+export const useDeleteApiAdminUsersId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiAdminUsersId>>,
+        TError,
+        DeleteApiAdminUsersIdMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiAdminUsersIdMutationOptions(options), queryClient);
+    }
 
 export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -2999,6 +3402,434 @@ export function useGetApiExportJobId<TData = Awaited<ReturnType<typeof getApiExp
 
 
 
+
+export const getGetApiFeedUrl = (params?: GetApiFeedParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/feed?${stringifiedParams}` : `/api/feed`
+}
+
+/**
+ * @summary Feed
+ */
+export const getApiFeed = async (params?: GetApiFeedParams, options?: Parameters<typeof apiClient>[1]): Promise<FeedPageDto> => {
+
+  return apiClient<FeedPageDto>(getGetApiFeedUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiFeedQueryKey = (params?: GetApiFeedParams,) => {
+    return [
+    `/api/feed`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiFeedQueryOptions = <TData = Awaited<ReturnType<typeof getApiFeed>>, TError = void>(params?: GetApiFeedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiFeedQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiFeed>>> = () => getApiFeed(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getApiFeed>>>
+export type GetApiFeedQueryError = void
+
+
+/** @summary Feed */
+export function useGetApiFeed<TData = Awaited<ReturnType<typeof getApiFeed>>, TError = void>(
+ params: undefined |  GetApiFeedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiFeed>>,
+          TError,
+          Awaited<ReturnType<typeof getApiFeed>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feed */
+export function useGetApiFeed<TData = Awaited<ReturnType<typeof getApiFeed>>, TError = void>(
+ params?: GetApiFeedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiFeed>>,
+          TError,
+          Awaited<ReturnType<typeof getApiFeed>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feed */
+export function useGetApiFeed<TData = Awaited<ReturnType<typeof getApiFeed>>, TError = void>(
+ params?: GetApiFeedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Feed */
+export function useGetApiFeed<TData = Awaited<ReturnType<typeof getApiFeed>>, TError = void>(
+ params?: GetApiFeedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeed>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiFeedQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostApiFeedEventIdCommentsUrl = (eventId: Uuid,) => {
+
+
+
+
+  return `/api/feed/${eventId}/comments`
+}
+
+/**
+ * @summary Comment
+ */
+export const postApiFeedEventIdComments = async (eventId: Uuid,
+    feedCommentCreateDto: FeedCommentCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<unknown>(getPostApiFeedEventIdCommentsUrl(eventId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedCommentCreateDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiFeedEventIdCommentsMutationKey = () => ['postApiFeedEventIdComments'] as const;
+
+export const getPostApiFeedEventIdCommentsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedEventIdComments>>, TError,PostApiFeedEventIdCommentsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiFeedEventIdComments>>, TError,PostApiFeedEventIdCommentsMutationVariables, TContext> => {
+
+const mutationKey = getPostApiFeedEventIdCommentsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiFeedEventIdComments>>, PostApiFeedEventIdCommentsMutationVariables> = (props) => {
+          const {eventId,data} = props ?? {};
+
+          return  postApiFeedEventIdComments(eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiFeedEventIdCommentsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiFeedEventIdComments>>>
+    export type PostApiFeedEventIdCommentsMutationBody = FeedCommentCreateDto
+    export type PostApiFeedEventIdCommentsMutationError = void
+    export type PostApiFeedEventIdCommentsMutationVariables = {eventId: Uuid;data: FeedCommentCreateDto}
+
+    /** @summary Comment */
+export const usePostApiFeedEventIdComments = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiFeedEventIdComments>>, TError,PostApiFeedEventIdCommentsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiFeedEventIdComments>>,
+        TError,
+        PostApiFeedEventIdCommentsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiFeedEventIdCommentsMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiFeedEventIdCommentsCommentIdUrl = (eventId: Uuid,
+    commentId: Uuid,) => {
+
+
+
+
+  return `/api/feed/${eventId}/comments/${commentId}`
+}
+
+/**
+ * @summary Delete Comment
+ */
+export const deleteApiFeedEventIdCommentsCommentId = async (eventId: Uuid,
+    commentId: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiFeedEventIdCommentsCommentIdUrl(eventId,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiFeedEventIdCommentsCommentIdMutationKey = () => ['deleteApiFeedEventIdCommentsCommentId'] as const;
+
+export const getDeleteApiFeedEventIdCommentsCommentIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>, TError,DeleteApiFeedEventIdCommentsCommentIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>, TError,DeleteApiFeedEventIdCommentsCommentIdMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiFeedEventIdCommentsCommentIdMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>, DeleteApiFeedEventIdCommentsCommentIdMutationVariables> = (props) => {
+          const {eventId,commentId} = props ?? {};
+
+          return  deleteApiFeedEventIdCommentsCommentId(eventId,commentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiFeedEventIdCommentsCommentIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>>
+
+    export type DeleteApiFeedEventIdCommentsCommentIdMutationError = void
+    export type DeleteApiFeedEventIdCommentsCommentIdMutationVariables = {eventId: Uuid;commentId: Uuid}
+
+    /** @summary Delete Comment */
+export const useDeleteApiFeedEventIdCommentsCommentId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>, TError,DeleteApiFeedEventIdCommentsCommentIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiFeedEventIdCommentsCommentId>>,
+        TError,
+        DeleteApiFeedEventIdCommentsCommentIdMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiFeedEventIdCommentsCommentIdMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiFeedEventIdReactionUrl = (eventId: Uuid,) => {
+
+
+
+
+  return `/api/feed/${eventId}/reaction`
+}
+
+/**
+ * @summary Unreact
+ */
+export const deleteApiFeedEventIdReaction = async (eventId: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiFeedEventIdReactionUrl(eventId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiFeedEventIdReactionMutationKey = () => ['deleteApiFeedEventIdReaction'] as const;
+
+export const getDeleteApiFeedEventIdReactionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>, TError,DeleteApiFeedEventIdReactionMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>, TError,DeleteApiFeedEventIdReactionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiFeedEventIdReactionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>, DeleteApiFeedEventIdReactionMutationVariables> = (props) => {
+          const {eventId} = props ?? {};
+
+          return  deleteApiFeedEventIdReaction(eventId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiFeedEventIdReactionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>>
+
+    export type DeleteApiFeedEventIdReactionMutationError = void
+    export type DeleteApiFeedEventIdReactionMutationVariables = {eventId: Uuid}
+
+    /** @summary Unreact */
+export const useDeleteApiFeedEventIdReaction = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>, TError,DeleteApiFeedEventIdReactionMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiFeedEventIdReaction>>,
+        TError,
+        DeleteApiFeedEventIdReactionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiFeedEventIdReactionMutationOptions(options), queryClient);
+    }
+
+export const getPutApiFeedEventIdReactionUrl = (eventId: Uuid,) => {
+
+
+
+
+  return `/api/feed/${eventId}/reaction`
+}
+
+/**
+ * @summary React
+ */
+export const putApiFeedEventIdReaction = async (eventId: Uuid,
+    feedReactionDto: FeedReactionDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiFeedEventIdReactionUrl(eventId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedReactionDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiFeedEventIdReactionMutationKey = () => ['putApiFeedEventIdReaction'] as const;
+
+export const getPutApiFeedEventIdReactionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiFeedEventIdReaction>>, TError,PutApiFeedEventIdReactionMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiFeedEventIdReaction>>, TError,PutApiFeedEventIdReactionMutationVariables, TContext> => {
+
+const mutationKey = getPutApiFeedEventIdReactionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiFeedEventIdReaction>>, PutApiFeedEventIdReactionMutationVariables> = (props) => {
+          const {eventId,data} = props ?? {};
+
+          return  putApiFeedEventIdReaction(eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiFeedEventIdReactionMutationResult = NonNullable<Awaited<ReturnType<typeof putApiFeedEventIdReaction>>>
+    export type PutApiFeedEventIdReactionMutationBody = FeedReactionDto
+    export type PutApiFeedEventIdReactionMutationError = void
+    export type PutApiFeedEventIdReactionMutationVariables = {eventId: Uuid;data: FeedReactionDto}
+
+    /** @summary React */
+export const usePutApiFeedEventIdReaction = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiFeedEventIdReaction>>, TError,PutApiFeedEventIdReactionMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiFeedEventIdReaction>>,
+        TError,
+        PutApiFeedEventIdReactionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiFeedEventIdReactionMutationOptions(options), queryClient);
+    }
 
 export const getPostApiFeedbackUrl = () => {
 
@@ -5579,6 +6410,164 @@ export const useDeleteApiMe = <TError = void,
       return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
     }
 
+export const getPutApiMeAvatarUrl = () => {
+
+
+
+
+  return `/api/me/avatar`
+}
+
+/**
+ * @summary Set Avatar
+ */
+export const putApiMeAvatar = async (putApiMeAvatarBody: Blob, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiMeAvatarUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'image/jpeg', ...getHeaders(options?.headers) },
+    body: putApiMeAvatarBody
+  }
+);}
+
+
+
+
+
+export const getPutApiMeAvatarMutationKey = () => ['putApiMeAvatar'] as const;
+
+export const getPutApiMeAvatarMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext> => {
+
+const mutationKey = getPutApiMeAvatarMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiMeAvatar>>, PutApiMeAvatarMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiMeAvatar(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiMeAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof putApiMeAvatar>>>
+    export type PutApiMeAvatarMutationBody = Blob
+    export type PutApiMeAvatarMutationError = void
+    export type PutApiMeAvatarMutationVariables = {data: Blob}
+
+    /** @summary Set Avatar */
+export const usePutApiMeAvatar = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiMeAvatar>>,
+        TError,
+        PutApiMeAvatarMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiMeAvatarMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiMeAvatarUrl = () => {
+
+
+
+
+  return `/api/me/avatar`
+}
+
+/**
+ * @summary Remove Avatar
+ */
+export const deleteApiMeAvatar = async ( options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiMeAvatarUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiMeAvatarMutationKey = () => ['deleteApiMeAvatar'] as const;
+
+export const getDeleteApiMeAvatarMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteApiMeAvatarMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiMeAvatar>>, void> = () => {
+
+
+          return  deleteApiMeAvatar(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiMeAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiMeAvatar>>>
+
+    export type DeleteApiMeAvatarMutationError = void
+
+
+    /** @summary Remove Avatar */
+export const useDeleteApiMeAvatar = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiMeAvatar>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteApiMeAvatarMutationOptions(options), queryClient);
+    }
+
 export const getGetApiMeBlockedUrl = () => {
 
 
@@ -7771,6 +8760,107 @@ export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, 
 
 
 
+export const getGetApiUsersIdAvatarUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/avatar`
+}
+
+/**
+ * @summary Avatar
+ */
+export const getApiUsersIdAvatar = async (id: string, options?: Parameters<typeof apiClient>[1]): Promise<Blob> => {
+
+  return apiClient<Blob>(getGetApiUsersIdAvatarUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiUsersIdAvatarQueryKey = (id: string,) => {
+    return [
+    `/api/users/${id}/avatar`
+    ] as const;
+    }
+
+
+export const getGetApiUsersIdAvatarQueryOptions = <TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiUsersIdAvatarQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersIdAvatar>>> = () => getApiUsersIdAvatar(id, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiUsersIdAvatarQueryResult = NonNullable<Awaited<ReturnType<typeof getApiUsersIdAvatar>>>
+export type GetApiUsersIdAvatarQueryError = void
+
+
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiUsersIdAvatarQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getDeleteApiUsersIdBlockUrl = (id: string,) => {
 
 
@@ -8058,6 +9148,107 @@ export const usePutApiUsersIdFollow = <TError = void,
       > => {
       return useMutation(getPutApiUsersIdFollowMutationOptions(options), queryClient);
     }
+
+export const getGetApiUsersIdProfileUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/profile`
+}
+
+/**
+ * @summary Profile
+ */
+export const getApiUsersIdProfile = async (id: string, options?: Parameters<typeof apiClient>[1]): Promise<MemberProfileDto> => {
+
+  return apiClient<MemberProfileDto>(getGetApiUsersIdProfileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiUsersIdProfileQueryKey = (id: string,) => {
+    return [
+    `/api/users/${id}/profile`
+    ] as const;
+    }
+
+
+export const getGetApiUsersIdProfileQueryOptions = <TData = Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiUsersIdProfileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersIdProfile>>> = () => getApiUsersIdProfile(id, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiUsersIdProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getApiUsersIdProfile>>>
+export type GetApiUsersIdProfileQueryError = void
+
+
+/** @summary Profile */
+export function useGetApiUsersIdProfile<TData = Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Profile */
+export function useGetApiUsersIdProfile<TData = Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Profile */
+export function useGetApiUsersIdProfile<TData = Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Profile */
+export function useGetApiUsersIdProfile<TData = Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdProfile>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiUsersIdProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiViewsUrl = () => {
 

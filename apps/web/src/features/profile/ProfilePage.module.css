@@ -1,0 +1,212 @@
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.backButton {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* A reading width, like People: a profile gains nothing from a whole desktop. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 760px;
+}
+
+.identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+
+.who {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--fs-25);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.relation {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.editLink {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.blockText {
+  margin: 0 0 16px;
+  color: var(--ink-soft);
+  font-size: var(--fs-14);
+}
+
+.blockActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.figures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  text-align: center;
+}
+
+.figureValue {
+  font-family: var(--font-serif);
+  font-size: var(--fs-22);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.figureLabel {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--fs-17);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty {
+  margin: 0;
+  padding: 14px;
+  text-align: center;
+  font-size: var(--fs-13-5);
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-panel-lg);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row,
+.review {
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+}
+
+.book {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bookText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bookTitle {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.bookAuthors {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.bookDetail {
+  flex-shrink: 0;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.reviewText {
+  margin: 8px 0 0;
+  font-size: var(--fs-14);
+  color: var(--ink-soft);
+  white-space: pre-line;
+}
