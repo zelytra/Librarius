@@ -38,12 +38,12 @@ function StatsContent() {
   const kindGoals = (stats.goals ?? []).filter((g) => (g.target ?? 0) > 0);
 
   const bigStats = [
-    { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--tint-sage-ink)', tone: styles.tileSage },
+    { value: String(read), label: t('stats.cards.read'), icon: 'menu_book', ic: 'var(--success-ink)', tone: styles.tileSage },
     {
       value: pages.unknown ? '—' : (pages.estimated ? '≈ ' : '') + pages.value.toLocaleString(activeLanguage()),
-      label: t(pages.estimated || pages.unknown ? 'stats.cards.pagesEstimated' : 'stats.cards.pages'), icon: 'auto_stories', ic: 'var(--tint-rose-ink)', tone: styles.tileRose },
+      label: t(pages.estimated || pages.unknown ? 'stats.cards.pagesEstimated' : 'stats.cards.pages'), icon: 'auto_stories', ic: 'var(--danger-ink)', tone: styles.tileRose },
     { value: String(seriesCount), label: t('stats.cards.series'), icon: 'collections_bookmark', ic: 'var(--tint-violet-ink)', tone: styles.tileViolet },
-    { value: String(reading), label: t('stats.cards.reading'), icon: 'local_fire_department', ic: 'var(--tint-clay-ink)', tone: styles.tileClay },
+    { value: String(reading), label: t('stats.cards.reading'), icon: 'local_fire_department', ic: 'var(--warning-ink)', tone: styles.tileClay },
   ];
 
   const maxGenre = Math.max(1, ...byGenre.map((g) => g.count ?? 0));

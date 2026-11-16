@@ -78,7 +78,7 @@ export function AdminMonitoring() {
               <Icon
                 name={service.up ? 'check_circle' : 'error'}
                 size={20}
-                color={service.up ? 'var(--accent-deep)' : 'var(--rose)'}
+                color={service.up ? 'var(--success-ink)' : 'var(--danger-ink)'}
               />
               <span className={styles.serviceName}>{t(`admin.services.${service.name}`, service.name!)}</span>
               <span className={service.up ? styles.serviceUp : styles.serviceDown}>

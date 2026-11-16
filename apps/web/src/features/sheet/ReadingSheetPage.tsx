@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { LoginGate } from '../../shared/LoginGate';
@@ -7,7 +7,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { Segmented } from '../../shared/ui/primitives';
 import { activeLanguage } from '../../i18n/languages';
 import { useGetApiCategories, useGetApiLibraryId, type LibraryItemDto } from '../../api/generated/librarius';
-import { SHEET_FORMATS, pageRule, readingDays, type SheetFormat } from './readingSheet';
+import { SHEET_FORMATS, pageRule, printMargin, readingDays, type SheetFormat } from './readingSheet';
 import styles from './ReadingSheetPage.module.css';
 
 /** Ruled lines left to write on by hand, where the reader typed nothing, per format. */
@@ -109,7 +109,7 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
 
       {/* The paper size can only be told to the printer through @page, which no class can
           scope: the rule follows the format picked. */}
-      <style>{pageRule(format, rings)}</style>
+      <style>{pageRule(format)}</style>
       <article
         className={[styles.sheet, format === 'A6' && styles.a6, format === 'A5' && styles.a5, rings && styles.rings]
           .filter(Boolean)
@@ -117,6 +117,7 @@ export function ReadingSheet({ item, rankLabel }: { item: LibraryItemDto; rankLa
         aria-label={t('sheet.title')}
         data-format={format}
         data-rings={rings}
+        style={{ '--print-margin': printMargin(format, rings) } as CSSProperties}
       >
         <header className={styles.header}>
           <span className={styles.kicker}>{t('sheet.title')}</span>

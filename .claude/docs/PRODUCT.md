@@ -613,7 +613,9 @@ year 🔜.
   same edition in step, and buying it keeps the reading history.
 - **Reading sheet** (`/detail/:id/fiche`): a printable A4 page or A6 card (#427) of a
   finished title — rating, review (or ruled lines), facts, dates — black on white with
-  hairlines, cover on by default.
+  hairlines, cover on by default. The `@page` margin is zero so the browser has no room to
+  print its own date, title, URL and page number on it (#521); the sheet carries its margins
+  as print padding (`--print-margin`, wider on the ring side).
   Offered on Detail once read and from the end-of-reading sheet.
 - **Feedback**: every write announces its outcome in a toast (`shared/ui/toast.ts`, mounted
   once by `App`); buttons and status chips give under the finger. Reduced motion is honoured.

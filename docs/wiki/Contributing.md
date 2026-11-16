@@ -94,7 +94,11 @@ main screens at 390 px in each of the four themes, signed in, and fails on any s
 critical violation. jsdom computes no colours, so contrast is only checked there. A contrast
 failure is fixed at the token (`shared/styles/tokens.css`), not on one screen: `--faint` is
 set per theme to stay ≥ 4.5:1 on `--chip`, text on a filled accent sits on `--accent` (never
-`--accent-deep`), initials on a cover pastel use `--cover-ink`. Touch targets are 44 px —
+`--accent-deep`), initials on a cover pastel use `--cover-ink`. Red, amber and green that say « error », « to
+look at » and « done » (admin triage and services, the stats tiles, the error toast) come from
+the status tokens `--danger` / `--warning` / `--success`, each with a `-soft` background and an
+`-ink` (#522): vivid, and held to AA in every palette by `shared/styles/statusColors.test.ts`.
+Touch targets are 44 px —
 a small visual control (the cross on a cover) widens its hit area with an `::after`.
 Keyboard and reading order were checked by hand in Chromium; no real screen reader has been
 run yet (NVDA / VoiceOver remain to do).

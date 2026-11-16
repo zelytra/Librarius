@@ -81,11 +81,24 @@ describe('ReadingSheetPage (#412)', () => {
     const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
     await userEvent.click(screen.getByRole('button', { name: 'A5 · demi-page' }));
     expect(sheet).toHaveAttribute('data-format', 'A5');
-    expect(container.querySelector('style')?.textContent).toContain('size: 148mm 210mm; margin: 10mm 10mm 10mm 10mm');
+    expect(container.querySelector('style')?.textContent).toContain('size: 148mm 210mm');
+    expect(sheet.style.getPropertyValue('--print-margin')).toBe('10mm 10mm 10mm 10mm');
 
     await userEvent.click(screen.getByLabelText('Classeur à anneaux (marge pour les trous)'));
     expect(sheet).toHaveAttribute('data-rings', 'true');
-    expect(container.querySelector('style')?.textContent).toContain('margin: 10mm 10mm 10mm 20mm');
+    expect(sheet.style.getPropertyValue('--print-margin')).toBe('10mm 10mm 10mm 20mm');
+  });
+
+  /** #521: a page margin is where the browser prints its date, title, URL and page number. */
+  test.each(['A4', 'A5', 'A6'] as const)('leaves the browser no margin to print its own text in (%s)', async (format) => {
+    libraryItemReturns(FINISHED);
+    const { container } = renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${format} ·`) }));
+    await userEvent.click(screen.getByLabelText('Classeur à anneaux (marge pour les trous)'));
+    expect(sheet).toHaveAttribute('data-format', format);
+    expect(container.querySelector('style')?.textContent).toMatch(/@page \{ size: [^;]+; margin: 0; \}/);
   });
 
   test('prints from its toolbar', async () => {
