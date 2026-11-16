@@ -104,9 +104,14 @@ jobs:
       # (compileSdk/targetSdk 35, minSdk 23 — apps/mobile/android/variables.gradle) out of
       # the box, so there is no setup-android step here. No debug signing config either:
       # Gradle signs debug builds with its own auto-generated, non-secret debug keystore.
-      - name: Build the debug APK
+      # `bundleDebug` beside `assembleDebug` so that the packaging Play actually takes — the
+      # app bundle (#525) — is built on every pull request too. Only the release bundle is
+      # ever published, and only from a tag, so this one is thrown away: what it buys is that
+      # a broken bundle task is found here rather than on a tag, where the keystore secrets
+      # make the failure far more expensive to reproduce.
+      - name: Build the debug APK and app bundle
         working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug bundleDebug --no-daemon
 
       - name: Upload the debug APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
