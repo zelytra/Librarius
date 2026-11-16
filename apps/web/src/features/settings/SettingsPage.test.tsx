@@ -129,7 +129,7 @@ describe('SettingsPage — language', () => {
     // The two strings React does not own: the `lang` a screen reader reads from, and the
     // tab title `index.html` shipped in French.
     expect(document.documentElement.lang).toBe('en');
-    expect(document.title).toBe('My Library');
+    expect(document.title).toBe('Librarius');
   });
 
   test('labels each language in its own words, so it can be found from the other one',

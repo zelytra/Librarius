@@ -13,3 +13,11 @@ test('resolves only once the new locale is live, and remembers the choice', asyn
   expect(i18n.language).toBe('en');
   expect(localStorage.getItem(STORAGE_KEY)).toBe('en');
 });
+
+/** #501: the tab reads the application's name, « Librarius », in every language. */
+test('names the browser tab « Librarius » in both languages', async () => {
+  await changeLanguage('fr');
+  expect(document.title).toBe('Librarius');
+  await changeLanguage('en');
+  expect(document.title).toBe('Librarius');
+});

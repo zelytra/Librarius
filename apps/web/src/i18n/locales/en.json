@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "My Library",
+    "name": "Librarius",
     "tagline": "Your personal library of books and manga."
   },
   "nav": {
@@ -850,7 +850,7 @@
     "language": "Language",
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
     "notifications": "Notifications",
-    "version": "My Library · version {{version}}",
+    "version": "Librarius · version {{version}}",
     "blocked": {
       "title": "Blocked members",
       "description": "Blocked members cannot see your shared content or follow you, and you cannot see theirs. They are not told.",
@@ -955,7 +955,7 @@
       "confirmLabel": "To confirm, type your username: {{username}}",
       "cancel": "Cancel",
       "confirm": "Delete permanently",
-      "done": "Your account and all your data have been deleted. Thank you for using My Library.",
+      "done": "Your account and all your data have been deleted. Thank you for using Librarius.",
       "failed": "Cannot delete it right now. Nothing has been deleted."
     },
     "community": "Community",
@@ -1131,7 +1131,7 @@
     "notes": "Notes and quotes",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
-    "footer": "My Library · sheet of {{date}}",
+    "footer": "Librarius · sheet of {{date}}",
     "facts": {
       "series": "Series",
       "publisher": "Publisher",

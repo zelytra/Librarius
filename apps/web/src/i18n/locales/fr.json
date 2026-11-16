@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Ma Bibliothèque",
+    "name": "Librarius",
     "tagline": "Votre bibliothèque personnelle de livres et mangas."
   },
   "nav": {
@@ -850,7 +850,7 @@
     "language": "Langue",
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",
     "notifications": "Notifications",
-    "version": "Ma Bibliothèque · version {{version}}",
+    "version": "Librarius · version {{version}}",
     "blocked": {
       "title": "Membres bloqués",
       "description": "Un membre bloqué ne voit plus ton contenu partagé et ne peut plus te suivre, et tu ne vois plus le sien. Il n'en est pas averti.",
@@ -955,7 +955,7 @@
       "confirmLabel": "Pour confirmer, tape ton nom d'utilisateur : {{username}}",
       "cancel": "Annuler",
       "confirm": "Supprimer définitivement",
-      "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Ma Bibliothèque.",
+      "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Librarius.",
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     },
     "community": "Communauté",
@@ -1131,7 +1131,7 @@
     "notes": "Notes et citations",
     "days_one": "{{count}} jour",
     "days_other": "{{count}} jours",
-    "footer": "Ma Bibliothèque · fiche du {{date}}",
+    "footer": "Librarius · fiche du {{date}}",
     "facts": {
       "series": "Série",
       "publisher": "Éditeur",

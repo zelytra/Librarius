@@ -207,6 +207,9 @@ Usual scopes: `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
 
 ## 3. Pull requests
 
+Opened **as a draft at the start of the work**, then filled in as commits are pushed — see
+[WORKFLOW § 3](WORKFLOW.md#3-one-branch-one-pull-request-per-batch) (#505).
+
 Written **in English**, title included — the repository squash-merges, so the pull request
 title becomes the commit subject on `main`. Same format as commits:
 `<type>(<scope>): <summary>`.

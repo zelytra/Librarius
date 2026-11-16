@@ -28,7 +28,7 @@ describe('LoginGate', () => {
 
     expect(screen.getByText('contenu protégé')).toBeInTheDocument();
     // The branded screen is for the two waiting branches only.
-    expect(screen.queryByText('Ma Bibliothèque')).not.toBeInTheDocument();
+    expect(screen.queryByText('Librarius')).not.toBeInTheDocument();
   });
 
   /**
@@ -40,7 +40,7 @@ describe('LoginGate', () => {
     setLoading(true);
     renderGate();
 
-    expect(screen.getByText('Ma Bibliothèque')).toBeInTheDocument();
+    expect(screen.getByText('Librarius')).toBeInTheDocument();
     expect(screen.getByText(/bibliothèque personnelle/)).toBeInTheDocument();
     expect(screen.queryByText('contenu protégé')).not.toBeInTheDocument();
 
@@ -57,7 +57,7 @@ describe('LoginGate', () => {
     setAuthenticated(false);
     renderGate();
 
-    expect(screen.getByText('Ma Bibliothèque')).toBeInTheDocument();
+    expect(screen.getByText('Librarius')).toBeInTheDocument();
     expect(screen.getByText('Connecte-toi pour voir tes souhaits.')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText('contenu protégé')).not.toBeInTheDocument();
