@@ -11,7 +11,8 @@
     "discover": "Add a book",
     "wishlist": "Wishlist",
     "stats": "Stats",
-    "admin": "Admin"
+    "admin": "Admin",
+    "people": "Readers"
   },
   "common": {
     "seeAll": "See all",
@@ -23,7 +24,8 @@
     "remove": "Remove",
     "retry": "Try again",
     "errorWithStatus": "Error {{status}}",
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel"
   },
   "auth": {
     "signIn": "Sign in",
@@ -1071,7 +1073,8 @@
     "as": "Add as",
     "title": "Add to your library",
     "cancel": "Cancel",
-    "confirm": "Add"
+    "confirm": "Add",
+    "open": "Add"
   },
   "people": {
     "title": "Readers",
@@ -1082,9 +1085,9 @@
     "noFollowing": "You follow nobody yet: find readers in the Search tab.",
     "noFollowers": "Nobody follows you yet.",
     "tabs": {
+      "feed": "Feed",
       "search": "Search",
-      "following_one": "Following ({{count}})",
-      "following_other": "Following ({{count}})",
+      "following": "Following ({{count}})",
       "followers": "Followers"
     },
     "follow": "Follow",
@@ -1432,7 +1435,6 @@
     "prompt": "Sign in to reach the administration.",
     "restricted": "Administrators only",
     "restrictedHint": "This page needs the administrator role, granted in Keycloak.",
-    "open": "Open the administration",
     "tabs": {
       "reports": "Reports",
       "monitoring": "Monitoring"
@@ -1519,5 +1521,75 @@
       },
       "failed": "The status could not be saved."
     }
+  },
+  "profile": {
+    "prompt": "Sign in to see this reader's profile.",
+    "unavailable": "This profile is not available",
+    "unavailableHint": "This reader does not exist, or their profile is not open to you.",
+    "error": "Could not load this profile.",
+    "private": "Private profile",
+    "privateHint": "Their reading shows once you follow each other, or if they make their account public.",
+    "since": "Member since {{date}}",
+    "followers_one": "{{count}} follower",
+    "followers_other": "{{count}} followers",
+    "followingCount_one": "{{count}} following",
+    "followingCount_other": "{{count}} following",
+    "mutual": "You follow each other",
+    "followsYou": "Follows you",
+    "edit": "Edit my profile",
+    "mine": "My profile",
+    "followed": "You follow {{name}}.",
+    "unfollowed": "You no longer follow {{name}}.",
+    "actionFailed": "That did not work. Try again.",
+    "block": "Block",
+    "blockTitle": "Block {{name}}?",
+    "blockText": "Neither of you will see the other's reading, reviews or comments, and neither can follow the other. {{name}} is not told. You can unblock them from the settings.",
+    "blockConfirm": "Block {{name}}",
+    "blocked": "{{name}} is blocked.",
+    "stats": {
+      "label": "Their reading in figures",
+      "read": "Read",
+      "readThisYear": "Read this year",
+      "reading": "Reading",
+      "toRead": "To read",
+      "wished": "Wishes",
+      "pagesRead": "Pages read"
+    },
+    "genres": "Favorite genres",
+    "current": "Currently reading",
+    "currentEmpty": "Nothing being read.",
+    "percent": "{{percent}}%",
+    "finished": "Recently finished",
+    "finishedEmpty": "No book finished yet.",
+    "reviews": "Shared reviews",
+    "reviewsEmpty": "No shared review."
+  },
+  "feed": {
+    "error": "Could not load the feed.",
+    "empty": "Nothing new yet",
+    "emptyHint": "The feed shows what the readers you follow finish, wish for and share — once you follow each other, or when their account is public.",
+    "more": "Show more",
+    "react": "React",
+    "verbs": {
+      "FINISHED_READING": "finished",
+      "WISHLIST_ADDED": "added to their wishlist",
+      "REVIEW_SHARED": "shared a review of"
+    },
+    "emotes": {
+      "LOVE": "Love it",
+      "FUNNY": "Funny",
+      "WOW": "Wow",
+      "CLAP": "Bravo",
+      "SAD": "Sad"
+    },
+    "comments": "Comments",
+    "comment": "Comment",
+    "commentPlaceholder": "Write a comment…",
+    "send": "Send",
+    "commented": "Comment posted.",
+    "commentDeleted": "Comment deleted.",
+    "deleteComment": "Delete my comment",
+    "releases": "Coming releases",
+    "reaction": "{{emote}} ({{count}})"
   }
 }

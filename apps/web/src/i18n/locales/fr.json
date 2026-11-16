@@ -11,7 +11,8 @@
     "discover": "Ajouter un livre",
     "wishlist": "Souhaits",
     "stats": "Stats",
-    "admin": "Admin"
+    "admin": "Admin",
+    "people": "Lecteurs"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -23,7 +24,8 @@
     "remove": "Retirer",
     "retry": "Réessayer",
     "errorWithStatus": "Erreur {{status}}",
-    "close": "Fermer"
+    "close": "Fermer",
+    "cancel": "Annuler"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -1071,7 +1073,8 @@
     "as": "Ajouter comme",
     "title": "Ajouter à ta bibliothèque",
     "cancel": "Annuler",
-    "confirm": "Ajouter"
+    "confirm": "Ajouter",
+    "open": "Ajouter"
   },
   "people": {
     "title": "Lecteurs",
@@ -1082,9 +1085,9 @@
     "noFollowing": "Tu ne suis encore personne : cherche des lecteurs dans l'onglet Rechercher.",
     "noFollowers": "Personne ne te suit pour l'instant.",
     "tabs": {
-      "search": "Rechercher",
-      "following_one": "Abonnement ({{count}})",
-      "following_other": "Abonnements ({{count}})",
+      "feed": "Fil",
+      "search": "Chercher",
+      "following": "Suivis ({{count}})",
       "followers": "Abonnés"
     },
     "follow": "Suivre",
@@ -1432,7 +1435,6 @@
     "prompt": "Connecte-toi pour accéder à l'administration.",
     "restricted": "Réservé aux administrateurs",
     "restrictedHint": "Cette page demande le rôle administrateur, attribué dans Keycloak.",
-    "open": "Ouvrir l'administration",
     "tabs": {
       "reports": "Signalements",
       "monitoring": "Supervision"
@@ -1519,5 +1521,75 @@
       },
       "failed": "Le statut n'a pas pu être enregistré."
     }
+  },
+  "profile": {
+    "prompt": "Connecte-toi pour voir le profil de ce lecteur.",
+    "unavailable": "Ce profil n'est pas disponible",
+    "unavailableHint": "Ce lecteur n'existe pas, ou son profil ne t'est pas accessible.",
+    "error": "Impossible de charger ce profil.",
+    "private": "Profil privé",
+    "privateHint": "Ses lectures sont visibles quand vous vous suivez l'un l'autre, ou s'il rend son compte public.",
+    "since": "Membre depuis {{date}}",
+    "followers_one": "{{count}} abonné",
+    "followers_other": "{{count}} abonnés",
+    "followingCount_one": "{{count}} abonnement",
+    "followingCount_other": "{{count}} abonnements",
+    "mutual": "Vous vous suivez",
+    "followsYou": "Te suit",
+    "edit": "Modifier mon profil",
+    "mine": "Mon profil",
+    "followed": "Tu suis {{name}}.",
+    "unfollowed": "Tu ne suis plus {{name}}.",
+    "actionFailed": "L'action n'a pas abouti. Réessaie.",
+    "block": "Bloquer",
+    "blockTitle": "Bloquer {{name}} ?",
+    "blockText": "Vous ne verrez plus vos lectures, avis et commentaires respectifs, et aucun de vous ne pourra suivre l'autre. {{name}} n'en est pas averti. Tu pourras le débloquer depuis les paramètres.",
+    "blockConfirm": "Bloquer {{name}}",
+    "blocked": "{{name}} est bloqué.",
+    "stats": {
+      "label": "Ses lectures en chiffres",
+      "read": "Lus",
+      "readThisYear": "Lus cette année",
+      "reading": "En cours",
+      "toRead": "À lire",
+      "wished": "Souhaits",
+      "pagesRead": "Pages lues"
+    },
+    "genres": "Genres préférés",
+    "current": "En cours de lecture",
+    "currentEmpty": "Aucune lecture en cours.",
+    "percent": "{{percent}} %",
+    "finished": "Derniers livres finis",
+    "finishedEmpty": "Aucun livre fini pour l'instant.",
+    "reviews": "Avis partagés",
+    "reviewsEmpty": "Aucun avis partagé."
+  },
+  "feed": {
+    "error": "Impossible de charger le fil.",
+    "empty": "Rien de neuf pour l’instant",
+    "emptyHint": "Le fil montre ce que finissent, souhaitent et partagent les lecteurs que tu suis — quand vous vous suivez l'un l'autre, ou que leur compte est public.",
+    "more": "Voir plus",
+    "react": "Réagir",
+    "verbs": {
+      "FINISHED_READING": "a terminé",
+      "WISHLIST_ADDED": "a ajouté à ses souhaits",
+      "REVIEW_SHARED": "a partagé son avis sur"
+    },
+    "emotes": {
+      "LOVE": "J'adore",
+      "FUNNY": "Drôle",
+      "WOW": "Waouh",
+      "CLAP": "Bravo",
+      "SAD": "Triste"
+    },
+    "comments": "Commentaires",
+    "comment": "Commenter",
+    "commentPlaceholder": "Écrire un commentaire…",
+    "send": "Envoyer",
+    "commented": "Commentaire publié.",
+    "commentDeleted": "Commentaire supprimé.",
+    "deleteComment": "Supprimer mon commentaire",
+    "releases": "Sorties à venir",
+    "reaction": "{{emote}} ({{count}})"
   }
 }

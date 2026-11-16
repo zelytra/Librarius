@@ -45,6 +45,21 @@ describe('HomePage', () => {
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
   });
 
+  /** #210, #497: on a phone the readers are an icon in Home's header, like Settings. */
+  test('opens the readers from the header', async () => {
+    render(
+      <TestProviders route="/">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/people" element={<p>Écran des lecteurs</p>} />
+        </Routes>
+      </TestProviders>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Lecteurs' }));
+    expect(await screen.findByText('Écran des lecteurs')).toBeInTheDocument();
+  });
+
   test('renders the library counters', async () => {
     server.use(http.get('*/api/stats', () => HttpResponse.json(stats({ read: 12, reading: 2, toRead: 34 }))));
     renderWithProviders(<HomePage />);

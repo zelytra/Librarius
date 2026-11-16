@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Stars } from '../detail/StarRating';
 import type { SharedReviewsDto } from '../../api/generated/librarius';
@@ -53,7 +54,9 @@ export function ReadersReviews({
                 </span>
                 <div className={styles.body}>
                   <div className={styles.head}>
-                    <span className={styles.name}>{name}</span>
+                    <Link to={`/people/${review.authorId}`} className={styles.name}>
+                      {name}
+                    </Link>
                     {review.rating != null && (
                       <Stars value={review.rating} />
                     )}

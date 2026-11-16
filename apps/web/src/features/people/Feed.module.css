@@ -1,0 +1,224 @@
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event,
+.releases {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+}
+
+/* The releases are not news from a reader: drawn apart, on the accent tint. */
+.releases {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.releasesTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-15);
+}
+
+.releaseList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.release {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.head {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 4px;
+  font-size: var(--fs-14);
+  color: var(--ink-soft);
+}
+
+.actor {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.actor:hover,
+.actor:focus-visible {
+  text-decoration: underline;
+}
+
+.date {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  color: var(--muted);
+}
+
+.book {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bookText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bookTitle {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.bookAuthors {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.review {
+  margin: 0;
+  font-size: var(--fs-14);
+  color: var(--ink-soft);
+  white-space: pre-line;
+}
+
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reaction {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reactionOn {
+  border-color: var(--accent-deep);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.reaction:disabled {
+  cursor: default;
+}
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.commentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.commentBody {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-13-5);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.commentForm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.commentInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-14);
+}
+
+.iconButton {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-round);
+  background: none;
+  cursor: pointer;
+}
+
+.iconButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

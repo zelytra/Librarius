@@ -14,7 +14,6 @@ import { ExportSection } from './ExportSection';
 import { BlockedMembersSection } from './BlockedMembersSection';
 import { DeleteAccountSection } from './DeleteAccountSection';
 import { ResetLibrarySection } from './ResetLibrarySection';
-import { useGetApiMe } from '../../api/generated/librarius';
 import styles from './SettingsPage.module.css';
 
 // Stamped at build time by the image build (`VITE_APP_VERSION`, see apps/web/Dockerfile):

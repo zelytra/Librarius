@@ -101,6 +101,15 @@ import { fileURLToPath } from 'node:url';
  * several merges and this batch measured 321.1 kB; re-derived to the measurement plus ~6%.
  * `initial` measured 195.4 kB and stays at 199, under #79's 200 kB product ceiling.
  *
+ * `initial` comes down for the social batch (#494–#497, #209, #210, 2026-11): `main` measured
+ * 198.6 kB of 199, and the batch's copy in both eager locales would have pushed it past #79's
+ * 200 kB ceiling. Rather than raising it, English moved out of the eager payload — French, the
+ * default and the fallback, stays bundled; English is fetched on first use (`i18n/index.ts`).
+ * Measured 186.3 kB; the budget stays at 199, which leaves room the next screens can spend.
+ * The English chunk gets a budget of its own (`locale`), like the decoder, rather than a raised
+ * `chunk` that would loosen every screen's. `total` moves to 360 kB: measured 343.5 kB with the
+ * feed, the profile page and their copy, re-derived to the measurement plus ~5%.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -110,7 +119,10 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 340,
+  total: 360,
+  // The English locale (#497), fetched on first use: 16.1 kB measured. A whole interface's copy
+  // is one file by nature, so it has a budget of its own rather than the per-screen `chunk`.
+  locale: 18,
   // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
   // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the
@@ -125,6 +137,8 @@ const BUDGET_KB = {
 /** The barcode decoder's assets, each with a budget of its own; see `BUDGET_KB.decoder*`. */
 const DECODER = /^assets\/ponyfill-[\w-]+\.js$/;
 const DECODER_WASM = /^assets\/zxing_reader-[\w-]+\.wasm$/;
+/** A locale loaded on demand; see `BUDGET_KB.locale`. */
+const LOCALE = /^assets\/en-[\w-]+\.js$/;
 
 /** Compressed on the wire by nginx; anything else (images, fonts) is already binary. */
 const COMPRESSED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.svg', '.webmanifest', '.wasm']);
@@ -220,7 +234,8 @@ console.log(`  ${pad('initial')}${check('Initial payload', initialBytes, BUDGET_
 console.log('Deferred assets — the lazy routes and the service worker runtime');
 for (const f of deferred) {
   console.log(`  ${pad(f.name)}${fmt(f.bytes).padStart(10)}`);
-  check(`Deferred asset ${f.name}`, f.bytes, DECODER.test(f.name) ? BUDGET_KB.decoder : BUDGET_KB.chunk, [f]);
+  const budget = DECODER.test(f.name) ? BUDGET_KB.decoder : LOCALE.test(f.name) ? BUDGET_KB.locale : BUDGET_KB.chunk;
+  check(`Deferred asset ${f.name}`, f.bytes, budget, [f]);
 }
 console.log('');
 

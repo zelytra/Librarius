@@ -1,6 +1,5 @@
-import i18n from 'i18next';
+import i18n, { type BackendModule } from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import en from './locales/en.json';
 import fr from './locales/fr.json';
 import {
   DEFAULT_LANGUAGE,
@@ -10,19 +9,55 @@ import {
   type LanguageId,
 } from './languages';
 
+/**
+ * The locales other than French, fetched when they are first needed.
+ *
+ * French is bundled: it is the default and the fallback, so the first screen of almost every
+ * visit paints from it. English used to be bundled too, and each locale weighs ~17 kB gz —
+ * the eager payload had reached #79's 200 kB ceiling with both in it. Loaded on demand, a
+ * reader who never switches never downloads it, and the service worker precaches its chunk
+ * for the one who does. A switch goes through i18next's own `changeLanguage`, which waits for
+ * this loader, so no caller has to know.
+ */
+const LAZY_LOCALES: Partial<Record<LanguageId, () => Promise<{ default: Record<string, unknown> }>>> = {
+  en: () => import('./locales/en.json'),
+};
+
+const lazyLocales: BackendModule = {
+  type: 'backend',
+  init: () => {},
+  read(language, _namespace, callback) {
+    const load = LAZY_LOCALES[language as LanguageId];
+    if (!load) {
+      callback(null, {});
+      return;
+    }
+    load().then(
+      (module) => callback(null, module.default),
+      (error: Error) => callback(error, null),
+    );
+  },
+};
+
 // French and English are both complete: `locales.test.ts` fails the build on the first key
 // that exists in one and not in the other. `fallbackLng` is therefore about the locale the
 // copy is authored in, not about a hole anyone is expected to hit.
-void i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: en },
-    fr: { translation: fr },
-  },
-  lng: resolveInitialLanguage(),
-  fallbackLng: DEFAULT_LANGUAGE,
-  supportedLngs: LANGUAGES.map((l) => l.id),
-  interpolation: { escapeValue: false },
-});
+/**
+ * Settles once the initial language is ready to render: at once for French, after its chunk
+ * for English. `main.tsx` waits for it, so an English reader never sees a French first paint.
+ */
+export const i18nReady: Promise<unknown> = i18n
+  .use(lazyLocales)
+  .use(initReactI18next)
+  .init({
+    resources: { fr: { translation: fr } },
+    // The bundled French is complete: only a language missing from `resources` is fetched.
+    partialBundledLanguages: true,
+    lng: resolveInitialLanguage(),
+    fallbackLng: DEFAULT_LANGUAGE,
+    supportedLngs: LANGUAGES.map((l) => l.id),
+    interpolation: { escapeValue: false },
+  });
 
 /**
  * The two strings that live outside React: `<html lang>` and the tab title.

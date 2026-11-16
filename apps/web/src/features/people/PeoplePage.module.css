@@ -106,3 +106,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* #497: a reader's name opens their profile. */
+.nameLink {
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nameLink:hover,
+.nameLink:focus-visible {
+  text-decoration: underline;
+}
+
+.mine {
+  margin-left: auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  text-decoration: none;
+}

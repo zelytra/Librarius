@@ -30,6 +30,13 @@ export const NAV_DESTINATIONS: readonly Destination[] = [
 ];
 
 /**
+ * The readers (#210, #497): the feed, finding people, profiles — it used to hide in Settings.
+ * The side navigation lists it with the others; on a phone it is an icon in Home's header,
+ * like Settings, because a seventh tab would cut « Bibliothèque » short in a 360px bar.
+ */
+export const PEOPLE_DESTINATION: Destination = { to: '/people', icon: 'group', labelKey: 'nav.people' };
+
+/**
  * Settings, which is not one of the five: it configures the application rather than
  * being a part of it, and the side navigation draws it apart from the others at the
  * bottom of the rail.

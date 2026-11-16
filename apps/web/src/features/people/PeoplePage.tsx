@@ -1,24 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   deleteApiUsersIdFollow,
   getGetApiMeFollowingQueryKey,
   putApiUsersIdFollow,
+  useGetApiMe,
   useGetApiMeFollowers,
   useGetApiMeFollowing,
   useGetApiUsers,
 } from '../../api/generated/librarius';
+import { useApiAuth } from '../../shared/api';
 import { LoginGate } from '../../shared/LoginGate';
 import { Button, Screen, Segmented } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
 import { TrustBadge } from '../../shared/ui/TrustBadge';
 import { colorFor } from '../../shared/ui/coverPalette';
 import { initials } from '../author/author';
+import { Feed } from './Feed';
 import styles from './PeoplePage.module.css';
 
-type Tab = 'search' | 'following' | 'followers';
+type Tab = 'feed' | 'search' | 'following' | 'followers';
+const TABS: readonly Tab[] = ['feed', 'search', 'following', 'followers'];
 
 /** Delay before a keystroke turns into a request — the same as the other searches. */
 const DEBOUNCE_MS = 300;
@@ -30,7 +34,10 @@ interface Person {
 }
 
 /**
- * Finding other readers (#202): by name, with who the reader follows and who follows them.
+ * The readers' corner: the feed of what followed readers did (#210), opened first, and
+ * finding other readers (#202): by name, with who the reader follows and who follows them.
+ * Every name opens that reader's profile (#497); the tab lives in the URL, so coming back
+ * from a profile lands on the same list.
  * Names are not unique — two "Marc" are both listed, told apart by their initials' colour.
  * Following answers at once: the button turns before the server has, and turns back if it
  * refuses.
@@ -45,6 +52,7 @@ export function PeoplePage() {
           <Icon name="arrow_back" size={24} color="var(--ink)" />
         </button>
         <h2 className={styles.title}>{t('people.title')}</h2>
+        <MyProfileLink />
       </div>
       <LoginGate prompt={t('people.prompt')}>
         <People />
@@ -53,10 +61,26 @@ export function PeoplePage() {
   );
 }
 
+/** The way to the reader's own profile, once `/api/me` says who they are. */
+function MyProfileLink() {
+  const { t } = useTranslation();
+  const { authed } = useApiAuth();
+  const { data: me } = useGetApiMe({ query: { enabled: authed } });
+  if (!me?.id) return null;
+  return (
+    <Link to={`/people/${me.id}`} className={styles.mine}>
+      <Icon name="person" size={18} color="currentColor" />
+      {t('profile.mine')}
+    </Link>
+  );
+}
+
 function People() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<Tab>('search');
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = TABS.find((candidate) => candidate === params.get('tab')) ?? 'feed';
+  const setTab = (next: Tab) => setParams(next === 'feed' ? {} : { tab: next }, { replace: true });
   const [input, setInput] = useState('');
   const [term, setTerm] = useState('');
   // The follow state the screen shows, ahead of the server: id -> following.
@@ -103,6 +127,7 @@ function People() {
     <div className={styles.body}>
       <Segmented<Tab>
         options={[
+          { id: 'feed', label: t('people.tabs.feed') },
           { id: 'search', label: t('people.tabs.search') },
           { id: 'following', label: t('people.tabs.following', { count: following.data?.length ?? 0 }) },
           { id: 'followers', label: t('people.tabs.followers') },
@@ -110,6 +135,7 @@ function People() {
         value={tab}
         onChange={setTab}
       />
+      {tab === 'feed' && <Feed onFindPeople={() => setTab('search')} />}
       {tab === 'search' && (
         <div className={styles.searchBar}>
           <Icon name="search" size={20} color="var(--faint)" />
@@ -122,7 +148,7 @@ function People() {
           />
         </div>
       )}
-      {list.length === 0 ? (
+      {tab === 'feed' ? null : list.length === 0 ? (
         empty && <p className={styles.empty}>{empty}</p>
       ) : (
         <ul className={styles.list}>
@@ -135,7 +161,9 @@ function People() {
                   {initials(name)}
                 </span>
                 <span className={styles.name}>
-                  {name}
+                  <Link to={`/people/${person.id}`} className={styles.nameLink}>
+                    {name}
+                  </Link>
                   {person.trusted && <TrustBadge />}
                 </span>
                 <Button

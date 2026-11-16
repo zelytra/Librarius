@@ -17,7 +17,7 @@ import styles from './SideNav.module.css';
  */
 export function SideNav() {
   const { t } = useTranslation();
-  const destinations = useNavDestinations();
+  const destinations = useNavDestinations(true);
 
   return (
     <nav className={styles.nav} aria-label={t('nav.label')}>

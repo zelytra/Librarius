@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Stars } from '../detail/StarRating';
 import type { TFunction } from 'i18next';
@@ -38,7 +39,9 @@ export function FriendsOnWork({ workId }: { workId: string | undefined }) {
                 {initials(name)}
               </span>
               <div className={styles.body}>
-                <span className={styles.name}>{name}</span>
+                <Link to={`/people/${friend.id}`} className={styles.name}>
+                  {name}
+                </Link>
                 <span className={styles.facts}>{facts(friend, t).join(' · ')}</span>
               </div>
               {friend.rankLabel && (

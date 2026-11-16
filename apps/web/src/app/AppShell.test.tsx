@@ -125,7 +125,7 @@ describe('the navigation the shell mounts', () => {
     expect(sideNav()).toBeInTheDocument();
   });
 
-  test('the bar carries the five destinations, and no way to Settings', () => {
+  test('the bar carries the six destinations, and no way to Settings', () => {
     viewport(390);
     renderAt('/');
 
@@ -133,11 +133,11 @@ describe('the navigation the shell mounts', () => {
     expect(screen.queryByRole('link', { name: 'Réglages' })).toBeNull();
   });
 
-  test('the side navigation carries the same five in the same order, plus Settings', () => {
+  test('the side navigation carries the same six in the same order, plus the readers and Settings', () => {
     viewport(1440);
     renderAt('/');
 
-    expect(destinations()).toEqual([...DESTINATIONS, '/settings']);
+    expect(destinations()).toEqual([...DESTINATIONS, '/people', '/settings']);
     expect(screen.getByRole('link', { name: 'Réglages' })).toBeInTheDocument();
   });
 

@@ -38,6 +38,11 @@
   font-weight: 600;
   /* "Bibliothèque" has to fit a sixth of a 375px phone. */
   letter-spacing: -0.03em;
+  /* A seventh of a 360px phone once an admin has the Admin tab (#496) is narrower than the
+     word: it breaks onto the second line — hyphenated where the browser can — rather than
+     losing its last letters. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
   max-width: 100%;
   /* Two lines rather than an ellipsis (#474): « Ajouter un livre » is a sixth of a phone too. */
   text-align: center;

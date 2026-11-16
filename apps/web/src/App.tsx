@@ -48,6 +48,9 @@ const WishlistPage = lazy(() =>
 const PeoplePage = lazy(() =>
   import('./features/people/PeoplePage').then((m) => ({ default: m.PeoplePage })),
 );
+const ProfilePage = lazy(() =>
+  import('./features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
 const ScanPage = lazy(() =>
   import('./features/scan/ScanPage').then((m) => ({ default: m.ScanPage })),
 );
@@ -140,6 +143,7 @@ function App() {
           <Route path="achievements" element={<AchievementsPage />} />
           <Route path="scan" element={<ScanPage />} />
           <Route path="people" element={<PeoplePage />} />
+          <Route path="people/:id" element={<ProfilePage />} />
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />
