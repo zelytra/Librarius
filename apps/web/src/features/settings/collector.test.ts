@@ -277,7 +277,10 @@ describe('bookmarkletHref', () => {
       open(_method: string, url: string) {
         opened.push(url);
       }
-      setRequestHeader(_name: string, _value: string) {}
+      readonly headers: [string, string][] = [];
+      setRequestHeader(name: string, value: string) {
+        this.headers.push([name, value]);
+      }
     }
     const site = { fetch: vi.fn(() => Promise.resolve(new Response('{}'))), XMLHttpRequest: FakeXhr } as unknown as typeof globalThis;
     const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
@@ -362,7 +365,7 @@ describe('bookmarkletHref', () => {
 
   /** #503: the pseudo is gone — a collection is the reader's own, read with their session. */
   test("never reads another member's public profile", async () => {
-    const fetch = vi.fn((_url: string) => Promise.resolve(new Response('', { status: 401 })));
+    const fetch = vi.fn<(url: string) => Promise<Response>>(() => Promise.resolve(new Response('', { status: 401 })));
     const { env: e, saved } = env({
       location: { hostname: 'www.mangacollec.com', pathname: '/user/alice/collection', href: 'https://www.mangacollec.com/user/alice/collection' },
       fetch,
