@@ -50,4 +50,13 @@ class CollectedLibraryTest {
         assertEquals(1, books.size());
         assertTrue(books.get(0).wished());
     }
+
+    /** #506: Babelio labels the wishes « Wishlist » now. */
+    @Test
+    void aRowLabelledWishlistIsAWish() {
+        String page = """
+                <ul><li class="lib-book"><div class="lib-book-main"><h3 class="lib-book-title"><a href="/livres/A-Voulu/1">Voulu</a></h3></div>
+                <div class="lib-book-state"><p class="lib-status-line"><span class="lib-status">Wishlist</span></p></div></li></ul>""";
+        assertTrue(new CollectedLibrary().parse("babelio", List.of(page)).get(0).wished());
+    }
 }

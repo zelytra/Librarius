@@ -325,7 +325,8 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
       pages.push(rowsOf(await load(urls[i])));
     }
-    /* Babelio files the wished books under their own « Pense-bête » filter, which the list the */
+    /* Babelio files the wished books under their own filter — « Wishlist » today (#506), */
+    /* « Pense-bête » before — which the list the */
     /* reader stands on leaves out (#477). Only a filter of the library page itself is followed — */
     /* same address, another query, as a link or an htmx `hx-get` — never another page whose */
     /* label merely contains « pense » (#502: a readers' selection came in that way). */
@@ -351,7 +352,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       const wishUrls = filters
         .filter((filter) => {
           const folded = filter.text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-          return /pense.?bete|envie de lire/.test(folded);
+          return /wishlist|pense.?bete|envie de lire/.test(folded);
         })
         .map((filter) => filter.url)
         .filter((url) => !seen.has(url));

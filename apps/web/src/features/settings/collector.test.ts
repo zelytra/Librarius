@@ -154,6 +154,30 @@ describe('collectLibrary', () => {
     expect(text).not.toContain('Promu');
   });
 
+  /** #506: Babelio's live filters, as the owner's file recorded them — the wishes are « Wishlist ». */
+  test('walks the « Wishlist » filter of the live library page', async () => {
+    const filters =
+      '<a href="/mabibliotheque.php?s1=0">En cours 1</a><a href="/mabibliotheque.php?s1=1">Lus 113</a>' +
+      '<a href="/mabibliotheque.php?s1=2">À lire 15</a><a href="/mabibliotheque.php?s1=3">Wishlist 5</a>' +
+      '<a href="/mabibliotheque.php?s1=4">Abandonnés 4</a>';
+    const library = `<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>${filters}</body></html>`;
+    const wishes =
+      '<html><body><ul><li class="lib-book"><a href="/livres/W1/2">Voulu 1</a>' +
+      '<span class="lib-status lib-status--3">Wishlist</span></li></ul></body></html>';
+    const fetch = vi.fn((url: string) => Promise.resolve(response(url.endsWith('s1=3') ? wishes : library)));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch,
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch.mock.calls.map(([url]) => url)).toContain('https://www.babelio.com/mabibliotheque.php?s1=3');
+    // Only the wish filter: the other statuses are already in the default view.
+    expect(fetch.mock.calls.map(([url]) => url)).not.toContain('https://www.babelio.com/mabibliotheque.php?s1=1');
+    expect(saved[0].pages.join(' ')).toContain('Voulu 1');
+  });
+
   test('keeps nothing from a page that is not the library list once the library has one', async () => {
     const library =
       '<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>' +
