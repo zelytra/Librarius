@@ -20,6 +20,11 @@ export interface CollectedFile {
   source: 'booknode' | 'babelio' | 'mangacollec';
   collectedAt: string;
   pages: string[];
+  /**
+   * Babelio only: the filters its library page offers (label and address), kept so that a
+   * file a reader sends says what the live site calls them (#502). Ignored by the import.
+   */
+  filters?: { text: string; url: string }[];
 }
 
 /** The browser surface the collector touches, injectable for the tests. */
@@ -99,6 +104,9 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     return new DOMParser().parseFromString(text, 'text/html');
   }
 
+  /** Whether the library is Babelio's current list (`li.lib-book`): then nothing else is read. */
+  let libraryList = false;
+
   /** The rows describing one book each, as HTML the server parses. */
   function rowsOf(page: Document): string {
     if (source === 'booknode') {
@@ -109,11 +117,13 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     /* Babelio's current list: one `li.lib-book` per title. Taken as is when the page has it. */
     const items = Array.from(page.querySelectorAll('li.lib-book'));
     if (items.length > 0) return items.map((item) => item.outerHTML).join(' ');
+    /* A page without the list, in a library that has one, is not the library (#502). */
+    if (libraryList) return '';
     const rows: Element[] = [];
     page.querySelectorAll('a[href*="/livres/"]').forEach((link) => {
-      /* The site's menus, header and footer link to promoted books on every page: not the */
-      /* reader's library. */
-      if (link.closest('[class*="megamenu"], nav, header, footer')) return;
+      /* The site's menus, header and footer link to promoted books on every page, and its */
+      /* selections list other people's books (`list-item`): not the reader's library. */
+      if (link.closest('[class*="megamenu"], nav, header, footer, .list-item, [class*="selection"]')) return;
       const row = link.closest('tr') ?? link.closest('li') ?? link.parentElement;
       if (row && !rows.includes(row)) rows.push(row);
     });
@@ -234,6 +244,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     }
     say('lecture de la page 1…');
     const first = await load(firstUrl);
+    libraryList = source === 'babelio' && first.querySelectorAll('li.lib-book').length > 0;
     const urls = pageUrls(first, firstUrl);
     const pages = [rowsOf(first)];
     for (let i = 1; i < urls.length; i++) {
@@ -242,27 +253,45 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       pages.push(rowsOf(await load(urls[i])));
     }
     /* Babelio files the wished books under their own « Pense-bête » filter, which the list the */
-    /* reader stands on may leave out (#477): that filter is walked too, its pages included. */
+    /* reader stands on leaves out (#477). Only a filter of the library page itself is followed — */
+    /* same address, another query, as a link or an htmx `hx-get` — never another page whose */
+    /* label merely contains « pense » (#502: a readers' selection came in that way). */
+    let filters: { text: string; url: string }[] | undefined;
     if (source === 'babelio') {
       const seen = new Set(urls);
-      const wishLinks = Array.from(first.querySelectorAll('a[href]'))
-        .filter((link) => {
-          const text = (link.textContent ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-          const href = link.getAttribute('href') ?? '';
-          return text.includes('pense') && !/\/(livres|auteur)\//.test(href);
+      const libraryPath = new URL(firstUrl).pathname;
+      const found = new Map<string, string>();
+      first.querySelectorAll('a[href], [hx-get]').forEach((element) => {
+        const raw = element.getAttribute('hx-get') ?? element.getAttribute('href') ?? '';
+        let target: URL;
+        try {
+          target = new URL(raw, firstUrl);
+        } catch {
+          return;
+        }
+        if (target.pathname !== libraryPath || !target.search) return;
+        if (Array.from(target.searchParams.keys()).some((key) => /page|part/i.test(key))) return;
+        const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (text && !found.has(target.toString())) found.set(target.toString(), text);
+      });
+      filters = Array.from(found, ([url, text]) => ({ text, url })).slice(0, 40);
+      const wishUrls = filters
+        .filter((filter) => {
+          const folded = filter.text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          return /pense.?bete|envie de lire/.test(folded);
         })
-        .map((link) => new URL(link.getAttribute('href') ?? '', firstUrl).toString())
+        .map((filter) => filter.url)
         .filter((url) => !seen.has(url));
-      for (const wishUrl of new Set(wishLinks)) {
+      for (const wishUrl of wishUrls) {
         say('lecture des pense-bêtes…');
         const wishFirst = await load(wishUrl);
-        const wishUrls = pageUrls(wishFirst, wishUrl);
+        const wishPages = pageUrls(wishFirst, wishUrl);
         pages.push(rowsOf(wishFirst));
-        for (let i = 1; i < wishUrls.length; i++) {
-          if (seen.has(wishUrls[i])) continue;
-          seen.add(wishUrls[i]);
+        for (let i = 1; i < wishPages.length; i++) {
+          if (seen.has(wishPages[i])) continue;
+          seen.add(wishPages[i]);
           await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 0));
-          pages.push(rowsOf(await load(wishUrls[i])));
+          pages.push(rowsOf(await load(wishPages[i])));
         }
       }
     }
@@ -281,6 +310,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       source,
       collectedAt: new Date().toISOString(),
       pages: kept,
+      ...(filters ? { filters } : {}),
     });
     say(urls.length + ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).');
   } catch (error) {

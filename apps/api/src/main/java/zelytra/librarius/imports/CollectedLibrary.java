@@ -37,11 +37,17 @@ public class CollectedLibrary {
             return MangacollecImporter.parse(pages.get(0));
         }
         List<ImportedBook> books = new ArrayList<>();
-        for (String page : pages) {
-            if (page == null || page.isBlank()) {
+        List<org.jsoup.nodes.Document> documents = pages.stream()
+                .filter(page -> page != null && !page.isBlank())
+                .map(page -> Jsoup.parse(page, baseUrl(source)))
+                .toList();
+        // Once the file holds Babelio's library list, a page without it is not the library — a
+        // selection the collector wandered into imported a hundred strangers' books (#502).
+        boolean libraryList = "babelio".equals(source) && documents.stream().anyMatch(BabelioPageParser::isLibraryList);
+        for (var document : documents) {
+            if (libraryList && !BabelioPageParser.isLibraryList(document)) {
                 continue;
             }
-            var document = Jsoup.parse(page, baseUrl(source));
             books.addAll(switch (source) {
                 case "booknode" -> booknode.parse(document);
                 case "babelio" -> BabelioPageParser.parse(document);

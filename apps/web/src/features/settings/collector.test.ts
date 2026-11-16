@@ -127,6 +127,68 @@ describe('collectLibrary', () => {
     expect(titles).toEqual(['Lu 1', 'Voulu 1', 'Voulu 2']);
   });
 
+  /**
+   * #502, measured on the owner's real file: a link whose text merely contained « pense »
+   * led to a readers' selection, and its hundred books were imported as the reader's own.
+   */
+  test('follows only the wish filter of the library page, never another page that says « pense »', async () => {
+    const library =
+      '<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>' +
+      '<a href="/selection/top">Qu\u2019en pensez-vous ?</a>' +
+      '<button hx-get="/mabibliotheque.php?s1=3">Pense-bêtes</button></body></html>';
+    const wishes = '<html><body><ul><li class="lib-book"><a href="/livres/W1/2">Voulu 1</a></li></ul></body></html>';
+    const selection = '<html><body><ul><li class="list-item"><a href="/livres/P/9">Promu</a></li></ul></body></html>';
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(response(url.includes('selection') ? selection : url.includes('s1=3') ? wishes : library)),
+    );
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch,
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch.mock.calls.map(([url]) => url).some((url) => url.includes('selection'))).toBe(false);
+    const text = saved[0].pages.join(' ');
+    expect(text).toContain('Voulu 1');
+    expect(text).not.toContain('Promu');
+  });
+
+  test('keeps nothing from a page that is not the library list once the library has one', async () => {
+    const library =
+      '<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>' +
+      '<a href="/mabibliotheque.php?statut=pense">Pense-bête</a></body></html>';
+    const notTheList = '<html><body><aside><a href="/livres/P/9">Suggestion</a></aside></body></html>';
+    const fetch = vi.fn((url: string) => Promise.resolve(response(url.includes('statut') ? notTheList : library)));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch,
+    });
+
+    await collectLibrary(e);
+
+    expect(saved[0].pages.join(' ')).not.toContain('Suggestion');
+  });
+
+  /** So that a file the owner sends says what the live filters are called and where they go. */
+  test('records the filters the library page offers', async () => {
+    const library =
+      '<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>' +
+      '<a href="/mabibliotheque.php?s1=1">Lus</a><a hx-get="/mabibliotheque.php?s1=2">À lire</a>' +
+      '<a href="/auteur/X/1">Un auteur</a></body></html>';
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch: vi.fn(() => Promise.resolve(response(library))),
+    });
+
+    await collectLibrary(e);
+
+    expect(saved[0].filters).toEqual([
+      { text: 'Lus', url: 'https://www.babelio.com/mabibliotheque.php?s1=1' },
+      { text: 'À lire', url: 'https://www.babelio.com/mabibliotheque.php?s1=2' },
+    ]);
+  });
+
   test('says where to go when run anywhere else', async () => {
     const { env: e, saved, alerts } = env({
       location: { hostname: 'example.org', pathname: '/', href: 'https://example.org/' },
