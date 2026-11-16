@@ -7,6 +7,13 @@ Google account and a payment card, and this page is the order to do it in.
 
 Read it once from end to end before starting: two of the steps below **cannot be undone**.
 
+> **The app ships pointing at `librarius.zelytra.fr`, which is a staging environment.**
+> `apps/web/.env.mobile` is what the native build reads, and production does not exist yet
+> ([#103](https://github.com/zelytra/Librarius/issues/103)). Publishing on Play before it
+> does means publishing an application whose data can be reset without notice — fine for a
+> closed test, a decision to make deliberately for production. The day the real domain opens,
+> that file is the one line to change, and every installed copy needs an update to follow.
+
 ## 0. What you need before anything else
 
 | | What | Cost | Lead time |
