@@ -1054,4 +1054,3 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 `LibraryResource` (an add straight as read; a `/progress` update that moves the status to
 `READ`; a review flipped to shared with a rating or a text) and `WishlistResource.add` — not
 from `ReadingProgressService`, which the bulk edit also goes through, nor from the imports.
-
