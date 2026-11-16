@@ -30,7 +30,7 @@
 
 /* Above the phone's bottom navigation bar (84 px). */
 .raised {
-  bottom: calc(84px + 16px + env(safe-area-inset-bottom));
+  bottom: calc(var(--bottom-nav-height) + 16px + env(safe-area-inset-bottom));
 }
 
 .form {

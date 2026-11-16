@@ -80,6 +80,7 @@ export const ICON_CODEPOINTS: Readonly<Record<string, number>> = {
   local_fire_department: 0xef55,
   lock: 0xe899,
   login: 0xea77,
+  menu: 0xe5d2,
   menu_book: 0xea19,
   military_tech: 0xea3f,
   monitoring: 0xf190,

@@ -169,6 +169,8 @@
    not matter. */
 
 :root {
+  /* The phone's bottom bar (#504): four pages and « Plus », lower than the six-tab bar was. */
+  --bottom-nav-height: 64px;
   /* ── Typography ───────────────────────────────────────────────────────────
      The type scale mirrors the mockup one for one, half-pixel sizes included,
      so that moving the screens to CSS Modules changes nothing on screen.

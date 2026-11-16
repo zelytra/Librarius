@@ -65,3 +65,10 @@ export const ADMIN_DESTINATION: Destination = {
   icon: 'admin_panel_settings',
   labelKey: 'nav.admin',
 };
+
+/**
+ * The phone's bar (#504): the four pages a reader goes back to all day. Every other
+ * destination sits in the bar's « Plus » sheet, so the bar stays compact and nothing is out of
+ * reach.
+ */
+export const PHONE_PRIMARY: readonly string[] = ['/', '/collection', '/discover', '/wishlist'];
