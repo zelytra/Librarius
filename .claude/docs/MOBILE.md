@@ -174,7 +174,7 @@ the plugins faked, and only a run on a device shows that the OS routes the callb
 | The authorization page opened in a Custom Tab / `ASWebAuthenticationSession` | `systemBrowserNavigator`, the `INavigator` given to `new UserManager(settings, …)` in place of the redirect navigator |
 | The callback link turned back into a signed-in session | `routeAuthCallbacks`, registered once in `main.tsx`: it listens for `appUrlOpen`, closes the browser and calls `signinCallback(url)` — or `signoutCallback(url)` for the sign-out leg, told apart by the presence of `code`/`error` |
 | The scheme registered natively | the second `<intent-filter>` in `AndroidManifest.xml`, on `@string/custom_url_scheme`; `CFBundleURLTypes` on the iOS side ([#531](https://github.com/zelytra/Librarius/issues/531)) |
-| The Keycloak client | `librarius-mobile`, public, PKCE `S256`, direct access grants off, in `infra/keycloak/realm-librarius.json` **and** the realm embedded in `infra/helm/librarius/templates/keycloak.yaml` |
+| The Keycloak client | `librarius-mobile`, public, PKCE `S256`, direct access grants off, in `infra/keycloak/realm-librarius.json` **and** the realm embedded in `infra/helm/librarius/templates/keycloak.yaml` — **and** created on the live realm by the `keycloak-setup` Job, because a realm is imported once and staging's was imported long before this client existed |
 | Which client the app asks for | `VITE_OIDC_CLIENT_ID=librarius-mobile` in `apps/web/.env.mobile` |
 
 Two details that are easy to get wrong and expensive to debug:

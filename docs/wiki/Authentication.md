@@ -53,9 +53,11 @@ stack before `./mvnw verify`.
 Keycloak imports `realm-librarius.json` only when the realm does not exist yet, so a change
 to it never reaches a running deployment on its own. On every deploy, the chart's
 `keycloak-setup` Job applies to the live realm what has to stay true there: the session
-lifetimes (`keycloak.sessions` in `values.yaml`), and the confidential client
+lifetimes (`keycloak.sessions` in `values.yaml`), the confidential client
 `librarius-api-admin`, whose service account (`realm-management` → `manage-users` only)
-lets the api delete a Keycloak login when a reader deletes their account. The chart
+lets the api delete a Keycloak login when a reader deletes their account, and the public
+client `librarius-mobile` the installed application signs in with — PKCE `S256`, redirect
+URI `fr.zelytra.librarius://auth`, and the container's two origins listed explicitly. The chart
 generates that client's secret and keeps it across upgrades. Details:
 [`docs/DEPLOYMENT.md`](https://github.com/zelytra/Librarius/blob/main/docs/DEPLOYMENT.md)
 § "Account deletion".

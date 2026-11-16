@@ -82,6 +82,30 @@ spec:
                      -s "description=Instance administration (reports, monitoring)"
               echo "admin role present"
 
+              # The native app's client (#528). The realm JSON gained it after staging's realm
+              # was first imported, so only this Job can put it there. Public and PKCE-only:
+              # an installed application cannot keep a secret. `webOrigins` lists the two
+              # origins the container sends by hand — "+" derives them from the redirect URIs,
+              # and a custom scheme derives nothing, which would fail the token exchange on
+              # CORS after a sign-in that looked successful.
+              mobile_args=(
+                -s enabled=true -s publicClient=true -s standardFlowEnabled=true
+                -s directAccessGrantsEnabled=false -s implicitFlowEnabled=false
+                -s 'redirectUris=["fr.zelytra.librarius://auth"]'
+                -s 'webOrigins=["https://localhost","capacitor://localhost"]'
+                -s 'attributes."pkce.code.challenge.method"=S256'
+                -s 'attributes."post.logout.redirect.uris"=fr.zelytra.librarius://auth'
+              )
+              mobile_id=$($kc get clients -r librarius -q clientId=librarius-mobile --fields id --format csv --noquotes)
+              if [ -z "$mobile_id" ]; then
+                $kc create clients -r librarius -s clientId=librarius-mobile \
+                  -s 'name=Librarius native app' "${mobile_args[@]}"
+                echo "client librarius-mobile created"
+              else
+                $kc update "clients/$mobile_id" -r librarius "${mobile_args[@]}"
+                echo "client librarius-mobile updated"
+              fi
+
               {{- if $apiAdmin.enabled }}
 
               # Account deletion (#73): a confidential client with a service account that
