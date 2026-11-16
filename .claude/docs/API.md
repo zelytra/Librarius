@@ -85,7 +85,12 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/stats/value` | What the library (`ownership = OWNED`, publisher's price) and the wishlist (market price, else the reader's estimate) are worth (`ValueDto`, #421) |
 | POST | `/api/import/{source}` | Import by handle — `{ "handle": "…" }`. Only `booknode` fetches anything: `babelio` is registered but answers 400 on every handle, since Babelio publishes no library ([Import](#import)) |
 | POST | `/api/import/csv` | CSV import (the body is the raw content) |
-| POST | `/api/import/mangacollec` | Mangacollec import by pseudo (#456) — `{ "handle": … }` through `/api/import/{source}`: a public profile's collection read by the server; answers a job to poll ([Import](#import)) |
+| POST | `/api/import/mangacollec` | Removed by #503: answers a job that fails with the way to the collector (`MangacollecUserImporter`), like Babelio |
+| PUT | `/api/me/avatar` | Profile picture (#500): raw `image/jpeg`, `image/png` or `application/octet-stream` body → 204. 400 empty, 413 over 2 MB or 8000 px a side / 40 MP, 415 not a JPEG/PNG by magic bytes or undecodable. `AvatarService` crops to the centre square and re-encodes a 256 px JPEG |
+| DELETE | `/api/me/avatar` | 204, idempotent |
+| GET | `/api/users/{id}/avatar` | `image/jpeg`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'`, `Cache-Control: private, max-age=86400`; 404 none, unknown or across a block |
+| GET | `/api/admin/users?page=&size=&q=` | `@RolesAllowed("admin")` — `AdminUserPageDto` of `AdminUserDto(id, username, displayName, email, createdAt, avatarVersion, libraryItems, lastSeenAt)`, newest first; `q` = case-insensitive substring of username, display name or email (#499) |
+| DELETE | `/api/admin/users/{id}` | `AccountDeletionService.delete` (Keycloak, then `AccountEraser`) → 204; 400 on the caller, 404 unknown, 503 when Keycloak refuses (nothing erased) |
 | POST | `/api/library/bulk` | Several changes at once on up to 500 of the caller's titles (`ids`) and every volume held of up to 200 series (`seriesIds`, #467) (`BulkUpdateDto`, #457); nothing selected is a 400: `status`, `ownership`, `format`, `categoryId`/`clearCategory`, `rating`/`clearRating`, `remove`; others' ids skipped, a foreign category 400; answers `BulkResultDto.updated` |
 | POST | `/api/import/collected` | Import of a library collected in the reader's browser — `{ "source": "booknode" \| "babelio", "pages": ["<html>", …] }`, answers a job to poll ([Import](#import)) |
 | POST | `/api/import/json` | Restores a JSON export (`ExportDto`) — see [Export](#export) |
@@ -836,10 +841,11 @@ is 32 MB. The import runs as a background job like the CSV one. Pages saved from
 
 **Mangacollec (#448, #456).** The document mangacollec.com loads for a member (normalised arrays: `series`,
 `editions`, `volumes`, `possessions`, `reads`, `boxes`, `box_possessions`…), read as it is
-rather than bound to a DTO. It arrives by pseudo (`MangacollecUserImporter` reads
-`api.mangacollec.com/v2/user/<pseudo>/collection`, a pseudo of `[\w.-]{1,40}` only) or as the
-single page of a collected file (`source: mangacollec`, saved by the collector on
-mangacollec.com with the session the site keeps in the page's storage). `MangacollecImporter` turns each volume held or read into an
+rather than bound to a DTO. It arrives only as the single page of a collected file
+(`source: mangacollec`, #503): the collector on mangacollec.com replays the `Authorization`
+header the site's own requests carried (a `fetch`/`XMLHttpRequest` hook), then a stored token,
+then the cookies, and saves a body only if it has `volumes`, `editions` and
+`possessions`/`reads`. `MangacollecImporter` turns each volume held or read into an
 `ImportedBook` titled "Série [Édition] Tome n" with its ISBN, cover and dates, and carries two
 fields only this source fills: `ownership` (`NOT_OWNED` for a volume read and not held) and
 `format` (from the edition name; `BOX_SET` for a box). A document of another shape fails the
