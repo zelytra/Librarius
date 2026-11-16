@@ -1591,7 +1591,20 @@
     "finished": "Recently finished",
     "finishedEmpty": "No book finished yet.",
     "reviews": "Shared reviews",
-    "reviewsEmpty": "No shared review."
+    "reviewsEmpty": "No shared review.",
+    "tabs": {
+      "overview": "Overview",
+      "library": "Books",
+      "toRead": "To read",
+      "wishlist": "Wishes"
+    },
+    "shelf": {
+      "search": "Find a title",
+      "error": "Could not load this shelf.",
+      "empty": "Nothing on this shelf.",
+      "total_one": "{{count}} title",
+      "total_other": "{{count}} titles"
+    }
   },
   "feed": {
     "error": "Could not load the feed.",

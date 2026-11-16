@@ -3329,6 +3329,69 @@
         } ]
       }
     },
+    "/api/users/{id}/shelf" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "q",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "shelf",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 30
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MemberShelfPageDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Shelf",
+        "tags" : [ "User Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/views" : {
       "get" : {
         "responses" : {
@@ -4813,29 +4876,6 @@
           }
         }
       },
-      "FeedBookDto" : {
-        "type" : "object",
-        "properties" : {
-          "editionId" : {
-            "$ref" : "#/components/schemas/UUID"
-          },
-          "workId" : {
-            "$ref" : "#/components/schemas/UUID"
-          },
-          "kind" : {
-            "type" : "string"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "authors" : {
-            "type" : "string"
-          },
-          "coverUrl" : {
-            "type" : "string"
-          }
-        }
-      },
       "FeedCommentCreateDto" : {
         "type" : "object",
         "required" : [ "comment" ],
@@ -4883,7 +4923,7 @@
             "$ref" : "#/components/schemas/MemberSummaryDto"
           },
           "book" : {
-            "$ref" : "#/components/schemas/FeedBookDto"
+            "$ref" : "#/components/schemas/MemberBookDto"
           },
           "rating" : {
             "type" : "number",
@@ -5601,6 +5641,58 @@
           }
         }
       },
+      "MemberBookDto" : {
+        "type" : "object",
+        "properties" : {
+          "editionId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "workId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "authors" : {
+            "type" : "string"
+          },
+          "coverUrl" : {
+            "type" : "string"
+          },
+          "isbn13" : {
+            "type" : "string"
+          },
+          "publisher" : {
+            "type" : "string"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "seriesTitle" : {
+            "type" : "string"
+          },
+          "volumeNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "synopsis" : {
+            "type" : "string"
+          },
+          "provider" : {
+            "type" : "string"
+          },
+          "providerRef" : {
+            "type" : "string"
+          },
+          "myItemId" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        }
+      },
       "MemberProfileDto" : {
         "type" : "object",
         "properties" : {
@@ -5661,6 +5753,29 @@
             "type" : "boolean"
           },
           "avatarVersion" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "MemberShelfPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProfileTitleDto"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
             "type" : "integer",
             "format" : "int64"
           }
@@ -5824,22 +5939,10 @@
       "ProfileTitleDto" : {
         "type" : "object",
         "properties" : {
-          "editionId" : {
-            "$ref" : "#/components/schemas/UUID"
+          "book" : {
+            "$ref" : "#/components/schemas/MemberBookDto"
           },
-          "workId" : {
-            "$ref" : "#/components/schemas/UUID"
-          },
-          "kind" : {
-            "type" : "string"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "authors" : {
-            "type" : "string"
-          },
-          "coverUrl" : {
+          "status" : {
             "type" : "string"
           },
           "rating" : {

@@ -74,7 +74,10 @@ describe('PeoplePage', () => {
   test('links each reader, and the reader themself, to a profile', async () => {
     renderWithProviders(<PeoplePage />, { route: '/people?tab=followers' });
 
-    expect(await screen.findByRole('link', { name: 'Camille' })).toHaveAttribute('href', '/people/u-3');
+    const camille = await screen.findByRole('link', { name: 'Camille' });
+    expect(camille).toHaveAttribute('href', '/people/u-3');
+    // #512: the avatar is part of the link, not only the name.
+    expect(camille.querySelector('[aria-hidden="true"]')).not.toBeNull();
     expect(await screen.findByRole('link', { name: 'Mon profil' })).toHaveAttribute('href', '/people/me-1');
   });
 });

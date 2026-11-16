@@ -70,9 +70,9 @@ class ProfileApiTest {
         assertTrue(bob.getInt("reading.read") >= 1);
         assertTrue(bob.getInt("reading.reading") >= 1);
         assertTrue(bob.getInt("reading.readThisYear") >= 1);
-        assertEquals(title, bob.getString("reading.recentlyFinished.find { it.title == '" + title + "' }.title"));
+        assertEquals(title, bob.getString("reading.recentlyFinished.find { it.book.title == '" + title + "' }.book.title"));
         assertTrue(bob.getList("reading.currentlyReading").size() >= 1);
-        assertEquals("Superbe", bob.getString("reading.reviews.find { it.title == '" + title + "' }.review"));
+        assertEquals("Superbe", bob.getString("reading.reviews.find { it.book.title == '" + title + "' }.review"));
         assertTrue(bob.getList("reading.topGenres").size() >= 1);
     }
 
@@ -86,8 +86,8 @@ class ProfileApiTest {
         mutual("alice", "bob");
 
         JsonPath bob = profile("alice", "bob");
-        assertNull(bob.get("reading.reviews.find { it.title == '" + title + "' }"));
-        assertNull(bob.get("reading.recentlyFinished.find { it.title == '" + title + "' }.rating"),
+        assertNull(bob.get("reading.reviews.find { it.book.title == '" + title + "' }"));
+        assertNull(bob.get("reading.recentlyFinished.find { it.book.title == '" + title + "' }.rating"),
                 "a rating kept private is not shown either");
     }
 
@@ -115,5 +115,62 @@ class ProfileApiTest {
         assertTrue(me.getBoolean("self"));
         assertTrue(me.getBoolean("visible"));
         assertNotNull(me.get("reading"));
+    }
+
+    // ── Shelves (#514) and books that open their screen (#513) ─────────────────
+
+    private static JsonPath shelf(String viewer, String member, String shelf, String extra) {
+        return given().auth().oauth2(token(viewer)).when()
+                .get("/api/users/" + id(member) + "/shelf?shelf=" + shelf + "&size=100" + extra)
+                .then().statusCode(200).extract().jsonPath();
+    }
+
+    @Test
+    void aMutualFollowBrowsesTheLibraryThePileAndTheWishlist() {
+        String tag = "Étagère " + UUID.randomUUID();
+        add("bob", tag + " lu", "READ");
+        add("bob", tag + " pile", "TO_READ");
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"book\": { \"kind\": \"BOOK\", \"title\": \"" + tag + " voulu\" } }")
+                .when().post("/api/wishlist").then().statusCode(201);
+        mutual("alice", "bob");
+
+        java.util.List<String> library = shelf("alice", "bob", "library", "&q=" + tag).getList("items.book.title");
+        assertEquals(java.util.List.of(tag + " lu", tag + " pile").stream().sorted().toList(),
+                library.stream().sorted().toList());
+        assertEquals(java.util.List.of(tag + " pile"), shelf("alice", "bob", "toRead", "&q=" + tag).getList("items.book.title"));
+        assertEquals(java.util.List.of(tag + " voulu"), shelf("alice", "bob", "wishlist", "&q=" + tag).getList("items.book.title"));
+        assertEquals(2, shelf("alice", "bob", "library", "&q=" + tag).getInt("total"));
+    }
+
+    @Test
+    void aShelfOutOfReachAnswers404AndAnUnknownShelf400() {
+        relation("alice", "bob", "follow", true);
+        given().auth().oauth2(token("alice")).when().get("/api/users/" + id("bob") + "/shelf?shelf=library")
+                .then().statusCode(404);
+        publicAccount("bob", true);
+        relation("bob", "alice", "block", true);
+        given().auth().oauth2(token("alice")).when().get("/api/users/" + id("bob") + "/shelf?shelf=library")
+                .then().statusCode(404);
+        given().auth().oauth2(token("carol")).when().get("/api/users/" + id("bob") + "/shelf?shelf=nope")
+                .then().statusCode(400);
+        // Your own shelves are yours to browse.
+        shelf("bob", "bob", "library", "");
+    }
+
+    @Test
+    void aBookSaysWhereTheViewerHoldsItTooAndHowToFindItInTheCatalog() {
+        String tag = "Commun " + UUID.randomUUID();
+        add("bob", tag, "READ");
+        String mine = add("alice", tag, "TO_READ").getString("id");
+        String only = "Seulement bob " + UUID.randomUUID();
+        add("bob", only, "READ");
+        mutual("alice", "bob");
+
+        JsonPath shared = shelf("alice", "bob", "library", "&q=" + tag);
+        assertEquals(mine, shared.getString("items[0].book.myItemId"));
+        assertNull(shelf("alice", "bob", "library", "&q=" + only).get("items[0].book.myItemId"));
+        assertNotNull(shelf("alice", "bob", "library", "&q=" + only).get("items[0].book.editionId"));
+        assertEquals("READ", shelf("alice", "bob", "library", "&q=" + only).getString("items[0].status"));
     }
 }

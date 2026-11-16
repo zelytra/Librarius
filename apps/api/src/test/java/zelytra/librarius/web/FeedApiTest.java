@@ -199,4 +199,15 @@ class FeedApiTest {
         assertEquals(1, mine.getInt(path + ".reactions.LOVE"));
         assertEquals("Bravo !", mine.getString(path + ".comments[0].comment"));
     }
+
+    /** #513: a book in the feed says whether the viewer holds it, to open their own screen. */
+    @Test
+    void aFeedBookCarriesTheViewersOwnItem() {
+        mutual("alice", "bob");
+        String title = "Partagé " + UUID.randomUUID();
+        add("bob", title, "READ");
+        String mine = add("alice", title, "TO_READ").getString("id");
+
+        assertEquals(mine, feed("alice").getString("items.find { it.book.title == '" + title + "' }.book.myItemId"));
+    }
 }

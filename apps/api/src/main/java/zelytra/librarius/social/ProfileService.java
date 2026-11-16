@@ -16,6 +16,8 @@ import zelytra.librarius.domain.repository.UserFollowRepository;
 import zelytra.librarius.web.ApiDtos.MemberProfileDto;
 import zelytra.librarius.web.ApiDtos.ProfileReadingDto;
 import zelytra.librarius.web.ApiDtos.ProfileTitleDto;
+import zelytra.librarius.web.ApiDtos.MemberBookDto;
+import zelytra.librarius.web.ApiDtos.MemberShelfPageDto;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -71,10 +73,10 @@ public class ProfileService {
                 !self && follows.isFollowing(memberId, viewerId),
                 count("select count(f) from UserFollow f where f.followeeId = :id", memberId),
                 count("select count(f) from UserFollow f where f.followerId = :id", memberId),
-                visible, visible ? reading(memberId) : null));
+                visible, visible ? reading(viewerId, memberId) : null));
     }
 
-    private ProfileReadingDto reading(String memberId) {
+    private ProfileReadingDto reading(String viewerId, String memberId) {
         StatusTotals totals = items.statusTotals(memberId);
         LocalDate yearStart = LocalDate.now().withDayOfYear(1);
         long readThisYear = em.createQuery("""
@@ -86,7 +88,7 @@ public class ProfileService {
                 .getSingleResult();
         List<String> genres = items.topGenres(memberId, GENRES_LIMIT).stream().map(GenreTotal::label).toList();
 
-        List<ProfileTitleDto> current = em.createQuery("""
+        List<LibraryItem> current = em.createQuery("""
                         select li from LibraryItem li left join fetch li.progress p
                         join fetch li.edition e join fetch e.work
                         where li.userId = :id and li.status = :reading
@@ -94,8 +96,8 @@ public class ProfileService {
                 .setParameter("id", memberId)
                 .setParameter("reading", LibraryStatus.READING)
                 .setMaxResults(CURRENT_LIMIT)
-                .getResultStream().map(li -> title(li, false)).toList();
-        List<ProfileTitleDto> finished = em.createQuery("""
+                .getResultList();
+        List<LibraryItem> finished = em.createQuery("""
                         select li from LibraryItem li join fetch li.progress p
                         join fetch li.edition e join fetch e.work
                         where li.userId = :id and li.status = :read and p.finishedAt is not null
@@ -103,8 +105,8 @@ public class ProfileService {
                 .setParameter("id", memberId)
                 .setParameter("read", LibraryStatus.READ)
                 .setMaxResults(FINISHED_LIMIT)
-                .getResultStream().map(li -> title(li, false)).toList();
-        List<ProfileTitleDto> reviews = em.createQuery("""
+                .getResultList();
+        List<LibraryItem> reviews = em.createQuery("""
                         select li from LibraryItem li left join fetch li.progress
                         join fetch li.edition e join fetch e.work
                         where li.userId = :id and li.reviewShared = true
@@ -112,20 +114,86 @@ public class ProfileService {
                         order by li.createdAt desc""", LibraryItem.class)
                 .setParameter("id", memberId)
                 .setMaxResults(REVIEWS_LIMIT)
-                .getResultStream().map(li -> title(li, true)).toList();
+                .getResultList();
 
+        List<LibraryItem> shown = new java.util.ArrayList<>(current);
+        shown.addAll(finished);
+        shown.addAll(reviews);
+        var mine = mine(viewerId, shown);
         return new ProfileReadingDto(totals.read(), totals.reading(), totals.toRead(), totals.abandoned(),
                 count("select count(w) from WishlistItem w where w.userId = :id", memberId),
-                totals.pagesRead(), readThisYear, genres, current, finished, reviews);
+                totals.pagesRead(), readThisYear, genres,
+                current.stream().map(li -> title(li, false, mine)).toList(),
+                finished.stream().map(li -> title(li, false, mine)).toList(),
+                reviews.stream().map(li -> title(li, true, mine)).toList());
     }
 
-    private static ProfileTitleDto title(LibraryItem li, boolean withReview) {
+    private ProfileTitleDto title(LibraryItem li, boolean withReview, java.util.Map<java.util.UUID, java.util.UUID> mine) {
         var e = li.edition;
-        var w = e.work;
         var p = li.progress;
-        return new ProfileTitleDto(e.id, w.id, w.kind.name(), w.title, w.authorsText, e.coverUrl,
+        return new ProfileTitleDto(MemberBookDto.of(e, mine.get(e.work.id)), li.status.name(),
                 li.reviewShared ? li.rating : null, withReview && li.reviewShared ? li.review : null,
                 p != null ? p.finishedAt : null, p != null ? p.percent : null);
+    }
+
+    /** The viewer's own copies of the works of {@code items}, keyed by work (#513). */
+    private java.util.Map<java.util.UUID, java.util.UUID> mine(String viewerId, List<LibraryItem> items) {
+        return items(viewerId, items.stream().map(li -> li.edition.work.id).distinct().toList());
+    }
+
+    private java.util.Map<java.util.UUID, java.util.UUID> items(String viewerId, List<java.util.UUID> workIds) {
+        return this.items.itemIdsByWork(viewerId, workIds);
+    }
+
+    public enum Shelf { LIBRARY, TO_READ, WISHLIST }
+
+    /**
+     * One shelf of a member (#514) — the whole library, the to-read pile or the wishlist — a page
+     * at a time, by title; {@code query} narrows on the title. Empty when the viewer may not see
+     * the member, which the resource turns into 404.
+     */
+    @Transactional
+    public Optional<MemberShelfPageDto> shelf(String viewerId, String memberId, Shelf shelf,
+            zelytra.librarius.web.PageRequest window, String query) {
+        if (users.findById(memberId) == null || !gate.canView(viewerId, memberId)) {
+            return Optional.empty();
+        }
+        String like = query == null || query.isBlank() ? null : "%" + query.trim().toLowerCase() + "%";
+        String titleFilter = like == null ? "" : " and lower(w.title) like :q";
+        if (shelf == Shelf.WISHLIST) {
+            var rows = em.createQuery("select wi from WishlistItem wi join fetch wi.edition e join fetch e.work w"
+                            + " where wi.userId = :id" + titleFilter + " order by lower(w.title), wi.id",
+                    zelytra.librarius.domain.WishlistItem.class).setParameter("id", memberId);
+            var count = em.createQuery("select count(wi) from WishlistItem wi join wi.edition e join e.work w"
+                    + " where wi.userId = :id" + titleFilter, Long.class).setParameter("id", memberId);
+            if (like != null) {
+                rows.setParameter("q", like);
+                count.setParameter("q", like);
+            }
+            var wishes = rows.setFirstResult(window.offset()).setMaxResults(window.size()).getResultList();
+            var mine = items(viewerId, wishes.stream().map(wi -> wi.edition.work.id).distinct().toList());
+            List<ProfileTitleDto> titles = wishes.stream().map(wi -> new ProfileTitleDto(
+                    MemberBookDto.of(wi.edition, mine.get(wi.edition.work.id)), null, null, null, null, null)).toList();
+            return Optional.of(new MemberShelfPageDto(titles, window.page(), window.size(), count.getSingleResult()));
+        }
+        String statusFilter = shelf == Shelf.TO_READ ? " and li.status = :status" : "";
+        var rows = em.createQuery("select li from LibraryItem li join fetch li.edition e join fetch e.work w"
+                        + " left join fetch li.progress where li.userId = :id" + statusFilter + titleFilter
+                        + " order by lower(w.title), li.id", LibraryItem.class).setParameter("id", memberId);
+        var count = em.createQuery("select count(li) from LibraryItem li join li.edition e join e.work w"
+                + " where li.userId = :id" + statusFilter + titleFilter, Long.class).setParameter("id", memberId);
+        if (shelf == Shelf.TO_READ) {
+            rows.setParameter("status", LibraryStatus.TO_READ);
+            count.setParameter("status", LibraryStatus.TO_READ);
+        }
+        if (like != null) {
+            rows.setParameter("q", like);
+            count.setParameter("q", like);
+        }
+        List<LibraryItem> page = rows.setFirstResult(window.offset()).setMaxResults(window.size()).getResultList();
+        var mine = mine(viewerId, page);
+        return Optional.of(new MemberShelfPageDto(page.stream().map(li -> title(li, false, mine)).toList(),
+                window.page(), window.size(), count.getSingleResult()));
     }
 
     private long count(String jpql, String id) {

@@ -1243,17 +1243,37 @@ public final class ApiDtos {
             java.util.List<ProfileTitleDto> reviews) {
     }
 
-    /** A title on a profile: the book, and what the list it sits in needs of it. */
-    public record ProfileTitleDto(UUID editionId, UUID workId, String kind, String title, String authors,
-            String coverUrl, Double rating, String review, LocalDate finishedAt, Integer percent) {
+    /**
+     * A title on a member's profile or shelf: the book, the member's status, and what the list
+     * needs of it. {@code rating} only when the member shared it; {@code review} only on the
+     * reviews list.
+     */
+    public record ProfileTitleDto(MemberBookDto book, String status, Double rating, String review,
+            LocalDate finishedAt, Integer percent) {
+    }
+
+    /** A page of a member's shelf (#514). */
+    public record MemberShelfPageDto(java.util.List<ProfileTitleDto> items, int page, int size, long total) {
+    }
+
+    /**
+     * A book seen on someone else's profile or in the feed (#513), with what opening it needs:
+     * {@code myItemId} is the viewer's own copy when they hold the work too (their Detail
+     * screen), otherwise the catalog fields let the catalog page show it and offer to add it.
+     */
+    public record MemberBookDto(UUID editionId, UUID workId, String kind, String title, String authors,
+            String coverUrl, String isbn13, String publisher, Integer year, String seriesTitle,
+            Integer volumeNumber, String synopsis, String provider, String providerRef, UUID myItemId) {
+        public static MemberBookDto of(Edition e, UUID myItemId) {
+            Work w = e.work;
+            return new MemberBookDto(e.id, w.id, w.kind.name(), w.title, w.authorsText, e.coverUrl, e.isbn13,
+                    e.publisher, w.originalYear, w.seriesTitle, w.volumeNumber, w.synopsis,
+                    e.provider != null ? e.provider : w.provider,
+                    e.providerRef != null ? e.providerRef : w.providerRef, myItemId);
+        }
     }
 
     // ── Social feed (#209, #210) ────────────────────────────────────────────
-
-    /** The book a feed event is about. */
-    public record FeedBookDto(UUID editionId, UUID workId, String kind, String title, String authors,
-            String coverUrl) {
-    }
 
     /**
      * One thing a followed member did: finished a title, wished one, or shared a review of it
@@ -1261,7 +1281,7 @@ public final class ApiDtos {
      * emote; {@code myReaction} is the caller's, null when none.
      */
     public record FeedItemDto(UUID id, String type, java.time.OffsetDateTime createdAt, MemberSummaryDto actor,
-            FeedBookDto book, Double rating, String review, java.util.Map<String, Long> reactions,
+            MemberBookDto book, Double rating, String review, java.util.Map<String, Long> reactions,
             String myReaction, java.util.List<FeedCommentDto> comments) {
     }
 

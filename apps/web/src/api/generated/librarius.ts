@@ -452,15 +452,6 @@ export interface ExternalRatingDto {
   url?: string;
 }
 
-export interface FeedBookDto {
-  editionId?: Uuid;
-  workId?: Uuid;
-  kind?: string;
-  title?: string;
-  authors?: string;
-  coverUrl?: string;
-}
-
 export interface FeedCommentCreateDto {
   /**
      * @maxLength 2000
@@ -486,12 +477,30 @@ export interface FeedCommentDto {
 
 export type FeedItemDtoReactions = {[key: string]: number};
 
+export interface MemberBookDto {
+  editionId?: Uuid;
+  workId?: Uuid;
+  kind?: string;
+  title?: string;
+  authors?: string;
+  coverUrl?: string;
+  isbn13?: string;
+  publisher?: string;
+  year?: number;
+  seriesTitle?: string;
+  volumeNumber?: number;
+  synopsis?: string;
+  provider?: string;
+  providerRef?: string;
+  myItemId?: Uuid;
+}
+
 export interface FeedItemDto {
   id?: Uuid;
   type?: string;
   createdAt?: OffsetDateTime;
   actor?: MemberSummaryDto;
-  book?: FeedBookDto;
+  book?: MemberBookDto;
   rating?: number;
   review?: string;
   reactions?: FeedItemDtoReactions;
@@ -739,12 +748,8 @@ export interface MeDto {
 }
 
 export interface ProfileTitleDto {
-  editionId?: Uuid;
-  workId?: Uuid;
-  kind?: string;
-  title?: string;
-  authors?: string;
-  coverUrl?: string;
+  book?: MemberBookDto;
+  status?: string;
   rating?: number;
   review?: string;
   finishedAt?: LocalDate;
@@ -786,6 +791,13 @@ export interface MemberSearchDto {
   trusted?: boolean;
   following?: boolean;
   avatarVersion?: number;
+}
+
+export interface MemberShelfPageDto {
+  items?: ProfileTitleDto[];
+  page?: number;
+  size?: number;
+  total?: number;
 }
 
 export interface MonitoringDayDto {
@@ -1204,6 +1216,13 @@ export type GetApiStatsTimelineParams = {
 
 export type GetApiUsersParams = {
   q?: string;
+};
+
+export type GetApiUsersIdShelfParams = {
+  page?: number;
+  q?: string;
+  shelf?: string;
+  size?: number;
 };
 
 export type GetApiWishlistParams = {
@@ -9239,6 +9258,122 @@ export function useGetApiUsersIdProfile<TData = Awaited<ReturnType<typeof getApi
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiUsersIdProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiUsersIdShelfUrl = (id: string,
+    params?: GetApiUsersIdShelfParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/users/${id}/shelf?${stringifiedParams}` : `/api/users/${id}/shelf`
+}
+
+/**
+ * @summary Shelf
+ */
+export const getApiUsersIdShelf = async (id: string,
+    params?: GetApiUsersIdShelfParams, options?: Parameters<typeof apiClient>[1]): Promise<MemberShelfPageDto> => {
+
+  return apiClient<MemberShelfPageDto>(getGetApiUsersIdShelfUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiUsersIdShelfQueryKey = (id: string,
+    params?: GetApiUsersIdShelfParams,) => {
+    return [
+    `/api/users/${id}/shelf`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiUsersIdShelfQueryOptions = <TData = Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError = void>(id: string,
+    params?: GetApiUsersIdShelfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiUsersIdShelfQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersIdShelf>>> = () => getApiUsersIdShelf(id,params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiUsersIdShelfQueryResult = NonNullable<Awaited<ReturnType<typeof getApiUsersIdShelf>>>
+export type GetApiUsersIdShelfQueryError = void
+
+
+/** @summary Shelf */
+export function useGetApiUsersIdShelf<TData = Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError = void>(
+ id: string,
+    params: undefined |  GetApiUsersIdShelfParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdShelf>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdShelf>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Shelf */
+export function useGetApiUsersIdShelf<TData = Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError = void>(
+ id: string,
+    params?: GetApiUsersIdShelfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdShelf>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdShelf>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Shelf */
+export function useGetApiUsersIdShelf<TData = Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError = void>(
+ id: string,
+    params?: GetApiUsersIdShelfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Shelf */
+export function useGetApiUsersIdShelf<TData = Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError = void>(
+ id: string,
+    params?: GetApiUsersIdShelfParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdShelf>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiUsersIdShelfQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -59,6 +59,8 @@ describe('Feed', () => {
 
     const finished = (await screen.findByText('Dune')).closest('article')!;
     expect(within(finished).getByText(/a terminé/)).toBeInTheDocument();
+    // #513: the book opens its screen — the catalog page, the reader holding no copy.
+    expect(within(finished).getByRole('link', { name: /Dune/ })).toHaveAttribute('href', '/catalog/librarius/e-Dune');
     expect(within(finished).getByRole('link', { name: 'Bob' })).toHaveAttribute('href', '/people/bob');
     expect(within(finished).getByText('Un classique !')).toBeInTheDocument();
 

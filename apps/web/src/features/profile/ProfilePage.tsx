@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,15 +16,15 @@ import {
 import { activeLanguage } from '../../i18n/languages';
 import { apiErrorStatus } from '../../shared/apiClient';
 import { LoginGate } from '../../shared/LoginGate';
-import { BookCover } from '../../shared/ui/BookCover';
-import { colorFor } from '../../shared/ui/coverPalette';
 import { Icon } from '../../shared/ui/Icon';
 import { Modal } from '../../shared/ui/Modal';
-import { Button, Chip, Screen } from '../../shared/ui/primitives';
+import { Button, Chip, Screen, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { toast } from '../../shared/ui/toast';
 import { TrustBadge } from '../../shared/ui/TrustBadge';
 import { Avatar } from '../../shared/ui/Avatar';
+import { MemberBook } from '../../shared/ui/MemberBook';
+import { Shelf, type ShelfName } from './Shelf';
 import { Stars } from '../detail/StarRating';
 import styles from './ProfilePage.module.css';
 
@@ -68,11 +68,31 @@ function Profile() {
     <div className={styles.body}>
       <Identity profile={profile} />
       {profile.reading ? (
-        <Reading reading={profile.reading} />
+        <ProfileTabs id={profile.id!} reading={profile.reading} />
       ) : (
         <EmptyState icon="lock" title={t('profile.private')} description={t('profile.privateHint')} />
       )}
     </div>
+  );
+}
+
+type Tab = 'overview' | ShelfName;
+const TABS: Tab[] = ['overview', 'library', 'toRead', 'wishlist'];
+
+/** The overview, then the member's shelves to browse (#514); the tab lives in the URL. */
+function ProfileTabs({ id, reading }: { id: string; reading: ProfileReadingDto }) {
+  const { t } = useTranslation();
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = TABS.find((candidate) => candidate === params.get('tab')) ?? 'overview';
+  return (
+    <>
+      <Segmented<Tab>
+        value={tab}
+        onChange={(next) => setParams(next === 'overview' ? {} : { tab: next }, { replace: true })}
+        options={TABS.map((candidate) => ({ id: candidate, label: t(`profile.tabs.${candidate}`) }))}
+      />
+      {tab === 'overview' ? <Reading reading={reading} /> : <Shelf key={tab} memberId={id} shelf={tab} />}
+    </>
   );
 }
 
@@ -243,8 +263,8 @@ function Reading({ reading }: { reading: ProfileReadingDto }) {
         ) : (
           <ul className={styles.list}>
             {reviews.map((item) => (
-              <li key={item.editionId} className={styles.review}>
-                <BookLine item={item} detail={item.rating != null ? <Stars value={item.rating} /> : null} />
+              <li key={item.book?.editionId} className={styles.review}>
+                <MemberBook book={item.book ?? {}} detail={item.rating != null ? <Stars value={item.rating} /> : null} />
                 {item.review && <p className={styles.reviewText}>{item.review}</p>}
               </li>
             ))}
@@ -274,28 +294,12 @@ function TitleList({
       ) : (
         <ul className={styles.list}>
           {titles.map((item) => (
-            <li key={item.editionId} className={styles.row}>
-              <BookLine item={item} detail={detail(item)} />
+            <li key={item.book?.editionId} className={styles.row}>
+              <MemberBook book={item.book ?? {}} detail={detail(item)} />
             </li>
           ))}
         </ul>
       )}
     </section>
-  );
-}
-
-function BookLine({ item, detail }: { item: ProfileTitleDto; detail: React.ReactNode }) {
-  const title = item.title ?? '';
-  return (
-    <div className={styles.book}>
-      <span aria-hidden="true">
-        <BookCover color={colorFor(title)} imageUrl={item.coverUrl ?? undefined} width={40} height={58} radius={6} />
-      </span>
-      <span className={styles.bookText}>
-        <span className={styles.bookTitle}>{title}</span>
-        {item.authors && <span className={styles.bookAuthors}>{item.authors}</span>}
-      </span>
-      {detail && <span className={styles.bookDetail}>{detail}</span>}
-    </div>
   );
 }

@@ -89,19 +89,7 @@
   color: var(--muted);
 }
 
-.book {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-.bookText {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 
 .bookTitle {
   font-weight: 600;
