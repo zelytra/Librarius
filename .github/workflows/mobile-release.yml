@@ -1,9 +1,15 @@
 name: mobile-release
 
-# A `vX.Y.Z` tag on `main` — the same tag release.yml reacts to — builds a signed,
-# installable Android release APK and publishes it as a workflow artifact. Play Store
-# publishing itself (an .aab, a store listing, a privacy policy) is not part of this: #70
-# only asks for a signed APK, and .claude/docs/MOBILE.md § 1 tracks what is still open.
+# A `vX.Y.Z` tag on `main` — the same tag release.yml reacts to — builds the two signed,
+# installable Android artifacts and publishes them:
+#
+#   - app-release.aab, the Android App Bundle the Play Console takes. Play has required a
+#     bundle of every new application since August 2021 and refuses an APK upload (#525);
+#   - app-release.apk, which Play does not take and a phone installs directly: it is how a
+#     release candidate is tried on a device without going through a store.
+#
+# Uploading the bundle to Play is still a manual step, deliberately — the account, the
+# listing and the first release are the owner's: docs/wiki/Mobile-Play-Store.md.
 #
 # The keystore is never in the repository. It has to be decoded from ANDROID_KEYSTORE_BASE64,
 # a repository secret nobody has created yet — .claude/docs/MOBILE.md § 8 has the exact
@@ -121,7 +127,9 @@ jobs:
       # The four LIBRARIUS_RELEASE_* properties feed apps/mobile/android/app/build.gradle's
       # signingConfigs.release; the two LIBRARIUS_VERSION_* ones feed defaultConfig. Passed
       # as -P rather than committed anywhere, including gradle.properties.
-      - name: Build the signed release APK
+      # One invocation for both: the two tasks share everything but the packaging step, and
+      # splitting them would build the project twice.
+      - name: Build the signed app bundle and APK
         if: steps.signing.outputs.configured == 'true'
         working-directory: apps/mobile/android
         env:
@@ -131,7 +139,7 @@ jobs:
           VERSION_NAME: ${{ steps.version.outputs.version }}
           VERSION_CODE: ${{ steps.android-version.outputs.code }}
         run: |
-          ./gradlew assembleRelease --no-daemon \
+          ./gradlew bundleRelease assembleRelease --no-daemon \
             -PLIBRARIUS_RELEASE_STORE_FILE="$KEYSTORE_PATH" \
             -PLIBRARIUS_RELEASE_STORE_PASSWORD="$STORE_PASSWORD" \
             -PLIBRARIUS_RELEASE_KEY_ALIAS="$KEY_ALIAS" \
@@ -143,10 +151,20 @@ jobs:
         if: always() && steps.signing.outputs.configured == 'true'
         run: rm -f "$KEYSTORE_PATH"
 
-      - name: Upload the signed APK
+      # Two artifacts rather than one holding both files: the names then say which is which
+      # on the run's page, and whoever publishes downloads only the bundle.
+      - name: Upload the app bundle for Play
         if: steps.signing.outputs.configured == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: librarius-release-${{ steps.version.outputs.version }}
+          name: librarius-play-bundle-${{ steps.version.outputs.version }}
+          path: apps/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 90
+
+      - name: Upload the APK for sideloading
+        if: steps.signing.outputs.configured == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: librarius-release-apk-${{ steps.version.outputs.version }}
           path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 90

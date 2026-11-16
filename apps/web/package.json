@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:mobile": "tsc -b && vite build --mode mobile",
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
@@ -15,7 +16,9 @@
     "generate:icon-font": "node scripts/generate-icon-font.mjs"
   },
   "dependencies": {
-    "@capacitor/core": "^7.6.8",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.6.2",
     "@tanstack/react-query": "^5.101.4",
     "barcode-detector": "3.2.3",
     "i18next": "^27.1.1",

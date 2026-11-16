@@ -1,4 +1,5 @@
 import { endExpiredSession, getAccessToken, tryRenewSession } from './authToken';
+import { apiUrl } from './apiBase';
 
 /**
  * A GET with the session, for the answers `apiClient` cannot parse — a file to download, an
@@ -6,7 +7,8 @@ import { endExpiredSession, getAccessToken, tryRenewSession } from './authToken'
  * session in place.
  */
 async function send(url: string, token: string | undefined): Promise<Response> {
-  return fetch(url, {
+  // Same reason as `apiClient`: a relative URL reaches no API inside the container (#527).
+  return fetch(apiUrl(url), {
     method: 'GET',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });

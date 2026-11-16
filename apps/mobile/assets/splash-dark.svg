@@ -1,0 +1,10 @@
+<!-- The launch screen a device in dark mode gets: the `nuit` palette's background, and the
+     mark in the lighter greens that palette uses, so it keeps its contrast. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#211e1a"/>
+  <g transform="translate(1366 1366) scale(13.67) translate(-32 -32.5)">
+    <path d="M16 14h13c2.2 0 4 1.8 4 4v32c0-2.2-1.8-4-4-4H16z" fill="#b6c4ad"/>
+    <path d="M48 14H35c-2.2 0-4 1.8-4 4v32c0-2.2 1.8-4 4-4h13z" fill="#9aab92"/>
+    <rect x="14" y="46" width="36" height="5" rx="2" fill="#6f6557"/>
+  </g>
+</svg>

@@ -15,6 +15,16 @@ const config: CapacitorConfig = {
   // Shown under the icon on the device, hence French like the rest of the interface.
   appName: 'Ma Bibliothèque',
   webDir: '../web/dist',
+  plugins: {
+    // An app that targets API 35 or later draws edge to edge, and Capacitor 8 leaves the
+    // insets to CSS (`insetsHandling: "css"`, its default): `index.html` asks for
+    // `viewport-fit=cover` and the shell reads `env(safe-area-inset-*)` (#529). The hint
+    // below says so up front, so the first frame is not laid out as `contain` and then
+    // shifted once the meta tag is read.
+    SystemBars: {
+      initialViewportFitValueHint: 'cover',
+    },
+  },
 };
 
 export default config;

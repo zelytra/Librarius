@@ -1,0 +1,11 @@
+<!-- The adaptive icon's foreground layer: the mark alone, on transparency.
+
+     The viewBox is cropped to the mark plus a tenth of its size on each side, so the mark
+     covers 85% of this canvas and about 57% of the finished icon once the generated
+     `mipmap-anydpi-v26/ic_launcher.xml` has applied its 16.7% inset: well inside the safe
+     zone of an adaptive icon, where no launcher mask can clip it. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="10.2 10.7 43.6 43.6">
+  <path d="M16 14h13c2.2 0 4 1.8 4 4v32c0-2.2-1.8-4-4-4H16z" fill="#9aab92"/>
+  <path d="M48 14H35c-2.2 0-4 1.8-4 4v32c0-2.2 1.8-4 4-4h13z" fill="#7d8f73"/>
+  <rect x="14" y="46" width="36" height="5" rx="2" fill="#cdbfa6"/>
+</svg>

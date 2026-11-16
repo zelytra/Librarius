@@ -1,0 +1,193 @@
+name: ios-release
+
+# The same `vX.Y.Z` tag as release.yml and mobile-release.yml, on the iOS side: archive the
+# app on a rented macOS machine, sign it with App Store Connect's own cloud signing, and
+# upload the build to TestFlight (#531).
+#
+# Why this shape, for a project whose owner has no Mac:
+#
+#   - `macos-latest` is the only machine in the chain that runs Xcode. It is free on a public
+#     repository.
+#   - **No certificate and no provisioning profile are stored anywhere.** `xcodebuild` is run
+#     with `-allowProvisioningUpdates` and an App Store Connect API key, so it asks Apple for
+#     the distribution certificate and the profile it needs, on the runner, for that build.
+#     There is no keychain to prime, no `.p12` in a secret, and nothing to renew by hand — the
+#     part of iOS CI that usually needs a Mac to set up.
+#   - The export step uploads the build itself (`destination: upload` in
+#     apps/mobile/ios-export-options.plist), so there is no altool or Transporter call.
+#   - The owner then installs it on their iPhone from TestFlight, which is also the only way
+#     to run the app on a device without Xcode.
+#
+# Like mobile-release.yml, every step that needs something nobody has created yet is skipped
+# with an explanatory annotation rather than failing: a tag must not go red because a manual
+# Apple step is still pending. docs/wiki/Mobile-iOS-Pipeline.md is the procedure.
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: archive & upload
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Only needed for the ancestry check below.
+          fetch-depth: 0
+
+      - name: Check the tag sits on main
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "::error::${GITHUB_REF_NAME} points at a commit that is not contained in main"
+            exit 1
+          fi
+
+      # The native project is committed, and does not exist until ios-bootstrap.yml has been
+      # run once. Until then this workflow has nothing to build and says so.
+      - name: Check the iOS project exists
+        id: project
+        run: |
+          if [ -d apps/mobile/ios/App ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::${GITHUB_REF_NAME} produced no iOS build — apps/mobile/ios does not exist yet. Run the ios-bootstrap workflow once and commit its result: docs/wiki/Mobile-iOS-Pipeline.md."
+          fi
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: steps.project.outputs.present == 'true'
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.project.outputs.present == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Resolve the version from the tag
+        id: version
+        if: steps.project.outputs.present == 'true'
+        run: bash .github/scripts/release-version.sh "$GITHUB_REF_NAME" "$GITHUB_SHA" | tee -a "$GITHUB_OUTPUT"
+
+      # App Store Connect refuses a build whose number it has already seen, and compares them
+      # as integers. The same arithmetic as mobile-release.yml's versionCode, so a release
+      # carries the same build number on both stores.
+      - name: Derive the build number
+        id: build-number
+        if: steps.project.outputs.present == 'true'
+        env:
+          MAJOR: ${{ steps.version.outputs.major }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          core=${VERSION%%-*}
+          minor=${core#*.}; minor=${minor%%.*}
+          patch=${core##*.}
+          echo "code=$(( MAJOR * 1000000 + minor * 1000 + patch ))" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        if: steps.project.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the web bundle and sync it
+        if: steps.project.outputs.present == 'true'
+        run: pnpm mobile:build
+
+      # No `pod install`: Capacitor 8 scaffolds the iOS project with Swift Package Manager, so
+      # there is no Podfile and no workspace — `xcodebuild` resolves the packages itself from
+      # App.xcodeproj. `cap sync` above is what keeps the package list in step with the
+      # plugins declared in apps/mobile/package.json.
+
+      # Everything from here on is skipped, not failed, when the Apple secrets are absent.
+      - name: Check the App Store Connect secrets are configured
+        id: signing
+        if: steps.project.outputs.present == 'true'
+        run: |
+          if [ -n "${{ secrets.APPLE_ASC_KEY_ID }}" ] && \
+             [ -n "${{ secrets.APPLE_ASC_ISSUER_ID }}" ] && \
+             [ -n "${{ secrets.APPLE_ASC_KEY_P8_BASE64 }}" ] && \
+             [ -n "${{ secrets.APPLE_TEAM_ID }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::${GITHUB_REF_NAME} was not uploaded to TestFlight — APPLE_ASC_KEY_ID, APPLE_ASC_ISSUER_ID, APPLE_ASC_KEY_P8_BASE64 and/or APPLE_TEAM_ID are not set on this repository yet. Procedure: docs/wiki/Mobile-iOS-Pipeline.md."
+          fi
+
+      # Into $RUNNER_TEMP, outside the checkout, like the Android keystore: it cannot reach a
+      # commit, an artifact or a cache by accident, and the runner is destroyed with it.
+      - name: Decode the API key
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          KEY_BASE64: ${{ secrets.APPLE_ASC_KEY_P8_BASE64 }}
+          KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+        run: |
+          key_path="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"
+          echo "$KEY_BASE64" | base64 -d > "$key_path"
+          chmod 600 "$key_path"
+          echo "ASC_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+
+      - name: Archive the app
+        if: steps.signing.outputs.configured == 'true'
+        working-directory: apps/mobile/ios/App
+        env:
+          KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.build-number.outputs.code }}
+        run: |
+          # MARKETING_VERSION and CURRENT_PROJECT_VERSION are where the version actually
+          # lives: the template's Info.plist reads both from the build settings, so passing
+          # them here is what stamps the archive — editing the plist would change nothing.
+          xcodebuild archive \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Librarius.xcarchive" \
+            MARKETING_VERSION="${VERSION%%-*}" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - name: Export and upload to TestFlight
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          options="$RUNNER_TEMP/ExportOptions.plist"
+          cp apps/mobile/ios-export-options.plist "$options"
+          plutil -replace teamID -string "$TEAM_ID" "$options"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Librarius.xcarchive" \
+            -exportOptionsPlist "$options" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - name: Remove the decoded API key
+        if: always() && steps.signing.outputs.configured == 'true'
+        run: rm -f "$ASC_KEY_PATH"
+
+      # The export uploads the build itself, so this is a receipt rather than the delivery:
+      # the logs of what was sent, and the .ipa when the export left one behind.
+      - name: Upload the export output
+        if: steps.signing.outputs.configured == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: librarius-ios-${{ steps.version.outputs.version }}
+          path: ${{ runner.temp }}/export
+          if-no-files-found: ignore
+          retention-days: 30

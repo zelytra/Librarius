@@ -1,0 +1,12 @@
+<!-- The launch screen, on the application's background colour, the mark at about a fifth of
+     the short side. The generator crops this square to every density and orientation, so the
+     mark has to stay well inside the centre: a landscape phone keeps roughly the middle
+     third of the height. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#f3ede3"/>
+  <g transform="translate(1366 1366) scale(13.67) translate(-32 -32.5)">
+    <path d="M16 14h13c2.2 0 4 1.8 4 4v32c0-2.2-1.8-4-4-4H16z" fill="#9aab92"/>
+    <path d="M48 14H35c-2.2 0-4 1.8-4 4v32c0-2.2 1.8-4 4-4h13z" fill="#7d8f73"/>
+    <rect x="14" y="46" width="36" height="5" rx="2" fill="#cdbfa6"/>
+  </g>
+</svg>

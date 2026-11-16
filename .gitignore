@@ -38,6 +38,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# The native build's own configuration: public URLs, committed so that an APK built on any
+# machine reaches the same API as one built in CI — apps/web/.env.mobile says why.
+!apps/web/.env.mobile
 
 # Worktrees temporaires des agents
 .claude/worktrees/

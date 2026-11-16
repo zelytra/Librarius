@@ -90,6 +90,29 @@ describe('apiClient', () => {
     expect(received).toEqual({ q: 'dune', author: 'Frank Herbert', year: '1965', kind: 'BOOK' });
   });
 
+  /**
+   * #527: in the native container a relative URL is looked for among the packaged assets.
+   * The module reads `VITE_API_BASE_URL` when it is first imported, hence the re-import.
+   */
+  test('sends the call to the configured API origin', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_API_BASE_URL', 'https://librarius.zelytra.fr');
+    let requested: string | undefined;
+    server.use(
+      http.get('*/api/me', ({ request }) => {
+        requested = request.url;
+        return HttpResponse.json({ id: 'u-1' });
+      }),
+    );
+
+    const { getApiMe } = await import('../api/generated/librarius');
+    await getApiMe();
+
+    expect(requested).toBe('https://librarius.zelytra.fr/api/me');
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
   test('raises the status of a failed call', async () => {
     server.use(http.get('*/api/stats', () => new HttpResponse(null, { status: 500 })));
 

@@ -1,4 +1,5 @@
 import { getAccessToken, endExpiredSession, tryRenewSession } from './authToken';
+import { apiUrl } from './apiBase';
 import { note } from './feedback/diagnostics';
 
 /**
@@ -45,7 +46,9 @@ export function apiErrorStatus(error: unknown): number | undefined {
 async function send(url: string, init: RequestInit, token: string | undefined): Promise<Response> {
   const headers = new Headers(init.headers);
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  return fetch(url, { ...init, headers });
+  // `apiUrl` is a no-op on a web build; in the native container it is what sends the
+  // request to the deployed API rather than to the packaged assets (#527).
+  return fetch(apiUrl(url), { ...init, headers });
 }
 
 export async function apiClient<T>(url: string, init: RequestInit = {}): Promise<T> {

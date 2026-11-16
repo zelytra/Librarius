@@ -1,0 +1,14 @@
+<!-- The Play Console's feature graphic: 1024 x 500, shown at the top of the store listing and
+     in promotional spots. Play may crop it and may draw its own controls over it, so the mark
+     and the words stay in the middle band and nothing of meaning touches the edges. No store
+     name here: Play prints the application's own name beside it. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <rect width="1024" height="500" fill="#f3ede3"/>
+  <g transform="translate(250 250) scale(4.4) translate(-32 -32.5)">
+    <path d="M16 14h13c2.2 0 4 1.8 4 4v32c0-2.2-1.8-4-4-4H16z" fill="#9aab92"/>
+    <path d="M48 14H35c-2.2 0-4 1.8-4 4v32c0-2.2 1.8-4 4-4h13z" fill="#7d8f73"/>
+    <rect x="14" y="46" width="36" height="5" rx="2" fill="#cdbfa6"/>
+  </g>
+  <text x="420" y="232" font-family="Georgia, 'Times New Roman', serif" font-size="68" fill="#2f2a24">Librarius</text>
+  <text x="420" y="296" font-family="Verdana, Geneva, sans-serif" font-size="30" fill="#5f6c57">Votre bibliothèque, volume par volume</text>
+</svg>

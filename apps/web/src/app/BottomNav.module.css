@@ -5,14 +5,17 @@
 .nav {
   flex: 0 0 auto;
   width: 100%;
-  height: var(--bottom-nav-height);
+  /* `min-height` rather than `height` (#529): the gesture bar's inset is reserved *under* the
+     bar, so the bar keeps its own height and its 44px targets instead of giving a slice of
+     them to the system. Nothing changes where the inset is `0px`. */
+  min-height: var(--bottom-nav-height);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--chip);
   display: flex;
   align-items: center;
   /* Four pages and « Plus » (#504): room enough for every label on one line. */
-  padding: 0 4px;
+  padding: 0 4px env(safe-area-inset-bottom, 0px);
 }
 
 .tab {
@@ -64,7 +67,8 @@
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: calc(var(--bottom-nav-height) + 8px);
+  /* Clears the bar, and the gesture bar the bar now reserves under itself (#529). */
+  bottom: calc(var(--bottom-nav-height) + 8px + env(safe-area-inset-bottom, 0px));
   z-index: 30;
   background: var(--surface);
   border: 1px solid var(--line);

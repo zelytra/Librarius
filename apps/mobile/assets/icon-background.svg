@@ -1,0 +1,6 @@
+<!-- The adaptive icon's background layer: the application's own background colour, flat.
+     It is painted edge to edge, never inset, or a round mask would cut into transparency at
+     the corners instead of into the colour (scripts/finish-android-icons.mjs). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#f3ede3"/>
+</svg>
