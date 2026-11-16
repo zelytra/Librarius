@@ -190,7 +190,14 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     if (page.__librariusHooked) return;
     page.__librariusHooked = true;
     const keep = (url: string, name: string, value: string) => {
-      if (url.includes('api.mangacollec.com') && /^authorization$/i.test(name) && value) {
+      let host = '';
+      try {
+        host = new URL(url, 'https://www.mangacollec.com/').hostname;
+      } catch {
+        return;
+      }
+      /* The API's own host, exactly: a look-alike address must never lend its header. */
+      if (host === 'api.mangacollec.com' && /^authorization$/i.test(name) && value) {
         page.__librariusAuth = [name, value];
       }
     };

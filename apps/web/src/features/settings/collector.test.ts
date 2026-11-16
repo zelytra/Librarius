@@ -338,6 +338,28 @@ describe('bookmarkletHref', () => {
     expect(await run()).toEqual([expect.objectContaining({ pages: [collection] })]);
   });
 
+  /** Only the API's own host counts: a look-alike address must not lend its header (CodeQL). */
+  test('ignores a header sent to a host that only contains the API name', async () => {
+    const site = { fetch: vi.fn(() => Promise.resolve(new Response('{}'))) } as unknown as typeof globalThis;
+    const fetch = vi.fn<(url: string, headers?: Record<string, string>) => Promise<Response>>(() =>
+      Promise.resolve(new Response('', { status: 401 })));
+    const run = () =>
+      collectLibrary(env({
+        location: { hostname: 'www.mangacollec.com', pathname: '/', href: 'https://www.mangacollec.com/' },
+        fetch,
+        storage: [],
+        global: site,
+      }).env);
+
+    await run();
+    await site.fetch('https://api.mangacollec.com.evil.example/x', { headers: { authorization: 'Bearer stolen' } });
+    await site.fetch('https://evil.example/?api.mangacollec.com', { headers: { authorization: 'Bearer stolen' } });
+    fetch.mockClear();
+    await run();
+
+    expect(fetch.mock.calls.some(([, headers]) => headers?.authorization === 'Bearer stolen')).toBe(false);
+  });
+
   /** An error page answered with 200 used to be saved, and the import then failed on it. */
   test('saves only a collection, and says which reads failed and how', async () => {
     const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
