@@ -39,6 +39,8 @@ export interface CollectorEnv {
   save: (file: CollectedFile) => void;
   /** Pause between two pages, so a 100-page library is read at a reader's pace. */
   pauseMs?: number;
+  /** The page's global object, whose requests the Mangacollec collector listens to (#503). */
+  global?: typeof globalThis;
 }
 
 export async function collectLibrary(env?: CollectorEnv): Promise<void> {
@@ -59,6 +61,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       link.remove();
     },
     pauseMs: 400,
+    global: window,
   };
 
   const host = e.location.hostname;
@@ -168,14 +171,72 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
   }
 
   /**
-   * Mangacollec (#456): the site loads the whole collection as one JSON document from its API,
-   * with the session it keeps in the browser's storage. The collector asks for the same
-   * document — the reader's own when signed in, a public profile's on `/user/<pseudo>` — and
-   * saves it as is; the server reads it.
+   * Mangacollec (#456, #503): the site loads the whole collection as one JSON document from
+   * its API. Where it keeps its session has changed under us before, so the collector does not
+   * depend on it: it listens to the site's own requests to its API — `fetch` and
+   * `XMLHttpRequest`, the hook staying installed between two clicks — and replays the
+   * `Authorization` header the site sent. A token found in the page's storage or cookies, and
+   * the site's cookies alone, are tried next. A body is kept only if it is a collection;
+   * otherwise `notes` says what each attempt answered, for the reader and for a report.
    */
+  type HookedGlobal = typeof globalThis & {
+    __librariusHooked?: boolean;
+    __librariusAuth?: [string, string];
+  };
+  const page = (e.global ?? window) as HookedGlobal;
+  const notes: string[] = [];
+
+  function listenToTheSite(): void {
+    if (page.__librariusHooked) return;
+    page.__librariusHooked = true;
+    const keep = (url: string, name: string, value: string) => {
+      if (url.includes('api.mangacollec.com') && /^authorization$/i.test(name) && value) {
+        page.__librariusAuth = [name, value];
+      }
+    };
+    const siteFetch = page.fetch;
+    if (typeof siteFetch === 'function') {
+      page.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        try {
+          const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+          const headers = new Headers(init?.headers ?? (typeof input === 'object' && 'headers' in input ? input.headers : undefined));
+          headers.forEach((value, name) => keep(url, name, value));
+        } catch {
+          /* A request we cannot read is none of ours. */
+        }
+        return siteFetch.call(page, input, init);
+      }) as typeof fetch;
+    }
+    const xhr = page.XMLHttpRequest?.prototype as
+      | (XMLHttpRequest & { __librariusUrl?: string })
+      | undefined;
+    if (xhr && typeof xhr.open === 'function' && typeof xhr.setRequestHeader === 'function') {
+      const open = xhr.open;
+      const setHeader = xhr.setRequestHeader;
+      xhr.open = function (this: XMLHttpRequest & { __librariusUrl?: string }, ...args: unknown[]) {
+        this.__librariusUrl = String(args[1]);
+        return (open as (...a: unknown[]) => void).apply(this, args);
+      } as typeof xhr.open;
+      xhr.setRequestHeader = function (this: XMLHttpRequest & { __librariusUrl?: string }, name: string, value: string) {
+        keep(this.__librariusUrl ?? '', name, value);
+        return setHeader.call(this, name, value);
+      };
+    }
+  }
+
+  function isCollection(text: string): boolean {
+    try {
+      const doc = JSON.parse(text) as Record<string, unknown>;
+      return Array.isArray(doc.volumes) && Array.isArray(doc.editions)
+        && (Array.isArray(doc.possessions) || Array.isArray(doc.reads));
+    } catch {
+      return false;
+    }
+  }
+
   async function mangacollec(): Promise<string | null> {
-    const api = 'https://api.mangacollec.com/v2/';
-    const profile = /\/user\/([^/?#]+)/.exec(e.location.pathname);
+    listenToTheSite();
+    const url = 'https://api.mangacollec.com/v2/users/me/collection';
     const tokens: string[] = [];
     const visit = (value: unknown, key: string) => {
       if (typeof value === 'string') {
@@ -197,23 +258,27 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         visit(store.getItem(key), key);
       }
     }
-    /* A session kept in a readable cookie counts too (#478). */
     for (const pair of (e.document.cookie ?? '').split(';')) {
       const at = pair.indexOf('=');
       if (at > 0) visit(decodeURIComponent(pair.slice(at + 1).trim()), pair.slice(0, at).trim());
     }
     const attempts: [string, Record<string, string> | undefined][] = [];
-    for (const token of tokens) attempts.push([api + 'users/me/collection', { Authorization: 'Bearer ' + token }]);
-    /* The reader's own collection with the site's cookies, for a session the page cannot read: */
-    /* no public profile needed (#478). */
-    attempts.push([api + 'users/me/collection', undefined]);
-    if (profile) attempts.push([api + 'user/' + profile[1] + '/collection', undefined]);
-    for (const [url, headers] of attempts) {
+    const heard = page.__librariusAuth;
+    if (heard) attempts.push(['session du site', { [heard[0]]: heard[1] }]);
+    for (const token of tokens) attempts.push(['jeton enregistré', { Authorization: 'Bearer ' + token }]);
+    attempts.push(['cookies', undefined]);
+    for (const [label, headers] of attempts) {
       try {
         const response = await e.fetch(url, headers);
-        if (response.ok) return await response.text();
-      } catch {
-        /* The next attempt may work. */
+        if (!response.ok) {
+          notes.push(label + ' : ' + response.status);
+          continue;
+        }
+        const text = await response.text();
+        if (isCollection(text)) return text;
+        notes.push(label + ' : ' + response.status + ' mais pas une collection');
+      } catch (error) {
+        notes.push(label + ' : ' + String(error));
       }
     }
     return null;
@@ -225,7 +290,8 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       const collection = await mangacollec();
       if (!collection) {
         e.alert(
-          'Librarius : impossible de lire ta collection. Connecte-toi sur mangacollec.com, ouvre ta collection, puis clique à nouveau sur ce favori.',
+          'Librarius : impossible de lire ta collection (' + notes.join(', ') + '). ' +
+            'Sur mangacollec.com, connecté à ton compte, ouvre ta collection depuis le menu du site, puis clique à nouveau sur ce favori.',
         );
         return;
       }

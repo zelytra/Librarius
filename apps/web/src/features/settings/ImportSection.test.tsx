@@ -183,18 +183,15 @@ describe('ImportSection', () => {
     expect(await screen.findByText('2 titre(s) importé(s) · 0 déjà présent(s).')).toBeInTheDocument();
   });
 
-  test('imports a Mangacollec collection from a pseudo, with the bookmarklet as the other way', async () => {
-    const calls = captureImports();
+  /** #503: no pseudo any more — Mangacollec imports through the collector, like Babelio. */
+  test('offers no pseudo for Mangacollec, only the collector', async () => {
     renderWithProviders(<ImportSection />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Mangacollec' }));
-    expect(screen.getByText(/ouvre ta collection sur mangacollec.com/i)).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText('Pseudo Mangacollec'), 'alice');
-    await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
 
-    await waitFor(() => expect(calls).toEqual([{ route: 'mangacollec', body: '{"handle":"alice"}' }]));
-    // #478: a private profile has nothing to read by pseudo; the screen says so, and where to go.
-    expect(screen.getByText(/profil public/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Pseudo/)).not.toBeInTheDocument();
+    expect(screen.getByText(/ouvre ta collection sur mangacollec.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/favori ci-dessous sur mangacollec.com/)).toBeInTheDocument();
   });
 
   test('sends a Mangacollec collection as the site wrote it, whatever the file is called', async () => {

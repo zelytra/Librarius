@@ -234,6 +234,7 @@ describe('bookmarkletHref', () => {
       location: { hostname: 'www.mangacollec.com', pathname: '/collection', href: 'https://www.mangacollec.com/collection' },
       fetch,
       storage: [storage],
+      global: { fetch: vi.fn() } as unknown as typeof globalThis,
     });
 
     await collectLibrary(e);
@@ -254,6 +255,7 @@ describe('bookmarkletHref', () => {
       location: { hostname: 'www.mangacollec.com', pathname: '/collection', href: 'https://www.mangacollec.com/collection' },
       fetch,
       storage: [],
+      global: { fetch: vi.fn() } as unknown as typeof globalThis,
     });
 
     await collectLibrary(e);
@@ -262,19 +264,116 @@ describe('bookmarkletHref', () => {
     expect(saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
   });
 
-  test('falls back on the public profile the reader is on, and says so when nothing reads', async () => {
-    const fetch = vi.fn(() => Promise.resolve(new Response('', { status: 403 })));
-    const { env: e, saved, alerts } = env({
-      location: { hostname: 'www.mangacollec.com', pathname: '/user/alice/collection', href: 'https://www.mangacollec.com/user/alice/collection' },
+  /**
+   * #503: wherever the site keeps its session, it sends it to its own API. The collector
+   * listens to the site's requests — `fetch` and `XMLHttpRequest` alike — and reads the
+   * collection with the header the site itself used. Nothing heard yet on the first click: it
+   * asks the reader to open their collection, and the second click reads it.
+   */
+  test("reads the collection with the header the site's own requests carry", async () => {
+    const collection = '{"editions":[],"volumes":[],"possessions":[]}';
+    const opened: string[] = [];
+    class FakeXhr {
+      open(_method: string, url: string) {
+        opened.push(url);
+      }
+      setRequestHeader(_name: string, _value: string) {}
+    }
+    const site = { fetch: vi.fn(() => Promise.resolve(new Response('{}'))), XMLHttpRequest: FakeXhr } as unknown as typeof globalThis;
+    const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
+      Promise.resolve(headers?.Authorization === 'Bearer from-the-site'
+        ? response(collection, 'application/json')
+        : new Response('', { status: 401 })));
+    const first = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/', href: 'https://www.mangacollec.com/' },
       fetch,
       storage: [],
+      global: site,
+    });
+
+    await collectLibrary(first.env);
+    expect(first.saved).toHaveLength(0);
+    expect(first.alerts[0]).toContain('clique à nouveau');
+
+    // The site, going on with its life: an axios-style request, then a fetch.
+    const xhr = new (site.XMLHttpRequest as unknown as typeof FakeXhr)();
+    xhr.open('GET', 'https://api.mangacollec.com/v2/users/me');
+    xhr.setRequestHeader('Authorization', 'Bearer from-the-site');
+
+    const second = env({
+      location: first.env.location,
+      fetch,
+      storage: [],
+      global: site,
+    });
+    await collectLibrary(second.env);
+
+    expect(opened).toEqual(['https://api.mangacollec.com/v2/users/me']);
+    expect(second.saved).toEqual([expect.objectContaining({ source: 'mangacollec', pages: [collection] })]);
+  });
+
+  test("hears the header on the site's fetch calls too", async () => {
+    const collection = '{"editions":[],"volumes":[],"reads":[]}';
+    const site = { fetch: vi.fn(() => Promise.resolve(new Response('{}'))) } as unknown as typeof globalThis;
+    const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
+      Promise.resolve(headers?.authorization === 'Bearer via-fetch'
+        ? response(collection, 'application/json')
+        : new Response('', { status: 401 })));
+    const run = () => {
+      const { env: e, saved } = env({
+        location: { hostname: 'www.mangacollec.com', pathname: '/', href: 'https://www.mangacollec.com/' },
+        fetch,
+        storage: [],
+        global: site,
+      });
+      return collectLibrary(e).then(() => saved);
+    };
+
+    await run();
+    await site.fetch('https://api.mangacollec.com/v2/users/me/collection', { headers: { authorization: 'Bearer via-fetch' } });
+
+    expect(await run()).toEqual([expect.objectContaining({ pages: [collection] })]);
+  });
+
+  /** An error page answered with 200 used to be saved, and the import then failed on it. */
+  test('saves only a collection, and says which reads failed and how', async () => {
+    const fetch = vi.fn((_url: string, headers?: Record<string, string>) =>
+      Promise.resolve(headers ? response('{"error":"expired"}', 'application/json') : new Response('', { status: 403 })));
+    const session = 'y'.repeat(24);
+    const store = new Map([['token', session]]);
+    const storage = {
+      length: store.size,
+      key: (i: number) => [...store.keys()][i] ?? null,
+      getItem: (k: string) => store.get(k) ?? null,
+    } as unknown as Storage;
+    const { env: e, saved, alerts } = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/collection', href: 'https://www.mangacollec.com/collection' },
+      fetch,
+      storage: [storage],
+      global: { fetch: vi.fn() } as unknown as typeof globalThis,
     });
 
     await collectLibrary(e);
 
-    expect(fetch).toHaveBeenCalledWith('https://api.mangacollec.com/v2/user/alice/collection', undefined);
     expect(saved).toHaveLength(0);
-    expect(alerts[0]).toContain('mangacollec.com');
+    expect(alerts[0]).toContain('pas une collection');
+    expect(alerts[0]).toContain('403');
+  });
+
+  /** #503: the pseudo is gone — a collection is the reader's own, read with their session. */
+  test("never reads another member's public profile", async () => {
+    const fetch = vi.fn((_url: string) => Promise.resolve(new Response('', { status: 401 })));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.mangacollec.com', pathname: '/user/alice/collection', href: 'https://www.mangacollec.com/user/alice/collection' },
+      fetch,
+      storage: [],
+      global: { fetch: vi.fn() } as unknown as typeof globalThis,
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch.mock.calls.map(([url]) => url)).not.toContain('https://api.mangacollec.com/v2/user/alice/collection');
+    expect(saved).toHaveLength(0);
   });
 
   test('is the collector, self-contained, run on the page', () => {

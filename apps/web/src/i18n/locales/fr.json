@@ -890,8 +890,7 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Pseudo Booknode",
-        "mangacollec": "Pseudo Mangacollec"
+        "booknode": "Pseudo Booknode"
       },
       "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
@@ -918,7 +917,7 @@
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
       "failedTitle": "L'import n'a pas abouti",
-      "mangacollecNote": "Le pseudo ne fonctionne qu'avec un profil public. Profil privé ? Utilise le favori ci-dessous sur mangacollec.com, connecté : il lit ta collection avec ta propre session."
+      "mangacollecNote": "Mangacollec ne donne ta collection qu'à toi, connecté : utilise le favori ci-dessous sur mangacollec.com, il la lit avec ta propre session."
     },
     "export": {
       "title": "Exporter mes données",

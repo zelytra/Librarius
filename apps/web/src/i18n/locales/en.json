@@ -890,8 +890,7 @@
         "mangacollec": "Mangacollec"
       },
       "handlePlaceholder": {
-        "booknode": "Booknode handle",
-        "mangacollec": "Mangacollec username"
+        "booknode": "Booknode handle"
       },
       "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
@@ -918,7 +917,7 @@
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
       "failedTitle": "The import did not go through",
-      "mangacollecNote": "The username only works with a public profile. Private profile? Use the bookmark below on mangacollec.com, signed in: it reads your collection with your own session."
+      "mangacollecNote": "Mangacollec only gives your collection to you, signed in: use the bookmark below on mangacollec.com, it reads it with your own session."
     },
     "export": {
       "title": "Export my data",

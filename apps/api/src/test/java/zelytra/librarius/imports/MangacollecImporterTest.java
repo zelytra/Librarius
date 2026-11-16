@@ -90,17 +90,11 @@ class MangacollecImporterTest {
                 "{\"editions\":[],\"volumes\":[],\"possessions\":[]}"));
     }
 
-    /** #456: a pseudo that could leave its path segment is refused before any request. */
+    /** #503: no import by pseudo — the reader is pointed at the collector instead. */
     @Test
-    void anImportByPseudoRefusesAMalformedOneAndExplainsWhatToDoInstead() {
+    void anImportByPseudoIsRefusedAndPointsAtTheCollector() {
         ImportException refused = assertThrows(ImportException.class,
-                () -> new MangacollecUserImporter().fetch("../users/me"));
-        org.junit.jupiter.api.Assertions.assertTrue(refused.getMessage().contains("mangacollec.com/user/"));
-        org.junit.jupiter.api.Assertions.assertTrue(
-                MangacollecUserImporter.failureMessage("alice", 404).startsWith("Aucun profil Mangacollec « alice »"));
-        org.junit.jupiter.api.Assertions.assertTrue(
-                MangacollecUserImporter.failureMessage("alice", 403).contains("n'est pas public"));
-        org.junit.jupiter.api.Assertions.assertTrue(
-                MangacollecUserImporter.failureMessage("alice", 0).contains("Librarius : collecter"));
+                () -> new MangacollecUserImporter().fetch("alice"));
+        org.junit.jupiter.api.Assertions.assertTrue(refused.getMessage().contains("Librarius : collecter"));
     }
 }
