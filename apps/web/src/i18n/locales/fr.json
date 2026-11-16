@@ -959,7 +959,17 @@
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     },
     "community": "Communauté",
-    "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit."
+    "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit.",
+    "avatar": {
+      "choose": "Choisir une photo",
+      "replace": "Changer la photo",
+      "remove": "Retirer la photo",
+      "saved": "Photo de profil mise à jour.",
+      "removed": "Photo de profil retirée.",
+      "format": "Ce fichier n’est pas une image JPEG ou PNG.",
+      "tooBig": "Cette image est trop lourde ou trop grande.",
+      "failed": "La photo n’a pas pu être enregistrée. Réessaie."
+    }
   },
   "report": {
     "trigger": "Signaler une erreur",

@@ -69,3 +69,44 @@
   color: var(--rose);
   margin: 0;
 }
+
+/* #500: the profile picture, its preview and its two actions. */
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.avatarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avatarChoose {
+  position: relative;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: var(--radius-button);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatarChoose:focus-within {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* Over the whole label, invisible: the native control keeps its keyboard and screen reader. */
+.avatarInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}

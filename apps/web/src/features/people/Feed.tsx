@@ -15,6 +15,7 @@ import {
 import { activeLanguage } from '../../i18n/languages';
 import { BookCover } from '../../shared/ui/BookCover';
 import { colorFor } from '../../shared/ui/coverPalette';
+import { Avatar } from '../../shared/ui/Avatar';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
@@ -99,6 +100,7 @@ function FeedEvent({ item }: { item: FeedItemDto }) {
   return (
     <article className={styles.event}>
       <p className={styles.head}>
+        <Avatar id={actor?.id} name={name} version={actor?.avatarVersion} size={28} decorative />
         <Link to={`/people/${actor?.id}`} className={styles.actor}>
           {name}
         </Link>{' '}

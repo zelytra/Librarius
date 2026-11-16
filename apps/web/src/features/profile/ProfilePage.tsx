@@ -24,8 +24,8 @@ import { Button, Chip, Screen } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { toast } from '../../shared/ui/toast';
 import { TrustBadge } from '../../shared/ui/TrustBadge';
+import { Avatar } from '../../shared/ui/Avatar';
 import { Stars } from '../detail/StarRating';
-import { initials } from '../author/author';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -134,9 +134,7 @@ function Identity({ profile }: { profile: MemberProfileDto }) {
 
   return (
     <section className={styles.identity}>
-      <span className={styles.avatar} style={{ background: colorFor(name) }} aria-hidden="true">
-        {initials(name)}
-      </span>
+      <Avatar id={id} name={name} version={profile.avatarVersion} size={64} decorative />
       <div className={styles.who}>
         <h2 className={styles.name}>
           {name}

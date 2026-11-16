@@ -454,6 +454,7 @@ export interface MemberSummaryDto {
   id?: string;
   displayName?: string;
   trusted?: boolean;
+  avatarVersion?: number;
 }
 
 export interface FeedCommentDto {
@@ -715,6 +716,7 @@ export interface MeDto {
   trusted?: boolean;
   publicAccount?: boolean;
   admin?: boolean;
+  avatarVersion?: number;
 }
 
 export interface ProfileTitleDto {
@@ -748,6 +750,7 @@ export interface MemberProfileDto {
   id?: string;
   displayName?: string;
   trusted?: boolean;
+  avatarVersion?: number;
   memberSince?: OffsetDateTime;
   self?: boolean;
   following?: boolean;
@@ -763,6 +766,7 @@ export interface MemberSearchDto {
   displayName?: string;
   trusted?: boolean;
   following?: boolean;
+  avatarVersion?: number;
 }
 
 export interface MonitoringDayDto {
@@ -6202,6 +6206,164 @@ export const useDeleteApiMe = <TError = void,
       return useMutation(getDeleteApiMeMutationOptions(options), queryClient);
     }
 
+export const getPutApiMeAvatarUrl = () => {
+
+
+
+
+  return `/api/me/avatar`
+}
+
+/**
+ * @summary Set Avatar
+ */
+export const putApiMeAvatar = async (putApiMeAvatarBody: Blob, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiMeAvatarUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'image/jpeg', ...getHeaders(options?.headers) },
+    body: putApiMeAvatarBody
+  }
+);}
+
+
+
+
+
+export const getPutApiMeAvatarMutationKey = () => ['putApiMeAvatar'] as const;
+
+export const getPutApiMeAvatarMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext> => {
+
+const mutationKey = getPutApiMeAvatarMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiMeAvatar>>, PutApiMeAvatarMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiMeAvatar(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiMeAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof putApiMeAvatar>>>
+    export type PutApiMeAvatarMutationBody = Blob
+    export type PutApiMeAvatarMutationError = void
+    export type PutApiMeAvatarMutationVariables = {data: Blob}
+
+    /** @summary Set Avatar */
+export const usePutApiMeAvatar = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeAvatar>>, TError,PutApiMeAvatarMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiMeAvatar>>,
+        TError,
+        PutApiMeAvatarMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiMeAvatarMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiMeAvatarUrl = () => {
+
+
+
+
+  return `/api/me/avatar`
+}
+
+/**
+ * @summary Remove Avatar
+ */
+export const deleteApiMeAvatar = async ( options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiMeAvatarUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiMeAvatarMutationKey = () => ['deleteApiMeAvatar'] as const;
+
+export const getDeleteApiMeAvatarMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteApiMeAvatarMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiMeAvatar>>, void> = () => {
+
+
+          return  deleteApiMeAvatar(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiMeAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiMeAvatar>>>
+
+    export type DeleteApiMeAvatarMutationError = void
+
+
+    /** @summary Remove Avatar */
+export const useDeleteApiMeAvatar = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMeAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiMeAvatar>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteApiMeAvatarMutationOptions(options), queryClient);
+    }
+
 export const getGetApiMeBlockedUrl = () => {
 
 
@@ -8382,6 +8544,107 @@ export function useGetApiUsers<TData = Awaited<ReturnType<typeof getApiUsers>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiUsersIdAvatarUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/avatar`
+}
+
+/**
+ * @summary Avatar
+ */
+export const getApiUsersIdAvatar = async (id: string, options?: Parameters<typeof apiClient>[1]): Promise<Blob> => {
+
+  return apiClient<Blob>(getGetApiUsersIdAvatarUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiUsersIdAvatarQueryKey = (id: string,) => {
+    return [
+    `/api/users/${id}/avatar`
+    ] as const;
+    }
+
+
+export const getGetApiUsersIdAvatarQueryOptions = <TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiUsersIdAvatarQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersIdAvatar>>> = () => getApiUsersIdAvatar(id, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiUsersIdAvatarQueryResult = NonNullable<Awaited<ReturnType<typeof getApiUsersIdAvatar>>>
+export type GetApiUsersIdAvatarQueryError = void
+
+
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersIdAvatar>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Avatar */
+export function useGetApiUsersIdAvatar<TData = Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiUsersIdAvatar>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiUsersIdAvatarQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

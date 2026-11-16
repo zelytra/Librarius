@@ -959,7 +959,17 @@
       "failed": "Cannot delete it right now. Nothing has been deleted."
     },
     "community": "Community",
-    "communityDescription": "Find other readers by name, follow them and see who follows you."
+    "communityDescription": "Find other readers by name, follow them and see who follows you.",
+    "avatar": {
+      "choose": "Choose a photo",
+      "replace": "Change the photo",
+      "remove": "Remove the photo",
+      "saved": "Profile picture updated.",
+      "removed": "Profile picture removed.",
+      "format": "This file is not a JPEG or PNG image.",
+      "tooBig": "This image is too heavy or too large.",
+      "failed": "The photo could not be saved. Try again."
+    }
   },
   "report": {
     "trigger": "Report an error",

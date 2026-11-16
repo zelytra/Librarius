@@ -12,6 +12,7 @@ import {
   usePatchApiMe,
 } from '../../api/generated/librarius';
 import { supportedTimeZones } from '../../shared/timeZones';
+import { AvatarPicker } from './AvatarPicker';
 import styles from './ProfileSection.module.css';
 
 /**
@@ -74,6 +75,7 @@ export function ProfileSection() {
     <>
       <h3 className={styles.title}>{t('settings.profile.title')}</h3>
       <p className={styles.intro}>{t('settings.profile.description')}</p>
+      <AvatarPicker />
 
       <div className={styles.form}>
         <label className={styles.field}>

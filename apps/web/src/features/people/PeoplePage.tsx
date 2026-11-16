@@ -16,8 +16,7 @@ import { LoginGate } from '../../shared/LoginGate';
 import { Button, Screen, Segmented } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
 import { TrustBadge } from '../../shared/ui/TrustBadge';
-import { colorFor } from '../../shared/ui/coverPalette';
-import { initials } from '../author/author';
+import { Avatar } from '../../shared/ui/Avatar';
 import { Feed } from './Feed';
 import styles from './PeoplePage.module.css';
 
@@ -31,6 +30,7 @@ interface Person {
   id?: string;
   displayName?: string;
   trusted?: boolean;
+  avatarVersion?: number | null;
 }
 
 /**
@@ -157,9 +157,7 @@ function People() {
             const followed = isFollowed(person);
             return (
               <li key={person.id} className={styles.row}>
-                <span className={styles.avatar} style={{ background: colorFor(name) }} aria-hidden="true">
-                  {initials(name)}
-                </span>
+                <Avatar id={person.id} name={name} version={person.avatarVersion} decorative />
                 <span className={styles.name}>
                   <Link to={`/people/${person.id}`} className={styles.nameLink}>
                     {name}

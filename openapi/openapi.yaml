@@ -1497,6 +1497,48 @@ paths:
       - Me Resource
       security:
       - SecurityScheme: []
+  /api/me/avatar:
+    put:
+      requestBody:
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Set Avatar
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Remove Avatar
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
   /api/me/blocked:
     get:
       responses:
@@ -2034,6 +2076,28 @@ paths:
         "403":
           description: Not Allowed
       summary: Search
+      tags:
+      - User Resource
+      security:
+      - SecurityScheme: []
+  /api/users/{id}/avatar:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            image/jpeg: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Avatar
       tags:
       - User Resource
       security:
@@ -3706,6 +3770,9 @@ components:
           type: boolean
         admin:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
     MemberProfileDto:
       type: object
       properties:
@@ -3715,6 +3782,9 @@ components:
           type: string
         trusted:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
         memberSince:
           $ref: "#/components/schemas/OffsetDateTime"
         self:
@@ -3744,6 +3814,9 @@ components:
           type: boolean
         following:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
     MemberSummaryDto:
       type: object
       properties:
@@ -3753,6 +3826,9 @@ components:
           type: string
         trusted:
           type: boolean
+        avatarVersion:
+          type: integer
+          format: int64
     MonitoringDayDto:
       type: object
       properties:
