@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { bookmarkletHref, collectLibrary, isCollectedFile, type CollectedFile, type CollectorEnv } from './collector';
+import { bookmarkletHref, collectLibrary, COLLECTOR_VERSION, isCollectedFile, type CollectedFile, type CollectorEnv } from './collector';
 
 /** A Booknode library page: rows, and the pagination naming the last page. */
 function booknodePage(titles: string[], last: number): string {
@@ -211,6 +211,18 @@ describe('collectLibrary', () => {
       { text: 'Lus', url: 'https://www.babelio.com/mabibliotheque.php?s1=1' },
       { text: 'À lire', url: 'https://www.babelio.com/mabibliotheque.php?s1=2' },
     ]);
+  });
+
+  /** #507: the serialized bookmark writes the version the import compares against. */
+  test('stamps its files with the current collector version', async () => {
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch: vi.fn(() => Promise.resolve(response('<html><body><ul><li class="lib-book"><a href="/livres/L/1">L</a></li></ul></body></html>'))),
+    });
+
+    await collectLibrary(e);
+
+    expect(saved[0].version).toBe(COLLECTOR_VERSION);
   });
 
   test('says where to go when run anywhere else', async () => {

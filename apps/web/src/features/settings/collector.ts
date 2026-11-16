@@ -16,7 +16,8 @@
 /** What the collector saves, and what `POST /api/import/collected` takes (plus a format tag). */
 export interface CollectedFile {
   format: 'librarius-collect';
-  version: 1;
+  /** {@link COLLECTOR_VERSION} for a file of the current bookmark; older bookmarks wrote 1. */
+  version: number;
   source: 'booknode' | 'babelio' | 'mangacollec';
   collectedAt: string;
   pages: string[];
@@ -42,6 +43,13 @@ export interface CollectorEnv {
   /** The page's global object, whose requests the Mangacollec collector listens to (#503). */
   global?: typeof globalThis;
 }
+
+/**
+ * The version the current bookmark writes in its files (#507). Raised when the collector
+ * changes in a way an older bookmark misses, so the import can tell the reader to replace it.
+ * The literal inside `collectLibrary` must match: the bookmark is serialized on its own.
+ */
+export const COLLECTOR_VERSION = 2;
 
 export async function collectLibrary(env?: CollectorEnv): Promise<void> {
   const e: CollectorEnv = env ?? {
@@ -302,7 +310,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
         );
         return;
       }
-      e.save({ format: 'librarius-collect', version: 1, source, collectedAt: new Date().toISOString(), pages: [collection] });
+      e.save({ format: 'librarius-collect', version: 2, source, collectedAt: new Date().toISOString(), pages: [collection] });
       say('collection récupérée : importe le fichier dans Librarius (Réglages → Importer).');
       return;
     }
@@ -380,7 +388,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
     }
     e.save({
       format: 'librarius-collect',
-      version: 1,
+      version: 2,
       source,
       collectedAt: new Date().toISOString(),
       pages: kept,

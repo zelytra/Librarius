@@ -893,7 +893,7 @@
       "handlePlaceholder": {
         "booknode": "Pseudo Booknode"
       },
-      "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessous, qui la lit depuis ton navigateur.",
+      "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessus, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible.",
@@ -902,15 +902,13 @@
         "title": "Collecte depuis ton navigateur — fonctionne toujours",
         "step1": "Glisse ce bouton dans ta barre de favoris :",
         "button": "Librarius : collecter",
-        "step2": {
-          "booknode": "Ouvre ta page de profil Booknode et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-booknode.json.",
-          "babelio": "Ouvre « Mes livres » sur Babelio, connecté à ton compte, et clique sur le favori : il parcourt toutes les pages de ta bibliothèque et télécharge un fichier librarius-babelio.json.",
-          "mangacollec": "Ouvre ta collection sur mangacollec.com, connecté à ton compte, et clique sur le favori : il récupère toute ta collection et télécharge un fichier librarius-mangacollec.json."
-        },
+        "step2": "Ouvre ta bibliothèque, connecté à ton compte — ta page de profil Booknode, « Mes livres » sur Babelio ou ta collection sur mangacollec.com — et clique sur le favori : il lit toute ta bibliothèque et télécharge un fichier librarius-….json.",
         "step3": "Importe ce fichier avec le bouton ci-dessous.",
         "copy": "Sur mobile : copier le code du favori",
         "copied": "Code copié : crée un favori et colle-le comme adresse.",
-        "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius."
+        "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius.",
+        "oneForAll": "Un seul favori pour Booknode, Babelio et Mangacollec. Si tu en as un plus ancien, remplace-le par celui-ci.",
+        "outdated": "Ce fichier vient d'un ancien favori : l'import se fait quand même, mais remplace ton favori par celui ci-dessus pour les prochaines fois."
       },
       "runningTitle": "Import en cours",
       "percent": "{{percent}} %",
@@ -918,7 +916,7 @@
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
       "failedTitle": "L'import n'a pas abouti",
-      "mangacollecNote": "Mangacollec ne donne ta collection qu'à toi, connecté : utilise le favori ci-dessous sur mangacollec.com, il la lit avec ta propre session."
+      "mangacollecNote": "Mangacollec ne donne ta collection qu'à toi, connecté : utilise le favori ci-dessus sur mangacollec.com, il la lit avec ta propre session."
     },
     "export": {
       "title": "Exporter mes données",

@@ -9,18 +9,21 @@ Librarius export. Every import is a **job**: `POST` starts it and answers an id,
 - **Booknode by pseudo** (`POST /api/import/booknode`): the server reads
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
-- **The collector** (Settings → "Librarius : collecter"): a bookmarklet the reader runs on
-  Booknode or on Babelio's "Mes livres", in their own signed-in browser. It walks every page,
+- **The collector** (Settings → "Librarius : collecter"): **one** bookmarklet for Booknode,
+  Babelio and Mangacollec, shown once above the source choice (#507), that the reader runs in
+  their own signed-in browser. Its files carry `version` (`COLLECTOR_VERSION`, 2 since #507);
+  a file from an older bookmark still imports and Settings says to replace the bookmark. It walks every page,
   keeps only the library rows (Babelio's `li.lib-book` items, never the site's menus) and
   downloads `librarius-<source>.json`, imported with `POST /api/import/collected`. It is the
   only way into Babelio, which shows a library to its signed-in owner only. On Babelio it also
-  follows the « Pense-bête » filter (#477) — only a filter **of the library page itself**
+  follows the wish filter — « Wishlist » (`?s1=3`) on the live site (#506), « Pense-bête » on
+  older layouts (#477) — only a filter **of the library page itself**
   (same path, another query, a link or an htmx `hx-get`), never another page whose label
   merely contains « pense » (#502: a readers' selection once brought 100 strangers' books in).
   The file records the filters the page offers (`filters`), so a file sent with a report says
   what the live site calls them. On the server, once a file holds the `li.lib-book` list, a
   page without it is skipped, and Babelio's `list-item`/selection rows are never read; a
-  `lib-status--3` row (« Pense-bête ») is filed on the wishlist.
+  `lib-status--3` row, or one labelled « Wishlist » / « Pense-bête », is filed on the wishlist.
 - **Mangacollec** (#448, #456, #503): Mangacollec has no export, but its site loads a member's
   whole collection as one JSON document from `api.mangacollec.com/v2/users/me/collection`.
   The **collector** is the only way in — the pseudo was removed (#503): it only ever worked
