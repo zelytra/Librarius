@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
-import { SETTINGS_DESTINATION, type Destination } from './navigation';
+import { NOTIFICATIONS_DESTINATION, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { useUnreadCount } from '../features/notifications/useUnread';
 import { useNavDestinations } from './useNavDestinations';
 import styles from './SideNav.module.css';
 
@@ -35,10 +36,13 @@ export function SideNav() {
 
 function Entry({ destination }: { destination: Destination }) {
   const { t } = useTranslation();
+  const unread = useUnreadCount();
+  const count = destination.to === NOTIFICATIONS_DESTINATION.to ? unread : 0;
 
   return (
     <NavLink
       to={destination.to}
+      aria-label={count > 0 ? t('notifications.bellUnread', { count }) : undefined}
       // Home is the only prefix of every other route: without this it would read as
       // active everywhere.
       end={destination.to === '/'}
@@ -51,6 +55,11 @@ function Entry({ destination }: { destination: Destination }) {
         <>
           <Icon name={destination.icon} size={24} fill={isActive} />
           <span className={styles.label}>{t(destination.labelKey)}</span>
+          {count > 0 && (
+            <span className={styles.badge} aria-hidden="true">
+              {count > 99 ? '99+' : count}
+            </span>
+          )}
         </>
       )}
     </NavLink>

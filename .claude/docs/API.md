@@ -22,6 +22,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/users/{id}/profile` | A member's profile (`MemberProfileDto`, #497) — public surface for anyone signed in, `reading` (`ProfileReadingDto`) only when `VisibilityGate.canView`; 404 unknown or across a block either way |
 | PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 400 while a block stands, 404 on an unknown id |
 | DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
+| PUT | `/api/users/{id}/follow/notify` | `FollowNotifyDto(notifyActivity @NotNull)` → 204; sets `user_follow.notify` (#516). 404 when the caller does not follow them |
 | PUT | `/api/users/{id}/block` | Block another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | DELETE | `/api/users/{id}/block` | Unblock another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
@@ -1056,6 +1057,12 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 | DELETE | `/api/feed/{eventId}/reaction` | 204; 404 as above |
 | POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |
 | DELETE | `/api/feed/{eventId}/comments/{commentId}` | 204 for the comment's author, 404 for anyone else |
+| GET | `/api/feed/{eventId}` | One `FeedItemDto` (#516), same query and gate as the feed (`FeedService.one`); 404 when out of reach |
+| GET | `/api/notifications?page=&size=` | `NotificationPageDto(items, page, size, hasMore)` of `NotificationDto(id, type ACTIVITY\|REACTION\|COMMENT, actor, eventId, eventType, book MemberBookDto, comment, emote, createdAt, readAt)`, newest first; blocked actors left out |
+| GET | `/api/notifications/unread` | `UnreadCountDto(count)` — the web app polls it every 60 s and on focus |
+| POST | `/api/notifications/read` | Marks every notification read — 204 |
+
+`NotificationService` writes the rows: `activity` (from `FeedService.record` on a real insert) to every follower with `notify` who passes `VisibilityGate.canView`; `reaction` (replacing the actor's previous one) and `comment` (unless the owner set `notify_comments=false`) to the event's owner, never to the actor themself. `MeDto`/`UpdateMeDto` carry `notifyComments`.
 
 `FeedService.record(user, type, edition)` (`INSERT … ON CONFLICT DO NOTHING`) is called from
 `LibraryResource` (an add straight as read; a `/progress` update that moves the status to

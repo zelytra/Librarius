@@ -51,7 +51,7 @@
 
 .goalLink {
   /* A text action still needs a finger-sized target. */
-  min-height: 36px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   margin-top: 8px;

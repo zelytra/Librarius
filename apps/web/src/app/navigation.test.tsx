@@ -76,7 +76,7 @@ describe('the bottom bar on a phone', () => {
 
     const sheet = screen.getByRole('dialog', { name: 'Plus' });
     expect(within(sheet).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
-      '/to-read', '/stats', '/people', '/settings',
+      '/to-read', '/stats', '/people', '/notifications', '/settings',
     ]);
     expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('aria-expanded', 'true');
   });

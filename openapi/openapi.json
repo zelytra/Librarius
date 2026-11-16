@@ -911,6 +911,41 @@
         } ]
       }
     },
+    "/api/feed/{eventId}" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "eventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FeedItemDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "One",
+        "tags" : [ "Feed Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/feed/{eventId}/comments" : {
       "post" : {
         "parameters" : [ {
@@ -2455,6 +2490,97 @@
         } ]
       }
     },
+    "/api/notifications" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 30
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationPageDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "List",
+        "tags" : [ "Notification Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/notifications/read" : {
+      "post" : {
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Read All",
+        "tags" : [ "Notification Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/notifications/unread" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnreadCountDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Unread",
+        "tags" : [ "Notification Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/releases/upcoming" : {
       "get" : {
         "parameters" : [ {
@@ -3288,6 +3414,47 @@
           }
         },
         "summary" : "Follow",
+        "tags" : [ "User Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/users/{id}/follow/notify" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FollowNotifyDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Follow Notify",
         "tags" : [ "User Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -5136,6 +5303,15 @@
           }
         }
       },
+      "FollowNotifyDto" : {
+        "type" : "object",
+        "required" : [ "notifyActivity" ],
+        "properties" : {
+          "notifyActivity" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "FormatDto" : {
         "type" : "object",
         "properties" : {
@@ -5638,6 +5814,9 @@
           "avatarVersion" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "notifyComments" : {
+            "type" : "boolean"
           }
         }
       },
@@ -5734,6 +5913,9 @@
           },
           "reading" : {
             "$ref" : "#/components/schemas/ProfileReadingDto"
+          },
+          "notifyActivity" : {
+            "type" : "boolean"
           }
         }
       },
@@ -5837,6 +6019,63 @@
             "items" : {
               "$ref" : "#/components/schemas/ServiceStatusDto"
             }
+          }
+        }
+      },
+      "NotificationDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "actor" : {
+            "$ref" : "#/components/schemas/MemberSummaryDto"
+          },
+          "eventId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "eventType" : {
+            "type" : "string"
+          },
+          "book" : {
+            "$ref" : "#/components/schemas/MemberBookDto"
+          },
+          "comment" : {
+            "type" : "string"
+          },
+          "emote" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "readAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "NotificationPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NotificationDto"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "hasMore" : {
+            "type" : "boolean"
           }
         }
       },
@@ -6521,6 +6760,15 @@
         "format" : "uuid",
         "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
       },
+      "UnreadCountDto" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "UpcomingReleaseDto" : {
         "type" : "object",
         "properties" : {
@@ -6584,6 +6832,9 @@
             "maxLength" : 64
           },
           "publicAccount" : {
+            "type" : "boolean"
+          },
+          "notifyComments" : {
             "type" : "boolean"
           }
         }

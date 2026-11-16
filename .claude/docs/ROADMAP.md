@@ -252,7 +252,7 @@ their data, in French or in English, with a Lighthouse score ≥ 90.
 | ✅ [#75](https://github.com/zelytra/Librarius/issues/75) | User profile: display name, language, time zone — `PATCH /api/me` and a Settings profile section; the language persists to the account and follows it across devices | — |
 | ✅ [#76](https://github.com/zelytra/Librarius/issues/76) | First-login onboarding — a short, dismissible tour on Home for a new empty account (import, discover, annual goal), never shown to a returning user, replayable from Settings | — |
 | ✅ [#77](https://github.com/zelytra/Librarius/issues/77) | Complete English locale | #35 |
-| [#78](https://github.com/zelytra/Librarius/issues/78) | Accessibility: WCAG 2.1 level AA | #32, #42 |
+| [#78](https://github.com/zelytra/Librarius/issues/78) | Accessibility: WCAG 2.1 level AA — **done** (axe-core audit green on every screen and theme; NVDA/VoiceOver pass still to run) | #32, #42 |
 | [#79](https://github.com/zelytra/Librarius/issues/79) | ✅ Performance: bundle budget and Lighthouse — first payload shrunk and locked down in CI | — |
 | [#80](https://github.com/zelytra/Librarius/issues/80) | Public landing page | — |
 | ✅ [#81](https://github.com/zelytra/Librarius/issues/81) | User documentation — `docs/GUIDE.md` and a sample CSV, in French, linked from the README. The link **from inside the app** is a code change and rides with #80 | — |
@@ -301,7 +301,7 @@ public.
 | [#209](https://github.com/zelytra/Librarius/issues/209) | ✅ Social feed: activity log and API — `feed_event` (V38), `GET /api/feed`; releases are not logged, the feed screen shows the reader's coming releases apart | #200, #201 |
 | [#210](https://github.com/zelytra/Librarius/issues/210) | ✅ Social feed screen with reactions and comments — `feed_reaction`, `feed_comment` (V38), the feed tab of `/people` | #209 |
 | [#497](https://github.com/zelytra/Librarius/issues/497) | ✅ Member profile pages — `GET /api/users/{id}/profile`, `/people/:id` | #201, #203 |
-| [#211](https://github.com/zelytra/Librarius/issues/211) | Notify on a comment received on a review | #69, #210 |
+| [#211](https://github.com/zelytra/Librarius/issues/211) | Notify on a comment received on a review — **done** in-app with the bell (#516, V41); push stays with #69 | #69, #210 |
 
 ---
 

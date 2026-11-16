@@ -33,11 +33,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 36px;
+  /* A 44 px target, and the dark text on `--accent`, where it reads in every theme (#78). */
+  min-height: 44px;
   padding: 0 14px;
   border: none;
   border-radius: var(--radius-chip);
-  background: var(--accent-deep);
+  background: var(--accent);
   color: var(--on-accent);
   font-family: inherit;
   font-size: var(--fs-13);

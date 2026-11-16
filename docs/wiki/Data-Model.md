@@ -39,6 +39,7 @@ for how that matching happens on the way in.
 | `user_achievement` | One unlocked achievement tier (V31), `seen_at` once announced; the catalogue, XP and levels live in code |
 | `user_activity` | One row per member and day they used the instance (V36, #491), `last_seen_at` moved forward at most once a minute, after the response — the monitoring's active members |
 | `feed_event` | What a member did that the feed shows (V38, #209): `FINISHED_READING`, `WISHLIST_ADDED` or `REVIEW_SHARED` on an `edition`, once per member, type and edition. Logged where the action happens — finishing a title, adding a wish, sharing a review — never by an import or a bulk edit |
+| `notification` | One line of a member's bell (V41, #516): `type` `ACTIVITY`, `REACTION` or `COMMENT`, the `actor`, the `feed_event` and the `feed_comment` it is about, the `emote`, `read_at` once seen; cascades away with either account, the event or the comment. A new reaction from the same member replaces the previous notification. `user_follow.notify` (default true) and `app_user.notify_comments` (default true) say who wants which |
 | `feed_reaction`, `feed_comment` | A member's reaction to a feed event (one per member and event, `PRIMARY KEY (feed_event_id, user_id)`) and their flat comments (V38, #210); both cascade away with the event or the account |
 | `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
 

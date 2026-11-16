@@ -72,3 +72,10 @@ export const ADMIN_DESTINATION: Destination = {
  * reach.
  */
 export const PHONE_PRIMARY: readonly string[] = ['/', '/collection', '/discover', '/wishlist'];
+
+/** The notifications (#516): the bell's page, with its unread count drawn by each navigation. */
+export const NOTIFICATIONS_DESTINATION: Destination = {
+  to: '/notifications',
+  icon: 'notifications',
+  labelKey: 'nav.notifications',
+};

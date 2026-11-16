@@ -599,6 +599,14 @@ updated_at)`. The content is always the API's own 256 px JPEG, never the upload.
 `app_user.username VARCHAR(255)`, written at creation and refreshed by `CurrentUser.require()`
 when the token's `preferred_username` (else the principal name) differs. Shown to admins only.
 
+### V41 — notifications (#516, #211)
+
+`notification(id, user_id → app_user CASCADE, type ACTIVITY|REACTION|COMMENT, actor_id →
+app_user CASCADE, feed_event_id → feed_event CASCADE, comment_id → feed_comment CASCADE, emote,
+created_at, read_at)`, idx `(user_id, created_at DESC)` and the unread ones.
+`user_follow.notify BOOLEAN NOT NULL DEFAULT true` (a follow notifies of activity unless switched
+off on the profile) and `app_user.notify_comments BOOLEAN NOT NULL DEFAULT true`.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

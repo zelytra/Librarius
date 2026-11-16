@@ -49,6 +49,9 @@ public class UserResource {
     ProfileService profiles;
 
     @Inject
+    zelytra.librarius.social.NotificationService notifications;
+
+    @Inject
     zelytra.librarius.account.AvatarService avatars;
 
     @Inject
@@ -133,6 +136,21 @@ public class UserResource {
         currentUser.require();
         follows.follow(currentUser.id(), id);
         return Response.noContent().build();
+    }
+
+    /**
+     * Whether the member's activity notifies the caller (#516): on by default with every follow.
+     * 204; 404 when the caller does not follow the member.
+     */
+    @PUT
+    @Path("/{id}/follow/notify")
+    @jakarta.ws.rs.Consumes(MediaType.APPLICATION_JSON)
+    public void followNotify(@PathParam("id") String id,
+            @jakarta.validation.Valid @jakarta.validation.constraints.NotNull ApiDtos.FollowNotifyDto dto) {
+        currentUser.require();
+        if (!notifications.setFollowNotify(currentUser.id(), id, dto.notifyActivity())) {
+            throw new NotFoundException();
+        }
     }
 
     /** The caller stops following the member. Idempotent, 204. */

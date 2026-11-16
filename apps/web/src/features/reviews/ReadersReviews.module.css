@@ -49,19 +49,6 @@
   border-radius: var(--radius-panel);
 }
 
-.avatar {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: var(--radius-round);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: var(--fs-13);
-  color: var(--ink);
-}
 
 .body {
   flex: 1;

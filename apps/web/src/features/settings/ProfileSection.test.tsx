@@ -17,6 +17,7 @@ function profileReturns(me: {
   timeZone?: string;
   trusted?: boolean;
   publicAccount?: boolean;
+  notifyComments?: boolean;
 }) {
   server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', ...me })));
 }
@@ -60,6 +61,8 @@ describe('ProfileSection', () => {
       timeZone: 'America/New_York',
       // #201: the required preference travels with the full-replacement form, default off.
       publicAccount: false,
+      // #211: comments on my activity notify me unless I turn it off.
+      notifyComments: true,
     });
     expect(await screen.findByText('Profil enregistré.')).toBeInTheDocument();
   });
@@ -76,7 +79,7 @@ describe('ProfileSection', () => {
 
     await waitFor(() => expect(saved).toHaveLength(1));
     // An empty zone is left out of the body rather than sent as a blank string.
-    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: false });
+    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: false, notifyComments: true });
   });
 
   test('a profile save preserves an account that is already public (#201)', async () => {
@@ -91,7 +94,7 @@ describe('ProfileSection', () => {
     await userEvent.click(screen.getByText('Enregistrer'));
 
     await waitFor(() => expect(saved).toHaveLength(1));
-    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: true });
+    expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: true, notifyComments: true });
   });
 
   test('applies the chosen language to the interface on save', async () => {
@@ -156,5 +159,20 @@ describe('ProfileSection', () => {
 
     expect(await screen.findByText(/Connecte-toi pour modifier ton profil/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Nom affiché')).not.toBeInTheDocument();
+  });
+
+  /** #211: comments on my activity notify me; the profile turns that off. */
+  test('turns off the notification of comments on my activity', async () => {
+    profileReturns({ displayName: 'alice', locale: 'fr', notifyComments: true });
+    const saved = captureSaves();
+    renderWithProviders(<ProfileSection />);
+
+    const box = await screen.findByRole('checkbox', { name: 'Me notifier des commentaires sur mes activités' });
+    await waitFor(() => expect(box).toBeChecked());
+    await userEvent.click(box);
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toMatchObject({ notifyComments: false });
   });
 });

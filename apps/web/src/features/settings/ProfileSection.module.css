@@ -110,3 +110,20 @@
   opacity: 0;
   cursor: pointer;
 }
+
+/* #211: one preference, a native checkbox with its label as a 44 px target. */
+.check {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-14);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-deep);
+}

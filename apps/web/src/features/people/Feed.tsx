@@ -90,7 +90,7 @@ export function Feed({ onFindPeople }: { onFindPeople: () => void }) {
 const when = (value?: string) =>
   value ? new Date(value).toLocaleDateString(activeLanguage(), { day: 'numeric', month: 'short' }) : '';
 
-function FeedEvent({ item }: { item: FeedItemDto }) {
+export function FeedEvent({ item }: { item: FeedItemDto }) {
   const { t } = useTranslation();
   const actor = item.actor;
   const name = actor?.displayName ?? '—';

@@ -21,7 +21,7 @@ or initials, bibliography, follow toggle, reached from a resolvable author name 
 and from a minimal search in Discover. The fourth
 status itself has landed ([#163](https://github.com/zelytra/Librarius/issues/163), V11):
 a title can be given up on, it keeps the page it was given up at, and it counts towards no
-goal. **Quality** is no accessibility pass — the desktop layout that used to sit beside it on
+goal. **Quality** has its WCAG 2.1 AA pass (#78: contrast at the tokens, 44 px targets, axe-core in `e2e/tests/a11y.spec.ts`; a real screen reader still to run) — the desktop layout that used to sit beside it on
 this list (debt #23) is cleared, all eight screens now reading the available width past
 `--bp-tablet`, the same way the single locale left it on 2026-07-29, the interface shipping
 in French and English. **Operations** is what only

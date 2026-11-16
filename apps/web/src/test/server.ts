@@ -35,6 +35,8 @@ const BASE = '*/api';
 
 export const defaultHandlers = [
   http.get(`${BASE}/library`, () => HttpResponse.json(libraryPage([]))),
+  // The bell asks on every signed-in screen (#516): nothing unread unless a test says otherwise.
+  http.get(`${BASE}/notifications/unread`, () => HttpResponse.json({ count: 0 })),
   http.get(`${BASE}/library/:id`, () => new HttpResponse(null, { status: 404 })),
   http.get(`${BASE}/wishlist`, () => HttpResponse.json(wishlistPage([]))),
   http.get(`${BASE}/series`, () => HttpResponse.json([])),

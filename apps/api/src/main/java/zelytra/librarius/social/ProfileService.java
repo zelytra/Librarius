@@ -73,7 +73,18 @@ public class ProfileService {
                 !self && follows.isFollowing(memberId, viewerId),
                 count("select count(f) from UserFollow f where f.followeeId = :id", memberId),
                 count("select count(f) from UserFollow f where f.followerId = :id", memberId),
-                visible, visible ? reading(viewerId, memberId) : null));
+                visible, visible ? reading(viewerId, memberId) : null, followNotify(viewerId, memberId)));
+    }
+
+    /** Whether the caller's follow of the member notifies them (#516); null when they do not follow. */
+    private Boolean followNotify(String viewerId, String memberId) {
+        @SuppressWarnings("unchecked")
+        List<Boolean> rows = em.createNativeQuery(
+                        "select notify from user_follow where follower_id = :viewer and followee_id = :member")
+                .setParameter("viewer", viewerId)
+                .setParameter("member", memberId)
+                .getResultList();
+        return rows.isEmpty() ? null : rows.get(0);
     }
 
     private ProfileReadingDto reading(String viewerId, String memberId) {
