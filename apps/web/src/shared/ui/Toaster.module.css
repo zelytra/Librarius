@@ -55,8 +55,8 @@
 }
 
 .error {
-  background: var(--danger, #b3261e);
-  color: #fff;
+  background: var(--danger);
+  color: var(--on-danger);
 }
 
 .message {
