@@ -10,7 +10,8 @@
     "toRead": "Pile à lire",
     "discover": "Ajouter un livre",
     "wishlist": "Souhaits",
-    "stats": "Stats"
+    "stats": "Stats",
+    "admin": "Admin"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -1068,7 +1069,6 @@
       "TO_READ": "Ajouté à ta pile à lire."
     },
     "as": "Ajouter comme",
-    "open": "Ajouter",
     "title": "Ajouter à ta bibliothèque",
     "cancel": "Annuler",
     "confirm": "Ajouter"
@@ -1432,8 +1432,6 @@
     "prompt": "Connecte-toi pour accéder à l'administration.",
     "restricted": "Réservé aux administrateurs",
     "restrictedHint": "Cette page demande le rôle administrateur, attribué dans Keycloak.",
-    "entry": "Administration",
-    "entryDescription": "Signalements des membres, erreurs enregistrées et supervision de l'instance.",
     "open": "Ouvrir l'administration",
     "tabs": {
       "reports": "Signalements",

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
-import { NAV_DESTINATIONS } from './navigation';
+import { useNavDestinations } from './useNavDestinations';
 import styles from './BottomNav.module.css';
 
 /**
@@ -12,9 +12,10 @@ import styles from './BottomNav.module.css';
  */
 export function BottomNav() {
   const { t } = useTranslation();
+  const destinations = useNavDestinations();
   return (
     <nav className={styles.nav}>
-      {NAV_DESTINATIONS.map((tab) => (
+      {destinations.map((tab) => (
         <NavLink key={tab.to} to={tab.to} end={tab.to === '/'} className={styles.tab}>
           {({ isActive }) => (
             <span

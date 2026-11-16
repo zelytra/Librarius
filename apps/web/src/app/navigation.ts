@@ -46,3 +46,15 @@ export const SETTINGS_DESTINATION: Destination = {
   icon: 'settings',
   labelKey: 'settings.title',
 };
+
+/**
+ * The administration (#496), a destination of the navigation rather than a link buried in
+ * Settings — and only for the admin role: `useNavDestinations` appends it when `/api/me`
+ * says so. The API checks the role on every call; hiding the entry only spares everyone
+ * else a screen they cannot use.
+ */
+export const ADMIN_DESTINATION: Destination = {
+  to: '/admin',
+  icon: 'admin_panel_settings',
+  labelKey: 'nav.admin',
+};

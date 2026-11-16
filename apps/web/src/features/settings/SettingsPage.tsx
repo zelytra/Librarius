@@ -76,9 +76,6 @@ export function SettingsPage() {
           </button>
         </div>
 
-        {/* The admin screens (#488), shown to the admin role alone. */}
-        <AdminEntry />
-
         {/* External library import. */}
         <div className={styles.sectionBlock}>
           <ImportSection />
@@ -166,23 +163,5 @@ export function SettingsPage() {
 
       <div className={styles.version}>{t('settings.version', { version: APP_VERSION })}</div>
     </Screen>
-  );
-}
-
-function AdminEntry() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { authed } = useApiAuth();
-  const { data: me } = useGetApiMe({ query: { enabled: authed } });
-  if (!me?.admin) return null;
-  return (
-    <div className={styles.sectionBlock}>
-      <h3 className={styles.sectionTitle}>{t('admin.entry')}</h3>
-      <p className={styles.sectionIntro}>{t('admin.entryDescription')}</p>
-      <button className={styles.dashboardLink} onClick={() => navigate('/admin')}>
-        <Icon name="admin_panel_settings" size={16} color="var(--accent-deep)" />
-        {t('admin.open')}
-      </button>
-    </div>
   );
 }

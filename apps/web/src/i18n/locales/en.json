@@ -10,7 +10,8 @@
     "toRead": "To read",
     "discover": "Add a book",
     "wishlist": "Wishlist",
-    "stats": "Stats"
+    "stats": "Stats",
+    "admin": "Admin"
   },
   "common": {
     "seeAll": "See all",
@@ -1068,7 +1069,6 @@
       "TO_READ": "Added to your to-read pile."
     },
     "as": "Add as",
-    "open": "Add",
     "title": "Add to your library",
     "cancel": "Cancel",
     "confirm": "Add"
@@ -1432,8 +1432,6 @@
     "prompt": "Sign in to reach the administration.",
     "restricted": "Administrators only",
     "restrictedHint": "This page needs the administrator role, granted in Keycloak.",
-    "entry": "Administration",
-    "entryDescription": "Members' reports, recorded errors and monitoring of the instance.",
     "open": "Open the administration",
     "tabs": {
       "reports": "Reports",
