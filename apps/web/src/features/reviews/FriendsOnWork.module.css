@@ -29,19 +29,6 @@
   border-radius: var(--radius-panel);
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: var(--radius-round);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-size: var(--fs-13);
-  font-weight: 600;
-  color: var(--on-accent);
-}
 
 .body {
   flex: 1;

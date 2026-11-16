@@ -3,8 +3,8 @@
 }
 
 .backButton {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: var(--radius-round);
   background: var(--surface);
@@ -117,8 +117,8 @@
 }
 
 .action {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   background: none;
   border-radius: var(--radius-round);

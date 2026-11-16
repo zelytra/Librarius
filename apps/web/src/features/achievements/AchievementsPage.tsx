@@ -78,7 +78,7 @@ function AchievementCard({ a }: { a: AchievementDto }) {
           {t(`achievements.items.${code}.description`, { count: target, value: target.toLocaleString(locale) })}
         </p>
         {tiers > 1 && (
-          <div className={styles.pips} aria-label={t('achievements.tiersLabel', { tier, tiers })}>
+          <div className={styles.pips} role="img" aria-label={t('achievements.tiersLabel', { tier, tiers })}>
             {Array.from({ length: tiers }, (_, i) => (
               <span key={i} className={`${styles.pip} ${i < tier ? styles.pipOn : ''}`} />
             ))}

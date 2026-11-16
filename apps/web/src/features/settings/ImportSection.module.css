@@ -44,7 +44,7 @@
 
 .fileButton {
   /* A text action still needs a finger-sized target. */
-  min-height: 36px;
+  min-height: 44px;
   align-self: flex-start;
   background: none;
   border: none;

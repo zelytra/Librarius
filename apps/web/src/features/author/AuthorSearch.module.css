@@ -45,7 +45,8 @@
   justify-content: center;
   font-size: var(--fs-11-5);
   font-weight: 700;
-  color: var(--ink);
+  /* On a pastel of the cover palette in every theme: the covers' ink (#78). */
+  color: var(--cover-ink);
 }
 
 .name {

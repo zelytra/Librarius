@@ -41,8 +41,8 @@
 /* --overlay follows the theme: a fixed white pill would burn a hole in a dark
    page, since the wash behind it is barely there. */
 .backButton {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: var(--radius-round);
   background: var(--overlay);
@@ -350,7 +350,7 @@
 .fieldInput {
   flex: 1;
   min-width: 0;
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
   background: var(--surface-2);
@@ -398,7 +398,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 36px;
+  min-height: 44px;
   margin-top: 10px;
   font-size: var(--fs-13-5);
   font-weight: 600;
@@ -468,7 +468,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: 44px;
   border: none;
   background: none;
   color: var(--rose);
@@ -556,4 +556,10 @@
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill {
+    transition: none;
+  }
 }

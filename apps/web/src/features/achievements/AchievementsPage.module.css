@@ -123,11 +123,15 @@
   border-radius: var(--radius-card);
   border: 1px solid var(--line);
   background: var(--surface);
-  opacity: 0.78;
+}
+
+/* A locked achievement is told by its dimmed medal and its words, never by fading its text:
+   an opacity on the card took the small print under 4.5:1 (#78). */
+.card:not(.cardOn) .badge {
+  opacity: 0.6;
 }
 
 .cardOn {
-  opacity: 1;
   border-color: var(--accent);
 }
 

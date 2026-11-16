@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Stars } from '../detail/StarRating';
 import type { TFunction } from 'i18next';
 import { useGetApiWorksIdFriends, type FriendOnWorkDto } from '../../api/generated/librarius';
-import { colorFor } from '../../shared/ui/coverPalette';
-import { initials } from '../author/author';
 import { ownershipLabelKey, statusLabelKey } from '../../shared/statuses';
+import { Avatar } from '../../shared/ui/Avatar';
 import styles from './FriendsOnWork.module.css';
 
 /** What a friend's copy says, in the order a reader looks for it. */
@@ -35,9 +34,7 @@ export function FriendsOnWork({ workId }: { workId: string | undefined }) {
           const name = friend.displayName ?? '—';
           return (
             <li key={friend.id} className={styles.item}>
-              <span className={styles.avatar} style={{ background: colorFor(name) }} aria-hidden="true">
-                {initials(name)}
-              </span>
+              <Avatar id={friend.id} name={name} size={36} decorative />
               <div className={styles.body}>
                 <Link to={`/people/${friend.id}`} className={styles.name}>
                   {name}

@@ -7,8 +7,8 @@
   margin-bottom: 12px;
 }
 .backButton {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: var(--radius-round);
   background: var(--surface);

@@ -52,7 +52,8 @@
 
 .badgeError {
   background: color-mix(in srgb, var(--rose) 15%, transparent);
-  color: var(--rose);
+  /* The rose on its own tint fell under 4.5:1 (#78): the tint says « error », the text stays ink. */
+  color: var(--ink);
 }
 
 .occurrences {
@@ -300,7 +301,7 @@
 }
 
 .statusHANDLED {
-  background: var(--accent-deep);
+  background: var(--accent);
   color: var(--on-accent);
 }
 

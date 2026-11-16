@@ -7,5 +7,7 @@
   object-fit: cover;
   font-family: var(--font-serif);
   font-weight: 700;
-  color: var(--ink);
+  /* The initials sit on a pastel of the cover palette in every theme: the covers' own ink, not the
+     theme's, which is light at night (#78). */
+  color: var(--cover-ink);
 }

@@ -229,3 +229,10 @@
   font-weight: 600;
   color: var(--muted);
 }
+
+/* The cross stays small on the cover, but the finger gets 44 px around it (#78). */
+.removeButton::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}

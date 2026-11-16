@@ -33,7 +33,8 @@
 
 .print {
   margin-left: auto;
-  background: var(--accent-deep);
+  /* Dark text reads on `--accent`, not on `--accent-deep` in the light themes (#78). */
+  background: var(--accent);
   border-color: var(--accent-deep);
   color: var(--on-accent);
 }

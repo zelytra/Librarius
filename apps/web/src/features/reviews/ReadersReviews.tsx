@@ -4,8 +4,7 @@ import { Stars } from '../detail/StarRating';
 import type { SharedReviewsDto } from '../../api/generated/librarius';
 import { ReportButton } from '../report/ReportButton';
 import { activeLanguage } from '../../i18n/languages';
-import { colorFor } from '../../shared/ui/coverPalette';
-import { initials } from '../author/author';
+import { Avatar } from '../../shared/ui/Avatar';
 import styles from './ReadersReviews.module.css';
 
 /**
@@ -49,9 +48,7 @@ export function ReadersReviews({
             const name = review.authorName ?? '—';
             return (
               <li key={review.id} className={styles.item}>
-                <span className={styles.avatar} style={{ background: colorFor(name) }} aria-hidden="true">
-                  {initials(name)}
-                </span>
+                <Avatar id={review.authorId} name={name} size={36} decorative />
                 <div className={styles.body}>
                   <div className={styles.head}>
                     <Link to={`/people/${review.authorId}`} className={styles.name}>

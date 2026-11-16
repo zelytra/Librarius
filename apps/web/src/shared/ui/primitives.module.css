@@ -132,7 +132,7 @@
 
 /* Next to a field, or among secondary actions: a step down, still a full button. */
 .sizeCompact {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 16px;
   font-size: var(--fs-14);
 }
@@ -189,7 +189,7 @@
 
 .segment {
   flex: 1 1 auto;
-  min-height: 36px;
+  min-height: 44px;
   border: none;
   cursor: pointer;
   /* Side padding and no wrapping: with none, short labels ran into each other
