@@ -107,23 +107,38 @@ that build happens locally or in CI:
 
 | Platform | Requirements | Where they come from in CI |
 |---|---|---|
-| Android | Android Studio (for local development only), the Android SDK (API 23+), a JDK 21 — the one already used by `apps/api` | `ubuntu-latest` ships a recent SDK (platforms and build-tools well past API 35) out of the box; `actions/setup-java` installs Temurin 21. Nothing to configure. |
+| Android | Android Studio (for local development only), the Android SDK (API 24+), a JDK 21 — the one already used by `apps/api` | `ubuntu-latest` ships a recent SDK (platforms and build-tools past API 36) out of the box; `actions/setup-java` installs Temurin 21. Nothing to configure. |
 | iOS | macOS, Xcode, CocoaPods, a paid Apple developer account for a device or TestFlight | Not built in CI yet — [#71](https://github.com/zelytra/Librarius/issues/71). |
 
 No Windows machine used on this project has the Android SDK, and none is expected to: the
 Android build is verified on the GitHub-hosted runner, not locally — § 7.
 
-**Version note.** Capacitor was pinned to **7.x** because `@capacitor/cli` 8 declares
-`node >= 22` while the repository still built on Node 20. **That constraint is gone**:
-`.nvmrc` moved to **24** with the toolchain upgrade
-([#133](https://github.com/zelytra/Librarius/issues/133)), Node 20 having reached end of
-life in April 2026.
+**Version note.** The workspace runs **Capacitor 8** since
+[#524](https://github.com/zelytra/Librarius/issues/524). It was pinned to 7.x while the
+repository built on Node 20, and stayed there afterwards as an untried bump; what forced the
+move is Google Play, which requires **API level 36** of every new app and every update since
+31 August 2026. API 36 needs AGP 8.13, and AGP 8.13 is what the Capacitor 8 scaffold brings:
 
-So 8.x is now merely **untried**, not blocked. The pin stays until someone moves it
-deliberately and runs `pnpm mobile:build` against it — a major bump nobody has exercised is
-not something to inherit silently while [#68](https://github.com/zelytra/Librarius/issues/68)
-to [#71](https://github.com/zelytra/Librarius/issues/71) are still unwritten. Whoever picks
-one of them up should try 8 first, rather than building on 7 and migrating afterwards.
+| | Capacitor 7 | Capacitor 8 |
+|---|---|---|
+| `minSdkVersion` | 23 (Android 6.0) | **24** (Android 7.0) |
+| `compileSdkVersion` / `targetSdkVersion` | 35 | **36** |
+| Android Gradle plugin | 8.7.2 | **8.13.0** |
+| Gradle wrapper | 8.11.1 | **8.14.3** |
+| `com.google.gms:google-services` | 4.4.2 | 4.4.4 |
+
+Two consequences to know:
+
+- **Android 6.0 is dropped** by the `minSdkVersion` floor — around 0.2 % of devices still in
+  use, and none that would run this app well.
+- **`android.adjustMarginsForEdgeToEdge` no longer exists.** Capacitor 8 replaces it with the
+  built-in `SystemBars` plugin, whose `insetsHandling` defaults to `css`: the container stays
+  edge-to-edge and the web app reads `env(safe-area-inset-*)` itself — § 6 and
+  [#529](https://github.com/zelytra/Librarius/issues/529).
+
+The upgrade was mechanical because `android/` is the stock template plus a handful of hand
+edits (§ 7): eight files differ between the 7 and 8 scaffolds, and only `app/build.gradle` and
+`AndroidManifest.xml` of them carry edits of ours to re-apply.
 
 ## 5. Authentication — what does not work yet
 
@@ -231,7 +246,7 @@ Three workflows touch this workspace now:
   than red — nothing about the build is broken, only a manual step nobody has done yet.
 
 None of the three installs the Android SDK by hand: `ubuntu-latest` already carries the
-platforms and build-tools this project's `compileSdk`/`targetSdk` (35, `variables.gradle`)
+platforms and build-tools this project's `compileSdk`/`targetSdk` (36, `variables.gradle`)
 need — `actions/setup-java` adds the matching Temurin 21, and `gradle/actions/setup-gradle`
 caches `~/.gradle` and validates the committed wrapper jar's checksum. This matters because
 **no machine used on this project has the Android SDK either**: the pipeline was written and

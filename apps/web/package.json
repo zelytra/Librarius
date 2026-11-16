@@ -15,7 +15,7 @@
     "generate:icon-font": "node scripts/generate-icon-font.mjs"
   },
   "dependencies": {
-    "@capacitor/core": "^7.6.8",
+    "@capacitor/core": "^8.6.2",
     "@tanstack/react-query": "^5.101.4",
     "barcode-detector": "3.2.3",
     "i18next": "^27.1.1",
