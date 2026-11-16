@@ -77,7 +77,7 @@ public class FeedService {
         List<Object[]> rows = em.createNativeQuery("""
                         select fe.id, fe.type, fe.created_at, u.id as uid, u.display_name, u.trusted,
                                e.id as eid, w.id as wid, w.kind, w.title, w.authors, e.cover_url,
-                               li.rating, li.review, li.review_shared
+                               li.rating, li.review, li.review_shared, u.avatar_version
                         from feed_event fe
                           join app_user u on u.id = fe.user_id
                           join edition e on e.id = fe.edition_id
@@ -103,7 +103,7 @@ public class FeedService {
             UUID id = (UUID) row[0];
             boolean review = Type.REVIEW_SHARED.name().equals(row[1]);
             items.add(new FeedItemDto(id, (String) row[1], toOffset(row[2]),
-                    new MemberSummaryDto((String) row[3], (String) row[4], Boolean.TRUE.equals(row[5])),
+                    new MemberSummaryDto((String) row[3], (String) row[4], Boolean.TRUE.equals(row[5]), toLong(row[15])),
                     new FeedBookDto((UUID) row[6], (UUID) row[7], (String) row[8], (String) row[9],
                             (String) row[10], (String) row[11]),
                     review ? toDouble(row[12]) : null, review ? (String) row[13] : null,
@@ -219,7 +219,8 @@ public class FeedService {
         }
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
-                        select c.feed_event_id, c.id, u.id as uid, u.display_name, u.trusted, c.comment, c.created_at
+                        select c.feed_event_id, c.id, u.id as uid, u.display_name, u.trusted, c.comment, c.created_at,
+                               u.avatar_version
                         from feed_comment c join app_user u on u.id = c.user_id
                         where c.feed_event_id in (:ids)
                           and not exists (select 1 from user_block b
@@ -234,7 +235,7 @@ public class FeedService {
             if (list.size() < COMMENTS_PER_EVENT) {
                 String author = (String) row[2];
                 list.add(new FeedCommentDto((UUID) row[1],
-                        new MemberSummaryDto(author, (String) row[3], Boolean.TRUE.equals(row[4])),
+                        new MemberSummaryDto(author, (String) row[3], Boolean.TRUE.equals(row[4]), toLong(row[7])),
                         (String) row[5], toOffset(row[6]), author.equals(viewerId)));
             }
         }
@@ -252,6 +253,10 @@ public class FeedService {
             return ts.toInstant().atOffset(java.time.ZoneOffset.UTC);
         }
         return null;
+    }
+
+    private static Long toLong(Object value) {
+        return value == null ? null : ((Number) value).longValue();
     }
 
     private static Double toDouble(Object value) {

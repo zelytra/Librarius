@@ -59,10 +59,11 @@ public final class ApiDtos {
      * the admin endpoints check the role themselves.
      */
     public record MeDto(String id, String email, String displayName, String locale,
-                        String timeZone, boolean trusted, boolean publicAccount, boolean admin) {
+                        String timeZone, boolean trusted, boolean publicAccount, boolean admin,
+                        Long avatarVersion) {
         public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount, admin);
+                    u.publicAccount, admin, u.avatarVersion);
         }
     }
 
@@ -76,7 +77,8 @@ public final class ApiDtos {
      *                caller's own profile does (#186)
      */
     /** A member found by name (#202): the follow-list surface, plus whether the caller follows them. */
-    public record MemberSearchDto(String id, String displayName, boolean trusted, boolean following) {
+    public record MemberSearchDto(String id, String displayName, boolean trusted, boolean following,
+            Long avatarVersion) {
     }
 
     /**
@@ -174,9 +176,10 @@ public final class ApiDtos {
             LocalDate startedAt, LocalDate finishedAt, Integer days) {
     }
 
-    public record MemberSummaryDto(String id, String displayName, boolean trusted) {
+    /** {@code avatarVersion} is set while the member has a profile picture (#500). */
+    public record MemberSummaryDto(String id, String displayName, boolean trusted, Long avatarVersion) {
         public static MemberSummaryDto of(AppUser u) {
-            return new MemberSummaryDto(u.id, u.displayName, u.trusted);
+            return new MemberSummaryDto(u.id, u.displayName, u.trusted, u.avatarVersion);
         }
     }
 
@@ -1226,7 +1229,7 @@ public final class ApiDtos {
      * relate, the follow counts — is for any signed-in member; {@code reading} only when
      * {@code VisibilityGate} lets the caller see the member's shared content, null otherwise.
      */
-    public record MemberProfileDto(String id, String displayName, boolean trusted,
+    public record MemberProfileDto(String id, String displayName, boolean trusted, Long avatarVersion,
             java.time.OffsetDateTime memberSince, boolean self, boolean following, boolean followsYou,
             long followers, long followingCount, boolean visible, ProfileReadingDto reading) {
     }

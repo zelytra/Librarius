@@ -49,6 +49,9 @@ public class UserResource {
     ProfileService profiles;
 
     @Inject
+    zelytra.librarius.account.AvatarService avatars;
+
+    @Inject
     zelytra.librarius.domain.repository.AppUserRepository users;
 
     @Inject
@@ -69,7 +72,7 @@ public class UserResource {
         String me = currentUser.id();
         return users.searchByName(me, q, 30).stream()
                 .map(u -> new ApiDtos.MemberSearchDto(u.id, u.displayName, u.trusted,
-                        followRepository.isFollowing(me, u.id)))
+                        followRepository.isFollowing(me, u.id), u.avatarVersion))
                 .toList();
     }
 
@@ -82,6 +85,24 @@ public class UserResource {
     public ApiDtos.MemberProfileDto profile(@PathParam("id") String id) {
         currentUser.require();
         return profiles.of(currentUser.id(), id).orElseThrow(NotFoundException::new);
+    }
+
+    /**
+     * A member's profile picture (#500), for any signed-in member, never across a block (404, the
+     * same answer as no picture). Served so that a browser can only ever show it as an image.
+     */
+    @GET
+    @Path("/{id}/avatar")
+    @Produces("image/jpeg")
+    public Response avatar(@PathParam("id") String id) {
+        currentUser.require();
+        byte[] image = avatars.read(currentUser.id(), id).orElseThrow(NotFoundException::new);
+        return Response.ok(image, "image/jpeg")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Security-Policy", "default-src 'none'")
+                .header("Content-Disposition", "inline")
+                .header("Cache-Control", "private, max-age=86400")
+                .build();
     }
 
     /** The caller starts following the member. Idempotent, 204. */

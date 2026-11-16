@@ -67,4 +67,8 @@ public class AppUser {
      */
     @Column(name = "achievements_evaluated_at")
     public OffsetDateTime achievementsEvaluatedAt;
+
+    /** Set while the member has a profile picture (#500, V39), changing with each one. */
+    @Column(name = "avatar_version")
+    public Long avatarVersion;
 }

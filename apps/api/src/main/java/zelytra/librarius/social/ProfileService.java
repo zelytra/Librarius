@@ -65,7 +65,7 @@ public class ProfileService {
         }
         boolean self = viewerId.equals(memberId);
         boolean visible = gate.canView(viewerId, memberId);
-        return Optional.of(new MemberProfileDto(member.id, member.displayName, member.trusted,
+        return Optional.of(new MemberProfileDto(member.id, member.displayName, member.trusted, member.avatarVersion,
                 member.createdAt, self,
                 !self && follows.isFollowing(viewerId, memberId),
                 !self && follows.isFollowing(memberId, viewerId),
