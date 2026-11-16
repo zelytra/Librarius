@@ -86,7 +86,7 @@ class FeedApiTest {
 
         relation("carol", "bob", "follow", true);
         assertEquals(0, about("carol", title).size(), "a one-way follow contributes nothing");
-        assertEquals(0, about("bob", title).size(), "nobody's own feed holds their events");
+        assertEquals(1, about("bob", title).size(), "a reader's own events are in their feed (#511)");
 
         publicAccount("bob", true);
         assertEquals(1, about("carol", title).size(), "a followed public account is seen");
@@ -180,5 +180,23 @@ class FeedApiTest {
     private static void react(String user, String event, String emote, int expected) {
         given().auth().oauth2(token(user)).contentType("application/json").body("{ \"emote\": \"" + emote + "\" }")
                 .when().put("/api/feed/" + event + "/reaction").then().statusCode(expected);
+    }
+
+    /** #511: what others said about my activity reaches me — my own events are in my feed. */
+    @Test
+    void myOwnEventCarriesTheReactionsAndCommentsOthersLeft() {
+        mutual("alice", "bob");
+        String title = "Le mien " + UUID.randomUUID();
+        add("bob", title, "READ");
+        String event = eventId("bob", title, "FINISHED_READING");
+
+        react("alice", event, "LOVE", 204);
+        given().auth().oauth2(token("alice")).contentType("application/json").body("{ \"comment\": \"Bravo !\" }")
+                .when().post("/api/feed/" + event + "/comments").then().statusCode(201);
+
+        JsonPath mine = feed("bob");
+        String path = "items.find { it.id == '" + event + "' }";
+        assertEquals(1, mine.getInt(path + ".reactions.LOVE"));
+        assertEquals("Bravo !", mine.getString(path + ".comments[0].comment"));
     }
 }

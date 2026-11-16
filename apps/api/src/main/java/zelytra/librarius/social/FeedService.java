@@ -28,8 +28,8 @@ import java.util.UUID;
  * shared — once per member, type and edition. Imports and bulk edits log nothing: a library
  * of five hundred titles arriving at once is not news, it is a flood.
  *
- * <p>Who sees what is {@link VisibilityGate}'s rule and nobody else's: a viewer's feed holds the
- * events of the members they follow and may see (a mutual follow, or a public account, never
+ * <p>Who sees what is {@link VisibilityGate}'s rule and nobody else's: a viewer's feed holds their
+ * own events (#511) and those of the members they follow and may see (a mutual follow, or a public account, never
  * across a block). Reacting and commenting re-check the same rule against the event's author —
  * an event outlives the follow that made it visible, and a stale screen must not write on it.
  */
@@ -62,13 +62,14 @@ public class FeedService {
 
     @Transactional
     public FeedPageDto feed(String viewerId, PageRequest window) {
-        List<String> actors = em.createQuery(
-                        "select f.followeeId from UserFollow f where f.followerId = :viewer", String.class)
+        // The caller's own events too (#511): what others said about them belongs in their feed.
+        List<String> actors = new ArrayList<>(List.of(viewerId));
+        em.createQuery("select f.followeeId from UserFollow f where f.followerId = :viewer", String.class)
                 .setParameter("viewer", viewerId)
                 .getResultList()
                 .stream()
                 .filter(actor -> gate.canView(viewerId, actor))
-                .toList();
+                .forEach(actors::add);
         if (actors.isEmpty()) {
             return new FeedPageDto(List.of(), window.page(), window.size(), false);
         }
