@@ -14,19 +14,26 @@ Librarius export. Every import is a **job**: `POST` starts it and answers an id,
   keeps only the library rows (Babelio's `li.lib-book` items, never the site's menus) and
   downloads `librarius-<source>.json`, imported with `POST /api/import/collected`. It is the
   only way into Babelio, which shows a library to its signed-in owner only. On Babelio it also
-  follows the page's « Pense-bête » filter and its pages (#477), so the wished books reach the
-  import — a « Pense-bête » row is filed on the wishlist.
-- **Mangacollec** (#448, #456): Mangacollec has no export, but its site loads a member's
-  whole collection as one JSON document from `api.mangacollec.com/v2/…/collection`. Two ways
-  in, both one step:
-  - **by pseudo** (`POST /api/import/mangacollec` with `{handle}`, `MangacollecUserImporter`):
-    the server reads a public profile's collection; a 404, a 401/403 or a refusal of our
-    server says so and points at the collector;
-  - **the collector** on mangacollec.com: it finds the session the site keeps in the page's
-    storage or in a readable cookie, asks for `users/me/collection` with it, then with the
-    site's own cookies (a private profile needs nothing more, #478) — or, on a `/user/<pseudo>`
-    page, for that public profile's — and downloads `librarius-mangacollec.json`, whose single page is the
-    document itself, imported with `POST /api/import/collected` like the others.
+  follows the « Pense-bête » filter (#477) — only a filter **of the library page itself**
+  (same path, another query, a link or an htmx `hx-get`), never another page whose label
+  merely contains « pense » (#502: a readers' selection once brought 100 strangers' books in).
+  The file records the filters the page offers (`filters`), so a file sent with a report says
+  what the live site calls them. On the server, once a file holds the `li.lib-book` list, a
+  page without it is skipped, and Babelio's `list-item`/selection rows are never read; a
+  `lib-status--3` row (« Pense-bête ») is filed on the wishlist.
+- **Mangacollec** (#448, #456, #503): Mangacollec has no export, but its site loads a member's
+  whole collection as one JSON document from `api.mangacollec.com/v2/users/me/collection`.
+  The **collector** is the only way in — the pseudo was removed (#503): it only ever worked
+  for a public profile, and `POST /api/import/mangacollec` now answers with the way to the
+  collector. On mangacollec.com the collector listens to the site's own requests to its API
+  (`fetch` and `XMLHttpRequest`, the hook kept between two clicks) and replays the
+  `Authorization` header the site sent; then it tries a token found in the page's storage or a
+  readable cookie, then the site's cookies alone. It saves a body only if it is a collection
+  (`volumes`, `editions`, `possessions`/`reads`) and, when nothing works, its alert names each
+  attempt and its HTTP status. The first click on a freshly loaded page usually has heard
+  nothing yet: it asks the reader to open their collection from the site's menu and click
+  again. The file's single page is the document itself, imported with
+  `POST /api/import/collected` like the others.
   A raw collection document saved by hand is still accepted by the file picker, recognised by
   its content (`features/settings/mangacollec.ts`).
 

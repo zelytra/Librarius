@@ -1548,7 +1548,8 @@
       "confirmLabel": "Type “{{username}}” to confirm",
       "confirm": "Delete for good",
       "deleted": "{{name}} was deleted, with all their data.",
-      "deleteFailed": "The deletion failed: nothing was erased."
+      "deleteFailed": "The deletion failed: nothing was erased.",
+      "handle": "@{{username}}"
     }
   },
   "profile": {

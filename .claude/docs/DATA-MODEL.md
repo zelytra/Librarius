@@ -588,6 +588,17 @@ created_at)`, idx `(feed_event_id, created_at)`. An edition rather than a generi
 `target_type/target_id`: every event is about a book, and a real foreign key keeps the log
 from pointing at a row that is gone.
 
+### V39 — profile pictures (#500)
+
+`app_user.avatar_version BIGINT` (null = no picture; epoch millis of the last upload, so a
+screen keys its cache on it) and `user_avatar(user_id PK → app_user CASCADE, content BYTEA,
+updated_at)`. The content is always the API's own 256 px JPEG, never the upload.
+
+### V40 — Keycloak username (#499)
+
+`app_user.username VARCHAR(255)`, written at creation and refreshed by `CurrentUser.require()`
+when the token's `preferred_username` (else the principal name) differs. Shown to admins only.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

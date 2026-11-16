@@ -75,7 +75,7 @@ export function AdminUsers() {
                   <Avatar id={user.id} name={name} version={user.avatarVersion} size={44} decorative />
                   <span className={styles.userText}>
                     <span className={styles.userName}>{name}</span>
-                    {user.username && <span className={styles.meta}>@{user.username}</span>}
+                    {user.username && <span className={styles.meta}>{t('admin.users.handle', { username: user.username })}</span>}
                     <span className={styles.meta}>
                       {[t('admin.users.since', { date: day(user.createdAt) }), t('admin.users.titles', { count: user.libraryItems ?? 0 })]
                         .join(' · ')}

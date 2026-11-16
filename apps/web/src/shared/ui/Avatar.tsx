@@ -5,7 +5,7 @@ import { colorFor } from './coverPalette';
 import styles from './Avatar.module.css';
 
 /** The initials a member without a picture is drawn with. */
-export function initialsOf(name: string): string {
+function initialsOf(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)

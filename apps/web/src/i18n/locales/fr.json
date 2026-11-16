@@ -1548,7 +1548,8 @@
       "confirmLabel": "Tape « {{username}} » pour confirmer",
       "confirm": "Supprimer définitivement",
       "deleted": "{{name}} a été supprimé, avec toutes ses données.",
-      "deleteFailed": "La suppression a échoué : rien n’a été effacé."
+      "deleteFailed": "La suppression a échoué : rien n’a été effacé.",
+      "handle": "@{{username}}"
     }
   },
   "profile": {
