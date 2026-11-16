@@ -66,7 +66,7 @@ export function HomeShowcase({
           </div>
           <div className={styles.actions}>
             <Button variant="primary" size="compact" onClick={() => navigate('/discover')}>
-              <Icon name="add" size={18} color="var(--on-accent)" />
+              <Icon name="add" size={18} color="var(--on-accent-fill)" />
               {t('home.showcase.add')}
             </Button>
             <Button variant="secondary" size="compact" onClick={() => navigate('/collection')}>

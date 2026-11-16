@@ -105,6 +105,13 @@ spec:
                   name: {{ include "librarius.apiAdmin.secretName" . }}
                   key: {{ .Values.api.accountDeletion.secretKey }}
             {{- end }}
+            # Agents' key to the reports (#518); optional, the endpoint stays closed without it.
+            - name: LIBRARIUS_AGENT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.agentApiKey.secretName }}
+                  key: {{ .Values.api.agentApiKey.secretKey }}
+                  optional: true
           # Removing the pod from the Service endpoints and sending it SIGTERM are
           # concurrent, so without this pause Traefik keeps routing to a container
           # that has already begun to stop. Native sleep action, k8s ≥ 1.30.

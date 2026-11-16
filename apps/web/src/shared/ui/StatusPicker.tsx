@@ -48,7 +48,7 @@ function ChipGroup<T extends string>({ label, options, value, labelOf, onChange,
               }}
               className={`${styles.chip} ${on ? styles.chipOn : ''}`}
             >
-              <Icon name={option.icon} size={17} color={on ? 'var(--on-accent)' : 'var(--muted)'} />
+              <Icon name={option.icon} size={17} color={on ? 'var(--on-accent-fill)' : 'var(--muted)'} />
               {labelOf(option.id)}
             </button>
           );

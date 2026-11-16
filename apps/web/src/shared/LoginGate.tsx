@@ -46,7 +46,7 @@ export function LoginGate({ children, prompt }: { children: ReactNode; prompt?: 
       <Welcome>
         <p className={styles.prompt}>{prompt ?? t('auth.defaultPrompt')}</p>
         <Button variant="primary" onClick={signIn} disabled={pending}>
-          <Icon name="login" size={20} fill color="var(--on-accent)" />
+          <Icon name="login" size={20} fill color="var(--on-accent-fill)" />
           {t('auth.signIn')}
         </Button>
         {failed && (

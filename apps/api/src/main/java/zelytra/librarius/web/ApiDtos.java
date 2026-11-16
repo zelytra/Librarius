@@ -1226,6 +1226,10 @@ public final class ApiDtos {
     public record FeedbackPageDto(java.util.List<FeedbackDto> items, int page, int size, long total) {
     }
 
+    /** The reports as an agent reads them (#518): each in full, logs or stack trace included. */
+    public record AgentFeedbackPageDto(java.util.List<FeedbackDetailDto> items, int page, int size, long total) {
+    }
+
     // ── Member profile (#497) ───────────────────────────────────────────────
 
     /**

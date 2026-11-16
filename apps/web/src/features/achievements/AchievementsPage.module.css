@@ -149,8 +149,8 @@
 }
 
 .cardOn .badge {
-  background: var(--accent-deep);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
 }
 
 /* The metal of the tier reached, when the achievement has tiers. */

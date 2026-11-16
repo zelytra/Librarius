@@ -447,8 +447,8 @@
 
 /* The three states, told apart by a fill, an icon and an outline, as on the Series screen. */
 .read {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   border: 1.5px solid var(--accent);
 }
 
@@ -581,8 +581,8 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-round);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   font-size: var(--fs-13);
   font-weight: 700;
 }

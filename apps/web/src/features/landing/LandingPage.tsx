@@ -89,7 +89,7 @@ function CallToAction({ onClick, disabled, size = 'lg' }: {
   const { t } = useTranslation();
   return (
     <Button variant="primary" size={size} onClick={onClick} disabled={disabled} className={styles.cta}>
-      <Icon name="login" size={20} fill color="var(--on-accent)" />
+      <Icon name="login" size={20} fill color="var(--on-accent-fill)" />
       {t('landing.cta.label')}
     </Button>
   );

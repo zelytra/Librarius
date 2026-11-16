@@ -91,8 +91,8 @@
   align-items: center;
   padding: 0 16px;
   border-radius: var(--radius-button);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
   font-size: var(--fs-13);
   font-weight: 600;
   cursor: pointer;

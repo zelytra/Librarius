@@ -34,9 +34,9 @@
 .print {
   margin-left: auto;
   /* Dark text reads on `--accent`, not on `--accent-deep` in the light themes (#78). */
-  background: var(--accent);
+  background: var(--accent-fill);
   border-color: var(--accent-deep);
-  color: var(--on-accent);
+  color: var(--on-accent-fill);
 }
 
 .toggle {

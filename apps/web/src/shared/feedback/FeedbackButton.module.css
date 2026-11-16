@@ -12,7 +12,7 @@
   justify-content: center;
   border: none;
   border-radius: var(--radius-round);
-  background: var(--accent-deep);
+  background: var(--accent-fill);
   box-shadow: 0 4px 14px rgb(0 0 0 / 22%);
   cursor: pointer;
   opacity: 0.9;

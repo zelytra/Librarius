@@ -8,6 +8,7 @@ import zelytra.librarius.domain.Feedback;
 import zelytra.librarius.domain.Feedback.Kind;
 import zelytra.librarius.domain.Feedback.Source;
 import zelytra.librarius.domain.Feedback.Status;
+import zelytra.librarius.web.ApiDtos.AgentFeedbackPageDto;
 import zelytra.librarius.web.ApiDtos.FeedbackDetailDto;
 import zelytra.librarius.web.ApiDtos.FeedbackDto;
 import zelytra.librarius.web.ApiDtos.FeedbackPageDto;
@@ -91,23 +92,51 @@ public class FeedbackService {
     /** The reports, the latest seen first; only those in {@code status} when it is given (#495). */
     @Transactional
     public FeedbackPageDto list(PageRequest window, Status status) {
-        String filter = status == null ? "" : " where f.status = :status";
-        var rows = em.createQuery("""
+        var rows = rows(window, status).stream().map(row -> {
+            Feedback f = (Feedback) row[0];
+            return new FeedbackDto(f.id, f.kind.name(), f.source.name(), f.message, f.page, f.appVersion,
+                    (String) row[1], f.occurrences, f.createdAt, f.lastSeenAt, f.status.name(), f.statusChangedAt);
+        }).toList();
+        return new FeedbackPageDto(rows, window.page(), window.size(), count(status));
+    }
+
+    /**
+     * The same list with each report in full, for an agent (#518). Reading it changes nothing:
+     * a report stays new until someone says otherwise.
+     */
+    @Transactional
+    public AgentFeedbackPageDto listInFull(PageRequest window, Status status) {
+        var rows = rows(window, status).stream().map(row -> detail((Feedback) row[0], (String) row[1])).toList();
+        return new AgentFeedbackPageDto(rows, window.page(), window.size(), count(status));
+    }
+
+    /** One page of reports with their reporter's display name, the latest seen first. */
+    private List<Object[]> rows(PageRequest window, Status status) {
+        var query = em.createQuery("""
                         select f, u.displayName from Feedback f left join AppUser u on u.id = f.userId"""
-                        + filter + " order by f.lastSeenAt desc, f.id", Object[].class);
-        var count = em.createQuery("select count(f) from Feedback f" + filter, Long.class);
+                        + filter(status) + " order by f.lastSeenAt desc, f.id", Object[].class);
         if (status != null) {
-            rows.setParameter("status", status);
-            count.setParameter("status", status);
+            query.setParameter("status", status);
         }
-        List<FeedbackDto> items = rows.setFirstResult(window.offset()).setMaxResults(window.size())
-                .getResultList().stream().map(row -> {
-                    Feedback f = (Feedback) row[0];
-                    return new FeedbackDto(f.id, f.kind.name(), f.source.name(), f.message, f.page, f.appVersion,
-                            (String) row[1], f.occurrences, f.createdAt, f.lastSeenAt, f.status.name(),
-                            f.statusChangedAt);
-                }).toList();
-        return new FeedbackPageDto(items, window.page(), window.size(), count.getSingleResult());
+        return query.setFirstResult(window.offset()).setMaxResults(window.size()).getResultList();
+    }
+
+    private long count(Status status) {
+        var query = em.createQuery("select count(f) from Feedback f" + filter(status), Long.class);
+        if (status != null) {
+            query.setParameter("status", status);
+        }
+        return query.getSingleResult();
+    }
+
+    private static String filter(Status status) {
+        return status == null ? "" : " where f.status = :status";
+    }
+
+    private static FeedbackDetailDto detail(Feedback f, String reporterName) {
+        return new FeedbackDetailDto(f.id, f.kind.name(), f.source.name(), f.message, f.page, f.appVersion,
+                f.userAgent, f.details, reporterName, f.occurrences, f.createdAt, f.lastSeenAt, f.status.name(),
+                f.statusChangedAt);
     }
 
     /** One report in full. An admin opening a new one has now seen it (#495). */
@@ -124,9 +153,7 @@ public class FeedbackService {
                     if (f.status == Status.NEW) {
                         changeStatus(f, Status.SEEN);
                     }
-                    return new FeedbackDetailDto(f.id, f.kind.name(), f.source.name(), f.message, f.page,
-                            f.appVersion, f.userAgent, f.details, (String) row[1], f.occurrences,
-                            f.createdAt, f.lastSeenAt, f.status.name(), f.statusChangedAt);
+                    return detail(f, (String) row[1]);
                 });
     }
 

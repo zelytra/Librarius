@@ -354,7 +354,7 @@ regeneration.
 | Aspect | State |
 |---|---|
 | Authentication | Keycloak OIDC, `quarkus.oidc.application-type=service`, JWT validated against JWKS |
-| Authorisation | `@Authenticated` on every resource, with no exception |
+| Authorisation | `@Authenticated` on every resource, except the BnF cover proxy (`@PermitAll`, an `<img>` sends no token) and `/api/agent/feedback` (`@PermitAll` behind the `X-Api-Key` of `LIBRARIUS_AGENT_API_KEY`, closed while unset, #518) |
 | Data isolation | Application-level, through `user_id` in every query — locked down by `DataIsolationTest` since [#39](https://github.com/zelytra/Librarius/issues/39) |
 | Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
 | Exposed surface | Only `/auth`, `/api` and `/` are routed. Swagger UI is dev/test only, `/q` is cluster-internal ([#62](https://github.com/zelytra/Librarius/issues/62)) |

@@ -504,7 +504,8 @@ Points worth knowing before touching it:
 - No plaintext secret in the repository (not in `values.yaml`, not in a committed `.env`,
   not in command output). Mask tokens in logs and responses.
 - Every new resource is `@Authenticated` and user-scoped, unless a documented explicit
-  decision says otherwise.
+  decision says otherwise. The two exceptions to date: the BnF cover proxy, and the
+  agents' reports endpoint behind its `X-Api-Key` (#518, [API](API.md)).
 - Changes to repository or cluster settings (branch protections, CI secrets, permissions)
   **are not made autonomously**: provide the exact procedure and wait for approval.
 

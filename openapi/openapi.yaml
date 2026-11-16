@@ -202,6 +202,65 @@ paths:
       security:
       - SecurityScheme:
         - admin
+  /api/agent/feedback:
+    get:
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: X-Api-Key
+        in: header
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentFeedbackPageDto"
+      summary: List
+      tags:
+      - Agent Feedback Resource
+  /api/agent/feedback/{id}/status:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: X-Api-Key
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackStatusDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Status
+      tags:
+      - Agent Feedback Resource
   /api/authors:
     get:
       parameters:
@@ -2932,6 +2991,22 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminUserDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    AgentFeedbackPageDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedbackDetailDto"
         page:
           type: integer
           format: int32

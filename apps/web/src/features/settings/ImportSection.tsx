@@ -206,7 +206,7 @@ export function ImportSection() {
                   onClick={(e) => e.preventDefault()}
                   draggable
                 >
-                  <Icon name="bookmark_add" size={16} color="var(--on-accent)" />
+                  <Icon name="bookmark_add" size={16} color="var(--on-accent-fill)" />
                   {t('settings.import.collector.button')}
                 </a>
               </li>
