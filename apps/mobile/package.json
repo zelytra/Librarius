@@ -11,7 +11,9 @@
     "add:ios": "cap add ios",
     "open:android": "cap open android",
     "open:ios": "cap open ios",
-    "doctor": "cap doctor"
+    "doctor": "cap doctor",
+    "assets:generate": "capacitor-assets generate --android && node scripts/finish-android-icons.mjs",
+    "store:assets": "node scripts/generate-store-assets.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
@@ -21,8 +23,10 @@
     "@capacitor/ios": "^8.6.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "4.0.0",
     "@capacitor/cli": "^8.6.2",
     "@librarius/web": "workspace:*",
+    "sharp": "0.35.5",
     "typescript": "~5.9.3"
   }
 }

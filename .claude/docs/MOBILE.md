@@ -19,19 +19,17 @@ What is deliberately **not** here yet:
 
 - `apps/mobile/ios/` — the iOS native project, needing Xcode and a paid Apple developer
   account. Comes with [#71](https://github.com/zelytra/Librarius/issues/71).
-- **Librarius' own icon and splash screen.** `cap add` always writes Capacitor's stock
-  placeholder artwork at every density (`android/app/src/main/res/mipmap-*/ic_launcher*.png`,
-  `drawable*/splash.png`); nobody has replaced them yet, so a debug APK built today shows
-  the generic Capacitor mark, not the Librarius logo. Unclaimed work, not blocked on
-  anything.
+- ~~**Librarius' own icon and splash screen.**~~ Done by
+  [#526](https://github.com/zelytra/Librarius/issues/526) — see § 9.
 - Status bar colour and edge-to-edge / safe-area handling: real settings of the native
   project that now exists, still unset. See § 6.
 - Any plugin. A plugin that no issue asks for is dead weight the next agent has to
   explain; the camera comes with [#68](https://github.com/zelytra/Librarius/issues/68),
   push with [#69](https://github.com/zelytra/Librarius/issues/69).
-- **Play Store publishing.** #70 asked for this alongside the signed APK; this document
-  covers CI producing that APK (§ 7, § 8) and stops there. The Play Console account, the
-  store listing and the privacy policy it requires are unclaimed, undocumented work.
+- **Play Store publishing itself.** The procedure is now written down —
+  `docs/wiki/Mobile-Play-Store.md`, [#530](https://github.com/zelytra/Librarius/issues/530) —
+  but the Play Console account, the listing and the privacy policy it requires are the
+  owner's to create: nothing in this repository can do it.
 
 ## 2. How the code is shared with the web app
 
@@ -365,3 +363,42 @@ log the moment a workflow references it.
 Once all four exist, the next `vX.Y.Z` tag
 (`.claude/docs/CONVENTIONS.md` § "When a tag is cut") is what actually exercises this path
 for the first time: nothing before that point — this document included — has compiled it.
+
+## 9. Icon, splash screen and store artwork
+
+The launcher icon and the launch screen are **generated**, not drawn by hand. Five SVG
+sources live in `apps/mobile/assets/`, all of them the web app's open-book mark
+(`apps/web/public/favicon.svg`) on the application's own background token:
+
+| Source | Becomes |
+|---|---|
+| `icon-only.svg` | `mipmap-*/ic_launcher.png` and `ic_launcher_round.png` — the icon of Android 7 and 8.0, which know nothing of adaptive icons |
+| `icon-foreground.svg` | `mipmap-*/ic_launcher_foreground.png`, the adaptive icon's mark |
+| `icon-background.svg` | `mipmap-*/ic_launcher_background.png`, its flat background |
+| `splash.svg`, `splash-dark.svg` | `drawable*/splash.png` at every density, orientation and night variant |
+
+```bash
+pnpm --filter @librarius/mobile assets:generate   # the native resources
+pnpm --filter @librarius/mobile store:assets      # the Play Console's two images
+```
+
+Three things worth knowing before touching any of it:
+
+- **The foreground has to stay inside the safe zone.** A launcher masks an adaptive icon with
+  its own shape, and only the central 66 % always survives. `icon-foreground.svg` is cropped
+  to the mark plus a tenth of its size, and the generated `mipmap-anydpi-v26/ic_launcher.xml`
+  insets it by a further 16.7 %.
+- **The background must not be inset.** `@capacitor/assets` writes both layers inset, which
+  leaves the four corners transparent and makes a round mask cut a hole in the icon;
+  `scripts/finish-android-icons.mjs` rewrites those two files right after the generator and
+  removes the template leftovers nothing references any more. That is why `assets:generate`
+  is two commands rather than one.
+- **The generator reformats `AndroidManifest.xml`** (it parses and rewrites it). It keeps the
+  content, comments included; the diff is whitespace. Nothing to undo.
+
+`apps/mobile/store/` holds what the Play Console asks for and the native project does not
+use: `icon-512.png` (512 × 512, no alpha — Play refuses one) and `feature-graphic.png`
+(1024 × 500), both rendered from the SVG beside them. **Screenshots are not in here**: Play
+wants between two and eight real ones per form factor, and only a run on a device or a signed
+-in browser at phone width can produce them — `docs/wiki/Mobile-Play-Store.md` says what to
+shoot.
