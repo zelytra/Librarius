@@ -1492,6 +1492,32 @@
     "services": {
       "database": "Base de données",
       "keycloak": "Keycloak"
+    },
+    "status": {
+      "label": "Statut du signalement",
+      "filter": "Filtrer par statut",
+      "all": "Tous",
+      "NEW": "Nouveau",
+      "SEEN": "Vu",
+      "HANDLED": "Traité",
+      "IRRELEVANT": "Non pertinent",
+      "filters": {
+        "NEW": "Nouveaux",
+        "SEEN": "Vus",
+        "HANDLED": "Traités",
+        "IRRELEVANT": "Non pertinents"
+      },
+      "mark": {
+        "SEEN": "Marquer vu",
+        "HANDLED": "Marquer traité",
+        "IRRELEVANT": "Marquer non pertinent"
+      },
+      "saved": {
+        "SEEN": "Signalement marqué vu.",
+        "HANDLED": "Signalement marqué traité.",
+        "IRRELEVANT": "Signalement marqué non pertinent."
+      },
+      "failed": "Le statut n'a pas pu être enregistré."
     }
   }
 }

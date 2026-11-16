@@ -1492,6 +1492,32 @@
     "services": {
       "database": "Database",
       "keycloak": "Keycloak"
+    },
+    "status": {
+      "label": "Report status",
+      "filter": "Filter by status",
+      "all": "All",
+      "NEW": "New",
+      "SEEN": "Seen",
+      "HANDLED": "Handled",
+      "IRRELEVANT": "Not relevant",
+      "filters": {
+        "NEW": "New",
+        "SEEN": "Seen",
+        "HANDLED": "Handled",
+        "IRRELEVANT": "Not relevant"
+      },
+      "mark": {
+        "SEEN": "Mark seen",
+        "HANDLED": "Mark handled",
+        "IRRELEVANT": "Mark not relevant"
+      },
+      "saved": {
+        "SEEN": "Report marked seen.",
+        "HANDLED": "Report marked handled.",
+        "IRRELEVANT": "Report marked not relevant."
+      },
+      "failed": "The status could not be saved."
     }
   }
 }
