@@ -60,6 +60,24 @@ export interface AchievementsDto {
   unseen?: AchievementUnlockDto[];
 }
 
+export interface AdminUserDto {
+  id?: string;
+  username?: string;
+  displayName?: string;
+  email?: string;
+  createdAt?: OffsetDateTime;
+  avatarVersion?: number;
+  libraryItems?: number;
+  lastSeenAt?: OffsetDateTime;
+}
+
+export interface AdminUserPageDto {
+  items?: AdminUserDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -1108,6 +1126,12 @@ export type GetApiAdminFeedbackParams = {
   status?: string;
 };
 
+export type GetApiAdminUsersParams = {
+  page?: number;
+  q?: string;
+  size?: number;
+};
+
 export type GetApiAuthorsParams = {
   q?: string;
 };
@@ -1778,6 +1802,186 @@ export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getAp
 
 
 
+
+export const getGetApiAdminUsersUrl = (params?: GetApiAdminUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/users?${stringifiedParams}` : `/api/admin/users`
+}
+
+/**
+ * @summary Users
+ */
+export const getApiAdminUsers = async (params?: GetApiAdminUsersParams, options?: Parameters<typeof apiClient>[1]): Promise<AdminUserPageDto> => {
+
+  return apiClient<AdminUserPageDto>(getGetApiAdminUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminUsersQueryKey = (params?: GetApiAdminUsersParams,) => {
+    return [
+    `/api/admin/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAdminUsersQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminUsers>>> = () => getApiAdminUsers(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminUsers>>>
+export type GetApiAdminUsersQueryError = void
+
+
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params: undefined |  GetApiAdminUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Users */
+export function useGetApiAdminUsers<TData = Awaited<ReturnType<typeof getApiAdminUsers>>, TError = void>(
+ params?: GetApiAdminUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminUsers>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteApiAdminUsersIdUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/users/${id}`
+}
+
+/**
+ * @summary Delete User
+ */
+export const deleteApiAdminUsersId = async (id: string, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiAdminUsersIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiAdminUsersIdMutationKey = () => ['deleteApiAdminUsersId'] as const;
+
+export const getDeleteApiAdminUsersIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiAdminUsersIdMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, DeleteApiAdminUsersIdMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiAdminUsersId(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiAdminUsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiAdminUsersId>>>
+
+    export type DeleteApiAdminUsersIdMutationError = void
+    export type DeleteApiAdminUsersIdMutationVariables = {id: string}
+
+    /** @summary Delete User */
+export const useDeleteApiAdminUsersId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminUsersId>>, TError,DeleteApiAdminUsersIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiAdminUsersId>>,
+        TError,
+        DeleteApiAdminUsersIdMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiAdminUsersIdMutationOptions(options), queryClient);
+    }
 
 export const getGetApiAuthorsUrl = (params?: GetApiAuthorsParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -1446,8 +1446,9 @@
     "restricted": "Administrators only",
     "restrictedHint": "This page needs the administrator role, granted in Keycloak.",
     "tabs": {
-      "reports": "Reports",
-      "monitoring": "Monitoring"
+      "reports": "Tickets",
+      "monitoring": "Monitoring",
+      "users": "Members"
     },
     "kinds": {
       "BUG": "Problem",
@@ -1530,6 +1531,24 @@
         "IRRELEVANT": "Report marked not relevant."
       },
       "failed": "The status could not be saved."
+    },
+    "users": {
+      "search": "Find a member",
+      "error": "Could not load the members.",
+      "empty": "No member matches.",
+      "total_one": "{{count}} member",
+      "total_other": "{{count}} members",
+      "since": "Joined {{date}}",
+      "titles_one": "{{count}} title",
+      "titles_other": "{{count}} titles",
+      "delete": "Delete",
+      "deleteAria": "Delete {{name}}",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteText": "Their Keycloak account and all their data — library, wishes, readings, reviews, follows, picture — will be deleted for good. The shared catalog stays as it is.",
+      "confirmLabel": "Type “{{username}}” to confirm",
+      "confirm": "Delete for good",
+      "deleted": "{{name}} was deleted, with all their data.",
+      "deleteFailed": "The deletion failed: nothing was erased."
     }
   },
   "profile": {

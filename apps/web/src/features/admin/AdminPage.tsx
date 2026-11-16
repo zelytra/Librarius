@@ -8,8 +8,9 @@ import { Screen, ScreenTitle, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, Loading } from '../../shared/ui/states';
 import { AdminReports } from './AdminReports';
 import { AdminMonitoring } from './AdminMonitoring';
+import { AdminUsers } from './AdminUsers';
 
-type Tab = 'reports' | 'monitoring';
+type Tab = 'reports' | 'users' | 'monitoring';
 
 /**
  * The admin screens (#488): the reports members sent and the errors recorded (#489, #490),
@@ -44,7 +45,8 @@ function AdminOnly({ children }: { children: ReactNode }) {
 function AdminTabs() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
-  const tab: Tab = params.get('tab') === 'monitoring' ? 'monitoring' : 'reports';
+  const asked = params.get('tab');
+  const tab: Tab = asked === 'monitoring' || asked === 'users' ? asked : 'reports';
   return (
     <>
       <Segmented<Tab>
@@ -52,10 +54,11 @@ function AdminTabs() {
         onChange={(next) => setParams(next === 'reports' ? {} : { tab: next }, { replace: true })}
         options={[
           { id: 'reports', label: t('admin.tabs.reports') },
+          { id: 'users', label: t('admin.tabs.users') },
           { id: 'monitoring', label: t('admin.tabs.monitoring') },
         ]}
       />
-      {tab === 'reports' ? <AdminReports /> : <AdminMonitoring />}
+      {tab === 'reports' ? <AdminReports /> : tab === 'users' ? <AdminUsers /> : <AdminMonitoring />}
     </>
   );
 }

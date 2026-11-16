@@ -1446,8 +1446,9 @@
     "restricted": "Réservé aux administrateurs",
     "restrictedHint": "Cette page demande le rôle administrateur, attribué dans Keycloak.",
     "tabs": {
-      "reports": "Signalements",
-      "monitoring": "Supervision"
+      "reports": "Tickets",
+      "monitoring": "Supervision",
+      "users": "Membres"
     },
     "kinds": {
       "BUG": "Problème",
@@ -1530,6 +1531,24 @@
         "IRRELEVANT": "Signalement marqué non pertinent."
       },
       "failed": "Le statut n'a pas pu être enregistré."
+    },
+    "users": {
+      "search": "Chercher un membre",
+      "error": "Impossible de charger les membres.",
+      "empty": "Aucun membre ne correspond.",
+      "total_one": "{{count}} membre",
+      "total_other": "{{count}} membres",
+      "since": "Inscrit le {{date}}",
+      "titles_one": "{{count}} titre",
+      "titles_other": "{{count}} titres",
+      "delete": "Supprimer",
+      "deleteAria": "Supprimer {{name}}",
+      "deleteTitle": "Supprimer {{name}} ?",
+      "deleteText": "Son compte Keycloak et toutes ses données — bibliothèque, souhaits, lectures, avis, abonnements, photo — seront supprimés définitivement. Le catalogue partagé reste intact.",
+      "confirmLabel": "Tape « {{username}} » pour confirmer",
+      "confirm": "Supprimer définitivement",
+      "deleted": "{{name}} a été supprimé, avec toutes ses données.",
+      "deleteFailed": "La suppression a échoué : rien n’a été effacé."
     }
   },
   "profile": {
