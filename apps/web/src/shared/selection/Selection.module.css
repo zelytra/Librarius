@@ -133,3 +133,10 @@
 .spacer {
   height: 88px;
 }
+
+/* #508: the kinds, one chip each, wrapping on a phone. */
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

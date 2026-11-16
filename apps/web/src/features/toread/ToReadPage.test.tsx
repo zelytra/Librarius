@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
@@ -105,5 +105,32 @@ describe('ToReadPage', () => {
     await waitFor(() => expect(sent).toEqual([
       { ids: ['a', 'c'], seriesIds: [], status: 'READ', format: 'POCKET', categoryId: 'cat-or' },
     ]));
+  });
+
+  /** #508: the kind of the selected titles changes with the rest. */
+  test('files the selected titles under another kind', async () => {
+    libraryReturns([
+      libraryItem({ id: 'a', status: 'TO_READ', book: { kind: 'BOOK', title: 'Premier' } }),
+      libraryItem({ id: 'b', status: 'TO_READ', book: { kind: 'BOOK', title: 'Deuxième' } }),
+    ]);
+    const sent: unknown[] = [];
+    server.use(http.post('*/api/library/bulk', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json({ updated: 2 });
+    }));
+    renderWithProviders(<ToReadPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Sélectionner' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Choisir « Premier »' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Choisir « Deuxième »' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Modifier' }));
+
+    const dialog = await screen.findByRole('dialog');
+    const kinds = within(dialog).getByRole('group', { name: 'Type de livre' });
+    await userEvent.click(within(kinds).getByRole('button', { name: 'BD' }));
+    expect(within(kinds).getByRole('button', { name: 'BD' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Appliquer' }));
+
+    await waitFor(() => expect(sent).toEqual([{ ids: ['a', 'b'], seriesIds: [], kind: 'COMIC' }]));
   });
 });

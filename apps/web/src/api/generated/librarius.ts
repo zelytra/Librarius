@@ -184,6 +184,17 @@ export const Ownership = {
   NOT_OWNED: 'NOT_OWNED',
 } as const;
 
+export type Kind = typeof Kind[keyof typeof Kind];
+
+
+export const Kind = {
+  BOOK: 'BOOK',
+  MANGA: 'MANGA',
+  COMIC: 'COMIC',
+  GRAPHIC_NOVEL: 'GRAPHIC_NOVEL',
+  AUDIOBOOK: 'AUDIOBOOK',
+} as const;
+
 export interface BulkUpdateDto {
   /**
      * @maxItems 500
@@ -198,6 +209,7 @@ export interface BulkUpdateDto {
   status?: LibraryStatus;
   ownership?: Ownership;
   format?: BookFormat;
+  kind?: Kind;
   categoryId?: Uuid;
   clearCategory?: boolean;
   rating?: number;
@@ -323,17 +335,6 @@ export interface ExportCategoryDto {
   color?: string;
   sortOrder?: number;
 }
-
-export type Kind = typeof Kind[keyof typeof Kind];
-
-
-export const Kind = {
-  BOOK: 'BOOK',
-  MANGA: 'MANGA',
-  COMIC: 'COMIC',
-  GRAPHIC_NOVEL: 'GRAPHIC_NOVEL',
-  AUDIOBOOK: 'AUDIOBOOK',
-} as const;
 
 export interface ManualBookDto {
   kind: Kind;

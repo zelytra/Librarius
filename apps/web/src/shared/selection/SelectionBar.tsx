@@ -7,13 +7,14 @@ import {
   useGetApiCategories,
   usePostApiLibraryBulk,
 } from '../../api/generated/librarius';
-import { Button } from '../ui/primitives';
+import { Button, Chip } from '../ui/primitives';
 import { Modal } from '../ui/Modal';
 import { StatusPicker } from '../ui/StatusPicker';
 import { toast } from '../ui/toast';
 import { STATS_QUERIES } from '../statsQueries';
 import { CategoryChoice } from '../../features/detail/CategoryChoice';
 import { StarRating } from '../../features/detail/StarRating';
+import { ALL_KINDS, KIND_LABEL_KEY } from '../../features/discover/medium';
 import type { Selection } from './useSelection';
 import { bulkRequest, type Draft } from './bulkRequest';
 import styles from './Selection.module.css';
@@ -23,7 +24,7 @@ const changesIn = (draft: Draft) => Object.values(draft).filter((v) => v !== und
 /**
  * The bar of a screen that is selecting (#457): how many titles or series are picked, and the
  * sheet of what to do to all of them. Several changes are picked first — status, ownership,
- * format, category, rating — then applied together in one request (#467); removal stays a
+ * format, kind, category, rating — then applied together in one request (#467); removal stays a
  * separate, confirmed action.
  */
 export function SelectionBar({ selection }: { selection: Selection }) {
@@ -87,6 +88,17 @@ export function SelectionBar({ selection }: { selection: Selection }) {
               onFormat={(format) => set({ format: format ?? undefined })}
               disabled={isPending}
             />
+            <div role="group" aria-labelledby="selection-kind">
+              <h3 id="selection-kind" className={styles.sheetTitle}>{t('selection.kind')}</h3>
+              <div className={styles.kinds}>
+                {ALL_KINDS.map((kind) => (
+                  <Chip key={kind} selected={draft.kind === kind}
+                    onClick={() => set({ kind: draft.kind === kind ? undefined : kind })}>
+                    {t(KIND_LABEL_KEY[kind])}
+                  </Chip>
+                ))}
+              </div>
+            </div>
             <div>
               <h3 className={styles.sheetTitle}>{t('selection.category')}</h3>
               <CategoryChoice

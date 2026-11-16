@@ -454,7 +454,7 @@ public class LibraryResource {
 
     /**
      * Applies one action to several titles at once (#457): a reading status, an ownership, a
-     * format, a category, a rating, or removal. Only the caller's titles are touched — an
+     * format, a kind (#508), a category, a rating, or removal. Only the caller's titles are touched — an
      * identifier of someone else's is skipped like an unknown one — and a category must be
      * one of theirs (400 otherwise).
      */
@@ -485,7 +485,9 @@ public class LibraryResource {
                 }
                 continue;
             }
-            LibraryItem item = items.findOwned(userId, id).orElse(null);
+            LibraryItem item = dto.kind() != null
+                    ? editions.moveToKind(userId, id, dto.kind()).orElse(null)
+                    : items.findOwned(userId, id).orElse(null);
             if (item == null) {
                 continue;
             }

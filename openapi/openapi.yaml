@@ -2946,6 +2946,8 @@ components:
           $ref: "#/components/schemas/Ownership"
         format:
           $ref: "#/components/schemas/BookFormat"
+        kind:
+          $ref: "#/components/schemas/Kind"
         categoryId:
           $ref: "#/components/schemas/UUID"
         clearCategory:

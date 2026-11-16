@@ -1418,7 +1418,8 @@
     "pending_one": "{{count}} change picked",
     "pending_other": "{{count}} changes picked",
     "apply": "Apply",
-    "pickSeries": "Pick the series “{{title}}”"
+    "pickSeries": "Pick the series “{{title}}”",
+    "kind": "Kind of book"
   },
   "feedback": {
     "open": "Report a problem",
