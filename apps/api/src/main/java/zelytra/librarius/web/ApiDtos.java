@@ -60,10 +60,10 @@ public final class ApiDtos {
      */
     public record MeDto(String id, String email, String displayName, String locale,
                         String timeZone, boolean trusted, boolean publicAccount, boolean admin,
-                        Long avatarVersion) {
+                        Long avatarVersion, boolean notifyComments) {
         public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount, admin, u.avatarVersion);
+                    u.publicAccount, admin, u.avatarVersion, u.notifyComments);
         }
     }
 
@@ -204,7 +204,9 @@ public final class ApiDtos {
             @NotBlank @Size(max = 255) String displayName,
             @NotBlank @Pattern(regexp = "fr|en") String locale,
             @Size(max = 64) String timeZone,
-            @NotNull Boolean publicAccount) {
+            @NotNull Boolean publicAccount,
+            /** Optional (#211): absent keeps the stored choice, for a client that predates it. */
+            Boolean notifyComments) {
     }
 
     /**
@@ -1233,7 +1235,9 @@ public final class ApiDtos {
      */
     public record MemberProfileDto(String id, String displayName, boolean trusted, Long avatarVersion,
             java.time.OffsetDateTime memberSince, boolean self, boolean following, boolean followsYou,
-            long followers, long followingCount, boolean visible, ProfileReadingDto reading) {
+            long followers, long followingCount, boolean visible, ProfileReadingDto reading,
+            /** While the caller follows the member: whether their activity notifies the caller (#516). */
+            Boolean notifyActivity) {
     }
 
     /** What a member reads, for whoever may see it. A rating shows only when its owner shared it. */
@@ -1311,6 +1315,27 @@ public final class ApiDtos {
     }
 
     public record AdminUserPageDto(java.util.List<AdminUserDto> items, int page, int size, long total) {
+    }
+
+    // ── Notifications (#516, #211) ─────────────────────────────────────────
+
+    /**
+     * One notification: {@code ACTIVITY} (a followed reader did {@code eventType} on
+     * {@code book}), {@code REACTION} ({@code emote}) or {@code COMMENT} ({@code comment}) on the
+     * recipient's own event. {@code eventId} is the screen it opens.
+     */
+    public record NotificationDto(UUID id, String type, MemberSummaryDto actor, UUID eventId, String eventType,
+            MemberBookDto book, String comment, String emote, java.time.OffsetDateTime createdAt,
+            java.time.OffsetDateTime readAt) {
+    }
+
+    public record NotificationPageDto(java.util.List<NotificationDto> items, int page, int size, boolean hasMore) {
+    }
+
+    public record UnreadCountDto(long count) {
+    }
+
+    public record FollowNotifyDto(@NotNull Boolean notifyActivity) {
     }
 
     // ── Monitoring (#491) ────────────────────────────────────────────────────

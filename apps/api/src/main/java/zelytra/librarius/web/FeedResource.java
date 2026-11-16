@@ -49,6 +49,14 @@ public class FeedResource {
         return feed.feed(currentUser.id(), PageRequest.of(page, size));
     }
 
+    /** One event with its reactions and comments — the screen a notification opens (#516). 404 out of reach. */
+    @GET
+    @Path("/{eventId}")
+    public ApiDtos.FeedItemDto one(@PathParam("eventId") UUID eventId) {
+        currentUser.require();
+        return feed.one(currentUser.id(), eventId).orElseThrow(NotFoundException::new);
+    }
+
     /** Sets the caller's reaction, replacing the one they had. 204. */
     @PUT
     @Path("/{eventId}/reaction")

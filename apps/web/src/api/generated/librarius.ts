@@ -582,6 +582,10 @@ export interface FeedbackStatusDto {
   status: string;
 }
 
+export interface FollowNotifyDto {
+  notifyActivity: boolean;
+}
+
 export interface FormatDto {
   format?: BookFormat;
 }
@@ -745,6 +749,7 @@ export interface MeDto {
   publicAccount?: boolean;
   admin?: boolean;
   avatarVersion?: number;
+  notifyComments?: boolean;
 }
 
 export interface ProfileTitleDto {
@@ -783,6 +788,7 @@ export interface MemberProfileDto {
   followingCount?: number;
   visible?: boolean;
   reading?: ProfileReadingDto;
+  notifyActivity?: boolean;
 }
 
 export interface MemberSearchDto {
@@ -817,6 +823,26 @@ export interface MonitoringDto {
   activeNow?: number;
   days?: MonitoringDayDto[];
   services?: ServiceStatusDto[];
+}
+
+export interface NotificationDto {
+  id?: Uuid;
+  type?: string;
+  actor?: MemberSummaryDto;
+  eventId?: Uuid;
+  eventType?: string;
+  book?: MemberBookDto;
+  comment?: string;
+  emote?: string;
+  createdAt?: OffsetDateTime;
+  readAt?: OffsetDateTime;
+}
+
+export interface NotificationPageDto {
+  items?: NotificationDto[];
+  page?: number;
+  size?: number;
+  hasMore?: boolean;
 }
 
 export interface OwnershipDto {
@@ -1049,6 +1075,10 @@ export interface TimelineDto {
   booksPerMonth?: number;
 }
 
+export interface UnreadCountDto {
+  count?: number;
+}
+
 export interface UpcomingReleaseDto {
   id?: Uuid;
   seriesId?: Uuid;
@@ -1076,6 +1106,7 @@ export interface UpdateMeDto {
   /** @maxLength 64 */
   timeZone?: string;
   publicAccount: boolean;
+  notifyComments?: boolean;
 }
 
 export interface ValueDto {
@@ -1196,6 +1227,11 @@ export type GetApiLibraryParams = {
   standalone?: boolean;
   status?: LibraryStatus;
   view?: Uuid;
+};
+
+export type GetApiNotificationsParams = {
+  page?: number;
+  size?: number;
 };
 
 export type GetApiReleasesUpcomingParams = {
@@ -3519,6 +3555,107 @@ export function useGetApiFeed<TData = Awaited<ReturnType<typeof getApiFeed>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiFeedQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiFeedEventIdUrl = (eventId: Uuid,) => {
+
+
+
+
+  return `/api/feed/${eventId}`
+}
+
+/**
+ * @summary One
+ */
+export const getApiFeedEventId = async (eventId: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<FeedItemDto> => {
+
+  return apiClient<FeedItemDto>(getGetApiFeedEventIdUrl(eventId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiFeedEventIdQueryKey = (eventId: Uuid,) => {
+    return [
+    `/api/feed/${eventId}`
+    ] as const;
+    }
+
+
+export const getGetApiFeedEventIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiFeedEventId>>, TError = void>(eventId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiFeedEventIdQueryKey(eventId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiFeedEventId>>> = () => getApiFeedEventId(eventId, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: eventId !== null && eventId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiFeedEventIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiFeedEventId>>>
+export type GetApiFeedEventIdQueryError = void
+
+
+/** @summary One */
+export function useGetApiFeedEventId<TData = Awaited<ReturnType<typeof getApiFeedEventId>>, TError = void>(
+ eventId: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiFeedEventId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiFeedEventId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One */
+export function useGetApiFeedEventId<TData = Awaited<ReturnType<typeof getApiFeedEventId>>, TError = void>(
+ eventId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiFeedEventId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiFeedEventId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One */
+export function useGetApiFeedEventId<TData = Awaited<ReturnType<typeof getApiFeedEventId>>, TError = void>(
+ eventId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One */
+export function useGetApiFeedEventId<TData = Awaited<ReturnType<typeof getApiFeedEventId>>, TError = void>(
+ eventId: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiFeedEventId>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiFeedEventIdQueryOptions(eventId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -6963,6 +7100,287 @@ export const useDeleteApiMeLibrary = <TError = void,
       return useMutation(getDeleteApiMeLibraryMutationOptions(options), queryClient);
     }
 
+export const getGetApiNotificationsUrl = (params?: GetApiNotificationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/notifications?${stringifiedParams}` : `/api/notifications`
+}
+
+/**
+ * @summary List
+ */
+export const getApiNotifications = async (params?: GetApiNotificationsParams, options?: Parameters<typeof apiClient>[1]): Promise<NotificationPageDto> => {
+
+  return apiClient<NotificationPageDto>(getGetApiNotificationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiNotificationsQueryKey = (params?: GetApiNotificationsParams,) => {
+    return [
+    `/api/notifications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof getApiNotifications>>, TError = void>(params?: GetApiNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiNotificationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiNotifications>>> = () => getApiNotifications(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiNotifications>>>
+export type GetApiNotificationsQueryError = void
+
+
+/** @summary List */
+export function useGetApiNotifications<TData = Awaited<ReturnType<typeof getApiNotifications>>, TError = void>(
+ params: undefined |  GetApiNotificationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof getApiNotifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiNotifications<TData = Awaited<ReturnType<typeof getApiNotifications>>, TError = void>(
+ params?: GetApiNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiNotifications>>,
+          TError,
+          Awaited<ReturnType<typeof getApiNotifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiNotifications<TData = Awaited<ReturnType<typeof getApiNotifications>>, TError = void>(
+ params?: GetApiNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List */
+export function useGetApiNotifications<TData = Awaited<ReturnType<typeof getApiNotifications>>, TError = void>(
+ params?: GetApiNotificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotifications>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiNotificationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostApiNotificationsReadUrl = () => {
+
+
+
+
+  return `/api/notifications/read`
+}
+
+/**
+ * @summary Read All
+ */
+export const postApiNotificationsRead = async ( options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getPostApiNotificationsReadUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostApiNotificationsReadMutationKey = () => ['postApiNotificationsRead'] as const;
+
+export const getPostApiNotificationsReadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiNotificationsRead>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiNotificationsRead>>, TError,void, TContext> => {
+
+const mutationKey = getPostApiNotificationsReadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiNotificationsRead>>, void> = () => {
+
+
+          return  postApiNotificationsRead(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiNotificationsReadMutationResult = NonNullable<Awaited<ReturnType<typeof postApiNotificationsRead>>>
+
+    export type PostApiNotificationsReadMutationError = void
+
+
+    /** @summary Read All */
+export const usePostApiNotificationsRead = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiNotificationsRead>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiNotificationsRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPostApiNotificationsReadMutationOptions(options), queryClient);
+    }
+
+export const getGetApiNotificationsUnreadUrl = () => {
+
+
+
+
+  return `/api/notifications/unread`
+}
+
+/**
+ * @summary Unread
+ */
+export const getApiNotificationsUnread = async ( options?: Parameters<typeof apiClient>[1]): Promise<UnreadCountDto> => {
+
+  return apiClient<UnreadCountDto>(getGetApiNotificationsUnreadUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiNotificationsUnreadQueryKey = () => {
+    return [
+    `/api/notifications/unread`
+    ] as const;
+    }
+
+
+export const getGetApiNotificationsUnreadQueryOptions = <TData = Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiNotificationsUnreadQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiNotificationsUnread>>> = () => getApiNotificationsUnread(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiNotificationsUnreadQueryResult = NonNullable<Awaited<ReturnType<typeof getApiNotificationsUnread>>>
+export type GetApiNotificationsUnreadQueryError = void
+
+
+/** @summary Unread */
+export function useGetApiNotificationsUnread<TData = Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiNotificationsUnread>>,
+          TError,
+          Awaited<ReturnType<typeof getApiNotificationsUnread>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Unread */
+export function useGetApiNotificationsUnread<TData = Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiNotificationsUnread>>,
+          TError,
+          Awaited<ReturnType<typeof getApiNotificationsUnread>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Unread */
+export function useGetApiNotificationsUnread<TData = Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Unread */
+export function useGetApiNotificationsUnread<TData = Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiNotificationsUnread>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiNotificationsUnreadQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiReleasesUpcomingUrl = (params?: GetApiReleasesUpcomingParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -9167,6 +9585,93 @@ export const usePutApiUsersIdFollow = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiUsersIdFollowMutationOptions(options), queryClient);
+    }
+
+export const getPutApiUsersIdFollowNotifyUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/follow/notify`
+}
+
+/**
+ * @summary Follow Notify
+ */
+export const putApiUsersIdFollowNotify = async (id: string,
+    followNotifyDto: FollowNotifyDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiUsersIdFollowNotifyUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(followNotifyDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiUsersIdFollowNotifyMutationKey = () => ['putApiUsersIdFollowNotify'] as const;
+
+export const getPutApiUsersIdFollowNotifyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>, TError,PutApiUsersIdFollowNotifyMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>, TError,PutApiUsersIdFollowNotifyMutationVariables, TContext> => {
+
+const mutationKey = getPutApiUsersIdFollowNotifyMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>, PutApiUsersIdFollowNotifyMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiUsersIdFollowNotify(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiUsersIdFollowNotifyMutationResult = NonNullable<Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>>
+    export type PutApiUsersIdFollowNotifyMutationBody = FollowNotifyDto
+    export type PutApiUsersIdFollowNotifyMutationError = void
+    export type PutApiUsersIdFollowNotifyMutationVariables = {id: string;data: FollowNotifyDto}
+
+    /** @summary Follow Notify */
+export const usePutApiUsersIdFollowNotify = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>, TError,PutApiUsersIdFollowNotifyMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiUsersIdFollowNotify>>,
+        TError,
+        PutApiUsersIdFollowNotifyMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiUsersIdFollowNotifyMutationOptions(options), queryClient);
     }
 
 export const getGetApiUsersIdProfileUrl = (id: string,) => {

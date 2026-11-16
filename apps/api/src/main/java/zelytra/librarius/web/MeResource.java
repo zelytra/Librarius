@@ -125,6 +125,9 @@ public class MeResource {
         user.locale = dto.locale();
         user.timeZone = parseZone(dto.timeZone());
         user.publicAccount = dto.publicAccount();
+        if (dto.notifyComments() != null) {
+            user.notifyComments = dto.notifyComments();
+        }
         return MeDto.of(user, currentUser.isAdmin());
     }
 

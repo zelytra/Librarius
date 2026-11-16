@@ -52,17 +52,27 @@ public class FeedService {
     @Inject
     LibraryItemRepository libraryItems;
 
-    /** Logs that {@code userId} did {@code type} on an edition; a second time is a no-op. */
+    @Inject
+    NotificationService notifications;
+
+    /**
+     * Logs that {@code userId} did {@code type} on an edition; a second time is a no-op. A new
+     * event notifies the author's followers (#516).
+     */
     public void record(String userId, Type type, UUID editionId) {
-        em.createNativeQuery("""
+        UUID id = UUID.randomUUID();
+        int inserted = em.createNativeQuery("""
                         insert into feed_event (id, user_id, type, edition_id, created_at)
                         values (:id, :user, :type, :edition, now())
                         on conflict (user_id, type, edition_id) do nothing""")
-                .setParameter("id", UUID.randomUUID())
+                .setParameter("id", id)
                 .setParameter("user", userId)
                 .setParameter("type", type.name())
                 .setParameter("edition", editionId)
                 .executeUpdate();
+        if (inserted > 0) {
+            notifications.activity(userId, id);
+        }
     }
 
     @Transactional
@@ -78,27 +88,54 @@ public class FeedService {
         if (actors.isEmpty()) {
             return new FeedPageDto(List.of(), window.page(), window.size(), false);
         }
-        // A review event whose review is no longer shared, or empty, is gone with it.
         @SuppressWarnings("unchecked")
-        List<Object[]> rows = em.createNativeQuery("""
-                        select fe.id, fe.type, fe.created_at, u.id as uid, u.display_name, u.trusted,
-                               e.id as eid, w.id as wid, w.kind, w.title, w.authors, e.cover_url,
-                               li.rating, li.review, li.review_shared, u.avatar_version
-                        from feed_event fe
-                          join app_user u on u.id = fe.user_id
-                          join edition e on e.id = fe.edition_id
-                          join work w on w.id = e.work_id
-                          left join library_item li on li.user_id = fe.user_id and li.edition_id = fe.edition_id
-                        where fe.user_id in (:actors)
-                          and (fe.type <> 'REVIEW_SHARED'
-                               or (li.review_shared and (li.rating is not null or li.review is not null)))
-                        order by fe.created_at desc, fe.id""")
+        List<Object[]> rows = em.createNativeQuery(SELECT_EVENTS + """
+                         where fe.user_id in (:actors)""" + STILL_SHARED + " order by fe.created_at desc, fe.id")
                 .setParameter("actors", actors)
                 .setFirstResult(window.offset())
                 .setMaxResults(window.size() + 1)
                 .getResultList();
         boolean hasMore = rows.size() > window.size();
         List<Object[]> page = hasMore ? rows.subList(0, window.size()) : rows;
+        return new FeedPageDto(items(viewerId, page), window.page(), window.size(), hasMore);
+    }
+
+    /**
+     * One event, as the screen a notification opens shows it (#516) — with its reactions and
+     * comments; empty when it is unknown or its author is out of the caller's reach.
+     */
+    @Transactional
+    public Optional<FeedItemDto> one(String viewerId, UUID eventId) {
+        if (!canActOn(viewerId, eventId)) {
+            return Optional.empty();
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(SELECT_EVENTS + " where fe.id = :id" + STILL_SHARED)
+                .setParameter("id", eventId)
+                .getResultList();
+        return items(viewerId, rows).stream().findFirst();
+    }
+
+    /** Every event shown, with its author, its book and the shared review when it is one. */
+    private static final String SELECT_EVENTS = """
+            select fe.id, fe.type, fe.created_at, u.id as uid, u.display_name, u.trusted,
+                   e.id as eid, w.id as wid, w.kind, w.title, w.authors, e.cover_url,
+                   li.rating, li.review, li.review_shared, u.avatar_version
+            from feed_event fe
+              join app_user u on u.id = fe.user_id
+              join edition e on e.id = fe.edition_id
+              join work w on w.id = e.work_id
+              left join library_item li on li.user_id = fe.user_id and li.edition_id = fe.edition_id
+            """;
+
+    /** A review event whose review is no longer shared, or empty, is gone with it. */
+    private static final String STILL_SHARED = """
+
+              and (fe.type <> 'REVIEW_SHARED'
+                   or (li.review_shared and (li.rating is not null or li.review is not null)))
+            """;
+
+    private List<FeedItemDto> items(String viewerId, List<Object[]> page) {
         List<UUID> ids = page.stream().map(row -> (UUID) row[0]).toList();
         Map<UUID, Map<String, Long>> reactions = reactions(ids);
         Map<UUID, String> mine = myReactions(viewerId, ids);
@@ -117,7 +154,7 @@ public class FeedService {
                     review ? toDouble(row[12]) : null, review ? (String) row[13] : null,
                     reactions.getOrDefault(id, Map.of()), mine.get(id), comments.getOrDefault(id, List.of())));
         }
-        return new FeedPageDto(items, window.page(), window.size(), hasMore);
+        return items;
     }
 
     /** Sets the caller's reaction, replacing the one they had; false when the event is out of reach. */
@@ -134,6 +171,7 @@ public class FeedService {
                 .setParameter("user", viewerId)
                 .setParameter("emote", emote)
                 .executeUpdate();
+        notifications.reaction(viewerId, eventId, emote);
         return true;
     }
 
@@ -164,6 +202,7 @@ public class FeedService {
                 .setParameter("user", viewerId)
                 .setParameter("comment", comment.strip())
                 .executeUpdate();
+        notifications.comment(viewerId, eventId, id);
         return Optional.of(id);
     }
 

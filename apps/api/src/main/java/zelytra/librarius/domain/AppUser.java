@@ -75,4 +75,8 @@ public class AppUser {
     /** The Keycloak username (#499, V40), shown to the admins only. */
     @Column(length = 255)
     public String username;
+
+    /** Whether comments on this member's activity notify them (#211, V41). */
+    @Column(name = "notify_comments", nullable = false)
+    public boolean notifyComments = true;
 }
