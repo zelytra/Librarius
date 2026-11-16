@@ -55,6 +55,20 @@
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "+"
       }
+    },
+    {
+      "clientId": "librarius-mobile",
+      "name": "Librarius native app",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["fr.zelytra.librarius://auth"],
+      "webOrigins": ["https://localhost", "capacitor://localhost"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "fr.zelytra.librarius://auth"
+      }
     }
   ]
 }

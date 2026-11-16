@@ -148,73 +148,53 @@ The upgrade was mechanical because `android/` is the stock template plus a handf
 edits (§ 7): eight files differ between the 7 and 8 scaffolds, and only `app/build.gradle` and
 `AndroidManifest.xml` of them carry edits of ours to re-apply.
 
-## 5. Authentication — what does not work yet
+## 5. Authentication in the container
 
-**This is the open point of the bootstrap.** The redirect URI is branched and tested; the
-flow around it is not implemented, and it will not work by accident.
+Implemented by [#528](https://github.com/zelytra/Librarius/issues/528). It is the one part of
+this workspace that **no test and no CI job can prove**: the pieces below are unit-tested with
+the plugins faked, and only a run on a device shows that the OS routes the callback back.
 
-### What the web app does today
-
-`apps/web/src/auth/oidc.ts` configures Authorization Code + PKCE through
-`react-oidc-context`: `redirect_uri` is `window.location.origin`, the session is stored in
-`localStorage`, and `signinRedirect()` navigates the page to Keycloak.
-
-### What breaks inside the container
+### Why the browser flow cannot be reused as it is
 
 - **The origin is not an address.** The WebView serves the bundle from `https://localhost`
-  (Android) or `capacitor://localhost` (iOS) — the same two values for every installation
-  of every Capacitor app. Keycloak cannot use either as a redirect target.
+  (Android) or `capacitor://localhost` (iOS) — the same two values for every installation of
+  every Capacitor app — so neither can be a redirect target.
 - **The sign-in page must not run in the WebView.** RFC 8252 (OAuth 2.0 for Native Apps)
   requires the system browser: an embedded WebView gives the app access to the credentials
-  typed into it, and its cookie jar is separate, so there is no single sign-on with the
-  browser and every launch asks for the password again.
-- **The callback comes back out of band**, through a custom scheme the OS routes to the
-  app, not through a page navigation the WebView can follow.
+  typed into it, and its cookie jar is private to the app, so there is no single sign-on with
+  the browser and every launch would ask for the password again.
+- **The callback comes back out of band**, through a custom scheme the OS routes to the app,
+  not through a page navigation the WebView can follow.
 
-### What is already in place
+### How it works now
 
-`redirect_uri` and `post_logout_redirect_uri` become `fr.zelytra.librarius://auth` when
-`Capacitor.isNativePlatform()` is true — a reverse-DNS scheme mirroring the Capacitor
-`appId`, rather than the `librarius://` of the issue, because any application installed on
-the device can claim a short scheme. Both branches are locked by
-`apps/web/src/auth/oidc.test.ts`. The web behaviour is byte-for-byte what it was.
+| Piece | Where |
+|---|---|
+| `fr.zelytra.librarius://auth` as redirect and post-logout URI | `apps/web/src/auth/nativeAuth.ts` (`NATIVE_REDIRECT_URI`), used by `auth/oidc.ts` when `Capacitor.isNativePlatform()` |
+| The authorization page opened in a Custom Tab / `ASWebAuthenticationSession` | `systemBrowserNavigator`, the `INavigator` given to `new UserManager(settings, …)` in place of the redirect navigator |
+| The callback link turned back into a signed-in session | `routeAuthCallbacks`, registered once in `main.tsx`: it listens for `appUrlOpen`, closes the browser and calls `signinCallback(url)` — or `signoutCallback(url)` for the sign-out leg, told apart by the presence of `code`/`error` |
+| The scheme registered natively | the second `<intent-filter>` in `AndroidManifest.xml`, on `@string/custom_url_scheme`; `CFBundleURLTypes` on the iOS side ([#531](https://github.com/zelytra/Librarius/issues/531)) |
+| The Keycloak client | `librarius-mobile`, public, PKCE `S256`, direct access grants off, in `infra/keycloak/realm-librarius.json` **and** the realm embedded in `infra/helm/librarius/templates/keycloak.yaml` |
+| Which client the app asks for | `VITE_OIDC_CLIENT_ID=librarius-mobile` in `apps/web/.env.mobile` |
 
-### What is still missing, precisely
+Two details that are easy to get wrong and expensive to debug:
 
-1. **A Keycloak client for the native app.** The realm declares `librarius-web`, whose
-   redirect URIs are the web origins. A public client `librarius-mobile` has to be added to
-   `infra/keycloak/realm-librarius.json` **and** to the realm embedded in
-   `infra/helm/librarius/templates/keycloak.yaml`, with `redirectUris:
-   ["fr.zelytra.librarius://auth"]`, PKCE `S256` required and `directAccessGrantsEnabled`
-   off. The app then only needs `VITE_OIDC_CLIENT_ID=librarius-mobile` at build time — the
-   variable is already read.
-2. **`webOrigins` on that client.** The token exchange is an XHR sent by the WebView, whose
-   `Origin` is `https://localhost` or `capacitor://localhost`. `webOrigins: ["+"]` derives
-   the allowed origins from the redirect URIs, and a custom scheme derives nothing: both
-   origins have to be listed explicitly or the code exchange fails on CORS, after a login
-   that looked successful.
-3. **Two plugins**: `@capacitor/browser` to open the authorization URL in a Custom Tab /
-   `ASWebAuthenticationSession`, and `@capacitor/app` to receive the `appUrlOpen` event
-   carrying the callback URL.
-4. **A navigator for `oidc-client-ts`.** The seam exists and needs no fork:
-   `new UserManager(settings, redirectNavigator)` takes an `INavigator`
-   (`prepare(): Promise<IWindow>` / `callback(url)`), and `react-oidc-context` ≥ 3 accepts a
-   ready-made instance — `<AuthProvider userManager={…}>`, the `AuthProviderUserManagerProps`
-   half of its props union. The native implementation opens the URL with `Browser.open()`,
-   waits for `appUrlOpen`, closes the browser and hands the URL to `signinCallback(url)`,
-   which finishes PKCE against the verifier kept in storage.
-5. **The scheme registered natively**: an `<intent-filter>` with
-   `android:scheme="fr.zelytra.librarius"` in `AndroidManifest.xml`, and the matching
-   `CFBundleURLTypes` entry in `Info.plist`. `AndroidManifest.xml` exists now
-   ([#70](https://github.com/zelytra/Librarius/issues/70)) and deliberately carries no such
-   intent-filter yet — auth stayed out of #70's scope on purpose (§ 7), it is not blocked by
-   anything technical any more. `Info.plist` still does not exist —
-   [#71](https://github.com/zelytra/Librarius/issues/71).
+- **`webOrigins` has to list the two container origins explicitly.** `"+"` derives the allowed
+  origins from the redirect URIs, and a custom scheme derives nothing: without
+  `https://localhost` and `capacitor://localhost` the token exchange fails on CORS *after* a
+  sign-in that looked successful.
+- **`signinRedirect()` ignores whatever the navigator returns** (`_signinStart` awaits
+  `handle.navigate(…)` and drops the result), which is why the callback cannot be handed back
+  through the navigator and `routeAuthCallbacks` exists instead.
 
-Point 4 is the only real code, and it is perhaps thirty lines. It is deliberately not
-written here: nothing in this repository can run it — no native project, no device, no
-emulator — and an untested authentication flow that *looks* implemented is worse than an
-absent one.
+### What a device run has to confirm
+
+1. The sign-in button opens the **system browser**, not a page inside the app.
+2. Coming back lands on the app signed in, with the library loaded — which also proves the
+   CORS origins of § 6.
+3. Closing the browser without signing in leaves the app usable.
+4. Signing out ends the Keycloak session: signing in again asks for the password.
+5. Reopening the app days later is still signed in (the offline token), with no browser.
 
 ## 6. What else the container changes
 

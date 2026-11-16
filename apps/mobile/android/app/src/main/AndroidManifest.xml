@@ -22,6 +22,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- The OAuth callback (#528). The authorization page runs in the system browser,
+                 as RFC 8252 requires, so the answer comes back as a link on the app's own
+                 scheme — fr.zelytra.librarius://auth — which this filter is what routes to
+                 MainActivity, where Capacitor turns it into an `appUrlOpen` event. The scheme
+                 comes from strings.xml, the single place it is spelled on this side. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/custom_url_scheme" />
+            </intent-filter>
+
         </activity>
 
         <provider
