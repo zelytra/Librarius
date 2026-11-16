@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { bookmarkletHref, collectLibrary, isCollectedFile, type CollectedFile, type CollectorEnv } from './collector';
+import { bookmarkletHref, collectLibrary, COLLECTOR_VERSION, isCollectedFile, type CollectedFile, type CollectorEnv } from './collector';
 
 /** A Booknode library page: rows, and the pagination naming the last page. */
 function booknodePage(titles: string[], last: number): string {
@@ -154,6 +154,30 @@ describe('collectLibrary', () => {
     expect(text).not.toContain('Promu');
   });
 
+  /** #506: Babelio's live filters, as the owner's file recorded them — the wishes are « Wishlist ». */
+  test('walks the « Wishlist » filter of the live library page', async () => {
+    const filters =
+      '<a href="/mabibliotheque.php?s1=0">En cours 1</a><a href="/mabibliotheque.php?s1=1">Lus 113</a>' +
+      '<a href="/mabibliotheque.php?s1=2">À lire 15</a><a href="/mabibliotheque.php?s1=3">Wishlist 5</a>' +
+      '<a href="/mabibliotheque.php?s1=4">Abandonnés 4</a>';
+    const library = `<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>${filters}</body></html>`;
+    const wishes =
+      '<html><body><ul><li class="lib-book"><a href="/livres/W1/2">Voulu 1</a>' +
+      '<span class="lib-status lib-status--3">Wishlist</span></li></ul></body></html>';
+    const fetch = vi.fn((url: string) => Promise.resolve(response(url.endsWith('s1=3') ? wishes : library)));
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch,
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch.mock.calls.map(([url]) => url)).toContain('https://www.babelio.com/mabibliotheque.php?s1=3');
+    // Only the wish filter: the other statuses are already in the default view.
+    expect(fetch.mock.calls.map(([url]) => url)).not.toContain('https://www.babelio.com/mabibliotheque.php?s1=1');
+    expect(saved[0].pages.join(' ')).toContain('Voulu 1');
+  });
+
   test('keeps nothing from a page that is not the library list once the library has one', async () => {
     const library =
       '<html><body><ul><li class="lib-book"><a href="/livres/L1/1">Lu 1</a></li></ul>' +
@@ -187,6 +211,18 @@ describe('collectLibrary', () => {
       { text: 'Lus', url: 'https://www.babelio.com/mabibliotheque.php?s1=1' },
       { text: 'À lire', url: 'https://www.babelio.com/mabibliotheque.php?s1=2' },
     ]);
+  });
+
+  /** #507: the serialized bookmark writes the version the import compares against. */
+  test('stamps its files with the current collector version', async () => {
+    const { env: e, saved } = env({
+      location: { hostname: 'www.babelio.com', pathname: '/mabibliotheque.php', href: 'https://www.babelio.com/mabibliotheque.php' },
+      fetch: vi.fn(() => Promise.resolve(response('<html><body><ul><li class="lib-book"><a href="/livres/L/1">L</a></li></ul></body></html>'))),
+    });
+
+    await collectLibrary(e);
+
+    expect(saved[0].version).toBe(COLLECTOR_VERSION);
   });
 
   test('says where to go when run anywhere else', async () => {

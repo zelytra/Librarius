@@ -4304,6 +4304,9 @@
           "format" : {
             "$ref" : "#/components/schemas/BookFormat"
           },
+          "kind" : {
+            "$ref" : "#/components/schemas/Kind"
+          },
           "categoryId" : {
             "$ref" : "#/components/schemas/UUID"
           },

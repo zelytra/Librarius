@@ -157,6 +157,8 @@ public final class ApiDtos {
             LibraryStatus status,
             Ownership ownership,
             zelytra.librarius.domain.BookFormat format,
+            /** Files the titles under another kind (#508), as `PUT /api/library/{id}/kind` does. */
+            Kind kind,
             UUID categoryId,
             Boolean clearCategory,
             @HalfStar Double rating,

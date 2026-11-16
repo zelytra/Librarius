@@ -99,9 +99,9 @@ public final class BabelioPageParser {
         String author = authorLink != null ? emptyToNull(authorLink.text()) : null;
         Element statusTag = item.selectFirst(".lib-status");
         String statusText = textOf(statusTag);
-        // « Pense-bête » is `lib-status--3`, whatever its label reads (#502).
+        // The wish status is `lib-status--3`, labelled « Wishlist » today and « Pense-bête » before (#502, #506).
         boolean wished = (statusTag != null && statusTag.hasClass("lib-status--3"))
-                || (statusText != null && fold(statusText).contains("pense"));
+                || (statusText != null && (fold(statusText).contains("pense") || fold(statusText).contains("wishlist")));
         LibraryStatus status = wished ? LibraryStatus.TO_READ : status(item, statusText != null ? statusText : "");
 
         Integer rating = null;

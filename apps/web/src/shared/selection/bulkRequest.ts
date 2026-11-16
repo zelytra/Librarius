@@ -1,4 +1,4 @@
-import type { BulkUpdateDto } from '../../api/generated/librarius';
+import type { BulkUpdateDto, Kind } from '../../api/generated/librarius';
 import type { BookFormat, Ownership, ReadingStatus } from '../statuses';
 import { SERIES_KEY } from './useSelection';
 
@@ -7,6 +7,8 @@ export interface Draft {
   status?: ReadingStatus;
   ownership?: Ownership;
   format?: BookFormat;
+  /** The kind to file the titles under (#508). */
+  kind?: Kind;
   /** A category to file under, or `clear` to take the category off. */
   category?: string;
   /** A rating, or `clear` to take it off. */
@@ -22,6 +24,7 @@ export function bulkRequest(selected: Iterable<string>, draft: Draft): BulkUpdat
     status: draft.status,
     ownership: draft.ownership,
     format: draft.format,
+    kind: draft.kind,
     categoryId: draft.category && draft.category !== 'clear' ? draft.category : undefined,
     clearCategory: draft.category === 'clear' || undefined,
     rating: typeof draft.rating === 'number' ? draft.rating : undefined,

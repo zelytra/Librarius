@@ -348,10 +348,12 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
 
 1. Dans Réglages → Importer, glisse le bouton **« Librarius : collecter »** dans ta barre de
    favoris (sur mobile : « copier le code du favori », puis crée un favori avec ce code).
-2. Ouvre ta bibliothèque — ta page de profil Booknode, ou « Mes livres » sur Babelio,
-   connecté — et clique sur ce favori. Il parcourt toutes les pages et télécharge un
-   fichier `librarius-booknode.json` ou `librarius-babelio.json`. Sur Babelio, il récupère
-   aussi tes **pense-bêtes**, qui arrivent dans ta liste d'envies.
+   C'est **le même favori pour Booknode, Babelio et Mangacollec** : si tu en as un plus ancien,
+   remplace-le par celui-ci.
+2. Ouvre ta bibliothèque — ta page de profil Booknode, « Mes livres » sur Babelio ou ta
+   collection Mangacollec, connecté — et clique sur ce favori. Il parcourt toutes les pages et
+   télécharge un fichier `librarius-….json`. Sur Babelio, il récupère aussi ta **wishlist**,
+   qui arrive dans ta liste d'envies.
 3. Reviens dans Réglages et importe ce fichier.
 
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les

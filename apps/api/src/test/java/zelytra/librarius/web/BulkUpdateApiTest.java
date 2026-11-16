@@ -121,4 +121,35 @@ class BulkUpdateApiTest {
                 .when().post("/api/library/bulk")
                 .then().statusCode(200).body("updated", is(0));
     }
+
+    /** #508: the kind of several titles at once — only the caller's, everything else kept. */
+    @Test
+    void filesSeveralTitlesUnderAnotherKind() {
+        String tag = "Kind " + UUID.randomUUID();
+        String a = add("bob", tag + " A");
+        String b = add("bob", tag + " B");
+        String alices = add("alice", tag + " C");
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"ids\": [\"" + a + "\"], \"status\": \"READ\", \"rating\": 4 }")
+                .when().post("/api/library/bulk").then().statusCode(200);
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"ids\": [\"" + a + "\", \"" + b + "\", \"" + alices + "\"], \"kind\": \"COMIC\" }")
+                .when().post("/api/library/bulk")
+                .then().statusCode(200).body("updated", is(2));
+
+        given().auth().oauth2(token("bob")).when().get("/api/library?q=" + tag)
+                .then().statusCode(200)
+                .body("items", hasSize(2))
+                .body("items.book.kind", everyItem(is("COMIC")));
+        // What the reader set on the title survives the move.
+        given().auth().oauth2(token("bob")).when().get("/api/library/" + a)
+                .then().body("status", is("READ")).body("rating", is(4.0f));
+        given().auth().oauth2(token("alice")).when().get("/api/library/" + alices)
+                .then().statusCode(200).body("book.kind", is("BOOK"));
+
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"ids\": [\"" + a + "\"], \"kind\": \"NOVELLA\" }")
+                .when().post("/api/library/bulk").then().statusCode(400);
+    }
 }

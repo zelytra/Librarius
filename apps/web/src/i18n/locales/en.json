@@ -893,7 +893,7 @@
       "handlePlaceholder": {
         "booknode": "Booknode handle"
       },
-      "babelioNote": "Babelio only shows your library to you, signed in: use the collector below, which reads it from your browser.",
+      "babelioNote": "Babelio only shows your library to you, signed in: use the collector above, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
       "unavailable": "Import is unavailable right now.",
       "unreadableFile": "Unreadable file.",
@@ -902,15 +902,13 @@
         "title": "Collect from your browser — always works",
         "step1": "Drag this button to your bookmarks bar:",
         "button": "Librarius: collect",
-        "step2": {
-          "booknode": "Open your Booknode profile page and click the bookmark: it goes through every page of your library and downloads a librarius-booknode.json file.",
-          "babelio": "Open “Mes livres” on Babelio, signed in, and click the bookmark: it goes through every page of your library and downloads a librarius-babelio.json file.",
-          "mangacollec": "Open your collection on mangacollec.com, signed in, and click the bookmark: it fetches your whole collection and downloads a librarius-mangacollec.json file."
-        },
+        "step2": "Open your library, signed in — your Booknode profile page, « Mes livres » on Babelio or your collection on mangacollec.com — and click the bookmark: it reads your whole library and downloads a librarius-….json file.",
         "step3": "Import that file with the button below.",
         "copy": "On mobile: copy the bookmark's code",
         "copied": "Code copied: create a bookmark and paste it as its address.",
-        "notCollected": "This file was not produced by the Librarius collector."
+        "notCollected": "This file was not produced by the Librarius collector.",
+        "oneForAll": "One bookmark for Booknode, Babelio and Mangacollec. If you have an older one, replace it with this one.",
+        "outdated": "This file comes from an older bookmark: it is imported all the same, but replace your bookmark with the one above for next time."
       },
       "runningTitle": "Import in progress",
       "percent": "{{percent}}%",
@@ -918,7 +916,7 @@
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
       "failedTitle": "The import did not go through",
-      "mangacollecNote": "Mangacollec only gives your collection to you, signed in: use the bookmark below on mangacollec.com, it reads it with your own session."
+      "mangacollecNote": "Mangacollec only gives your collection to you, signed in: use the bookmark above on mangacollec.com, it reads it with your own session."
     },
     "export": {
       "title": "Export my data",
@@ -1418,7 +1416,8 @@
     "pending_one": "{{count}} change picked",
     "pending_other": "{{count}} changes picked",
     "apply": "Apply",
-    "pickSeries": "Pick the series “{{title}}”"
+    "pickSeries": "Pick the series “{{title}}”",
+    "kind": "Kind of book"
   },
   "feedback": {
     "open": "Report a problem",

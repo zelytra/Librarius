@@ -60,8 +60,12 @@ Dependabot pull requests are part of the work: a green one is merged; a red one 
 the bump applied on an agent branch with the code it needs, the gates run, and the
 Dependabot pull request left to close itself once the versions are on `main`.
 
-- A pull request is merged (squash) only when every CI check is green. The owner has
-  authorised agents to merge their own pull requests on that condition.
+- **The agent follows its pull request to the end** ([#509](https://github.com/zelytra/Librarius/issues/509)):
+  once the batch is pushed it subscribes to the pull request's activity, fixes every check
+  that goes red and every review finding that is real, and **squash-merges the pull request
+  itself as soon as every check is green and it has no conflict** — the owner's standing
+  authorisation, which needs no new question. It then follows the staging deploy and reports.
+- A pull request is merged (squash) only when every CI check is green, on its current head.
 - A red check is root-caused and fixed, never skipped or retried blindly.
 - Merging into `main` deploys to staging and runs the end-to-end journeys: when a change
   touches the chart, a migration or a journey, follow that run to its end.

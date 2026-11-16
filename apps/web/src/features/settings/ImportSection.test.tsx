@@ -103,8 +103,8 @@ describe('ImportSection', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Babelio' }));
 
-    expect(screen.getByText(/utilise la collecte ci-dessous/)).toBeInTheDocument();
-    expect(screen.getByText(/Ouvre « Mes livres » sur Babelio/)).toBeInTheDocument();
+    expect(screen.getByText(/utilise la collecte ci-dessus/)).toBeInTheDocument();
+    expect(screen.getByText(/« Mes livres » sur Babelio/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Pseudo Babelio')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Importer' })).not.toBeInTheDocument();
     expect(calls).toEqual([]);
@@ -115,6 +115,41 @@ describe('ImportSection', () => {
 
     const link = screen.getByText('Librarius : collecter').closest('a');
     expect(link?.getAttribute('href')?.split(':', 1)[0]).toBe('javascript');
+  });
+
+  /** #507: one bookmark for every site, shown once — never one per source to pick wrongly. */
+  test('offers a single collector bookmark, whatever the source', async () => {
+    renderWithProviders(<ImportSection />);
+
+    for (const source of ['Booknode', 'Babelio', 'Mangacollec']) {
+      await userEvent.click(screen.getByRole('button', { name: source }));
+      expect(screen.getAllByText('Librarius : collecter')).toHaveLength(1);
+    }
+    expect(screen.getByText(/Booknode, Babelio et Mangacollec/)).toBeInTheDocument();
+  });
+
+  test('imports a file from an older bookmark, and says to replace it', async () => {
+    const calls = captureImports();
+    const { container } = renderWithProviders(<ImportSection />);
+    const old = { format: 'librarius-collect', version: 1, source: 'babelio', collectedAt: '2026-11-01T10:00:00Z', pages: ['<li class="lib-book"></li>'] };
+
+    await userEvent.upload(fileInputOf(container),
+      new File([JSON.stringify(old)], 'librarius-babelio.json', { type: 'application/json' }));
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByText(/ancien favori/)).toBeInTheDocument();
+  });
+
+  test('says nothing of the bookmark for a file from the current one', async () => {
+    captureImports();
+    const { container } = renderWithProviders(<ImportSection />);
+    const current = { format: 'librarius-collect', version: 2, source: 'babelio', collectedAt: '2026-11-16T10:00:00Z', pages: ['<li class="lib-book"></li>'] };
+
+    await userEvent.upload(fileInputOf(container),
+      new File([JSON.stringify(current)], 'librarius-babelio.json', { type: 'application/json' }));
+
+    await screen.findByText('3 titre(s) importé(s) · 1 déjà présent(s).');
+    expect(screen.queryByText(/ancien favori/)).not.toBeInTheDocument();
   });
 
   test('imports the file the collector saved, for the source it was collected on', async () => {
@@ -190,8 +225,8 @@ describe('ImportSection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mangacollec' }));
 
     expect(screen.queryByLabelText(/Pseudo/)).not.toBeInTheDocument();
-    expect(screen.getByText(/ouvre ta collection sur mangacollec.com/i)).toBeInTheDocument();
-    expect(screen.getByText(/favori ci-dessous sur mangacollec.com/)).toBeInTheDocument();
+    expect(screen.getByText(/ta collection sur mangacollec.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/favori ci-dessus sur mangacollec.com/)).toBeInTheDocument();
   });
 
   test('sends a Mangacollec collection as the site wrote it, whatever the file is called', async () => {

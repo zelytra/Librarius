@@ -16,7 +16,7 @@ import {
   usePostApiImportSource,
 } from '../../api/generated/librarius';
 import type { ImportJobDto } from '../../api/generated/librarius';
-import { bookmarkletHref, isCollectedFile } from './collector';
+import { bookmarkletHref, COLLECTOR_VERSION, isCollectedFile } from './collector';
 import { isMangacollecCollection } from './mangacollec';
 import styles from './ImportSection.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
@@ -71,6 +71,7 @@ export function ImportSection() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const { mutateAsync: importFromSource, isPending: startingScrape } = usePostApiImportSource();
   const { mutateAsync: importCsv, isPending: startingCsv } = usePostApiImportCsv();
@@ -122,6 +123,7 @@ export function ImportSection() {
   function reset() {
     setMessage(null);
     setError(null);
+    setNotice(null);
   }
 
   async function runScrape() {
@@ -160,6 +162,8 @@ export function ImportSection() {
           return;
         }
         started = await importCollected({ data: { source: parsed.source, pages: parsed.pages } });
+        // A file from an older bookmark still imports; the reader is told to replace it (#507).
+        if (parsed.version !== COLLECTOR_VERSION) setNotice(t('settings.import.collector.outdated'));
       } else if (name.endsWith('.html') || name.endsWith('.htm')) {
         const pages = await Promise.all(files.map((f) => f.text()));
         started = await importCollected({ data: { source, pages } });
@@ -186,6 +190,35 @@ export function ImportSection() {
         </Button>
       ) : (
         <div className={styles.form}>
+          {/* The path that works whatever the site does to servers: the reader's own browser,
+              already signed in, collects the library and hands back a file. One bookmark for
+              Booknode, Babelio and Mangacollec, shown once above the sources (#507): one per
+              source read as three different bookmarks, and an old one got used. */}
+          <div className={styles.collector}>
+            <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
+            <p className={styles.note}>{t('settings.import.collector.oneForAll')}</p>
+            <ol className={styles.steps}>
+              <li>
+                {t('settings.import.collector.step1')}{' '}
+                <a
+                  ref={bookmarklet}
+                  className={styles.bookmarklet}
+                  onClick={(e) => e.preventDefault()}
+                  draggable
+                >
+                  <Icon name="bookmark_add" size={16} color="var(--on-accent)" />
+                  {t('settings.import.collector.button')}
+                </a>
+              </li>
+              <li>{t('settings.import.collector.step2')}</li>
+              <li>{t('settings.import.collector.step3')}</li>
+            </ol>
+            <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
+              <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />
+              {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
+            </button>
+          </div>
+
           <Segmented<Source>
             value={source}
             onChange={(s) => {
@@ -219,32 +252,6 @@ export function ImportSection() {
             <p className={styles.note}>{t('settings.import.babelioNote')}</p>
           ) : null}
 
-          {/* The path that works whatever the site does to servers: the reader's own browser,
-              already signed in, collects the library and hands back a file. */}
-          <div className={styles.collector}>
-            <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
-            <ol className={styles.steps}>
-              <li>
-                {t('settings.import.collector.step1')}{' '}
-                <a
-                  ref={bookmarklet}
-                  className={styles.bookmarklet}
-                  onClick={(e) => e.preventDefault()}
-                  draggable
-                >
-                  <Icon name="bookmark_add" size={16} color="var(--on-accent)" />
-                  {t('settings.import.collector.button')}
-                </a>
-              </li>
-              <li>{t(`settings.import.collector.step2.${source}`)}</li>
-              <li>{t('settings.import.collector.step3')}</li>
-            </ol>
-            <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
-              <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />
-              {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
-            </button>
-          </div>
-
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />
             {t('settings.import.file')}
@@ -262,6 +269,11 @@ export function ImportSection() {
 
           {/* A large library takes a while: the screen says it is working, and counts up as
               titles land, rather than looking frozen behind one long request. */}
+          {notice && (
+            <p className={styles.note} role="status">
+              {notice}
+            </p>
+          )}
           {running && <ImportProgress job={job} />}
           {!running && message && (
             <div className={styles.outcomeSuccess} role="status">
