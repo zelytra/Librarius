@@ -81,12 +81,13 @@
   padding: 18px 16px;
 }
 
+/* The green, red and amber tiles carry the status colours, the pastel tints read as grey (#522). */
 .tileSage {
-  background: var(--tint-sage);
+  background: var(--success-soft);
 }
 
 .tileRose {
-  background: var(--tint-rose);
+  background: var(--danger-soft);
 }
 
 .tileViolet {
@@ -94,7 +95,7 @@
 }
 
 .tileClay {
-  background: var(--tint-clay);
+  background: var(--warning-soft);
 }
 
 .tileValue {

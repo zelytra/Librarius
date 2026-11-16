@@ -51,9 +51,8 @@
 }
 
 .badgeError {
-  background: color-mix(in srgb, var(--rose) 15%, transparent);
-  /* The rose on its own tint fell under 4.5:1 (#78): the tint says « error », the text stays ink. */
-  color: var(--ink);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .occurrences {
@@ -93,7 +92,7 @@
 }
 
 .error {
-  color: var(--rose);
+  color: var(--danger-ink);
   font-size: var(--fs-13);
 }
 
@@ -218,7 +217,7 @@
 }
 
 .barErrors {
-  background: var(--rose);
+  background: var(--danger);
 }
 
 .barActive {
@@ -269,11 +268,11 @@
 }
 
 .serviceUp {
-  color: var(--accent-deep);
+  color: var(--success-ink);
 }
 
 .serviceDown {
-  color: var(--rose);
+  color: var(--danger-ink);
 }
 
 .note {
@@ -295,14 +294,20 @@
   color: var(--ink-soft);
 }
 
+/* Red to act on, amber looked at, green done (#522). */
 .statusNEW {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+
+.statusSEEN {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 
 .statusHANDLED {
-  background: var(--accent-fill);
-  color: var(--on-accent-fill);
+  background: var(--success-soft);
+  color: var(--success-ink);
 }
 
 .statusIRRELEVANT {

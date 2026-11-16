@@ -13,9 +13,8 @@ export type SheetFormat = 'A4' | 'A5' | 'A6';
 export const SHEET_FORMATS: SheetFormat[] = ['A4', 'A5', 'A6'];
 
 /**
- * Paper size and printer margins per format. The size is written in millimetres rather than
- * by name: Chromium knows `A4` and `A5` but not `A6`, and silently prints an unknown name on
- * Letter.
+ * Paper size and margins per format. The size is written in millimetres rather than by name:
+ * Chromium knows `A4` and `A5` but not `A6`, and silently prints an unknown name on Letter.
  */
 const PAGE: Record<SheetFormat, { size: string; margin: number; rings: number }> = {
   A4: { size: '210mm 297mm', margin: 12, rings: 22 },
@@ -24,11 +23,20 @@ const PAGE: Record<SheetFormat, { size: string; margin: number; rings: number }>
 };
 
 /**
- * The @page rule that tells the printer the paper size picked. For a ring binder (#432) the
- * inner margin widens so the punched holes — 8 mm from the edge on the usual punches, 5 to 6 mm
+ * The @page rule that tells the printer the paper size picked. The page margin is zero on
+ * purpose (#521): a browser prints its own header and footer — date, title, URL, page
+ * number — in that margin, so the sheet carries its margins itself ({@link printMargin}).
+ */
+export function pageRule(format: SheetFormat): string {
+  return `@page { size: ${PAGE[format].size}; margin: 0; }`;
+}
+
+/**
+ * The white space the printed sheet keeps around its text. For a ring binder (#432) the inner
+ * margin widens so the punched holes — 8 mm from the edge on the usual punches, 5 to 6 mm
  * across — fall outside the text.
  */
-export function pageRule(format: SheetFormat, rings = false): string {
-  const { size, margin, rings: inner } = PAGE[format];
-  return `@page { size: ${size}; margin: ${margin}mm ${margin}mm ${margin}mm ${rings ? inner : margin}mm; }`;
+export function printMargin(format: SheetFormat, rings = false): string {
+  const { margin, rings: inner } = PAGE[format];
+  return `${margin}mm ${margin}mm ${margin}mm ${rings ? inner : margin}mm`;
 }

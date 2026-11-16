@@ -358,14 +358,20 @@
     display: none;
   }
 
+  /* The page has no margin, so the browser has nowhere to print its own header and footer
+     (#521): the sheet keeps its white space itself, repeated on every page it runs onto. */
+  .sheet,
+  .a5,
+  .a6,
   .rings,
   .a6.rings {
-    padding-left: 0;
+    max-width: none;
+    padding: var(--print-margin);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   .sheet {
-    max-width: none;
-    padding: 0;
     border: none;
     border-radius: 0;
     box-shadow: none;

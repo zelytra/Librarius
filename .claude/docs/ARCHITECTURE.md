@@ -88,7 +88,10 @@ src/
   `<html>` always carries a resolved palette — `creme`, `sauge`, `rose` or `nuit`; the
   `systeme` preference is resolved against `prefers-color-scheme`. A token consumed on a
   themed surface belongs in a palette block, `nuit` included: one declared only in the
-  light base falls through to a light value on a dark background. The boot script in
+  light base falls through to a light value on a dark background. Status colours (#522):
+  `--success`, `--warning`, `--danger` (fills), their `-soft` backgrounds and `-ink` texts, and
+  `--on-danger` — the muted `--rose` and the sage accent are not a red or a green;
+  `statusColors.test.ts` checks hue, saturation and AA contrast per palette. The boot script in
   `index.html` applies the palette before the first paint and must stay in step with
   `shared/theme/themes.ts`.
 - **The sign-in page is themed from a copy of those values**

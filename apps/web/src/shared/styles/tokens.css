@@ -46,6 +46,21 @@
   --silver: #b3b7bf;
   --bronze: #c08a5a;
 
+  /* Status colours (#522): a real red, amber and green for « error », « to look at » and
+     « done » — the rose and the sage above are too muted to say either. Each comes as a fill
+     (a graphic, ≥ 3:1 on the surfaces), a soft background and an ink (≥ 4.5:1 on both);
+     `shared/styles/statusColors.test.ts` holds every palette to it. */
+  --success: #2e8b4a;
+  --success-soft: #d5efdc;
+  --success-ink: #1a6430;
+  --warning: #a87a00;
+  --warning-soft: #fcefc2;
+  --warning-ink: #7a5200;
+  --danger: #c62f25;
+  --danger-soft: #fbdcd8;
+  --danger-ink: #a3241b;
+  --on-danger: #ffffff;
+
   --shadow: 0 6px 18px -10px rgba(74, 64, 52, 0.25);
   --shadow-strong: 0 18px 36px -14px rgba(74, 64, 52, 0.55);
   --shadow-cover: 0 8px 18px -8px rgba(74, 64, 52, 0.4);
@@ -145,6 +160,17 @@
   --gold: #d9b94e;
   --silver: #b3b7bf;
   --bronze: #c08a5a;
+
+  --success: #4cbf6e;
+  --success-soft: #1f3a27;
+  --success-ink: #8fdca6;
+  --warning: #f0b928;
+  --warning-soft: #3f3315;
+  --warning-ink: #f5cf6a;
+  --danger: #ea6357;
+  --danger-soft: #4a2320;
+  --danger-ink: #ffa59b;
+  --on-danger: #1f0b09;
 
   --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.65);
   --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.8);
