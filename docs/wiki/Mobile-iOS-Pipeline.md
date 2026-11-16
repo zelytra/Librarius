@@ -8,6 +8,18 @@ itself issue the signing material**.
 Nothing here needs a Mac of your own. It does need a paid Apple Developer Program membership,
 and an iPhone to install the result.
 
+## Before paying anything: the PWA already installs on an iPhone
+
+Librarius is a progressive web app. Open <https://librarius.zelytra.fr> in Safari, *Share →
+Add to Home Screen*, and it sits on the home screen with its own icon, full screen, with no
+Apple account and no build at all. What that version does **not** get is the native shell's
+own capabilities — the barcode scanner through the camera plugin, native push
+([#69](https://github.com/zelytra/Librarius/issues/69)) and anything else a plugin adds — and
+it cannot be found on the App Store.
+
+Everything below is for the native application. If the only goal is "the app on my iPhone",
+the paragraph above costs nothing and takes a minute.
+
 ## What it costs, and how long it takes
 
 | | What | Cost | Lead time |
