@@ -18,6 +18,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
 | GET | `/api/me/blocked` | The members the caller blocks (`MemberSummaryDto`) — see [Blocking members](#blocking-members) |
+| GET | `/api/users/{id}/shelf?shelf=&page=&size=&q=` | A member's shelf (#514): `library`, `toRead` (status `TO_READ`) or `wishlist`, by lower(title); `MemberShelfPageDto` of `ProfileTitleDto(book: MemberBookDto, status, rating if shared, review null, finishedAt, percent)`. `VisibilityGate.canView` else 404; another shelf 400 |
 | GET | `/api/users/{id}/profile` | A member's profile (`MemberProfileDto`, #497) — public surface for anyone signed in, `reading` (`ProfileReadingDto`) only when `VisibilityGate.canView`; 404 unknown or across a block either way |
 | PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 400 while a block stands, 404 on an unknown id |
 | DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
@@ -1050,7 +1051,7 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)])`. Actors = the caller's followees that pass `VisibilityGate.canView`; a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
+| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)])`. Actors = the caller themself (#511) and their followees that pass `VisibilityGate.canView`; `book` is a `MemberBookDto` (#513: catalog fields, `myItemId` from `LibraryItemRepository.itemIdsByWork`); a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
 | PUT | `/api/feed/{eventId}/reaction` | `FeedReactionDto(emote LOVE\|FUNNY\|WOW\|CLAP\|SAD)` → 204, upsert on `(feed_event_id, user_id)`; 404 when the event's author is not visible to the caller |
 | DELETE | `/api/feed/{eventId}/reaction` | 204; 404 as above |
 | POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |

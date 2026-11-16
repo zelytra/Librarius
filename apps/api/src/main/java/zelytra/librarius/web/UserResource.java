@@ -105,6 +105,27 @@ public class UserResource {
                 .build();
     }
 
+    /**
+     * One shelf of a member (#514): {@code library} (every title), {@code toRead} (the pile) or
+     * {@code wishlist}, a page at a time by title, {@code q} narrowing on the title. Behind the
+     * #201 visibility gate: 404 when out of reach or across a block; 400 for another shelf.
+     */
+    @GET
+    @Path("/{id}/shelf")
+    public ApiDtos.MemberShelfPageDto shelf(@PathParam("id") String id, @QueryParam("shelf") String shelf,
+            @QueryParam("page") @jakarta.ws.rs.DefaultValue("0") int page,
+            @QueryParam("size") @jakarta.ws.rs.DefaultValue("30") int size, @QueryParam("q") String q) {
+        currentUser.require();
+        ProfileService.Shelf which = switch (shelf == null ? "" : shelf) {
+            case "library" -> ProfileService.Shelf.LIBRARY;
+            case "toRead" -> ProfileService.Shelf.TO_READ;
+            case "wishlist" -> ProfileService.Shelf.WISHLIST;
+            default -> throw new jakarta.ws.rs.BadRequestException("Unknown shelf: " + shelf);
+        };
+        return profiles.shelf(currentUser.id(), id, which, PageRequest.of(page, size), q)
+                .orElseThrow(NotFoundException::new);
+    }
+
     /** The caller starts following the member. Idempotent, 204. */
     @PUT
     @Path("/{id}/follow")

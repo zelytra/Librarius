@@ -1,0 +1,40 @@
+.book {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.book:hover .title,
+.book:focus-visible .title {
+  text-decoration: underline;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.authors {
+  font-size: var(--fs-12-5);
+  color: var(--muted);
+}
+
+.detail {
+  flex-shrink: 0;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}

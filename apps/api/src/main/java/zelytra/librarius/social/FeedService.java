@@ -4,7 +4,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import zelytra.librarius.web.ApiDtos.FeedBookDto;
+import zelytra.librarius.domain.Edition;
+import zelytra.librarius.domain.repository.LibraryItemRepository;
+import zelytra.librarius.web.ApiDtos.MemberBookDto;
 import zelytra.librarius.web.ApiDtos.FeedCommentDto;
 import zelytra.librarius.web.ApiDtos.FeedItemDto;
 import zelytra.librarius.web.ApiDtos.FeedPageDto;
@@ -28,8 +30,8 @@ import java.util.UUID;
  * shared — once per member, type and edition. Imports and bulk edits log nothing: a library
  * of five hundred titles arriving at once is not news, it is a flood.
  *
- * <p>Who sees what is {@link VisibilityGate}'s rule and nobody else's: a viewer's feed holds the
- * events of the members they follow and may see (a mutual follow, or a public account, never
+ * <p>Who sees what is {@link VisibilityGate}'s rule and nobody else's: a viewer's feed holds their
+ * own events (#511) and those of the members they follow and may see (a mutual follow, or a public account, never
  * across a block). Reacting and commenting re-check the same rule against the event's author —
  * an event outlives the follow that made it visible, and a stale screen must not write on it.
  */
@@ -47,6 +49,9 @@ public class FeedService {
     @Inject
     VisibilityGate gate;
 
+    @Inject
+    LibraryItemRepository libraryItems;
+
     /** Logs that {@code userId} did {@code type} on an edition; a second time is a no-op. */
     public void record(String userId, Type type, UUID editionId) {
         em.createNativeQuery("""
@@ -62,13 +67,14 @@ public class FeedService {
 
     @Transactional
     public FeedPageDto feed(String viewerId, PageRequest window) {
-        List<String> actors = em.createQuery(
-                        "select f.followeeId from UserFollow f where f.followerId = :viewer", String.class)
+        // The caller's own events too (#511): what others said about them belongs in their feed.
+        List<String> actors = new ArrayList<>(List.of(viewerId));
+        em.createQuery("select f.followeeId from UserFollow f where f.followerId = :viewer", String.class)
                 .setParameter("viewer", viewerId)
                 .getResultList()
                 .stream()
                 .filter(actor -> gate.canView(viewerId, actor))
-                .toList();
+                .forEach(actors::add);
         if (actors.isEmpty()) {
             return new FeedPageDto(List.of(), window.page(), window.size(), false);
         }
@@ -97,6 +103,9 @@ public class FeedService {
         Map<UUID, Map<String, Long>> reactions = reactions(ids);
         Map<UUID, String> mine = myReactions(viewerId, ids);
         Map<UUID, List<FeedCommentDto>> comments = comments(viewerId, ids);
+        // The viewer's own copy of each work, so a book opens their Detail when they hold it (#513).
+        Map<UUID, UUID> myItems = libraryItems.itemIdsByWork(viewerId,
+                page.stream().map(row -> (UUID) row[7]).distinct().toList());
 
         List<FeedItemDto> items = new ArrayList<>();
         for (Object[] row : page) {
@@ -104,8 +113,7 @@ public class FeedService {
             boolean review = Type.REVIEW_SHARED.name().equals(row[1]);
             items.add(new FeedItemDto(id, (String) row[1], toOffset(row[2]),
                     new MemberSummaryDto((String) row[3], (String) row[4], Boolean.TRUE.equals(row[5]), toLong(row[15])),
-                    new FeedBookDto((UUID) row[6], (UUID) row[7], (String) row[8], (String) row[9],
-                            (String) row[10], (String) row[11]),
+                    MemberBookDto.of(em.find(Edition.class, row[6]), myItems.get((UUID) row[7])),
                     review ? toDouble(row[12]) : null, review ? (String) row[13] : null,
                     reactions.getOrDefault(id, Map.of()), mine.get(id), comments.getOrDefault(id, List.of())));
         }

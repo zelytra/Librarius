@@ -157,13 +157,16 @@ function People() {
             const followed = isFollowed(person);
             return (
               <li key={person.id} className={styles.row}>
-                <Avatar id={person.id} name={name} version={person.avatarVersion} decorative />
-                <span className={styles.name}>
-                  <Link to={`/people/${person.id}`} className={styles.nameLink}>
+                {/* The avatar and the name together open the profile (#512), the follow
+                    button staying apart. */}
+                <Link to={`/people/${person.id}`} className={styles.person}>
+                  <Avatar id={person.id} name={name} version={person.avatarVersion} decorative />
+                  <span className={styles.name}>
                     {name}
-                  </Link>
-                  {person.trusted && <TrustBadge />}
-                </span>
+                    {person.trusted && <TrustBadge />}
+                  </span>
+                  <Icon name="chevron_right" size={20} color="var(--faint)" />
+                </Link>
                 <Button
                   variant={followed ? 'secondary' : 'primary'}
                   size="compact"

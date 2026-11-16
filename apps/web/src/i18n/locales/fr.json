@@ -1591,7 +1591,20 @@
     "finished": "Derniers livres finis",
     "finishedEmpty": "Aucun livre fini pour l'instant.",
     "reviews": "Avis partagés",
-    "reviewsEmpty": "Aucun avis partagé."
+    "reviewsEmpty": "Aucun avis partagé.",
+    "tabs": {
+      "overview": "Aperçu",
+      "library": "Livres",
+      "toRead": "À lire",
+      "wishlist": "Souhaits"
+    },
+    "shelf": {
+      "search": "Chercher un titre",
+      "error": "Impossible de charger cette étagère.",
+      "empty": "Rien sur cette étagère.",
+      "total_one": "{{count}} titre",
+      "total_other": "{{count}} titres"
+    }
   },
   "feed": {
     "error": "Impossible de charger le fil.",

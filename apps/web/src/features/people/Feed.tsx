@@ -13,8 +13,7 @@ import {
   type FeedItemDto,
 } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
-import { BookCover } from '../../shared/ui/BookCover';
-import { colorFor } from '../../shared/ui/coverPalette';
+import { MemberBook } from '../../shared/ui/MemberBook';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Icon } from '../../shared/ui/Icon';
 import { Button } from '../../shared/ui/primitives';
@@ -109,16 +108,8 @@ function FeedEvent({ item }: { item: FeedItemDto }) {
           {when(item.createdAt)}
         </time>
       </p>
-      <div className={styles.book}>
-        <span aria-hidden="true">
-          <BookCover color={colorFor(title)} imageUrl={item.book?.coverUrl ?? undefined} width={48} height={70} radius={6} />
-        </span>
-        <span className={styles.bookText}>
-          <span className={styles.bookTitle}>{title}</span>
-          {item.book?.authors && <span className={styles.bookAuthors}>{item.book.authors}</span>}
-          {item.rating != null && <Stars value={item.rating} />}
-        </span>
-      </div>
+      <MemberBook book={item.book ?? { title }} coverWidth={48}
+        detail={item.rating != null ? <Stars value={item.rating} /> : null} />
       {item.review && <p className={styles.review}>{item.review}</p>}
       <Reactions item={item} />
       <Comments item={item} />
