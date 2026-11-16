@@ -42,9 +42,17 @@ apps/mobile/package.json      devDependencies: "@librarius/web": "workspace:*"
 apps/mobile/capacitor.config.ts   webDir: '../web/dist'
 ```
 
-- The **workspace dependency** is what makes the ordering explicit:
-  `pnpm --filter "@librarius/mobile..." build` (aliased to `pnpm mobile:build`) runs
-  `@librarius/web build` first, then `cap sync`. Nothing can sync a stale bundle.
+- The **workspace dependency** is what keeps the two installed and versioned together, and
+  `pnpm mobile:build` names the order explicitly:
+  `@librarius/web build:mobile`, then `@librarius/mobile build` (`cap sync`). Nothing can
+  sync a stale bundle.
+  The web build runs in Vite's **`mobile` mode** rather than its default one, which is the
+  one difference between the bundle the browser gets and the bundle the container gets:
+  `apps/web/.env.mobile` names the API and the Keycloak client in full, because neither is
+  same-origin from inside the container ([#527](https://github.com/zelytra/Librarius/issues/527),
+  [#528](https://github.com/zelytra/Librarius/issues/528)). That is also why `mobile:build`
+  spells the chain out instead of letting the workspace dependency run `@librarius/web`'s
+  default `build`: the dependency decides the order, not the mode.
 - **`webDir` points outside the package**, at the web build output. `cap sync` copies that
   directory into each native project (`android/app/src/main/assets/public`, `ios/App/App/public`).
 
@@ -79,7 +87,7 @@ in `src/auth/oidc.ts`), `apps/mobile` declares it because the platform packages 
 
 | Command | Effect |
 |---|---|
-| `pnpm mobile:build` | Builds `@librarius/web`, then `cap sync` |
+| `pnpm mobile:build` | Builds `@librarius/web` **in `mobile` mode**, then `cap sync` |
 | `pnpm --filter @librarius/mobile typecheck` | Type-checks `capacitor.config.ts` |
 | `pnpm --filter @librarius/mobile add:android` | `cap add android` — do **not** run this again; `android/` already exists and `cap add` overwrites hand-edited files (§ 7) |
 | `pnpm --filter @librarius/mobile open:android` | Opens the native project in Android Studio — run `pnpm mobile:build` first, or the project opens without a web bundle to serve |
@@ -212,14 +220,18 @@ absent one.
 
 Two more things that a native build will hit, neither of them auth:
 
-- **The API is no longer same-origin.** The generated client calls relative URLs
-  (`/api/library`, orval `baseUrl: ''`), which the browser resolves against the page origin.
-  Inside the container that origin is the bundle itself, so every call would look for the API
-  in the packaged assets. The native build needs an absolute base URL — a `VITE_API_BASE_URL`
-  read by `shared/apiClient.ts` is enough, empty by default so the web is untouched — and the
-  API needs its `CORS_ORIGINS` (`apps/api/src/main/resources/application.properties`, wired
-  through `infra/helm/librarius/templates/api.yaml`) to accept `https://localhost` and
-  `capacitor://localhost`.
+- **The API is no longer same-origin** — handled since
+  [#527](https://github.com/zelytra/Librarius/issues/527). The generated client calls relative
+  URLs (`/api/library`, orval `baseUrl: ''`), which the browser resolves against the page
+  origin; inside the container that origin is the bundle itself, so every call looked for the
+  API in the packaged assets. `apps/web/src/shared/apiBase.ts` now prefixes
+  `VITE_API_BASE_URL` to every API path, in the two places that reach the network
+  (`shared/apiClient.ts` for the generated hooks, `shared/authorisedGet.ts` for the avatar
+  and the export). The variable is empty on a web build, so the browser and the Vite dev
+  proxy are byte-for-byte unchanged; `apps/web/.env.mobile` sets it for the native build, and
+  the API's `CORS_ORIGINS` accepts `https://localhost` and `capacitor://localhost`
+  (`application.properties` default and `infra/helm/librarius/templates/api.yaml`, locked by
+  `CorsTest`).
 - **Safe areas and the status bar.** `index.html` already carries `viewport-fit=cover`, but
   no rule reads `env(safe-area-inset-*)`, so the bottom navigation would sit under the
   gesture bar. The fix belongs with the native project: Capacitor 7 can handle Android 15

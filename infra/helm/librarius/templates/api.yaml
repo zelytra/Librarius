@@ -71,8 +71,13 @@ spec:
             # The PWA and the API share a host, but browsers still send an Origin header
             # on writes: without the public origin allowed, every POST, PUT and DELETE
             # comes back 403.
+            # The two localhost origins are the native container's own (#527): the Capacitor
+            # WebView serves the bundle from https://localhost on Android and
+            # capacitor://localhost on iOS, and sends one of them as the Origin of every call
+            # the installed app makes. They are not addresses on this cluster and allow
+            # nothing a browser could reach.
             - name: CORS_ORIGINS
-              value: "https://{{ .Values.domain }}"
+              value: "https://{{ .Values.domain }},https://localhost,capacitor://localhost"
             {{- /*
             Catalog quota. The counter is per-instance and in memory, so N pods
             enforce it N times; these exist so the aggregate can be held when the
