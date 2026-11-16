@@ -37,11 +37,15 @@ for how that matching happens on the way in.
 | `cover_cache` | Resized BnF cover thumbnails by ark (`content` NULL = known miss) — V26 |
 | `user_achievement` | One unlocked achievement tier (V31), `seen_at` once announced; the catalogue, XP and levels live in code |
 | `user_activity` | One row per member and day they used the instance (V36, #491), `last_seen_at` moved forward at most once a minute, after the response — the monitoring's active members |
+| `feed_event` | What a member did that the feed shows (V38, #209): `FINISHED_READING`, `WISHLIST_ADDED` or `REVIEW_SHARED` on an `edition`, once per member, type and edition. Logged where the action happens — finishing a title, adding a wish, sharing a review — never by an import or a bulk edit |
+| `feed_reaction`, `feed_comment` | A member's reaction to a feed event (one per member and event, `PRIMARY KEY (feed_event_id, user_id)`) and their flat comments (V38, #210); both cascade away with the event or the account |
 | `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
 
 `feedback` (V35, #489, #490) is the one table read across users, by the admins only: the
 members' reports and the errors recorded by the web app and the API, one row per error
-fingerprint with its `occurrences`. Its `user_id` is `ON DELETE SET NULL`: a report outlives
+fingerprint with its `occurrences`, and where an admin stands with each (`status`, V37, #495:
+`NEW`, `SEEN`, `HANDLED`, `IRRELEVANT`; an error marked handled that comes back is `NEW`
+again). Its `user_id` is `ON DELETE SET NULL`: a report outlives
 its author's account, which only forgets who sent it.
 
 Every one of these carries a `user_id`, and every API resource filters on it: no query ever

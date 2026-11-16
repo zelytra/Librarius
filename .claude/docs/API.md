@@ -18,6 +18,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
 | GET | `/api/me/blocked` | The members the caller blocks (`MemberSummaryDto`) — see [Blocking members](#blocking-members) |
+| GET | `/api/users/{id}/profile` | A member's profile (`MemberProfileDto`, #497) — public surface for anyone signed in, `reading` (`ProfileReadingDto`) only when `VisibilityGate.canView`; 404 unknown or across a block either way |
 | PUT | `/api/users/{id}/follow` | Follow another member — 204, idempotent. 400 on self, 400 while a block stands, 404 on an unknown id |
 | DELETE | `/api/users/{id}/follow` | Unfollow another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | PUT | `/api/users/{id}/block` | Block another member — 204, idempotent. 400 on self, 404 on an unknown id |
@@ -1025,8 +1026,9 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 |---|---|---|
 | POST | `/api/feedback` | `FeedbackCreateDto(kind BUG\|IDEA\|OTHER, message ≤5000, page, appVersion, userAgent, logs ≤20000)` → 201 `FeedbackCreatedDto(id)` |
 | POST | `/api/feedback/errors` | `ClientErrorDto(message ≤2000, stack, page, appVersion, userAgent)` → 204; `FeedbackService.recordError` upserts on `fingerprint` = SHA-256 of `WEB\|message\|first stack line` (`INSERT … ON CONFLICT` — `occurrences + 1`, `last_seen_at = now()`) |
-| GET | `/api/admin/feedback?page=&size=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user` |
-| GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown |
+| GET | `/api/admin/feedback?page=&size=&status=` | `@RolesAllowed("admin")` — `FeedbackPageDto` of `FeedbackDto`, by `last_seen_at` desc, `reporterName` joined from `app_user`, `status` + `statusChangedAt` (#495); `status=` filters (`NEW`/`SEEN`/`HANDLED`/`IRRELEVANT`, 400 otherwise) |
+| GET | `/api/admin/feedback/{id}` | `FeedbackDetailDto` with `details` (logs or stack trace) and `userAgent`; 404 unknown. Opening a `NEW` report sets it `SEEN` |
+| PUT | `/api/admin/feedback/{id}/status` | `FeedbackStatusDto(status)` → 204; 400 unknown status, 404 unknown report. `recordError`'s upsert sets a `HANDLED` error back to `NEW` when it recurs |
 | GET | `/api/admin/monitoring` | `MonitoringDto(activeNow, days[30] of MonitoringDayDto(day, reports, errors, activeUsers), services[ServiceStatusDto(name, up, detail)])` — `database` (`select 1`), `keycloak` (the realm's discovery document, 3 s timeout) |
 
 `MeDto.admin` is `CurrentUser.isAdmin()` (`SecurityIdentity.hasRole("admin")`).
@@ -1037,3 +1039,19 @@ source `API` (signature = exception class + `Resource#method` + first `zelytra.`
 `{"message": "Erreur interne du serveur."}`. `ActivityTracker` (`@ServerResponseFilter`)
 upserts `user_activity` for an authenticated caller off the request (Mutiny worker pool), at
 most once a minute per member; a write that finds no `app_user` yet is retried next request.
+
+## Social feed (#209, #210)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)])`. Actors = the caller's followees that pass `VisibilityGate.canView`; a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
+| PUT | `/api/feed/{eventId}/reaction` | `FeedReactionDto(emote LOVE\|FUNNY\|WOW\|CLAP\|SAD)` → 204, upsert on `(feed_event_id, user_id)`; 404 when the event's author is not visible to the caller |
+| DELETE | `/api/feed/{eventId}/reaction` | 204; 404 as above |
+| POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |
+| DELETE | `/api/feed/{eventId}/comments/{commentId}` | 204 for the comment's author, 404 for anyone else |
+
+`FeedService.record(user, type, edition)` (`INSERT … ON CONFLICT DO NOTHING`) is called from
+`LibraryResource` (an add straight as read; a `/progress` update that moves the status to
+`READ`; a review flipped to shared with a rating or a text) and `WishlistResource.add` — not
+from `ReadingProgressService`, which the bulk edit also goes through, nor from the imports.
+
