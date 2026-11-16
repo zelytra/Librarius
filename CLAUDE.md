@@ -77,6 +77,8 @@ cd apps/api && ./mvnw -B package -DskipTests && cd ../web && pnpm gen:api
   verifies). Pull requests are squashed, so `main` carries the merger's identity.
 - Every change goes through a pull request against `main`. Merge commits are refused:
   squash or rebase only.
+- **Follow the pull request and merge it on green**: the agent watches its CI, fixes what goes
+  red, and squash-merges it itself once every check is green and it has no conflict (#509).
 - **Never merge on a red CI.** Merging into `main` deploys to **staging**; production
   will be deployed by tagging `main`, and does not exist yet ([#103](https://github.com/zelytra/Librarius/issues/103)).
 
