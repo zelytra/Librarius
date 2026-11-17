@@ -39,7 +39,7 @@ the Alertmanager webhook, and running a restore and a rollback for real.
 | Area | State |
 |---|---|
 | Monorepo | pnpm workspaces (`apps/web`) + Maven (`apps/api`), Node 24 / pnpm 9.15.9 / JDK 21 |
-| Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging. The sign-in pages now carry the app's own theme (`infra/helm/librarius/files/keycloak-theme/`), in French and English; putting it on the long-lived staging realm is a manual step, see debt #24 |
+| Auth | Keycloak OIDC end to end — Dev Services in tests, realm imported in dev, `/auth` ingress in staging. Google and Apple as identity providers (#177), e-mail only (#538), configured by the `keycloak-setup` Job once their Secrets exist on the cluster — see debt #26. The sign-in pages now carry the app's own theme (`infra/helm/librarius/files/keycloak-theme/`), in French and English; putting it on the long-lived staging realm is a manual step, see debt #24 |
 | Persistence | PostgreSQL + Panache + Flyway (13 migrations), Hibernate in `validate` mode |
 | Catalog | `CatalogService` aggregates Open Library **and the BnF** (books) and AniList (manga), two-level cache Caffeine → `catalog_cache` (6 h / 12 h). Search on text, author, year, language, publisher or ISBN, each provider honouring what it indexes ([API](API.md#catalog-search)). A book search merges the two catalogues and survives either being down; a cold fetch holds a connection while the provider answers, capped at 4 of the 50 pooled ([ARCHITECTURE](ARCHITECTURE.md)) |
 | Import | Booknode (scraping) + CSV + **Mangacollec** (the collection JSON saved from the site, `POST /api/import/mangacollec`, #448) + **the collector**: a bookmarklet that reads a Booknode or Babelio library from the reader's own signed-in browser and imports it through `POST /api/import/collected` — the path that works whatever the sites do to servers. Exposed in Settings. A CSV keeps the reading date apart from the day added (`Date Read` → `reading_progress.finished_at`, so the history, the goal and the monthly stats count it), reads `ISBN13` and the page count, and files "One Piece Tome 3" or Goodreads' "Title (Series, #3)" under its series. A background enricher completes imported editions — cover, ISBN, pages, publisher — from the catalog, preferring a French edition and refusing a different book (sequel, homonym) |
@@ -376,6 +376,17 @@ production opens.*
     against each other, because a Keycloak theme cannot read the web bundle.
     [#176](https://github.com/zelytra/Librarius/issues/176) is not met until the page on
     `librarius.zelytra.fr` is the themed one.
+
+26. **Google and Apple sign-in is shipped and has never met Google or Apple.** The chart
+    configures both identity providers from Secrets that only the owner can create (a Google
+    Cloud OAuth client, an Apple Developer Services ID and key), so neither is on staging
+    yet. What is proven: the rendered `keycloak-setup` Job runs twice on the pinned Keycloak
+    image carrying the Apple extension (`infra/keycloak/check-identity-providers.sh`), and a
+    first brokered sign-in against a stand-in OIDC provider on Keycloak 25.0.6 created an
+    account with no form and a token carrying only `sub`, `email` and `preferred_username`.
+    What is not: a real Google or Apple round trip, and Apple's `form_post` callback.
+    [#177](https://github.com/zelytra/Librarius/issues/177) is met on the code side; the
+    first real sign-in through each closes this item.
 
 ## Functional gaps vs the vision 📋
 

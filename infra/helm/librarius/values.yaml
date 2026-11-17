@@ -241,7 +241,7 @@ keycloak:
       # keycloak.image. The jar is fetched at pod start and refused unless its hash matches.
       extension:
         url: https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.14.0/apple-identity-provider-1.14.0.jar
-        sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+        sha256: "f0b940f32cb384f18f784ad97ea84979f008c81325a26cf1c200c880ed733407"
         fetchImage: curlimages/curl:8.11.1
   resources:
     requests: { cpu: 100m, memory: 384Mi }
