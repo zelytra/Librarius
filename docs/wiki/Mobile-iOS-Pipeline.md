@@ -20,6 +20,54 @@ it cannot be found on the App Store.
 Everything below is for the native application. If the only goal is "the app on my iPhone",
 the paragraph above costs nothing and takes a minute.
 
+## Installing on an iPhone without the App Store
+
+Three ways, and only the first costs nothing.
+
+### 1. Sideload an unsigned build with a free Apple ID — 0 €
+
+Every tag publishes **`librarius-ios-unsigned-<version>`**, an `.ipa` built without a signing
+identity, for as long as the Apple secrets are absent. It cannot be installed as it is: a
+sideloading tool re-signs it with a free Apple ID and installs it over USB or Wi-Fi.
+
+- **Sideloadly** runs on Windows and macOS and is the simplest from a Windows machine.
+- **AltStore** / **SideStore** do the same and can refresh the signature by themselves while
+  the phone and the computer are on one Wi-Fi network, which matters because of the next
+  point.
+
+What Apple's free tier costs instead of money:
+
+| | Free Apple ID | Paid membership |
+|---|---|---|
+| Signature lifetime | **7 days**, then the app refuses to open until it is re-signed | 1 year |
+| Applications at once | **3** per Apple ID | no such limit |
+| Needs a computer | yes, at least for the first install | no (TestFlight) |
+
+On iOS 16 and later the phone also asks for **Developer Mode** (Settings → Privacy &
+Security → Developer Mode) before a sideloaded app will launch, and the developer profile has
+to be trusted in Settings → General → VPN & Device Management.
+
+This is Apple's own "free provisioning", used through a third-party tool rather than Xcode —
+nothing is jailbroken and nothing is circumvented. The tools are not Apple's, though: read
+what they do before handing them an Apple ID, and prefer an Apple ID that is not the one
+holding your main iCloud account.
+
+### 2. Ad hoc distribution — needs the 99 USD membership
+
+The membership lets you register device UDIDs (**100 per product family per membership year**)
+and sign a build for exactly those devices. The `.ipa` is then installed directly — by link,
+by email, by a tool — with **no App Review and no store**, and the signature lasts a year.
+This is the paid version of what you are asking for, and it is what `ios-release.yml` would
+produce with `method: ad-hoc` instead of `app-store-connect` in
+`apps/mobile/ios-export-options.plist`.
+
+### 3. TestFlight — needs the same membership
+
+Not a store listing, but it does go through App Store Connect. **Internal** testers (up to 100
+people on the team) get a build with no review, minutes after the upload; builds expire after
+90 days. It is what `ios-release.yml` does today, and the least work once the membership
+exists.
+
 ## What it costs, and how long it takes
 
 | | What | Cost | Lead time |
