@@ -1,9 +1,13 @@
-<!-- The launcher icon of Android 7 and 8.0 (API 24 and 25), which know nothing of adaptive
-     icons: the mark on its own rounded background, exactly the web app's favicon
-     (apps/web/public/favicon.svg) at 1024px. Adaptive launchers use the two layers beside
-     this file instead, and apply their own mask. -->
+<!-- The whole icon, on one layer: what Android 7 and 8.0 (API 24 and 25) use, since they
+     know nothing of adaptive icons, and what iOS uses, since it has no layers at all.
+
+     Full bleed, with no rounded corners of its own: both platforms apply their own mask
+     (iOS always, an Android launcher when it has one), and a corner this file rounded itself
+     would show as a pale sliver outside a mask that rounds less. The mark is the web app's
+     favicon (apps/web/public/favicon.svg); the adaptive icon's two layers are beside this
+     file. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#f3ede3"/>
+  <rect width="64" height="64" fill="#f3ede3"/>
   <path d="M16 14h13c2.2 0 4 1.8 4 4v32c0-2.2-1.8-4-4-4H16z" fill="#9aab92"/>
   <path d="M48 14H35c-2.2 0-4 1.8-4 4v32c0-2.2 1.8-4 4-4h13z" fill="#7d8f73"/>
   <rect x="14" y="46" width="36" height="5" rx="2" fill="#cdbfa6"/>
