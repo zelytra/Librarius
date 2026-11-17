@@ -61,8 +61,7 @@ public class CurrentUser {
             user = new AppUser();
             user.id = id;
             user.email = claim("email");
-            user.displayName = firstNonBlank(claim("name"), claim("preferred_username"),
-                    principalName(), "Lecteur");
+            user.displayName = initialDisplayName(claim("name"), claim("preferred_username"));
             user.locale = firstNonBlank(claim("locale"), "fr");
             user.username = firstNonBlank(claim("preferred_username"), principalName());
             users.persist(user);
@@ -74,6 +73,22 @@ public class CurrentUser {
             }
         }
         return user;
+    }
+
+    /**
+     * The display name a new account starts with: the token's name, else its username (never the opaque subject) — but
+     * never a value that looks like an e-mail address (#538), since other members see it. An
+     * account created through Google or Apple has no name and an e-mail for a username, so it
+     * starts with the neutral default and the reader sets their own in Settings.
+     */
+    static String initialDisplayName(String name, String preferredUsername) {
+        return firstNonBlank(notAnEmail(name), notAnEmail(preferredUsername), DEFAULT_DISPLAY_NAME);
+    }
+
+    private static final String DEFAULT_DISPLAY_NAME = "Lecteur";
+
+    private static String notAnEmail(String value) {
+        return value != null && value.contains("@") ? null : value;
     }
 
     private String principalName() {
