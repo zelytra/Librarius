@@ -15,6 +15,111 @@ versioning pipeline lands before the first release is cut.
 
 <!-- releases:start -->
 
+## [1.0.0-rc.1] - 2026-11-17
+
+### Features
+
+- **api**: gate cross-account visibility by public flag or mutual follow (#263)
+- **api**: block a member and hide their content both ways (#264)
+- **api,web,db**: let a member rate and review a series (#265)
+- **api**: rank catalog search by relevance and fold the dedup key
+- **api,web**: carry page count, series and volume on catalog results
+- **infra**: persist Keycloak user sessions across a restart
+- **web**: add a sign-out button to the Settings screen
+- **api**: aggregate catalog editions of the same series and volume
+- **api**: fill series total_volumes so the grid shows the whole run
+- **api**: show an author's full bibliography, enriched from the provider (#294)
+- **api**: carry ratings, dates and shelf categories through an import (#295)
+- **web**: make author names clickable across every shelf and wishlist (#296)
+- **web**: search the catalog as you type, the way Babelio and Mangacollec do (#297)
+- **web**: catalog fiche for an unowned title (view before owning) (#298)
+- **api,web**: run library imports in the background so a large one stops timing out (#301)
+- **api**: fill imported titles' page counts from the catalog in the background (#302)
+- browser import for Booknode and Babelio, a real author page, and a Home showcase (#344)
+- a showcase landing page, a sign-in button that reports an unreachable service, and a deploy that checks its Secrets (#346)
+- scan a book's barcode and know at once whether it is already yours (#68) (#353)
+- add a book with its status, a to-read pile, latest activity first, and a readable reading chart (#373)
+- **web**: scan a shelf in one motion — a session target, no confirmation per book (#377)
+- find other readers by name, follow them, and see who follows you (#378)
+- share reviews with other readers, and report them (#380)
+- empty the library, and turn account deletion on (#385)
+- reading dates follow the status, and a reading goal per kind (#395)
+- **web**: one add button, remove from the book, covers that come back, and cached images (#403)
+- French-first, work-centric catalog search with real covers (#410)
+- status families, reading sheet, action feedback, estimated lengths, prices and stats fixes (#422)
+- wishlist search, A4/A6 reading sheet, quieter sky card and immediate import enrichment (#428)
+- scanner in every browser, self-completing series, own price, kept searches, A5 sheet (#438)
+- achievements, XP and levels (#442)
+- clickable authors and series, webcam scanning, edition choice, own pages and format, Mangacollec import (#449)
+- library views, infinite scroll, friends and outside ratings on a title, kind change, audiobooks (#460)
+- one-step Mangacollec import, bulk edits, kind filter, profile save, condensed dependency updates (#461)
+- reading calendar, edition metadata, drag in views, full-screen dialogs, scroll that never stalls, Babelio wishes, private Mangacollec (#483)
+- half-star ratings, compact editions, books in their calendar day, reliable moving in views, one-line bookmarklet (#492)
+- report button, errors recorded by themselves, admin role, reports and monitoring screens (#493)
+- social feed, profiles and avatars, admin members and ticket triage, compact phone bar; fix the Babelio and Mangacollec imports (#498)
+- own activity in the feed, clickable readers and books, a member's shelves on their profile (#515)
+- notification bell (#516, #211) and WCAG 2.1 AA pass (#78) (#517)
+- reports endpoint for agents; white text on light-theme accent fills (#520)
+- **mobile**: an Android package ready for Play, and iOS without a Mac (#532)
+- **mobile**: the iOS project, generated, compiling and wearing its own icon (#535)
+
+### Fixes
+
+- **web**: add apple-touch-icon for iOS home screen (#272)
+- **infra**: widen the Keycloak login card on desktop (#271)
+- **web**: show a skeleton while a cover image is loading (#274)
+- **web**: keep Settings sections a single stacked column on desktop (#273)
+- **api,web**: open author bibliography tiles and retire the Tomes goal unit (#275)
+- **web**: keep collection cover tiles uniform on phone widths (#276)
+- **api**: keep a volume 0 in the series run (#277)
+- **api**: make follow() idempotent under concurrent duplicate requests (#279)
+- **api**: drop empty catalog search results from the memory cache (#278)
+- **web**: resolve changeLanguage once the locale switch is applied (#280)
+- **deps**: pull brace-expansion off the vulnerable 1.1.16 (#281)
+- **api**: make the Booknode import fetch every page as a browser
+- **infra**: deploy api and keycloak with Recreate so the rollout fits the node (#299)
+- **api**: read Booknode status/rating from the real badge, and give book authors a full bibliography (#300)
+- make the catalog, imports, series, authors and covers work against real data (#342)
+- **api**: write big imports in batches, and say why a Booknode pseudo fails (#351)
+- **web**: one button height per size, and pages that keep inside their blocks (#352)
+- **api**: answer a scan in well under a second, and recognise a title worded the other way (#354)
+- import a Booknode library the way the reader filed it, and keep the stats honest about it (#355)
+- read Babelio's current library, offer real editions only, and keep readers signed in (#356)
+- **web**: stay signed in across visits, and bring back the kind switch (#384)
+- **web**: library sorts, kept state, wish fiches, a to-read screen and the renamed Bibliothèque (#394)
+- a scanner that reads barcodes, and no more always-red e2e workflow (#441)
+- pill radii everywhere, series and several changes in bulk edits, cleaner selection (#469)
+- **web**: readable series, infinite scroll in order and ahead, filter icons, « Ajouter un livre », scan beside search (#475)
+- Babelio wishlist, one collector bookmark, bulk kind change; docs: merge on green (#510)
+- **web**: clean printed reading sheet, vivid status colours on admin and stats (#523)
+
+### Documentation
+
+- keep the developer wiki in docs/wiki and publish it on every merge (#376)
+- engineering rules for every agent, and the web dependency updates Dependabot could not land (#471)
+
+### CI
+
+- bump the github-actions group with 10 updates (#267)
+- gate the deploy on kubectl rollout status instead of helm --wait
+- bump the github-actions group across 1 directory with 12 updates (#339)
+- bump azure/setup-helm (#464)
+
+### Chores
+
+- **release**: align the chart and changelog with v0.8.0 (#266)
+- **deps**: bump the api group across 1 directory with 3 updates (#270)
+- add a per-feature UX review subagent
+- **deps**: bump the api group across 1 directory with 8 updates (#319)
+- **deps**: bump serialize-javascript from 7.0.7 to 7.1.4 (#343)
+- **deps-dev**: bump vitest from 4.1.10 to 4.1.11 (#341)
+- **web**: bump vite to 8.1.6 and its override with it (#349)
+- **deps**: bump the api group in /apps/api with 6 updates (#347)
+- **web**: bump the web-runtime group and re-derive the bundle budget (#350)
+- **deps**: bump the api group in /apps/api with 2 updates (#462)
+
+[Full comparison](https://github.com/zelytra/Librarius/compare/v0.8.0...v1.0.0-rc.1)
+
 ## [0.8.0] - 2026-08-01
 
 ### Features
