@@ -451,3 +451,59 @@ input.btn-default {
   background: var(--surface-2);
   color: var(--ink-soft);
 }
+
+/* Sign in with Google and Apple (#177). keycloak.v2 draws a provider it has an icon
+   for (Google) as a bare 23 px glyph with its name only in `aria-label`, and one it
+   has none for (Apple) as plain text: two shapes, neither of them a 44 px target.
+   Each becomes one full-width button carrying its name; the name of an icon-only
+   provider is read back from its `aria-label` — `::before`, because PatternFly
+   already spends `::after` on the outline. */
+#kc-social-providers {
+  padding-bottom: 24px;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item {
+  width: 100%;
+  margin: 0;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--radius-button);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item-link::after {
+  border-radius: var(--radius-button);
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item-link svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item-link:has(svg)::before {
+  content: attr(aria-label);
+  order: 1;
+}
+
+#kc-social-providers .pf-v5-c-login__main-footer-links-item-link:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}

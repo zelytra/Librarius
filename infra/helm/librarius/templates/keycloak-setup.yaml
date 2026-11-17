@@ -1,6 +1,6 @@
 {{- if .Values.keycloak.enabled }}
 {{- /*
-Keeps the existing realm in line with the chart, on every deploy (#381, #73).
+Keeps the existing realm in line with the chart, on every deploy (#381, #73, #177).
 
 `--import-realm` only imports a realm that does not exist yet, so anything the realm
 JSON gained after the first deploy never reached staging: the session lifetimes of #371
@@ -82,6 +82,56 @@ spec:
                      -s "description=Instance administration (reports, monitoring)"
               echo "admin role present"
 
+              # The user profile (#538): Keycloak 25's own, with first and last name optional
+              # (files/keycloak-user-profile.json). Required, they made Keycloak stop a reader
+              # signing in with Google or Apple for the first time — which hands over nothing
+              # but the e-mail — on a form asking for both. The reader names themselves in the
+              # app instead.
+              $kc update users/profile -r librarius -f - <<'PROFILE'
+              {{- .Files.Get "files/keycloak-user-profile.json" | nindent 14 }}
+              PROFILE
+              echo "user profile applied"
+
+              # Sign in with Google and Apple (#177), each on when its Secret exists. Only the
+              # e-mail scope is asked for (#538): no name or picture leaves the provider. Both
+              # providers verify the address, so it is trusted; IMPORT copies it once and never
+              # overwrites what the reader changes afterwards.
+              upsert_idp() { # upsert_idp <alias> <kcadm -s arguments…>
+                local alias=$1; shift
+                if $kc get "identity-provider/instances/$alias" -r librarius >/dev/null 2>&1; then
+                  $kc update "identity-provider/instances/$alias" -r librarius "$@"
+                  echo "identity provider $alias updated"
+                else
+                  $kc create identity-provider/instances -r librarius -s "alias=$alias" "$@"
+                  echo "identity provider $alias created"
+                fi
+              }
+              {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "google") }}
+              upsert_idp google -s providerId=google -s displayName=Google -s enabled=true \
+                -s trustEmail=true -s config.syncMode=IMPORT -s config.guiOrder=1 \
+                -s 'config.defaultScope=openid email' \
+                -s "config.clientId=$GOOGLE_CLIENT_ID" -s "config.clientSecret=$GOOGLE_CLIENT_SECRET"
+              {{- end }}
+              {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
+              # The deploy that turns Apple on also restarts Keycloak with the extension: wait
+              # for the restarted one rather than fail against the pod on its way out.
+              for i in $(seq 1 120); do
+                [[ $($kc get serverinfo 2>/dev/null) == *'"apple"'* ]] && break
+                [ "$i" = 120 ] && { echo "Keycloak never loaded the Apple provider"; exit 1; }
+                sleep 5
+                $kc config credentials --server "$server" --realm master \
+                  --user "$KC_ADMIN" --password "$KC_ADMIN_PASSWORD" >/dev/null 2>&1 || true
+              done
+              # The extension takes the raw .p8 key as client secret and signs the JWT Apple
+              # wants from it on each sign-in, so nothing here expires every six months.
+              apple_key=${APPLE_PRIVATE_KEY//$'\r'/}
+              upsert_idp apple -s providerId=apple -s displayName=Apple -s enabled=true \
+                -s trustEmail=true -s config.syncMode=IMPORT -s config.guiOrder=2 \
+                -s config.defaultScope=email \
+                -s "config.clientId=$APPLE_CLIENT_ID" -s "config.teamId=$APPLE_TEAM_ID" \
+                -s "config.keyId=$APPLE_KEY_ID" -s "config.clientSecret=${apple_key//$'\n'/}"
+              {{- end }}
+
               # The native app's client (#528). The realm JSON gained it after staging's realm
               # was first imported, so only this Job can put it there. Public and PKCE-only:
               # an installed application cannot keep a secret. `webOrigins` lists the two
@@ -135,6 +185,24 @@ spec:
                 secretKeyRef:
                   name: {{ include "librarius.keycloak.secretName" . }}
                   key: {{ .Values.keycloak.secretKey }}
+            {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "google") }}
+            {{- $google := .Values.keycloak.identityProviders.google.secretName }}
+            - name: GOOGLE_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: {{ $google }}, key: client-id } }
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: {{ $google }}, key: client-secret } }
+            {{- end }}
+            {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
+            {{- $apple := .Values.keycloak.identityProviders.apple.secretName }}
+            - name: APPLE_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: {{ $apple }}, key: client-id } }
+            - name: APPLE_TEAM_ID
+              valueFrom: { secretKeyRef: { name: {{ $apple }}, key: team-id } }
+            - name: APPLE_KEY_ID
+              valueFrom: { secretKeyRef: { name: {{ $apple }}, key: key-id } }
+            - name: APPLE_PRIVATE_KEY
+              valueFrom: { secretKeyRef: { name: {{ $apple }}, key: private-key } }
+            {{- end }}
             {{- if $apiAdmin.enabled }}
             - name: API_ADMIN_SECRET
               valueFrom:

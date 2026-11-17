@@ -119,6 +119,32 @@ spec:
           (.Files.Get "files/keycloak-theme/login/messages/messages_en.properties")
           | sha256sum }}
     spec:
+      {{- $apple := .Values.keycloak.identityProviders.apple }}
+      {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
+      # Keycloak has no Apple provider of its own (#177): the extension's jar is fetched into
+      # the providers directory before Keycloak starts, and refused unless its SHA-256 is the
+      # one pinned in values.yaml. A plain `start` (not `--optimized`) then builds it in.
+      initContainers:
+        - name: apple-provider
+          image: {{ $apple.extension.fetchImage }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              curl -fsSL --retry 3 -o /providers/apple-identity-provider.jar "$URL"
+              echo "$SHA256  /providers/apple-identity-provider.jar" | sha256sum -c -
+          env:
+            - name: URL
+              value: {{ $apple.extension.url | quote }}
+            - name: SHA256
+              value: {{ $apple.extension.sha256 | quote }}
+          volumeMounts:
+            - name: providers
+              mountPath: /providers
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 200m, memory: 64Mi }
+      {{- end }}
       containers:
         - name: keycloak
           image: {{ .Values.keycloak.image }}
@@ -178,6 +204,10 @@ spec:
             # `keycloak.v2`, which lives inside a jar and is unaffected either way.
             - name: theme
               mountPath: /opt/keycloak/themes/librarius
+            {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
+            - name: providers
+              mountPath: /opt/keycloak/providers
+            {{- end }}
           readinessProbe:
             httpGet: { port: 8081, path: /auth/realms/librarius }
             initialDelaySeconds: 20
@@ -189,6 +219,10 @@ spec:
         - name: realm
           configMap:
             name: {{ .Release.Name }}-keycloak-realm
+        {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
+        - name: providers
+          emptyDir: {}
+        {{- end }}
         # `path` is what rebuilds the directory tree a theme has to have: the
         # ConfigMap keys are flat because a key cannot contain a slash.
         - name: theme
