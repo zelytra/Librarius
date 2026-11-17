@@ -117,8 +117,67 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::${GITHUB_REF_NAME} was not uploaded to TestFlight — APPLE_ASC_KEY_ID, APPLE_ASC_ISSUER_ID, APPLE_ASC_KEY_P8_BASE64 and/or APPLE_TEAM_ID are not set on this repository yet. Procedure: docs/wiki/Mobile-iOS-Pipeline.md."
+            echo "::warning::${GITHUB_REF_NAME} was not uploaded to TestFlight — APPLE_ASC_KEY_ID, APPLE_ASC_ISSUER_ID, APPLE_ASC_KEY_P8_BASE64 and/or APPLE_TEAM_ID are not set on this repository yet. An unsigned .ipa is published as an artifact instead, to sideload with a free Apple ID. Procedure: docs/wiki/Mobile-iOS-Pipeline.md."
           fi
+
+      # With no Apple account there is nothing to sign and nothing to upload — but there is
+      # still something worth producing. An unsigned archive needs no certificate, and the
+      # .ipa packaged from it is what a sideloading tool (Sideloadly, AltStore, SideStore)
+      # re-signs with a free Apple ID to install the app on the owner's own iPhone, outside
+      # any store. That signature lasts seven days and covers at most three applications per
+      # Apple ID; a paid membership is what turns it into a year.
+      #
+      # It also answers the other half of the question a release candidate asks: does this
+      # version build at all? So a tag cut before the membership exists exercises the
+      # scaffold, the Swift packages and the plugins instead of printing a warning and
+      # stopping.
+      - name: Archive the app, unsigned
+        if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
+        working-directory: apps/mobile/ios/App
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.build-number.outputs.code }}
+        run: |
+          xcodebuild archive \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Librarius-unsigned.xcarchive" \
+            MARKETING_VERSION="${VERSION%%-*}" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS=""
+
+      # An .ipa is a zip holding `Payload/<app>.app`, nothing more; `xcodebuild
+      # -exportArchive` would refuse to produce one without a signing identity, so the
+      # archive's own product is packaged by hand.
+      - name: Package the unsigned .ipa
+        if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/unsigned/Payload"
+          # Globbed rather than named: the product is App.app today, and a rename in the
+          # Xcode project would otherwise fail here for no good reason.
+          app=$(find "$RUNNER_TEMP/Librarius-unsigned.xcarchive/Products/Applications" \
+                  -maxdepth 1 -name '*.app' | head -1)
+          if [ -z "$app" ]; then
+            echo "::error::the archive holds no .app — nothing to package"
+            exit 1
+          fi
+          cp -R "$app" "$RUNNER_TEMP/unsigned/Payload/"
+          cd "$RUNNER_TEMP/unsigned"
+          zip -qry "Librarius-unsigned.ipa" Payload
+          ls -lh Librarius-unsigned.ipa
+
+      - name: Upload the unsigned .ipa
+        if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: librarius-ios-unsigned-${{ steps.version.outputs.version }}
+          path: ${{ runner.temp }}/unsigned/Librarius-unsigned.ipa
+          retention-days: 30
 
       # Into $RUNNER_TEMP, outside the checkout, like the Android keystore: it cannot reach a
       # commit, an artifact or a cache by accident, and the runner is destroyed with it.
