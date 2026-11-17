@@ -158,8 +158,15 @@ jobs:
         if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
         run: |
           mkdir -p "$RUNNER_TEMP/unsigned/Payload"
-          cp -R "$RUNNER_TEMP/Librarius-unsigned.xcarchive/Products/Applications/App.app" \
-                "$RUNNER_TEMP/unsigned/Payload/"
+          # Globbed rather than named: the product is App.app today, and a rename in the
+          # Xcode project would otherwise fail here for no good reason.
+          app=$(find "$RUNNER_TEMP/Librarius-unsigned.xcarchive/Products/Applications" \
+                  -maxdepth 1 -name '*.app' | head -1)
+          if [ -z "$app" ]; then
+            echo "::error::the archive holds no .app — nothing to package"
+            exit 1
+          fi
+          cp -R "$app" "$RUNNER_TEMP/unsigned/Payload/"
           cd "$RUNNER_TEMP/unsigned"
           zip -qry "Librarius-unsigned.ipa" Payload
           ls -lh Librarius-unsigned.ipa
