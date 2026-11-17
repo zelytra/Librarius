@@ -15,6 +15,10 @@ on:
     paths:
       - 'infra/helm/librarius/files/keycloak-theme/**'
       - 'infra/helm/librarius/templates/keycloak.yaml'
+      - 'infra/helm/librarius/templates/keycloak-setup.yaml'
+      - 'infra/helm/librarius/templates/_helpers.tpl'
+      - 'infra/helm/librarius/values.yaml'
+      - 'infra/helm/librarius/files/keycloak-user-profile.json'
       - 'infra/keycloak/**'
       - '.github/workflows/keycloak-theme.yml'
 
@@ -46,3 +50,23 @@ jobs:
       # reproducible without reading this file.
       - name: Render, serve and read the sign-in page
         run: bash infra/keycloak/check-theme.sh
+
+  # Sign in with Google and Apple (#177): the chart's keycloak-setup Job, rendered and run
+  # against the pinned image carrying the Apple extension the Deployment would fetch.
+  identity-providers:
+    name: the identity providers reach the realm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Helm
+        uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Shell script parses
+        run: bash -n infra/keycloak/check-identity-providers.sh
+
+      - name: Render the Job, run it on Keycloak, read the realm back
+        run: bash infra/keycloak/check-identity-providers.sh
