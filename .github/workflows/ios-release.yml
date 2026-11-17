@@ -117,8 +117,24 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::${GITHUB_REF_NAME} was not uploaded to TestFlight — APPLE_ASC_KEY_ID, APPLE_ASC_ISSUER_ID, APPLE_ASC_KEY_P8_BASE64 and/or APPLE_TEAM_ID are not set on this repository yet. Procedure: docs/wiki/Mobile-iOS-Pipeline.md."
+            echo "::warning::${GITHUB_REF_NAME} was not uploaded to TestFlight — APPLE_ASC_KEY_ID, APPLE_ASC_ISSUER_ID, APPLE_ASC_KEY_P8_BASE64 and/or APPLE_TEAM_ID are not set on this repository yet. The app is compiled unsigned instead, so the build is still checked. Procedure: docs/wiki/Mobile-iOS-Pipeline.md."
           fi
+
+      # With no Apple account there is nothing to sign and nothing to upload, but the tag can
+      # still answer the other half of the question: does this version build at all? An
+      # unsigned compile needs no certificate, so a release candidate cut before the
+      # membership is paid for still exercises the scaffold, the Swift packages and the
+      # plugins instead of printing a warning and stopping.
+      - name: Compile the app, unsigned
+        if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
+        working-directory: apps/mobile/ios/App
+        run: |
+          xcodebuild build \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
 
       # Into $RUNNER_TEMP, outside the checkout, like the Android keystore: it cannot reach a
       # commit, an artifact or a cache by accident, and the runner is destroyed with it.

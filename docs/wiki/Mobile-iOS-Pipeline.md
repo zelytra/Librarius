@@ -116,7 +116,14 @@ goes red over a pending manual step.
 
 ## Step 4 — release
 
-Cut a `vX.Y.Z` tag on `main`, as for every other release. `ios-release` archives the app,
+Cut a `vX.Y.Z` tag on `main`, as for every other release.
+
+**Before the membership is paid for**, that tag still builds: `ios-release` compiles the app
+unsigned and says in a warning annotation that nothing was uploaded. A release candidate
+therefore checks the iOS build without an Apple account — it simply cannot produce anything
+installable.
+
+**Once the four secrets exist**, `ios-release` archives the app,
 signs it, and uploads it straight to App Store Connect (`destination: upload` in
 `apps/mobile/ios-export-options.plist` — no `altool`, no Transporter). The build appears in
 TestFlight a few minutes later, after Apple's automatic processing.
