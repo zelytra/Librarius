@@ -5,6 +5,32 @@ the web app (`react-oidc-context`, `apps/web/src/auth/oidc.ts`). The API validat
 token and reads the user from its `sub` (`security/CurrentUser.java`); the first request of a
 new account creates its `app_user` row.
 
+## Google and Apple
+
+The sign-in page also offers **Google** and **Apple** (#177), as Keycloak identity
+providers: the app itself knows nothing of them, a brokered account reaches the API as an
+ordinary Keycloak token. They exist on a realm only once the owner has created their
+credentials as Kubernetes Secrets; the `keycloak-setup` Job then configures them (see
+"Keeping the live realm in line" below), and Apple, which Keycloak does not ship, comes
+from the [klausbetz extension](https://github.com/klausbetz/apple-identity-provider-keycloak)
+the Deployment fetches and checks against a pinned SHA-256. Owner procedure, console
+screens and redirect URIs:
+[`docs/DEPLOYMENT.md`](https://github.com/zelytra/Librarius/blob/main/docs/DEPLOYMENT.md)
+§ "Sign in with Google and Apple". The mobile app signs in through the system browser, so
+Google does not refuse it as an embedded WebView.
+
+**Only the e-mail address is imported (#538).** The providers are asked for the e-mail
+scope alone, and the realm's user profile makes first and last name optional
+(`infra/helm/librarius/files/keycloak-user-profile.json`), so a first sign-in creates the
+account without a form. Such an account's token carries no `name`, and its
+`preferred_username` is the e-mail address: `CurrentUser.initialDisplayName` never takes a
+value containing `@` as a display name — other members see it — so the account starts as
+« Lecteur » and the reader names themselves in Settings.
+
+`infra/keycloak/check-identity-providers.sh` (CI job *the identity providers reach the
+realm*) renders the chart with both providers on, runs the rendered Job twice on the pinned
+Keycloak image carrying the Apple jar, and reads the realm and the sign-in page back.
+
 ## The admin role
 
 The realm role **`admin`** (#488) opens the admin screens — the members' reports, the
@@ -53,7 +79,8 @@ stack before `./mvnw verify`.
 Keycloak imports `realm-librarius.json` only when the realm does not exist yet, so a change
 to it never reaches a running deployment on its own. On every deploy, the chart's
 `keycloak-setup` Job applies to the live realm what has to stay true there: the session
-lifetimes (`keycloak.sessions` in `values.yaml`), the confidential client
+lifetimes (`keycloak.sessions` in `values.yaml`), the user profile (first and last name
+optional), the Google and Apple identity providers whose Secrets exist, the confidential client
 `librarius-api-admin`, whose service account (`realm-management` → `manage-users` only)
 lets the api delete a Keycloak login when a reader deletes their account, and the public
 client `librarius-mobile` the installed application signs in with — PKCE `S256`, redirect

@@ -237,7 +237,7 @@ signing in shows something branded; loading and empty states stop flashing.
 | [#181](https://github.com/zelytra/Librarius/issues/181) | ✅ Home screen: a book stack visualizing total books and pages read | — |
 | [#183](https://github.com/zelytra/Librarius/issues/183) | ✅ Library screen: separate shelves by support type | #178 |
 | [#176](https://github.com/zelytra/Librarius/issues/176) | A Keycloak login theme matching the application | — |
-| [#177](https://github.com/zelytra/Librarius/issues/177) | Social sign-in with Google and Apple | #176 |
+| [#177](https://github.com/zelytra/Librarius/issues/177) | ✅ Social sign-in with Google and Apple — e-mail only ([#538](https://github.com/zelytra/Librarius/issues/538)); live once the owner creates the two Secrets (`docs/DEPLOYMENT.md`) | #176 |
 
 ---
 

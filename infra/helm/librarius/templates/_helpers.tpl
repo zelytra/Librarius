@@ -50,3 +50,13 @@ still renders untouched for a deployment that has no backup destination yet.
 {{- define "librarius.backup.secretName" -}}
 {{- required "backup.existingSecret is required when backup.enabled is true: create the Secret then deploy with --set backup.existingSecret=<name> (see docs/DEPLOYMENT.md)" .Values.backup.existingSecret -}}
 {{- end -}}
+
+{{/*
+Whether an identity provider (#177) is on: forced by `enabled`, or because its Secret
+exists in the namespace. `lookup` sees nothing under `helm template`, hence the flag.
+Call with (dict "ctx" $ "idp" "google").
+*/}}
+{{- define "librarius.idp.enabled" -}}
+{{- $idp := index .ctx.Values.keycloak.identityProviders .idp -}}
+{{- if or $idp.enabled (lookup "v1" "Secret" .ctx.Release.Namespace $idp.secretName) -}}true{{- end -}}
+{{- end -}}

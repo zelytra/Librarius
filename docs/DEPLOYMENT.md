@@ -374,6 +374,99 @@ k exec deploy/librarius-keycloak -- /opt/keycloak/bin/kcadm.sh add-roles -r libr
 after the `config credentials` line of the next section. They see « Administration » in
 Settings once they sign in again.
 
+### 🔐 Sign in with Google and Apple (manual action)
+
+The sign-in page offers « Google » and « Apple » next to the password form (#177) once the
+owner has created the credentials each provider issues. Everything else is in the chart:
+the `keycloak-setup` Job configures the identity provider on the live realm **as soon as its
+Secret exists**, and the Keycloak Deployment fetches the Apple extension (Keycloak has no
+Apple provider of its own) when the Apple Secret exists. No value to change, no realm edit.
+
+**Only the e-mail address is taken from the provider (#538).** Google is asked for
+`openid email` and Apple for `email`: no name, no picture. The realm's user profile makes
+first and last name optional, so the first sign-in goes straight through; the account starts
+with the display name « Lecteur » and the reader sets their own in Settings. The address is
+trusted (both providers verify it). A reader who already has a password account with that
+address is asked for their password once, then the two are linked.
+
+Both providers need the same Keycloak callback, one per provider:
+
+| Provider | Redirect URI to register |
+|---|---|
+| Google | `https://librarius.zelytra.fr/auth/realms/librarius/broker/google/endpoint` |
+| Apple | `https://librarius.zelytra.fr/auth/realms/librarius/broker/apple/endpoint` |
+
+#### Google
+
+1. <https://console.cloud.google.com> → create a project (e.g. *Librarius*).
+2. *Google Auth Platform* → *Get started* (the old « OAuth consent screen »): app name
+   *Ma Bibliothèque*, a support e-mail, audience **External**, a contact e-mail.
+3. *Branding*: add `zelytra.fr` to the authorised domains.
+4. *Data access*: keep only the non-sensitive scopes `openid` and
+   `.../auth/userinfo.email` — no `profile`. Non-sensitive scopes need no Google
+   verification.
+5. *Audience* → **Publish app** (« In production »). Left in « Testing », only the test
+   users listed there can sign in.
+6. *Clients* → *Create client* → *Web application*, name *Librarius staging*. No JavaScript
+   origin. *Authorised redirect URIs*: the Google line of the table above. Create, then copy
+   the **client ID** and the **client secret**.
+7. On the cluster:
+
+   ```bash
+   kubectl -n librarius create secret generic librarius-keycloak-google \
+     --from-literal=client-id='<client ID>.apps.googleusercontent.com' \
+     --from-literal=client-secret='<client secret>'
+   ```
+
+#### Apple
+
+Requires a paid Apple Developer Program membership. In
+<https://developer.apple.com/account/resources> (*Certificates, Identifiers & Profiles*):
+
+1. *Identifiers* → the App ID of the app (`fr.zelytra.librarius`; create it if it does not
+   exist) → tick **Sign In with Apple** → *Edit* → *Enable as a primary App ID* → *Save*.
+2. *Identifiers* → **+** → **Services IDs** → description *Ma Bibliothèque*, identifier
+   `fr.zelytra.librarius.signin` → *Register*. Open it, tick **Sign In with Apple** →
+   *Configure*: primary App ID `fr.zelytra.librarius`, *Domains and Subdomains*
+   `librarius.zelytra.fr`, *Return URLs* the Apple line of the table above → *Next* →
+   *Done* → *Continue* → *Save*. The Services ID is the **client ID**.
+3. *Keys* → **+** → name *Librarius Sign in with Apple*, tick **Sign in with Apple** →
+   *Configure* → primary App ID `fr.zelytra.librarius` → *Save* → *Continue* → *Register*.
+   **Download the `.p8` file — Apple offers it once** — and note the **Key ID**.
+4. The **Team ID** is under *Membership details* (top right of the account page).
+5. On the cluster:
+
+   ```bash
+   kubectl -n librarius create secret generic librarius-keycloak-apple \
+     --from-literal=client-id=fr.zelytra.librarius.signin \
+     --from-literal=team-id='<Team ID>' \
+     --from-literal=key-id='<Key ID>' \
+     --from-file=private-key=AuthKey_<Key ID>.p8
+   ```
+
+The extension signs the short-lived JWT Apple wants with the `.p8` key on each sign-in, so
+nothing expires every six months. A reader who picks *Hide My Email* arrives with an
+`@privaterelay.appleid.com` address; that is the address the account gets.
+
+#### Then
+
+Redeploy — the next merge into `main`, or *Actions* → *cd* → *Re-run all jobs* on the last
+run. The `Wait for the Keycloak setup` step prints `identity provider google created` (and
+`apple`). Check by opening <https://librarius.zelytra.fr>, *Se connecter*, then each button.
+
+- **Turning one off**: deleting its Secret stops the Job from touching it but leaves it on
+  the realm — disable it in the console (*Identity providers* → the provider → *Enabled*).
+- **Rotating** a secret or the Apple key: replace the Secret's value and redeploy; the Job
+  writes it again.
+- **Upgrading Keycloak**: the Apple extension is tied to the Keycloak major. Move
+  `keycloak.identityProviders.apple.extension` (URL and SHA-256) along with
+  `keycloak.image`, using the compatibility table of the extension's README;
+  `infra/keycloak/check-identity-providers.sh` (CI: `keycloak-theme` workflow) fails until
+  they match.
+- **Locally** no provider is configured: there are no credentials to give one. To try a
+  provider, add it by hand in the local console (`http://localhost:8081/admin`) with a
+  client of your own whose redirect URI is `http://localhost:8081/realms/librarius/broker/<alias>/endpoint`.
+
 ### 🎨 Changing the realm of a running Keycloak (manual action)
 
 **The realm is imported once, on an empty database, and never again.** Both the chart and

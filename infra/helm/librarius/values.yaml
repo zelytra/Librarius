@@ -221,6 +221,28 @@ keycloak:
     idle: 604800
     max: 2592000
     offlineIdle: 7776000
+  # Sign in with Google and Apple (#177), applied to the live realm by the keycloak-setup
+  # Job. Each provider turns itself on when its Secret exists in the namespace — create it,
+  # then redeploy; no value to change here. `enabled: true` forces it on (the CI check).
+  # Only the e-mail address is asked for (#538): the reader sets their own name in the app.
+  # Procedure, console screens and redirect URIs: docs/DEPLOYMENT.md § "Sign in with Google
+  # and Apple".
+  identityProviders:
+    google:
+      enabled: false
+      # Keys: client-id, client-secret (Google Cloud → APIs & Services → Credentials).
+      secretName: librarius-keycloak-google
+    apple:
+      enabled: false
+      # Keys: client-id (the Services ID), team-id, key-id, private-key (the .p8 file).
+      secretName: librarius-keycloak-apple
+      # Keycloak has no Apple provider of its own: this extension supplies it. 1.14.0 is the
+      # last release for Keycloak 25 (its README's compatibility table) — move it with
+      # keycloak.image. The jar is fetched at pod start and refused unless its hash matches.
+      extension:
+        url: https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.14.0/apple-identity-provider-1.14.0.jar
+        sha256: "f0b940f32cb384f18f784ad97ea84979f008c81325a26cf1c200c880ed733407"
+        fetchImage: curlimages/curl:8.11.1
   resources:
     requests: { cpu: 100m, memory: 384Mi }
     limits: { cpu: "1", memory: 768Mi }
