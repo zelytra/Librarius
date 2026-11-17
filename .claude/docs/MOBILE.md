@@ -21,10 +21,9 @@ gets — `android/` is packaging around that bundle, not a second copy of the ap
 
 What is deliberately **not** here yet:
 
-- `apps/mobile/ios/` — the iOS native project. `cap add ios` needs macOS, and nobody on this
-  project has a Mac, so it is created **in CI**: the `ios-bootstrap` workflow runs it on a
-  GitHub-hosted macOS runner and hands back the generated project to commit
-  ([#531](https://github.com/zelytra/Librarius/issues/531), § 10). Nobody has run it yet.
+- **An Apple Developer Program membership**, and therefore any build that can leave the
+  runner: `ios-release` stops at its signing guard until the four Apple secrets exist (§ 10).
+  The project itself is here and compiles.
 - **The status bar's own colours.** The app holds the system bars off its content (§ 6), but
   their icons still follow the device's dark mode rather than the palette the reader chose —
   [#533](https://github.com/zelytra/Librarius/issues/533).
@@ -383,13 +382,13 @@ sources live in `apps/mobile/assets/`, all of them the web app's open-book mark
 
 | Source | Becomes |
 |---|---|
-| `icon-only.svg` | `mipmap-*/ic_launcher.png` and `ic_launcher_round.png` — the icon of Android 7 and 8.0, which know nothing of adaptive icons |
+| `icon-only.svg` | `mipmap-*/ic_launcher.png` and `ic_launcher_round.png` — the icon of Android 7 and 8.0, which know nothing of adaptive icons — and `AppIcon-512@2x.png`, the whole iOS icon. Full bleed, because both platforms mask it themselves |
 | `icon-foreground.svg` | `mipmap-*/ic_launcher_foreground.png`, the adaptive icon's mark |
 | `icon-background.svg` | `mipmap-*/ic_launcher_background.png`, its flat background |
-| `splash.svg`, `splash-dark.svg` | `drawable*/splash.png` at every density, orientation and night variant |
+| `splash.svg`, `splash-dark.svg` | `drawable*/splash.png` at every density, orientation and night variant, and `Splash.imageset`'s six iOS images |
 
 ```bash
-pnpm --filter @librarius/mobile assets:generate   # the native resources
+pnpm --filter @librarius/mobile assets:generate   # the native resources, both platforms
 pnpm --filter @librarius/mobile store:assets      # the Play Console's two images
 ```
 
@@ -418,12 +417,14 @@ shoot.
 
 The owner has an iPhone and no Mac, and every Apple tool that matters — `xcodebuild`, the
 signing machinery, the uploader — is macOS-only. The way through is to rent the Mac by the
-minute and let Apple issue the signing material itself. Two workflows, neither of which has
-run yet ([#531](https://github.com/zelytra/Librarius/issues/531)):
+minute and let Apple issue the signing material itself. Two workflows. The first has
+run ([#531](https://github.com/zelytra/Librarius/issues/531)): the project it generated is
+committed under `apps/mobile/ios/`, and `xcodebuild` builds it unsigned on the runner, which
+is as far as anything can go before a membership is paid for. The second has not:
 
 | Workflow | When | What it does |
 |---|---|---|
-| `ios-bootstrap.yml` | By hand, once | `cap add ios` on `macos-latest`, then `scripts/patch-ios-project.sh`, then hands the project back as an artifact (or pushes it to a branch). It refuses to run while `apps/mobile/ios` exists. |
+| `ios-bootstrap.yml` | By hand, once | `cap add ios` on `macos-latest`, then `scripts/patch-ios-project.sh`, then **compiles the result unsigned** and hands the project back as an artifact (or pushes it to `ios-bootstrap-<run>`). It refuses to run while `apps/mobile/ios` exists. |
 | `ios-release.yml` | Every `v*` tag | Web build, `cap sync`, `xcodebuild archive`, `xcodebuild -exportArchive` with `destination: upload` — straight into TestFlight. Skips with an annotation while the project or the secrets are missing. |
 
 What makes it work without a Mac is **cloud-managed signing**: `xcodebuild` is given
@@ -441,6 +442,12 @@ Three facts about the Capacitor 8 iOS scaffold that the workflows depend on:
 - the hand edits — `CFBundleURLTypes` for `fr.zelytra.librarius://auth` and the French
   `NSCameraUsageDescription` — are applied by `scripts/patch-ios-project.sh`, which is
   idempotent and has to be re-run after any `cap add ios`.
+
+**Testing the iOS build without paying anything** is exactly that unsigned compile: run
+`ios-bootstrap` on a checkout where `apps/mobile/ios` has been removed, or read the
+`xcodebuild build … CODE_SIGNING_ALLOWED=NO` step of its last run. It catches a broken
+scaffold, a Swift package that will not resolve and a plugin that does not compile. It cannot
+say whether the app runs: that needs a signed build on a device.
 
 The procedure, with costs and lead times, is `docs/wiki/Mobile-iOS-Pipeline.md`. The device
 checks that none of this can prove — sign-in, the scanner, the safe areas — stay on

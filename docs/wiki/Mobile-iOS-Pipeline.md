@@ -65,12 +65,17 @@ them every time.
 
 1. **Actions → `ios-bootstrap` → Run workflow.** It installs the dependencies, builds the web
    bundle, runs `cap add ios`, applies the hand edits
-   (`apps/mobile/scripts/patch-ios-project.sh`) and uploads the result as the
-   `librarius-ios-project` artifact.
+   (`apps/mobile/scripts/patch-ios-project.sh`), **compiles the result unsigned**
+   (`CODE_SIGNING_ALLOWED=NO`) and uploads it as the `librarius-ios-project` artifact.
 2. Commit that directory to a branch and open a pull request — or tick *push_branch* when
-   launching the workflow and it pushes `ios-bootstrap` for you.
+   launching the workflow and it pushes `ios-bootstrap-<run number>` for you.
 3. Merge it. From then on `ios-release` has something to build, and `cap sync` keeps the web
    bundle and the plugin list in step on every run.
+
+That unsigned compile is **the free way to test the iOS build**: it needs no Apple account, no
+certificate and no device, and it fails on anything wrong with the scaffold, the Swift
+packages or a plugin. What it cannot tell you is whether the app *runs* — for that the build
+has to be signed and installed, which is the paid half below.
 
 Run this workflow again only when `@capacitor/ios` moves. It refuses to run while
 `apps/mobile/ios` exists, because `cap add` overwrites hand edits.

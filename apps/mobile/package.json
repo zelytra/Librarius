@@ -12,7 +12,7 @@
     "open:android": "cap open android",
     "open:ios": "cap open ios",
     "doctor": "cap doctor",
-    "assets:generate": "capacitor-assets generate --android && node scripts/finish-android-icons.mjs",
+    "assets:generate": "capacitor-assets generate --android --ios && node scripts/finish-android-icons.mjs",
     "store:assets": "node scripts/generate-store-assets.mjs"
   },
   "dependencies": {
