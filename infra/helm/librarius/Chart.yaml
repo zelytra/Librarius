@@ -2,6 +2,6 @@ apiVersion: v2
 name: librarius
 description: Ma Bibliothèque (Librarius) — stack complète (web + api + postgres + keycloak)
 type: application
-version: 0.8.0
-appVersion: "0.8.0"
+version: 1.0.0-rc.1
+appVersion: "1.0.0-rc.1"
 home: https://github.com/zelytra/Librarius
