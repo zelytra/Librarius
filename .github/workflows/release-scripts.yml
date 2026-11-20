@@ -15,6 +15,8 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/release.yml'
       - '.github/workflows/release-scripts.yml'
+      - '.github/workflows/mobile-release.yml'
+      - '.github/workflows/ios-release.yml'
 
 concurrency:
   group: release-scripts-${{ github.ref }}
@@ -36,6 +38,9 @@ jobs:
       # release, and it covers the whole history — every oddly-worded subject the
       # repository has accumulated, the initial commit included. `a..b` would exclude
       # `a` and quietly skip the one commit least likely to follow the convention.
+      - name: Attaching the mobile files waits for the release (#541)
+        run: bash .github/scripts/attach-release-assets.test.sh
+
       - name: Render the notes over the full history
         run: |
           bash .github/scripts/changelog.sh "0.0.0-check" "HEAD" \

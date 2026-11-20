@@ -37,6 +37,9 @@ jobs:
   build:
     name: archive & upload
     runs-on: macos-latest
+    # write: the .ipa is attached to the tag's GitHub release (#541).
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -179,6 +182,18 @@ jobs:
           path: ${{ runner.temp }}/unsigned/Librarius-unsigned.ipa
           retention-days: 30
 
+      # The release page is where a tester finds it (#541): artifacts expire and need a
+      # GitHub login.
+      - name: Attach the unsigned .ipa to the GitHub release
+        if: steps.project.outputs.present == 'true' && steps.signing.outputs.configured != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cp "$RUNNER_TEMP/unsigned/Librarius-unsigned.ipa" "$RUNNER_TEMP/librarius-${VERSION}-ios-unsigned.ipa"
+          bash .github/scripts/attach-release-assets.sh "$GITHUB_REF_NAME" \
+            "$RUNNER_TEMP/librarius-${VERSION}-ios-unsigned.ipa"
+
       # Into $RUNNER_TEMP, outside the checkout, like the Android keystore: it cannot reach a
       # commit, an artifact or a cache by accident, and the runner is destroyed with it.
       - name: Decode the API key
@@ -250,3 +265,19 @@ jobs:
           path: ${{ runner.temp }}/export
           if-no-files-found: ignore
           retention-days: 30
+
+      # The signed .ipa is only installable through TestFlight or a registered device, but it
+      # belongs with the rest of the release's files all the same (#541).
+      - name: Attach the signed .ipa to the GitHub release
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ipa=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' | head -1)
+          if [ -z "$ipa" ]; then
+            echo "::notice::the export uploaded to TestFlight without leaving an .ipa — nothing to attach"
+            exit 0
+          fi
+          cp "$ipa" "$RUNNER_TEMP/librarius-${VERSION}-ios.ipa"
+          bash .github/scripts/attach-release-assets.sh "$GITHUB_REF_NAME" "$RUNNER_TEMP/librarius-${VERSION}-ios.ipa"

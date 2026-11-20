@@ -26,8 +26,9 @@ Three ways, and only the first costs nothing.
 
 ### 1. Sideload an unsigned build with a free Apple ID — 0 €
 
-Every tag publishes **`librarius-ios-unsigned-<version>`**, an `.ipa` built without a signing
-identity, for as long as the Apple secrets are absent. It cannot be installed as it is: a
+Every tag publishes **`librarius-<version>-ios-unsigned.ipa`** among the files of its GitHub
+release (#541) — and as the `librarius-ios-unsigned-<version>` workflow artifact — an `.ipa`
+built without a signing identity, for as long as the Apple secrets are absent. It cannot be installed as it is: a
 sideloading tool re-signs it with a free Apple ID and installs it over USB or Wi-Fi.
 
 - **Sideloadly** runs on Windows and macOS and is the simplest from a Windows machine.

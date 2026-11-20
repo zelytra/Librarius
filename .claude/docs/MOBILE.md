@@ -427,6 +427,13 @@ is as far as anything can go before a membership is paid for. The second has not
 | `ios-bootstrap.yml` | By hand, once | `cap add ios` on `macos-latest`, then `scripts/patch-ios-project.sh`, then **compiles the result unsigned** and hands the project back as an artifact (or pushes it to `ios-bootstrap-<run>`). It refuses to run while `apps/mobile/ios` exists. |
 | `ios-release.yml` | Every `v*` tag | Web build, `cap sync`, `xcodebuild archive`, `xcodebuild -exportArchive` with `destination: upload` — straight into TestFlight. Skips with an annotation while the project or the secrets are missing. |
 
+Both release workflows attach what they build to the tag's **GitHub release**
+([#541](https://github.com/zelytra/Librarius/issues/541)): `librarius-<version>.apk` and
+`.aab` from `mobile-release.yml`, `librarius-<version>-ios[-unsigned].ipa` from
+`ios-release.yml`. `release.yml` creates that release in parallel, so
+`.github/scripts/attach-release-assets.sh` polls for it (30 s × 60) before uploading, and
+fails rather than publishing nothing; its stubbed test runs in `release-scripts.yml`.
+
 What makes it work without a Mac is **cloud-managed signing**: `xcodebuild` is given
 `-allowProvisioningUpdates` and an App Store Connect **API key** (Admin role — the lesser
 roles are refused), and asks Apple for the distribution certificate and the provisioning

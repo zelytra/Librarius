@@ -105,9 +105,10 @@ actually does:
 ## 5. Upload the first build
 
 1. Cut the tag the milestone deserves (`.claude/docs/CONVENTIONS.md` § "When a tag is cut").
-2. Open the `mobile-release` run for that tag and download the
-   **`librarius-play-bundle-<version>`** artifact: `app-release.aab`. The other artifact, the
-   APK, is for sideloading — Play refuses it.
+2. Download **`librarius-<version>.aab`** from the files of the tag's GitHub release (#541) —
+   the same file is the `librarius-play-bundle-<version>` artifact of the `mobile-release`
+   run. The release's other file, `librarius-<version>.apk`, is for installing directly on a
+   phone — Play refuses it.
 3. **Internal testing → Create new release → upload the `.aab`.** Internal testing reaches up
    to 100 testers you name, with no review wait: it is where you check the app on a real
    device before anyone else sees it.

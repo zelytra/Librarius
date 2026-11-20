@@ -36,6 +36,9 @@ jobs:
   build:
     name: build & sign
     runs-on: ubuntu-latest
+    # write: the two files are attached to the tag's GitHub release (#541).
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -168,3 +171,17 @@ jobs:
           name: librarius-release-apk-${{ steps.version.outputs.version }}
           path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 90
+
+      # The release page is where a tester finds the app: workflow artifacts expire and sit
+      # behind a GitHub login (#541). Renamed so the version shows in the download.
+      - name: Attach the APK and the bundle to the GitHub release
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          out="$RUNNER_TEMP/release-assets"
+          mkdir -p "$out"
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$out/librarius-${VERSION}.apk"
+          cp apps/mobile/android/app/build/outputs/bundle/release/app-release.aab "$out/librarius-${VERSION}.aab"
+          bash .github/scripts/attach-release-assets.sh "$GITHUB_REF_NAME" "$out"/*
