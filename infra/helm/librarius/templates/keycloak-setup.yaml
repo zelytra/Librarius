@@ -75,6 +75,30 @@ spec:
                 -s offlineSessionIdleTimeout={{ .Values.keycloak.sessions.offlineIdle }}
               echo "realm session lifetimes applied"
 
+              # Hardening (#579, #581, #584), on the live realm like the lifetimes above.
+              # Ten failed passwords lock an account for a minute, then longer each time, up
+              # to fifteen minutes; a password has ten characters at least and is neither the
+              # username nor the e-mail; a refresh token works once, so a stolen one dies at
+              # the reader's next refresh; sign-ins and admin changes are kept thirty days.
+              # E-mail verification waits for an SMTP server the chart does not have yet.
+              $kc update realms/librarius \
+                -s bruteForceProtected=true -s permanentLockout=false \
+                -s failureFactor=10 -s waitIncrementSeconds=60 \
+                -s maxFailureWaitSeconds=900 -s maxDeltaTimeSeconds=43200 \
+                -s 'passwordPolicy=length(10) and notUsername and notEmail' \
+                -s revokeRefreshToken=true -s refreshTokenMaxReuse=0 \
+                -s eventsEnabled=true -s eventsExpiration=2592000 \
+                -s adminEventsEnabled=true -s adminEventsDetailsEnabled=false
+              echo "realm hardening applied"
+
+              # The web client signs in through the browser only (#578): a public client that
+              # took the password grant let anyone try credentials without the sign-in page.
+              web_id=$($kc get clients -r librarius -q clientId=librarius-web --fields id --format csv --noquotes)
+              if [ -n "$web_id" ]; then
+                $kc update "clients/$web_id" -r librarius -s directAccessGrantsEnabled=false
+                echo "client librarius-web: password grant off"
+              fi
+
               # The admin role (#488): created on a realm imported before it existed, granted
               # to no one — the owner gives it by hand in the Keycloak console.
               $kc get roles/admin -r librarius >/dev/null 2>&1 \

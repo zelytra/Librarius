@@ -15,6 +15,18 @@ data:
       "enabled": true,
       "sslRequired": "external",
       "registrationAllowed": true,
+      "bruteForceProtected": true,
+      "permanentLockout": false,
+      "failureFactor": 10,
+      "waitIncrementSeconds": 60,
+      "maxFailureWaitSeconds": 900,
+      "maxDeltaTimeSeconds": 43200,
+      "passwordPolicy": "length(10) and notUsername and notEmail",
+      "revokeRefreshToken": true,
+      "refreshTokenMaxReuse": 0,
+      "eventsEnabled": true,
+      "eventsExpiration": 2592000,
+      "adminEventsEnabled": true,
       "loginWithEmailAllowed": true,
       "displayName": "Ma Bibliothèque",
       "loginTheme": "librarius",
@@ -29,7 +41,7 @@ data:
       "clients": [
         {
           "clientId": "librarius-web", "name": "Librarius PWA", "enabled": true,
-          "publicClient": true, "standardFlowEnabled": true, "directAccessGrantsEnabled": true,
+          "publicClient": true, "standardFlowEnabled": true, "directAccessGrantsEnabled": false,
           "redirectUris": ["https://{{ .Values.domain }}/*"],
           "webOrigins": ["+"],
           "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "+" }
