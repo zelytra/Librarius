@@ -5229,6 +5229,10 @@
             "items" : {
               "$ref" : "#/components/schemas/FeedCommentDto"
             }
+          },
+          "readingDays" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

@@ -3593,6 +3593,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FeedCommentDto"
+        readingDays:
+          type: integer
+          format: int32
     FeedPageDto:
       type: object
       properties:

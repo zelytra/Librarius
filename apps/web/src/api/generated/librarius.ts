@@ -530,6 +530,7 @@ export interface FeedItemDto {
   reactions?: FeedItemDtoReactions;
   myReaction?: string;
   comments?: FeedCommentDto[];
+  readingDays?: number;
 }
 
 export interface FeedPageDto {

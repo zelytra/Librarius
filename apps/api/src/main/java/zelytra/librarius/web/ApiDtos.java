@@ -1288,9 +1288,10 @@ public final class ApiDtos {
      * ({@code rating} and {@code review} are then the shared ones). {@code reactions} counts each
      * emote; {@code myReaction} is the caller's, null when none.
      */
+    /** {@code readingDays}: how long a finished book was read, null without a start date (#569). */
     public record FeedItemDto(UUID id, String type, java.time.OffsetDateTime createdAt, MemberSummaryDto actor,
             MemberBookDto book, Double rating, String review, java.util.Map<String, Long> reactions,
-            String myReaction, java.util.List<FeedCommentDto> comments) {
+            String myReaction, java.util.List<FeedCommentDto> comments, Integer readingDays) {
     }
 
     public record FeedCommentDto(UUID id, MemberSummaryDto author, String comment,

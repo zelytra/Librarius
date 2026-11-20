@@ -1687,7 +1687,9 @@
     "commentDeleted": "Commentaire supprimé.",
     "deleteComment": "Supprimer mon commentaire",
     "releases": "Sorties à venir",
-    "reaction": "{{emote}} ({{count}})"
+    "reaction": "{{emote}} ({{count}})",
+    "readingDays_one": "Lu en {{count}} jour",
+    "readingDays_other": "Lu en {{count}} jours"
   },
   "notifications": {
     "title": "Notifications",
