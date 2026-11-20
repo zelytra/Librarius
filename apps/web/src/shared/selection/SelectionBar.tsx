@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -185,13 +185,38 @@ export function SelectionBar({ selection }: { selection: Selection }) {
   );
 }
 
-/** The button that starts selecting on a screen. */
+/**
+ * The button that starts selecting on a screen. Once it has scrolled out of sight the same
+ * action floats at the bottom of the screen (#557): a reader who decides mid-browse to pick
+ * several titles need not scroll back to the top for it.
+ */
 export function SelectButton({ selection }: { selection: Selection }) {
   const { t } = useTranslation();
+  const anchor = useRef<HTMLSpanElement>(null);
+  const [inSight, setInSight] = useState(true);
+
+  useEffect(() => {
+    const element = anchor.current;
+    if (!element || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setInSight(entry.isIntersecting));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [selection.active]);
+
   if (selection.active) return null;
   return (
-    <Button variant="secondary" size="compact" onClick={selection.start}>
-      {t('selection.start')}
-    </Button>
+    <>
+      <span ref={anchor} className={styles.anchor}>
+        <Button variant="secondary" size="compact" onClick={selection.start}>
+          {t('selection.start')}
+        </Button>
+      </span>
+      {!inSight && (
+        <button type="button" className={styles.floatingStart} onClick={selection.start}>
+          <Icon name="check_circle" size={20} color="currentColor" />
+          {t('selection.start')}
+        </button>
+      )}
+    </>
   );
 }
