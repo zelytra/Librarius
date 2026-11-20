@@ -16,6 +16,10 @@ it starts — so a session cut short, or a fix that misses part of the request, 
 - A request that is ambiguous is still recorded; the reading taken is written in the issue
   and repeated to the owner.
 - A part of a request that is left out is split into its own issue, never dropped silently.
+- **Every issue is labelled when it is written** ([#540](https://github.com/zelytra/Librarius/issues/540)):
+  one priority, one type and every area it touches — the set is in
+  [CONVENTIONS § 3](CONVENTIONS.md#labels). The owner's "high / medium / low priority" maps to
+  `P1` / `P2` / `P3`; `P0` is kept for what blocks a release or is exploitable.
 
 ## 2. Measure before fixing
 
@@ -51,6 +55,8 @@ reference: 38 real queries run before, and again after each step.
 - A change to a resource or a DTO regenerates the client from a **clean** build
   (`./mvnw -B clean package -DskipTests`, then `pnpm gen:api`): a stale `target/` leaks test
   classes into the schema.
+- The pull request carries the labels of the issues it closes, so the board reads the same
+  whichever of the two is looked at.
 - The pull request closes its issues (`Closes #n`) and updates the documentation it makes
   stale in the same change: `docs/wiki/` for developers, `.claude/docs/` for agents.
 

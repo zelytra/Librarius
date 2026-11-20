@@ -232,6 +232,21 @@ What the change does, and why this approach over the alternatives.
 Closes #<issue>
 ```
 
+### Labels
+
+Every issue and every pull request is labelled at creation — never "later"
+([#540](https://github.com/zelytra/Librarius/issues/540)). A pull request takes the labels
+of the issues it closes.
+
+| Axis | How many | Labels |
+|---|---|---|
+| Priority | exactly one | `P0` blocking (release blocker, exploitable flaw) · `P1` high · `P2` normal · `P3` low |
+| Type | at least one | `bug`, `feature`, `ux`, `security`, `tech-debt`, `performance`, `test`, `documentation` |
+| Area | every one touched | `web`, `api`, `db`, `mobile`, `ci`, `infra`, `i18n`, `gdpr` |
+
+`dependencies` and `javascript` are Dependabot's own; `duplicate`, `wontfix` and `invalid`
+are set when an issue is closed for that reason.
+
 ## 4. Quality — before any push
 
 ```bash
