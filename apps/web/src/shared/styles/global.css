@@ -129,3 +129,15 @@ input[type='number']::-webkit-outer-spin-button {
     animation: none;
   }
 }
+
+/* #553: iOS zooms onto a field whose text is under 16px as it takes the focus, and the page
+   stays zoomed. On a touch screen every text field is at least 16px. `!important` because the
+   fields' own modules set smaller sizes for the desktop, and this rule has to win over all of
+   them on a phone; the zoom itself stays allowed (WCAG 1.4.4). */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
