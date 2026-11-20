@@ -380,3 +380,12 @@
   font-size: var(--fs-13);
   color: var(--ink-soft);
 }
+
+/* #564: one scroll on a phone. A log scrolling inside a dialog that scrolls too caught every
+   swipe landing on it, and the rest of the report was out of reach. Long lines still wrap. */
+@media (max-width: 599px) {
+  .logs {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
