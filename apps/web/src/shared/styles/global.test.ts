@@ -24,4 +24,9 @@ describe('global.css', () => {
     expect(viewport).toMatch(/name="viewport"/);
     expect(viewport).not.toMatch(/user-scalable|maximum-scale/);
   });
+
+  /** #563: a `scroll-x` row scrolls sideways by itself — the views row on a phone did not. */
+  test('makes a scroll-x row scroll horizontally', () => {
+    expect(css).toMatch(/\.scroll-x\s*\{[^}]*overflow-x:\s*auto/);
+  });
 });

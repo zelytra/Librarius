@@ -35,6 +35,9 @@ button {
 /* Hides the scrollbars while keeping the scroll. A horizontal row keeps its swipe to itself
    (#487): the gesture scrolls the row rather than chaining to the page, with momentum on iOS. */
 .scroll-x {
+  /* The helper scrolls by itself (#563): a row that only borrowed the class — the library's
+     views — never declared it, and its last buttons were out of reach on a phone. */
+  overflow-x: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
   overscroll-behavior-x: contain;

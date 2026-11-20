@@ -8,6 +8,11 @@
   gap: 8px;
 }
 
+/* Each view keeps its width and the row scrolls (#563), rather than squeezing the names. */
+.chips > * {
+  flex: 0 0 auto;
+}
+
 .action {
   flex: 0 0 auto;
   display: inline-flex;
