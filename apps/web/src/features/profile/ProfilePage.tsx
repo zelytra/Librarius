@@ -189,7 +189,7 @@ function Identity({ profile }: { profile: MemberProfileDto }) {
       </div>
       <div className={styles.actions}>
         {profile.self ? (
-          <Link to="/settings" className={styles.editLink}>
+          <Link to="/settings/profile" className={styles.editLink}>
             <Icon name="edit" size={16} color="currentColor" />
             {t('profile.edit')}
           </Link>

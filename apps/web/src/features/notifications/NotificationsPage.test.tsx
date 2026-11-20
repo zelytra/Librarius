@@ -46,6 +46,46 @@ describe('notifications', () => {
     await waitFor(() => expect(read).toBe(1));
   });
 
+  /** #544: a new follower — their profile one tap away, and a way to follow them back. */
+  test('announces a new follower, opens their profile and follows them back', async () => {
+    const followed: string[] = [];
+    let following = false;
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({
+        items: [{ id: 'n9', type: 'FOLLOW', actor: BOB, followingActor: following, createdAt: '2026-11-16T11:00:00Z' }],
+        page: 0, size: 30, hasMore: false,
+      })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+      http.put('*/api/users/:id/follow', ({ params }) => {
+        followed.push(String(params.id));
+        following = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderWithProviders(<NotificationsPage />);
+
+    expect(await screen.findByRole('link', { name: /Bob s’est abonné à toi/ })).toHaveAttribute('href', '/people/bob');
+    await userEvent.click(screen.getByRole('button', { name: 'Suivre Bob en retour' }));
+
+    await waitFor(() => expect(followed).toEqual(['bob']));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Suivre Bob en retour' })).not.toBeInTheDocument());
+    expect(screen.getByText('Vous vous suivez')).toBeInTheDocument();
+  });
+
+  test('offers no follow-back to a follower already followed', async () => {
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({
+        items: [{ id: 'n9', type: 'FOLLOW', actor: BOB, followingActor: true, createdAt: '2026-11-16T11:00:00Z' }],
+        page: 0, size: 30, hasMore: false,
+      })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+    );
+    renderWithProviders(<NotificationsPage />);
+
+    await screen.findByRole('link', { name: /Bob s’est abonné à toi/ });
+    expect(screen.queryByRole('button', { name: 'Suivre Bob en retour' })).not.toBeInTheDocument();
+  });
+
   test('says when there is nothing yet', async () => {
     server.use(
       http.get('*/api/notifications', () => HttpResponse.json({ items: [], page: 0, size: 30, hasMore: false })),

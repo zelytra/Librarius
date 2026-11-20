@@ -986,6 +986,7 @@ downloading the collection.
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze`, `abandon` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |
+| `hideToRead` | `false` | collection | Leaves the to-read pile out (#552): a `TO_READ` title is returned only when the caller has read another volume of its series. The library shelf sends it on every shelf but « Pile à lire »; it also leaves out of the grouped shelf a series with `readCount` 0 |
 | `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
 | `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
 
@@ -1062,7 +1063,7 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 | POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |
 | DELETE | `/api/feed/{eventId}/comments/{commentId}` | 204 for the comment's author, 404 for anyone else |
 | GET | `/api/feed/{eventId}` | One `FeedItemDto` (#516), same query and gate as the feed (`FeedService.one`); 404 when out of reach |
-| GET | `/api/notifications?page=&size=` | `NotificationPageDto(items, page, size, hasMore)` of `NotificationDto(id, type ACTIVITY\|REACTION\|COMMENT, actor, eventId, eventType, book MemberBookDto, comment, emote, createdAt, readAt)`, newest first; blocked actors left out |
+| GET | `/api/notifications?page=&size=` | `NotificationPageDto(items, page, size, hasMore)` of `NotificationDto(id, type ACTIVITY\|REACTION\|COMMENT\|FOLLOW, actor, eventId, eventType, book MemberBookDto, comment, emote, createdAt, readAt, followingActor)`, newest first; blocked actors left out. `FOLLOW` (#544) is written by a new `PUT /api/users/{id}/follow` — not by a repeated one — carries no event nor book, and replaces an earlier one from the same follower; `followingActor` is whether the caller follows the actor |
 | GET | `/api/notifications/unread` | `UnreadCountDto(count)` — the web app polls it every 60 s and on focus |
 | POST | `/api/notifications/read` | Marks every notification read — 204 |
 

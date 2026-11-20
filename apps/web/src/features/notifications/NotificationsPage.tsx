@@ -6,8 +6,10 @@ import {
   getApiNotifications,
   getGetApiNotificationsUnreadQueryKey,
   postApiNotificationsRead,
+  usePutApiUsersIdFollow,
   type NotificationDto,
 } from '../../api/generated/librarius';
+import { toast } from '../../shared/ui/toast';
 import { activeLanguage } from '../../i18n/languages';
 import { LoginGate } from '../../shared/LoginGate';
 import { Avatar } from '../../shared/ui/Avatar';
@@ -88,8 +90,56 @@ function Notifications() {
 const when = (value?: string) =>
   value ? new Date(value).toLocaleString(activeLanguage(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
+/**
+ * A new follower (#544): their profile one tap away, and following them back without leaving
+ * the list. Not one link like the others — a button cannot sit inside a link.
+ */
+function FollowEntry({ item }: { item: NotificationDto }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const name = item.actor?.displayName ?? '—';
+  const unread = !item.readAt;
+  const { mutate: followBack, isPending } = usePutApiUsersIdFollow({
+    mutation: {
+      onSuccess: () => {
+        toast.success(t('notifications.followedBack', { name }), 'check_circle');
+        void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      },
+      onError: () => toast.error(t('toasts.failed')),
+    },
+  });
+  return (
+    <div className={`${styles.entry} ${unread ? styles.unread : ''}`}>
+      <Link to={`/people/${item.actor?.id}`} className={styles.entryLink}>
+        <Avatar id={item.actor?.id} name={name} version={item.actor?.avatarVersion} size={40} decorative />
+        <span className={styles.body}>
+          <span className={styles.text}>{t('notifications.follow', { name })}</span>
+          <span className={styles.meta}>
+            <time dateTime={item.createdAt}>{when(item.createdAt)}</time>
+            {unread && <span className={styles.unreadMark}>{t('notifications.unread')}</span>}
+            {item.followingActor && <span>{t('notifications.followingToo')}</span>}
+          </span>
+        </span>
+      </Link>
+      {!item.followingActor && item.actor?.id && (
+        <Button
+          variant="primary"
+          size="compact"
+          className={styles.followBack}
+          disabled={isPending}
+          aria-label={t('notifications.followBackLabel', { name })}
+          onClick={() => followBack({ id: item.actor!.id! })}
+        >
+          {t('notifications.followBack')}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function Entry({ item }: { item: NotificationDto }) {
   const { t } = useTranslation();
+  if (item.type === 'FOLLOW') return <FollowEntry item={item} />;
   const name = item.actor?.displayName ?? '—';
   const title = item.book?.title ?? '';
   const text =

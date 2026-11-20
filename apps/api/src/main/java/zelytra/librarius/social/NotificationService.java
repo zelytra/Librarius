@@ -30,7 +30,9 @@ import java.util.UUID;
  *       author ({@link VisibilityGate}, the feed's own rule);</li>
  *   <li>{@code REACTION} — someone reacted to my event (a changed reaction replaces the
  *       notification rather than stacking a second);</li>
- *   <li>{@code COMMENT} — someone commented on my event, unless I switched comments off.</li>
+ *   <li>{@code COMMENT} — someone commented on my event, unless I switched comments off;</li>
+ *   <li>{@code FOLLOW} — someone started following me (#544). It is about them, not about an
+ *       event: it carries none, and a follow after an unfollow replaces the earlier one.</li>
  * </ul>
  * Nobody is notified of their own doing, and nothing crosses a block: a notification whose actor
  * a block now stands between with the recipient is not shown.
@@ -38,7 +40,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class NotificationService {
 
-    public enum Type { ACTIVITY, REACTION, COMMENT }
+    public enum Type { ACTIVITY, REACTION, COMMENT, FOLLOW }
 
     @Inject
     EntityManager em;
@@ -92,16 +94,29 @@ public class NotificationService {
         insert(owner, Type.COMMENT, actorId, eventId, commentId, null);
     }
 
+    /** {@code actorId} started following {@code recipientId}: they hear of it, once per follower. */
+    public void follow(String actorId, String recipientId) {
+        em.createNativeQuery("""
+                        delete from notification
+                        where user_id = :recipient and actor_id = :actor and type = 'FOLLOW'""")
+                .setParameter("recipient", recipientId)
+                .setParameter("actor", actorId)
+                .executeUpdate();
+        insert(recipientId, Type.FOLLOW, actorId, null, null, null);
+    }
+
     @Transactional
     public NotificationPageDto list(String userId, PageRequest window) {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
                         select n.id, n.type, n.feed_event_id, fe.type as event_type, fe.edition_id, n.emote,
                                c.comment, n.created_at, n.read_at,
-                               u.id as uid, u.display_name, u.trusted, u.avatar_version
+                               u.id as uid, u.display_name, u.trusted, u.avatar_version,
+                               exists (select 1 from user_follow f
+                                       where f.follower_id = n.user_id and f.followee_id = n.actor_id) as following_actor
                         from notification n
                           join app_user u on u.id = n.actor_id
-                          join feed_event fe on fe.id = n.feed_event_id
+                          left join feed_event fe on fe.id = n.feed_event_id
                           left join feed_comment c on c.id = n.comment_id
                         where n.user_id = :user""" + NOT_BLOCKED + """
                         order by n.created_at desc, n.id""")
@@ -111,9 +126,11 @@ public class NotificationService {
                 .getResultList();
         boolean hasMore = rows.size() > window.size();
         List<Object[]> page = hasMore ? rows.subList(0, window.size()) : rows;
-        List<Edition> editions = page.stream().map(row -> em.find(Edition.class, row[4])).toList();
+        // A follow notification is about no event, hence no book.
+        List<Edition> editions = page.stream()
+                .map(row -> row[4] == null ? null : em.find(Edition.class, row[4])).toList();
         Map<UUID, UUID> mine = libraryItems.itemIdsByWork(userId,
-                editions.stream().map(e -> e.work.id).distinct().toList());
+                editions.stream().filter(java.util.Objects::nonNull).map(e -> e.work.id).distinct().toList());
         List<NotificationDto> items = new ArrayList<>();
         for (int i = 0; i < page.size(); i++) {
             Object[] row = page.get(i);
@@ -121,8 +138,10 @@ public class NotificationService {
             items.add(new NotificationDto((UUID) row[0], (String) row[1],
                     new MemberSummaryDto((String) row[9], (String) row[10], Boolean.TRUE.equals(row[11]),
                             row[12] == null ? null : ((Number) row[12]).longValue()),
-                    (UUID) row[2], (String) row[3], MemberBookDto.of(edition, mine.get(edition.work.id)),
-                    (String) row[6], (String) row[5], toOffset(row[7]), toOffset(row[8])));
+                    (UUID) row[2], (String) row[3],
+                    edition == null ? null : MemberBookDto.of(edition, mine.get(edition.work.id)),
+                    (String) row[6], (String) row[5], toOffset(row[7]), toOffset(row[8]),
+                    Boolean.TRUE.equals(row[13])));
         }
         return new NotificationPageDto(items, window.page(), window.size(), hasMore);
     }
@@ -164,7 +183,7 @@ public class NotificationService {
     private void insert(String userId, Type type, String actorId, UUID eventId, UUID commentId, String emote) {
         em.createNativeQuery("""
                         insert into notification (id, user_id, type, actor_id, feed_event_id, comment_id, emote, created_at)
-                        values (:id, :user, :type, :actor, :event, cast(:comment as uuid), cast(:emote as varchar), now())""")
+                        values (:id, :user, :type, :actor, cast(:event as uuid), cast(:comment as uuid), cast(:emote as varchar), now())""")
                 .setParameter("id", UUID.randomUUID())
                 .setParameter("user", userId)
                 .setParameter("type", type.name())

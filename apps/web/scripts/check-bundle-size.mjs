@@ -110,6 +110,12 @@ import { fileURLToPath } from 'node:url';
  * `chunk` that would loosen every screen's. `total` moves to 360 kB: measured 343.5 kB with the
  * feed, the profile page and their copy, re-derived to the measurement plus ~5%.
  *
+ * `total` moves to 385 kB for the batch #540–#560 (2026-11-20): `main` measured 358.1 kB, 99% of
+ * 360, and had sat there since the social batch. Settings split into categories, the reading
+ * sheet's three themes, the blank and multi-title sheets, and their copy in both locales
+ * measured 365.0 kB. Re-derived to the measurement plus ~5%; `initial` (189.9 kB) is untouched,
+ * and Settings stays under the per-screen `chunk` by loading its data category on its own.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -119,7 +125,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 360,
+  total: 385,
   // The English locale (#497), fetched on first use: 16.1 kB measured. A whole interface's copy
   // is one file by nature, so it has a budget of its own rather than the per-screen `chunk`.
   locale: 18,

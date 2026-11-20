@@ -1,6 +1,6 @@
-/* The reading sheet (#412). Drawn for paper: black on white, hairlines rather than filled
-   areas, the accent only as a thin rule. Every colour here is fixed rather than a theme
-   token on purpose — a sheet printed from the dark theme must still be black on white. */
+/* The reading sheet (#412). Drawn for paper: dark ink on white, hairlines rather than filled
+   areas. Every colour here is fixed rather than a theme token on purpose — a sheet printed
+   from the dark theme must still be dark on white. */
 
 .page {
   min-height: 100vh;
@@ -21,6 +21,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
   padding: 9px 14px;
   border: 1.5px solid var(--line);
   border-radius: var(--radius-control);
@@ -43,6 +44,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
   font-size: var(--fs-13);
   color: var(--ink-soft);
 }
@@ -54,30 +56,69 @@
   color: var(--muted);
 }
 
+/* One sheet per printed page (#551); on screen, a gap between them. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ── The sheet ──────────────────────────────────────────────────────────────
+   Drawn at its paper's exact size (#548): `--sheet-width` × `--sheet-height` come from
+   `sheetSize`, the same millimetres the @page rule gives the printer. On a screen narrower
+   than the paper it narrows, and its aspect ratio still holds as a minimum height. */
 .sheet {
   --sheet-ink: #1f1b16;
   --sheet-soft: #55504a;
   --sheet-rule: #b9b2a8;
   --sheet-accent: #5f6c57;
+  --sheet-body: var(--font-sans);
+  --sheet-display: var(--font-serif);
+  --rule-gap: 8mm;
+  --scale: 1;
 
-  max-width: 210mm;
-  margin: 0 auto;
-  padding: 16mm 15mm 14mm;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--sheet-width);
+  display: flex;
+  flex-direction: column;
+  padding: var(--print-margin);
   background: #fff;
   color: var(--sheet-ink);
   border: 1px solid var(--line);
   border-radius: 4px;
   box-shadow: var(--shadow-strong);
-  font-family: var(--font-sans);
+  font-family: var(--sheet-body);
+  font-size: calc(10pt * var(--scale));
+  /* The rules are drawn as backgrounds: printed only when the browser is told they are ink. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.A4 {
+  aspect-ratio: 210 / 297;
+}
+
+.A5 {
+  aspect-ratio: 148 / 210;
+  --rule-gap: 7mm;
+  font-size: calc(9pt * var(--scale));
+}
+
+.A6 {
+  aspect-ratio: 105 / 148;
+  --rule-gap: 6mm;
+  font-size: calc(7.5pt * var(--scale));
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-bottom: 6px;
+  padding-bottom: 0.5em;
   border-bottom: 1.5px solid var(--sheet-accent);
-  font-size: 10pt;
+  font-size: 0.95em;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--sheet-soft);
@@ -90,42 +131,76 @@
 
 .identity {
   display: flex;
-  gap: 16px;
+  gap: 1.4em;
   align-items: flex-start;
-  margin: 18px 0 14px;
+  margin: 1.6em 0 1.2em;
+}
+
+.identityText {
+  flex: 1;
+  min-width: 0;
+}
+
+.cover,
+.coverFrame {
+  flex: 0 0 auto;
+  width: 28mm;
+}
+
+.A5 .cover,
+.A5 .coverFrame {
+  width: 22mm;
+}
+
+.A6 .cover,
+.A6 .coverFrame {
+  width: 16mm;
 }
 
 .cover {
-  width: 28mm;
   height: auto;
   border: 0.5pt solid var(--sheet-rule);
 }
 
+/* The blank sheet's cover (#550): an empty frame of a cover's proportions, to paste one in. */
+.coverFrame {
+  display: block;
+  aspect-ratio: 2 / 3;
+  border: 1.5pt solid var(--sheet-ink);
+}
+
 .bookTitle {
-  font-family: var(--font-serif);
-  font-size: 24pt;
+  font-family: var(--sheet-display);
+  font-size: 2.4em;
   font-weight: 600;
   line-height: 1.1;
   margin: 0;
 }
 
 .authors {
-  font-family: var(--font-serif);
+  font-family: var(--sheet-display);
   font-style: italic;
-  font-size: 13pt;
+  font-size: 1.3em;
   color: var(--sheet-soft);
-  margin: 4px 0 0;
+  margin: 0.3em 0 0;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.9em;
+  color: var(--sheet-soft);
+  margin-top: 0.6em;
 }
 
 .ratingRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 0.8em;
 }
 
 .stars {
-  font-size: 17pt;
+  font-size: 1.7em;
   letter-spacing: 2px;
   line-height: 1;
 }
@@ -139,7 +214,7 @@
 }
 
 .unrated {
-  font-size: 9.5pt;
+  font-size: 0.95em;
   color: var(--sheet-soft);
 }
 
@@ -151,13 +226,16 @@
   border-top: 0.5pt solid var(--sheet-rule);
 }
 
+.A6 .facts {
+  grid-template-columns: 1fr;
+}
+
 .fact {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 5px 0;
+  padding: 0.45em 0;
   border-bottom: 0.5pt solid var(--sheet-rule);
-  font-size: 10pt;
 }
 
 .fact dt {
@@ -171,22 +249,22 @@
 }
 
 .block {
-  margin-top: 16px;
+  margin-top: 1.5em;
   break-inside: avoid;
 }
 
 .blockTitle {
-  font-family: var(--font-serif);
-  font-size: 13pt;
+  font-family: var(--sheet-display);
+  font-size: 1.3em;
   font-weight: 600;
-  margin: 0 0 6px;
+  margin: 0 0 0.4em;
   padding-left: 8px;
   border-left: 2px solid var(--sheet-accent);
 }
 
 .review,
 .synopsis {
-  font-size: 10.5pt;
+  font-size: 1.05em;
   line-height: 1.55;
   margin: 0;
   white-space: pre-line;
@@ -202,52 +280,34 @@
 }
 
 .line {
-  height: 8mm;
+  height: var(--rule-gap);
   border-bottom: 0.5pt dotted var(--sheet-rule);
 }
 
-.footer {
-  margin-top: 18px;
-  padding-top: 6px;
-  border-top: 0.5pt solid var(--sheet-rule);
-  font-size: 8.5pt;
-  color: var(--sheet-soft);
-  text-align: right;
+/* The notes take whatever the page has left (#548), ruled to the bottom edge. */
+.notes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  break-inside: auto;
 }
 
-/* A5 (#432): a 148 × 210 mm half page, between the page and the card. */
-.a5 {
-  max-width: 148mm;
-  padding: 10mm 9mm;
-  font-size: 9pt;
+.ruled {
+  flex: 1;
+  min-height: calc(var(--rule-gap) * 2);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--rule-gap) - 0.5pt),
+    var(--sheet-rule) calc(var(--rule-gap) - 0.5pt),
+    var(--sheet-rule) var(--rule-gap)
+  );
 }
 
-.a5 .bookTitle {
-  font-size: 18pt;
-}
-
-.a5 .authors {
-  font-size: 11pt;
-}
-
-.a5 .fact {
-  font-size: 8.5pt;
-}
-
-.a5 .review,
-.a5 .synopsis {
-  font-size: 9pt;
-}
-
-.a5 .line {
-  height: 7mm;
-}
-
-/* A ring binder (#432): the inner margin widens, and on screen faint holes show where the punch
-   will go, so the reader sees the text clear them. The printer is told through @page. */
+/* A ring binder (#432): the inner margin widens (through --print-margin), and on screen faint
+   holes show where the punch will go, so the reader sees the text clear them. */
 .rings {
   position: relative;
-  padding-left: 24mm;
 }
 
 .rings::before {
@@ -263,86 +323,105 @@
   opacity: 0.8;
 }
 
-.a6.rings {
-  padding-left: 16mm;
-}
-
-.a6.rings::before {
+.A6.rings::before {
   left: 4mm;
 }
 
-/* A6 (#427): a 105 × 148 mm card — the same sheet at a smaller type scale, the facts on
-   one column. */
-.a6 {
-  max-width: 105mm;
-  padding: 7mm 6mm;
-  font-size: 8pt;
+/* ── Themes (#549, #550) ───────────────────────────────────────────────────── */
+
+/* Handwritten, the default: a handwriting face, and rules that wobble like a pen's. The system
+   faces stand in until Caveat arrives, or offline. Caveat runs small, hence the scale. */
+.sheet[data-theme='handwritten'] {
+  --sheet-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+  --sheet-body: var(--sheet-hand);
+  --sheet-display: var(--sheet-hand);
+  --sheet-ink: #1d2a44;
+  --sheet-soft: #44506b;
+  --sheet-rule: #8f98ab;
+  --scale: 1.3;
+  --wobble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='6' viewBox='0 0 120 6'%3E%3Cpath d='M0 3.4 C 14 2.2 26 4.2 40 3.1 S 66 2.4 80 3.6 S 106 4.1 120 3' fill='none' stroke='%238f98ab' stroke-width='0.9' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
-.a6 .header {
-  font-size: 6.5pt;
+.sheet[data-theme='handwritten'] .header {
+  border-bottom: none;
+  background: var(--wobble) repeat-x left bottom / 120px 6px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  font-size: 1.15em;
 }
 
-.a6 .identity {
-  gap: 8px;
-  margin: 8px 0 6px;
+.sheet[data-theme='handwritten'] .bookTitle {
+  font-weight: 700;
+  transform: rotate(-1deg);
+  transform-origin: left center;
 }
 
-.a6 .cover {
-  width: 16mm;
+.sheet[data-theme='handwritten'] .authors {
+  font-style: normal;
 }
 
-.a6 .bookTitle {
-  font-size: 14pt;
+.sheet[data-theme='handwritten'] .cover {
+  transform: rotate(-2deg);
+  border: 1pt solid var(--sheet-ink);
+  border-radius: 2px 6px 3px 5px / 5px 2px 6px 3px;
 }
 
-.a6 .authors {
-  font-size: 9pt;
+/* A box drawn freehand: no two corners alike. */
+.sheet[data-theme='handwritten'] .coverFrame {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  transform: rotate(-1.5deg);
 }
 
-.a6 .stars {
-  font-size: 11pt;
+.sheet[data-theme='handwritten'] .facts {
+  border-top: none;
 }
 
-.a6 .facts {
-  grid-template-columns: 1fr;
+.sheet[data-theme='handwritten'] .fact,
+.sheet[data-theme='handwritten'] .line {
+  border-bottom: none;
+  background: var(--wobble) repeat-x left bottom / 120px 6px;
 }
 
-.a6 .fact {
-  padding: 2px 0;
-  font-size: 7.5pt;
+.sheet[data-theme='handwritten'] .blockTitle {
+  border-left: none;
+  padding-left: 0;
+  text-decoration: underline wavy var(--sheet-accent) 1px;
+  text-underline-offset: 4px;
 }
 
-.a6 .block {
-  margin-top: 7px;
+.sheet[data-theme='handwritten'] .ruled {
+  background-image: var(--wobble);
+  background-repeat: repeat;
+  background-size: 120px var(--rule-gap);
+  background-position: left calc(var(--rule-gap) - 6px);
 }
 
-.a6 .blockTitle {
-  font-size: 9pt;
-  margin-bottom: 3px;
+/* Notebook: a school exercise book's page — blue ruling and a red margin. */
+.sheet[data-theme='notebook'] {
+  --sheet-rule: #9cc0e2;
+  --sheet-accent: #d0453f;
+  --sheet-display: var(--font-sans);
 }
 
-.a6 .review {
-  font-size: 8pt;
-  line-height: 1.4;
+.sheet[data-theme='notebook'] .ruled,
+.sheet[data-theme='notebook'] .lines {
+  box-shadow: inset 1.5pt 0 0 var(--sheet-accent);
+  padding-left: 4mm;
 }
 
-.a6 .line {
-  height: 6mm;
+.sheet[data-theme='notebook'] .line {
+  border-bottom-style: solid;
 }
 
-.a6 .footer {
-  margin-top: 6px;
-  font-size: 6pt;
-}
-
-@media (max-width: 600px) {
-  .sheet {
-    padding: 18px 16px;
-  }
-
+@media screen and (max-width: 600px) {
   .facts {
     grid-template-columns: 1fr;
+  }
+
+  /* A page drawn at its paper's size on a phone: the five stars must not run past the edge. */
+  .stars {
+    font-size: 1.3em;
+    letter-spacing: 0;
   }
 }
 
@@ -358,22 +437,28 @@
     display: none;
   }
 
-  /* The page has no margin, so the browser has nowhere to print its own header and footer
-     (#521): the sheet keeps its white space itself, repeated on every page it runs onto. */
-  .sheet,
-  .a5,
-  .a6,
-  .rings,
-  .a6.rings {
-    max-width: none;
-    padding: var(--print-margin);
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
+  .stack {
+    display: block;
   }
 
+  /* The page has no margin, so the browser has nowhere to print its own header and footer
+     (#521): the sheet keeps its white space itself, repeated on every page it runs onto. Its
+     box is the paper's (#548), a hair short so rounding never spills a blank page. */
   .sheet {
+    width: var(--sheet-width);
+    max-width: none;
+    min-height: calc(var(--sheet-height) - 0.5mm);
+    aspect-ratio: auto;
+    margin: 0;
     border: none;
     border-radius: 0;
     box-shadow: none;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    break-after: page;
+  }
+
+  .sheet:last-child {
+    break-after: auto;
   }
 }

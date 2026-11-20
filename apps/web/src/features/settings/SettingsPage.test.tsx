@@ -10,6 +10,14 @@ vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
 const { SettingsPage } = await import('./SettingsPage');
 
+/** Settings by category (#546): each one is its own address. */
+function renderSettings(category?: string) {
+  return renderWithProviders(<SettingsPage />, {
+    route: category ? `/settings/${category}` : '/settings',
+    path: '/settings/:category?',
+  });
+}
+
 /**
  * jsdom implements neither object URLs nor a real download, so the browser side is captured
  * rather than performed. What the test can and should assert is that the API was called and
@@ -47,9 +55,9 @@ describe('SettingsPage — export', () => {
   test('downloads the complete archive as JSON', async () => {
     exportReturns('{"schemaVersion":1}', 'librarius-export-2026-07-28.json',
       'application/json;charset=UTF-8');
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
-    await userEvent.click(screen.getByText('Fichier JSON'));
+    await userEvent.click(await screen.findByText('Fichier JSON'));
 
     await waitFor(() => expect(savedFiles).toEqual(['librarius-export-2026-07-28.json']));
     expect(await screen.findByText('Export téléchargé.')).toBeInTheDocument();
@@ -57,9 +65,9 @@ describe('SettingsPage — export', () => {
 
   test('downloads the book list as CSV', async () => {
     exportReturns('Title;Author\r\n', 'librarius-export-2026-07-28.csv', 'text/csv;charset=UTF-8');
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
-    await userEvent.click(screen.getByText('Fichier CSV'));
+    await userEvent.click(await screen.findByText('Fichier CSV'));
 
     await waitFor(() => expect(savedFiles).toEqual(['librarius-export-2026-07-28.csv']));
   });
@@ -80,9 +88,9 @@ describe('SettingsPage — export', () => {
           },
         })),
     );
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
-    await userEvent.click(screen.getByText('Fichier JSON'));
+    await userEvent.click(await screen.findByText('Fichier JSON'));
 
     await waitFor(() => expect(savedFiles).toEqual(['librarius-export-big.json']),
       { timeout: 5000 });
@@ -90,41 +98,39 @@ describe('SettingsPage — export', () => {
 
   test('reports a failed export instead of pretending it worked', async () => {
     server.use(http.get('*/api/export', () => new HttpResponse(null, { status: 500 })));
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
-    await userEvent.click(screen.getByText('Fichier JSON'));
+    await userEvent.click(await screen.findByText('Fichier JSON'));
 
     expect(await screen.findByText('Erreur 500')).toBeInTheDocument();
     expect(savedFiles).toEqual([]);
   });
 
-  test('offers to sign in rather than to export when there is no session', () => {
+  test('offers to sign in rather than to export when there is no session', async () => {
     setAuthenticated(false);
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
-    expect(screen.getByText('Se connecter pour exporter')).toBeInTheDocument();
+    expect(await screen.findByText('Se connecter pour exporter')).toBeInTheDocument();
     expect(screen.queryByText('Fichier JSON')).not.toBeInTheDocument();
   });
 });
 
 describe('SettingsPage — language', () => {
-  beforeEach(resetAuth);
+  beforeEach(() => setAuthenticated(false));
+  afterEach(() => {
+    resetAuth();
+    // The rest of the suite asserts the French copy, and i18next is a singleton.
+    changeLanguage('fr');
+  });
 
-  // The rest of the suite asserts the French copy, and i18next is a singleton.
-  afterEach(() => changeLanguage('fr'));
-
-  // The Profile section (#75) carries its own language control, so the standalone switcher
-  // is the last one in the page — targeting it keeps this about the quick toggle.
-  const standaloneSwitch = (name: string) =>
-    screen.getAllByRole('button', { name }).at(-1) as HTMLElement;
-
+  // Signed out, the device-local switcher in Appearance is the only language control.
   test('switches the interface and keeps the choice for the next visit', async () => {
-    renderWithProviders(<SettingsPage />);
-    expect(screen.getByRole('heading', { name: 'Réglages' })).toBeInTheDocument();
+    renderSettings('appearance');
+    expect(screen.getByRole('heading', { name: 'Apparence' })).toBeInTheDocument();
 
-    await userEvent.click(standaloneSwitch('English'));
+    await userEvent.click(screen.getByRole('button', { name: 'English' }));
 
-    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Appearance' })).toBeInTheDocument();
     expect(localStorage.getItem('librarius.language')).toBe('en');
     // The two strings React does not own: the `lang` a screen reader reads from, and the
     // tab title `index.html` shipped in French.
@@ -134,12 +140,110 @@ describe('SettingsPage — language', () => {
 
   test('labels each language in its own words, so it can be found from the other one',
     async () => {
-      renderWithProviders(<SettingsPage />);
+      renderSettings('appearance');
 
-      await userEvent.click(standaloneSwitch('English'));
+      await userEvent.click(screen.getByRole('button', { name: 'English' }));
 
       expect(await screen.findAllByRole('button', { name: 'Français' })).not.toHaveLength(0);
     });
+});
+
+/** #547: signed in, the language is the profile's — one control, never two. */
+describe('SettingsPage — a single language control', () => {
+  beforeEach(resetAuth);
+
+  test('offers the language in the profile only, and points there from Appearance', async () => {
+    renderSettings('profile');
+    expect(await screen.findAllByRole('button', { name: 'English' })).toHaveLength(1);
+  });
+
+  test('leaves Appearance without a second switcher', async () => {
+    renderSettings('appearance');
+
+    expect(screen.queryByRole('button', { name: 'English' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'La langue se règle dans ton profil' }))
+      .toHaveAttribute('href', '/settings/profile');
+  });
+});
+
+/** #546: the settings split into categories, each a page of its own. */
+describe('SettingsPage — categories', () => {
+  beforeEach(resetAuth);
+
+  test('lists the categories, each leading to its own page', async () => {
+    renderSettings();
+
+    const links = screen.getAllByRole('link');
+    expect(links.map((l) => l.getAttribute('href'))).toEqual([
+      '/settings/profile', '/settings/reading', '/settings/appearance', '/settings/community', '/settings/data',
+    ]);
+    await userEvent.click(screen.getByRole('link', { name: /Données et compte/ }));
+    expect(await screen.findByRole('heading', { name: 'Données et compte' })).toBeInTheDocument();
+    expect(await screen.findByText('Fichier JSON')).toBeInTheDocument();
+  });
+
+  test('shows only the sections of the category opened', () => {
+    renderSettings('community');
+
+    expect(screen.getByRole('heading', { name: 'Communauté' })).toBeInTheDocument();
+    expect(screen.queryByText('Fichier JSON')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Retour aux réglages' })).toHaveAttribute('href', '/settings');
+  });
+
+  test('sends an unknown category back to the list', () => {
+    renderWithProviders(<SettingsPage />, { route: '/settings/nope', path: '/settings/:category?' });
+    // The redirect lands on the list, which this route also renders.
+    expect(screen.getByRole('link', { name: /Profil/ })).toBeInTheDocument();
+  });
+});
+
+/** #545: the library's opening shelf, picked here. */
+describe('SettingsPage — library opening shelf', () => {
+  beforeEach(() => {
+    resetAuth();
+    localStorage.removeItem('librarius.libraryKind');
+  });
+
+  test('is automatic until a kind is picked, and keeps the pick', async () => {
+    renderSettings('reading');
+
+    expect(screen.getByRole('button', { name: 'Automatique' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Manga' }));
+
+    expect(screen.getByRole('button', { name: 'Manga' })).toHaveAttribute('aria-pressed', 'true');
+    expect(localStorage.getItem('librarius.libraryKind')).toBe('MANGA');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Automatique' }));
+    expect(localStorage.getItem('librarius.libraryKind')).toBeNull();
+  });
+});
+
+/** #550: the reading sheet's theme, picked on a preview, and the blank sheet. */
+describe('SettingsPage — reading sheet', () => {
+  beforeEach(() => {
+    resetAuth();
+    localStorage.removeItem('librarius.sheetTheme');
+  });
+
+  test('picks a theme from its preview, and keeps it', async () => {
+    renderSettings('reading');
+
+    const handwritten = await screen.findByRole('button', { name: 'Manuscrite' });
+    expect(handwritten).toHaveAttribute('aria-pressed', 'true');
+    // Each choice draws the sheet itself, in its theme.
+    const notebook = screen.getByRole('button', { name: 'Cahier' });
+    expect(notebook.querySelector('article[data-theme="notebook"]')).not.toBeNull();
+
+    await userEvent.click(notebook);
+    expect(notebook).toHaveAttribute('aria-pressed', 'true');
+    expect(localStorage.getItem('librarius.sheetTheme')).toBe('notebook');
+  });
+
+  test('prints a blank sheet from here', async () => {
+    renderSettings('reading');
+
+    expect(await screen.findByRole('link', { name: 'Imprimer une fiche vierge' })).toHaveAttribute('href', '/sheet/blank');
+  });
 });
 
 describe('SettingsPage — account deletion', () => {
@@ -147,8 +251,8 @@ describe('SettingsPage — account deletion', () => {
 
   /** Opens the panel and waits for the profile, which the confirmation is checked against. */
   async function openTheDangerPanel() {
-    renderWithProviders(<SettingsPage />);
-    await userEvent.click(screen.getByText('Supprimer mon compte', { selector: 'button' }));
+    renderSettings('data');
+    await userEvent.click(await screen.findByText('Supprimer mon compte', { selector: 'button' }));
     return screen.findByLabelText(/tape ton nom d'utilisateur : alice/);
   }
 
@@ -212,10 +316,12 @@ describe('SettingsPage — account deletion', () => {
     await waitFor(() => expect(savedFiles).toEqual(['librarius-export-2026-07-28.json']));
   });
 
-  test('is invisible without a session', () => {
+  test('is invisible without a session', async () => {
     setAuthenticated(false);
-    renderWithProviders(<SettingsPage />);
+    renderSettings('data');
 
+    // The category is a lazy chunk: wait for it before asserting what it leaves out.
+    await screen.findByText('Se connecter pour exporter');
     expect(screen.queryByText('Supprimer mon compte')).not.toBeInTheDocument();
   });
 });
@@ -224,7 +330,7 @@ describe('SettingsPage — session', () => {
   beforeEach(resetAuth);
 
   test('signs the user out, ending the Keycloak session', async () => {
-    renderWithProviders(<SettingsPage />);
+    renderSettings('profile');
 
     await userEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
 
@@ -233,7 +339,7 @@ describe('SettingsPage — session', () => {
 
   test('hides the sign-out when there is no session', () => {
     setAuthenticated(false);
-    renderWithProviders(<SettingsPage />);
+    renderSettings('profile');
 
     expect(screen.queryByRole('button', { name: 'Se déconnecter' })).not.toBeInTheDocument();
   });
@@ -246,7 +352,7 @@ describe('SettingsPage — administration', () => {
 
   test('leaves the administration to the navigation, even for an admin', async () => {
     server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
-    renderWithProviders(<SettingsPage />);
+    renderSettings('profile');
 
     await screen.findByDisplayValue('Alice');
     expect(screen.queryByRole('button', { name: "Ouvrir l'administration" })).not.toBeInTheDocument();

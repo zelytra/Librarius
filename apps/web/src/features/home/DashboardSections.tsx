@@ -1,5 +1,5 @@
-import { lazy, Suspense, type ReactNode } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Cover } from '../../shared/ui/Cover';
 import { AuthorNames } from '../author/AuthorNames';
@@ -17,12 +17,6 @@ import { ToReadPile } from './ToReadPile';
 import { UpcomingReleases } from './UpcomingReleases';
 import { defaultLayout } from './dashboardLayout';
 import styles from './HomePage.module.css';
-
-// The editor is only fetched once the user actually opens it: someone who never
-// customizes the dashboard — the common case — never pays for its bundle.
-const DashboardEditor = lazy(() =>
-  import('./DashboardEditor').then((m) => ({ default: m.DashboardEditor })),
-);
 
 interface DashboardSectionsProps {
   reading: LibraryItemDto[];
@@ -42,20 +36,6 @@ interface DashboardSectionsProps {
 export function DashboardSections({ reading, read, stats, libraryEmpty }: DashboardSectionsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // Opened from the header's button, next to Settings (#397): the request travels in the
-  // URL so the header and the sections need not share a parent's state.
-  const [params, setParams] = useSearchParams();
-  const editing = params.get('customize') === '1';
-  const setEditing = (open: boolean) =>
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (open) next.set('customize', '1');
-        else next.delete('customize');
-        return next;
-      },
-      { replace: true },
-    );
   const { data } = useGetApiDashboardLayout();
   const sections = data?.sections ?? defaultLayout();
   const isHidden = (code: string) => sections.find((s) => s.code === code)?.hidden ?? false;
@@ -192,12 +172,6 @@ export function DashboardSections({ reading, read, stats, libraryEmpty }: Dashbo
 
   return (
     <div className={styles.sections}>
-      {editing && (
-        <Suspense fallback={null}>
-          <DashboardEditor sections={sections} onClose={() => setEditing(false)} />
-        </Suspense>
-      )}
-
       {sections.map((s) => renderSection(s.code))}
 
       {libraryEmpty && (

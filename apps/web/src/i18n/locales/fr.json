@@ -844,11 +844,9 @@
     "title": "Réglages",
     "dashboard": "Tableau de bord",
     "dashboardDescription": "Réordonne ou masque les sections de l'accueil : reprise de lecture, compteurs, objectif, prochaines sorties, derniers lus.",
-    "dashboardAction": "Aller à l'accueil",
     "onboardingAction": "Revoir la visite guidée",
     "session": "Session",
     "logout": "Se déconnecter",
-    "appearance": "Apparence",
     "language": "Langue",
     "languageDescription": "L'application suit ton navigateur à la première visite. Choisis une langue ici et elle est conservée sur cet appareil.",
     "notifications": "Notifications",
@@ -958,7 +956,6 @@
       "done": "Ton compte et toutes tes données ont été supprimés. Merci d'avoir utilisé Librarius.",
       "failed": "Suppression impossible pour le moment. Rien n'a été supprimé."
     },
-    "community": "Communauté",
     "communityDescription": "Trouve d'autres lecteurs par leur nom, suis-les et retrouve qui te suit.",
     "avatar": {
       "choose": "Choisir une photo",
@@ -969,7 +966,51 @@
       "format": "Ce fichier n’est pas une image JPEG ou PNG.",
       "tooBig": "Cette image est trop lourde ou trop grande.",
       "failed": "La photo n’a pas pu être enregistrée. Réessaie."
-    }
+    },
+    "categories": {
+      "profile": {
+        "title": "Profil",
+        "description": "Ton nom, ta photo, ta langue, ton fuseau horaire et ta session."
+      },
+      "reading": {
+        "title": "Lecture",
+        "description": "Objectif de l'année, bibliothèque à l'ouverture, fiche de lecture."
+      },
+      "appearance": {
+        "title": "Apparence",
+        "description": "Thème, langue et organisation de l'accueil."
+      },
+      "community": {
+        "title": "Communauté",
+        "description": "Trouver des lecteurs, membres bloqués."
+      },
+      "data": {
+        "title": "Données et compte",
+        "description": "Importer, exporter, vider la bibliothèque ou supprimer le compte."
+      }
+    },
+    "backToCategories": "Retour aux réglages",
+    "languageInProfile": "La langue se règle dans ton profil",
+    "libraryKind": {
+      "title": "Bibliothèque à l'ouverture",
+      "description": "Le type de livres affiché en arrivant sur la bibliothèque. « Automatique » ouvre sur celui que tu possèdes le plus.",
+      "auto": "Automatique"
+    },
+    "sheet": {
+      "title": "Fiche de lecture",
+      "description": "Choisis l'allure de tes fiches imprimées.",
+      "themes": {
+        "handwritten": "Manuscrite",
+        "classic": "Classique",
+        "notebook": "Cahier"
+      },
+      "blank": "Imprimer une fiche vierge",
+      "sampleTitle": "Le Petit Prince",
+      "sampleAuthor": "Antoine de Saint-Exupéry",
+      "sampleReview": "On ne voit bien qu'avec le cœur."
+    },
+    "theme": "Thème",
+    "findReaders": "Trouver des lecteurs"
   },
   "report": {
     "trigger": "Signaler une erreur",
@@ -1141,7 +1182,6 @@
     "notes": "Notes et citations",
     "days_one": "{{count}} jour",
     "days_other": "{{count}} jours",
-    "footer": "Librarius · fiche du {{date}}",
     "facts": {
       "series": "Série",
       "publisher": "Éditeur",
@@ -1160,7 +1200,12 @@
       "A5": "A5 · demi-page",
       "A6": "A6 · carte"
     },
-    "rings": "Classeur à anneaux (marge pour les trous)"
+    "rings": "Classeur à anneaux (marge pour les trous)",
+    "coverFrame": "Emplacement de la couverture",
+    "blankTitle": "Titre",
+    "blankAuthor": "Auteur",
+    "multiError": "Impossible de préparer toutes les fiches.",
+    "multiEmpty": "Aucun titre à imprimer."
   },
   "statuses": {
     "readingTitle": "Lecture",
@@ -1419,7 +1464,8 @@
     "pending_other": "{{count}} changements choisis",
     "apply": "Appliquer",
     "pickSeries": "Choisir la série « {{title}} »",
-    "kind": "Type de livre"
+    "kind": "Type de livre",
+    "printSheets": "Imprimer les fiches de lecture"
   },
   "feedback": {
     "open": "Signaler un problème",
@@ -1646,7 +1692,7 @@
     "bellUnread_other": "Notifications, {{count}} non lues",
     "error": "Impossible de charger les notifications.",
     "empty": "Aucune notification pour l’instant",
-    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, et des réactions et commentaires sur les tiennes.",
+    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, et de tes nouveaux abonnés.",
     "activity": {
       "FINISHED_READING": "{{name}} a terminé « {{title}} »",
       "WISHLIST_ADDED": "{{name}} a ajouté « {{title}} » à ses souhaits",
@@ -1658,6 +1704,11 @@
     "unread": "Non lue",
     "event": "Activité",
     "gone": "Cette activité n’est plus disponible",
-    "goneHint": "Son auteur ne la partage plus avec toi, ou elle a été retirée."
+    "goneHint": "Son auteur ne la partage plus avec toi, ou elle a été retirée.",
+    "follow": "{{name}} s’est abonné à toi",
+    "followBack": "Suivre en retour",
+    "followBackLabel": "Suivre {{name}} en retour",
+    "followedBack": "Tu suis {{name}}",
+    "followingToo": "Vous vous suivez"
   }
 }

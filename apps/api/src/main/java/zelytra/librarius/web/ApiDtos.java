@@ -1326,11 +1326,13 @@ public final class ApiDtos {
     /**
      * One notification: {@code ACTIVITY} (a followed reader did {@code eventType} on
      * {@code book}), {@code REACTION} ({@code emote}) or {@code COMMENT} ({@code comment}) on the
-     * recipient's own event. {@code eventId} is the screen it opens.
+     * recipient's own event — {@code eventId} is the screen it opens —, or {@code FOLLOW}: the
+     * actor started following the recipient (#544), with no event nor book.
+     * {@code followingActor} says whether the recipient follows the actor, for "follow back".
      */
     public record NotificationDto(UUID id, String type, MemberSummaryDto actor, UUID eventId, String eventType,
             MemberBookDto book, String comment, String emote, java.time.OffsetDateTime createdAt,
-            java.time.OffsetDateTime readAt) {
+            java.time.OffsetDateTime readAt, boolean followingActor) {
     }
 
     public record NotificationPageDto(java.util.List<NotificationDto> items, int page, int size, boolean hasMore) {

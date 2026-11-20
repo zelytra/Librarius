@@ -86,7 +86,7 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
                 unit: previousUnits,
               })}
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/settings')}>
+            <Button variant="ghost" onClick={() => navigate('/settings/reading#goal')}>
               {t('goal.rollover.other')}
             </Button>
           </div>
@@ -99,7 +99,7 @@ export function GoalCard({ stats }: { stats: StatsDto | undefined }) {
         title={t('goal.empty.title')}
         description={t('goal.empty.description', { year })}
         action={
-          <Button variant="secondary" onClick={() => navigate('/settings')}>
+          <Button variant="secondary" onClick={() => navigate('/settings/reading#goal')}>
             {t('goal.empty.action')}
           </Button>
         }
@@ -162,7 +162,7 @@ function KindGoal({ goal, year }: { goal: KindGoalDto; year: number }) {
             </p>
           </>
         )}
-        <button className={styles.edit} onClick={() => navigate('/settings')}>
+        <button className={styles.edit} onClick={() => navigate('/settings/reading#goal')}>
           {t('goal.edit')}
         </button>
       </div>

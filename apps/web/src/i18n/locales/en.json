@@ -844,11 +844,9 @@
     "title": "Settings",
     "dashboard": "Dashboard",
     "dashboardDescription": "Reorder or hide the home screen sections: resume reading, counters, goal, upcoming releases, recently read.",
-    "dashboardAction": "Go to the home screen",
     "onboardingAction": "Replay the guided tour",
     "session": "Session",
     "logout": "Sign out",
-    "appearance": "Appearance",
     "language": "Language",
     "languageDescription": "The application follows your browser on a first visit. Pick a language here and it sticks on this device.",
     "notifications": "Notifications",
@@ -958,7 +956,6 @@
       "done": "Your account and all your data have been deleted. Thank you for using Librarius.",
       "failed": "Cannot delete it right now. Nothing has been deleted."
     },
-    "community": "Community",
     "communityDescription": "Find other readers by name, follow them and see who follows you.",
     "avatar": {
       "choose": "Choose a photo",
@@ -969,7 +966,51 @@
       "format": "This file is not a JPEG or PNG image.",
       "tooBig": "This image is too heavy or too large.",
       "failed": "The photo could not be saved. Try again."
-    }
+    },
+    "categories": {
+      "profile": {
+        "title": "Profile",
+        "description": "Your name, picture, language, time zone and session."
+      },
+      "reading": {
+        "title": "Reading",
+        "description": "This year's goal, the library's opening shelf, the reading sheet."
+      },
+      "appearance": {
+        "title": "Appearance",
+        "description": "Theme, language and Home layout."
+      },
+      "community": {
+        "title": "Community",
+        "description": "Find readers, blocked members."
+      },
+      "data": {
+        "title": "Data and account",
+        "description": "Import, export, empty the library or delete the account."
+      }
+    },
+    "backToCategories": "Back to settings",
+    "languageInProfile": "The language is set in your profile",
+    "libraryKind": {
+      "title": "Library opening shelf",
+      "description": "The kind of books shown when you open the library. \"Automatic\" opens on the one you own the most of.",
+      "auto": "Automatic"
+    },
+    "sheet": {
+      "title": "Reading sheet",
+      "description": "Pick the look of your printed sheets.",
+      "themes": {
+        "handwritten": "Handwritten",
+        "classic": "Classic",
+        "notebook": "Notebook"
+      },
+      "blank": "Print a blank sheet",
+      "sampleTitle": "The Little Prince",
+      "sampleAuthor": "Antoine de Saint-Exupéry",
+      "sampleReview": "One sees clearly only with the heart."
+    },
+    "theme": "Theme",
+    "findReaders": "Find readers"
   },
   "report": {
     "trigger": "Report an error",
@@ -1141,7 +1182,6 @@
     "notes": "Notes and quotes",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
-    "footer": "Librarius · sheet of {{date}}",
     "facts": {
       "series": "Series",
       "publisher": "Publisher",
@@ -1160,7 +1200,12 @@
       "A5": "A5 · half page",
       "A6": "A6 · card"
     },
-    "rings": "Ring binder (margin for the holes)"
+    "rings": "Ring binder (margin for the holes)",
+    "coverFrame": "Space for the cover",
+    "blankTitle": "Title",
+    "blankAuthor": "Author",
+    "multiError": "Couldn't prepare every sheet.",
+    "multiEmpty": "No title to print."
   },
   "statuses": {
     "readingTitle": "Reading",
@@ -1419,7 +1464,8 @@
     "pending_other": "{{count}} changes picked",
     "apply": "Apply",
     "pickSeries": "Pick the series “{{title}}”",
-    "kind": "Kind of book"
+    "kind": "Kind of book",
+    "printSheets": "Print the reading sheets"
   },
   "feedback": {
     "open": "Report a problem",
@@ -1646,7 +1692,7 @@
     "bellUnread_other": "Notifications, {{count}} unread",
     "error": "Could not load the notifications.",
     "empty": "No notification yet",
-    "emptyHint": "You will be told here of the activity of the readers you follow, and of reactions and comments on yours.",
+    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, and of your new followers.",
     "activity": {
       "FINISHED_READING": "{{name}} finished “{{title}}”",
       "WISHLIST_ADDED": "{{name}} added “{{title}}” to their wishlist",
@@ -1658,6 +1704,11 @@
     "unread": "Unread",
     "event": "Activity",
     "gone": "This activity is no longer available",
-    "goneHint": "Its author no longer shares it with you, or it was removed."
+    "goneHint": "Its author no longer shares it with you, or it was removed.",
+    "follow": "{{name}} started following you",
+    "followBack": "Follow back",
+    "followBackLabel": "Follow {{name}} back",
+    "followedBack": "You follow {{name}}",
+    "followingToo": "You follow each other"
   }
 }

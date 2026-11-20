@@ -26,7 +26,7 @@ const STEPS: OnboardingStep[] = [
     titleKey: 'onboarding.steps.import.title',
     descriptionKey: 'onboarding.steps.import.description',
     actionKey: 'onboarding.steps.import.action',
-    route: '/settings',
+    route: '/settings/data#import',
   },
   {
     icon: 'search',
@@ -40,7 +40,7 @@ const STEPS: OnboardingStep[] = [
     titleKey: 'onboarding.steps.goal.title',
     descriptionKey: 'onboarding.steps.goal.description',
     actionKey: 'onboarding.steps.goal.action',
-    route: '/settings',
+    route: '/settings/reading#goal',
   },
 ];
 

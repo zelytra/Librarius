@@ -7,8 +7,10 @@
   width: 100%;
   /* `min-height` rather than `height` (#529): the gesture bar's inset is reserved *under* the
      bar, so the bar keeps its own height and its 44px targets instead of giving a slice of
-     them to the system. Nothing changes where the inset is `0px`. */
-  min-height: var(--bottom-nav-height);
+     them to the system. The inset is in the sum because `box-sizing: border-box` counts the
+     padding inside `min-height`: left out, it pushed the icons against the top edge (#543).
+     Nothing changes where the inset is `0px`. */
+  min-height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--chip);
@@ -22,6 +24,10 @@
   flex: 1;
   min-width: 0;
   min-height: 44px;
+  /* Centred whatever the label's line count, so every icon sits on one line (#543). */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   padding: 0;

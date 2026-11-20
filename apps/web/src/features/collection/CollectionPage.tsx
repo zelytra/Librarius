@@ -29,6 +29,7 @@ import { AuthorNames } from '../author/AuthorNames';
 import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
 import { OWNERSHIPS, ownershipLabelKey, type Ownership } from '../../shared/statuses';
+import { readLibraryKind } from '../../shared/libraryKind';
 import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort, mergeByActivity } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
@@ -261,7 +262,9 @@ function CollectionContent() {
   // the user has already picked one by hand, in which case that choice wins.
   const urlKind = params.get('kind');
   const manualKind = urlKind && (ALL_KINDS as string[]).includes(urlKind) ? (urlKind as Kind) : null;
-  const collType = manualKind ?? bestKind;
+  // The kind picked in Settings (#545) comes before the one owned most, never before the URL.
+  const preferredKind = readLibraryKind();
+  const collType = manualKind ?? (preferredKind === 'auto' ? bestKind : preferredKind);
   const setCollType = (kind: Kind) => setParam('kind', kind);
 
   // Books, manga and comics are always offered (#383): they are the shelves a reader files
@@ -337,6 +340,8 @@ function CollectionContent() {
     view: sortBy === 'manual' ? activeView?.id : undefined,
     // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
     standalone: grouped || undefined,
+    // The pile has its own screen (#552): it stays off every shelf but its own.
+    hideToRead: shelfFilter.kind === 'toRead' ? undefined : true,
   };
 
   const {
@@ -391,8 +396,9 @@ function CollectionContent() {
     () =>
       grouped
         ? filterSeries(allSeries, { kind: collType, search, sort: 'title' }).filter(
-            // A series only followed, with nothing of it on the shelf, is not in the collection.
-            (s) => (s.ownedCount ?? 0) > 0,
+            // A series only followed, with nothing of it on the shelf, is not in the collection;
+            // nor is one nothing of which has been read yet — it is still on the pile (#552).
+            (s) => (s.ownedCount ?? 0) > 0 && (s.readCount ?? 0) > 0,
           )
         : [],
     [allSeries, collType, search, grouped],

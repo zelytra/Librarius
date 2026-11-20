@@ -33,6 +33,9 @@ public class UserFollowService {
     @Inject
     AppUserRepository users;
 
+    @Inject
+    NotificationService notifications;
+
     /**
      * The caller starts following {@code targetId}. Idempotent.
      *
@@ -49,7 +52,10 @@ public class UserFollowService {
         if (blocks.isBlockBetween(followerId, targetId)) {
             throw new BadRequestException("A block stands between the two accounts.");
         }
-        follows.follow(followerId, targetId);
+        // A follow that already stood announces nothing: a repeated PUT is not a new follower.
+        if (follows.follow(followerId, targetId)) {
+            notifications.follow(followerId, targetId);
+        }
     }
 
     /**

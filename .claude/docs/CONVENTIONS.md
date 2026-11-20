@@ -232,6 +232,21 @@ What the change does, and why this approach over the alternatives.
 Closes #<issue>
 ```
 
+### Labels
+
+Every issue and every pull request is labelled at creation — never "later"
+([#540](https://github.com/zelytra/Librarius/issues/540)). A pull request takes the labels
+of the issues it closes.
+
+| Axis | How many | Labels |
+|---|---|---|
+| Priority | exactly one | `P0` blocking (release blocker, exploitable flaw) · `P1` high · `P2` normal · `P3` low |
+| Type | at least one | `bug`, `feature`, `ux`, `security`, `tech-debt`, `performance`, `test`, `documentation` |
+| Area | every one touched | `web`, `api`, `db`, `mobile`, `ci`, `infra`, `i18n`, `gdpr` |
+
+`dependencies` and `javascript` are Dependabot's own; `duplicate`, `wontfix` and `invalid`
+are set when an issue is closed for that reason.
+
 ## 4. Quality — before any push
 
 ```bash
@@ -265,7 +280,7 @@ Three budgets, all measured **gzipped** — what nginx puts on the wire:
 |---|---|---|---|
 | initial | everything `index.html` loads before the first paint | 199 kB (#79's product ceiling is 200) | 195.4 kB |
 | deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | under 6 kB |
-| whole build | every file, i.e. what the service worker precaches | 340 kB | 321.1 kB |
+| whole build | every file, i.e. what the service worker precaches | 385 kB | 365.0 kB (2026-11-20) |
 
 The history of every re-derivation, with its reason, is the header of
 `apps/web/scripts/check-bundle-size.mjs`.

@@ -1108,6 +1108,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: hideToRead
+        in: query
+        schema:
+          type: boolean
+          default: false
       - name: kind
         in: query
         schema:
@@ -4257,6 +4262,8 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         readAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        followingActor:
+          type: boolean
     NotificationPageDto:
       type: object
       properties:

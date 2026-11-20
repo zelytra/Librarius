@@ -140,3 +140,23 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* The reading sheets of the selection (#551): an icon, the bar has no room for a label. */
+.iconAction {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.iconAction:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

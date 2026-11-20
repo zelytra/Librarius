@@ -2,7 +2,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Never wider than the screen (#542): the actions wrap under the greeting rather than
+     pushing past the edge, whatever the greeting's length. */
+  flex-wrap: wrap;
+  gap: 12px;
   margin: 6px 0 22px;
+}
+
+/* Shrinks before the actions do: the date wraps inside it, and the row stays one line as long
+   as the actions alone fit (#542). */
+.heading {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .date {
@@ -23,18 +34,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.customizeHeaderButton {
-  width: 46px;
-  height: 46px;
-  border: 1.5px solid var(--chip);
-  border-radius: var(--radius-round);
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  margin-left: auto;
 }
 
 .settingsButton {

@@ -18,7 +18,7 @@ function renderFlow(onDismiss = vi.fn()) {
           path="/"
           element={<OnboardingFlow onDismiss={onDismiss} />}
         />
-        <Route path="/settings" element={<p>écran des réglages</p>} />
+        <Route path="/settings/:category" element={<p>écran des réglages</p>} />
         <Route path="/discover" element={<p>écran de découverte</p>} />
       </Routes>
     </MemoryRouter>,

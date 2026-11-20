@@ -3,13 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { libraryItem } from '../../test/fixtures';
-import { libraryItemReturns } from '../../test/server';
+import { http, HttpResponse, libraryItemReturns, server } from '../../test/server';
 import { resetAuth } from '../../test/oidcMock';
-import { readingDays } from './readingSheet';
+import { SHEET_THEME_STORAGE_KEY, readingDays } from './readingSheet';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
-const { ReadingSheetPage } = await import('./ReadingSheetPage');
+const { BlankSheetPage, ReadingSheetPage, ReadingSheetsPage } = await import('./ReadingSheetPage');
 
 const FINISHED = libraryItem({
   id: 'item-1',
@@ -33,7 +33,48 @@ function renderSheet() {
 }
 
 describe('ReadingSheetPage (#412)', () => {
-  beforeEach(resetAuth);
+  beforeEach(() => {
+    resetAuth();
+    localStorage.removeItem(SHEET_THEME_STORAGE_KEY);
+  });
+
+  /** #548: the sheet is drawn at its paper's exact size, which fills the printed page. */
+  test.each([
+    ['A4', '210mm', '297mm'],
+    ['A5', '148mm', '210mm'],
+    ['A6', '105mm', '148mm'],
+  ] as const)('draws the %s sheet at %s × %s', async (format, width, height) => {
+    libraryItemReturns(FINISHED);
+    renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${format} ·`) }));
+    expect(sheet.style.getPropertyValue('--sheet-width')).toBe(width);
+    expect(sheet.style.getPropertyValue('--sheet-height')).toBe(height);
+  });
+
+  /** #549: the sheet is a keepsake, not a receipt — no export date on it. */
+  test('prints no export date', async () => {
+    libraryItemReturns(FINISHED);
+    renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    expect(sheet).not.toHaveTextContent(/fiche du/i);
+    const today = new Intl.DateTimeFormat('fr', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+    expect(sheet).not.toHaveTextContent(today);
+  });
+
+  /** #549, #550: handwritten by default, the theme picked in Settings otherwise. */
+  test('is handwritten by default, and follows the theme picked in Settings', async () => {
+    libraryItemReturns(FINISHED);
+    const first = renderSheet();
+    expect(await screen.findByRole('article', { name: 'Fiche de lecture' })).toHaveAttribute('data-theme', 'handwritten');
+    first.unmount();
+
+    localStorage.setItem(SHEET_THEME_STORAGE_KEY, 'notebook');
+    renderSheet();
+    expect(await screen.findByRole('article', { name: 'Fiche de lecture' })).toHaveAttribute('data-theme', 'notebook');
+  });
 
   test('lays out the rating, the review and the facts of the book', async () => {
     libraryItemReturns(FINISHED);
@@ -115,6 +156,63 @@ describe('ReadingSheetPage (#412)', () => {
     renderSheet();
 
     expect(await screen.findByLabelText('Lignes à compléter à la main')).toBeInTheDocument();
+  });
+});
+
+describe('BlankSheetPage (#550)', () => {
+  test('leaves every field to fill in, and frames an empty cover only when the cover is ticked', async () => {
+    renderWithProviders(<BlankSheetPage />);
+
+    const sheet = screen.getByRole('article', { name: 'Fiche de lecture' });
+    expect(screen.getByText('Titre')).toBeInTheDocument();
+    expect(screen.getByText('Auteur')).toBeInTheDocument();
+    expect(screen.getByText('Commencé le')).toBeInTheDocument();
+    expect(screen.getByLabelText('Lignes à compléter à la main')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Emplacement de la couverture' })).toBeInTheDocument();
+    expect(sheet).toHaveAttribute('data-format', 'A4');
+
+    await userEvent.click(screen.getByLabelText('Inclure la couverture'));
+    expect(screen.queryByRole('img', { name: 'Emplacement de la couverture' })).not.toBeInTheDocument();
+  });
+
+  test("switches the paper size like a book's sheet", async () => {
+    const { container } = renderWithProviders(<BlankSheetPage />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'A6 · carte' }));
+    expect(screen.getByRole('article', { name: 'Fiche de lecture' })).toHaveAttribute('data-format', 'A6');
+    expect(container.querySelector('style')?.textContent).toContain('size: 105mm 148mm');
+  });
+});
+
+describe('ReadingSheetsPage (#551)', () => {
+  beforeEach(resetAuth);
+
+  test('prints one sheet per selected title, a selected series as its volumes held', async () => {
+    const titles: Record<string, string> = { a: 'Premier', b: 'Second', v1: 'Tome un', v2: 'Tome deux' };
+    server.use(
+      http.get('*/api/library/:id', ({ params }) =>
+        HttpResponse.json(libraryItem({ id: String(params.id), book: { kind: 'BOOK', title: titles[String(params.id)] } }))),
+      http.get('*/api/series/:id', () =>
+        HttpResponse.json({
+          id: 's1',
+          title: 'Une série',
+          volumes: [
+            { volumeNumber: 1, libraryItemId: 'v1', owned: true },
+            { volumeNumber: 2, libraryItemId: 'v2', owned: true },
+            { volumeNumber: 3, owned: false },
+          ],
+        })),
+    );
+    renderWithProviders(<ReadingSheetsPage />, { route: '/sheets?items=a,b&series=s1', path: '/sheets' });
+
+    expect(await screen.findByRole('heading', { name: 'Premier' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Tome deux' })).toBeInTheDocument();
+    expect(screen.getAllByRole('article', { name: 'Fiche de lecture' })).toHaveLength(4);
+  });
+
+  test('says so when nothing was selected', async () => {
+    renderWithProviders(<ReadingSheetsPage />, { route: '/sheets', path: '/sheets' });
+    expect(await screen.findByText('Aucun titre à imprimer.')).toBeInTheDocument();
   });
 });
 

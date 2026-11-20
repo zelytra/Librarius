@@ -154,6 +154,12 @@ export function libraryReturns(items: LibraryItemDto[]) {
     if (q) matching = matching.filter((it) => matches(it.book, q));
     // The grouped shelf asks only for the one-shots: a volume of a series is drawn as its block.
     if (params.get('standalone') === 'true') matching = matching.filter((it) => !it.book?.seriesTitle);
+    // #552: the pile stays out, unless another volume of its run has been read.
+    if (params.get('hideToRead') === 'true') {
+      const startedRuns = new Set(items.filter((it) => it.status === 'READ').map((it) => it.book?.seriesTitle));
+      matching = matching.filter((it) =>
+        it.status !== 'TO_READ' || (it.book?.seriesTitle != null && startedRuns.has(it.book.seriesTitle)));
+    }
 
     const field = SORT_FIELD[params.get('sort') ?? 'added'];
     if (field) {

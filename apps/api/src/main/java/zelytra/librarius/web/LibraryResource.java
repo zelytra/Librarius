@@ -116,6 +116,8 @@ public class LibraryResource {
      *                  {@code NOT_OWNED} (#411), no filtering when absent
      * @param format    the format of the reader's copy (#447), no filtering when absent
      * @param view      the view whose manual order {@code sort=manual} follows (#451)
+     * @param hideToRead leaves the to-read pile out (#552): a to-read title is returned only
+     *                  when the caller has read another volume of its series
      */
     @GET
     public LibraryPageDto list(
@@ -131,7 +133,8 @@ public class LibraryResource {
             @QueryParam("standalone") @DefaultValue("false") boolean standalone,
             @QueryParam("ownership") Ownership ownership,
             @QueryParam("format") zelytra.librarius.domain.BookFormat format,
-            @QueryParam("view") UUID view) {
+            @QueryParam("view") UUID view,
+            @QueryParam("hideToRead") @DefaultValue("false") boolean hideToRead) {
 
         LibrarySort ordering = LibrarySort.parse(sort)
                 .orElseThrow(() -> new BadRequestException("Unknown sort: " + sort));
@@ -145,7 +148,7 @@ public class LibraryResource {
         PageRequest window = PageRequest.of(page, size);
         LibraryFilter filter =
                 new LibraryFilter(currentUser.id(), kind, status, rank, genre, minRating, q,
-                        standalone, ownership, format);
+                        standalone, ownership, format, hideToRead);
 
         long total = items.countMatching(filter);
         List<LibraryItemDto> slice =

@@ -34,7 +34,8 @@ test('renders the translated navigation', () => {
 
 // Settings is code split, so the click has to wait for its chunk to resolve.
 test('the theme switcher applies the theme on <html>', async () => {
-  renderAt('/settings');
+  // The themes are in Settings' Appearance category (#546).
+  renderAt('/settings/appearance');
   fireEvent.click(await screen.findByText('Nuit'));
   expect(document.documentElement.getAttribute('data-theme')).toBe('nuit');
 });

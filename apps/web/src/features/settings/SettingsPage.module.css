@@ -30,8 +30,9 @@
 }
 
 .backButton {
-  width: 40px;
-  height: 40px;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-round);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -123,4 +124,74 @@
   text-align: center;
   font-size: var(--fs-11-5);
   color: var(--faint);
+}
+
+.kicker {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* The categories (#546): one row each, the whole row the target. */
+.categories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel-lg);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.category:hover,
+.category:focus-visible {
+  border-color: var(--accent-deep);
+}
+
+.categoryIcon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.categoryText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryTitle {
+  font-size: var(--fs-15);
+  font-weight: 700;
+}
+
+.categoryDescription {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
