@@ -13,6 +13,7 @@ import { GoalSection } from './GoalSection';
 import { BlockedMembersSection } from './BlockedMembersSection';
 import { LibraryKindSection } from './LibraryKindSection';
 import { HomeLayoutSection } from './HomeLayoutSection';
+import { BottomBarSection } from './BottomBarSection';
 import { useHighlightHash } from '../../shared/useHighlightHash';
 import { Loading } from '../../shared/ui/states';
 import styles from './SettingsPage.module.css';
@@ -149,6 +150,10 @@ function AppearanceCategory() {
 
       <Block id="home">
         <HomeLayoutSection />
+      </Block>
+
+      <Block id="bottom-bar">
+        <BottomBarSection />
       </Block>
     </>
   );

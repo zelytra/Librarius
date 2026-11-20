@@ -195,3 +195,30 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* A group of checkboxes with a title (#561): the fieldset's own border and padding go. */
+.fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: var(--fs-14);
+  color: var(--ink);
+}
+
+.checkRow:has(input:disabled) {
+  color: var(--muted);
+}

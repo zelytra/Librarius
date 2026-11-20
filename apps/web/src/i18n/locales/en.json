@@ -1016,7 +1016,11 @@
       "sampleReview": "One sees clearly only with the heart."
     },
     "theme": "Theme",
-    "findReaders": "Find readers"
+    "findReaders": "Find readers",
+    "bottomBar": {
+      "title": "Bottom bar (phone)",
+      "description": "Pick up to {{max}} pages for the bottom bar; the others stay in \"More\"."
+    }
   },
   "report": {
     "trigger": "Report an error",

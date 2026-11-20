@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
@@ -357,5 +357,36 @@ describe('SettingsPage — administration', () => {
     await screen.findByDisplayValue('Alice');
     expect(screen.queryByRole('button', { name: "Ouvrir l'administration" })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+  });
+});
+
+/** #561: the pages of the phone's bottom bar, picked here — four at most, one at least. */
+describe('SettingsPage — bottom bar', () => {
+  beforeEach(() => {
+    resetAuth();
+    localStorage.removeItem('librarius.bottomBar');
+  });
+
+  test('starts from the four pages of the bar, and keeps a new pick', async () => {
+    renderSettings('appearance');
+    const group = screen.getByRole('group', { name: 'Barre du bas (téléphone)' });
+    const box = (name: string) => within(group).getByRole('checkbox', { name });
+
+    expect(box('Accueil')).toBeChecked();
+    expect(box('Stats')).not.toBeChecked();
+    // Four already: nothing more can be added until one goes.
+    expect(box('Stats')).toBeDisabled();
+
+    await userEvent.click(box('Souhaits'));
+    await userEvent.click(box('Stats'));
+    expect(JSON.parse(localStorage.getItem('librarius.bottomBar') ?? '[]')).toEqual(['/', '/collection', '/discover', '/stats']);
+  });
+
+  test('keeps at least one page', async () => {
+    localStorage.setItem('librarius.bottomBar', JSON.stringify(['/']));
+    renderSettings('appearance');
+
+    const group = screen.getByRole('group', { name: 'Barre du bas (téléphone)' });
+    expect(within(group).getByRole('checkbox', { name: 'Accueil' })).toBeDisabled();
   });
 });

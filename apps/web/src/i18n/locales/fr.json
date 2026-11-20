@@ -1016,7 +1016,11 @@
       "sampleReview": "On ne voit bien qu'avec le cœur."
     },
     "theme": "Thème",
-    "findReaders": "Trouver des lecteurs"
+    "findReaders": "Trouver des lecteurs",
+    "bottomBar": {
+      "title": "Barre du bas (téléphone)",
+      "description": "Choisis jusqu'à {{max}} pages pour la barre du bas ; les autres restent dans « Plus »."
+    }
   },
   "report": {
     "trigger": "Signaler une erreur",

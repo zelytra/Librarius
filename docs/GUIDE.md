@@ -474,6 +474,11 @@ l'accueil), **Communauté** (trouver des lecteurs, membres bloqués) et **Donné
 « Fixer un objectif », par exemple — ouvre la bonne catégorie et met la section concernée en
 évidence.
 
+Dans **Apparence**, « Barre du bas (téléphone) » choisit jusqu'à quatre pages pour la barre
+en bas de l'écran ; les autres restent dans « Plus », avec ton **profil** (ta photo et ton
+nom), l'administration si tu es administrateur, et les réglages. Sur ordinateur, ces trois
+entrées sont au pied de la navigation latérale.
+
 La bibliothèque s'ouvre par défaut sur le type de livres que tu possèdes le plus
 (« Automatique ») ; tu peux choisir à la place Livre, Manga, BD, Roman graphique ou Livre
 audio.

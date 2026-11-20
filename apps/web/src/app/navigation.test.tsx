@@ -5,6 +5,7 @@ import { http, HttpResponse, server } from '../test/server';
 import { renderWithProviders } from '../test/utils';
 import { resetAuth, setAuthenticated } from '../test/oidcMock';
 import { BottomNav } from './BottomNav';
+import { BOTTOM_BAR_STORAGE_KEY } from '../shared/bottomBar';
 import { SideNav } from './SideNav';
 
 vi.mock('react-oidc-context', () => import('../test/oidcMock'));
@@ -202,5 +203,35 @@ describe('the unread reports', () => {
     await screen.findByRole('link', { name: 'Mon profil · Bob' });
 
     expect(asked).toBe(false);
+  });
+});
+
+/** #561: the reader picks which pages the phone's bar shows; the others go to « Plus ». */
+describe('a bottom bar picked in Settings', () => {
+  afterEach(() => {
+    resetAuth();
+    localStorage.removeItem(BOTTOM_BAR_STORAGE_KEY);
+  });
+
+  test("shows the pages picked, in the navigation's order, the rest in « Plus »", async () => {
+    localStorage.setItem(BOTTOM_BAR_STORAGE_KEY, JSON.stringify(['/stats', '/', '/to-read']));
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })));
+    renderWithProviders(<BottomNav />);
+
+    const bar = screen.getByRole('navigation');
+    expect(within(bar).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/', '/to-read', '/stats']);
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+    const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    expect(within(sheet).getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute('href', '/collection');
+  });
+
+  test('ignores a stored pick it cannot use', () => {
+    localStorage.setItem(BOTTOM_BAR_STORAGE_KEY, JSON.stringify(['/nowhere']));
+    renderWithProviders(<BottomNav />);
+
+    const bar = screen.getByRole('navigation');
+    expect(within(bar).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      '/', '/collection', '/discover', '/wishlist',
+    ]);
   });
 });

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
-import { NOTIFICATIONS_DESTINATION, PHONE_PRIMARY, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { NOTIFICATIONS_DESTINATION, SETTINGS_DESTINATION, type Destination } from './navigation';
+import { readBottomBar } from '../shared/bottomBar';
 import { useUnreadCount } from '../features/notifications/useUnread';
 import { useAccountEntries, useNavDestinations } from './useNavDestinations';
 import { ProfileEntry } from './ProfileEntry';
@@ -19,9 +20,12 @@ export function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const all = useNavDestinations(true);
-  const primary = all.filter((d) => PHONE_PRIMARY.includes(d.to));
+  // The pages picked in Settings (#561), the four of #504 by default; read on every render, so
+  // coming back from Settings shows the new pick.
+  const picked = readBottomBar();
+  const primary = all.filter((d) => picked.includes(d.to));
   const { admin, me } = useAccountEntries();
-  const others = [...all.filter((d) => !PHONE_PRIMARY.includes(d.to)), ...(admin ? [admin] : [])];
+  const others = [...all.filter((d) => !picked.includes(d.to)), ...(admin ? [admin] : [])];
   const more = [...others, SETTINGS_DESTINATION];
   const profilePath = me ? `/people/${me.id}` : null;
   const unread = useUnreadCount();
