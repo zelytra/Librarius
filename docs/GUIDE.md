@@ -268,6 +268,10 @@ trois premières s'affichent, « Voir les autres éditions » montre le reste. C
 La section **Autres éditions** est toujours là : choisis une édition proposée par le
 catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).
 
+Sous les statuts, **Langue de lecture** note dans quelle langue tu as lu ton exemplaire
+(français, anglais, japonais…). C'est la tienne : elle ne change pas l'édition, et elle part
+avec ton export.
+
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre

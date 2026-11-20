@@ -402,6 +402,7 @@ export interface ExportCollectionItemDto {
   price?: number;
   pageCount?: number;
   format?: BookFormat;
+  language?: string;
 }
 
 export interface ExportUserDto {
@@ -666,6 +667,11 @@ export interface KindValueDto {
   wishlistPriced?: number;
 }
 
+export interface LanguageDto {
+  /** @pattern [a-z]{2,3} */
+  language?: string;
+}
+
 export interface LibraryCreateDto {
   book: ManualBookDto;
   status?: LibraryStatus;
@@ -696,6 +702,7 @@ export interface LibraryItemDto {
   price?: number;
   pageCount?: number;
   format?: string;
+  language?: string;
 }
 
 export interface LibraryPageDto {
@@ -5995,6 +6002,93 @@ export const usePutApiLibraryIdKind = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiLibraryIdKindMutationOptions(options), queryClient);
+    }
+
+export const getPutApiLibraryIdLanguageUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/language`
+}
+
+/**
+ * @summary Set Language
+ */
+export const putApiLibraryIdLanguage = async (id: Uuid,
+    languageDto: LanguageDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<unknown>(getPutApiLibraryIdLanguageUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(languageDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdLanguageMutationKey = () => ['putApiLibraryIdLanguage'] as const;
+
+export const getPutApiLibraryIdLanguageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdLanguage>>, TError,PutApiLibraryIdLanguageMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdLanguage>>, TError,PutApiLibraryIdLanguageMutationVariables, TContext> => {
+
+const mutationKey = getPutApiLibraryIdLanguageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdLanguage>>, PutApiLibraryIdLanguageMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdLanguage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdLanguageMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdLanguage>>>
+    export type PutApiLibraryIdLanguageMutationBody = LanguageDto
+    export type PutApiLibraryIdLanguageMutationError = void
+    export type PutApiLibraryIdLanguageMutationVariables = {id: Uuid;data: LanguageDto}
+
+    /** @summary Set Language */
+export const usePutApiLibraryIdLanguage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdLanguage>>, TError,PutApiLibraryIdLanguageMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdLanguage>>,
+        TError,
+        PutApiLibraryIdLanguageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdLanguageMutationOptions(options), queryClient);
     }
 
 export const getPutApiLibraryIdOwnershipUrl = (id: Uuid,) => {

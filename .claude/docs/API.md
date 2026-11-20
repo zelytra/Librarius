@@ -45,6 +45,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/works/{id}/friends` | People the caller follows who read, own or wish for the title (`FriendOnWorkDto`), each through `VisibilityGate`; same work, or a work with the same title and authors; rating only when shared (#452) |
 | GET | `/api/works/{id}/external` | Other communities' ratings (`ExternalRatingDto`): Open Library by work key or ISBN, AniList for a manga by id or exact title; credited, linked, cached 12 h (#453) |
 | GET | `/api/authors/{id}/external` | The opening of the author's French Wikipedia article (`ExternalAuthorDto`, CC BY-SA 4.0), zero or one; a disambiguation page gives none (#453) |
+| PUT | `/api/library/{id}/language` | The language the copy was read in (`LanguageDto(language)`, `[a-z]{2,3}`, 400 otherwise; null clears it) (#566); `LibraryItemDto.language` carries it |
 | PUT | `/api/library/{id}/format` | The format of the copy (`FormatDto`, null clears it) (#447); `GET /api/library?format=` filters on it |
 | POST | `/api/library/{id}/edition` | Moves the title onto an edition that is not a row yet (`EditionChoiceDto`): a provider's printing or one described by hand, created under the title's work; a known ISBN reuses that edition (#445) |
 | PUT | `/api/library/{id}/price` | The reader's own price (`PriceDto`, null clears it, ≥ 0) — private, the edition's market price untouched (#431); `LibraryItemDto.price` |

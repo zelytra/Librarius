@@ -685,6 +685,23 @@ describe('DetailPage', () => {
     await waitFor(() => expect(sent).toEqual([{ format: 'HARDCOVER' }, {}]));
   });
 
+  /** #566: the language the copy was read in, picked like its format, and cleared. */
+  test('sets the language the copy was read in, and clears it', async () => {
+    libraryItemReturns({ ...ITEM, language: 'ja' });
+    const sent: unknown[] = [];
+    server.use(http.put('*/api/library/:id/language', async ({ request }) => {
+      sent.push(await request.json());
+      return HttpResponse.json(ITEM);
+    }));
+    renderDetail();
+
+    const picker = await screen.findByLabelText('Langue de lecture');
+    expect(picker).toHaveValue('ja');
+    await userEvent.selectOptions(picker, 'fr');
+    await userEvent.selectOptions(picker, '');
+    await waitFor(() => expect(sent).toEqual([{ language: 'fr' }, {}]));
+  });
+
   /** #454: the reader files the title under another kind, like they set its format. */
   test('files the title under another kind', async () => {
     libraryItemReturns(ITEM);

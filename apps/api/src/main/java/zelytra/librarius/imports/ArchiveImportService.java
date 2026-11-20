@@ -209,6 +209,8 @@ public class ArchiveImportService {
             item.price = dto.price();
             item.pageCount = dto.pageCount();
             item.format = dto.format();
+            // An archive from before #566 carries none; a malformed one is dropped, not stored.
+            item.language = dto.language() != null && dto.language().matches("[a-z]{2,3}") ? dto.language() : null;
             item.rating = dto.rating() != null && HalfStar.Validator.isRating(dto.rating()) ? dto.rating() : null;
             item.review = dto.review();
             item.acquiredAt = dto.acquiredAt();

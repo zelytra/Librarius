@@ -842,7 +842,9 @@
       "set": "Saisir",
       "label": "Nombre de pages de ton exemplaire",
       "private": "Ce nombre n'est que pour toi : il compte dans tes pages lues, tes objectifs et ta progression, et ne change rien pour les autres lecteurs. Laisse vide pour revenir à celui de l'édition."
-    }
+    },
+    "readingLanguage": "Langue de lecture",
+    "readingLanguageUnset": "Non précisée"
   },
   "settings": {
     "title": "Réglages",
@@ -1277,7 +1279,8 @@
     "pages_one": "{{count}} page enregistrée",
     "pages_other": "{{count}} pages enregistrées",
     "pagesCleared": "Retour au nombre de pages de l'édition",
-    "kind": "Rangé dans : {{kind}}"
+    "kind": "Rangé dans : {{kind}}",
+    "language": "Langue de lecture enregistrée"
   },
   "achievements": {
     "title": "Succès",

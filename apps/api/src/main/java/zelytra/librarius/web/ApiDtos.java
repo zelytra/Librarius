@@ -367,6 +367,10 @@ public final class ApiDtos {
     public record FormatDto(zelytra.librarius.domain.BookFormat format) {
     }
 
+    /** The language of the reader's copy (#566): an ISO 639-1 or -2 code in lower case, null clears it. */
+    public record LanguageDto(@jakarta.validation.constraints.Pattern(regexp = "[a-z]{2,3}") String language) {
+    }
+
     /**
      * An edition the reader picks for their title (#445) that is not a row yet: a provider's
      * printing, or one they describe by hand. It is created under the title's own work.
@@ -436,14 +440,14 @@ public final class ApiDtos {
     public record LibraryItemDto(UUID id, String status, Double rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
             boolean reviewShared, String ownership, BigDecimal price, Integer pageCount,
-            String format) {
+            String format, String language) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
                     it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price,
-                    it.pageCount, it.format != null ? it.format.name() : null);
+                    it.pageCount, it.format != null ? it.format.name() : null, it.language);
         }
     }
 
@@ -1028,7 +1032,7 @@ public final class ApiDtos {
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Double rating, String review, LocalDate acquiredAt,
             String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price,
-            Integer pageCount, zelytra.librarius.domain.BookFormat format) {
+            Integer pageCount, zelytra.librarius.domain.BookFormat format, String language) {
     }
 
     /** One wish, with the note the user attached to it. */

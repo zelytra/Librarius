@@ -842,7 +842,9 @@
       "set": "Enter",
       "label": "Page count of your copy",
       "private": "This count is yours alone: it counts in your pages read, goals and progress, and changes nothing for other readers. Leave it empty to go back to the edition's."
-    }
+    },
+    "readingLanguage": "Reading language",
+    "readingLanguageUnset": "Not set"
   },
   "settings": {
     "title": "Settings",
@@ -1277,7 +1279,8 @@
     "pages_one": "{{count}} page saved",
     "pages_other": "{{count}} pages saved",
     "pagesCleared": "Back to the edition's page count",
-    "kind": "Filed under: {{kind}}"
+    "kind": "Filed under: {{kind}}",
+    "language": "Reading language saved"
   },
   "achievements": {
     "title": "Achievements",
