@@ -139,7 +139,12 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
             <li key={r.itemId} className={styles.item}>
               {/* The cover beside each reading (#567): decorative, the title says what it is. */}
               {r.coverUrl ? (
-                <img className={styles.itemCover} src={r.coverUrl} alt="" loading="lazy" />
+                <img
+                  className={styles.itemCover}
+                  src={r.coverUrl}
+                  // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+                  alt=""
+                />
               ) : (
                 <span className={styles.itemCover} style={{ background: colorFor(r.title ?? r.itemId ?? '') }} data-cover aria-hidden="true" />
               )}
