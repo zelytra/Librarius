@@ -31,10 +31,19 @@ describe('safe areas', () => {
   });
 
   // The bar keeps its own height: the inset is added to it, never taken out of it, or the
-  // touch targets would shrink below 44px on a phone with a gesture bar.
+  // touch targets would shrink below 44px on a phone with a gesture bar. Under the global
+  // `box-sizing: border-box` the padding counts inside `min-height`, so the inset has to be
+  // in the `min-height` too — without it the icons hugged the bar's top edge (#543).
   test('the bottom bar keeps its height when an inset is added', () => {
-    expect(bottomNav).toMatch(/\.nav\s*\{[^}]*min-height:\s*var\(--bottom-nav-height\)/);
+    expect(bottomNav).toMatch(
+      /\.nav\s*\{[^}]*min-height:\s*calc\(var\(--bottom-nav-height\)\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\)/,
+    );
     expect(bottomNav).not.toMatch(/\.nav\s*\{[^}]*\n\s*height:\s*var\(--bottom-nav-height\)/);
+  });
+
+  // Icon and label are centred in the tab's height, whatever the label's line count (#543).
+  test('a tab centres its content vertically', () => {
+    expect(bottomNav).toMatch(/\.tab\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;[^}]*justify-content:\s*center/);
   });
 
   // The sheet rises from the bar, so it has to clear the same inset the bar now reserves.
