@@ -29,6 +29,7 @@ import { AuthorNames } from '../author/AuthorNames';
 import { SeriesBlock } from '../series/SeriesBlock';
 import { filterSeries } from '../series/series';
 import { OWNERSHIPS, ownershipLabelKey, type Ownership } from '../../shared/statuses';
+import { readLibraryKind } from '../../shared/libraryKind';
 import styles from './CollectionPage.module.css';
 import { interleave, isKeyedSort, mergeByActivity } from './shelfOrder';
 import { ViewsBar, type ViewSettings } from './ViewsBar';
@@ -261,7 +262,9 @@ function CollectionContent() {
   // the user has already picked one by hand, in which case that choice wins.
   const urlKind = params.get('kind');
   const manualKind = urlKind && (ALL_KINDS as string[]).includes(urlKind) ? (urlKind as Kind) : null;
-  const collType = manualKind ?? bestKind;
+  // The kind picked in Settings (#545) comes before the one owned most, never before the URL.
+  const preferredKind = readLibraryKind();
+  const collType = manualKind ?? (preferredKind === 'auto' ? bestKind : preferredKind);
   const setCollType = (kind: Kind) => setParam('kind', kind);
 
   // Books, manga and comics are always offered (#383): they are the shelves a reader files

@@ -280,7 +280,7 @@ Three budgets, all measured **gzipped** — what nginx puts on the wire:
 |---|---|---|---|
 | initial | everything `index.html` loads before the first paint | 199 kB (#79's product ceiling is 200) | 195.4 kB |
 | deferred asset | any single lazy route or runtime chunk, on its own | 10 kB | under 6 kB |
-| whole build | every file, i.e. what the service worker precaches | 340 kB | 321.1 kB |
+| whole build | every file, i.e. what the service worker precaches | 385 kB | 365.0 kB (2026-11-20) |
 
 The history of every re-derivation, with its reason, is the header of
 `apps/web/scripts/check-bundle-size.mjs`.

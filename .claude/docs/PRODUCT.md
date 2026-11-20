@@ -290,9 +290,14 @@ something as read — an existing collection carries no reading dates.
   nothing to fetch from a handle: picking Babelio offers no handle field at all, it says the
   library is not public and points at the CSV export, one click below. Only Booknode is
   scraped.
-- ✅ **Dashboard** shortcut to Home's own "Personnaliser l'accueil" panel (§ 4.1) — Settings
-  is not where the reordering happens, but a reader would not necessarily think to look on
-  Home for it.
+- ✅ **Categories** ([#546](https://github.com/zelytra/Librarius/issues/546)): `/settings` lists
+  Profile, Reading, Appearance, Community, Data and account; each is `/settings/<id>`, and a
+  hash names a section — `useHighlightHash` scrolls it into view and rings it for a moment
+  (#560), which is how « set a goal » lands on `/settings/reading#goal`.
+- ✅ **Home layout** (#554): « Personnaliser l'accueil » lives in Appearance (it used to be a
+  button in Home's header, which overflowed a phone, #542).
+- ✅ **Library opening shelf** (#545): automatic (the kind owned most) or a kind picked,
+  kept in `localStorage` (`librarius.libraryKind`); a kind in the URL still wins.
 - ✅ **Replay the first-login tour** ([#76](https://github.com/zelytra/Librarius/issues/76)):
   a link back to the onboarding flow (§ 4.1) for whoever skipped it too fast, regardless of
   whether the collection is still empty.
@@ -306,8 +311,8 @@ something as read — an existing collection carries no reading dates.
 - ✅ **Profile**: display name, language and time zone, saved to the account through
   `PATCH /api/me` (#75). The language moves to the profile and follows the account across
   devices — a save applies it at once and stores it as this device's boot value; the switcher
-  below stays as the quick, device-local toggle the app boots on before the profile has been
-  fetched, and the one a signed-out visitor still has. The time zone is an IANA identifier, or
+  in Appearance is shown only to a signed-out visitor (#547: two controls for one setting
+  disagreed); signed in, Appearance points at the profile instead. The time zone is an IANA identifier, or
   blank to follow the device.
 - ✅ **Trusted badge** ([#186](https://github.com/zelytra/Librarius/issues/186)): a small
   pill next to the display-name field, shown only when the account's server-computed
@@ -616,7 +621,14 @@ year 🔜.
   hairlines, cover on by default. The `@page` margin is zero so the browser has no room to
   print its own date, title, URL and page number on it (#521); the sheet carries its margins
   as print padding (`--print-margin`, wider on the ring side).
-  Offered on Detail once read and from the end-of-reading sheet.
+  Offered on Detail once read and from the end-of-reading sheet. Since #548 the sheet is drawn
+  at its paper's exact ISO 216 size (`sheetSize`: 210 × 297, 148 × 210, 105 × 148 mm) and the
+  notes' ruling stretches to the bottom, so a printed sheet fills its page. Three themes
+  (#549, #550): **handwritten** (default; Caveat fetched by the sheet alone, wobbling SVG rules,
+  printed through `print-color-adjust: exact`), **classic**, **notebook** — picked in Settings
+  → Reading on live miniatures, kept in `localStorage` (`librarius.sheetTheme`). No export
+  date. `/sheet/blank` prints an empty sheet with a framed cover slot; `/sheets?items=…&series=…`
+  prints one sheet per page for a selection (#551), a series as its volumes held.
 - **Feedback**: every write announces its outcome in a toast (`shared/ui/toast.ts`, mounted
   once by `App`); buttons and status chips give under the finger. Reduced motion is honoured.
 - **No hole in the lengths**: an edition without a page count counts at an estimate (series

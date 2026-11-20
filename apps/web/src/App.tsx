@@ -63,6 +63,12 @@ const ScanPage = lazy(() =>
 const ReadingSheetPage = lazy(() =>
   import('./features/sheet/ReadingSheetPage').then((m) => ({ default: m.ReadingSheetPage })),
 );
+const BlankSheetPage = lazy(() =>
+  import('./features/sheet/ReadingSheetPage').then((m) => ({ default: m.BlankSheetPage })),
+);
+const ReadingSheetsPage = lazy(() =>
+  import('./features/sheet/ReadingSheetPage').then((m) => ({ default: m.ReadingSheetsPage })),
+);
 const AchievementsPage = lazy(() =>
   import('./features/achievements/AchievementsPage').then((m) => ({ default: m.AchievementsPage })),
 );
@@ -135,6 +141,23 @@ function App() {
             </Suspense>
           }
         />
+        {/* A blank sheet to fill in by hand (#550), and the sheets of a selection (#551). */}
+        <Route
+          path="sheet/blank"
+          element={
+            <Suspense fallback={<Loading />}>
+              <BlankSheetPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="sheets"
+          element={
+            <Suspense fallback={<Loading />}>
+              <ReadingSheetsPage />
+            </Suspense>
+          }
+        />
         <Route element={<AppShell />}>
           <Route index element={<RootRoute />} />
           <Route path="collection" element={<CollectionPage />} />
@@ -155,7 +178,7 @@ function App() {
           <Route path="detail/:id" element={<DetailPage />} />
           <Route path="series/:id" element={<SeriesPage />} />
           <Route path="authors/:id" element={<AuthorPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/:category?" element={<SettingsPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>

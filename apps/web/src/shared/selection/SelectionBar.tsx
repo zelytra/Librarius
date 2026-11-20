@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -15,11 +16,23 @@ import { STATS_QUERIES } from '../statsQueries';
 import { CategoryChoice } from '../../features/detail/CategoryChoice';
 import { StarRating } from '../../features/detail/StarRating';
 import { ALL_KINDS, KIND_LABEL_KEY } from '../../features/discover/medium';
-import type { Selection } from './useSelection';
+import { Icon } from '../ui/Icon';
+import { SERIES_KEY, type Selection } from './useSelection';
 import { bulkRequest, type Draft } from './bulkRequest';
 import styles from './Selection.module.css';
 
 const changesIn = (draft: Draft) => Object.values(draft).filter((v) => v !== undefined).length;
+
+/** The print screen of a selection's reading sheets (#551): titles and series, apart. */
+function sheetsUrl(selected: ReadonlySet<string>): string {
+  const ids = [...selected];
+  const params = new URLSearchParams();
+  const items = ids.filter((id) => !id.startsWith(SERIES_KEY));
+  const series = ids.filter((id) => id.startsWith(SERIES_KEY)).map((id) => id.slice(SERIES_KEY.length));
+  if (items.length) params.set('items', items.join(','));
+  if (series.length) params.set('series', series.join(','));
+  return `/sheets?${params.toString()}`;
+}
 
 /**
  * The bar of a screen that is selecting (#457): how many titles or series are picked, and the
@@ -29,6 +42,7 @@ const changesIn = (draft: Draft) => Object.values(draft).filter((v) => v !== und
  */
 export function SelectionBar({ selection }: { selection: Selection }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>({});
@@ -71,6 +85,17 @@ export function SelectionBar({ selection }: { selection: Selection }) {
         <Button variant="secondary" size="compact" onClick={selection.stop}>
           {t('selection.cancel')}
         </Button>
+        {/* Every selected title's reading sheet, one per page (#551). */}
+        <button
+          type="button"
+          className={styles.iconAction}
+          disabled={count === 0}
+          aria-label={t('selection.printSheets')}
+          title={t('selection.printSheets')}
+          onClick={() => navigate(sheetsUrl(selection.selected))}
+        >
+          <Icon name="print" size={20} color="currentColor" />
+        </button>
         <Button variant="primary" size="compact" disabled={count === 0} onClick={() => setOpen(true)}>
           {t('selection.edit')}
         </Button>

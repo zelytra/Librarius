@@ -6,6 +6,7 @@ import { TestProviders, mockViewportWidth, renderWithProviders } from '../../tes
 import { BUILTIN_CATEGORIES, customCategory, libraryItem as fixtureItem, seriesSummary } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, seriesReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { LIBRARY_KIND_STORAGE_KEY } from '../../shared/libraryKind';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -213,6 +214,33 @@ describe('CollectionPage', () => {
     expect(screen.getByText('Corto Maltese')).toBeInTheDocument();
     expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
     expect(screen.queryByText('Vinland Saga')).not.toBeInTheDocument();
+  });
+
+  /** #545: the kind picked in Settings wins over the one owned most, the URL over both. */
+  describe('with a kind picked in Settings', () => {
+    afterEach(() => localStorage.removeItem(LIBRARY_KIND_STORAGE_KEY));
+
+    test('opens on the kind picked rather than the one owned most', async () => {
+      localStorage.setItem(LIBRARY_KIND_STORAGE_KEY, 'BOOK');
+      libraryReturns([
+        ROMAN,
+        libraryItem({ id: 'comic-1', book: { kind: 'COMIC', title: 'Le Chat du rabbin' } }),
+        libraryItem({ id: 'comic-2', book: { kind: 'COMIC', title: 'Corto Maltese' } }),
+      ]);
+      renderWithProviders(<CollectionPage />);
+
+      expect(await screen.findByText('Le Nom du vent')).toBeInTheDocument();
+      expect(screen.queryByText('Corto Maltese')).not.toBeInTheDocument();
+    });
+
+    test('still follows a kind named in the URL', async () => {
+      localStorage.setItem(LIBRARY_KIND_STORAGE_KEY, 'BOOK');
+      libraryReturns([ROMAN, MANGA]);
+      renderWithProviders(<CollectionPage />, { route: '/?kind=MANGA' });
+
+      expect(await screen.findByText('Vinland Saga')).toBeInTheDocument();
+      expect(screen.queryByText('Le Nom du vent')).not.toBeInTheDocument();
+    });
   });
 
   /** A tie falls back to the first kind of the taxonomy — 'BOOK', same as an empty library. */

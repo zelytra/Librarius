@@ -45,19 +45,17 @@ describe('HomePage', () => {
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
   });
 
-  /** #210, #497: on a phone the readers are an icon in Home's header, like Settings. */
-  test('opens the readers from the header', async () => {
-    render(
-      <TestProviders route="/">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/people" element={<p>Écran des lecteurs</p>} />
-        </Routes>
-      </TestProviders>,
-    );
+  /**
+   * #542: the header has to fit a 360px phone. The readers are in the navigation (#504) and
+   * organising Home moved to Settings (#554): only the level, the bell and Settings remain.
+   */
+  test('keeps the header to what fits a phone', async () => {
+    renderWithProviders(<HomePage />);
+    await screen.findByText('lus');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Lecteurs' }));
-    expect(await screen.findByText('Écran des lecteurs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Réglages' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lecteurs' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Personnaliser l'accueil" })).not.toBeInTheDocument();
   });
 
   test('renders the library counters', async () => {
@@ -652,95 +650,6 @@ describe('HomePage', () => {
     await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR} · Romans`)).not.toBeInTheDocument());
   });
 
-  /**
-   * The point of #54's requirement 2: hiding a section is not the same as deleting it. The
-   * panel that reorders and hides sections must go on listing a hidden one, or there would
-   * be no way back to it short of guessing it used to exist.
-   */
-  test('a hidden section stays listed, and marked, in the customize panel', async () => {
-    server.use(http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
-      sections: [
-        { code: 'resumeReading', hidden: false },
-        { code: 'counters', hidden: false },
-        { code: 'goal', hidden: true },
-        { code: 'upcoming', hidden: false },
-        { code: 'recentlyRead', hidden: false },
-      ],
-    }))));
-    renderWithProviders(<HomePage />);
-
-    await screen.findByText('lus');
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-
-    expect(await screen.findByText('Objectif de lecture annuel')).toBeInTheDocument();
-    expect(screen.getByText('Masquée')).toBeInTheDocument();
-  });
-
-  test('unhiding a section in the panel and saving brings it back on the dashboard', async () => {
-    const saved: unknown[] = [];
-    server.use(
-      http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout({
-        sections: [
-          { code: 'resumeReading', hidden: false },
-          { code: 'counters', hidden: false },
-          { code: 'goal', hidden: true },
-          { code: 'upcoming', hidden: false },
-          { code: 'recentlyRead', hidden: false },
-        ],
-      }))),
-      http.put('*/api/dashboard/layout', async ({ request }) => {
-        const body = await request.json();
-        saved.push(body);
-        return HttpResponse.json(body);
-      }),
-    );
-    server.use(http.get('*/api/stats', () =>
-      HttpResponse.json(stats({ goalTarget: 30, goalCurrent: 12, goalUnit: 'BOOKS' }))));
-    renderWithProviders(<HomePage />);
-
-    await screen.findByText('lus');
-    await waitFor(() => expect(screen.queryByText(`Objectif ${YEAR} · Romans`)).not.toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    await userEvent.click(await screen.findByRole('button', {
-      name: "Afficher « Objectif de lecture annuel »",
-    }));
-    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
-
-    await waitFor(() => expect(saved).toHaveLength(1));
-    expect(saved[0]).toMatchObject({
-      sections: expect.arrayContaining([{ code: 'goal', hidden: false }]),
-    });
-    expect(await screen.findByText(`Objectif ${YEAR} · Romans`)).toBeInTheDocument();
-  });
-
-  test('moving a section up in the panel changes the order it is saved in', async () => {
-    const saved: { sections?: { code: string }[] }[] = [];
-    server.use(
-      http.get('*/api/dashboard/layout', () => HttpResponse.json(dashboardLayout())),
-      http.put('*/api/dashboard/layout', async ({ request }) => {
-        const body = (await request.json()) as { sections?: { code: string }[] };
-        saved.push(body);
-        return HttpResponse.json(body);
-      }),
-    );
-    renderWithProviders(<HomePage />);
-
-    await screen.findByText('lus');
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    // "Compteurs de lecture" is the third row by default order; moving it up swaps it
-    // with "Ta pile à lire".
-    await userEvent.click(await screen.findByRole('button', {
-      name: "Déplacer « Compteurs de lecture » vers le haut",
-    }));
-    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
-
-    await waitFor(() => expect(saved).toHaveLength(1));
-    expect(saved[0].sections?.map((s) => s.code)).toEqual([
-      'resumeReading', 'counters', 'toRead', 'bookStack', 'goal', 'upcoming', 'recentlyRead',
-    ]);
-  });
-
   // ── First-login onboarding (#76) ────────────────────────────────────────────
 
   test('greets a new account with the tour: empty library, never seen it before', async () => {
@@ -805,38 +714,5 @@ describe('HomePage', () => {
     );
 
     expect(await screen.findByText('Tu as déjà une bibliothèque ?')).toBeInTheDocument();
-  });
-
-  /** #416: the editor is a modal dialog over the dashboard, closed by Escape or its button. */
-  test('opens the customize panel as a modal, closed by Escape or the close button', async () => {
-    renderWithProviders(<HomePage />);
-    await screen.findByText('lus');
-
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    const dialog = await screen.findByRole('dialog', { name: "Personnaliser l'accueil" });
-    expect(dialog).toHaveAttribute('aria-modal', 'true');
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Fermer' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  });
-
-  test('cancelling the customize panel discards the changes', async () => {
-    let putCalled = false;
-    server.use(http.put('*/api/dashboard/layout', () => {
-      putCalled = true;
-      return HttpResponse.json(dashboardLayout());
-    }));
-    renderWithProviders(<HomePage />);
-
-    await screen.findByText('lus');
-    await userEvent.click(screen.getByRole('button', { name: "Personnaliser l'accueil" }));
-    await screen.findByText(/Réordonne les sections/);
-    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
-
-    expect(screen.queryByText(/Réordonne les sections/)).not.toBeInTheDocument();
-    expect(putCalled).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Screen } from '../../shared/ui/primitives';
@@ -94,40 +94,22 @@ function Dashboard() {
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [, setParams] = useSearchParams();
   const today = new Intl.DateTimeFormat(activeLanguage(), { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   return (
     <Screen>
       <div className={styles.header}>
-        <div>
+        <div className={styles.heading}>
           <div className={styles.date}>{today}</div>
           <div className={styles.greeting}>{t('home.greeting')}</div>
         </div>
         <div className={styles.headerActions}>
           {/* The reader's level, the way into the achievements (#287). */}
           <LevelChip />
-          {/* Customising Home sits next to Settings (#397), where the reader looks for it. */}
-          <button
-            onClick={() => setParams({ customize: '1' }, { replace: true })}
-            aria-label={t('home.customize.open')}
-            title={t('home.customize.open')}
-            className={styles.customizeHeaderButton}
-          >
-            <Icon name="tune" size={22} color="var(--ink-soft)" />
-          </button>
           {/* The bell (#516): what happened around the reader's activity and the readers they follow. */}
           <NotificationBell />
-          {/* The readers (#210, #497): a header icon on a phone, like Settings — the side
-              navigation lists them on a wide screen. */}
-          <button
-            onClick={() => navigate('/people')}
-            aria-label={t('nav.people')}
-            title={t('nav.people')}
-            className={styles.customizeHeaderButton}
-          >
-            <Icon name="group" size={22} color="var(--ink-soft)" />
-          </button>
+          {/* Organising Home moved to Settings (#554) and the readers live in the navigation
+              (#504): the row keeps three targets, which fit a 360px phone (#542). */}
           <button
             onClick={() => navigate('/settings')}
             aria-label={t('settings.title')}

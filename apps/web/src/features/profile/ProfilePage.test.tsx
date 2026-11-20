@@ -122,7 +122,7 @@ describe('ProfilePage', () => {
     await screen.findByRole('heading', { name: /Bob/ });
     expect(screen.queryByRole('button', { name: /Suivre/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Bloquer' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Modifier mon profil' })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('link', { name: 'Modifier mon profil' })).toHaveAttribute('href', '/settings/profile');
   });
 
   test('says a profile out of reach is unavailable', async () => {

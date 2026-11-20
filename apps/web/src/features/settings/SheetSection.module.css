@@ -1,0 +1,97 @@
+.title {
+  font-size: var(--fs-16);
+  margin: 0 0 14px;
+}
+
+.intro {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  margin: -8px 0 14px;
+  line-height: 1.4;
+}
+
+.themes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme[aria-pressed='true'] {
+  border-color: var(--accent-deep);
+  color: var(--accent-deep);
+}
+
+.theme:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* An A6 sheet (105 mm ≈ 397 px wide) drawn at a fixed fraction of its size: 80 px is 0.2 of
+   it, and fits a third of a 360 px screen. */
+.preview {
+  position: relative;
+  display: block;
+  width: 80px;
+  height: 113px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: var(--shadow-swatch);
+  pointer-events: none;
+}
+
+.previewInner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 105mm;
+  transform-origin: top left;
+  transform: scale(0.2015);
+}
+
+@media (min-width: 600px) {
+  .preview {
+    width: 120px;
+    height: 169px;
+  }
+
+  .previewInner {
+    transform: scale(0.3023);
+  }
+}
+
+.previewInner > article {
+  box-shadow: none;
+  border: none;
+}
+
+.label {
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.blank {
+  margin-top: 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  text-decoration: none;
+}

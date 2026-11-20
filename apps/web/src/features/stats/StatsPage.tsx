@@ -64,7 +64,7 @@ function StatsContent() {
           <div className={styles.goalBody}>
             <div className={styles.goalTitle}>{t('goal.empty.title')}</div>
             <div className={styles.goalHint}>{t('goal.empty.description', { year })}</div>
-            <button className={styles.goalLink} onClick={() => navigate('/settings')}>
+            <button className={styles.goalLink} onClick={() => navigate('/settings/reading#goal')}>
               {t('goal.empty.action')}
             </button>
           </div>
@@ -94,7 +94,7 @@ function StatsContent() {
                     ? t('goal.reached')
                     : t('goal.remaining', { remaining: pace.remaining, unit: units(pace.remaining) })}
                 </div>
-                <button className={styles.goalLink} onClick={() => navigate('/settings')}>
+                <button className={styles.goalLink} onClick={() => navigate('/settings/reading#goal')}>
                   {t('goal.edit')}
                 </button>
               </div>

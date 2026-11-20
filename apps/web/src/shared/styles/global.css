@@ -104,3 +104,28 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* The part a link pointed at (#560, `useHighlightHash`): a ring that pulses, then fades. */
+.highlight-target {
+  outline: 3px solid var(--accent-deep);
+  outline-offset: 4px;
+  border-radius: var(--radius-panel-lg);
+  scroll-margin-top: 16px;
+  animation: highlight-pulse 0.8s ease-in-out 3 alternate;
+}
+
+@keyframes highlight-pulse {
+  from {
+    outline-color: var(--accent-deep);
+  }
+
+  to {
+    outline-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-target {
+    animation: none;
+  }
+}

@@ -266,13 +266,27 @@ catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, p
 ## La fiche de lecture
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
-quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (une page), **A5** (une demi-page) ou **A6**
-(une carte à glisser dans le livre, sans le résumé) : titre, auteur, ta note en étoiles,
-ton avis — ou des lignes pour l'écrire à la main —, les dates de lecture, l'éditeur, le
-nombre de pages et ton classement. Traits fins, aucun aplat de couleur : elle s'imprime aussi
-bien en noir et blanc qu'en couleur. La couverture est incluse par défaut ; décoche
-« Inclure la couverture » pour économiser l'encre. L'option « Classeur à anneaux » élargit la
-marge intérieure pour que les trous de perforation ne tombent pas sur le texte.
+quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (21 × 29,7 cm),
+**A5** (14,8 × 21 cm, une demi-feuille A4) ou **A6** (10,5 × 14,8 cm, une carte à glisser
+dans le livre, sans le résumé). La fiche est dessinée **à la taille exacte de la feuille** et
+la remplit jusqu'en bas : les lignes de notes s'étirent sur la place qui reste.
+
+Elle reprend le titre, l'auteur, ta note en étoiles, ton avis — ou des lignes pour l'écrire
+à la main —, les dates et la durée de lecture, l'éditeur, le nombre de pages et ton
+classement. Aucune date d'impression n'y figure. Traits fins, aucun aplat de couleur : elle
+s'imprime aussi bien en noir et blanc qu'en couleur. La couverture est incluse par défaut ;
+décoche « Inclure la couverture » pour économiser l'encre. L'option « Classeur à anneaux »
+élargit la marge intérieure pour que les trous de perforation ne tombent pas sur le texte.
+
+Trois allures, à choisir dans **Réglages → Lecture → Fiche de lecture** sur un aperçu de la
+fiche : **Manuscrite** (par défaut, écriture à la main et traits tremblés), **Classique** et
+**Cahier** (lignes bleues et marge rouge). Au même endroit, « Imprimer une fiche vierge »
+donne une fiche à remplir entièrement à la main, avec un cadre vide de la taille d'une
+couverture pour en coller une.
+
+Pour imprimer **plusieurs fiches d'un coup**, sélectionne les titres (ou les séries) dans ta
+bibliothèque, puis appuie sur l'icône d'imprimante de la barre de sélection : une fiche par
+page, une par tome possédé pour une série.
 
 ## Les nombres de pages estimés
 
@@ -283,7 +297,7 @@ remplacé dès qu'un catalogue fournit le vrai.
 
 ## L'accueil, dans ton ordre
 
-« Personnaliser l'accueil » s'ouvre dans une fenêtre par-dessus l'accueil et réordonne les sections du tableau de bord et masque celles qui
+« Personnaliser l'accueil », dans **Réglages → Apparence**, ouvre une fenêtre qui réordonne les sections du tableau de bord et masque celles qui
 ne t'intéressent pas — avec des flèches plutôt qu'un glisser-déposer, pour que ça marche
 au doigt, à la souris et au clavier. Une section masquée reste listée dans le panneau,
 signalée comme telle, pour qu'on puisse la retrouver. Le choix est conservé sur ton
@@ -442,12 +456,24 @@ d'utilisateur** pour confirmer. Il n'y a pas de retour en arrière.
 
 ## Réglages, thème et langue
 
-Les réglages s'ouvrent par la **roue dentée en haut de l'accueil**.
+Les réglages s'ouvrent par la **roue dentée en haut de l'accueil**, ou depuis « Plus » sur
+téléphone. Ils sont rangés en cinq catégories : **Profil** (nom, photo, langue, fuseau
+horaire, déconnexion), **Lecture** (objectif de l'année, type de livres affiché à l'ouverture
+de la bibliothèque, fiche de lecture), **Apparence** (thème, langue, organisation de
+l'accueil), **Communauté** (trouver des lecteurs, membres bloqués) et **Données et compte**
+(import, export, vider la bibliothèque, supprimer le compte). Un lien venu d'ailleurs —
+« Fixer un objectif », par exemple — ouvre la bonne catégorie et met la section concernée en
+évidence.
 
-L'application se lit en **français** ou en **anglais** : à la première visite elle suit ton
-navigateur, ensuite elle garde le choix fait ici, sur cet appareil. Cinq thèmes :
-**Système** — qui suit ton téléphone ou ton ordinateur, et c'est le réglage par défaut —,
-Crème, Sauge, Rose et Nuit.
+La bibliothèque s'ouvre par défaut sur le type de livres que tu possèdes le plus
+(« Automatique ») ; tu peux choisir à la place Livre, Manga, BD, Roman graphique ou Livre
+audio.
+
+L'application se lit en **français** ou en **anglais**. Connecté, la langue se règle dans ton
+**profil** et suit ton compte d'un appareil à l'autre ; sans compte, elle se choisit dans
+Apparence et reste sur cet appareil. À la première visite elle suit ton navigateur. Cinq
+thèmes : **Système** — qui suit ton téléphone ou ton ordinateur, et c'est le réglage par
+défaut —, Crème, Sauge, Rose et Nuit.
 
 ## Signaler un problème
 
