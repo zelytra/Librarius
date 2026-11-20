@@ -16,7 +16,9 @@
     "more": "Plus",
     "notifications": "Notifications",
     "profile": "Mon profil",
-    "profileOf": "Mon profil · {{name}}"
+    "profileOf": "Mon profil · {{name}}",
+    "adminUnread_one": "{{label}}, {{count}} signalement non lu",
+    "adminUnread_other": "{{label}}, {{count}} signalements non lus"
   },
   "common": {
     "seeAll": "Tout voir",

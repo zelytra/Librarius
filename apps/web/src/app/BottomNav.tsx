@@ -6,6 +6,7 @@ import { NOTIFICATIONS_DESTINATION, PHONE_PRIMARY, SETTINGS_DESTINATION, type De
 import { useUnreadCount } from '../features/notifications/useUnread';
 import { useAccountEntries, useNavDestinations } from './useNavDestinations';
 import { ProfileEntry } from './ProfileEntry';
+import { useUnreadReports } from '../features/admin/useUnreadReports';
 import styles from './BottomNav.module.css';
 
 /**
@@ -23,8 +24,18 @@ export function BottomNav() {
   const others = [...all.filter((d) => !PHONE_PRIMARY.includes(d.to)), ...(admin ? [admin] : [])];
   const more = [...others, SETTINGS_DESTINATION];
   const profilePath = me ? `/people/${me.id}` : null;
-  const [open, setOpen] = useState(false);
   const unread = useUnreadCount();
+  const unreadReports = useUnreadReports(admin != null);
+  // What each sheet entry counts: the bell's notifications, the Admin entry's reports (#565).
+  const countOf = (to: string) => (to === NOTIFICATIONS_DESTINATION.to ? unread : to === admin?.to ? unreadReports : 0);
+  const labelOf = (destination: Destination) => {
+    const count = countOf(destination.to);
+    if (count === 0) return undefined;
+    return destination.to === NOTIFICATIONS_DESTINATION.to
+      ? t('notifications.bellUnread', { count })
+      : t('nav.adminUnread', { count, label: t(destination.labelKey) });
+  };
+  const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const current = more.some((d) => pathname === d.to || pathname.startsWith(`${d.to}/`)) || pathname === profilePath;
@@ -63,15 +74,16 @@ export function BottomNav() {
                   to={destination.to}
                   className={styles.sheetEntry}
                   onClick={() => close(false)}
-                  aria-label={destination.to === NOTIFICATIONS_DESTINATION.to && unread > 0
-                    ? t('notifications.bellUnread', { count: unread }) : undefined}
+                  aria-label={labelOf(destination)}
                 >
                   {({ isActive }) => (
                     <>
                       <Icon name={destination.icon} size={22} fill={isActive} />
                       <span>{t(destination.labelKey)}</span>
-                      {destination.to === NOTIFICATIONS_DESTINATION.to && unread > 0 && (
-                        <span className={styles.badge} aria-hidden="true">{unread > 99 ? '99+' : unread}</span>
+                      {countOf(destination.to) > 0 && (
+                        <span className={styles.badge} aria-hidden="true">
+                          {countOf(destination.to) > 99 ? '99+' : countOf(destination.to)}
+                        </span>
                       )}
                     </>
                   )}
@@ -112,7 +124,7 @@ export function BottomNav() {
         >
           <span className={`${styles.tabContent} ${current || open ? styles.tabContentActive : ''}`}>
             {/* A dot when something is unread: the sheet's bell entry says how many (#516). */}
-            {unread > 0 && <span className={styles.dot} aria-hidden="true" />}
+            {unread + unreadReports > 0 && <span className={styles.dot} aria-hidden="true" />}
             <Icon name="menu" size={25} />
             <span className={styles.label}>{t('nav.more')}</span>
           </span>

@@ -16,7 +16,9 @@
     "more": "More",
     "notifications": "Notifications",
     "profile": "My profile",
-    "profileOf": "My profile · {{name}}"
+    "profileOf": "My profile · {{name}}",
+    "adminUnread_one": "{{label}}, {{count}} unread report",
+    "adminUnread_other": "{{label}}, {{count}} unread reports"
   },
   "common": {
     "seeAll": "See all",

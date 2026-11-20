@@ -148,3 +148,59 @@ describe('the foot of the navigation', () => {
     expect(screen.queryByRole('link', { name: /Mon profil/ })).not.toBeInTheDocument();
   });
 });
+
+/** #565: an admin sees how many reports are still unread, on the Admin entry, like the bell. */
+describe('the unread reports', () => {
+  afterEach(() => resetAuth());
+
+  function reports(total: number) {
+    let asked = 0;
+    server.use(
+      http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })),
+      http.get('*/api/admin/feedback', ({ request }) => {
+        asked += 1;
+        expect(new URL(request.url).searchParams.get('status')).toBe('NEW');
+        return HttpResponse.json({ items: [], page: 0, size: 1, total });
+      }),
+    );
+    return () => asked;
+  }
+
+  test('are counted on the Admin entry of the side navigation', async () => {
+    reports(3);
+    renderWithProviders(<SideNav />);
+
+    expect(await screen.findByRole('link', { name: 'Admin, 3 signalements non lus' })).toHaveAttribute('href', '/admin');
+  });
+
+  test('are counted in the « Plus » sheet, and dot the button', async () => {
+    reports(2);
+    renderWithProviders(<BottomNav />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+
+    expect(await screen.findByRole('link', { name: 'Admin, 2 signalements non lus' })).toBeInTheDocument();
+  });
+
+  test('show nothing at zero', async () => {
+    reports(0);
+    renderWithProviders(<SideNav />);
+
+    expect(await screen.findByRole('link', { name: 'Admin' })).toBeInTheDocument();
+  });
+
+  test('are never asked for a member', async () => {
+    let asked = false;
+    server.use(
+      http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })),
+      http.get('*/api/admin/feedback', () => {
+        asked = true;
+        return HttpResponse.json({ items: [], total: 9 });
+      }),
+    );
+    renderWithProviders(<SideNav />);
+    await screen.findByRole('link', { name: 'Mon profil · Bob' });
+
+    expect(asked).toBe(false);
+  });
+});

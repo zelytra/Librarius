@@ -5,6 +5,7 @@ import { NOTIFICATIONS_DESTINATION, SETTINGS_DESTINATION, type Destination } fro
 import { useUnreadCount } from '../features/notifications/useUnread';
 import { useAccountEntries, useNavDestinations } from './useNavDestinations';
 import { ProfileEntry } from './ProfileEntry';
+import { useUnreadReports } from '../features/admin/useUnreadReports';
 import styles from './SideNav.module.css';
 
 /**
@@ -21,6 +22,7 @@ export function SideNav() {
   const { t } = useTranslation();
   const destinations = useNavDestinations(true);
   const { admin, me } = useAccountEntries();
+  const unreadReports = useUnreadReports(admin != null);
 
   return (
     <nav className={styles.nav} aria-label={t('nav.label')}>
@@ -31,7 +33,7 @@ export function SideNav() {
           than a place to browse — the administration (#556), the reader's own profile
           (#555), then Settings. */}
       <div className={styles.footer}>
-        {admin && <Entry destination={admin} />}
+        {admin && <Entry destination={admin} reports={unreadReports} />}
         {me && <ProfileEntry me={me} className={`${styles.entry} ${styles.profile}`} labelClassName={styles.label} />}
         <Entry destination={SETTINGS_DESTINATION} />
       </div>
@@ -39,15 +41,22 @@ export function SideNav() {
   );
 }
 
-function Entry({ destination }: { destination: Destination }) {
+/** `reports`: the unread reports on the Admin entry (#565), counted like the bell's. */
+function Entry({ destination, reports = 0 }: { destination: Destination; reports?: number }) {
   const { t } = useTranslation();
   const unread = useUnreadCount();
-  const count = destination.to === NOTIFICATIONS_DESTINATION.to ? unread : 0;
+  const bell = destination.to === NOTIFICATIONS_DESTINATION.to;
+  const count = bell ? unread : reports;
+  const label = count === 0
+    ? undefined
+    : bell
+      ? t('notifications.bellUnread', { count })
+      : t('nav.adminUnread', { count, label: t(destination.labelKey) });
 
   return (
     <NavLink
       to={destination.to}
-      aria-label={count > 0 ? t('notifications.bellUnread', { count }) : undefined}
+      aria-label={label}
       // Home is the only prefix of every other route: without this it would read as
       // active everywhere.
       end={destination.to === '/'}
