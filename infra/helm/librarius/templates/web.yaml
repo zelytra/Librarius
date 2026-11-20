@@ -11,7 +11,10 @@ data:
         server_name _;
         root /usr/share/nginx/html;
         index index.html;
-        location = /healthz { add_header Content-Type text/plain; return 200 'ok'; }
+        # The image's security headers (#580), shipped by apps/web/Dockerfile.
+        server_tokens off;
+        include /etc/nginx/snippets/security-headers.conf;
+        location = /healthz { add_header Content-Type text/plain; include /etc/nginx/snippets/security-headers.conf; return 200 'ok'; }
         location / { try_files $uri $uri/ /index.html; }
     }
 ---
