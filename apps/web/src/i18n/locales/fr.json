@@ -14,7 +14,9 @@
     "admin": "Admin",
     "people": "Lecteurs",
     "more": "Plus",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "profile": "Mon profil",
+    "profileOf": "Mon profil · {{name}}"
   },
   "common": {
     "seeAll": "Tout voir",

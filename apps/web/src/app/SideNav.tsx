@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
 import { NOTIFICATIONS_DESTINATION, SETTINGS_DESTINATION, type Destination } from './navigation';
 import { useUnreadCount } from '../features/notifications/useUnread';
-import { useNavDestinations } from './useNavDestinations';
+import { useAccountEntries, useNavDestinations } from './useNavDestinations';
+import { ProfileEntry } from './ProfileEntry';
 import styles from './SideNav.module.css';
 
 /**
@@ -19,15 +20,19 @@ import styles from './SideNav.module.css';
 export function SideNav() {
   const { t } = useTranslation();
   const destinations = useNavDestinations(true);
+  const { admin, me } = useAccountEntries();
 
   return (
     <nav className={styles.nav} aria-label={t('nav.label')}>
       {destinations.map((destination) => (
         <Entry key={destination.to} destination={destination} />
       ))}
-      {/* Pushed to the bottom and set behind a hairline: Settings configures the
-          application, it is not a sixth place to browse. */}
+      {/* Pushed to the bottom and set behind a hairline: what is about the account rather
+          than a place to browse — the administration (#556), the reader's own profile
+          (#555), then Settings. */}
       <div className={styles.footer}>
+        {admin && <Entry destination={admin} />}
+        {me && <ProfileEntry me={me} className={`${styles.entry} ${styles.profile}`} labelClassName={styles.label} />}
         <Entry destination={SETTINGS_DESTINATION} />
       </div>
     </nav>

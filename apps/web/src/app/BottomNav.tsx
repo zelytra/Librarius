@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '../shared/ui/Icon';
 import { NOTIFICATIONS_DESTINATION, PHONE_PRIMARY, SETTINGS_DESTINATION, type Destination } from './navigation';
 import { useUnreadCount } from '../features/notifications/useUnread';
-import { useNavDestinations } from './useNavDestinations';
+import { useAccountEntries, useNavDestinations } from './useNavDestinations';
+import { ProfileEntry } from './ProfileEntry';
 import styles from './BottomNav.module.css';
 
 /**
@@ -18,12 +19,15 @@ export function BottomNav() {
   const { pathname } = useLocation();
   const all = useNavDestinations(true);
   const primary = all.filter((d) => PHONE_PRIMARY.includes(d.to));
-  const more = [...all.filter((d) => !PHONE_PRIMARY.includes(d.to)), SETTINGS_DESTINATION];
+  const { admin, me } = useAccountEntries();
+  const others = [...all.filter((d) => !PHONE_PRIMARY.includes(d.to)), ...(admin ? [admin] : [])];
+  const more = [...others, SETTINGS_DESTINATION];
+  const profilePath = me ? `/people/${me.id}` : null;
   const [open, setOpen] = useState(false);
   const unread = useUnreadCount();
   const button = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
-  const current = more.some((d) => pathname === d.to || pathname.startsWith(`${d.to}/`));
+  const current = more.some((d) => pathname === d.to || pathname.startsWith(`${d.to}/`)) || pathname === profilePath;
 
   const close = (focusBack: boolean) => {
     setOpen(false);
@@ -53,7 +57,7 @@ export function BottomNav() {
       {open && (
         <div ref={sheet} role="dialog" aria-label={t('nav.more')} className={styles.sheet}>
           <ul className={styles.sheetList}>
-            {more.map((destination) => (
+            {others.map((destination) => (
               <li key={destination.to}>
                 <NavLink
                   to={destination.to}
@@ -74,6 +78,22 @@ export function BottomNav() {
                 </NavLink>
               </li>
             ))}
+            {/* The reader's own profile (#555), just above Settings. */}
+            {me && (
+              <li>
+                <ProfileEntry me={me} className={styles.sheetEntry} onClick={() => close(false)} />
+              </li>
+            )}
+            <li>
+              <NavLink to={SETTINGS_DESTINATION.to} className={styles.sheetEntry} onClick={() => close(false)}>
+                {({ isActive }) => (
+                  <>
+                    <Icon name={SETTINGS_DESTINATION.icon} size={22} fill={isActive} />
+                    <span>{t(SETTINGS_DESTINATION.labelKey)}</span>
+                  </>
+                )}
+              </NavLink>
+            </li>
           </ul>
         </div>
       )}

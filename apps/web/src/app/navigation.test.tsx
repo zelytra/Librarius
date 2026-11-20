@@ -75,8 +75,10 @@ describe('the bottom bar on a phone', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
 
     const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    // The reader's own profile (#555) sits just above Settings.
+    await within(sheet).findByRole('link', { name: 'Mon profil · Bob' });
     expect(within(sheet).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
-      '/to-read', '/stats', '/people', '/notifications', '/settings',
+      '/to-read', '/stats', '/people', '/notifications', '/people/bob', '/settings',
     ]);
     expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('aria-expanded', 'true');
   });
@@ -106,5 +108,43 @@ describe('the bottom bar on a phone', () => {
     renderWithProviders(<BottomNav />, { route: '/stats' });
 
     expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('data-current', 'true');
+  });
+});
+
+/**
+ * #555, #556: the reader's own profile — their picture and name — and, for an admin, the
+ * administration both sit at the foot of the navigation, just above Settings.
+ */
+describe('the foot of the navigation', () => {
+  afterEach(() => resetAuth());
+
+  test('on a wide screen, ends on the administration, the profile and Settings', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
+    renderWithProviders(<SideNav />);
+
+    const profile = await screen.findByRole('link', { name: 'Mon profil · Alice' });
+    expect(profile).toHaveAttribute('href', '/people/alice');
+    expect(within(profile).getByText('Alice')).toBeInTheDocument();
+    const links = screen.getAllByRole('link').map((link) => link.getAttribute('href'));
+    expect(links.slice(-3)).toEqual(['/admin', '/people/alice', '/settings']);
+  });
+
+  test('on a phone, puts the administration and the profile just above Settings', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
+    renderWithProviders(<BottomNav />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+
+    const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    await within(sheet).findByRole('link', { name: 'Mon profil · Alice' });
+    const links = within(sheet).getAllByRole('link').map((link) => link.getAttribute('href'));
+    expect(links.slice(-3)).toEqual(['/admin', '/people/alice', '/settings']);
+  });
+
+  test('offers no profile to a signed-out visitor', () => {
+    setAuthenticated(false);
+    renderWithProviders(<SideNav />);
+
+    expect(screen.queryByRole('link', { name: /Mon profil/ })).not.toBeInTheDocument();
   });
 });
