@@ -20,7 +20,7 @@ export function AchievementsPanel() {
       <div className={styles.xpTrack} role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-label={t('achievements.title')}>
         <span className={styles.xpFill} style={{ width: `${Math.round(progress * 100)}%` }} />
       </div>
-      <p className={styles.panelEmpty}>
+      <p className={`${styles.panelEmpty} ${styles.achievementsSummary}`}>
         {[t('achievements.count', { unlocked, total: data.achievements?.length ?? 0 }), t('achievements.xpTotal', { xp })].join(' · ')}
       </p>
       <Button variant="secondary" size="compact" onClick={() => navigate('/achievements')}>

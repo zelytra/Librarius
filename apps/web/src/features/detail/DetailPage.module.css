@@ -423,7 +423,9 @@
   align-items: center;
   gap: 8px;
   font-size: var(--fs-17);
-  margin: 0 0 12px;
+  /* The readers' reviews and the outside ratings above end on no margin of their own: the
+     heading keeps the screen's section rhythm from them (#558). */
+  margin: 26px 0 12px;
 }
 
 /* The row itself belongs to CategoryChoice, which the end-of-reading sheet draws too:
