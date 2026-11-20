@@ -37,6 +37,21 @@ describe('ReadingCalendar', () => {
     server.use(http.get('*/api/stats/readings', () => HttpResponse.json(readings)));
   }
 
+  /** #567: each row of the list under the grid carries the book's cover. */
+  test('shows each listed reading with its cover', async () => {
+    readingsReturn([
+      reading('i1', 'Dune', '2021-03-05', '2021-03-19', 'https://cover.test/dune.jpg'),
+      reading('i2', 'Sans couverture', '2021-03-02', '2021-03-03'),
+    ]);
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    const dune = (await screen.findByText('Dune')).closest('li')!;
+    expect(dune.querySelector('img')).toHaveAttribute('src', 'https://cover.test/dune.jpg');
+    // Without an image, a coloured spine stands in, as everywhere else.
+    const bare = screen.getByText('Sans couverture').closest('li')!;
+    expect(bare.querySelector('[data-cover]')).not.toBeNull();
+  });
+
   /** #485: a book shows in the day it was finished, as its cover. */
   test('places each finished book in its day, as its cover', async () => {
     readingsReturn([
