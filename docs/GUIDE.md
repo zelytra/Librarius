@@ -170,6 +170,11 @@ celles dont tu peux voir l'activité, et leur note seulement si elles l'ont part
 de personnes qui veulent le lire) et, pour un manga, la note d'AniList, avec un lien vers la
 source. La page d'un auteur reprend le début de son article Wikipédia, en citant la source.
 
+La **cloche** de l'accueil liste ce qui s'est passé autour de toi : l'activité des lecteurs
+que tu suis, les réactions et commentaires sur la tienne, et tes **nouveaux abonnés**. Une
+notification d'abonnement ouvre le profil de la personne, et « Suivre en retour » la suit
+sans quitter la liste.
+
 ## Séries et tomes
 
 L'écran d'une série montre tous ses tomes d'un coup, et distingue quatre états sans qu'on

@@ -1692,7 +1692,7 @@
     "bellUnread_other": "Notifications, {{count}} non lues",
     "error": "Impossible de charger les notifications.",
     "empty": "Aucune notification pour l’instant",
-    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, et des réactions et commentaires sur les tiennes.",
+    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, et de tes nouveaux abonnés.",
     "activity": {
       "FINISHED_READING": "{{name}} a terminé « {{title}} »",
       "WISHLIST_ADDED": "{{name}} a ajouté « {{title}} » à ses souhaits",
@@ -1704,6 +1704,11 @@
     "unread": "Non lue",
     "event": "Activité",
     "gone": "Cette activité n’est plus disponible",
-    "goneHint": "Son auteur ne la partage plus avec toi, ou elle a été retirée."
+    "goneHint": "Son auteur ne la partage plus avec toi, ou elle a été retirée.",
+    "follow": "{{name}} s’est abonné à toi",
+    "followBack": "Suivre en retour",
+    "followBackLabel": "Suivre {{name}} en retour",
+    "followedBack": "Tu suis {{name}}",
+    "followingToo": "Vous vous suivez"
   }
 }

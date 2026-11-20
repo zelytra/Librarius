@@ -1692,7 +1692,7 @@
     "bellUnread_other": "Notifications, {{count}} unread",
     "error": "Could not load the notifications.",
     "empty": "No notification yet",
-    "emptyHint": "You will be told here of the activity of the readers you follow, and of reactions and comments on yours.",
+    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, and of your new followers.",
     "activity": {
       "FINISHED_READING": "{{name}} finished “{{title}}”",
       "WISHLIST_ADDED": "{{name}} added “{{title}}” to their wishlist",
@@ -1704,6 +1704,11 @@
     "unread": "Unread",
     "event": "Activity",
     "gone": "This activity is no longer available",
-    "goneHint": "Its author no longer shares it with you, or it was removed."
+    "goneHint": "Its author no longer shares it with you, or it was removed.",
+    "follow": "{{name}} started following you",
+    "followBack": "Follow back",
+    "followBackLabel": "Follow {{name}} back",
+    "followedBack": "You follow {{name}}",
+    "followingToo": "You follow each other"
   }
 }

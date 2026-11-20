@@ -26,14 +26,16 @@ public class UserFollowRepository
      * check and the insert are not atomic. The insert itself carries the atomicity: a native
      * upsert that is a no-op when the pair already exists, rather than a separate {@code COUNT}
      * followed by a {@code persist()} in another round-trip.
+     *
+     * @return whether the follow is new — false when it already stood
      */
-    public void follow(String followerId, String followeeId) {
-        getEntityManager()
+    public boolean follow(String followerId, String followeeId) {
+        return getEntityManager()
                 .createNativeQuery("insert into user_follow (follower_id, followee_id) "
                         + "values (?1, ?2) on conflict (follower_id, followee_id) do nothing")
                 .setParameter(1, followerId)
                 .setParameter(2, followeeId)
-                .executeUpdate();
+                .executeUpdate() > 0;
     }
 
     /** Stops following another user. Idempotent as well. */

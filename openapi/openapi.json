@@ -6169,6 +6169,9 @@
           },
           "readAt" : {
             "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "followingActor" : {
+            "type" : "boolean"
           }
         }
       },

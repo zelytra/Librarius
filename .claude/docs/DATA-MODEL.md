@@ -607,6 +607,12 @@ created_at, read_at)`, idx `(user_id, created_at DESC)` and the unread ones.
 `user_follow.notify BOOLEAN NOT NULL DEFAULT true` (a follow notifies of activity unless switched
 off on the profile) and `app_user.notify_comments BOOLEAN NOT NULL DEFAULT true`.
 
+### V42 — follow notification (#544)
+
+`notification.type` also takes `FOLLOW` — someone started following the recipient — and
+`feed_event_id` becomes nullable for it alone (`ck_notification_event`: every other type keeps
+its event). A new follow from the same member replaces their earlier `FOLLOW` row.
+
 ### Cascades
 
 Nearly every FK pointing at `app_user` is `ON DELETE CASCADE`: deleting an `app_user` wipes all

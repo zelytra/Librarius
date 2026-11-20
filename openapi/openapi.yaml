@@ -4262,6 +4262,8 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         readAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        followingActor:
+          type: boolean
     NotificationPageDto:
       type: object
       properties:

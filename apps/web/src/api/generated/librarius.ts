@@ -843,6 +843,7 @@ export interface NotificationDto {
   emote?: string;
   createdAt?: OffsetDateTime;
   readAt?: OffsetDateTime;
+  followingActor?: boolean;
 }
 
 export interface NotificationPageDto {

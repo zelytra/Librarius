@@ -1063,7 +1063,7 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 | POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |
 | DELETE | `/api/feed/{eventId}/comments/{commentId}` | 204 for the comment's author, 404 for anyone else |
 | GET | `/api/feed/{eventId}` | One `FeedItemDto` (#516), same query and gate as the feed (`FeedService.one`); 404 when out of reach |
-| GET | `/api/notifications?page=&size=` | `NotificationPageDto(items, page, size, hasMore)` of `NotificationDto(id, type ACTIVITY\|REACTION\|COMMENT, actor, eventId, eventType, book MemberBookDto, comment, emote, createdAt, readAt)`, newest first; blocked actors left out |
+| GET | `/api/notifications?page=&size=` | `NotificationPageDto(items, page, size, hasMore)` of `NotificationDto(id, type ACTIVITY\|REACTION\|COMMENT\|FOLLOW, actor, eventId, eventType, book MemberBookDto, comment, emote, createdAt, readAt, followingActor)`, newest first; blocked actors left out. `FOLLOW` (#544) is written by a new `PUT /api/users/{id}/follow` — not by a repeated one — carries no event nor book, and replaces an earlier one from the same follower; `followingActor` is whether the caller follows the actor |
 | GET | `/api/notifications/unread` | `UnreadCountDto(count)` — the web app polls it every 60 s and on focus |
 | POST | `/api/notifications/read` | Marks every notification read — 204 |
 

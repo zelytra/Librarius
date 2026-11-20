@@ -168,4 +168,50 @@ class NotificationApiTest {
                 .when().patch("/api/me").then().statusCode(200);
         assertEquals(on, given().auth().oauth2(token(user)).when().get("/api/me").then().extract().path("notifyComments"));
     }
+
+    /** The follow notifications {@code user} has from {@code actor}. */
+    private static List<Map<String, Object>> followsFrom(String user, String actor) {
+        return notifications(user).getList(
+                "items.findAll { it.type == 'FOLLOW' && it.actor.id == '" + id(actor) + "' }");
+    }
+
+    /** #544: a new follower is announced, with a way to their profile and to follow them back. */
+    @Test
+    void aNewFollowerIsAnnouncedAndCanBeFollowedBack() {
+        relation("carol", "bob", "follow", true);
+
+        List<Map<String, Object>> mine = followsFrom("bob", "carol");
+        assertEquals(1, mine.size());
+        assertNull(mine.get(0).get("eventId"));
+        assertNull(mine.get(0).get("book"));
+        assertEquals(Boolean.FALSE, mine.get(0).get("followingActor"));
+        assertTrue(unread("bob") >= 1);
+        // The follower is not told of their own doing.
+        assertTrue(followsFrom("carol", "carol").isEmpty());
+
+        relation("bob", "carol", "follow", true);
+        assertEquals(Boolean.TRUE, followsFrom("bob", "carol").get(0).get("followingActor"));
+        assertEquals(1, followsFrom("carol", "bob").size());
+    }
+
+    /** Following again — after an unfollow, or twice in a row — never stacks a second one. */
+    @Test
+    void followingAgainDoesNotStackNotifications() {
+        relation("carol", "bob", "follow", true);
+        relation("carol", "bob", "follow", true);
+        relation("carol", "bob", "follow", false);
+        relation("carol", "bob", "follow", true);
+
+        assertEquals(1, followsFrom("bob", "carol").size());
+    }
+
+    /** Nothing crosses a block, a follow notification included. */
+    @Test
+    void aBlockHidesTheFollowNotification() {
+        relation("carol", "bob", "follow", true);
+        relation("bob", "carol", "block", true);
+
+        assertTrue(followsFrom("bob", "carol").isEmpty());
+        relation("bob", "carol", "block", false);
+    }
 }
