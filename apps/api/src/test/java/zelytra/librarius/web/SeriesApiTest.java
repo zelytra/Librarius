@@ -452,4 +452,56 @@ class SeriesApiTest {
                 .body("items.book.title", org.hamcrest.Matchers.hasItem(oneShot))
                 .body("items.book.seriesTitle", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue()));
     }
+
+    /** Adds a one-shot, a title of no series, to the user's collection. */
+    private void addOneShot(String user, String title, String status) {
+        given().auth().oauth2(token(user)).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "MANGA", "title": "%s", "authors": "Series Test" },
+                          "status": "%s" }
+                        """.formatted(title, status))
+                .when().post("/api/library")
+                .then().statusCode(201);
+    }
+
+    /**
+     * #552: the to-read pile stays out of the library. A to-read one-shot is left out; a
+     * to-read volume is left out unless the reader has read another volume of its run, in
+     * which case the run is shown as it always was.
+     */
+    @Test
+    void hidesTheToReadPileFromTheLibraryWhenAsked() {
+        String marker = UUID.randomUUID().toString();
+        String pileOneShot = "Pile one-shot " + marker;
+        String readOneShot = "Read one-shot " + marker;
+        String untouched = "Untouched run " + marker;
+        String started = "Started run " + marker;
+        addOneShot("bob", pileOneShot, "TO_READ");
+        addOneShot("bob", readOneShot, "READ");
+        addVolume("bob", untouched, 1, "TO_READ");
+        addVolume("bob", untouched, 2, "READING");
+        addVolume("bob", started, 1, "READ");
+        addVolume("bob", started, 2, "TO_READ");
+        // Another reader's progress never counts for bob's shelf.
+        addVolume("alice", untouched, 1, "READ");
+
+        given().auth().oauth2(token("bob"))
+                .queryParam("hideToRead", true).queryParam("size", 100).queryParam("q", marker)
+                .when().get("/api/library")
+                .then().statusCode(200)
+                .body("items.book.title", org.hamcrest.Matchers.containsInAnyOrder(
+                        readOneShot, untouched + " vol. 2", started + " vol. 1", started + " vol. 2"));
+
+        // The total agrees with the page, so the infinite shelf stops where it should.
+        given().auth().oauth2(token("bob"))
+                .queryParam("hideToRead", true).queryParam("size", 100).queryParam("q", marker)
+                .when().get("/api/library")
+                .then().body("total", is(4));
+
+        // Without the flag nothing changes: the pile is still a shelf of its own.
+        given().auth().oauth2(token("bob"))
+                .queryParam("size", 100).queryParam("q", marker)
+                .when().get("/api/library")
+                .then().body("total", is(6));
+    }
 }

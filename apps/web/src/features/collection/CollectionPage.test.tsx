@@ -3,13 +3,20 @@ import { Route, Routes, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { TestProviders, mockViewportWidth, renderWithProviders } from '../../test/utils';
-import { BUILTIN_CATEGORIES, customCategory, libraryItem, seriesSummary } from '../../test/fixtures';
+import { BUILTIN_CATEGORIES, customCategory, libraryItem as fixtureItem, seriesSummary } from '../../test/fixtures';
 import { http, HttpResponse, libraryReturns, seriesReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
 const { CollectionPage } = await import('./CollectionPage');
+
+/**
+ * A title of the library, read unless a test says otherwise: the shared fixture defaults to
+ * the to-read pile, which the shelf leaves out since #552.
+ */
+const libraryItem = (overrides: Parameters<typeof fixtureItem>[0] = {}) =>
+  fixtureItem({ status: 'READ', ...overrides });
 
 const ROMAN = libraryItem({ id: 'roman-1', book: { kind: 'BOOK', title: 'Le Nom du vent', authors: 'Patrick Rothfuss' } });
 const MANGA = libraryItem({ id: 'manga-1', book: { kind: 'MANGA', title: 'Vinland Saga', authors: 'Makoto Yukimura' } });
@@ -128,6 +135,34 @@ describe('CollectionPage', () => {
 
     expect(await screen.findByText('Pas encore ouvert')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Déjà fini')).not.toBeInTheDocument());
+  });
+
+  /** #552: the library is what has been read or is being read; the pile has its own screen. */
+  test('leaves the to-read pile out of the shelf', async () => {
+    libraryReturns([
+      libraryItem({ id: 'held', status: 'TO_READ', book: { kind: 'BOOK', title: 'Pas encore ouvert' } }),
+      libraryItem({ id: 'done', status: 'READ', book: { kind: 'BOOK', title: 'Déjà fini' } }),
+      libraryItem({ id: 'going', status: 'READING', book: { kind: 'BOOK', title: 'En cours' } }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+
+    expect(await screen.findByText('Déjà fini')).toBeInTheDocument();
+    expect(screen.getByText('En cours')).toBeInTheDocument();
+    expect(screen.queryByText('Pas encore ouvert')).not.toBeInTheDocument();
+  });
+
+  /** #552: a run nothing of which has been read stays on the pile; one started shows whole. */
+  test('leaves out a series none of whose volumes has been read', async () => {
+    libraryReturns([ONE_SHOT]);
+    seriesReturns([
+      seriesSummary({ id: 'started', title: 'Commencée', readCount: 1 }),
+      seriesSummary({ id: 'untouched', title: 'Jamais ouverte', readCount: 0 }),
+    ]);
+    renderWithProviders(<CollectionPage />);
+    await openMangaShelf();
+
+    expect(await screen.findByText('Commencée')).toBeInTheDocument();
+    expect(screen.queryByText('Jamais ouverte')).not.toBeInTheDocument();
   });
 
   /** By latest activity, a series read last week comes before a one-shot added years ago. */

@@ -127,6 +127,11 @@ ce que tu as noté 4 ou plus.
 
 La liste se charge **toute seule** en descendant : plus besoin d'appuyer sur « Voir plus ».
 
+La bibliothèque montre ce que tu **as lu ou lis** : un titre encore dans ta **pile à lire**
+n'y apparaît pas — il est sur l'écran « À lire », et sur l'étagère « Pile à lire ». Une
+série dont tu n'as lu **aucun** tome reste elle aussi dans la pile ; dès qu'un tome est lu,
+la série entière revient dans la bibliothèque.
+
 ### Modifier plusieurs titres d'un coup
 
 « **Sélectionner** », dans la bibliothèque, la pile à lire ou la page d'une série, te laisse

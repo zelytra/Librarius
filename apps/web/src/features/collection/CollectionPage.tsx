@@ -337,6 +337,8 @@ function CollectionContent() {
     view: sortBy === 'manual' ? activeView?.id : undefined,
     // Grouped, the volumes of a run are drawn as its series block: only the one-shots remain.
     standalone: grouped || undefined,
+    // The pile has its own screen (#552): it stays off every shelf but its own.
+    hideToRead: shelfFilter.kind === 'toRead' ? undefined : true,
   };
 
   const {
@@ -391,8 +393,9 @@ function CollectionContent() {
     () =>
       grouped
         ? filterSeries(allSeries, { kind: collType, search, sort: 'title' }).filter(
-            // A series only followed, with nothing of it on the shelf, is not in the collection.
-            (s) => (s.ownedCount ?? 0) > 0,
+            // A series only followed, with nothing of it on the shelf, is not in the collection;
+            // nor is one nothing of which has been read yet — it is still on the pile (#552).
+            (s) => (s.ownedCount ?? 0) > 0 && (s.readCount ?? 0) > 0,
           )
         : [],
     [allSeries, collType, search, grouped],

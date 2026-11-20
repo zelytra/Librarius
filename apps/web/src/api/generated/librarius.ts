@@ -1229,6 +1229,7 @@ export type DeleteApiGoalsYearParams = {
 export type GetApiLibraryParams = {
   format?: BookFormat;
   genre?: string;
+  hideToRead?: boolean;
   kind?: Kind;
   minRating?: number;
   ownership?: Ownership;

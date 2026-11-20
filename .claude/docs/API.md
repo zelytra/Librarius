@@ -986,6 +986,7 @@ downloading the collection.
 | `rank` | — | collection | Rank category code (`or`, `argent`, `bronze`, `abandon` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |
+| `hideToRead` | `false` | collection | Leaves the to-read pile out (#552): a `TO_READ` title is returned only when the caller has read another volume of its series. The library shelf sends it on every shelf but « Pile à lire »; it also leaves out of the grouped shelf a series with `readCount` 0 |
 | `priority` | — | wishlist | `PRIORITY` \| `SOON` \| `SOMEDAY` |
 | `q` | — | both | Free text, case-insensitive, matched against the title, the authors and the series. `%` and `_` typed by the user are searched literally |
 

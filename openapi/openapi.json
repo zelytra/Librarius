@@ -1613,6 +1613,13 @@
             "type" : "string"
           }
         }, {
+          "name" : "hideToRead",
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "name" : "kind",
           "in" : "query",
           "schema" : {

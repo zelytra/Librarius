@@ -235,10 +235,19 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * @param search    free text matched against the title, the authors and the series
      * @param standalone keep only the titles that belong to no series — the one-shots the
      *                  grouped shelf lists beside its series blocks
+     * @param hideToRead leave the to-read pile out (#552): a to-read title, unless the reader
+     *                  has read another volume of its series
      */
     public record LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
             String genre, Integer minRating, String search, boolean standalone,
-            zelytra.librarius.domain.Ownership ownership, zelytra.librarius.domain.BookFormat format) {
+            zelytra.librarius.domain.Ownership ownership, zelytra.librarius.domain.BookFormat format,
+            boolean hideToRead) {
+
+        public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
+                String genre, Integer minRating, String search, boolean standalone,
+                zelytra.librarius.domain.Ownership ownership, zelytra.librarius.domain.BookFormat format) {
+            this(userId, kind, status, rank, genre, minRating, search, standalone, ownership, format, false);
+        }
 
         public LibraryFilter(String userId, Kind kind, LibraryStatus status, String rank,
                 String genre, Integer minRating, String search, boolean standalone,
@@ -374,6 +383,15 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
         }
         if (filter.standalone()) {
             clauses.add("w.series is null");
+        }
+        if (filter.hideToRead()) {
+            // A run the reader has started reading stays whole on the shelf; only a pile
+            // nothing of which has been read yet is left to the to-read screen.
+            clauses.add("not (li.status = :pileStatus and (w.series is null or not exists ("
+                    + "select 1 from LibraryItem rli join rli.edition red join red.work rwk"
+                    + " where rli.userId = :userId and rwk.series = w.series and rli.status = :readStatus)))");
+            params.put("pileStatus", LibraryStatus.TO_READ);
+            params.put("readStatus", LibraryStatus.READ);
         }
         if (filter.ownership() != null) {
             clauses.add("li.ownership = :ownership");
