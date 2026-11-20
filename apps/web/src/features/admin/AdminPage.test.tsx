@@ -203,6 +203,16 @@ describe('AdminPage', () => {
       expect(within(bob).getByText(/12 titres/)).toBeInTheDocument();
     });
 
+    /** #562: a member opens their profile. */
+    test("opens a member's profile from the list", async () => {
+      meIs(true);
+      server.use(http.get('*/api/admin/users', () => HttpResponse.json(USERS)));
+      renderWithProviders(<AdminPage />, { route: '/admin?tab=users' });
+
+      expect(await screen.findByRole('link', { name: /Bob Lecteur/ })).toHaveAttribute('href', '/people/u-bob');
+      expect(screen.getByRole('link', { name: /Ève/ })).toHaveAttribute('href', '/people/u-eve');
+    });
+
     test('deletes a member once their username is typed, and says so', async () => {
       meIs(true);
       let deleted = '';

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -72,15 +73,18 @@ export function AdminUsers() {
               const name = user.displayName ?? user.username ?? '—';
               return (
                 <li key={user.id} className={styles.user}>
-                  <Avatar id={user.id} name={name} version={user.avatarVersion} size={44} decorative />
-                  <span className={styles.userText}>
-                    <span className={styles.userName}>{name}</span>
-                    {user.username && <span className={styles.meta}>{t('admin.users.handle', { username: user.username })}</span>}
-                    <span className={styles.meta}>
-                      {[t('admin.users.since', { date: day(user.createdAt) }), t('admin.users.titles', { count: user.libraryItems ?? 0 })]
-                        .join(' · ')}
+                  {/* The member's profile, one tap away (#562). */}
+                  <Link to={`/people/${user.id}`} className={styles.userLink}>
+                    <Avatar id={user.id} name={name} version={user.avatarVersion} size={44} decorative />
+                    <span className={styles.userText}>
+                      <span className={styles.userName}>{name}</span>
+                      {user.username && <span className={styles.meta}>{t('admin.users.handle', { username: user.username })}</span>}
+                      <span className={styles.meta}>
+                        {[t('admin.users.since', { date: day(user.createdAt) }), t('admin.users.titles', { count: user.libraryItems ?? 0 })]
+                          .join(' · ')}
+                      </span>
                     </span>
-                  </span>
+                  </Link>
                   <Button
                     variant="secondary"
                     size="compact"
