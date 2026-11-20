@@ -4608,6 +4608,9 @@
           },
           "listPriceCurrency" : {
             "type" : "string"
+          },
+          "releaseDate" : {
+            "$ref" : "#/components/schemas/LocalDate"
           }
         }
       },

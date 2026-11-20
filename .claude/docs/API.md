@@ -55,7 +55,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
 | PUT | `/api/library/{id}/edition` | "This is the edition I own" (`EditionSwitchDto`) — see [Editions](#editions) |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
-| GET | `/api/works/{id}/editions` | Known editions of a work (`EditionDto`), the caller's own flagged `owned` |
+| GET | `/api/works/{id}/editions` | Known editions of a work (`EditionDto`), the caller's own flagged `owned`. A stored edition with no `releaseDate` takes the date of the provider's printing of the same ISBN, and keeps it (#568: search results carry none); `BookView.releaseDate` then shows it |
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist, with the budget of the whole filtered set (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | PUT | `/api/wishlist/{id}` | Replaces the priority, the estimated price and the note (`WishlistUpdateDto`) |

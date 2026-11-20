@@ -235,8 +235,11 @@ public final class ApiDtos {
             String genres,
             boolean pageCountEstimated,
             BigDecimal listPrice,
-            String listPriceCurrency) {
+            String listPriceCurrency,
+            LocalDate releaseDate) {
         /**
+         * {@code releaseDate} is the edition's (#568), filled from the provider's printing of the
+         * same ISBN when the title was added without one.
          * {@code pageCount} is the length every figure uses: the real count, else the estimate
          * of #414, which {@code pageCountEstimated} flags so a screen can print it with "≈".
          * {@code listPrice} is the publisher's price of a new copy (#421), when known.
@@ -248,7 +251,7 @@ public final class ApiDtos {
             return new BookView(e.id, w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
                     w.volumeNumber, e.coverUrl, e.effectivePageCount(), e.publisher, e.language,
                     e.isbn13, w.originalYear, w.synopsis, w.genresText, e.pageCountEstimated(),
-                    e.listPrice, e.listPriceCurrency);
+                    e.listPrice, e.listPriceCurrency, e.releaseDate);
         }
     }
 

@@ -3157,6 +3157,8 @@ components:
           type: number
         listPriceCurrency:
           type: string
+        releaseDate:
+          $ref: "#/components/schemas/LocalDate"
     BreakdownCountDto:
       type: object
       properties:

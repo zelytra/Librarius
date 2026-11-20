@@ -148,6 +148,8 @@ export const BookFormat = {
   BOX_SET: 'BOX_SET',
 } as const;
 
+export type LocalDate = string;
+
 export interface BookView {
   editionId?: Uuid;
   workId?: Uuid;
@@ -167,6 +169,7 @@ export interface BookView {
   pageCountEstimated?: boolean;
   listPrice?: number;
   listPriceCurrency?: string;
+  releaseDate?: LocalDate;
 }
 
 export interface BreakdownCountDto {
@@ -240,8 +243,6 @@ export interface BulkUpdateDto {
   clearRating?: boolean;
   remove?: boolean;
 }
-
-export type LocalDate = string;
 
 export interface CatalogResult {
   kind?: string;
