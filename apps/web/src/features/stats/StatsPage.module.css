@@ -136,6 +136,11 @@
   margin: 0;
 }
 
+/* The achievements' summary sits between the XP bar and the button: room on both sides (#559). */
+.achievementsSummary {
+  margin: 10px 0 16px;
+}
+
 .genres {
   display: flex;
   flex-direction: column;

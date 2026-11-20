@@ -235,8 +235,11 @@ public final class ApiDtos {
             String genres,
             boolean pageCountEstimated,
             BigDecimal listPrice,
-            String listPriceCurrency) {
+            String listPriceCurrency,
+            LocalDate releaseDate) {
         /**
+         * {@code releaseDate} is the edition's (#568), filled from the provider's printing of the
+         * same ISBN when the title was added without one.
          * {@code pageCount} is the length every figure uses: the real count, else the estimate
          * of #414, which {@code pageCountEstimated} flags so a screen can print it with "≈".
          * {@code listPrice} is the publisher's price of a new copy (#421), when known.
@@ -248,7 +251,7 @@ public final class ApiDtos {
             return new BookView(e.id, w.id, w.kind.name(), w.title, w.authorsText, w.seriesTitle,
                     w.volumeNumber, e.coverUrl, e.effectivePageCount(), e.publisher, e.language,
                     e.isbn13, w.originalYear, w.synopsis, w.genresText, e.pageCountEstimated(),
-                    e.listPrice, e.listPriceCurrency);
+                    e.listPrice, e.listPriceCurrency, e.releaseDate);
         }
     }
 
@@ -367,6 +370,10 @@ public final class ApiDtos {
     public record FormatDto(zelytra.librarius.domain.BookFormat format) {
     }
 
+    /** The language of the reader's copy (#566): an ISO 639-1 or -2 code in lower case, null clears it. */
+    public record LanguageDto(@jakarta.validation.constraints.Pattern(regexp = "[a-z]{2,3}") String language) {
+    }
+
     /**
      * An edition the reader picks for their title (#445) that is not a row yet: a provider's
      * printing, or one they describe by hand. It is created under the title's own work.
@@ -436,14 +443,14 @@ public final class ApiDtos {
     public record LibraryItemDto(UUID id, String status, Double rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
             boolean reviewShared, String ownership, BigDecimal price, Integer pageCount,
-            String format) {
+            String format, String language) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
                     it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price,
-                    it.pageCount, it.format != null ? it.format.name() : null);
+                    it.pageCount, it.format != null ? it.format.name() : null, it.language);
         }
     }
 
@@ -1028,7 +1035,7 @@ public final class ApiDtos {
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Double rating, String review, LocalDate acquiredAt,
             String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price,
-            Integer pageCount, zelytra.librarius.domain.BookFormat format) {
+            Integer pageCount, zelytra.librarius.domain.BookFormat format, String language) {
     }
 
     /** One wish, with the note the user attached to it. */
@@ -1288,9 +1295,10 @@ public final class ApiDtos {
      * ({@code rating} and {@code review} are then the shared ones). {@code reactions} counts each
      * emote; {@code myReaction} is the caller's, null when none.
      */
+    /** {@code readingDays}: how long a finished book was read, null without a start date (#569). */
     public record FeedItemDto(UUID id, String type, java.time.OffsetDateTime createdAt, MemberSummaryDto actor,
             MemberBookDto book, Double rating, String review, java.util.Map<String, Long> reactions,
-            String myReaction, java.util.List<FeedCommentDto> comments) {
+            String myReaction, java.util.List<FeedCommentDto> comments, Integer readingDays) {
     }
 
     public record FeedCommentDto(UUID id, MemberSummaryDto author, String comment,

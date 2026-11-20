@@ -210,3 +210,10 @@
   opacity: 0.45;
   cursor: default;
 }
+
+/* #569: the reading time of a finished book, under its title. */
+.readingTime {
+  display: block;
+  font-size: var(--fs-12);
+  color: var(--muted);
+}

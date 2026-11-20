@@ -151,6 +151,8 @@ function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
       setChosen(status);
       toast.success(t(`admin.status.saved.${status}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackIdQueryKey(id) });
+      // The lists, and the navigation's count of unread reports with them (#565).
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackQueryKey().slice(0, 1) });
     } catch {
       toast.error(t('admin.status.failed'));
     } finally {

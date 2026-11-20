@@ -146,10 +146,27 @@ button.day:focus-visible {
 
 .item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
+}
+
+/* #567: a small cover beside each reading, a book's 2:3. */
+.itemCover {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: var(--shadow-swatch);
+}
+
+.itemText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .itemTitle {

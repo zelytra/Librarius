@@ -107,6 +107,52 @@ class EditionEnrichmentApiTest {
     }
 
     /**
+     * #568: a title added from a search result carries no release date — Open Library's search
+     * gives one date per printing of the whole work, BnF only a year. The provider's printing
+     * with the same ISBN knows it: the stored edition takes the date from it, and keeps it.
+     */
+    @Test
+    void theStoredEditionTakesItsReleaseDateFromTheProvidersPrintingOfTheSameIsbn() {
+        Mockito.when(catalog.editionsOf(anyString(), anyString(), anyInt())).thenReturn(List.of(
+                new CatalogResult("BOOK", null, null, null, null, null, "9781111111148", "Pocket",
+                        "fr", java.time.LocalDate.of(2011, 9, 1), null, null, 662, "openlibrary", "OL7M"),
+                new CatalogResult("BOOK", null, null, null, null, null, "9780000000031", "Other",
+                        "en", java.time.LocalDate.of(2007, 3, 27), null, null, null, "openlibrary", "OL8M")));
+
+        String item = add("alice", "Enrichissement - date", "openlibrary", "OL45809W", "9781111111148");
+        given().auth().oauth2(token("alice")).when().get("/api/library/" + item)
+                .then().body("book.releaseDate", nullValue());
+
+        editions("alice", item).then()
+                .body("find { it.owned }.releaseDate", is("2011-09-01"))
+                // The other printing keeps its own date, and is not mistaken for the reader's.
+                .body("find { it.publisher == 'Other' }.releaseDate", is("2007-03-27"));
+
+        // Stored, not only shown: the book itself now says when it came out.
+        Mockito.when(catalog.editionsOf(anyString(), anyString(), anyInt())).thenReturn(List.of());
+        given().auth().oauth2(token("alice")).when().get("/api/library/" + item)
+                .then().body("book.releaseDate", is("2011-09-01"));
+    }
+
+    /** A date the stored edition already has is never overwritten by a provider's. */
+    @Test
+    void aStoredReleaseDateIsKept() {
+        Mockito.when(catalog.editionsOf(anyString(), anyString(), anyInt())).thenReturn(List.of(
+                new CatalogResult("BOOK", null, null, null, null, null, "9781111111155", "Pocket",
+                        "fr", java.time.LocalDate.of(1999, 1, 1), null, null, null, "openlibrary", "OL9M")));
+        String item = given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "BOOK", "title": "Enrichissement - date gardée", "authors": "%s",
+                                    "isbn13": "9781111111155", "releaseDate": "2012-05-02",
+                                    "provider": "openlibrary", "providerRef": "OL45810W" },
+                          "status": "TO_READ" }
+                        """.formatted(AUTHOR))
+                .when().post("/api/library").then().statusCode(201).extract().path("id");
+
+        editions("alice", item).then().body("find { it.owned }.releaseDate", is("2012-05-02"));
+    }
+
+    /**
      * #480: each printing carries what tells it apart — its length and its date — and the
      * list leads with the reader's own, then the French printings, then those with a cover.
      */

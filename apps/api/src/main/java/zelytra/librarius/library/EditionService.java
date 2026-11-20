@@ -193,10 +193,39 @@ public class EditionService {
                 seen.add("isbn:" + isbn);
             }
         }
+        fillReleaseDates(stored, fromProvider, result);
         for (CatalogResult candidate : fromProvider) {
             if (seen.add(dedupKey(candidate))) {
                 result.add(providerEdition(candidate));
             }
+        }
+    }
+
+    /**
+     * #568: a title added from a search result has no release date — Open Library's search
+     * answers one date per printing of the whole work, BnF a year at most. The provider's
+     * printing of the same ISBN does know it: a stored edition with none takes it, in a
+     * transaction of its own so the provider call above held no connection. A date already
+     * stored is never replaced.
+     */
+    private void fillReleaseDates(List<Edition> stored, List<CatalogResult> fromProvider, List<EditionDto> result) {
+        java.util.Map<String, java.time.LocalDate> dated = new java.util.HashMap<>();
+        for (CatalogResult candidate : fromProvider) {
+            String isbn = normalizeIsbn(candidate.isbn13());
+            if (isbn != null && candidate.releaseDate() != null) {
+                dated.putIfAbsent(isbn, candidate.releaseDate());
+            }
+        }
+        for (Edition edition : stored) {
+            String isbn = normalizeIsbn(edition.isbn13);
+            java.time.LocalDate date = isbn == null ? null : dated.get(isbn);
+            if (edition.releaseDate != null || date == null) {
+                continue;
+            }
+            io.quarkus.narayana.jta.QuarkusTransaction.requiringNew().run(() ->
+                    editions.update("releaseDate = ?1 where id = ?2 and releaseDate is null", date, edition.id));
+            edition.releaseDate = date;
+            result.replaceAll(dto -> edition.id.equals(dto.id()) ? EditionDto.of(edition, dto.owned()) : dto);
         }
     }
 

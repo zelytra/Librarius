@@ -15,9 +15,10 @@ export default defineConfig({
     // a test. `tokens.css` for `shared/ui/breakpoints.test.ts`, which checks that the
     // breakpoints declared in CSS and in TypeScript still agree; `global.css` for
     // `global.test.ts`; the shell's two stylesheets for `app/safeAreas.test.ts`, which
-    // checks that the frame and the bottom bar still hold the system bars off (#529).
+    // checks that the frame and the bottom bar still hold the system bars off (#529);
+    // `AdminPage.module.css` for `features/admin/reportScroll.test.ts` (#564).
     css: {
-      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/],
+      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/],
     },
   },
 });

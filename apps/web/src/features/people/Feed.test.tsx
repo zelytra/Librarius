@@ -72,6 +72,17 @@ describe('Feed', () => {
     expect(within(wish).getByText(/a ajouté à ses souhaits/)).toBeInTheDocument();
   });
 
+  /** #569: a finished book says how long it was read, when the reading had a start. */
+  test('tells how long a finished book was read, and nothing without a start date', async () => {
+    feedIs([{ ...FINISHED, readingDays: 12 }, { ...FINISHED, id: 'ev9', book: book('Akira'), readingDays: undefined }]);
+    renderFeed();
+
+    const timed = (await screen.findByText('Dune')).closest('article')!;
+    expect(within(timed).getByText('Lu en 12 jours')).toBeInTheDocument();
+    const bare = screen.getByText('Akira').closest('article')!;
+    expect(within(bare).queryByText(/Lu en/)).not.toBeInTheDocument();
+  });
+
   test('says what to do when there is nothing yet', async () => {
     feedIs([]);
     renderFeed();

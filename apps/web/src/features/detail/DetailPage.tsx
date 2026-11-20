@@ -27,6 +27,7 @@ import {
   usePutApiLibraryIdPrice,
   usePutApiLibraryIdPages,
   usePutApiLibraryIdFormat,
+  usePutApiLibraryIdLanguage,
   usePutApiLibraryIdKind,
   usePostApiLibraryIdEdition,
   type EditionChoiceDto,
@@ -48,6 +49,7 @@ import { StarRating } from './StarRating';
 import { ReadersReviews } from '../reviews/ReadersReviews';
 import { FriendsOnWork } from '../reviews/FriendsOnWork';
 import { ExternalRatings } from '../reviews/ExternalOpinions';
+import { ReadingLanguage } from './ReadingLanguage';
 import styles from './DetailPage.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 import { StatusPicker } from '../../shared/ui/StatusPicker';
@@ -850,6 +852,15 @@ function DetailContent({ id }: { id: string }) {
       onError: failed,
     },
   });
+  const { mutate: mutateLanguage, isPending: languageSaving } = usePutApiLibraryIdLanguage({
+    mutation: {
+      onSuccess: () => {
+        toast.success(t('toasts.language'), 'translate');
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
   const { mutate: mutateKind, isPending: kindSaving } = usePutApiLibraryIdKind({
     mutation: {
       onSuccess: (_data, { data }) => {
@@ -1118,6 +1129,11 @@ function DetailContent({ id }: { id: string }) {
             kind={b.kind as BookKind}
             onKind={(kind) => mutateKind({ id, data: { kind } })}
             disabled={progressSaving || ownershipSaving || formatSaving || kindSaving}
+          />
+          <ReadingLanguage
+            value={item.language ?? null}
+            disabled={languageSaving}
+            onChange={(language) => mutateLanguage({ id, data: language ? { language } : {} })}
           />
         </section>
 

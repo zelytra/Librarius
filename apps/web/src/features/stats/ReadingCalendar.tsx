@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useGetApiStatsReadings, type ReadingSpanDto } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
 import { Icon } from '../../shared/ui/Icon';
+import { colorFor } from '../../shared/ui/coverPalette';
 import styles from './ReadingCalendar.module.css';
 
 /** `YYYY-MM-DD` of a UTC date — the calendar works in plain dates, never in time zones. */
@@ -136,8 +137,21 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
         <ul className={styles.list}>
           {shown.map((r) => (
             <li key={r.itemId} className={styles.item}>
-              <span className={styles.itemTitle}>{r.title}</span>
-              <span className={styles.itemSpan}>{span(r)}</span>
+              {/* The cover beside each reading (#567): decorative, the title says what it is. */}
+              {r.coverUrl ? (
+                <img
+                  className={styles.itemCover}
+                  src={r.coverUrl}
+                  // eslint-disable-next-line no-restricted-syntax -- empty alt, not user-facing text
+                  alt=""
+                />
+              ) : (
+                <span className={styles.itemCover} style={{ background: colorFor(r.title ?? r.itemId ?? '') }} data-cover aria-hidden="true" />
+              )}
+              <span className={styles.itemText}>
+                <span className={styles.itemTitle}>{r.title}</span>
+                <span className={styles.itemSpan}>{span(r)}</span>
+              </span>
             </li>
           ))}
         </ul>

@@ -380,3 +380,30 @@
   font-size: var(--fs-13);
   color: var(--ink-soft);
 }
+
+/* #564: one scroll on a phone. A log scrolling inside a dialog that scrolls too caught every
+   swipe landing on it, and the rest of the report was out of reach. Long lines still wrap. */
+@media (max-width: 599px) {
+  .logs {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* #562: the member's picture and name lead to their profile. */
+.userLink {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.userLink:hover .userName,
+.userLink:focus-visible .userName {
+  text-decoration: underline;
+}

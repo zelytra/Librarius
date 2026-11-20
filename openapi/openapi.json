@@ -2041,6 +2041,52 @@
         } ]
       }
     },
+    "/api/library/{id}/language" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LanguageDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Language",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/library/{id}/ownership" : {
       "put" : {
         "parameters" : [ {
@@ -4562,6 +4608,9 @@
           },
           "listPriceCurrency" : {
             "type" : "string"
+          },
+          "releaseDate" : {
+            "$ref" : "#/components/schemas/LocalDate"
           }
         }
       },
@@ -4979,6 +5028,9 @@
           },
           "format" : {
             "$ref" : "#/components/schemas/BookFormat"
+          },
+          "language" : {
+            "type" : "string"
           }
         }
       },
@@ -5229,6 +5281,10 @@
             "items" : {
               "$ref" : "#/components/schemas/FeedCommentDto"
             }
+          },
+          "readingDays" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -5626,6 +5682,15 @@
           }
         }
       },
+      "LanguageDto" : {
+        "type" : "object",
+        "properties" : {
+          "language" : {
+            "type" : "string",
+            "pattern" : "[a-z]{2,3}"
+          }
+        }
+      },
       "LibraryCreateDto" : {
         "type" : "object",
         "required" : [ "book" ],
@@ -5693,6 +5758,9 @@
             "format" : "int32"
           },
           "format" : {
+            "type" : "string"
+          },
+          "language" : {
             "type" : "string"
           }
         }

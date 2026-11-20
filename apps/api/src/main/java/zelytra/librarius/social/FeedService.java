@@ -120,12 +120,14 @@ public class FeedService {
     private static final String SELECT_EVENTS = """
             select fe.id, fe.type, fe.created_at, u.id as uid, u.display_name, u.trusted,
                    e.id as eid, w.id as wid, w.kind, w.title, w.authors, e.cover_url,
-                   li.rating, li.review, li.review_shared, u.avatar_version
+                   li.rating, li.review, li.review_shared, u.avatar_version,
+                   p.started_at, p.finished_at
             from feed_event fe
               join app_user u on u.id = fe.user_id
               join edition e on e.id = fe.edition_id
               join work w on w.id = e.work_id
               left join library_item li on li.user_id = fe.user_id and li.edition_id = fe.edition_id
+              left join reading_progress p on p.library_item_id = li.id
             """;
 
     /** A review event whose review is no longer shared, or empty, is gone with it. */
@@ -152,7 +154,8 @@ public class FeedService {
                     new MemberSummaryDto((String) row[3], (String) row[4], Boolean.TRUE.equals(row[5]), toLong(row[15])),
                     MemberBookDto.of(em.find(Edition.class, row[6]), myItems.get((UUID) row[7])),
                     review ? toDouble(row[12]) : null, review ? (String) row[13] : null,
-                    reactions.getOrDefault(id, Map.of()), mine.get(id), comments.getOrDefault(id, List.of())));
+                    reactions.getOrDefault(id, Map.of()), mine.get(id), comments.getOrDefault(id, List.of()),
+                    Type.FINISHED_READING.name().equals(row[1]) ? readingDays(row[16], row[17]) : null));
         }
         return items;
     }
@@ -298,6 +301,30 @@ public class FeedService {
         }
         if (value instanceof java.sql.Timestamp ts) {
             return ts.toInstant().atOffset(java.time.ZoneOffset.UTC);
+        }
+        return null;
+    }
+
+    /**
+     * How long a finished book was read (#569): both days counted, as the reading sheet counts
+     * them; null without a start date — a book added as read has none — or when the dates
+     * contradict each other.
+     */
+    static Integer readingDays(Object startedAt, Object finishedAt) {
+        java.time.LocalDate start = toDate(startedAt);
+        java.time.LocalDate end = toDate(finishedAt);
+        if (start == null || end == null || end.isBefore(start)) {
+            return null;
+        }
+        return Math.toIntExact(java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1);
+    }
+
+    private static java.time.LocalDate toDate(Object value) {
+        if (value instanceof java.time.LocalDate date) {
+            return date;
+        }
+        if (value instanceof java.sql.Date date) {
+            return date.toLocalDate();
         }
         return null;
     }

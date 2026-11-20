@@ -132,7 +132,8 @@ public class ExportService {
                         item.ownership,
                         item.price,
                         item.pageCount,
-                        item.format))
+                        item.format,
+                        item.language))
                 .toList();
 
         List<ExportWishDto> wishlist = wishes.listForExport(userId).stream()

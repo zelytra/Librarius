@@ -109,7 +109,15 @@ export function FeedEvent({ item }: { item: FeedItemDto }) {
         </time>
       </p>
       <MemberBook book={item.book ?? { title }} coverWidth={48}
-        detail={item.rating != null ? <Stars value={item.rating} /> : null} />
+        detail={item.rating != null || item.readingDays != null ? (
+          <>
+            {item.rating != null && <Stars value={item.rating} />}
+            {/* How long it took (#569), when the reading had a start date. */}
+            {item.readingDays != null && (
+              <span className={styles.readingTime}>{t('feed.readingDays', { count: item.readingDays })}</span>
+            )}
+          </>
+        ) : null} />
       {item.review && <p className={styles.review}>{item.review}</p>}
       <Reactions item={item} />
       <Comments item={item} />

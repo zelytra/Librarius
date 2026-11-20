@@ -296,6 +296,9 @@ something as read — an existing collection carries no reading dates.
   (#560), which is how « set a goal » lands on `/settings/reading#goal`.
 - ✅ **Home layout** (#554): « Personnaliser l'accueil » lives in Appearance (it used to be a
   button in Home's header, which overflowed a phone, #542).
+- ✅ **Bottom bar** (#561): up to four pages picked among the navigation's, in its order,
+  kept in `localStorage` (`librarius.bottomBar`); the rest — and the profile (#555), the
+  administration (#556, with its unread-reports count, #565) and Settings — sit in « Plus ».
 - ✅ **Library opening shelf** (#545): automatic (the kind owned most) or a kind picked,
   kept in `localStorage` (`librarius.libraryKind`); a kind in the URL still wins.
 - ✅ **Replay the first-login tour** ([#76](https://github.com/zelytra/Librarius/issues/76)):

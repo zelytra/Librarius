@@ -85,6 +85,9 @@ public class LibraryItem {
     @Column(length = 16)
     public BookFormat format;
 
+    /** The language the reader read their copy in (#566, V43), an ISO 639 code; {@code null} when unsaid. */
+    public String language;
+
     /** The length the reader's figures use: theirs, else the edition's, else its estimate. */
     public Integer effectivePageCount() {
         if (pageCount != null) {

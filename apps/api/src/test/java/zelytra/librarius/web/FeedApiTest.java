@@ -79,6 +79,30 @@ class FeedApiTest {
         assertEquals(1, about("alice", title).size());
     }
 
+    /** #569: a finished book says how long it was read, when the reading has a start date. */
+    @Test
+    void aFinishedBookCarriesItsReadingTime() {
+        mutual("alice", "bob");
+        String timed = "Chronométré " + UUID.randomUUID();
+        String item = add("bob", timed, "TO_READ").getString("id");
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"status\": \"READING\", \"startedAt\": \"2026-01-01\" }")
+                .when().put("/api/library/" + item + "/progress").then().statusCode(204);
+        given().auth().oauth2(token("bob")).contentType("application/json")
+                .body("{ \"status\": \"READ\", \"startedAt\": \"2026-01-01\", \"finishedAt\": \"2026-01-10\" }")
+                .when().put("/api/library/" + item + "/progress").then().statusCode(204);
+
+        Map<String, Object> event = about("alice", timed).get(0);
+        assertEquals(10, event.get("readingDays"));
+
+        // Added straight as read, a book has no reading time to tell.
+        String instant = "Sans durée " + UUID.randomUUID();
+        add("bob", instant, "READ");
+        Map<String, Object> bare = about("alice", instant).stream()
+                .filter(e -> "FINISHED_READING".equals(e.get("type"))).findFirst().orElseThrow();
+        assertNull(bare.get("readingDays"));
+    }
+
     @Test
     void onlyWhoMayBeSeenReachesTheFeed() {
         String title = "Isolé " + UUID.randomUUID();

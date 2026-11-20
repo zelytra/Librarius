@@ -160,3 +160,42 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.anchor {
+  display: inline-flex;
+}
+
+/* #557: the Select action, kept in reach once the toolbar's button has scrolled away —
+   floating above the bottom bar like the selection bar it opens. */
+.floatingStart {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bottom-nav-height) + 16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 20;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-round);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+}
+
+.floatingStart:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* No bottom bar from --bp-tablet up (#172): the button sits at the foot of the page. */
+@media (min-width: 600px) {
+  .floatingStart {
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+}

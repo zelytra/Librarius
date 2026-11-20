@@ -5,6 +5,7 @@ import { http, HttpResponse, server } from '../test/server';
 import { renderWithProviders } from '../test/utils';
 import { resetAuth, setAuthenticated } from '../test/oidcMock';
 import { BottomNav } from './BottomNav';
+import { BOTTOM_BAR_STORAGE_KEY } from '../shared/bottomBar';
 import { SideNav } from './SideNav';
 
 vi.mock('react-oidc-context', () => import('../test/oidcMock'));
@@ -75,8 +76,10 @@ describe('the bottom bar on a phone', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
 
     const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    // The reader's own profile (#555) sits just above Settings.
+    await within(sheet).findByRole('link', { name: 'Mon profil · Bob' });
     expect(within(sheet).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
-      '/to-read', '/stats', '/people', '/notifications', '/settings',
+      '/to-read', '/stats', '/people', '/notifications', '/people/bob', '/settings',
     ]);
     expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('aria-expanded', 'true');
   });
@@ -106,5 +109,129 @@ describe('the bottom bar on a phone', () => {
     renderWithProviders(<BottomNav />, { route: '/stats' });
 
     expect(screen.getByRole('button', { name: 'Plus' })).toHaveAttribute('data-current', 'true');
+  });
+});
+
+/**
+ * #555, #556: the reader's own profile — their picture and name — and, for an admin, the
+ * administration both sit at the foot of the navigation, just above Settings.
+ */
+describe('the foot of the navigation', () => {
+  afterEach(() => resetAuth());
+
+  test('on a wide screen, ends on the administration, the profile and Settings', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
+    renderWithProviders(<SideNav />);
+
+    const profile = await screen.findByRole('link', { name: 'Mon profil · Alice' });
+    expect(profile).toHaveAttribute('href', '/people/alice');
+    expect(within(profile).getByText('Alice')).toBeInTheDocument();
+    const links = screen.getAllByRole('link').map((link) => link.getAttribute('href'));
+    expect(links.slice(-3)).toEqual(['/admin', '/people/alice', '/settings']);
+  });
+
+  test('on a phone, puts the administration and the profile just above Settings', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })));
+    renderWithProviders(<BottomNav />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+
+    const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    await within(sheet).findByRole('link', { name: 'Mon profil · Alice' });
+    const links = within(sheet).getAllByRole('link').map((link) => link.getAttribute('href'));
+    expect(links.slice(-3)).toEqual(['/admin', '/people/alice', '/settings']);
+  });
+
+  test('offers no profile to a signed-out visitor', () => {
+    setAuthenticated(false);
+    renderWithProviders(<SideNav />);
+
+    expect(screen.queryByRole('link', { name: /Mon profil/ })).not.toBeInTheDocument();
+  });
+});
+
+/** #565: an admin sees how many reports are still unread, on the Admin entry, like the bell. */
+describe('the unread reports', () => {
+  afterEach(() => resetAuth());
+
+  function reports(total: number) {
+    let asked = 0;
+    server.use(
+      http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })),
+      http.get('*/api/admin/feedback', ({ request }) => {
+        asked += 1;
+        expect(new URL(request.url).searchParams.get('status')).toBe('NEW');
+        return HttpResponse.json({ items: [], page: 0, size: 1, total });
+      }),
+    );
+    return () => asked;
+  }
+
+  test('are counted on the Admin entry of the side navigation', async () => {
+    reports(3);
+    renderWithProviders(<SideNav />);
+
+    expect(await screen.findByRole('link', { name: 'Admin, 3 signalements non lus' })).toHaveAttribute('href', '/admin');
+  });
+
+  test('are counted in the « Plus » sheet, and dot the button', async () => {
+    reports(2);
+    renderWithProviders(<BottomNav />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+
+    expect(await screen.findByRole('link', { name: 'Admin, 2 signalements non lus' })).toBeInTheDocument();
+  });
+
+  test('show nothing at zero', async () => {
+    reports(0);
+    renderWithProviders(<SideNav />);
+
+    expect(await screen.findByRole('link', { name: 'Admin' })).toBeInTheDocument();
+  });
+
+  test('are never asked for a member', async () => {
+    let asked = false;
+    server.use(
+      http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })),
+      http.get('*/api/admin/feedback', () => {
+        asked = true;
+        return HttpResponse.json({ items: [], total: 9 });
+      }),
+    );
+    renderWithProviders(<SideNav />);
+    await screen.findByRole('link', { name: 'Mon profil · Bob' });
+
+    expect(asked).toBe(false);
+  });
+});
+
+/** #561: the reader picks which pages the phone's bar shows; the others go to « Plus ». */
+describe('a bottom bar picked in Settings', () => {
+  afterEach(() => {
+    resetAuth();
+    localStorage.removeItem(BOTTOM_BAR_STORAGE_KEY);
+  });
+
+  test("shows the pages picked, in the navigation's order, the rest in « Plus »", async () => {
+    localStorage.setItem(BOTTOM_BAR_STORAGE_KEY, JSON.stringify(['/stats', '/', '/to-read']));
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })));
+    renderWithProviders(<BottomNav />);
+
+    const bar = screen.getByRole('navigation');
+    expect(within(bar).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/', '/to-read', '/stats']);
+    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
+    const sheet = screen.getByRole('dialog', { name: 'Plus' });
+    expect(within(sheet).getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute('href', '/collection');
+  });
+
+  test('ignores a stored pick it cannot use', () => {
+    localStorage.setItem(BOTTOM_BAR_STORAGE_KEY, JSON.stringify(['/nowhere']));
+    renderWithProviders(<BottomNav />);
+
+    const bar = screen.getByRole('navigation');
+    expect(within(bar).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      '/', '/collection', '/discover', '/wishlist',
+    ]);
   });
 });

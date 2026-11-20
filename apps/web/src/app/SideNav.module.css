@@ -76,3 +76,11 @@
   line-height: 20px;
   text-align: center;
 }
+
+/* The reader's own entry (#555): a long name is cut, never wraps the rail. */
+.profile .label {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

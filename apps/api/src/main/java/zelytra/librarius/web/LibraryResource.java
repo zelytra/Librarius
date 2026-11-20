@@ -302,6 +302,20 @@ public class LibraryResource {
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
+    /** The language the reader read their copy in (#566). Null clears it; a malformed code is a 400. */
+    @PUT
+    @Path("/{id}/language")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setLanguage(@PathParam("id") UUID id, @Valid zelytra.librarius.web.ApiDtos.LanguageDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        item.language = dto != null ? dto.language() : null;
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
     /**
      * Moves the title onto an edition that is not a row yet (#445) — a provider's printing, or
      * one the reader describes — created under the title's own work.

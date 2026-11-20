@@ -14,7 +14,11 @@
     "admin": "Admin",
     "people": "Lecteurs",
     "more": "Plus",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "profile": "Mon profil",
+    "profileOf": "Mon profil · {{name}}",
+    "adminUnread_one": "{{label}}, {{count}} signalement non lu",
+    "adminUnread_other": "{{label}}, {{count}} signalements non lus"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -838,7 +842,9 @@
       "set": "Saisir",
       "label": "Nombre de pages de ton exemplaire",
       "private": "Ce nombre n'est que pour toi : il compte dans tes pages lues, tes objectifs et ta progression, et ne change rien pour les autres lecteurs. Laisse vide pour revenir à celui de l'édition."
-    }
+    },
+    "readingLanguage": "Langue de lecture",
+    "readingLanguageUnset": "Non précisée"
   },
   "settings": {
     "title": "Réglages",
@@ -1010,7 +1016,11 @@
       "sampleReview": "On ne voit bien qu'avec le cœur."
     },
     "theme": "Thème",
-    "findReaders": "Trouver des lecteurs"
+    "findReaders": "Trouver des lecteurs",
+    "bottomBar": {
+      "title": "Barre du bas (téléphone)",
+      "description": "Choisis jusqu'à {{max}} pages pour la barre du bas ; les autres restent dans « Plus »."
+    }
   },
   "report": {
     "trigger": "Signaler une erreur",
@@ -1273,7 +1283,8 @@
     "pages_one": "{{count}} page enregistrée",
     "pages_other": "{{count}} pages enregistrées",
     "pagesCleared": "Retour au nombre de pages de l'édition",
-    "kind": "Rangé dans : {{kind}}"
+    "kind": "Rangé dans : {{kind}}",
+    "language": "Langue de lecture enregistrée"
   },
   "achievements": {
     "title": "Succès",
@@ -1683,7 +1694,9 @@
     "commentDeleted": "Commentaire supprimé.",
     "deleteComment": "Supprimer mon commentaire",
     "releases": "Sorties à venir",
-    "reaction": "{{emote}} ({{count}})"
+    "reaction": "{{emote}} ({{count}})",
+    "readingDays_one": "Lu en {{count}} jour",
+    "readingDays_other": "Lu en {{count}} jours"
   },
   "notifications": {
     "title": "Notifications",

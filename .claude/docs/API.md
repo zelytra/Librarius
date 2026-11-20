@@ -45,6 +45,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/works/{id}/friends` | People the caller follows who read, own or wish for the title (`FriendOnWorkDto`), each through `VisibilityGate`; same work, or a work with the same title and authors; rating only when shared (#452) |
 | GET | `/api/works/{id}/external` | Other communities' ratings (`ExternalRatingDto`): Open Library by work key or ISBN, AniList for a manga by id or exact title; credited, linked, cached 12 h (#453) |
 | GET | `/api/authors/{id}/external` | The opening of the author's French Wikipedia article (`ExternalAuthorDto`, CC BY-SA 4.0), zero or one; a disambiguation page gives none (#453) |
+| PUT | `/api/library/{id}/language` | The language the copy was read in (`LanguageDto(language)`, `[a-z]{2,3}`, 400 otherwise; null clears it) (#566); `LibraryItemDto.language` carries it |
 | PUT | `/api/library/{id}/format` | The format of the copy (`FormatDto`, null clears it) (#447); `GET /api/library?format=` filters on it |
 | POST | `/api/library/{id}/edition` | Moves the title onto an edition that is not a row yet (`EditionChoiceDto`): a provider's printing or one described by hand, created under the title's work; a known ISBN reuses that edition (#445) |
 | PUT | `/api/library/{id}/price` | The reader's own price (`PriceDto`, null clears it, ≥ 0) — private, the edition's market price untouched (#431); `LibraryItemDto.price` |
@@ -54,7 +55,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
 | PUT | `/api/library/{id}/edition` | "This is the edition I own" (`EditionSwitchDto`) — see [Editions](#editions) |
 | DELETE | `/api/library/{id}` | Removes a title from the collection |
-| GET | `/api/works/{id}/editions` | Known editions of a work (`EditionDto`), the caller's own flagged `owned` |
+| GET | `/api/works/{id}/editions` | Known editions of a work (`EditionDto`), the caller's own flagged `owned`. A stored edition with no `releaseDate` takes the date of the provider's printing of the same ISBN, and keeps it (#568: search results carry none); `BookView.releaseDate` then shows it |
 | GET | `/api/wishlist?page=&size=&sort=&kind=&priority=&q=` | One page of the wishlist, with the budget of the whole filtered set (`WishlistPageDto`) |
 | POST | `/api/wishlist` | Adds a wish (`WishlistCreateDto`) |
 | PUT | `/api/wishlist/{id}` | Replaces the priority, the estimated price and the note (`WishlistUpdateDto`) |
@@ -1057,7 +1058,7 @@ most once a minute per member; a write that finds no `app_user` yet is retried n
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)])`. Actors = the caller themself (#511) and their followees that pass `VisibilityGate.canView`; `book` is a `MemberBookDto` (#513: catalog fields, `myItemId` from `LibraryItemRepository.itemIdsByWork`); a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
+| GET | `/api/feed?page=&size=` | `FeedPageDto(items, page, size, hasMore)` of `FeedItemDto(id, type, createdAt, actor, book, rating, review, reactions{emote→count}, myReaction, comments[FeedCommentDto(id, author, comment, createdAt, mine)], readingDays)`. `readingDays` (#569) is how long a `FINISHED_READING` book was read, both days counted, from the actor's `reading_progress` — null without a start date. Actors = the caller themself (#511) and their followees that pass `VisibilityGate.canView`; `book` is a `MemberBookDto` (#513: catalog fields, `myItemId` from `LibraryItemRepository.itemIdsByWork`); a `REVIEW_SHARED` event whose review is no longer shared drops out; comments by anyone a block stands between with the caller are left out |
 | PUT | `/api/feed/{eventId}/reaction` | `FeedReactionDto(emote LOVE\|FUNNY\|WOW\|CLAP\|SAD)` → 204, upsert on `(feed_event_id, user_id)`; 404 when the event's author is not visible to the caller |
 | DELETE | `/api/feed/{eventId}/reaction` | 204; 404 as above |
 | POST | `/api/feed/{eventId}/comments` | `FeedCommentCreateDto(comment ≤2000, not blank)` → 201 `FeedCommentCreatedDto(id)`; 404 as above |

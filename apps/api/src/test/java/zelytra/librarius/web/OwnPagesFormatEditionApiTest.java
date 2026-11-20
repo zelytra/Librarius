@@ -79,6 +79,38 @@ class OwnPagesFormatEditionApiTest {
                 .then().statusCode(200).body("format", nullValue());
     }
 
+    /** #566: the language the reader read their copy in, set, refused when malformed, cleared. */
+    @Test
+    void theLanguageOfTheCopyIsSetAndCleared() {
+        String id = (String) add("bob", """
+                { "book": { "kind": "MANGA", "title": "Own language %s" } }
+                """.formatted(UUID.randomUUID())).get("id");
+        given().auth().oauth2(token("bob")).when().get("/api/library/" + id)
+                .then().body("language", nullValue());
+
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"language\": \"ja\" }")
+                .when().put("/api/library/" + id + "/language")
+                .then().statusCode(200).body("language", is("ja"));
+        given().auth().oauth2(token("bob")).when().get("/api/library/" + id)
+                .then().body("language", is("ja"));
+
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"language\": \"japonais\" }")
+                .when().put("/api/library/" + id + "/language").then().statusCode(400);
+
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{}")
+                .when().put("/api/library/" + id + "/language")
+                .then().statusCode(200).body("language", nullValue());
+    }
+
+    @Test
+    void anotherReadersCopyHasNoLanguageToSet() {
+        String id = (String) add("bob", """
+                { "book": { "kind": "BOOK", "title": "Not yours %s" } }
+                """.formatted(UUID.randomUUID())).get("id");
+        given().auth().oauth2(token("alice")).contentType("application/json").body("{ \"language\": \"fr\" }")
+                .when().put("/api/library/" + id + "/language").then().statusCode(404);
+    }
+
     @Test
     void aProviderEditionBecomesTheTitlesEditionUnderTheSameWork() {
         Map<String, Object> item = add("bob", """

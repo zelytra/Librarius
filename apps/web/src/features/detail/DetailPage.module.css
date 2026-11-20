@@ -423,7 +423,9 @@
   align-items: center;
   gap: 8px;
   font-size: var(--fs-17);
-  margin: 0 0 12px;
+  /* The readers' reviews and the outside ratings above end on no margin of their own: the
+     heading keeps the screen's section rhythm from them (#558). */
+  margin: 26px 0 12px;
 }
 
 /* The row itself belongs to CategoryChoice, which the end-of-reading sheet draws too:
@@ -562,4 +564,30 @@
   .progressFill {
     transition: none;
   }
+}
+
+/* #566: the language the copy was read in, under the status families. */
+.languageField {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.languageLabel {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.languageSelect {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-14);
 }

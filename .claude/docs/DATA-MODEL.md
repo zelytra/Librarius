@@ -607,6 +607,12 @@ created_at, read_at)`, idx `(user_id, created_at DESC)` and the unread ones.
 `user_follow.notify BOOLEAN NOT NULL DEFAULT true` (a follow notifies of activity unless switched
 off on the profile) and `app_user.notify_comments BOOLEAN NOT NULL DEFAULT true`.
 
+### V43 — the copy's reading language (#566)
+
+`library_item.language VARCHAR(8)`, nullable: the ISO 639 code of the language the reader read
+their copy in — theirs, beside `edition.language` from the catalog. Exported and re-imported
+with the archive.
+
 ### V42 — follow notification (#544)
 
 `notification.type` also takes `FOLLOW` — someone started following the recipient — and
