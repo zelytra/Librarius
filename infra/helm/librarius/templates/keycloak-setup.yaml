@@ -48,9 +48,18 @@ spec:
         {{- include "librarius.labels" (dict "ctx" . "component" "keycloak-setup") | nindent 8 }}
     spec:
       restartPolicy: Never
+      # No pod of this chart calls the Kubernetes API, and each runs under the runtime's seccomp
+      # profile (#582).
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: kcadm
           image: {{ .Values.keycloak.image }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            {{- include "librarius.containerHardening" (dict) | nindent 12 }}
           command: ["/bin/bash", "-c"]
           args:
             - |

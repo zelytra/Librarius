@@ -92,7 +92,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      automountServiceAccountToken: false
       securityContext:
+        seccompProfile: { type: RuntimeDefault }
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
@@ -100,6 +102,8 @@ spec:
       containers:
         - name: prometheus
           image: {{ .Values.monitoring.prometheus.image }}
+          securityContext:
+            {{- include "librarius.containerHardening" (dict) | nindent 12 }}
           args:
             - --config.file=/etc/prometheus/config/prometheus.yml
             - --storage.tsdb.path=/prometheus
@@ -249,7 +253,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      automountServiceAccountToken: false
       securityContext:
+        seccompProfile: { type: RuntimeDefault }
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
@@ -257,6 +263,8 @@ spec:
       containers:
         - name: alertmanager
           image: {{ .Values.monitoring.alertmanager.image }}
+          securityContext:
+            {{- include "librarius.containerHardening" (dict) | nindent 12 }}
           args:
             - --config.file=/etc/alertmanager/config/alertmanager.yml
             - --storage.path=/alertmanager

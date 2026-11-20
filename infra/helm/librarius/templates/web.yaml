@@ -55,11 +55,21 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       # nginx stops in well under this; the window exists for the preStop pause.
+      # No pod of this chart calls the Kubernetes API, and each runs under the runtime's seccomp
+      # profile (#582).
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
       terminationGracePeriodSeconds: 15
       containers:
         - name: web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          # The nginx master starts as root to bind :80 and hand its workers to the nginx user:
+          # those four capabilities, nothing else (#582). Running it unprivileged means the
+          # unprivileged image and another port — a change of its own.
+          securityContext:
+            {{- include "librarius.containerHardening" (dict "add" (list "CHOWN" "SETUID" "SETGID" "NET_BIND_SERVICE")) | nindent 12 }}
           ports:
             - containerPort: 80
           volumeMounts:
