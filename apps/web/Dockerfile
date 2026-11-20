@@ -23,5 +23,7 @@ RUN pnpm --filter @librarius/web build
 
 FROM nginx:1.31-alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+# The security headers both server blocks include, the chart's included (#580).
+COPY apps/web/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
