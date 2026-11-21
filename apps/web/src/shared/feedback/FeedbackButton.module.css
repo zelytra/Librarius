@@ -33,6 +33,12 @@
   bottom: calc(var(--bottom-nav-height) + 16px + env(safe-area-inset-bottom));
 }
 
+/* Above an open selection bar too (#593): the bar sits 76 px up and is some 60 px tall, and the
+   button used to cover its actions. 148 px clears it with a margin. */
+:global(body:has([data-selection-bar])) .trigger {
+  bottom: calc(148px + env(safe-area-inset-bottom));
+}
+
 .form {
   display: flex;
   flex-direction: column;

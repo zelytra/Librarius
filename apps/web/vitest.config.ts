@@ -17,9 +17,10 @@ export default defineConfig({
     // `global.test.ts`; the shell's two stylesheets for `app/safeAreas.test.ts`, which
     // checks that the frame and the bottom bar still hold the system bars off (#529);
     // `AdminPage.module.css` for `features/admin/reportScroll.test.ts` (#564);
-    // `ReadingSheetPage.module.css` for `features/sheet/sheetInk.test.ts` (#596).
+    // `ReadingSheetPage.module.css` for `features/sheet/sheetInk.test.ts` (#596);
+    // `FeedbackButton.module.css` and `Selection.module.css` for `shared/feedback/feedbackClearance.test.ts` (#593).
     css: {
-      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/],
+      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/, /FeedbackButton\.module\.css/, /Selection\.module\.css/],
     },
   },
 });
