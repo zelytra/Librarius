@@ -47,10 +47,12 @@ echo "Pods (#582)"
 # branch went on unfiltered; and it answers null, not nothing, for a document that is no pod.
 pods='(((select(.kind == "Deployment" or .kind == "Job" or .kind == "StatefulSet") | .spec.template.spec),
       (select(.kind == "CronJob") | .spec.jobTemplate.spec.template.spec)) | select(. != null))'
+# Each check names the first container of an offending pod: yq prints a constant once per
+# document, matched or not, so a count would read every Service and ConfigMap as a failure.
 check "no pod mounts a service-account token" \
-  "$(yq -N -r "$pods | select(.automountServiceAccountToken != false) | \"x\"" "$r" | wc -l | tr -d ' ')" "0"
+  "$(yq -N -r "$pods | select(.automountServiceAccountToken != false) | .containers[0].name" "$r" | tr '\n' ' ')" ""
 check "every pod runs under the runtime's seccomp profile" \
-  "$(yq -N -r "$pods | select(.securityContext.seccompProfile.type != \"RuntimeDefault\") | \"x\"" "$r" | wc -l | tr -d ' ')" "0"
+  "$(yq -N -r "$pods | select(.securityContext.seccompProfile.type != \"RuntimeDefault\") | .containers[0].name" "$r" | tr '\n' ' ')" ""
 containers="$pods | ((.containers[]), ((.initContainers // [])[]))"
 check "no container may escalate its privileges" \
   "$(yq -N -r "$containers | select(.securityContext.allowPrivilegeEscalation != false) | .name" "$r" | tr '\n' ' ')" ""
