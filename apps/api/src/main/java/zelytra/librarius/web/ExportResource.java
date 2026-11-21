@@ -43,6 +43,12 @@ public class ExportResource {
     @Inject
     ExportJobs jobs;
 
+    @Inject
+    zelytra.librarius.security.ActionQuota quota;
+
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "librarius.quota.export.per-hour", defaultValue = "10")
+    int exportsPerHour;
+
     /**
      * The caller's account.
      *
@@ -57,6 +63,8 @@ public class ExportResource {
         ExportFormat wanted = ExportFormat.parse(format)
                 .orElseThrow(() -> new BadRequestException("Unknown export format: " + format));
         String userId = currentUser.require().id;
+        // Each export reads the whole library (#583).
+        quota.enforce("export", userId, exportsPerHour, "Trop d'exports en peu de temps. Réessaie dans une heure.");
 
         int rows = exports.rowCount(userId);
         if (jobs.fitsInRequest(rows)) {

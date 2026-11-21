@@ -997,6 +997,11 @@ Filters combine with an `and`, and all of them narrow a set already scoped to
 
 ## Conventions
 
+- **Quotas** (#583, `security.ActionQuota`): per caller and per hour, imports (any source,
+  10), exports (10), reports (20) and error notices (120) answer **429** with `Retry-After`
+  and a French `message` past their limit — `librarius.quota.*.per-hour`. The catalog keeps
+  its own, finer quota (`catalog.RateLimiter`). The anonymous cover proxy has none yet (#588).
+
 - **Adding a title**: the client sends a complete `ManualBookDto`; the server matches or
   creates the `work` + `edition`, then creates the `library_item`. The front end never has
   to handle a catalog identifier **of this instance** — it holds no `workId` or `editionId`

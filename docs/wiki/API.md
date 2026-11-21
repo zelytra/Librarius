@@ -54,3 +54,9 @@ A rating or review is private unless its author ticks "share". A shared one is l
 them, otherwise everyone when the author's account is public, otherwise readers who follow
 the author mutually. The average is computed over those visible ratings only, so it never
 leaks a private one.
+
+## Quotas
+
+Per caller and per hour (#583): imports 10, exports 10, reports 20, error notices 120 —
+past them the endpoint answers `429` with `Retry-After` and a `message`. Configured by
+`librarius.quota.*.per-hour`; the catalog search keeps its own per-minute and per-day quota.
