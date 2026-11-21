@@ -115,10 +115,17 @@ the search answer.
    "Blue Lock 1" is read as volume 1 only because another result is a volume of
    "Blue Lock"; a bare number alone ("Fahrenheit 451") never is.
 
+**Leading article.** Both catalogues require every word they are sent, so "Un pull moche"
+found nothing where "Pull moche" found the book (#607). `CatalogQuery.wordsToMatch()` drops a
+leading article (le, la, les, l, un, une, des, the, a, an — the set the ranker ignores too)
+from every forgiving query: Open Library's free text and prefix, the BnF all-words and prefix
+queries. Only the BnF exact phrase keeps it, so a title that does start with it still ranks
+first. A text that is the article alone is sent whole.
+
 **Prefix retry.** When nothing reaches the two top title tiers and the plain query has two
 words or more, the last of three letters or more ("le nom du ven"), the reader probably stopped
-mid-word: Open Library (`title:(le AND nom AND du AND ven*)`) and the BnF
-(`bib.title all "le nom du ven*"`) are asked once more (`CatalogQuery.prefixLastWord`), cached
+mid-word: Open Library (`title:(nom AND du AND ven*)`) and the BnF
+(`bib.title all "nom du ven*"`) are asked once more (`CatalogQuery.prefixLastWord`), cached
 like any call and charged nothing to the quota, and the merged page is ranked again with the
 last word matching the start of a title word.
 

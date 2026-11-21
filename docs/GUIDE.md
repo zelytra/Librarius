@@ -106,7 +106,7 @@ Deux façons de ranger, qui ne viennent pas du même endroit.
 - Les **genres** viennent du catalogue. Ils sont communs à tout le monde, tu ne les
   choisis pas ; ils alimentent « Genres favoris » dans les statistiques et le tri par
   genre de la collection.
-- Le **classement** est à toi. *Or*, *Argent*, *Bronze* et *Abandon* sont fournis avec
+- Le **classement** est à toi. *Platine*, *Or*, *Argent*, *Bronze* et *Abandon* sont fournis avec
   l'application et ne se modifient pas. Un titre porte **au plus un** classement.
 
 Depuis la ligne d'étagères de la collection, « Gérer mes catégories » permet de créer,

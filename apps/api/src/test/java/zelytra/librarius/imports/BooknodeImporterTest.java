@@ -54,7 +54,9 @@ class BooknodeImporterTest {
         // Being read: no reading date yet.
         assertEquals(null, books.get(2).readAt());
 
-        assertEquals("or", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "diamant")));
+        // Booknode's diamant tier sits above its or, as Platine sits above Or (#608).
+        assertEquals("platine", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "diamant")));
+        assertEquals("or", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "or")));
         assertEquals("bronze", BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "bronze")));
         assertEquals(null, BooknodeImporter.rankFromBadge(java.util.Set.of("listebadge", "luaussi")));
         assertEquals(zelytra.librarius.domain.Kind.MANGA, BooknodeImporter.kindOf("manga argent"));

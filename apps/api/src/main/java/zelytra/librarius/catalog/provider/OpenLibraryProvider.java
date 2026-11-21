@@ -214,7 +214,7 @@ public class OpenLibraryProvider implements CatalogProvider {
     static String solrQuery(CatalogQuery query) {
         StringBuilder q = new StringBuilder();
         if (query.text() != null) {
-            q.append(query.prefixLastWord() ? prefixTitle(query.text()) : query.text());
+            q.append(query.prefixLastWord() ? prefixTitle(query.wordsToMatch()) : query.wordsToMatch());
         }
         append(q, "author", query.author());
         append(q, "publisher", query.publisher());

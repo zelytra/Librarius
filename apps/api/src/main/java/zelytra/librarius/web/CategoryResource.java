@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Ranking categories: the built-ins (Or / Argent / Bronze) plus the caller's own.
+ * Ranking categories: the built-ins (Platine / Or / Argent / Bronze / Abandon) plus the caller's own.
  *
  * <p>The rules — ownership, read-only built-ins, one name per user, and what deleting a
  * category does to the titles filed under it — live in {@link CategoryService}.

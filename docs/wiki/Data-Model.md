@@ -41,7 +41,7 @@ for how that matching happens on the way in.
 | `feed_event` | What a member did that the feed shows (V38, #209): `FINISHED_READING`, `WISHLIST_ADDED` or `REVIEW_SHARED` on an `edition`, once per member, type and edition. Logged where the action happens — finishing a title, adding a wish, sharing a review — never by an import or a bulk edit |
 | `notification` | One line of a member's bell (V41, #516): `type` `ACTIVITY`, `REACTION`, `COMMENT` or `FOLLOW` (V42, #544: a new follower — no event; a follow after an unfollow replaces the earlier row), the `actor`, the `feed_event` and the `feed_comment` it is about, the `emote`, `read_at` once seen; cascades away with either account, the event or the comment. A new reaction from the same member replaces the previous notification. `user_follow.notify` (default true) and `app_user.notify_comments` (default true) say who wants which |
 | `feed_reaction`, `feed_comment` | A member's reaction to a feed event (one per member and event, `PRIMARY KEY (feed_event_id, user_id)`) and their flat comments (V38, #210); both cascade away with the event or the account |
-| `rank_category` | Gold / Silver / Bronze, built in and shared, plus any category a user defines |
+| `rank_category` | Platinum (V46) / Gold / Silver / Bronze / Abandon, built in and shared, plus any category a user defines |
 
 `feedback` (V35, #489, #490) is the one table read across users, by the admins only: the
 members' reports and the errors recorded by the web app and the API, one row per error

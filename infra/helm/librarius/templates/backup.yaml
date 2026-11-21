@@ -14,6 +14,21 @@ data:
     #!/bin/bash
     set -euo pipefail
 
+    # A new pod's first connections are refused: the network-policy controller
+    # has not learned its address yet (measured on staging, 2026-11-21, #59), and
+    # every retry of the Job is a new pod in the same window. Wait for the
+    # database rather than fail the night's backup on it.
+    for attempt in $(seq 1 30); do
+      if pg_isready --quiet --host "$PGHOST" --username "$PGUSER" --timeout 2; then
+        break
+      fi
+      if [ "$attempt" -eq 30 ]; then
+        echo "dump: ${PGHOST} never answered, giving up" >&2
+        exit 1
+      fi
+      sleep 2
+    done
+
     dump_one() {
       echo "dump: ${1}" >&2
       pg_dump \

@@ -176,6 +176,39 @@ class CategoryApiTest {
                 .then().statusCode(204);
     }
 
+    /** Platine sits above Or (#608): a shared, read-only built-in listed before the others. */
+    @Test
+    void platineIsTheFirstBuiltinAndCannotBeTakenOrChanged() {
+        given().auth().oauth2(token())
+                .when().get("/api/categories")
+                .then().statusCode(200)
+                .body("[0].code", is("platine"))
+                .body("[0].label", is("Platine"))
+                .body("[0].builtin", is(true))
+                .body("[1].code", is("or"));
+
+        String platine = builtinId("platine");
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Diamant\" }")
+                .when().put("/api/categories/" + platine)
+                .then().statusCode(403);
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Platine\" }")
+                .when().post("/api/categories")
+                .then().statusCode(409);
+    }
+
+    @Test
+    void aTitleCanBeFiledUnderPlatineAndFilteredOn() {
+        String item = addTitle("Platine Test Title");
+        rank(item, builtinId("platine"));
+
+        given().auth().oauth2(token())
+                .when().get("/api/library?rank=platine&size=200")
+                .then().statusCode(200)
+                .body("items.id", hasItem(item));
+    }
+
     /**
      * The built-ins are shared rows: renaming one would rename it for every account. The
      * refusal is a 403 and not a 404, since the caller can see them in the listing.
@@ -185,7 +218,7 @@ class CategoryApiTest {
         String or = builtinId("or");
 
         given().auth().oauth2(token()).contentType("application/json")
-                .body("{ \"label\": \"Platine\" }")
+                .body("{ \"label\": \"Vermeil\" }")
                 .when().put("/api/categories/" + or)
                 .then().statusCode(403);
 

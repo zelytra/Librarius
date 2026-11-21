@@ -110,6 +110,16 @@ class BnfProviderTest {
     }
 
     @Test
+    void theAllWordsQueryLeavesALeadingArticleOut() {
+        // The phrase keeps it — a title that does start with it is still found first — but
+        // "Un pull moche" must not demand an "un" the book "Pull moche" does not carry.
+        assertEquals(List.of(
+                "bib.title adj \"Un pull moche\" and bib.doctype any \"a\"",
+                "(bib.title all \"pull moche\" or bib.author all \"pull moche\") and bib.doctype any \"a\""),
+                queriesFor(CatalogQuery.of("Un pull moche")));
+    }
+
+    @Test
     void appendsTheAdvancedCriteriaToBothQueries() {
         List<String> queries = queriesFor(new CatalogQuery("dune", "Frank Herbert", null, null, "Pocket", null));
 
@@ -126,7 +136,7 @@ class BnfProviderTest {
 
     @Test
     void aPrefixSearchIsOneTruncatedAllWordsQuery() {
-        assertEquals(List.of("bib.title all \"le nom du ven*\" and bib.doctype any \"a\""),
+        assertEquals(List.of("bib.title all \"nom du ven*\" and bib.doctype any \"a\""),
                 BnfProvider.cqlQueries(CatalogQuery.of("le nom du ven").withPrefixLastWord()));
     }
 

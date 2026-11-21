@@ -1305,7 +1305,7 @@ final class CatalogRanker {
             }
             words.add(isNumber(word) ? String.valueOf(Integer.parseInt(word.length() > 9 ? word.substring(0, 9) : word)) : word);
         }
-        if (words.size() > 1 && ARTICLES.contains(words.get(0))) {
+        if (words.size() > 1 && CatalogQuery.LEADING_ARTICLES.contains(words.get(0))) {
             words.remove(0);
         }
         return words;
@@ -1313,9 +1313,6 @@ final class CatalogRanker {
 
     /** Volume markers carry no meaning of their own: "tome 1", "vol. 1" and ". 1" are one volume. */
     private static final Set<String> VOLUME_MARKERS = Set.of("tome", "tomes", "t", "vol", "volume");
-
-    private static final Set<String> ARTICLES = Set.of("le", "la", "les", "l", "un", "une", "des",
-            "the", "a", "an");
 
     /** Words that carry no subject: a title sharing only these with the query shares nothing. */
     private static final Set<String> STOP_WORDS = Set.of("le", "la", "les", "l", "un", "une", "des",

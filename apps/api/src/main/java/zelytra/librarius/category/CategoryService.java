@@ -27,7 +27,7 @@ import java.util.UUID;
  *       {@link RankCategoryRepository#findForUser}, which only ever returns the caller's own
  *       categories and the shared built-ins. Someone else's identifier is reported as
  *       unknown — a 404 rather than a 403, so nobody learns what other people collect.</li>
- *   <li><b>The built-ins are read-only.</b> {@code Or}, {@code Argent} and {@code Bronze}
+ *   <li><b>The built-ins are read-only.</b> {@code Platine}, {@code Or}, {@code Argent}, {@code Bronze} and {@code Abandon}
  *       are shared rows ({@code user_id NULL}): renaming one would rename it for every
  *       account. They are visible to the caller, so refusing is a 403 — a 404 would deny
  *       the existence of a row the same caller just listed.</li>
@@ -43,7 +43,7 @@ public class CategoryService {
     /** Colour a category gets when the caller supplies none: neutral, and readable on both themes. */
     private static final String DEFAULT_COLOR = "#9a8fa6";
 
-    /** Custom categories sort after the three built-ins, which occupy 1 to 3. */
+    /** Custom categories sort after the built-ins, which occupy 0 (Platine) to 4 (Abandon). */
     private static final int CUSTOM_SORT_ORDER = 100;
 
     @Inject
