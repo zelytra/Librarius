@@ -175,13 +175,23 @@ public class CatalogService {
      * so repeat views of one author page cost nothing.
      */
     public List<CatalogResult> worksOfAuthor(Set<Kind> kinds, String name, int limit) {
+        return worksOfAuthor(kinds, name, null, limit);
+    }
+
+    /**
+     * As above, for a reader of {@code language} (#601), which reaches the providers: one that
+     * knows its works' languages lists the ones printed in it first, and leaves out the
+     * translations it files as works of their own.
+     */
+    public List<CatalogResult> worksOfAuthor(Set<Kind> kinds, String name, String language, int limit) {
         if (name == null || name.isBlank()) {
             return List.of();
         }
         String key = name.toLowerCase(Locale.ROOT).trim();
         Function<CatalogProvider, List<CatalogResult>> call = provider -> cache.get(
-                CatalogCache.Scope.SEARCH, provider.name(), "authorworks|" + key + '|' + limit,
-                () -> provider.worksOfAuthor(name, limit));
+                CatalogCache.Scope.SEARCH, provider.name(),
+                "authorworks|" + key + '|' + limit + (language == null ? "" : '|' + language),
+                () -> provider.worksOfAuthor(name, language, limit));
         // Every medium, whatever the kinds owned: an imported manga is filed as a book, and its
         // author's series would otherwise never be asked of AniList.
         List<CatalogProvider> all = providersFor(Set.of());

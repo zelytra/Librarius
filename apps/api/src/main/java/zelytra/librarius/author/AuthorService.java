@@ -60,6 +60,9 @@ public class AuthorService {
     @Inject
     CatalogService catalog;
 
+    @Inject
+    zelytra.librarius.domain.repository.AppUserRepository users;
+
     /** Whether the author page's bibliography is enriched from the providers (off in tests). */
     @ConfigProperty(name = "librarius.author.enrich-bibliography", defaultValue = "true")
     boolean enrichBibliography;
@@ -154,7 +157,11 @@ public class AuthorService {
             Set<String> known = new java.util.HashSet<>(byTitle.keySet());
             Set<Kind> kinds = works.stream().map(w -> w.kind)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-            for (CatalogResult r : catalog.worksOfAuthor(kinds, author.name, MAX_PROVIDER_WORKS)) {
+            // In the reader's language first (#601): the providers file translations as works of
+            // their own, and an author printed in it is listed from those printings alone.
+            zelytra.librarius.domain.AppUser reader = users.findById(userId);
+            String language = reader == null ? null : reader.locale;
+            for (CatalogResult r : catalog.worksOfAuthor(kinds, author.name, language, MAX_PROVIDER_WORKS)) {
                 // A provider's author search matches words, not people: the BnF answered "Frank
                 // Herbert" with a thesis by F. T. H. Fletcher and a book on Van Gogh. Only a
                 // work that actually credits this author joins the bibliography.

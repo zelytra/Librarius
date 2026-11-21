@@ -340,6 +340,109 @@ class OpenLibraryProviderTest {
         assertEquals(250, r.popularity());
     }
 
+    /**
+     * #601: with no French printing, Open Library still puts some edition first — "Der Weg der
+     * Könige" for The Way of Kings, a Polish one for The Hero of Ages. A printing in another
+     * language than the one asked for is ignored whole: the work's own title, cover and ISBN stand.
+     */
+    @Test
+    void aPreferredEditionInAnotherLanguageIsIgnored() {
+        OpenLibraryClient.EditionDoc german = new OpenLibraryClient.EditionDoc("/books/OL9M",
+                "Der Weg der Könige", List.of("ger"), 99L, List.of("9783453267671"), List.of("Heyne"));
+        OpenLibraryClient.Doc doc = new OpenLibraryClient.Doc("/works/OL4W", "The Way of Kings",
+                List.of("Brandon Sanderson"), 2010, 8L, List.of("9780765326355"), List.of("Tor"),
+                List.of("eng", "ger"), 1000, 30,
+                new OpenLibraryClient.EditionHits(List.of(german)));
+        OpenLibraryProvider provider = provider(answering(() -> Uni.createFrom()
+                .item(new OpenLibraryClient.SearchResponse(List.of(doc)))), Duration.ofSeconds(5));
+
+        CatalogResult r = provider.search(CatalogQuery.of("way of kings"), 10).get(0);
+
+        assertEquals("The Way of Kings", r.title());
+        assertEquals("eng", r.language());
+        assertEquals("9780765326355", r.isbn13());
+        assertEquals("https://covers.openlibrary.org/b/id/8-M.jpg", r.coverUrl());
+    }
+
+    private static OpenLibraryClient.Doc work(String key, String title, List<String> languages) {
+        return new OpenLibraryClient.Doc(key, title, List.of("Riad Sattouf"), 2014, null, null, null,
+                languages, null, 1, null);
+    }
+
+    /**
+     * #601: for a French reader, the works printed in French come first, then the others but
+     * the ones labelled with other languages only — the translations Open Library files as works
+     * of their own. A work with no language label stays: plenty of French books carry none.
+     */
+    @Test
+    void worksOfAuthorForAReaderPutsTheirLanguageFirstAndLeavesLabelledTranslationsOut() {
+        List<String> asked = new java.util.ArrayList<>();
+        OpenLibraryProvider provider = provider(new OpenLibraryClient() {
+            @Override
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
+                asked.add(q);
+                List<Doc> docs = q.contains("language:") ? List.of(
+                        work("/works/OL1W", "L'Arabe du futur, tome 5", List.of("fre", "ger")))
+                        : List.of(
+                                work("/works/OL2W", "Arab of the Future", List.of("eng")),
+                                work("/works/OL1W", "L'Arabe du futur, tome 5", List.of("fre", "ger")),
+                                work("/works/OL3W", "La Vie secrète des jeunes", null),
+                                work("/works/OL4W", "Cuadernos de Esther", List.of("spa")),
+                                work("/works/OL5W", "L'Arabe du Futur 3", List.of("ger", "fre")),
+                                work("/works/OL6W", "Ma circoncision", List.of("fre")),
+                                work("/works/OL7W", "No sex in New York", List.of("fre")));
+                return Uni.createFrom().item(new SearchResponse(docs));
+            }
+
+            @Override
+            public Uni<EditionsResponse> editions(String ref, int limit) {
+                return Uni.createFrom().item(new EditionsResponse(List.of()));
+            }
+        }, Duration.ofSeconds(5));
+
+        List<String> titles = provider.worksOfAuthor("Riad Sattouf", "fr", 40).stream()
+                .map(CatalogResult::title).toList();
+
+        assertEquals(List.of("L'Arabe du futur, tome 5", "La Vie secrète des jeunes", "L'Arabe du Futur 3",
+                "Ma circoncision", "No sex in New York"), titles);
+        assertEquals(List.of("author:\"Riad Sattouf\" language:\"fre\"", "author:\"Riad Sattouf\""), asked);
+    }
+
+    /**
+     * #601: an author writing in another language than the reader's keeps their untranslated
+     * works — Brandon Sanderson's, labelled English only — while a translation into a third
+     * language, filed as a work of its own, is still left out.
+     */
+    @Test
+    void worksOfAuthorKeepsTheAuthorsOwnLanguage() {
+        OpenLibraryProvider provider = provider(new OpenLibraryClient() {
+            @Override
+            public Uni<SearchResponse> search(String q, int limit, String fields, String sort, String lang) {
+                List<Doc> docs = q.contains("language:") ? List.of() : List.of(
+                        work("/works/OL1W", "The Sunlit Man", List.of("eng")),
+                        work("/works/OL2W", "Rhythm of War", List.of("eng")),
+                        work("/works/OL3W", "Elantris", List.of("spa", "pol", "eng")),
+                        work("/works/OL4W", "Rozjemca", List.of("pol")));
+                return Uni.createFrom().item(new SearchResponse(docs));
+            }
+
+            @Override
+            public Uni<EditionsResponse> editions(String ref, int limit) {
+                return Uni.createFrom().item(new EditionsResponse(List.of()));
+            }
+        }, Duration.ofSeconds(5));
+
+        assertEquals(List.of("The Sunlit Man", "Rhythm of War", "Elantris"),
+                provider.worksOfAuthor("Brandon Sanderson", "fr", 40).stream().map(CatalogResult::title).toList());
+    }
+
+    /** Without a reader's language, one plain author search, as before. */
+    @Test
+    void worksOfAuthorWithoutALanguageIsOnePlainSearch() {
+        provider(client, Duration.ofSeconds(5)).worksOfAuthor("Riad Sattouf", null, 40);
+        assertEquals("author:\"Riad Sattouf\"", client.q);
+    }
+
     @Test
     void aSparseEditionFallsBackToTheWorkFieldByField() {
         OpenLibraryClient.EditionDoc edition = new OpenLibraryClient.EditionDoc("/books/OL2M",
