@@ -44,7 +44,7 @@ PY
 
 # ── 2. Throwaway stack: source database, target database, object storage ──────
 cleanup() {
-  docker rm -f lbpg lbpg2 lbminio >/dev/null 2>&1 || true
+  docker rm -f lbpg lbpg2 lbpglate lbminio >/dev/null 2>&1 || true
   docker network rm lbverify >/dev/null 2>&1 || true
 }
 cleanup
@@ -105,6 +105,36 @@ docker run --rm --network lbverify --user 65532:65532 \
   -e KEYCLOAK_DATABASE=keycloak \
   -v "$WORK/scripts:/scripts:ro" -v "$WORK/vol:/work" \
   --entrypoint bash postgres:16-alpine /scripts/dump.sh
+
+# ── 3b. A database that answers late ──────────────────────────────────────────
+# On the cluster a new pod's first connections are refused: the network-policy
+# controller has not learned its address yet (measured on staging, 2026-11-21,
+# #59). The dump has to wait for the database instead of failing the run — and
+# every retry of the Job, which lands in a new pod and the same window.
+echo "=== dump waits for a database that is not reachable yet ==="
+mkdir -p "$WORK/late-init" "$WORK/late-vol"
+chmod 777 "$WORK/late-vol"
+cat > "$WORK/late-init/seed.sql" <<'SQL'
+CREATE DATABASE keycloak;
+CREATE TABLE book (id serial primary key, title text);
+INSERT INTO book(title) SELECT 'Book ' || g FROM generate_series(1,2000) g;
+SQL
+docker run --rm --network lbverify --user 65532:65532 \
+  -e PGHOST=lbpglate -e PGUSER=librarius -e PGDATABASE=librarius -e PGPASSWORD=pgpass \
+  -e KEYCLOAK_DATABASE=keycloak \
+  -v "$WORK/scripts:/scripts:ro" -v "$WORK/late-vol:/work" \
+  --entrypoint bash postgres:16-alpine /scripts/dump.sh > "$WORK/late.log" 2>&1 &
+late_dump=$!
+sleep 8
+docker run -d --name lbpglate --network lbverify -e POSTGRES_USER=librarius \
+  -e POSTGRES_PASSWORD=pgpass -e POSTGRES_DB=librarius \
+  -v "$WORK/late-init:/docker-entrypoint-initdb.d:ro" postgres:16-alpine >/dev/null
+if ! wait "$late_dump"; then
+  cat "$WORK/late.log"
+  echo "DUMP FAILED: it gave up on a database that answered late"
+  exit 1
+fi
+echo "  dumped once the database answered: $(tail -1 "$WORK/late.log")"
 
 # ── 4. Encrypt, upload, prune — as the main container ─────────────────────────
 upload() {
