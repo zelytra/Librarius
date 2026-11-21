@@ -73,3 +73,32 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* The reading's dates (#594), side by side. */
+.dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dateField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dateLabel {
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.dateInput {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}

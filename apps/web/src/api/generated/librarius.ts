@@ -5323,7 +5323,7 @@ export const getPostApiLibraryUrl = () => {
 /**
  * @summary Add
  */
-export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<LibraryItemDto> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -5339,7 +5339,7 @@ export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options
     }
     return headers;
   };
-return apiClient<unknown>(getPostApiLibraryUrl(),
+return apiClient<LibraryItemDto>(getPostApiLibraryUrl(),
   {
     ...options,
     method: 'POST',

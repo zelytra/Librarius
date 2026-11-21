@@ -295,4 +295,50 @@ describe('end-of-reading sheet', () => {
 
     expect(sheet().getByText('Argent').closest('button')).toHaveAttribute('aria-pressed', 'true');
   });
+
+  // ── The reading dates (#594) ────────────────────────────────────────────────
+
+  /** The sheet carries the dates of the reading, pre-filled, and saves a change to them. */
+  test('offers the reading dates, pre-filled, and saves the ones changed', async () => {
+    const calls = servesTitle({ ...READING, progress: { ...READING.progress, startedAt: '2026-03-02' } });
+    renderDetail();
+
+    await endReading(FINISH);
+    const started = sheet().getByLabelText('Commencé le');
+    const finished = sheet().getByLabelText('Terminé le');
+    expect(started).toHaveValue('2026-03-02');
+    expect(finished).toHaveValue(new Date().toISOString().slice(0, 10));
+
+    await userEvent.clear(finished);
+    await userEvent.type(finished, '2026-03-20');
+    await userEvent.click(sheet().getByText('Enregistrer'));
+
+    await waitFor(() => expect(calls.progress).toHaveLength(2));
+    expect(calls.progress[1]).toMatchObject({ status: 'READ', startedAt: '2026-03-02', finishedAt: '2026-03-20' });
+  });
+
+  /** An abandonment keeps the page it stopped on: no date fields, no second progress write. */
+  test('asks for no dates when a title is given up on', async () => {
+    const calls = servesTitle();
+    renderDetail();
+
+    await endReading(GIVE_UP);
+    expect(sheet().queryByLabelText('Terminé le')).not.toBeInTheDocument();
+    await userEvent.click(sheet().getByText('Enregistrer'));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(calls.progress).toHaveLength(1);
+  });
+
+  /** #594: a title just added as read opens on its sheet. */
+  test('opens the sheet on a title added as read', async () => {
+    servesTitle({ ...READING, status: 'READ', progress: { percent: 100, finishedAt: '2026-04-01' } });
+    renderWithProviders(<DetailPage />, {
+      route: { pathname: '/detail/item-1', state: { rate: true } } as never,
+      path: '/detail/:id',
+    });
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(sheet().getByText('Terminé !')).toBeInTheDocument();
+    expect(sheet().getByLabelText('Terminé le')).toHaveValue('2026-04-01');
+  });
 });

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
@@ -50,6 +51,7 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
   const [failed, setFailed] = useState(false);
   const [target, setTarget] = useState<AddTarget>(DEFAULT_ADD_TARGET);
 
+  const navigate = useNavigate();
   const { mutateAsync: addToLibrary, isPending: libraryPending } = usePostApiLibrary();
   const { mutateAsync: addToWishlist, isPending: wishPending } = usePostApiWishlist();
   const isPending = libraryPending || wishPending;
@@ -76,8 +78,13 @@ export function ManualAddForm({ onCancel, onAdded }: ManualAddFormProps) {
         await addToWishlist({ data: { book, priority: 'SOON' } });
         toast.success(t('toasts.addedWishlist', { title: trimmed }), 'favorite');
       } else {
-        await addToLibrary({ data: { book, status: target.status, ownership: target.ownership, format: target.format ?? undefined } });
+        const item = await addToLibrary({ data: { book, status: target.status, ownership: target.ownership, format: target.format ?? undefined } });
         toast.success(t('toasts.addedLibrary', { title: trimmed }), 'library_books');
+        // Added as read: its screen opens on the rating sheet (#594).
+        if (target.status === 'READ' && item.id) {
+          navigate(`/detail/${item.id}`, { state: { rate: true } });
+          return;
+        }
       }
       onAdded(trimmed);
     } catch {

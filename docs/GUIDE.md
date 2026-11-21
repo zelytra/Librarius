@@ -274,6 +274,10 @@ avec ton export.
 
 ## La fiche de lecture
 
+Quand tu marques un livre comme lu — ou que tu l'ajoutes directement comme lu —, une fenêtre
+te propose de le noter, de le classer, et de corriger ses dates de lecture : « Commencé le »
+et « Terminé le » sont pré-remplis avec ce que Librarius sait (aujourd'hui pour la fin).
+
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
 quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (21 × 29,7 cm),
 **A5** (14,8 × 21 cm, une demi-feuille A4) ou **A6** (10,5 × 14,8 cm, une carte à glisser

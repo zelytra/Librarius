@@ -1187,11 +1187,11 @@ paths:
               $ref: "#/components/schemas/LibraryCreateDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "201":
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/LibraryItemDto"
         "401":
           description: Not Authorized
         "403":

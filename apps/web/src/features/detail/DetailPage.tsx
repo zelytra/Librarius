@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
@@ -788,6 +788,15 @@ function DetailContent({ id }: { id: string }) {
   const [editionError, setEditionError] = useState<string | null>(null);
   /** Which end-of-reading sheet is open, if any. Null is the ordinary state of the screen. */
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // A title just added as read arrives with `rate` (#594): its end-of-reading sheet opens once,
+  // and the flag is dropped from the entry so a back or a reload does not open it again.
+  const location = useLocation();
+  const rateOnArrival = (location.state as { rate?: boolean } | null)?.rate === true;
+  useEffect(() => {
+    if (!rateOnArrival || item?.status !== 'READ') return;
+    setOutcome('READ');
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [rateOnArrival, item?.status, location.pathname, location.search, navigate]);
 
   // A change of edition changes the cover the series screens draw too (#480).
   const invalidateSeries = () => {
@@ -1018,7 +1027,17 @@ function DetailContent({ id }: { id: string }) {
    * title already carries, so confirming a sheet nobody touched is not two pointless
    * requests — and skipping it is none at all.
    */
-  function applyOutcome({ rating, categoryId }: OutcomeChoice) {
+  function applyOutcome({ rating, categoryId, startedAt, finishedAt }: OutcomeChoice) {
+    // The dates, when the sheet carried them and they moved (#594): the finish was recorded
+    // already, this only corrects when the reading began and ended.
+    const p = item?.progress;
+    if ((startedAt !== undefined || finishedAt !== undefined)
+      && (startedAt !== (p?.startedAt ?? undefined) || finishedAt !== (p?.finishedAt ?? undefined))) {
+      mutateProgress({
+        id,
+        data: { status: 'READ', currentPage: p?.currentPage, percent: p?.percent, startedAt, finishedAt },
+      });
+    }
     if (rating !== (item?.rating ?? undefined)) {
       // The review endpoint replaces both halves, so the text has to be handed back.
       mutateReview({ id, data: { rating, review: item?.review || undefined } });

@@ -758,7 +758,9 @@
       "confirm": "Save",
       "skip": "Later",
       "close": "Close",
-      "printSheet": "Save and make the reading sheet"
+      "printSheet": "Save and make the reading sheet",
+      "startedAt": "Started on",
+      "finishedAt": "Finished on"
     },
     "progress": {
       "title": "My progress",

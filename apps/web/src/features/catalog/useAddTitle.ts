@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -22,19 +23,22 @@ import type { AddTarget } from './addTargets';
 export function useAddTitle() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { mutateAsync: addToLibrary } = usePostApiLibrary();
   const { mutateAsync: addToWishlist } = usePostApiWishlist();
 
   return async function addTitle(book: ManualBookDto, target: AddTarget) {
     const title = book.title ?? '';
+    let added: string | undefined;
     try {
       if (addsToWishlistOnly(target.status, target.ownership)) {
         await addToWishlist({ data: { book, priority: 'SOON' } });
         toast.success(t('toasts.addedWishlist', { title }), 'favorite');
       } else {
-        await addToLibrary({
+        const item = await addToLibrary({
           data: { book, status: target.status, ownership: target.ownership, format: target.format ?? undefined },
         });
+        if (target.status === 'READ') added = item.id;
         toast.success(t('toasts.addedLibrary', { title }), 'library_books');
       }
     } catch (error) {
@@ -44,5 +48,7 @@ export function useAddTitle() {
     void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
     void queryClient.invalidateQueries({ queryKey: getGetApiWishlistQueryKey() });
     void queryClient.invalidateQueries(STATS_QUERIES);
+    // Added as read, the reading is over: its screen opens on the rating sheet (#594).
+    if (added) navigate(`/detail/${added}`, { state: { rate: true } });
   };
 }

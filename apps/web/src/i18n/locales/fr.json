@@ -758,7 +758,9 @@
       "confirm": "Enregistrer",
       "skip": "Plus tard",
       "close": "Fermer",
-      "printSheet": "Valider et créer la fiche de lecture"
+      "printSheet": "Valider et créer la fiche de lecture",
+      "startedAt": "Commencé le",
+      "finishedAt": "Terminé le"
     },
     "progress": {
       "title": "Ma progression",
