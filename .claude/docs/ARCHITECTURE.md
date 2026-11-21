@@ -359,7 +359,7 @@ regeneration.
 | Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
 | Exposed surface | Only `/auth/realms/librarius`, `/auth/resources`, `/api` and `/` are routed — not the Keycloak console nor the master realm (#577). Swagger UI is dev/test only, `/q` is cluster-internal ([#62](https://github.com/zelytra/Librarius/issues/62)) |
 | Browser hardening | `apps/web/security-headers.conf` (#580): CSP `script-src 'self' 'wasm-unsafe-eval'`, no inline script (the theme boot is `public/theme-boot.js`), `frame-ancestors 'none'`, HSTS, nosniff, referrer and permissions policies |
-| Realm | Password grant off for `librarius-web` (#578), lockout after 10 failures and a 10-character policy (#579), single-use refresh tokens (#581), login and admin events kept 30 days (#584). E-mail verification waits for SMTP (#589) |
+| Realm | Password grant off for `librarius-web` (#578), lockout after 10 failures and a 10-character policy (#579), rotated refresh tokens (#581), login and admin events kept 30 days (#584). E-mail verification waits for SMTP (#589) |
 | Cluster | Pods without privileges or service-account token, network policies denying by default (#582), checked by `chart.yml` |
 | Rate limiting | Per caller: the catalog per minute and per day (`catalog.RateLimiter`); imports, exports and reports per hour (`security.ActionQuota`, #583). The anonymous cover proxy has none yet (#588) |
 | Static analysis | CodeQL on `javascript-typescript` and `java-kotlin`, weekly and on every pull request (`codeql.yml`) |
@@ -379,10 +379,11 @@ The OIDC user — access token and the `offline_access` refresh token — stays 
 (`auth/oidc.ts`): a backend-for-frontend holding it in an `HttpOnly` cookie would mean a
 server-side session layer this stack does not have, and the native shell needs the same
 token in its own storage anyway. The blast radius is reduced instead: a strict CSP is the
-first defence against the script that would read it (#580), and refresh tokens are single-use
-(`revokeRefreshToken`, `refreshTokenMaxReuse` 0), so a stolen one dies the next time the
-reader's app refreshes. The known cost: two tabs refreshing in the same instant — one of them
-loses the race and is signed out. Revisit with a BFF if that shows up in the reports.
+first defence against the script that would read it (#580), and refresh tokens rotate
+(`revokeRefreshToken`) and work twice at most (`refreshTokenMaxReuse` 1): a stolen one stops
+working once the reader's app and the thief have both used it. Strictly single-use would sign
+a reader out whenever two tabs refresh in the same instant, which the shared `localStorage`
+store makes ordinary. Revisit with a BFF if a stolen session ever shows up.
 
 ## 7. Deployment
 

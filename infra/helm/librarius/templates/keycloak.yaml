@@ -23,7 +23,7 @@ data:
       "maxDeltaTimeSeconds": 43200,
       "passwordPolicy": "length(10) and notUsername and notEmail",
       "revokeRefreshToken": true,
-      "refreshTokenMaxReuse": 0,
+      "refreshTokenMaxReuse": 1,
       "eventsEnabled": true,
       "eventsExpiration": 2592000,
       "adminEventsEnabled": true,

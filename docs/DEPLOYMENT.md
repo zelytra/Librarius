@@ -402,7 +402,7 @@ What the chart enforces, and `.github/workflows/chart.yml` checks on the rendere
   the setup Job and the backup only. Egress is left open: the providers move.
 - **Realm** (#578, #579, #581, #584), applied by the `keycloak-setup` Job: no password grant
   on `librarius-web`, a lockout after ten failed passwords, a ten-character password policy
-  excluding the username and the e-mail, single-use refresh tokens, thirty days of login and
+  excluding the username and the e-mail, rotated refresh tokens usable twice at most, thirty days of login and
   admin events. E-mail verification waits for an SMTP server.
 - **Headers** (#580): `apps/web/security-headers.conf`, included by both nginx server blocks.
 
