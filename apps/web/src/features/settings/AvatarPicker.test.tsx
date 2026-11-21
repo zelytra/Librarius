@@ -74,6 +74,22 @@ describe('AvatarPicker', () => {
     expect(dialog).not.toBeInTheDocument();
   });
 
+  // The chosen file never becomes a URL on the page (CodeQL js/xss-through-dom): the preview
+  // is drawn on a canvas from the decoded picture, the way the upload itself decodes it.
+  test('previews the picture on a canvas, never through a URL of the file', async () => {
+    meWith(null);
+    const toUrl = vi.spyOn(URL, 'createObjectURL');
+    renderWithProviders(<><AvatarPicker /><Toaster /></>);
+
+    await userEvent.upload(await screen.findByLabelText('Choisir une photo'), photo());
+    const dialog = await screen.findByRole('dialog', { name: 'Recadrer la photo' });
+
+    expect(dialog.querySelector('canvas')).not.toBeNull();
+    expect(dialog.querySelector('img')).toBeNull();
+    expect(toUrl).not.toHaveBeenCalled();
+    toUrl.mockRestore();
+  });
+
   test('sends nothing when the framing is cancelled', async () => {
     meWith(null);
     const put = vi.fn();

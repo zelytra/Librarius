@@ -145,10 +145,9 @@
 }
 
 .cropImage {
-  position: absolute;
-  top: 0;
-  left: 0;
-  max-width: none;
+  display: block;
+  width: 100%;
+  height: 100%;
   user-select: none;
   pointer-events: none;
 }
