@@ -32,7 +32,7 @@ const READING_SCREENS: [string, ReactElement, { route?: string; path?: string }]
 ];
 
 describe('reading-width screens', () => {
-  beforeEach(() => setAuthenticated());
+  beforeEach(() => setAuthenticated(true));
   afterEach(() => resetAuth());
 
   test.each(READING_SCREENS)('%s sits in the centred reading-width screen', async (_, page, options) => {
