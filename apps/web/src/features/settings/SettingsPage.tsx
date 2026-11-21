@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
 import { Button, Screen, Segmented } from '../../shared/ui/primitives';
@@ -193,6 +193,12 @@ export function SettingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { category } = useParams();
+  const location = useLocation();
+
+  // Back from the list leaves Settings (#591): to the screen before it, or Home when the list
+  // was reached from a category opened directly — never into a category again.
+  const entered = (location.state as { entry?: boolean } | null)?.entry === true;
+  const leave = () => (entered || location.key === 'default' ? navigate('/') : navigate(-1));
 
   if (category !== undefined && !isCategory(category)) return <Navigate to="/settings" replace />;
 
@@ -200,7 +206,7 @@ export function SettingsPage() {
     return (
       <Screen>
         <div className={styles.header}>
-          <button type="button" onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
+          <button type="button" onClick={leave} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--ink)" />
           </button>
           <h2 className={styles.title}>{t('settings.title')}</h2>
@@ -210,7 +216,7 @@ export function SettingsPage() {
           <ul className={styles.categories}>
             {SETTINGS_CATEGORIES.map((c) => (
               <li key={c.id}>
-                <Link to={`/settings/${c.id}`} className={styles.category}>
+                <Link to={`/settings/${c.id}`} state={{ fromList: true }} className={styles.category}>
                   <span className={styles.categoryIcon} aria-hidden="true">
                     <Icon name={c.icon} size={22} color="var(--accent-deep)" />
                   </span>
@@ -234,15 +240,21 @@ export function SettingsPage() {
 
 function CategoryScreen({ category }: { category: SettingsCategory }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Opened from the list, back is that list (#591); opened from a link elsewhere, back replaces
+  // the category with the list, which then leaves Settings rather than coming back here.
+  const fromList = (location.state as { fromList?: boolean } | null)?.fromList === true;
+  const back = () => (fromList ? navigate(-1) : navigate('/settings', { replace: true, state: { entry: true } }));
   // A link from elsewhere names the section it is about (#560): `/settings/reading#goal`.
   useHighlightHash();
   const Content = CATEGORY_CONTENT[category];
   return (
     <Screen>
       <div className={styles.header}>
-        <Link to="/settings" aria-label={t('settings.backToCategories')} className={styles.backButton}>
+        <button type="button" onClick={back} aria-label={t('settings.backToCategories')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
-        </Link>
+        </button>
         <div>
           <div className={styles.kicker}>{t('settings.title')}</div>
           <h2 className={styles.title}>{t(`settings.categories.${category}.title`)}</h2>
