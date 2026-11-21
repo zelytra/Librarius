@@ -86,4 +86,15 @@ public class AppUser {
     /** Whether comments on this member's activity notify them (#211, V41). */
     @Column(name = "notify_comments", nullable = false)
     public boolean notifyComments = true;
+
+    /**
+     * The version of the terms of service and privacy policy the member last accepted (#74),
+     * {@code null} until they do. Compared with {@code LegalTerms.CURRENT_VERSION}.
+     */
+    @Column(name = "terms_version")
+    public Integer termsVersion;
+
+    /** When they accepted it, on the server's clock. */
+    @Column(name = "terms_accepted_at")
+    public OffsetDateTime termsAcceptedAt;
 }

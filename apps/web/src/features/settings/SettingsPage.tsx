@@ -16,6 +16,7 @@ import { HomeLayoutSection } from './HomeLayoutSection';
 import { BottomBarSection } from './BottomBarSection';
 import { useHighlightHash } from '../../shared/useHighlightHash';
 import { Loading } from '../../shared/ui/states';
+import { LegalLinks } from '../legal/LegalLinks';
 import styles from './SettingsPage.module.css';
 
 // The sheet's previews draw real sheets: their code stays out of Settings until the reading
@@ -204,7 +205,7 @@ export function SettingsPage() {
 
   if (category === undefined) {
     return (
-      <Screen>
+      <Screen measure="reading">
         <div className={`sticky-header ${styles.header}`}>
           <button type="button" onClick={leave} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--ink)" />
@@ -231,6 +232,7 @@ export function SettingsPage() {
           </ul>
         </div>
         <div className={styles.version}>{t('settings.version', { version: APP_VERSION })}</div>
+        <LegalLinks />
       </Screen>
     );
   }
@@ -250,7 +252,7 @@ function CategoryScreen({ category }: { category: SettingsCategory }) {
   useHighlightHash();
   const Content = CATEGORY_CONTENT[category];
   return (
-    <Screen>
+    <Screen measure="reading">
       <div className={`sticky-header ${styles.header}`}>
         <button type="button" onClick={back} aria-label={t('settings.backToCategories')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />

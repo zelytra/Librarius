@@ -60,11 +60,18 @@ public final class ApiDtos {
      */
     public record MeDto(String id, String email, String displayName, String locale,
                         String timeZone, boolean trusted, boolean publicAccount, boolean admin,
-                        Long avatarVersion, boolean notifyComments, String country) {
+                        Long avatarVersion, boolean notifyComments, String country,
+                        Integer termsVersion, java.time.OffsetDateTime termsAcceptedAt,
+                        int currentTermsVersion) {
         public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount, admin, u.avatarVersion, u.notifyComments, u.country);
+                    u.publicAccount, admin, u.avatarVersion, u.notifyComments, u.country,
+                    u.termsVersion, u.termsAcceptedAt, zelytra.librarius.legal.LegalTerms.CURRENT_VERSION);
         }
+    }
+
+    /** {@code PUT /api/me/terms} (#74): the version of the terms the member accepts. */
+    public record AcceptTermsDto(@jakarta.validation.constraints.NotNull Integer version) {
     }
 
     /**

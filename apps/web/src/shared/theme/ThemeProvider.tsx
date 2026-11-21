@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   STORAGE_KEY,
+  applySystemBars,
   applyTheme,
   darkModeQuery,
   readStoredTheme,
@@ -13,16 +14,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(readStoredTheme);
 
   useEffect(() => {
-    applyTheme(resolveTheme(theme));
+    const apply = () => {
+      const palette = resolveTheme(theme);
+      applyTheme(palette);
+      applySystemBars(palette);
+    };
+    apply();
 
     // Following the system preference means following it while the app is open,
     // not only at load time.
     if (theme !== 'systeme') return;
     const query = darkModeQuery();
     if (!query) return;
-    const onChange = () => applyTheme(resolveTheme(theme));
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
+    query.addEventListener('change', apply);
+    return () => query.removeEventListener('change', apply);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(

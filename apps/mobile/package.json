@@ -20,7 +20,8 @@
     "@capacitor/app": "^8.1.2",
     "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.6.2",
-    "@capacitor/ios": "^8.6.2"
+    "@capacitor/ios": "^8.6.2",
+    "@capgo/inappbrowser": "^8.6.14"
   },
   "devDependencies": {
     "@capacitor/assets": "4.0.0",

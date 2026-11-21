@@ -173,7 +173,8 @@ describe('SettingsPage — categories', () => {
   test('lists the categories, each leading to its own page', async () => {
     renderSettings();
 
-    const links = screen.getAllByRole('link');
+    // The first list is the categories; the legal links (#74) close the page under it.
+    const links = within(screen.getAllByRole('list')[0]).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('href'))).toEqual([
       '/settings/profile', '/settings/reading', '/settings/appearance', '/settings/community', '/settings/data',
     ]);
@@ -188,6 +189,16 @@ describe('SettingsPage — categories', () => {
     expect(screen.getByRole('heading', { name: 'Communauté' })).toBeInTheDocument();
     expect(screen.queryByText('Fichier JSON')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retour aux réglages' })).toBeInTheDocument();
+  });
+
+  /** #74: the legal documents are one tap away from Settings. */
+  test('links the terms, the privacy policy and the legal notice under the list', () => {
+    renderSettings();
+
+    const legal = screen.getByRole('navigation', { name: 'Informations légales' });
+    expect(within(legal).getByRole('link', { name: 'Conditions d’utilisation' })).toHaveAttribute('href', '/legal/terms');
+    expect(within(legal).getByRole('link', { name: 'Confidentialité' })).toHaveAttribute('href', '/legal/privacy');
+    expect(within(legal).getByRole('link', { name: 'Mentions légales' })).toHaveAttribute('href', '/legal/notice');
   });
 
   test('sends an unknown category back to the list', () => {

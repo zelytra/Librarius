@@ -70,14 +70,14 @@ describe('PeoplePage', () => {
     expect(await screen.findByLabelText('Chercher un lecteur par son nom…')).toBeInTheDocument();
   });
 
-  /** #497: every reader listed opens their profile, and yours is one tap away. */
-  test('links each reader, and the reader themself, to a profile', async () => {
+  /** #497: every reader listed opens their profile. #605: yours is reached from the navigation. */
+  test('links each reader to a profile, with no « Mon profil » button in the header', async () => {
     renderWithProviders(<PeoplePage />, { route: '/people?tab=followers' });
 
     const camille = await screen.findByRole('link', { name: 'Camille' });
     expect(camille).toHaveAttribute('href', '/people/u-3');
     // #512: the avatar is part of the link, not only the name.
     expect(camille.querySelector('[aria-hidden="true"]')).not.toBeNull();
-    expect(await screen.findByRole('link', { name: 'Mon profil' })).toHaveAttribute('href', '/people/me-1');
+    expect(screen.queryByRole('link', { name: 'Mon profil' })).not.toBeInTheDocument();
   });
 });

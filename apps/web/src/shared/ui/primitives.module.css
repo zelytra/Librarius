@@ -10,6 +10,12 @@
   margin-inline: auto;
 }
 
+/* A screen that is a column to read rather than a grid to scan (#605): the same container,
+   narrower, still centred by the rule above. */
+.screenReading {
+  max-width: var(--reading-max);
+}
+
 /* The bottom margin is left to the screen: it varies from one to the next, and
    the global `h1, h2, h3 { margin: 0 }` rule is what a page class overrides. */
 .screenTitle {

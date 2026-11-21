@@ -18,9 +18,11 @@ export default defineConfig({
     // checks that the frame and the bottom bar still hold the system bars off (#529);
     // `AdminPage.module.css` for `features/admin/reportScroll.test.ts` (#564);
     // `ReadingSheetPage.module.css` for `features/sheet/sheetInk.test.ts` (#596);
-    // `FeedbackButton.module.css` and `Selection.module.css` for `shared/feedback/feedbackClearance.test.ts` (#593).
+    // `FeedbackButton.module.css` and `Selection.module.css` for `shared/feedback/feedbackClearance.test.ts` (#593);
+    // `primitives.module.css` for `shared/ui/readingScreens.test.tsx` (#605) and
+    // `SettingsPage.module.css` for `features/settings/versionGap.test.ts` (#604).
     css: {
-      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/, /FeedbackButton\.module\.css/, /Selection\.module\.css/],
+      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/, /FeedbackButton\.module\.css/, /Selection\.module\.css/, /primitives\.module\.css/, /SettingsPage\.module\.css/],
     },
   },
 });

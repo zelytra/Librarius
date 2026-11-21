@@ -31,6 +31,9 @@ importers:
       '@capacitor/ios':
         specifier: ^8.6.2
         version: 8.6.2(@capacitor/core@8.6.2)
+      '@capgo/inappbrowser':
+        specifier: ^8.6.14
+        version: 8.6.14(@capacitor/core@8.6.2)
     devDependencies:
       '@capacitor/assets':
         specifier: 4.0.0
@@ -59,6 +62,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.6.2
         version: 8.6.2
+      '@capgo/inappbrowser':
+        specifier: ^8.6.14
+        version: 8.6.14(@capacitor/core@8.6.2)
       '@tanstack/react-query':
         specifier: ^5.101.4
         version: 5.107.1(@types/react@19.3.0)(react@19.3.1)
@@ -707,6 +713,12 @@ packages:
     resolution: {integrity: sha512-YnVm0lRA1mQWK0SKd2bdJIOG+PXRRDDdndZ1+nGqeiob+QmHZmb4wWo5gVpWhoHO37pGi2qzH5w5WGvfKrs+Gg==}
     peerDependencies:
       '@capacitor/core': ^8.6.0
+
+  '@capgo/inappbrowser@8.6.14':
+    resolution: {integrity: sha512-5aSpqDf94h6za78Sa2ZTlGIJpIhdV76ZPeuFSULTCDHswyGRGFjT5BKcs5WxiguUGD6dT+6tc04wlWU+yndNrA==}
+    deprecated: This package has moved to @capgo/capacitor-inappbrowser. Please install @capgo/capacitor-inappbrowser instead.
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@commander-js/extra-typings@15.1.0':
     resolution: {integrity: sha512-FsI7l5tFON52RyyDKyCkvwFl+peHZuP5TZ7AhxbDFGo/5T6KQd4+KE48aJ8jrDSSAQDvZ8hYKX47fmwZ5bGFNw==}
@@ -4962,6 +4974,10 @@ snapshots:
       tslib: 2.9.1
 
   '@capacitor/ios@8.6.2(@capacitor/core@8.6.2)':
+    dependencies:
+      '@capacitor/core': 8.6.2
+
+  '@capgo/inappbrowser@8.6.14(@capacitor/core@8.6.2)':
     dependencies:
       '@capacitor/core': 8.6.2
 

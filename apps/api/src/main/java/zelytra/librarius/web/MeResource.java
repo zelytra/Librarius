@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,6 +20,8 @@ import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.security.CurrentUser;
 import zelytra.librarius.social.UserBlockService;
 import zelytra.librarius.social.UserFollowService;
+import zelytra.librarius.legal.LegalTerms;
+import zelytra.librarius.web.ApiDtos.AcceptTermsDto;
 import zelytra.librarius.web.ApiDtos.AccountDeletionDto;
 import zelytra.librarius.web.ApiDtos.LibraryResetDto;
 import zelytra.librarius.web.ApiDtos.MeDto;
@@ -26,6 +29,7 @@ import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 import zelytra.librarius.web.ApiDtos.UpdateMeDto;
 
 import java.time.DateTimeException;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
@@ -134,6 +138,26 @@ public class MeResource {
         if (dto.notifyComments() != null) {
             user.notifyComments = dto.notifyComments();
         }
+        return MeDto.of(user, currentUser.isAdmin());
+    }
+
+    /**
+     * Records the caller's acceptance of the terms of service and privacy policy (#74): the
+     * version they accepted, at the server's time — 200 with the profile. Only the version in
+     * force can be accepted (400 otherwise), so an acceptance always names the text that was
+     * shown. Accepting again moves the date forward.
+     */
+    @jakarta.ws.rs.PUT
+    @Path("/terms")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public MeDto acceptTerms(@Valid @NotNull AcceptTermsDto dto) {
+        if (dto.version() != LegalTerms.CURRENT_VERSION) {
+            throw new BadRequestException("Not the terms in force: " + dto.version());
+        }
+        AppUser user = currentUser.require();
+        user.termsVersion = dto.version();
+        user.termsAcceptedAt = OffsetDateTime.now();
         return MeDto.of(user, currentUser.isAdmin());
     }
 

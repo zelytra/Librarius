@@ -1,5 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
-import { bookmarkletHref, collectLibrary, COLLECTOR_VERSION, isCollectedFile, type CollectedFile, type CollectorEnv } from './collector';
+import { screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { bookmarkletHref, collectLibrary, COLLECTOR_VERSION, inAppCollectorScript, isCollectedFile, postToApp, type CollectedFile, type CollectorEnv } from './collector';
 
 /** A Booknode library page: rows, and the pagination naming the last page. */
 function booknodePage(titles: string[], last: number): string {
@@ -458,5 +459,42 @@ describe('isCollectedFile', () => {
     expect(isCollectedFile({ format: 'librarius-collect', version: 1, source: 'babelio', pages: [] })).toBe(true);
     expect(isCollectedFile({ source: 'babelio', pages: [] })).toBe(false);
     expect(isCollectedFile(null)).toBe(false);
+  });
+});
+
+/**
+ * #570: in the mobile app the collector runs in a window the app owns, not from a bookmark. The
+ * script injected there pins one button over the page; the collector it starts posts its file
+ * to the app rather than downloading it.
+ */
+describe('the in-app collector', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+    delete (window as { mobileApp?: unknown }).mobileApp;
+  });
+
+  test('pins a single import button over the page, however often it is injected', () => {
+    const run = new Function(inAppCollectorScript());
+    run();
+    run();
+    const buttons = screen.getAllByRole('button', { name: 'Importer dans Librarius' });
+    expect(buttons).toHaveLength(1);
+  });
+
+  test('starts the collector when the button is pressed', async () => {
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    new Function(inAppCollectorScript())();
+    screen.getByRole('button', { name: 'Importer dans Librarius' }).click();
+    // On a page that is none of the three sites, the collector says where to go.
+    await waitFor(() => expect(alert).toHaveBeenCalledWith(expect.stringMatching(/Booknode, Babelio ou Mangacollec/)));
+    alert.mockRestore();
+  });
+
+  test('posts the collected file to the app', () => {
+    const postMessage = vi.fn();
+    (window as { mobileApp?: unknown }).mobileApp = { postMessage };
+    const file: CollectedFile = { format: 'librarius-collect', version: COLLECTOR_VERSION, source: 'babelio', collectedAt: '2026-11-21T10:00:00Z', pages: ['<ul></ul>'] };
+    postToApp(file);
+    expect(postMessage).toHaveBeenCalledWith({ detail: file });
   });
 });

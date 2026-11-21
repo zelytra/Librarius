@@ -40,6 +40,45 @@ Librarius export. Every import is a **job**: `POST` starts it and answers an id,
   A raw collection document saved by hand is still accepted by the file picker, recognised by
   its content (`features/settings/mangacollec.ts`).
 
+## In the mobile app: signing in inside the app (#570)
+
+The collector asks a reader to install a bookmarklet, which phone browsers make awkward and
+the native app cannot run at all. In the app, Settings offers **« Se connecter à … et
+importer »** instead: the source site opens in a window the app owns, the reader signs in as
+usual, opens their library, and taps the **« Importer dans Librarius »** button pinned over
+the page. The same collector then runs in that page and hands the file straight back to the
+app, which imports it with `POST /api/import/collected` — no bookmark, no download, no file
+picker.
+
+How the options compared:
+
+| Option | Reads the signed-in page | Sends the file back | Verdict |
+|---|---|---|---|
+| `@capacitor/browser` (Custom Tabs, `SFSafariViewController`) — already a dependency | no: the system browser runs no script of ours | no | ✗ |
+| A popup or iframe from the web app | no: the third-party origin is cross-origin | no | ✗ |
+| A browser extension | yes | yes | heavier than the bookmarklet it would replace, one per browser, a store review each |
+| A native plugin of our own around a `WebView` | yes | yes | native code on two platforms to write and keep |
+| **`@capgo/inappbrowser`** (MIT, Capacitor ≥ 8) | **yes**: `executeScript` in the page | **yes**: `window.mobileApp.postMessage` → `messageFromWebview` | **chosen** |
+
+What the code does (`features/settings/inAppImport.ts`):
+
+- `openWebView` on the source's sign-in page (`IN_APP_START`), and on every
+  `browserPageLoaded` an `executeScript` of `inAppCollectorScript()`
+  (`features/settings/collector.ts`): it pins the button — once per page — and its click runs
+  `collectLibrary` with `postToApp` as the save, so the file is posted to the app instead of
+  downloaded. The collector is the bookmarklet's, unchanged: one code path for both.
+- The first `messageFromWebview` that holds a collected file closes the window and resolves
+  with it; closing the window first resolves with nothing, and the screen stays as it was.
+- Nothing about the session leaves the window: the collector reads the pages, the app only
+  receives the rows it would have downloaded. The sites' terms of use apply as they do to
+  the bookmarklet — the import reads the reader's own library, at a reader's pace.
+- On the web the bookmarklet stays: no browser lets a page script another origin, and an
+  extension was judged not worth it (table above).
+
+Not yet run on a device: the flow is locked by tests with the plugin faked, and needs a try on
+Android and iOS against the live sites — in particular the size of a large Mangacollec
+collection through the bridge.
+
 ## What a row becomes
 
 | Source | Read from it |

@@ -5,14 +5,13 @@
   margin-bottom: 20px;
 }
 
-/* Single stacked column at every width, each section a card of its own. Capped at a
-   reading width: stretched across a desktop screen, a name field ran a thousand pixels
-   long and its Save button ended up a screen away from it. */
+/* Single stacked column at every width, each section a card of its own. The reading
+   width comes from `Screen measure="reading"` (#605): stretched across a desktop screen, a
+   name field ran a thousand pixels long and its Save button ended up a screen away from it. */
 .sections {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 760px;
 }
 
 .sectionBlock {
@@ -122,7 +121,9 @@
   margin-bottom: 26px;
 }
 
+/* #604: kept off the last category card, at the page's own block rhythm. */
 .version {
+  margin-top: 22px;
   text-align: center;
   font-size: var(--fs-11-5);
   color: var(--faint);

@@ -412,6 +412,12 @@
      paragraph of Detail running the full width of one is unreadable. */
   --content-max: none;
 
+  /* The reading measure (#605): screens that are a column of text and cards — Settings,
+     People, Notifications, a profile, Categories — stop at 760px of content and centre in
+     the window, rather than stretch across --content-max or hug its left edge. `none` on a
+     phone, like --content-max; the padding is added back so the content keeps its 760px. */
+  --reading-max: none;
+
   /* ── Side navigation ──────────────────────────────────────────────────────
      The navigation of a wide viewport (#172), in its two forms. It is not
      mounted below --bp-tablet at all — the bottom bar is, unchanged — so what
@@ -541,6 +547,7 @@
     --app-frame-shadow: none;
 
     --content-max: 1140px;
+    --reading-max: calc(760px + 2 * var(--screen-pad-x));
 
     /* And the grids stop counting their columns: from here the width decides,
        which is what keeps them filling a window of any size between the two

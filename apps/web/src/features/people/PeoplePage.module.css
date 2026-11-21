@@ -21,12 +21,10 @@
   font-size: var(--fs-25);
 }
 
-/* Settings' reading width: a list of names gains nothing from a whole desktop. */
 .body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 760px;
 }
 
 .searchBar {
@@ -95,17 +93,6 @@
 }
 
 
-.mine {
-  margin-left: auto;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--accent-deep);
-  font-size: var(--fs-13);
-  font-weight: 600;
-  text-decoration: none;
-}
 
 /* #512: the avatar and the name, one link to the profile. */
 .person {

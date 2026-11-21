@@ -16,12 +16,10 @@
   cursor: pointer;
 }
 
-/* A reading width, like People: a profile gains nothing from a whole desktop. */
 .body {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  max-width: 760px;
 }
 
 .identity {

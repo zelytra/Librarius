@@ -6,12 +6,10 @@ import {
   deleteApiUsersIdFollow,
   getGetApiMeFollowingQueryKey,
   putApiUsersIdFollow,
-  useGetApiMe,
   useGetApiMeFollowers,
   useGetApiMeFollowing,
   useGetApiUsers,
 } from '../../api/generated/librarius';
-import { useApiAuth } from '../../shared/api';
 import { LoginGate } from '../../shared/LoginGate';
 import { Button, Screen, Segmented } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
@@ -46,32 +44,17 @@ export function PeoplePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Screen>
+    <Screen measure="reading">
       <div className={`sticky-header ${styles.header}`}>
         <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
         </button>
         <h2 className={styles.title}>{t('people.title')}</h2>
-        <MyProfileLink />
       </div>
       <LoginGate prompt={t('people.prompt')}>
         <People />
       </LoginGate>
     </Screen>
-  );
-}
-
-/** The way to the reader's own profile, once `/api/me` says who they are. */
-function MyProfileLink() {
-  const { t } = useTranslation();
-  const { authed } = useApiAuth();
-  const { data: me } = useGetApiMe({ query: { enabled: authed } });
-  if (!me?.id) return null;
-  return (
-    <Link to={`/people/${me.id}`} className={styles.mine}>
-      <Icon name="person" size={18} color="currentColor" />
-      {t('profile.mine')}
-    </Link>
   );
 }
 

@@ -85,6 +85,11 @@ const LandingPage = lazy(() =>
   import('./features/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
 );
 
+// The legal documents (#74): public, read rarely, and long.
+const LegalPage = lazy(() =>
+  import('./features/legal/LegalPage').then((m) => ({ default: m.LegalPage })),
+);
+
 /**
  * What `/` is, which depends on who is asking.
  *
@@ -129,6 +134,16 @@ function App() {
           element={
             <Suspense fallback={<Loading />}>
               <LandingPage />
+            </Suspense>
+          }
+        />
+        {/* The terms, the privacy policy and the legal notice (#74): readable without an
+            account, and out of the shell so the acceptance request it shows never covers them. */}
+        <Route
+          path="legal/:doc"
+          element={
+            <Suspense fallback={<Loading />}>
+              <LegalPage />
             </Suspense>
           }
         />

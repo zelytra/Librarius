@@ -280,7 +280,7 @@ export function CategoriesPage() {
   const navigate = useNavigate();
 
   return (
-    <Screen>
+    <Screen measure="reading">
       <div className={`sticky-back ${styles.backRow}`}>
         <button onClick={() => navigate('/collection')} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={20} color="var(--ink)" />
