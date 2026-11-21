@@ -80,8 +80,11 @@ public class CategoryService {
      * point at the category by identifier, not by code.
      */
     @Transactional
-    public RankCategory rename(String userId, UUID id, String label) {
+    public RankCategory rename(String userId, UUID id, String label, String color) {
         RankCategory category = requireOwn(userId, id);
+        if (color != null) {
+            category.color = color;
+        }
         String name = label.trim();
         String code = slug(name);
         requireFreeCode(userId, code, id);

@@ -63,7 +63,7 @@ public class CategoryResource {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     public CategoryDto update(@PathParam("id") UUID id, @Valid CategoryUpdateDto dto) {
-        return CategoryDto.of(service.rename(currentUser.id(), id, dto.label()));
+        return CategoryDto.of(service.rename(currentUser.id(), id, dto.label(), dto.color()));
     }
 
     /**

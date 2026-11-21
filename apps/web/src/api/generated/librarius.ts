@@ -266,6 +266,7 @@ export interface CatalogResult {
 export interface CategoryCreateDto {
   /** @pattern \S */
   label: string;
+  /** @pattern #[0-9a-fA-F]{6} */
   color?: string;
 }
 
@@ -280,6 +281,8 @@ export interface CategoryDto {
 export interface CategoryUpdateDto {
   /** @pattern \S */
   label: string;
+  /** @pattern #[0-9a-fA-F]{6} */
+  color?: string;
 }
 
 export interface ClientErrorDto {

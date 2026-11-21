@@ -487,7 +487,9 @@ public final class ApiDtos {
         }
     }
 
-    public record CategoryCreateDto(@NotBlank String label, String color) {
+    /** {@code color} is drawn straight into the page: a #rrggbb code or nothing (#599). */
+    public record CategoryCreateDto(@NotBlank String label,
+            @jakarta.validation.constraints.Pattern(regexp = "#[0-9a-fA-F]{6}") String color) {
     }
 
     /**
@@ -495,7 +497,9 @@ public final class ApiDtos {
      * and the colour is not editable — no screen offers a picker, so a field nothing can
      * fill would only be a way of clearing what the creation set.
      */
-    public record CategoryUpdateDto(@NotBlank String label) {
+    /** A rename, and the colour when it changes (#599); a missing colour keeps the one stored. */
+    public record CategoryUpdateDto(@NotBlank String label,
+            @jakarta.validation.constraints.Pattern(regexp = "#[0-9a-fA-F]{6}") String color) {
     }
 
     public record RankAssignDto(java.util.UUID categoryId) {

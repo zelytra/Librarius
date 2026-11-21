@@ -110,7 +110,7 @@ Deux façons de ranger, qui ne viennent pas du même endroit.
   l'application et ne se modifient pas. Un titre porte **au plus un** classement.
 
 Depuis la ligne d'étagères de la collection, « Gérer mes catégories » permet de créer,
-renommer et supprimer les tiennes. Elles sont privées : deux comptes peuvent avoir chacun
+renommer et supprimer les tiennes, et choisir leur couleur. Elles sont privées : deux comptes peuvent avoir chacun
 leur « Coup de cœur ». **Supprimer une catégorie ne supprime aucun titre** — les titres
 qui y étaient rangés restent dans ta collection, sans classement.
 

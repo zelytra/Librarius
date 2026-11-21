@@ -4786,7 +4786,8 @@
             "pattern" : "\\S"
           },
           "color" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "#[0-9a-fA-F]{6}"
           }
         }
       },
@@ -4817,6 +4818,10 @@
           "label" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "color" : {
+            "type" : "string",
+            "pattern" : "#[0-9a-fA-F]{6}"
           }
         }
       },

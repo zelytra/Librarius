@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
@@ -59,8 +59,31 @@ describe('CategoriesPage', () => {
     await userEvent.type(screen.getByLabelText('Nom de la catégorie'), 'À relire');
     await userEvent.click(screen.getByText('Créer'));
 
-    await waitFor(() => expect(sent).toEqual({ label: 'À relire' }));
+    // #599: a colour goes with it — the first of the palette unless another is picked.
+    await waitFor(() => expect(sent).toEqual({ label: 'À relire', color: '#5f6c57' }));
     expect(await screen.findByText('À relire')).toBeInTheDocument();
+  });
+
+  /** #599: the colour of a new category is picked from the palette. */
+  test('creates a category in the colour picked', async () => {
+    const state = categoriesReturn([...BUILTIN_CATEGORIES]);
+    let sent: unknown = null;
+    server.use(http.post('*/api/categories', async ({ request }) => {
+      sent = await request.json();
+      const created = customCategory({ id: 'cat-new', code: 'bleu', label: 'Bleu', color: '#2f6f8f' });
+      state.push(created);
+      return HttpResponse.json(created);
+    }));
+    renderWithProviders(<CategoriesPage />);
+
+    await screen.findByText('Or');
+    const palette = screen.getByRole('radiogroup', { name: 'Couleur de la nouvelle catégorie' });
+    await userEvent.click(within(palette).getByRole('radio', { name: 'Bleu canard' }));
+    expect(within(palette).getByRole('radio', { name: 'Bleu canard' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.type(screen.getByLabelText('Nom de la catégorie'), 'Bleu');
+    await userEvent.click(screen.getByText('Créer'));
+
+    await waitFor(() => expect(sent).toEqual({ label: 'Bleu', color: '#2f6f8f' }));
   });
 
   test('a name already taken is reported instead of being swallowed', async () => {
@@ -91,8 +114,27 @@ describe('CategoriesPage', () => {
     await userEvent.type(field, 'À relire');
     await userEvent.click(screen.getByText('Enregistrer'));
 
-    await waitFor(() => expect(sent).toEqual({ label: 'À relire' }));
+    // The colour it had goes back unchanged.
+    await waitFor(() => expect(sent).toEqual({ label: 'À relire', color: '#9a8fa6' }));
     expect(await screen.findByText('À relire')).toBeInTheDocument();
+  });
+
+  /** #599: the colour of a category of one's own changes in the same editor as its name. */
+  test('changes the colour of a category', async () => {
+    const state = categoriesReturn([...BUILTIN_CATEGORIES, customCategory()]);
+    let sent: unknown = null;
+    server.use(http.put('*/api/categories/:id', async ({ request }) => {
+      sent = await request.json();
+      state[state.length - 1] = customCategory({ color: '#b04a5a' });
+      return HttpResponse.json(state[state.length - 1]);
+    }));
+    renderWithProviders(<CategoriesPage />);
+
+    await userEvent.click(await screen.findByLabelText('Renommer Doré'));
+    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Couleur' })).getByRole('radio', { name: 'Framboise' }));
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(sent).toEqual({ label: 'Doré', color: '#b04a5a' }));
   });
 
   test('cancelling a rename leaves the name alone', async () => {

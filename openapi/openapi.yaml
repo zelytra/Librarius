@@ -3280,6 +3280,7 @@ components:
           pattern: \S
         color:
           type: string
+          pattern: "#[0-9a-fA-F]{6}"
     CategoryDto:
       type: object
       properties:
@@ -3301,6 +3302,9 @@ components:
         label:
           type: string
           pattern: \S
+        color:
+          type: string
+          pattern: "#[0-9a-fA-F]{6}"
     ClientErrorDto:
       type: object
       required:

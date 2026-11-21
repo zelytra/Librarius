@@ -432,7 +432,19 @@
       "renameFailed": "Renommage impossible pour le moment.",
       "deleteFailed": "Suppression impossible pour le moment.",
       "load": "Impossible de charger tes catégories."
-    }
+    },
+    "colors": {
+      "sage": "Sauge",
+      "green": "Vert sapin",
+      "teal": "Bleu canard",
+      "indigo": "Indigo",
+      "plum": "Prune",
+      "raspberry": "Framboise",
+      "amber": "Ambre",
+      "grey": "Gris"
+    },
+    "color": "Couleur",
+    "newColor": "Couleur de la nouvelle catégorie"
   },
   "series": {
     "follow": "Suivre cette série",

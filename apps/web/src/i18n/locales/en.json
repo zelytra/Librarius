@@ -432,7 +432,19 @@
       "renameFailed": "Cannot rename it right now.",
       "deleteFailed": "Cannot delete it right now.",
       "load": "Your categories could not be loaded."
-    }
+    },
+    "colors": {
+      "sage": "Sage",
+      "green": "Fir green",
+      "teal": "Teal",
+      "indigo": "Indigo",
+      "plum": "Plum",
+      "raspberry": "Raspberry",
+      "amber": "Amber",
+      "grey": "Gray"
+    },
+    "color": "Color",
+    "newColor": "Color of the new category"
   },
   "series": {
     "follow": "Follow this series",

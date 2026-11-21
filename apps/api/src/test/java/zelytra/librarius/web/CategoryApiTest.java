@@ -251,4 +251,45 @@ class CategoryApiTest {
                 .when().delete("/api/categories/" + unknown)
                 .then().statusCode(404);
     }
+
+    /** #599: a category of the reader's own carries the colour they picked, and can change it. */
+    @Test
+    void aCategoryKeepsTheColourPickedAndChangesIt() {
+        String id = given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Teinte %s\", \"color\": \"#3b7a57\" }".formatted(java.util.UUID.randomUUID()))
+                .when().post("/api/categories")
+                .then().statusCode(200).body("color", org.hamcrest.Matchers.is("#3b7a57"))
+                .extract().path("id");
+
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Teinte changée %s\", \"color\": \"#8a4fff\" }".formatted(java.util.UUID.randomUUID()))
+                .when().put("/api/categories/" + id)
+                .then().statusCode(200).body("color", org.hamcrest.Matchers.is("#8a4fff"));
+
+        // A rename that says nothing of the colour keeps it.
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Teinte gardée %s\" }".formatted(java.util.UUID.randomUUID()))
+                .when().put("/api/categories/" + id)
+                .then().statusCode(200).body("color", org.hamcrest.Matchers.is("#8a4fff"));
+    }
+
+    /** Only a colour of the form #rrggbb is stored: it is drawn straight into the page. */
+    @Test
+    void refusesAColourThatIsNotAHexCode() {
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Mauvaise teinte\", \"color\": \"red;background:url(x)\" }")
+                .when().post("/api/categories").then().statusCode(400);
+        String id = createCategory("Teinte refusée " + java.util.UUID.randomUUID());
+        given().auth().oauth2(token()).contentType("application/json")
+                .body("{ \"label\": \"Teinte refusée bis\", \"color\": \"blue\" }")
+                .when().put("/api/categories/" + id).then().statusCode(400);
+    }
+
+    @Test
+    void anotherReadersCategoryKeepsItsColour() {
+        String id = createCategory("Teinte privée " + java.util.UUID.randomUUID());
+        given().auth().oauth2(keycloak.getAccessToken("bob")).contentType("application/json")
+                .body("{ \"label\": \"Volée\", \"color\": \"#000000\" }")
+                .when().put("/api/categories/" + id).then().statusCode(404);
+    }
 }
