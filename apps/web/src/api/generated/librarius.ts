@@ -22,6 +22,10 @@ import type {
 } from '@tanstack/react-query';
 
 import { apiClient } from '../../shared/apiClient';
+export interface AcceptTermsDto {
+  version: number;
+}
+
 export interface AccountDeletionDto {
   libraryItems?: number;
   wishlistItems?: number;
@@ -775,6 +779,9 @@ export interface MeDto {
   avatarVersion?: number;
   notifyComments?: boolean;
   country?: string;
+  termsVersion?: number;
+  termsAcceptedAt?: OffsetDateTime;
+  currentTermsVersion?: number;
 }
 
 export interface ProfileTitleDto {
@@ -7516,6 +7523,92 @@ export const useDeleteApiMeLibrary = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiMeLibraryMutationOptions(options), queryClient);
+    }
+
+export const getPutApiMeTermsUrl = () => {
+
+
+
+
+  return `/api/me/terms`
+}
+
+/**
+ * @summary Accept Terms
+ */
+export const putApiMeTerms = async (acceptTermsDto: AcceptTermsDto, options?: Parameters<typeof apiClient>[1]): Promise<MeDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<MeDto>(getPutApiMeTermsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acceptTermsDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiMeTermsMutationKey = () => ['putApiMeTerms'] as const;
+
+export const getPutApiMeTermsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeTerms>>, TError,PutApiMeTermsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiMeTerms>>, TError,PutApiMeTermsMutationVariables, TContext> => {
+
+const mutationKey = getPutApiMeTermsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiMeTerms>>, PutApiMeTermsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiMeTerms(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiMeTermsMutationResult = NonNullable<Awaited<ReturnType<typeof putApiMeTerms>>>
+    export type PutApiMeTermsMutationBody = AcceptTermsDto
+    export type PutApiMeTermsMutationError = void
+    export type PutApiMeTermsMutationVariables = {data: AcceptTermsDto}
+
+    /** @summary Accept Terms */
+export const usePutApiMeTerms = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMeTerms>>, TError,PutApiMeTermsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiMeTerms>>,
+        TError,
+        PutApiMeTermsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiMeTermsMutationOptions(options), queryClient);
     }
 
 export const getGetApiNotificationsUrl = (params?: GetApiNotificationsParams,) => {

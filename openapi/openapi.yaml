@@ -1814,6 +1814,32 @@ paths:
       - Me Resource
       security:
       - SecurityScheme: []
+  /api/me/terms:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptTermsDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Accept Terms
+      tags:
+      - Me Resource
+      security:
+      - SecurityScheme: []
   /api/notifications:
     get:
       parameters:
@@ -2938,6 +2964,14 @@ paths:
       - SecurityScheme: []
 components:
   schemas:
+    AcceptTermsDto:
+      type: object
+      required:
+      - version
+      properties:
+        version:
+          type: integer
+          format: int32
     AccountDeletionDto:
       type: object
       properties:
@@ -4183,6 +4217,14 @@ components:
           type: boolean
         country:
           type: string
+        termsVersion:
+          type: integer
+          format: int32
+        termsAcceptedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        currentTermsVersion:
+          type: integer
+          format: int32
     MemberBookDto:
       type: object
       properties:
