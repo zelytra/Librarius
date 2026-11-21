@@ -12,13 +12,20 @@ pods from the node and are not subject to these rules.
 {{- range $component := list "api" "keycloak" "keycloak-setup" "backup" "prometheus" }}
 {{- $_ := set $pod $component (dict "podSelector" (dict "matchLabels" (dict "app" (printf "%s-%s" $.Release.Name $component)))) }}
 {{- end }}
+{{- /* Prometheus scrapes the api and talks to Alertmanager only when monitoring is on: with it
+off, nothing here may name them (alerting.yml checks that the chart then renders neither). */ -}}
+{{- $monitoring := .Values.monitoring.enabled }}
+{{- $apiFrom := list $ingress }}
+{{- if $monitoring }}{{- $apiFrom = append $apiFrom (index $pod "prometheus") }}{{- end }}
 {{- $rules := list
   (dict "component" "web" "port" 80 "from" (list $ingress))
-  (dict "component" "api" "port" 8080 "from" (list $ingress (index $pod "prometheus")))
+  (dict "component" "api" "port" 8080 "from" $apiFrom)
   (dict "component" "keycloak" "port" 8081 "from" (list $ingress (index $pod "api") (index $pod "keycloak-setup")))
   (dict "component" "postgres" "port" 5432 "from" (list (index $pod "api") (index $pod "keycloak") (index $pod "keycloak-setup") (index $pod "backup")))
-  (dict "component" "alertmanager" "port" 9093 "from" (list (index $pod "prometheus")))
 }}
+{{- if and $monitoring .Values.monitoring.alertmanager.enabled }}
+{{- $rules = append $rules (dict "component" "alertmanager" "port" 9093 "from" (list (index $pod "prometheus"))) }}
+{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
