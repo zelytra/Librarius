@@ -897,7 +897,11 @@
       "creme": "Crème",
       "sauge": "Sauge",
       "rose": "Rose",
-      "nuit": "Nuit"
+      "nuit": "Nuit",
+      "ocean": "Océan",
+      "lavande": "Lavande",
+      "sable": "Sable",
+      "ardoise": "Ardoise"
     },
     "import": {
       "title": "Importer ma bibliothèque",

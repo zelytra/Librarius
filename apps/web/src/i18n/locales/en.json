@@ -897,7 +897,11 @@
       "creme": "Cream",
       "sauge": "Sage",
       "rose": "Rose",
-      "nuit": "Night"
+      "nuit": "Night",
+      "ocean": "Ocean",
+      "lavande": "Lavender",
+      "sable": "Sand",
+      "ardoise": "Slate"
     },
     "import": {
       "title": "Import my library",

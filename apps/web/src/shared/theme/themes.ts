@@ -1,9 +1,9 @@
 /**
  * Themes offered in Settings.
  *
- * Four of them are palettes, and match the `data-theme` blocks in tokens.css.
- * The fifth, `systeme`, is a preference rather than a palette: it follows
- * `prefers-color-scheme` and resolves to one of the four.
+ * All but one are palettes, and match the `data-theme` blocks in tokens.css (#572 added
+ * Océan, Lavande, Sable and the dark Ardoise). `systeme` is a preference rather than a
+ * palette: it follows `prefers-color-scheme` and resolves to Crème or Nuit.
  */
 export const THEMES = [
   {
@@ -15,7 +15,12 @@ export const THEMES = [
   { id: 'creme', labelKey: 'settings.themes.creme', swatch: '#f3ede3' },
   { id: 'sauge', labelKey: 'settings.themes.sauge', swatch: '#dfe6da' },
   { id: 'rose', labelKey: 'settings.themes.rose', swatch: '#f1e2df' },
+  // #572: more colours.
+  { id: 'ocean', labelKey: 'settings.themes.ocean', swatch: '#dde8ee' },
+  { id: 'lavande', labelKey: 'settings.themes.lavande', swatch: '#e7e2ee' },
+  { id: 'sable', labelKey: 'settings.themes.sable', swatch: '#efe6d6' },
   { id: 'nuit', labelKey: 'settings.themes.nuit', swatch: '#211e1a' },
+  { id: 'ardoise', labelKey: 'settings.themes.ardoise', swatch: '#1b2129' },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]['id'];

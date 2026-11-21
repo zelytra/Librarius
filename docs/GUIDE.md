@@ -489,9 +489,9 @@ audio.
 
 L'application se lit en **français** ou en **anglais**. Connecté, la langue se règle dans ton
 **profil** et suit ton compte d'un appareil à l'autre ; sans compte, elle se choisit dans
-Apparence et reste sur cet appareil. À la première visite elle suit ton navigateur. Cinq
+Apparence et reste sur cet appareil. À la première visite elle suit ton navigateur. Neuf
 thèmes : **Système** — qui suit ton téléphone ou ton ordinateur, et c'est le réglage par
-défaut —, Crème, Sauge, Rose et Nuit.
+défaut —, Crème, Sauge, Rose, Océan, Lavande, Sable, et deux thèmes sombres, Nuit et Ardoise.
 
 ## Signaler un problème
 

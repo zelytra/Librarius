@@ -134,6 +134,54 @@
   --rose: #7d5e5a;
 }
 
+[data-theme='ocean'] {
+  --bg: #dde8ee;
+  --surface: #eef4f7;
+  --surface-2: #e4eef3;
+  --ink: #1f2c33;
+  --ink-soft: #3c4f59;
+  --muted: #4c5f69;
+  --faint: #4f5f68;
+  --accent: #7fa7ba;
+  --accent-deep: #2f6177;
+  --accent-soft: #d3e3eb;
+  --line: #c6d7e0;
+  --chip: #cfdfe7;
+  --rose: #8a4f58;
+}
+
+[data-theme='lavande'] {
+  --bg: #e7e2ee;
+  --surface: #f4f1f8;
+  --surface-2: #ece7f3;
+  --ink: #2b2433;
+  --ink-soft: #4a4057;
+  --muted: #5b5167;
+  --faint: #5c5267;
+  --accent: #a597c2;
+  --accent-deep: #5f4f80;
+  --accent-soft: #e2dbee;
+  --line: #d7cfe3;
+  --chip: #ddd5e9;
+  --rose: #8a4f63;
+}
+
+[data-theme='sable'] {
+  --bg: #efe6d6;
+  --surface: #f8f2e7;
+  --surface-2: #f2e9da;
+  --ink: #33291c;
+  --ink-soft: #56472f;
+  --muted: #65563f;
+  --faint: #64563f;
+  --accent: #c9a56b;
+  --accent-deep: #7a5a26;
+  --accent-soft: #f0e2c8;
+  --line: #e2d5bd;
+  --chip: #e8dcc5;
+  --rose: #8a4f45;
+}
+
 /* ── Dark palette ─────────────────────────────────────────────────────────────
    Redeclares the whole set, tints and shadows included: the warm brown shadows
    above are invisible on a dark surface, and the pastel tints would swallow
@@ -156,6 +204,67 @@
   --line: #443d34;
   --chip: #3a352e;
   --rose: #dda29b;
+  --rose-soft: #3d312e;
+  --gold: #d9b94e;
+  --silver: #b3b7bf;
+  --bronze: #c08a5a;
+
+  --success: #4cbf6e;
+  --success-soft: #1f3a27;
+  --success-ink: #8fdca6;
+  --warning: #f0b928;
+  --warning-soft: #3f3315;
+  --warning-ink: #f5cf6a;
+  --danger: #ea6357;
+  --danger-soft: #4a2320;
+  --danger-ink: #ffa59b;
+  --on-danger: #1f0b09;
+
+  --shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.65);
+  --shadow-strong: 0 18px 36px -14px rgba(0, 0, 0, 0.8);
+  --shadow-cover: 0 8px 18px -8px rgba(0, 0, 0, 0.7);
+  --shadow-cover-sm: 0 7px 16px -8px rgba(0, 0, 0, 0.7);
+  --shadow-thumb: 0 3px 8px -3px rgba(0, 0, 0, 0.6);
+  --shadow-badge: 0 2px 6px rgba(0, 0, 0, 0.6);
+  --shadow-segment: 0 3px 8px -4px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 8px 18px -8px rgba(0, 0, 0, 0.75);
+  --shadow-accent-sm: 0 4px 12px -3px rgba(0, 0, 0, 0.6);
+  --shadow-frame: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+
+  --overlay: rgba(24, 21, 18, 0.72);
+  --overlay-strong: rgba(24, 21, 18, 0.85);
+  --wash-opacity: 0.28;
+
+  --tint-sage: #333c30;
+  --tint-sage-ink: #a8bd9c;
+  --tint-rose: #3d312e;
+  --tint-rose-ink: #dda29b;
+  --tint-blush: #402f2d;
+  --tint-sand: #38332c;
+  --tint-clay: #3b342b;
+  --tint-clay-ink: #d6a271;
+  --tint-violet: #363043;
+  --tint-violet-ink: #c1b2d1;
+  --tint-violet-muted: var(--tint-violet-ink);
+}
+/* #572: a second dark palette, slate blue — Nuit's whole set, retinted. */
+[data-theme='ardoise'] {
+  --bg: #1b2129;
+  --surface: #252c35;
+  --surface-2: #303843;
+  --ink: #e8edf2;
+  --ink-soft: #cfd7df;
+  --muted: #a3afba;
+  --faint: #9aa6b2;
+  --accent: #8fb0c6;
+  --accent-deep: #a9c4d8;
+  --accent-soft: #2f3e4b;
+  /* The pastel fill and its dark ink: on a dark page the deep accent is the light one. */
+  --accent-fill: var(--accent);
+  --on-accent-fill: #16202a;
+  --line: #3a4450;
+  --chip: #323b46;
+  --rose: #e0a2a8;
   --rose-soft: #3d312e;
   --gold: #d9b94e;
   --silver: #b3b7bf;
