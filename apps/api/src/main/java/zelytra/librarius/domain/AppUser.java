@@ -35,6 +35,13 @@ public class AppUser {
     @Column(name = "time_zone", length = 64)
     public String timeZone;
 
+    /**
+     * The country the member says they live in (V44, #573), ISO 3166-1 alpha-2, e.g. {@code FR}.
+     * Nullable and only ever set by the member: the admins see a count per country, never who.
+     */
+    @Column(length = 2)
+    public String country;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     public OffsetDateTime createdAt;
 

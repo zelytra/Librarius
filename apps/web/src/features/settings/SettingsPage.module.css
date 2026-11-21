@@ -76,7 +76,9 @@
 }
 
 .themes {
-  display: flex;
+  /* Nine themes since #572: as many per row as the width holds, never squeezed. */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
   gap: 12px;
   margin-bottom: 26px;
 }

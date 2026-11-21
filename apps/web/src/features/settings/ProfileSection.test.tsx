@@ -15,6 +15,7 @@ function profileReturns(me: {
   displayName?: string;
   locale?: string;
   timeZone?: string;
+  country?: string;
   trusted?: boolean;
   publicAccount?: boolean;
   notifyComments?: boolean;
@@ -80,6 +81,34 @@ describe('ProfileSection', () => {
     await waitFor(() => expect(saved).toHaveLength(1));
     // An empty zone is left out of the body rather than sent as a blank string.
     expect(saved[0]).toEqual({ displayName: 'alice', locale: 'fr', publicAccount: false, notifyComments: true });
+  });
+
+  test('saves the country the member lives in, named in their language (#573)', async () => {
+    profileReturns({ displayName: 'alice', locale: 'fr', country: 'JP' });
+    const saved = captureSaves();
+    renderWithProviders(<ProfileSection />);
+
+    const country = await screen.findByLabelText('Pays');
+    await waitFor(() => expect(country).toHaveValue('JP'));
+    expect(screen.getByRole('option', { name: 'Japon' })).toBeInTheDocument();
+    await userEvent.selectOptions(country, 'Belgique');
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).toMatchObject({ country: 'BE' });
+  });
+
+  test('the country can be left unsaid', async () => {
+    profileReturns({ displayName: 'alice', locale: 'fr', country: 'JP' });
+    const saved = captureSaves();
+    renderWithProviders(<ProfileSection />);
+
+    await waitFor(() => expect(screen.getByLabelText('Pays')).toHaveValue('JP'));
+    await userEvent.selectOptions(screen.getByLabelText('Pays'), '');
+    await userEvent.click(screen.getByText('Enregistrer'));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]).not.toHaveProperty('country');
   });
 
   test('a profile save preserves an account that is already public (#201)', async () => {

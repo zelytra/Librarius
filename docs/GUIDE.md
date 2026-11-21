@@ -110,7 +110,7 @@ Deux façons de ranger, qui ne viennent pas du même endroit.
   l'application et ne se modifient pas. Un titre porte **au plus un** classement.
 
 Depuis la ligne d'étagères de la collection, « Gérer mes catégories » permet de créer,
-renommer et supprimer les tiennes. Elles sont privées : deux comptes peuvent avoir chacun
+renommer et supprimer les tiennes, et choisir leur couleur. Elles sont privées : deux comptes peuvent avoir chacun
 leur « Coup de cœur ». **Supprimer une catégorie ne supprime aucun titre** — les titres
 qui y étaient rangés restent dans ta collection, sans classement.
 
@@ -273,6 +273,10 @@ Sous les statuts, **Langue de lecture** note dans quelle langue tu as lu ton exe
 avec ton export.
 
 ## La fiche de lecture
+
+Quand tu marques un livre comme lu — ou que tu l'ajoutes directement comme lu —, une fenêtre
+te propose de le noter, de le classer, et de corriger ses dates de lecture : « Commencé le »
+et « Terminé le » sont pré-remplis avec ce que Librarius sait (aujourd'hui pour la fin).
 
 Une fois un livre fini, « Fiche de lecture » (sur sa page, ou depuis la fenêtre qui s'ouvre
 quand tu le marques lu) prépare une fiche à imprimer, au format **A4** (21 × 29,7 cm),
@@ -466,8 +470,8 @@ d'utilisateur** pour confirmer. Il n'y a pas de retour en arrière.
 ## Réglages, thème et langue
 
 Les réglages s'ouvrent par la **roue dentée en haut de l'accueil**, ou depuis « Plus » sur
-téléphone. Ils sont rangés en cinq catégories : **Profil** (nom, photo, langue, fuseau
-horaire, déconnexion), **Lecture** (objectif de l'année, type de livres affiché à l'ouverture
+téléphone. Ils sont rangés en cinq catégories : **Profil** (nom, photo — recadrée et zoomée
+avant d'être enregistrée —, langue, fuseau horaire, pays facultatif, déconnexion), **Lecture** (objectif de l'année, type de livres affiché à l'ouverture
 de la bibliothèque, fiche de lecture), **Apparence** (thème, langue, organisation de
 l'accueil), **Communauté** (trouver des lecteurs, membres bloqués) et **Données et compte**
 (import, export, vider la bibliothèque, supprimer le compte). Un lien venu d'ailleurs —
@@ -485,9 +489,9 @@ audio.
 
 L'application se lit en **français** ou en **anglais**. Connecté, la langue se règle dans ton
 **profil** et suit ton compte d'un appareil à l'autre ; sans compte, elle se choisit dans
-Apparence et reste sur cet appareil. À la première visite elle suit ton navigateur. Cinq
+Apparence et reste sur cet appareil. À la première visite elle suit ton navigateur. Neuf
 thèmes : **Système** — qui suit ton téléphone ou ton ordinateur, et c'est le réglage par
-défaut —, Crème, Sauge, Rose et Nuit.
+défaut —, Crème, Sauge, Rose, Océan, Lavande, Sable, et deux thèmes sombres, Nuit et Ardoise.
 
 ## Signaler un problème
 
@@ -506,7 +510,8 @@ comme dans ton navigateur, pour qu'un bug soit vu même quand personne ne l'écr
 Les comptes qui ont le rôle administrateur (attribué dans Keycloak) voient « Administration »
 dans les réglages : la liste des signalements et des erreurs, chacun avec son journal, et la
 supervision — membres actifs en ce moment et par jour, signalements et erreurs par jour sur
-30 jours, état de la base de données et de Keycloak.
+30 jours, un globe des membres par pays (seulement un nombre par pays, à partir du pays que
+chacun a choisi d'indiquer), état de la base de données et de Keycloak.
 
 ## Questions fréquentes
 

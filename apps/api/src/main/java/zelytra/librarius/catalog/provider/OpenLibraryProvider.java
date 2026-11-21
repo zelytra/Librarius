@@ -33,6 +33,9 @@ public class OpenLibraryProvider implements CatalogProvider {
      */
     private static final String PREFERRED_LANG = "fr";
 
+    /** {@link #PREFERRED_LANG} as Open Library labels its editions' languages. */
+    private static final String PREFERRED_MARC = "fre";
+
     /**
      * Open Library indexes languages as MARC codes ({@code fre}, {@code eng}), while a client
      * naturally holds the ISO 639-1 code of the language it displays. Only the languages the
@@ -87,12 +90,43 @@ public class OpenLibraryProvider implements CatalogProvider {
      */
     @Override
     public List<CatalogResult> worksOfAuthor(String authorName, int limit) {
+        return worksOfAuthor(authorName, null, limit);
+    }
+
+    /**
+     * As above, for a reader of {@code language} (#601). Open Library files many translations
+     * as works of their own — four "El árabe del futuro 5" and an "Arab of the Future" on Riad
+     * Sattouf — so the works printed in that language come first, then the others but those
+     * labelled with neither that language nor the author's own: Brandon Sanderson's untranslated
+     * novels, labelled English only, stay. A work with no language label at all stays too:
+     * plenty of French books carry none ("Vallée du silicium", Alain Damasio).
+     */
+    @Override
+    public List<CatalogResult> worksOfAuthor(String authorName, String language, int limit) {
         if (authorName == null || authorName.isBlank()) {
             return List.of();
         }
-        String q = solrQuery(new CatalogQuery(null, authorName, null, null, null, null));
-        return fetch(() -> client.search(q, Math.min(limit, 40), FIELDS, "editions", PREFERRED_LANG),
-                "author works");
+        int size = Math.min(limit, 40);
+        String any = solrQuery(new CatalogQuery(null, authorName, null, null, null, null));
+        if (language == null) {
+            return fetch(() -> client.search(any, size, FIELDS, "editions", PREFERRED_LANG), "author works", d -> true);
+        }
+        String marc = MARC_LANGUAGES.getOrDefault(language.toLowerCase(java.util.Locale.ROOT), language);
+        String printed = solrQuery(new CatalogQuery(null, authorName, null, language, null, null));
+        java.util.Map<String, CatalogResult> works = new java.util.LinkedHashMap<>();
+        java.util.function.Consumer<CatalogResult> add = r -> works.putIfAbsent(
+                r.providerRef() != null ? r.providerRef() : String.valueOf(r.title()), r);
+        fetch(() -> client.search(printed, size, FIELDS, "editions", PREFERRED_LANG), "author works in " + language,
+                d -> true).forEach(add);
+        List<OpenLibraryClient.Doc> others = fetchDocs(
+                () -> client.search(any, size, FIELDS, "editions", PREFERRED_LANG), "author works");
+        String own = authorLanguage(others);
+        others.stream()
+                .filter(d -> d.language() == null || d.language().isEmpty() || d.language().contains(marc)
+                        || (own != null && d.language().contains(own)))
+                .map(OpenLibraryProvider::toResult)
+                .forEach(add);
+        return works.values().stream().limit(limit).toList();
     }
 
     /**
@@ -130,11 +164,32 @@ public class OpenLibraryProvider implements CatalogProvider {
      * empty answer and is returned as is. Each attempt keeps its own {@code callTimeout}.
      */
     private List<CatalogResult> fetch(Supplier<Uni<OpenLibraryClient.SearchResponse>> call, String what) {
+        return fetch(call, what, d -> true);
+    }
+
+    /**
+     * The language an author writes in, as far as Open Library tells (#601): the most common one
+     * among their works labelled with a single language — a work grouping its translations
+     * carries several, a translation filed as a work of its own carries one. {@code null} when
+     * none carries a single label.
+     */
+    static String authorLanguage(List<OpenLibraryClient.Doc> docs) {
+        return docs.stream()
+                .filter(d -> d.language() != null && d.language().size() == 1)
+                .collect(java.util.stream.Collectors.groupingBy(d -> d.language().get(0),
+                        java.util.LinkedHashMap::new, java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    private List<OpenLibraryClient.Doc> fetchDocs(Supplier<Uni<OpenLibraryClient.SearchResponse>> call, String what) {
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
                 OpenLibraryClient.SearchResponse res = call.get().await().atMost(callTimeout);
                 if (res != null && res.docs() != null) {
-                    return res.docs().stream().map(OpenLibraryProvider::toResult).toList();
+                    return res.docs();
                 }
                 Log.warnf("Open Library %s answered no docs (attempt %d)", what, attempt);
             } catch (Exception e) {
@@ -142,6 +197,12 @@ public class OpenLibraryProvider implements CatalogProvider {
             }
         }
         return List.of();
+    }
+
+    /** As above, keeping only the works {@code keep} accepts. */
+    private List<CatalogResult> fetch(Supplier<Uni<OpenLibraryClient.SearchResponse>> call, String what,
+            java.util.function.Predicate<OpenLibraryClient.Doc> keep) {
+        return fetchDocs(call, what).stream().filter(keep).map(OpenLibraryProvider::toResult).toList();
     }
 
     /**
@@ -210,6 +271,12 @@ public class OpenLibraryProvider implements CatalogProvider {
         // to the work's own value independently: an edition record is often sparse.
         OpenLibraryClient.EditionDoc ed = d.editions() == null || d.editions().docs() == null
                 || d.editions().docs().isEmpty() ? null : d.editions().docs().get(0);
+        // With no French printing Open Library still puts one first — German, Polish (#601). A
+        // printing in another language stands for nothing here: the work's own fields do.
+        if (ed != null && ed.language() != null && !ed.language().isEmpty()
+                && !ed.language().contains(PREFERRED_MARC)) {
+            ed = null;
+        }
         boolean editionTitle = ed != null && ed.title() != null && !ed.title().isBlank();
         String title = editionTitle ? ed.title() : d.title();
         // The language follows the title: a French title must not be labelled with the work's

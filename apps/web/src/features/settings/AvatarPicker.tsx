@@ -7,7 +7,8 @@ import { apiErrorStatus } from '../../shared/apiClient';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Button } from '../../shared/ui/primitives';
 import { toast } from '../../shared/ui/toast';
-import { prepareAvatar } from './avatarImage';
+import { prepareAvatar, type AvatarCrop } from './avatarImage';
+import { AvatarCropper } from './AvatarCropper';
 import styles from './ProfileSection.module.css';
 
 /** What is worth reading in the browser: anything bigger is no profile picture. */
@@ -24,6 +25,8 @@ export function AvatarPicker() {
   const { data: me } = useGetApiMe({ query: { enabled: authed } });
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  // The picture being framed before it leaves (#571).
+  const [framing, setFraming] = useState<File | null>(null);
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: getGetApiMeQueryKey() });
 
@@ -38,11 +41,16 @@ export function AvatarPicker() {
       toast.error(t('settings.avatar.tooBig'));
       return;
     }
+    setFraming(file);
+  }
+
+  async function upload(file: File, crop: AvatarCrop) {
+    setFraming(null);
     setBusy(true);
     try {
       let prepared: Blob;
       try {
-        prepared = await prepareAvatar(file);
+        prepared = await prepareAvatar(file, crop);
       } catch {
         toast.error(t('settings.avatar.format'));
         return;
@@ -89,6 +97,9 @@ export function AvatarPicker() {
           />
           <span aria-hidden="true">{t(me.avatarVersion != null ? 'settings.avatar.replace' : 'settings.avatar.choose')}</span>
         </label>
+        {framing && (
+          <AvatarCropper file={framing} onCancel={() => setFraming(null)} onConfirm={(crop) => void upload(framing, crop)} />
+        )}
         {me.avatarVersion != null && (
           <Button variant="secondary" size="compact" disabled={busy} onClick={() => void remove()}>
             {t('settings.avatar.remove')}

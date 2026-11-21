@@ -133,7 +133,7 @@ export function CatalogDetailPage() {
 
   return (
     <Screen className={styles.screen}>
-      <div className={styles.backRow}>
+      <div className={`sticky-back ${styles.backRow}`}>
         <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
         </button>

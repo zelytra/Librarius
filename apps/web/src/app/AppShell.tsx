@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
@@ -8,6 +8,7 @@ import { useViewportAtLeast } from '../shared/ui/breakpoints';
 import { AchievementWatcher } from '../shared/AchievementWatcher';
 import { FeedbackButton } from '../shared/feedback/FeedbackButton';
 import { note } from '../shared/feedback/diagnostics';
+import { useScrollMemory } from './scrollMemory';
 import styles from './AppShell.module.css';
 
 /**
@@ -25,6 +26,9 @@ const HIDDEN_NAV_PREFIXES = ['/detail', '/series', '/settings'];
 
 export function AppShell() {
   const location = useLocation();
+  // Back to a screen, the scroll is where it was left (#600).
+  const content = useRef<HTMLElement>(null);
+  useScrollMemory(content);
   // Once the profile is loaded, the account's saved language drives the interface (#75).
   useProfileLanguage();
   // Exactly one navigation is mounted: the bar is replaced past --bp-tablet, not stacked
@@ -41,7 +45,7 @@ export function AppShell() {
           `AppShell.module.css` still holds no media query of its own. */}
       <div className={wide ? `${styles.frame} ${styles.frameSideNav}` : styles.frame}>
         {wide && <SideNav />}
-        <main className={`scroll-x ${styles.content}`}>
+        <main ref={content} className={`scroll-x ${styles.content}`}>
           {/* The screens behind the routes are code split (see App.tsx): this boundary
               covers the moment their chunk is on the wire, and sits inside the frame so
               the navigation does not disappear during the fetch. */}

@@ -17,6 +17,8 @@ import {
   usePutApiCategoriesId,
   type CategoryDto,
 } from '../../api/generated/librarius';
+import { ColorPicker } from './ColorPicker';
+import { CATEGORY_PALETTE } from './categoryPalette';
 import styles from './CategoriesPage.module.css';
 
 /**
@@ -39,22 +41,26 @@ type RowMode = 'idle' | 'rename' | 'delete';
  */
 function RenameForm({
   initial,
+  initialColor,
   onSubmit,
   onCancel,
 }: {
   initial: string;
-  onSubmit: (label: string) => void;
+  initialColor: string;
+  onSubmit: (label: string, color: string) => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState(initial);
+  // The name and the colour change in the one editor (#599).
+  const [color, setColor] = useState(initialColor);
 
   return (
     <form
       className={styles.editForm}
       onSubmit={(e) => {
         e.preventDefault();
-        if (draft.trim()) onSubmit(draft.trim());
+        if (draft.trim()) onSubmit(draft.trim(), color);
       }}
     >
       <input
@@ -64,6 +70,7 @@ function RenameForm({
         aria-label={t('categories.newName')}
         className={styles.input}
       />
+      <ColorPicker value={color} onChange={setColor} label={t('categories.color')} />
       <Button type="submit" size="compact" disabled={!draft.trim()}>
         {t('categories.save')}
       </Button>
@@ -84,7 +91,7 @@ function CategoryRow({
   category: CategoryDto;
   mode: RowMode;
   onMode: (mode: RowMode) => void;
-  onRename: (label: string) => void;
+  onRename: (label: string, color: string) => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -94,6 +101,7 @@ function CategoryRow({
       <li className={styles.row}>
         <RenameForm
           initial={category.label ?? ''}
+          initialColor={category.color ?? CATEGORY_PALETTE[0].color}
           onSubmit={onRename}
           onCancel={() => onMode('idle')}
         />
@@ -154,6 +162,7 @@ function CategoriesContent() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [draftColor, setDraftColor] = useState(CATEGORY_PALETTE[0].color);
   const [error, setError] = useState<string | null>(null);
   /** Identifier of the row being renamed or confirmed, and what it is doing. */
   const [active, setActive] = useState<{ id: string; mode: RowMode } | null>(null);
@@ -177,18 +186,19 @@ function CategoriesContent() {
     if (!label) return;
     setError(null);
     try {
-      await create({ data: { label } });
+      await create({ data: { label, color: draftColor } });
       setDraft('');
+      setDraftColor(CATEGORY_PALETTE[0].color);
       await refresh();
     } catch (e) {
       setError(failureMessage(t, e, 'categories.errors.createFailed'));
     }
   }
 
-  async function submitRename(id: string, label: string) {
+  async function submitRename(id: string, label: string, color: string) {
     setError(null);
     try {
-      await rename({ id, data: { label } });
+      await rename({ id, data: { label, color } });
       setActive(null);
       await refresh();
     } catch (e) {
@@ -235,6 +245,7 @@ function CategoriesContent() {
         <Button type="submit" size="compact" disabled={!draft.trim() || creating}>
           {t(creating ? 'common.working' : 'categories.create')}
         </Button>
+        <ColorPicker value={draftColor} onChange={setDraftColor} label={t('categories.newColor')} />
       </form>
 
       {error && <p className={styles.failure}>{error}</p>}
@@ -246,7 +257,7 @@ function CategoriesContent() {
             category={c}
             mode={active && active.id === c.id ? active.mode : 'idle'}
             onMode={(mode) => setActive(mode === 'idle' ? null : { id: c.id!, mode })}
-            onRename={(label) => void submitRename(c.id!, label)}
+            onRename={(label, color) => void submitRename(c.id!, label, color)}
             onDelete={() => void submitDelete(c.id!)}
           />
         ))}
@@ -270,7 +281,7 @@ export function CategoriesPage() {
 
   return (
     <Screen>
-      <div className={styles.backRow}>
+      <div className={`sticky-back ${styles.backRow}`}>
         <button onClick={() => navigate('/collection')} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={20} color="var(--ink)" />
         </button>

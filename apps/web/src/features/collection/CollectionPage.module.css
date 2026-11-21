@@ -236,3 +236,29 @@
   position: absolute;
   inset: -10px;
 }
+
+/* #598: the whole heading folds its category. */
+.categoryToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.categoryToggle > :last-child {
+  margin-left: auto;
+}
+
+.categoryToggle:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}

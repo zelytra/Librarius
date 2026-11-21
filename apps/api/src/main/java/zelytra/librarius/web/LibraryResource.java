@@ -174,9 +174,14 @@ public class LibraryResource {
                 .orElseThrow(NotFoundException::new);
     }
 
+    /** Adds a title; the 201 carries the created item, which the web app opens next (#594). */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201",
+            content = @org.eclipse.microprofile.openapi.annotations.media.Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @org.eclipse.microprofile.openapi.annotations.media.Schema(implementation = LibraryItemDto.class)))
     public Response add(@Valid LibraryCreateDto dto) {
         currentUser.require();
         Edition edition = catalog.createManualEdition(dto.book());

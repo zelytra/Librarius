@@ -158,3 +158,31 @@
   color: var(--faint);
   margin: 14px 0 0;
 }
+
+/* #599: the colour of a category of one's own. */
+.palette {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+}
+
+.swatch[aria-checked='true'] {
+  border-color: var(--ink);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}

@@ -8,7 +8,8 @@ import tokens from './tokens.css?raw';
  */
 
 const STATUSES = { success: [90, 160], warning: [30, 50], danger: [-15, 12] } as const;
-const THEMES = ['creme', 'sauge', 'rose', 'nuit'] as const;
+const THEMES = ['creme', 'sauge', 'rose', 'ocean', 'lavande', 'sable', 'nuit', 'ardoise'] as const;
+const DARK: readonly string[] = ['nuit', 'ardoise'];
 
 function block(selector: string): string {
   const start = tokens.indexOf(`${selector} {`);
@@ -21,7 +22,7 @@ function token(theme: (typeof THEMES)[number], name: string): string {
   const own = theme === 'creme' ? '' : block(`[data-theme='${theme}']`);
   const base = block(":root,\n[data-theme='creme']");
   const pick = (css: string) => new RegExp(`--${name}:\\s*(#[0-9a-f]{6})\\b`, 'i').exec(css)?.[1];
-  const value = pick(own) ?? (theme === 'nuit' ? undefined : pick(base));
+  const value = pick(own) ?? (DARK.includes(theme) ? undefined : pick(base));
   expect(value, `--${name} is not declared for ${theme}`).toBeDefined();
   return value!;
 }

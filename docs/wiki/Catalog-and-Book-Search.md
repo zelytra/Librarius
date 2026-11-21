@@ -126,6 +126,24 @@ last word matching the start of a title word.
 the real provider mappings and ranking. Discover also shows the authors of the shared catalog
 the words name, above the titles (`GET /api/authors?q=`).
 
+## Author pages and series totals
+
+An author page's bibliography (#601) is the local catalog's works plus `worksOfAuthor` from
+the providers, asked in the reader's language (their profile locale). Open Library files many
+translations as works of their own (four "El árabe del futuro 5" on Riad Sattouf), so it lists
+the works **printed in that language first**, then the others **minus those labelled with
+neither that language nor the author's own** (the most common single label among their works);
+a work with no language label stays. A "preferred" edition in another language than French is
+ignored whole: the work's own title, cover and ISBN stand. Series volumes fold into one tile
+per series on the web side.
+
+A series' volume total (#429, #602) comes from `CatalogService.seriesVolumes`: the kind's
+providers **and the record catalogues of every kind** (the BnF), the largest count kept.
+AniList reports no total for a manga still running; the BnF's legal deposit holds every volume
+published in France. `SeriesVolumeRefresher` asks the series missing a total first, then those
+not asked for a week, and only ever raises a total. A series whose albums carry their own titles
+(Astérix) is not matched by series title yet.
+
 ## Quota and cache
 
 A caller has a quota (`RateLimiter`, 30 searches a minute and 500 a day by default, chart

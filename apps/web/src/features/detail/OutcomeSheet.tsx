@@ -14,7 +14,12 @@ export type Outcome = 'READ' | 'ABANDONED';
 export interface OutcomeChoice {
   rating?: number;
   categoryId?: string;
+  /** The reading's dates, on a finished book only (#594). */
+  startedAt?: string;
+  finishedAt?: string;
 }
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 /** The shelf a title given up on is filed under, and the one that sheet starts from. */
 const ABANDON_CODE = 'abandon';
@@ -78,6 +83,14 @@ export function OutcomeSheet({
   const [categoryId, setCategoryId] = useState<string | undefined>(
     outcome === 'ABANDONED' ? (abandonShelf ?? filedUnder) : filedUnder,
   );
+  // The reading's dates (#594), on a finished book: what the title knows, the end today when
+  // it knows none. An abandonment asks for none — it keeps the page it stopped on.
+  const [startedAt, setStartedAt] = useState(item.progress?.startedAt ?? '');
+  const [finishedAt, setFinishedAt] = useState(item.progress?.finishedAt ?? today());
+  const choice = (): OutcomeChoice =>
+    outcome === 'READ'
+      ? { rating, categoryId, startedAt: startedAt || undefined, finishedAt: finishedAt || undefined }
+      : { rating, categoryId };
 
   // Escape is the way out of any dialog, and this one has nothing to lose by being closed.
   useEffect(() => {
@@ -122,6 +135,31 @@ export function OutcomeSheet({
           {t(COPY[outcome].subtitle, { title: item.book?.title ?? '' })}
         </p>
 
+        {outcome === 'READ' && (
+          <div className={`${styles.block} ${styles.dates}`}>
+            <label className={styles.dateField}>
+              <span className={styles.dateLabel}>{t('detail.outcome.startedAt')}</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={startedAt}
+                max={finishedAt || undefined}
+                onChange={(e) => setStartedAt(e.target.value)}
+              />
+            </label>
+            <label className={styles.dateField}>
+              <span className={styles.dateLabel}>{t('detail.outcome.finishedAt')}</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={finishedAt}
+                min={startedAt || undefined}
+                onChange={(e) => setFinishedAt(e.target.value)}
+              />
+            </label>
+          </div>
+        )}
+
         <div className={styles.block}>
           <h4 className={styles.sectionTitle}>{t('detail.review.title')}</h4>
           <StarRating value={rating} onRate={setRating} />
@@ -134,11 +172,11 @@ export function OutcomeSheet({
         </div>
 
         <div className={styles.actions}>
-          <Button variant="primary" size="block" onClick={() => onConfirm({ rating, categoryId })}>
+          <Button variant="primary" size="block" onClick={() => onConfirm(choice())}>
             {t('detail.outcome.confirm')}
           </Button>
           {onPrintSheet && (
-            <Button variant="secondary" size="block" onClick={() => onPrintSheet({ rating, categoryId })}>
+            <Button variant="secondary" size="block" onClick={() => onPrintSheet(choice())}>
               <Icon name="print" size={18} color="var(--ink-soft)" />
               {t('detail.outcome.printSheet')}
             </Button>

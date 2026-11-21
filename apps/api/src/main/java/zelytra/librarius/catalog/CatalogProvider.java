@@ -73,14 +73,6 @@ public interface CatalogProvider {
     }
 
     /**
-     * Every work the provider credits to an author, by name. The default runs the provider's
-     * own search on the author term alone — Open Library and the BnF both index works by
-     * author, so their bibliography <em>is</em> that search, which is why a book author page
-     * would otherwise show only the volumes already owned. AniList overrides this with a
-     * staff-linked lookup, its author index being a first-class one. Best-effort catalog data,
-     * merged with what the local catalog already holds.
-     */
-    /**
      * Whether the provider's answers are <em>works</em> — one line per book — rather than
      * catalogue records of every edition. An author's bibliography is drawn from the former; a
      * provider of records (the BnF: every printing, every booster pack of a manga) only fills in
@@ -90,10 +82,27 @@ public interface CatalogProvider {
         return true;
     }
 
+    /**
+     * Every work the provider credits to an author, by name. The default runs the provider's
+     * own search on the author term alone — Open Library and the BnF both index works by
+     * author, so their bibliography <em>is</em> that search, which is why a book author page
+     * would otherwise show only the volumes already owned. AniList overrides this with a
+     * staff-linked lookup, its author index being a first-class one. Best-effort catalog data,
+     * merged with what the local catalog already holds.
+     */
     default List<CatalogResult> worksOfAuthor(String authorName, int limit) {
         if (authorName == null || authorName.isBlank()) {
             return List.of();
         }
         return search(new CatalogQuery(null, authorName, null, null, null, null), limit);
+    }
+
+    /**
+     * The author's works printed in {@code language} (ISO 639-1, e.g. {@code fr}), or in any
+     * language when it is null (#601). The default ignores the language: only a provider whose
+     * works carry their printings' languages can narrow on it.
+     */
+    default List<CatalogResult> worksOfAuthor(String authorName, String language, int limit) {
+        return worksOfAuthor(authorName, limit);
     }
 }

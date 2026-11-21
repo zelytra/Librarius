@@ -187,7 +187,7 @@ describe('SettingsPage — categories', () => {
 
     expect(screen.getByRole('heading', { name: 'Communauté' })).toBeInTheDocument();
     expect(screen.queryByText('Fichier JSON')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Retour aux réglages' })).toHaveAttribute('href', '/settings');
+    expect(screen.getByRole('button', { name: 'Retour aux réglages' })).toBeInTheDocument();
   });
 
   test('sends an unknown category back to the list', () => {
@@ -202,6 +202,14 @@ describe('SettingsPage — library opening shelf', () => {
   beforeEach(() => {
     resetAuth();
     localStorage.removeItem('librarius.libraryKind');
+  });
+
+  /** #597: the shelves the library always offers (#383), nothing it does not show. */
+  test("offers the library's own shelves only", () => {
+    renderSettings('reading');
+
+    const group = screen.getByRole('group', { name: "Bibliothèque à l'ouverture" });
+    expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual(['Automatique', 'Livre', 'Manga', 'BD']);
   });
 
   test('is automatic until a kind is picked, and keeps the pick', async () => {
@@ -388,5 +396,53 @@ describe('SettingsPage — bottom bar', () => {
 
     const group = screen.getByRole('group', { name: 'Barre du bas (téléphone)' });
     expect(within(group).getByRole('checkbox', { name: 'Accueil' })).toBeDisabled();
+  });
+});
+
+/** #591: back never loops inside Settings — a category goes to the list, the list leaves. */
+describe('SettingsPage — back', () => {
+  beforeEach(resetAuth);
+
+  test('goes from a category to the list, then out of Settings', async () => {
+    const { MemoryRouter, Route, Routes } = await import('react-router');
+    const { render } = await import('@testing-library/react');
+    const { QueryClientProvider } = await import('@tanstack/react-query');
+    const { createTestQueryClient } = await import('../../test/utils');
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <MemoryRouter initialEntries={['/', '/settings']} initialIndex={1}>
+          <Routes>
+            <Route path="/" element={<p>Accueil test</p>} />
+            <Route path="/settings/:category?" element={<SettingsPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('link', { name: /Profil/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Retour aux réglages' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Retour' }));
+    expect(await screen.findByText('Accueil test')).toBeInTheDocument();
+  });
+
+  test('leaves for Home when Settings was opened directly', async () => {
+    const { MemoryRouter, Route, Routes } = await import('react-router');
+    const { render } = await import('@testing-library/react');
+    const { QueryClientProvider } = await import('@tanstack/react-query');
+    const { createTestQueryClient } = await import('../../test/utils');
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <MemoryRouter initialEntries={['/settings/profile']}>
+          <Routes>
+            <Route path="/" element={<p>Accueil test</p>} />
+            <Route path="/settings/:category?" element={<SettingsPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retour aux réglages' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Retour' }));
+    expect(await screen.findByText('Accueil test')).toBeInTheDocument();
   });
 });

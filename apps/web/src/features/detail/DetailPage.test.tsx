@@ -702,6 +702,14 @@ describe('DetailPage', () => {
     await waitFor(() => expect(sent).toEqual([{ language: 'fr' }, {}]));
   });
 
+  /** #595: with nothing saved, the copy is taken to be read in the reader's own language. */
+  test("shows the reader's language when the copy has none", async () => {
+    libraryItemReturns({ ...ITEM, language: undefined });
+    renderDetail();
+
+    expect(await screen.findByLabelText('Langue de lecture')).toHaveValue('fr');
+  });
+
   /** #454: the reader files the title under another kind, like they set its format. */
   test('files the title under another kind', async () => {
     libraryItemReturns(ITEM);

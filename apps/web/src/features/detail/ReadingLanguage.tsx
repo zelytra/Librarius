@@ -8,7 +8,10 @@ import styles from './DetailPage.module.css';
  */
 const LANGUAGES = ['fr', 'en', 'ja', 'ko', 'zh', 'es', 'it', 'de', 'pt', 'nl'];
 
-/** The language the reader read their copy in (#566); empty is unsaid. */
+/**
+ * The language the reader read their copy in (#566); with nothing saved, the reader's own
+ * language is shown (#595) — what a copy is most likely read in — and saved only once picked.
+ */
 export function ReadingLanguage({
   value,
   disabled,
@@ -31,7 +34,7 @@ export function ReadingLanguage({
       <span className={styles.languageLabel}>{t('detail.readingLanguage')}</span>
       <select
         className={styles.languageSelect}
-        value={value ?? ''}
+        value={value ?? activeLanguage()}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value || null)}
       >

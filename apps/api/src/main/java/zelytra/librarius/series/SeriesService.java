@@ -119,7 +119,7 @@ public class SeriesService {
             return Optional.empty();
         }
 
-        Run run = Run.of(found, owned, series.worksOfSeries(seriesId));
+        Run run = Run.of(found, owned, series.worksOfSeries(seriesId), series.volumeCovers(seriesId));
         SeriesDetailDto dto = SeriesDetailDto.of(found, run.ownedCount(), run.readCount(), followed,
                 run.volumes());
         if (dto.coverUrl() == null) {
@@ -274,7 +274,7 @@ public class SeriesService {
          * the user owns are appended at the end so that they are neither lost from the
          * counters nor mistaken for a hole.
          */
-        static Run of(Series series, List<LibraryItem> owned, List<Work> catalog) {
+        static Run of(Series series, List<LibraryItem> owned, List<Work> catalog, Map<Integer, String> covers) {
             Map<Integer, LibraryItem> ownedByVolume = new LinkedHashMap<>();
             List<LibraryItem> unnumbered = new ArrayList<>();
             Set<UUID> ownedWorks = new LinkedHashSet<>();
@@ -336,7 +336,9 @@ public class SeriesService {
                         isOwned && item.status == LibraryStatus.READ,
                         !isOwned && volume < highestOwned,
                         !isOwned && volume > highestOwned,
-                        isOwned ? item.edition.coverUrl : null));
+                        // The reader's own copy's cover, else the catalog's (#602), so a volume
+                        // they lack is recognisable rather than a blank tile.
+                        isOwned && item.edition.coverUrl != null ? item.edition.coverUrl : covers.get(volume)));
             }
             // A numbered volume the span could not reach — only a stray number puts an owned
             // one outside [first, last] — is still listed, so ownership is never dropped.

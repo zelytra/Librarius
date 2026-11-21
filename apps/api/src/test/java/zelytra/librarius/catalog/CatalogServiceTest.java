@@ -368,6 +368,55 @@ class CatalogServiceTest {
         assertTrue(service.seriesVolumes(Kind.BOOK, "Any Book").isEmpty());
     }
 
+    /** A record catalogue (the BnF), filed under one kind but holding every kind's records. */
+    private record RecordCatalogue(int volumes) implements CatalogProvider {
+        @Override
+        public String name() {
+            return "records";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOK;
+        }
+
+        @Override
+        public boolean listsWorks() {
+            return false;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public java.util.OptionalInt seriesVolumes(String title) {
+            return volumes > 0 ? java.util.OptionalInt.of(volumes) : java.util.OptionalInt.empty();
+        }
+    }
+
+    /**
+     * #602: AniList reports no total for a manga still running (One Piece, Blue Lock: null), the
+     * runs readers follow most. The legal-deposit catalogue holds the volumes published in
+     * France whatever the kind, so it is asked for a manga too, and the larger count wins.
+     */
+    @Test
+    void seriesVolumesAsksTheRecordCatalogueForEveryKindAndKeepsTheLargest() {
+        CatalogService running = new CatalogService(List.of(
+                new VolumeProvider(Kind.MANGA, 0), new RecordCatalogue(112)), passThroughCache());
+        assertEquals(112, running.seriesVolumes(Kind.MANGA, "One Piece").getAsInt());
+
+        CatalogService finished = new CatalogService(List.of(
+                new VolumeProvider(Kind.MANGA, 34), new RecordCatalogue(20)), passThroughCache());
+        assertEquals(34, finished.seriesVolumes(Kind.MANGA, "L'Attaque des Titans").getAsInt());
+    }
+
     @Test
     void worksOfAuthorRoutesToTheProvidersOfTheGivenKinds() {
         CatalogService service = new CatalogService(List.of(
@@ -396,6 +445,65 @@ class CatalogServiceTest {
         // The author name reached the provider as an author term, not as free text.
         assertEquals("Rebecca Yarros", provider.received.author());
         assertNull(provider.received.text());
+    }
+
+    /** Answers one list for an author's works in a language, another for them in any language. */
+    private static final class LanguageProvider implements CatalogProvider {
+        private final List<CatalogResult> inLanguage;
+        private final List<CatalogResult> anyLanguage;
+        private final List<String> asked = new java.util.ArrayList<>();
+
+        LanguageProvider(List<CatalogResult> inLanguage, List<CatalogResult> anyLanguage) {
+            this.inLanguage = inLanguage;
+            this.anyLanguage = anyLanguage;
+        }
+
+        @Override
+        public String name() {
+            return "language";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOK;
+        }
+
+        @Override
+        public boolean listsWorks() {
+            return true;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> worksOfAuthor(String authorName, String language, int limit) {
+            asked.add(String.valueOf(language));
+            return language == null ? anyLanguage : inLanguage;
+        }
+    }
+
+    /** #601: the reader's language reaches the providers that list an author's works. */
+    @Test
+    void worksOfAuthorCarriesTheReadersLanguageToTheProviders() {
+        LanguageProvider provider = new LanguageProvider(List.of(result("BOOK", "L'Empire ultime")),
+                List.of(result("BOOK", "The Final Empire")));
+        CatalogService service = new CatalogService(List.of(provider), passThroughCache());
+
+        assertEquals(List.of("L'Empire ultime"), service
+                .worksOfAuthor(Set.of(Kind.BOOK), "Brandon Sanderson", "fr", 40)
+                .stream().map(CatalogResult::title).toList());
+        assertEquals(List.of("The Final Empire"), service
+                .worksOfAuthor(Set.of(Kind.BOOK), "Brandon Sanderson", 40)
+                .stream().map(CatalogResult::title).toList());
+        assertEquals(List.of("fr", "null"), provider.asked);
     }
 
     /** Answers its canned list after a fixed delay, to measure whether calls overlap. */

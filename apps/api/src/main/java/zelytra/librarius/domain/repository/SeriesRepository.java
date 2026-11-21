@@ -94,15 +94,17 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
                 .getResultList();
     }
 
-    /** Series still missing a volume total, capped so one refresh run stays bounded. */
+    /** Series to ask for their volume total, capped so one refresh run stays bounded. */
     public List<Series> needingVolumeCount(int limit) {
         return needingVolumeCount(null, limit);
     }
 
     /**
-     * Series still missing a total and not asked lately, the never-asked first (#429), so a
-     * series no provider knows cannot hold the others back. Restricted to the series one user
-     * holds a volume of when {@code userId} is given.
+     * Series not asked lately — never asked or not for {@link #VOLUME_RETRY_DAYS} days — those
+     * still missing a total first, then the never-asked (#429), so a series no provider knows
+     * cannot hold the others back. A series that has a total is asked again too (#602): a run
+     * still going gains volumes. Restricted to the series one user holds a volume of when
+     * {@code userId} is given.
      */
     public List<Series> needingVolumeCount(String userId, int limit) {
         String held = userId == null ? "" : """
@@ -110,9 +112,9 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
                              where w.series = s and li.userId = :userId)""";
         var query = getEntityManager().createQuery("""
                 select s from Series s
-                where s.totalVolumes is null
-                  and (s.volumesCheckedAt is null or s.volumesCheckedAt < :before)%s
-                order by s.volumesCheckedAt asc nulls first, s.id asc
+                where (s.volumesCheckedAt is null or s.volumesCheckedAt < :before)%s
+                order by case when s.totalVolumes is null then 0 else 1 end,
+                         s.volumesCheckedAt asc nulls first, s.id asc
                 """.formatted(held), Series.class)
                 .setParameter("before", java.time.OffsetDateTime.now().minusDays(VOLUME_RETRY_DAYS))
                 .setMaxResults(limit);
@@ -122,7 +124,7 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
         return query.getResultList();
     }
 
-    /** Days before a series whose total no provider gave is asked again. */
+    /** Days before a series is asked for its total again, whether a provider gave one or not. */
     public static final int VOLUME_RETRY_DAYS = 7;
 
     /**
@@ -148,6 +150,28 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
         for (Object[] row : rows) {
             covers.putIfAbsent((UUID) row[0], (String) row[1]);
         }
+        return covers;
+    }
+
+    /**
+     * The cover of each numbered volume of a series in the shared catalog (#602): the first
+     * edition with one, whoever added it — what the grid shows for a volume the reader lacks.
+     */
+    public java.util.Map<Integer, String> volumeCovers(UUID seriesId) {
+        java.util.Map<Integer, String> covers = new java.util.HashMap<>();
+        getEntityManager()
+                .createQuery("""
+                        select w.volumeNumber, e.coverUrl
+                        from Edition e
+                          join e.work w
+                        where w.series.id = :id
+                          and w.volumeNumber is not null
+                          and e.coverUrl is not null
+                        order by e.createdAt asc, e.id asc
+                        """, Object[].class)
+                .setParameter("id", seriesId)
+                .getResultList()
+                .forEach(row -> covers.putIfAbsent((Integer) row[0], (String) row[1]));
         return covers;
     }
 }

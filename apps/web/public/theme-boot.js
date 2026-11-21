@@ -10,7 +10,11 @@
     creme: '#f3ede3',
     sauge: '#dfe6da',
     rose: '#f1e2df',
+    ocean: '#dde8ee',
+    lavande: '#e7e2ee',
+    sable: '#efe6d6',
     nuit: '#211e1a',
+    ardoise: '#1b2129',
   };
   var stored = null;
   try {

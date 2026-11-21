@@ -96,6 +96,12 @@
   print-color-adjust: exact;
 }
 
+/* The sheet's own ink for its headings (#596): `global.css` paints every h1–h3 in the app
+   theme's ink, which the « Nuit » palette makes white — on the sheet's white page. */
+.sheet :is(h1, h2, h3) {
+  color: inherit;
+}
+
 .A4 {
   aspect-ratio: 210 / 297;
 }
@@ -227,7 +233,19 @@
 }
 
 .A6 .facts {
-  grid-template-columns: 1fr;
+  /* Two columns on the card too (#590): one fact per line ran the review off the page. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 8px;
+}
+
+.A6 .fact {
+  flex-direction: column;
+  gap: 0;
+  padding: 0.25em 0;
+}
+
+.A6 .fact dd {
+  text-align: left;
 }
 
 .fact {
@@ -461,4 +479,9 @@
   .sheet:last-child {
     break-after: auto;
   }
+}
+
+/* Caveat runs small, hence the handwritten theme's 1.3 scale — too large for a card (#590). */
+.A6.sheet[data-theme='handwritten'] {
+  --scale: 1.12;
 }

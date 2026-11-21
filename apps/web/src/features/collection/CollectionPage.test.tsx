@@ -766,6 +766,27 @@ describe('CollectionPage', () => {
       expect(screen.getByRole('heading', { name: /^Or/ })).toBeInTheDocument();
     });
 
+    /** #598: a category folds away, so the ones below are in reach. */
+    test('folds a category and unfolds it again', async () => {
+      localStorage.removeItem('librarius.foldedCategories');
+      libraryReturns([A, B, C]);
+      renderWithProviders(<CollectionPage />, { route: '/collection?cat=1&view=flat' });
+
+      const gold = (await screen.findByRole('heading', { name: /^Or/ })).closest('section')!;
+      const toggle = within(gold).getByRole('button', { name: /^Or/ });
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      expect(within(gold).getByText('Charlie')).toBeInTheDocument();
+
+      await userEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      expect(within(gold).queryByText('Charlie')).not.toBeInTheDocument();
+      // The other categories stay open.
+      expect(screen.getByText('Bravo')).toBeInTheDocument();
+
+      await userEvent.click(toggle);
+      expect(within(gold).getByText('Charlie')).toBeInTheDocument();
+    });
+
     test('saves what the screen shows as a new view', async () => {
       libraryReturns([A]);
       const created: unknown[] = [];

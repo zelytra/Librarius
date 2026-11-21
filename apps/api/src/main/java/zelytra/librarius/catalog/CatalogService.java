@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -154,19 +155,22 @@ public class CatalogService {
     }
 
     /**
-     * The number of volumes a series is expected to run to, from whichever provider covers the
-     * kind and knows — AniList for a manga; a book catalogue reports none. Off the request path
-     * (the series-volume refresher), so it is not cached: a total is fetched once a day and
-     * written to {@code series.total_volumes}, not read on every render.
+     * The number of volumes a series runs to so far: the largest count among the providers of
+     * the kind — AniList for a finished manga — and the record catalogues of every kind (#602).
+     * AniList reports nothing for a run still going (One Piece, Blue Lock), while the BnF's
+     * legal deposit holds every volume published in France, manga included; neither ever counts
+     * a volume that does not exist, so the larger one is the nearer. Off the request path (the
+     * series-volume refresher), so it is not cached.
      */
     public java.util.OptionalInt seriesVolumes(Kind kind, String title) {
-        for (CatalogProvider provider : providersFor(kind == null ? Set.of() : Set.of(kind))) {
-            java.util.OptionalInt volumes = provider.seriesVolumes(title);
-            if (volumes.isPresent()) {
-                return volumes;
-            }
-        }
-        return java.util.OptionalInt.empty();
+        Set<CatalogProvider> asked = new LinkedHashSet<>(providersFor(kind == null ? Set.of() : Set.of(kind)));
+        providersFor(Set.of()).stream().filter(p -> !p.listsWorks()).forEach(asked::add);
+        return asked.stream()
+                .map(provider -> provider.seriesVolumes(title))
+                .filter(java.util.OptionalInt::isPresent)
+                .mapToInt(java.util.OptionalInt::getAsInt)
+                .filter(volumes -> volumes > 0)
+                .max();
     }
 
     /**
@@ -175,13 +179,23 @@ public class CatalogService {
      * so repeat views of one author page cost nothing.
      */
     public List<CatalogResult> worksOfAuthor(Set<Kind> kinds, String name, int limit) {
+        return worksOfAuthor(kinds, name, null, limit);
+    }
+
+    /**
+     * As above, for a reader of {@code language} (#601), which reaches the providers: one that
+     * knows its works' languages lists the ones printed in it first, and leaves out the
+     * translations it files as works of their own.
+     */
+    public List<CatalogResult> worksOfAuthor(Set<Kind> kinds, String name, String language, int limit) {
         if (name == null || name.isBlank()) {
             return List.of();
         }
         String key = name.toLowerCase(Locale.ROOT).trim();
         Function<CatalogProvider, List<CatalogResult>> call = provider -> cache.get(
-                CatalogCache.Scope.SEARCH, provider.name(), "authorworks|" + key + '|' + limit,
-                () -> provider.worksOfAuthor(name, limit));
+                CatalogCache.Scope.SEARCH, provider.name(),
+                "authorworks|" + key + '|' + limit + (language == null ? "" : '|' + language),
+                () -> provider.worksOfAuthor(name, language, limit));
         // Every medium, whatever the kinds owned: an imported manga is filed as a book, and its
         // author's series would otherwise never be asked of AniList.
         List<CatalogProvider> all = providersFor(Set.of());

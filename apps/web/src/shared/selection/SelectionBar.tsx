@@ -80,7 +80,7 @@ export function SelectionBar({ selection }: { selection: Selection }) {
       <div className={styles.spacer} aria-hidden="true" />
       {/* Hidden while the sheet is open: it would sit over the sheet's own footer. */}
       {!open && (
-      <div className={styles.bar} role="region" aria-label={t('selection.title')}>
+      <div className={styles.bar} data-selection-bar role="region" aria-label={t('selection.title')}>
         <span className={styles.count}>{t('selection.count', { count })}</span>
         <Button variant="secondary" size="compact" onClick={selection.stop}>
           {t('selection.cancel')}

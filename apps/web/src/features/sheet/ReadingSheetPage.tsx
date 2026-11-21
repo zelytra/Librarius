@@ -125,7 +125,11 @@ export function ReadingSheet({
     { label: t('sheet.facts.rank'), value: rankLabel },
   ];
   // A blank sheet keeps a line under every label, to be filled in by hand.
-  const shown = item ? facts.filter((f) => f.value) : facts.filter((f) => f.label !== t('sheet.facts.isbn'));
+  // A card holds what fits it (#590): the ISBN and the genres stay on the larger formats.
+  const onCard = (f: { label: string }) =>
+    format !== 'A6' || (f.label !== t('sheet.facts.isbn') && f.label !== t('sheet.facts.genres'));
+  const shown = (item ? facts.filter((f) => f.value) : facts.filter((f) => f.label !== t('sheet.facts.isbn')))
+    .filter(onCard);
   const size = sheetSize(format);
 
   return (
@@ -239,7 +243,7 @@ export function SheetPrintLayout({
       {/* No `precedence`: React would hold the sheet back until the font arrives, and offline
           forever. Unhoisted, the sheet paints at once in the fallback faces. */}
       {theme === 'handwritten' && <link rel="stylesheet" href={HAND_FONT} />}
-      <div className={styles.toolbar}>
+      <div className={`sticky-header ${styles.toolbar}`}>
         <button type="button" className={styles.tool} onClick={() => navigate(-1)}>
           <Icon name="arrow_back" size={18} color="currentColor" />
           {t('common.back')}

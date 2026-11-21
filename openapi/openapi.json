@@ -53,6 +53,36 @@
         } ]
       }
     },
+    "/api/admin/countries" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CountryCountDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Countries",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/admin/feedback" : {
       "get" : {
         "parameters" : [ {
@@ -1728,11 +1758,12 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "201" : {
             "content" : {
               "application/json" : {
-                "schema" : { }
+                "schema" : {
+                  "$ref" : "#/components/schemas/LibraryItemDto"
+                }
               }
             }
           },
@@ -4785,7 +4816,8 @@
             "pattern" : "\\S"
           },
           "color" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "#[0-9a-fA-F]{6}"
           }
         }
       },
@@ -4816,6 +4848,10 @@
           "label" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "color" : {
+            "type" : "string",
+            "pattern" : "#[0-9a-fA-F]{6}"
           }
         }
       },
@@ -4860,6 +4896,18 @@
               "type" : "string"
             },
             "maxItems" : 1000
+          }
+        }
+      },
+      "CountryCountDto" : {
+        "type" : "object",
+        "properties" : {
+          "country" : {
+            "type" : "string"
+          },
+          "members" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -6000,6 +6048,9 @@
           },
           "notifyComments" : {
             "type" : "boolean"
+          },
+          "country" : {
+            "type" : "string"
           }
         }
       },
@@ -7022,6 +7073,10 @@
           },
           "notifyComments" : {
             "type" : "boolean"
+          },
+          "country" : {
+            "type" : "string",
+            "maxLength" : 8
           }
         }
       },

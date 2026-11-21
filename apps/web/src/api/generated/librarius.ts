@@ -266,6 +266,7 @@ export interface CatalogResult {
 export interface CategoryCreateDto {
   /** @pattern \S */
   label: string;
+  /** @pattern #[0-9a-fA-F]{6} */
   color?: string;
 }
 
@@ -280,6 +281,8 @@ export interface CategoryDto {
 export interface CategoryUpdateDto {
   /** @pattern \S */
   label: string;
+  /** @pattern #[0-9a-fA-F]{6} */
+  color?: string;
 }
 
 export interface ClientErrorDto {
@@ -303,6 +306,11 @@ export interface CollectedRequest {
   source: string;
   /** @maxItems 1000 */
   pages: string[];
+}
+
+export interface CountryCountDto {
+  country?: string;
+  members?: number;
 }
 
 export interface DashboardSectionDto {
@@ -766,6 +774,7 @@ export interface MeDto {
   admin?: boolean;
   avatarVersion?: number;
   notifyComments?: boolean;
+  country?: string;
 }
 
 export interface ProfileTitleDto {
@@ -1124,6 +1133,8 @@ export interface UpdateMeDto {
   timeZone?: string;
   publicAccount: boolean;
   notifyComments?: boolean;
+  /** @maxLength 8 */
+  country?: string;
 }
 
 export interface ValueDto {
@@ -1485,6 +1496,107 @@ export const usePostApiAchievementsSeen = <TError = void,
       > => {
       return useMutation(getPostApiAchievementsSeenMutationOptions(options), queryClient);
     }
+
+export const getGetApiAdminCountriesUrl = () => {
+
+
+
+
+  return `/api/admin/countries`
+}
+
+/**
+ * @summary Countries
+ */
+export const getApiAdminCountries = async ( options?: Parameters<typeof apiClient>[1]): Promise<CountryCountDto[]> => {
+
+  return apiClient<CountryCountDto[]>(getGetApiAdminCountriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminCountriesQueryKey = () => {
+    return [
+    `/api/admin/countries`
+    ] as const;
+    }
+
+
+export const getGetApiAdminCountriesQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminCountries>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminCountriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminCountries>>> = () => getApiAdminCountries(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminCountriesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminCountries>>>
+export type GetApiAdminCountriesQueryError = void
+
+
+/** @summary Countries */
+export function useGetApiAdminCountries<TData = Awaited<ReturnType<typeof getApiAdminCountries>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminCountries>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminCountries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Countries */
+export function useGetApiAdminCountries<TData = Awaited<ReturnType<typeof getApiAdminCountries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminCountries>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminCountries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Countries */
+export function useGetApiAdminCountries<TData = Awaited<ReturnType<typeof getApiAdminCountries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Countries */
+export function useGetApiAdminCountries<TData = Awaited<ReturnType<typeof getApiAdminCountries>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCountries>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminCountriesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetApiAdminFeedbackUrl = (params?: GetApiAdminFeedbackParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -5323,7 +5435,7 @@ export const getPostApiLibraryUrl = () => {
 /**
  * @summary Add
  */
-export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<LibraryItemDto> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -5339,7 +5451,7 @@ export const postApiLibrary = async (libraryCreateDto: LibraryCreateDto, options
     }
     return headers;
   };
-return apiClient<unknown>(getPostApiLibraryUrl(),
+return apiClient<LibraryItemDto>(getPostApiLibraryUrl(),
   {
     ...options,
     method: 'POST',

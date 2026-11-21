@@ -20,6 +20,7 @@ import zelytra.librarius.web.ApiDtos.FeedbackPageDto;
 import zelytra.librarius.web.ApiDtos.FeedbackStatusDto;
 import zelytra.librarius.web.ApiDtos.MonitoringDto;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -103,6 +104,17 @@ public class AdminResource {
             throw new NotFoundException();
         }
         deletion.delete(id);
+    }
+
+    /**
+     * How many members said they live in each country (#573), the largest first: a count per
+     * country only, from the country each member filled themselves — members who did not are
+     * not counted.
+     */
+    @GET
+    @Path("/countries")
+    public List<ApiDtos.CountryCountDto> countries() {
+        return users.countries();
     }
 
     /** Reports and active members over the last 30 days, members active now, the services. */

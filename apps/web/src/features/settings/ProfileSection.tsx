@@ -1,18 +1,19 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
-import { Button, Segmented } from '../../shared/ui/primitives';
-import { TrustBadge } from '../../shared/ui/TrustBadge';
-import { useApiAuth } from '../../shared/api';
-import { changeLanguage } from '../../i18n';
-import { LANGUAGES, isLanguageId, type LanguageId } from '../../i18n/languages';
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button, Segmented } from "../../shared/ui/primitives";
+import { TrustBadge } from "../../shared/ui/TrustBadge";
+import { useApiAuth } from "../../shared/api";
+import { changeLanguage } from "../../i18n";
+import { LANGUAGES, isLanguageId, type LanguageId } from "../../i18n/languages";
 import {
   getGetApiMeQueryKey,
   useGetApiMe,
   usePatchApiMe,
-} from '../../api/generated/librarius';
-import { supportedTimeZones } from '../../shared/timeZones';
-import styles from './ProfileSection.module.css';
+} from "../../api/generated/librarius";
+import { supportedTimeZones } from "../../shared/timeZones";
+import { countryOptions } from "../../shared/countries";
+import styles from "./ProfileSection.module.css";
 
 /**
  * The editable profile (#75): display name, interface language and time zone.
@@ -25,7 +26,9 @@ import styles from './ProfileSection.module.css';
  */
 // Its own chunk: the Settings screen was at its 10 kB budget, and the picture is the one part
 // of the profile a reader does not touch on every visit (#500).
-const AvatarPicker = lazy(() => import('./AvatarPicker').then((m) => ({ default: m.AvatarPicker })));
+const AvatarPicker = lazy(() =>
+  import("./AvatarPicker").then((m) => ({ default: m.AvatarPicker }))
+);
 
 export function ProfileSection() {
   const { t } = useTranslation();
@@ -34,9 +37,10 @@ export function ProfileSection() {
 
   const { data: me } = useGetApiMe({ query: { enabled: auth.authed } });
 
-  const [displayName, setDisplayName] = useState('');
-  const [locale, setLocale] = useState<LanguageId>('fr');
-  const [timeZone, setTimeZone] = useState('');
+  const [displayName, setDisplayName] = useState("");
+  const [locale, setLocale] = useState<LanguageId>("fr");
+  const [timeZone, setTimeZone] = useState("");
+  const [country, setCountry] = useState("");
   const [notifyComments, setNotifyComments] = useState(true);
   const [saved, setSaved] = useState(false);
 
@@ -46,13 +50,25 @@ export function ProfileSection() {
   useEffect(() => {
     if (!me?.id) return;
     const stored = me.locale;
-    setDisplayName(me.displayName ?? '');
-    setLocale(isLanguageId(stored) ? stored : 'fr');
-    setTimeZone(me.timeZone ?? '');
+    setDisplayName(me.displayName ?? "");
+    setLocale(isLanguageId(stored) ? stored : "fr");
+    setTimeZone(me.timeZone ?? "");
+    setCountry(me.country ?? "");
     setNotifyComments(me.notifyComments ?? true);
-  }, [me?.id, me?.displayName, me?.locale, me?.timeZone, me?.notifyComments]);
+  }, [
+    me?.id,
+    me?.displayName,
+    me?.locale,
+    me?.timeZone,
+    me?.country,
+    me?.notifyComments,
+  ]);
 
-  const { mutate: saveProfile, isPending, isError } = usePatchApiMe({
+  const {
+    mutate: saveProfile,
+    isPending,
+    isError,
+  } = usePatchApiMe({
     mutation: {
       onSuccess: (updated) => {
         setSaved(true);
@@ -65,21 +81,21 @@ export function ProfileSection() {
   });
 
   const trimmed = displayName.trim();
-  const valid = trimmed !== '';
+  const valid = trimmed !== "";
 
   if (!auth.authed) {
     return (
       <>
-        <h3 className={styles.title}>{t('settings.profile.title')}</h3>
-        <p className={styles.intro}>{t('settings.profile.signIn')}</p>
+        <h3 className={styles.title}>{t("settings.profile.title")}</h3>
+        <p className={styles.intro}>{t("settings.profile.signIn")}</p>
       </>
     );
   }
 
   return (
     <>
-      <h3 className={styles.title}>{t('settings.profile.title')}</h3>
-      <p className={styles.intro}>{t('settings.profile.description')}</p>
+      <h3 className={styles.title}>{t("settings.profile.title")}</h3>
+      <p className={styles.intro}>{t("settings.profile.description")}</p>
       <Suspense fallback={null}>
         <AvatarPicker />
       </Suspense>
@@ -87,7 +103,7 @@ export function ProfileSection() {
       <div className={styles.form}>
         <label className={styles.field}>
           <span className={styles.label}>
-            {t('settings.profile.displayName')}
+            {t("settings.profile.displayName")}
             {/* #186: server-computed, display-only — nothing renders for a regular account. */}
             {me?.trusted && <TrustBadge className={styles.trustBadge} />}
           </span>
@@ -98,17 +114,20 @@ export function ProfileSection() {
               setDisplayName(e.target.value);
               setSaved(false);
             }}
-            placeholder={t('settings.profile.displayNamePlaceholder')}
-            aria-label={t('settings.profile.displayName')}
+            placeholder={t("settings.profile.displayNamePlaceholder")}
+            aria-label={t("settings.profile.displayName")}
             className={styles.input}
           />
         </label>
 
         <div className={styles.field}>
-          <span className={styles.label}>{t('settings.profile.language')}</span>
+          <span className={styles.label}>{t("settings.profile.language")}</span>
           {/* Endonyms, never translated: someone on the wrong language recognises their own. */}
           <Segmented<LanguageId>
-            options={LANGUAGES.map((language) => ({ id: language.id, label: language.label }))}
+            options={LANGUAGES.map((language) => ({
+              id: language.id,
+              label: language.label,
+            }))}
             value={locale}
             onChange={(next) => {
               setLocale(next);
@@ -118,24 +137,49 @@ export function ProfileSection() {
         </div>
 
         <label className={styles.field}>
-          <span className={styles.label}>{t('settings.profile.timeZone')}</span>
+          <span className={styles.label}>{t("settings.profile.timeZone")}</span>
           <select
             value={timeZone}
             onChange={(e) => {
               setTimeZone(e.target.value);
               setSaved(false);
             }}
-            aria-label={t('settings.profile.timeZone')}
+            aria-label={t("settings.profile.timeZone")}
             className={styles.input}
           >
             {/* Empty means "follow this device", the default an account never sets one keeps. */}
-            <option value="">{t('settings.profile.timeZoneAuto')}</option>
+            <option value="">{t("settings.profile.timeZoneAuto")}</option>
             {supportedTimeZones().map((zone) => (
               <option key={zone} value={zone}>
                 {zone}
               </option>
             ))}
           </select>
+        </label>
+
+        {/* #573: optional, and the member's own answer — the admins only see a count per country. */}
+        <label className={styles.field}>
+          <span className={styles.label}>{t("settings.profile.country")}</span>
+          <select
+            value={country}
+            onChange={(e) => {
+              setCountry(e.target.value);
+              setSaved(false);
+            }}
+            aria-label={t("settings.profile.country")}
+            aria-describedby="profile-country-hint"
+            className={styles.input}
+          >
+            <option value="">{t("settings.profile.countryUnsaid")}</option>
+            {countryOptions(locale).map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+          <span id="profile-country-hint" className={styles.hint}>
+            {t("settings.profile.countryHint")}
+          </span>
         </label>
 
         {/* #211: comments on my activity notify me, unless turned off here. */}
@@ -148,7 +192,7 @@ export function ProfileSection() {
               setSaved(false);
             }}
           />
-          {t('settings.profile.notifyComments')}
+          {t("settings.profile.notifyComments")}
         </label>
 
         <Button
@@ -162,6 +206,7 @@ export function ProfileSection() {
                 displayName: trimmed,
                 locale,
                 timeZone: timeZone || undefined,
+                country: country || undefined,
                 // #201: the visibility preference is a required field of the full-replacement
                 // form. Its own toggle control lands with the profile screens (#202); until
                 // then a profile save preserves whatever the account already chose.
@@ -171,11 +216,15 @@ export function ProfileSection() {
             })
           }
         >
-          {t(isPending ? 'common.working' : 'settings.profile.submit')}
+          {t(isPending ? "common.working" : "settings.profile.submit")}
         </Button>
 
-        {saved && !isPending && <p className={styles.success}>{t('settings.profile.saved')}</p>}
-        {isError && <p className={styles.failure}>{t('settings.profile.failed')}</p>}
+        {saved && !isPending && (
+          <p className={styles.success}>{t("settings.profile.saved")}</p>
+        )}
+        {isError && (
+          <p className={styles.failure}>{t("settings.profile.failed")}</p>
+        )}
       </div>
     </>
   );

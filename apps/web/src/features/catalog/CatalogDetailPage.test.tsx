@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ThemeProvider } from '../../shared/theme/ThemeProvider';
@@ -18,6 +18,13 @@ const { CatalogDetailPage } = await import('./CatalogDetailPage');
  * Renders the fiche at its route, with the picked result carried in navigation state the way
  * the search list hands it over — or without it, to exercise the cold-open fallback.
  */
+/** Stands in for the book's screen, saying whether it was asked to open the rating (#594). */
+function DetailStandIn() {
+  const { id } = useParams();
+  const rate = (useLocation().state as { rate?: boolean } | null)?.rate === true;
+  return <p>{`fiche ${id}${rate ? ' · notation' : ''}`}</p>;
+}
+
 function renderFiche(result?: ReturnType<typeof catalogResult>) {
   const entry = result
     ? { pathname: '/catalog/openlibrary/OL123W', state: { result } }
@@ -30,6 +37,7 @@ function renderFiche(result?: ReturnType<typeof catalogResult>) {
             <Route path="/catalog/:provider/:ref" element={<CatalogDetailPage />} />
             <Route path="/discover" element={<p>écran de recherche</p>} />
             <Route path="/authors/:id" element={<p>écran de l'auteur</p>} />
+            <Route path="/detail/:id" element={<DetailStandIn />} />
           </Routes>
         </MemoryRouter>
       </ThemeProvider>
@@ -103,7 +111,9 @@ describe('CatalogDetailPage', () => {
 
     await addAs('Lu');
 
-    expect(await screen.findByText('Ajouté à ta bibliothèque, comme lu.')).toBeInTheDocument();
+    // #594: a book added as read leaves the catalogue page for its own screen, the rating
+    // sheet over it — that sheet, not a line on the page left behind, confirms the addition.
+    expect(await screen.findByText('fiche nouveau · notation')).toBeInTheDocument();
     expect(posts[0].status).toBe('READ');
   });
 

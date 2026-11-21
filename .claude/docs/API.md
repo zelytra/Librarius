@@ -76,7 +76,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/genres` | Genres present in the caller's collection, most frequent first (`GenreCount`) — see [Genres](#genres) |
 | GET | `/api/categories` | Built-in ranks + the user's own categories |
 | POST | `/api/categories` | Creates a custom category (`CategoryCreateDto`) — 409 on a name already used |
-| PUT | `/api/categories/{id}` | Renames one of the caller's categories (`CategoryUpdateDto`) — see [Categories](#categories) |
+| PUT | `/api/categories/{id}` | Renames one of the caller's categories and, when `color` is sent, recolors it (`CategoryUpdateDto(label, color)`, #599) — see [Categories](#categories). On create and update, `color` is `#rrggbb` or a 400 |
 | DELETE | `/api/categories/{id}` | Deletes it and unranks its titles — 204 |
 | GET | `/api/goals` | Reading goals |
 | PUT | `/api/goals/{year}` | Creates or updates a year's goal (`GoalUpsertDto`) |

@@ -164,13 +164,38 @@ describe('AdminPage', () => {
 
     const active = (await screen.findByText('actifs maintenant')).parentElement!;
     expect(active).toHaveTextContent('3');
-    expect(screen.getByRole('img', { name: /Signalements par jour/ })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Membres actifs par jour/ })).toBeInTheDocument();
+    expect(screen.getByRole('figure', { name: /Signalements par jour/ })).toBeInTheDocument();
+    expect(screen.getByRole('figure', { name: /Membres actifs par jour/ })).toBeInTheDocument();
     const keycloak = screen.getByText('Keycloak').closest('li')!;
     expect(within(keycloak).getByText(/Indisponible/)).toBeInTheDocument();
     expect(within(keycloak).getByText(/HTTP 503/)).toBeInTheDocument();
     const database = screen.getByText('Base de données').closest('li')!;
     expect(within(database).getByText('Opérationnel')).toBeInTheDocument();
+  });
+
+  /** #574: every chart has its axes, and a column says what it holds on hover and on focus. */
+  test('draws axes on the charts and reads a column out on hover or focus', async () => {
+    meIs(true);
+    renderWithProviders(<AdminPage />, { route: '/admin?tab=monitoring' });
+
+    const reports = await screen.findByRole('figure', { name: /Signalements par jour/ });
+    // The value axis runs from 0 to the busiest day (1 + 4), the time axis from the first day to the last.
+    const values = within(reports).getByTestId('y-axis');
+    expect(within(values).getByText('5')).toBeInTheDocument();
+    expect(within(values).getByText('0')).toBeInTheDocument();
+    const dates = within(reports).getByTestId('x-axis');
+    expect(within(dates).getByText('14 nov.')).toBeInTheDocument();
+    expect(within(dates).getByText('15 nov.')).toBeInTheDocument();
+
+    const first = within(reports).getByRole('button', { name: '14 nov. · Membres 1 · Erreurs 4' });
+    await userEvent.hover(first);
+    expect(within(reports).getByRole('tooltip')).toHaveTextContent('14 nov. · Membres 1 · Erreurs 4');
+    await userEvent.unhover(first);
+    expect(within(reports).queryByRole('tooltip')).not.toBeInTheDocument();
+
+    const active = screen.getByRole('figure', { name: /Membres actifs par jour/ });
+    within(active).getByRole('button', { name: '15 nov. · Membres actifs 6' }).focus();
+    expect(await within(active).findByRole('tooltip')).toHaveTextContent('15 nov. · Membres actifs 6');
   });
 
   test('switches between the reports and the monitoring', async () => {

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chip } from '../../shared/ui/primitives';
-import { ALL_KINDS, KIND_LABEL_KEY } from '../discover/medium';
+import { KIND_LABEL_KEY } from '../discover/medium';
+import { KINDS } from '../../shared/kinds';
 import { readLibraryKind, storeLibraryKind, type LibraryKindPreference } from '../../shared/libraryKind';
 import styles from './SettingsPage.module.css';
 
@@ -15,7 +16,8 @@ export function LibraryKindSection() {
   };
   const options: { id: LibraryKindPreference; label: string }[] = [
     { id: 'auto', label: t('settings.libraryKind.auto') },
-    ...ALL_KINDS.map((kind) => ({ id: kind, label: t(KIND_LABEL_KEY[kind]) })),
+    // The shelves the library always offers (#383, #597), never one it may not show.
+    ...KINDS.map(({ id }) => ({ id, label: t(KIND_LABEL_KEY[id]) })),
   ];
   return (
     <>

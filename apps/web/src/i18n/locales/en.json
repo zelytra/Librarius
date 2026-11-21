@@ -432,7 +432,19 @@
       "renameFailed": "Cannot rename it right now.",
       "deleteFailed": "Cannot delete it right now.",
       "load": "Your categories could not be loaded."
-    }
+    },
+    "colors": {
+      "sage": "Sage",
+      "green": "Fir green",
+      "teal": "Teal",
+      "indigo": "Indigo",
+      "plum": "Plum",
+      "raspberry": "Raspberry",
+      "amber": "Amber",
+      "grey": "Gray"
+    },
+    "color": "Color",
+    "newColor": "Color of the new category"
   },
   "series": {
     "follow": "Follow this series",
@@ -758,7 +770,9 @@
       "confirm": "Save",
       "skip": "Later",
       "close": "Close",
-      "printSheet": "Save and make the reading sheet"
+      "printSheet": "Save and make the reading sheet",
+      "startedAt": "Started on",
+      "finishedAt": "Finished on"
     },
     "progress": {
       "title": "My progress",
@@ -876,14 +890,21 @@
       "submit": "Save",
       "saved": "Profile saved.",
       "failed": "The profile could not be saved right now.",
-      "notifyComments": "Notify me of comments on my activity"
+      "notifyComments": "Notify me of comments on my activity",
+      "country": "Country",
+      "countryUnsaid": "Not said",
+      "countryHint": "Optional. Admins only see a number of members per country, never who."
     },
     "themes": {
       "systeme": "System",
       "creme": "Cream",
       "sauge": "Sage",
       "rose": "Rose",
-      "nuit": "Night"
+      "nuit": "Night",
+      "ocean": "Ocean",
+      "lavande": "Lavender",
+      "sable": "Sand",
+      "ardoise": "Slate"
     },
     "import": {
       "title": "Import my library",
@@ -971,7 +992,12 @@
       "removed": "Profile picture removed.",
       "format": "This file is not a JPEG or PNG image.",
       "tooBig": "This image is too heavy or too large.",
-      "failed": "The photo could not be saved. Try again."
+      "failed": "The photo could not be saved. Try again.",
+      "cropTitle": "Crop the picture",
+      "cropHint": "Drag the picture, or use the arrow keys, and set the zoom.",
+      "cropFrame": "Picture position — drag or use the arrow keys",
+      "zoom": "Zoom",
+      "cropSave": "Save the picture"
     },
     "categories": {
       "profile": {
@@ -1557,8 +1583,8 @@
       "servicesTitle": "Service status",
       "up": "Operational",
       "down": "Unavailable {{detail}}",
-      "barTitle": "{{date}}: {{values}}",
-      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds."
+      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds.",
+      "legendActive": "Active members"
     },
     "services": {
       "database": "Database",
@@ -1608,6 +1634,15 @@
       "deleted": "{{name}} was deleted, with all their data.",
       "deleteFailed": "The deletion failed: nothing was erased.",
       "handle": "@{{username}}"
+    },
+    "globe": {
+      "title": "Members around the world",
+      "label": "Globe of members by country — drag it or use the arrow keys to turn it",
+      "listLabel": "Members by country",
+      "summary_one": "{{members}} member in {{countries}} countries",
+      "summary_other": "{{members}} members in {{countries}} countries",
+      "empty": "No member has given their country yet.",
+      "error": "The members' countries could not be loaded."
     }
   },
   "profile": {
