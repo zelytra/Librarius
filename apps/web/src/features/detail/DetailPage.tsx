@@ -795,8 +795,9 @@ function DetailContent({ id }: { id: string }) {
   useEffect(() => {
     if (!rateOnArrival || item?.status !== 'READ') return;
     setOutcome('READ');
-    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
-  }, [rateOnArrival, item?.status, location.pathname, location.search, navigate]);
+    // '.' is this same route: the state is dropped without building a URL out of `location`.
+    navigate('.', { replace: true, state: null });
+  }, [rateOnArrival, item?.status, navigate]);
 
   // A change of edition changes the cover the series screens draw too (#480).
   const invalidateSeries = () => {
