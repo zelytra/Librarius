@@ -16,9 +16,10 @@ export default defineConfig({
     // breakpoints declared in CSS and in TypeScript still agree; `global.css` for
     // `global.test.ts`; the shell's two stylesheets for `app/safeAreas.test.ts`, which
     // checks that the frame and the bottom bar still hold the system bars off (#529);
-    // `AdminPage.module.css` for `features/admin/reportScroll.test.ts` (#564).
+    // `AdminPage.module.css` for `features/admin/reportScroll.test.ts` (#564);
+    // `ReadingSheetPage.module.css` for `features/sheet/sheetInk.test.ts` (#596).
     css: {
-      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/],
+      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/],
     },
   },
 });
