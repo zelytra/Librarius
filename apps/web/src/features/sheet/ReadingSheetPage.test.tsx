@@ -53,6 +53,18 @@ describe('ReadingSheetPage (#412)', () => {
     expect(sheet.style.getPropertyValue('--sheet-height')).toBe(height);
   });
 
+  /** #590: a card holds what fits it — the ISBN and the genres stay on the larger formats. */
+  test('leaves the ISBN and the genres off the A6 card', async () => {
+    libraryItemReturns({ ...FINISHED, book: { ...FINISHED.book, isbn13: '9782352942495', genres: 'Fantasy' } });
+    renderSheet();
+
+    const sheet = await screen.findByRole('article', { name: 'Fiche de lecture' });
+    expect(sheet).toHaveTextContent('9782352942495');
+    await userEvent.click(screen.getByRole('button', { name: 'A6 · carte' }));
+    expect(sheet).not.toHaveTextContent('9782352942495');
+    expect(sheet).not.toHaveTextContent('Fantasy');
+  });
+
   /** #549: the sheet is a keepsake, not a receipt — no export date on it. */
   test('prints no export date', async () => {
     libraryItemReturns(FINISHED);

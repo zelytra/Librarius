@@ -125,7 +125,11 @@ export function ReadingSheet({
     { label: t('sheet.facts.rank'), value: rankLabel },
   ];
   // A blank sheet keeps a line under every label, to be filled in by hand.
-  const shown = item ? facts.filter((f) => f.value) : facts.filter((f) => f.label !== t('sheet.facts.isbn'));
+  // A card holds what fits it (#590): the ISBN and the genres stay on the larger formats.
+  const onCard = (f: { label: string }) =>
+    format !== 'A6' || (f.label !== t('sheet.facts.isbn') && f.label !== t('sheet.facts.genres'));
+  const shown = (item ? facts.filter((f) => f.value) : facts.filter((f) => f.label !== t('sheet.facts.isbn')))
+    .filter(onCard);
   const size = sheetSize(format);
 
   return (
