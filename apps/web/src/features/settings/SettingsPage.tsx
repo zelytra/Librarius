@@ -16,6 +16,7 @@ import { HomeLayoutSection } from './HomeLayoutSection';
 import { BottomBarSection } from './BottomBarSection';
 import { useHighlightHash } from '../../shared/useHighlightHash';
 import { Loading } from '../../shared/ui/states';
+import { LegalLinks } from '../legal/LegalLinks';
 import styles from './SettingsPage.module.css';
 
 // The sheet's previews draw real sheets: their code stays out of Settings until the reading
@@ -231,6 +232,7 @@ export function SettingsPage() {
           </ul>
         </div>
         <div className={styles.version}>{t('settings.version', { version: APP_VERSION })}</div>
+        <LegalLinks />
       </Screen>
     );
   }

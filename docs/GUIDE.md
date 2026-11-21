@@ -553,6 +553,13 @@ enregistrée sur sa fiche, et « Reprendre la lecture » le remet en cours quand
 Non. Aucun écran de l'application ne montre les données d'un autre compte. Ta note et ton
 avis sont attachés à **ton** exemplaire, jamais partagés, jamais moyennés.
 
+### Pourquoi l'application me demande d'accepter des conditions ?
+
+À ta première connexion, puis chaque fois qu'elles changent, tu acceptes les **conditions
+d'utilisation** et la **politique de confidentialité**. Les deux se lisent à tout moment,
+sans compte, avec les **mentions légales** : liens en bas des Réglages et de la page
+d'accueil. Si tu refuses, tu es déconnecté, et rien n'est enregistré.
+
 ### J'ai perdu mes classements et mes séries en réimportant mon CSV
 
 L'export CSV est fait pour **partir** vers un autre outil, pas pour revenir : à la

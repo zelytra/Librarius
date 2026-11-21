@@ -4,6 +4,7 @@ import { useApiAuth, useSignIn } from '../../shared/api';
 import { Button } from '../../shared/ui/primitives';
 import { Icon } from '../../shared/ui/Icon';
 import { Cover } from '../../shared/ui/Cover';
+import { LegalLinks } from '../legal/LegalLinks';
 import styles from './LandingPage.module.css';
 
 /**
@@ -326,6 +327,7 @@ export function LandingPage() {
         </footer>
 
         <p className={styles.footnote}>{t('landing.footer', { name: t('app.name') })}</p>
+        <LegalLinks />
       </main>
     </div>
   );

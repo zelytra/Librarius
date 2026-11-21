@@ -206,7 +206,11 @@ describe('a full-screen route', () => {
     renderAt('/settings');
 
     expect(await screen.findByText('Apparence')).toBeInTheDocument();
-    expect(screen.queryAllByRole('navigation')).toHaveLength(0);
+    // The legal links under the Settings list (#74) are a navigation too, and not the app's.
+    const appNavigations = screen
+      .queryAllByRole('navigation')
+      .filter((nav) => nav.getAttribute('aria-label') !== 'Informations légales');
+    expect(appNavigations).toHaveLength(0);
   });
 
   test('keeps the side navigation on a desktop', async () => {

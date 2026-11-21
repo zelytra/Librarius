@@ -337,7 +337,17 @@ something as read — an existing collection carries no reading dates.
   asks the user to type their own username, and offers the export first. The Keycloak login
   goes with the data; if it cannot, nothing is erased and the screen says so.
 - 🔜 Notification preferences.
-- 🔜 Legal notice, terms of service, privacy policy.
+- ✅ **Legal notice, terms of service, privacy policy** ([#74](https://github.com/zelytra/Librarius/issues/74)).
+  Public pages at `/legal/terms`, `/legal/privacy` and `/legal/notice`, outside the shell and
+  readable without an account, linked under the Settings list and at the foot of the landing
+  page. On first sign-in — and again whenever the API raises `currentTermsVersion` — a request
+  that cannot be dismissed asks the member to accept the terms and the privacy policy; it
+  links both documents and offers to decline, which signs the member out. The acceptance is
+  recorded with its version and the server's time. The publisher, contact and host are still
+  bracketed placeholders in `features/legal/content.*.ts`, to be filled in before any
+  promotion. The documents state the import decision: Booknode, Babelio and Mangacollec are
+  read in the member's own browser, never by a server. The Keycloak sign-in pages carry no link
+  yet: the theme overrides no template, on purpose.
 
 Category management lives on its own screen (§ 4.10) rather than here: it is reached from
 the Collection, where the categories are used, and not from a settings list nobody visits

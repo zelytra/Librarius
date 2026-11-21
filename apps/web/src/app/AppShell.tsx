@@ -6,6 +6,7 @@ import { useProfileLanguage } from './useProfileLanguage';
 import { Loading } from '../shared/ui/states';
 import { useViewportAtLeast } from '../shared/ui/breakpoints';
 import { AchievementWatcher } from '../shared/AchievementWatcher';
+import { TermsWatcher } from '../features/legal/TermsWatcher';
 import { FeedbackButton } from '../shared/feedback/FeedbackButton';
 import { note } from '../shared/feedback/diagnostics';
 import { useScrollMemory } from './scrollMemory';
@@ -55,6 +56,8 @@ export function AppShell() {
         </main>
         {!wide && showBottomNav && <BottomNav />}
       </div>
+      {/* Asks a member to accept the terms in force before anything else (#74). */}
+      <TermsWatcher />
       {/* Announces the achievements a write unlocked (#287). */}
       <AchievementWatcher />
       {/* Report a problem from any screen (#489), above the phone's bottom bar. */}

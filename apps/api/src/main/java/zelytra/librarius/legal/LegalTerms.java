@@ -5,8 +5,9 @@ package zelytra.librarius.legal;
  * the web app; the API only knows their version, so it can tell a member they have a version to
  * accept and refuse an acceptance of one the app does not show.
  *
- * <p>Raise {@link #CURRENT_VERSION} together with {@code LEGAL_VERSION} in the web app whenever
- * either document changes in substance: every member is then asked to accept again.
+ * <p>Raise {@link #CURRENT_VERSION} whenever either document changes in substance, in the same
+ * change as the text ({@code apps/web/src/features/legal/content.*.ts}): {@code /api/me} carries
+ * it, and the app asks every member whose accepted version is lower to accept again.
  */
 public final class LegalTerms {
 

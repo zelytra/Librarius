@@ -16,6 +16,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 |---|---|---|
 | GET | `/api/me` | Current profile (`MeDto`) — creates the `app_user` on the fly |
 | PATCH | `/api/me` | Updates the caller's own profile (`UpdateMeDto`) — display name, language, time zone, visibility preference. See [Profile](#profile) |
+| PUT | `/api/me/terms` | Records the caller's acceptance of the terms of service and privacy policy (`AcceptTermsDto {version}` → `MeDto`) — see [Terms acceptance](#terms-acceptance) |
 | DELETE | `/api/me` | Deletes the account and everything in it (`AccountDeletionDto`) — see [Account deletion](#account-deletion) |
 | GET | `/api/me/following` | The members the caller follows (`MemberSummaryDto`) — see [Following members](#following-members) |
 | GET | `/api/me/followers` | The members that follow the caller (`MemberSummaryDto`) |
@@ -216,6 +217,24 @@ Enums: `Kind {BOOK, MANGA}` · `LibraryStatus {TO_READ, READING, READ, ABANDONED
 `ReportTargetType {WORK, EDITION, SERIES}` ·
 `ReportReason {WRONG_COVER, WRONG_INFO, DUPLICATE, OTHER}` ·
 `ReportStatus {OPEN, DISMISSED, UPHELD}`.
+
+## Terms acceptance
+
+[#74](https://github.com/zelytra/Librarius/issues/74). `MeDto` carries `termsVersion` and
+`termsAcceptedAt` — the version of the terms of service and privacy policy the caller last
+accepted, and when, both `null` until the first acceptance — and `currentTermsVersion`, the
+version in force (`legal/LegalTerms.CURRENT_VERSION`). The web app asks for an acceptance
+whenever `termsVersion` is below `currentTermsVersion`, so raising the constant is all it
+takes to ask every member again.
+
+`PUT /api/me/terms {version}` records it: 200 with the profile, the date taken from the
+server's clock, never from the client. Only the version in force is accepted — 400 for any
+other, or for a missing one — so an acceptance always names the text that was shown. Like
+`PATCH /api/me` it takes no identifier; `TermsAcceptanceApiTest` checks that one member's
+acceptance never reaches another's row.
+
+The documents themselves are pages of the web app (`/legal/terms`, `/legal/privacy`,
+`/legal/notice`), public, with no API behind them.
 
 ## Profile
 

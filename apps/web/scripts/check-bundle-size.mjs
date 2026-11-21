@@ -116,6 +116,12 @@ import { fileURLToPath } from 'node:url';
  * measured 365.0 kB. Re-derived to the measurement plus ~5%; `initial` (189.9 kB) is untouched,
  * and Settings stays under the per-screen `chunk` by loading its data category on its own.
  *
+ * `total` moves to 410 kB for the batch #74/#533/#605 (2026-11-21): `main` sat at 99% of 385
+ * after #603, and the legal documents (#74) — the terms, the privacy policy and the legal
+ * notice, in both languages, read by everyone once at sign-up — add 5.5 kB of text plus their
+ * page and the acceptance request, all deferred. Measured 389.5 kB, re-derived to the
+ * measurement plus ~5%; `initial` (194.4 kB) is untouched, the documents staying out of it.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -125,7 +131,7 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 385,
+  total: 410,
   // The English locale (#497), fetched on first use: 16.1 kB measured. A whole interface's copy
   // is one file by nature, so it has a budget of its own rather than the per-screen `chunk`.
   locale: 18,

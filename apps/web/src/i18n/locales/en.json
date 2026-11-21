@@ -1757,5 +1757,21 @@
     "followBackLabel": "Follow {{name}} back",
     "followedBack": "You follow {{name}}",
     "followingToo": "You follow each other"
+  },
+  "legal": {
+    "nav": "Legal information",
+    "terms": "Terms of service",
+    "privacy": "Privacy",
+    "notice": "Legal notice",
+    "error": "The document could not be loaded.",
+    "gate": {
+      "title": "Terms of service",
+      "intro": "Before you go on, read Librarius’s terms of service and privacy policy, then accept them.",
+      "changed": "The terms of service or the privacy policy have changed since your last visit: read them again, then accept the new version to go on.",
+      "accept": "I accept",
+      "decline": "Decline and sign out",
+      "accepted": "Thanks, noted.",
+      "failed": "Your acceptance could not be saved. Try again."
+    }
   }
 }

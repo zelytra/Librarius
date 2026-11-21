@@ -1757,5 +1757,21 @@
     "followBackLabel": "Suivre {{name}} en retour",
     "followedBack": "Tu suis {{name}}",
     "followingToo": "Vous vous suivez"
+  },
+  "legal": {
+    "nav": "Informations légales",
+    "terms": "Conditions d’utilisation",
+    "privacy": "Confidentialité",
+    "notice": "Mentions légales",
+    "error": "Le document n’a pas pu être chargé.",
+    "gate": {
+      "title": "Conditions d’utilisation",
+      "intro": "Avant de continuer, prends connaissance des conditions d’utilisation et de la politique de confidentialité de Librarius, puis accepte-les.",
+      "changed": "Les conditions d’utilisation ou la politique de confidentialité ont changé depuis ta dernière visite : relis-les, puis accepte la nouvelle version pour continuer.",
+      "accept": "J’accepte",
+      "decline": "Refuser et me déconnecter",
+      "accepted": "Merci, c’est noté.",
+      "failed": "L’acceptation n’a pas pu être enregistrée. Réessaie."
+    }
   }
 }

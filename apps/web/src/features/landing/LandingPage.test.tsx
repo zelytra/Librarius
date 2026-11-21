@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -30,6 +30,16 @@ describe('LandingPage', () => {
   beforeEach(() => {
     resetAuth();
     setAuthenticated(false);
+  });
+
+  /** #74: the sign-in screen links the legal documents, readable before any account exists. */
+  test('links the legal documents', () => {
+    renderLanding();
+
+    const legal = screen.getByRole('navigation', { name: 'Informations légales' });
+    expect(within(legal).getByRole('link', { name: 'Conditions d’utilisation' })).toHaveAttribute('href', '/legal/terms');
+    expect(within(legal).getByRole('link', { name: 'Confidentialité' })).toHaveAttribute('href', '/legal/privacy');
+    expect(within(legal).getByRole('link', { name: 'Mentions légales' })).toHaveAttribute('href', '/legal/notice');
   });
 
   test('states what the product is before asking for anything', () => {
