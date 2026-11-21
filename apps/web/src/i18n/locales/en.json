@@ -937,6 +937,11 @@
         "oneForAll": "One bookmark for Booknode, Babelio and Mangacollec. If you have an older one, replace it with this one.",
         "outdated": "This file comes from an older bookmark: it is imported all the same, but replace your bookmark with the one above for next time."
       },
+      "inApp": {
+        "title": "From the site, inside the app",
+        "description": "Sign in to the site in the window that opens, open your library, then tap “Importer dans Librarius” at the bottom of the page: the import starts on its own.",
+        "button": "Sign in to {{site}} and import"
+      },
       "runningTitle": "Import in progress",
       "percent": "{{percent}}%",
       "reading": "Reading the file…",

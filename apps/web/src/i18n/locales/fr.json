@@ -937,6 +937,11 @@
         "oneForAll": "Un seul favori pour Booknode, Babelio et Mangacollec. Si tu en as un plus ancien, remplace-le par celui-ci.",
         "outdated": "Ce fichier vient d'un ancien favori : l'import se fait quand même, mais remplace ton favori par celui ci-dessus pour les prochaines fois."
       },
+      "inApp": {
+        "title": "Depuis le site, dans l’app",
+        "description": "Connecte-toi au site dans la fenêtre qui s’ouvre, ouvre ta bibliothèque, puis touche « Importer dans Librarius » en bas de la page : l’import démarre tout seul.",
+        "button": "Se connecter à {{site}} et importer"
+      },
       "runningTitle": "Import en cours",
       "percent": "{{percent}} %",
       "reading": "Lecture du fichier…",

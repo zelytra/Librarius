@@ -51,7 +51,11 @@ export interface CollectorEnv {
  */
 export const COLLECTOR_VERSION = 2;
 
-export async function collectLibrary(env?: CollectorEnv): Promise<void> {
+/**
+ * @param save replaces the download when the default environment is used: the in-app window
+ *   (#570) posts the file to the app instead. Ignored with `env`, which carries its own.
+ */
+export async function collectLibrary(env?: CollectorEnv, save?: (file: CollectedFile) => void): Promise<void> {
   const e: CollectorEnv = env ?? {
     location: window.location,
     document: window.document,
@@ -59,7 +63,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       window.fetch(url, headers ? { headers } : { credentials: 'include' }),
     storage: [window.localStorage, window.sessionStorage],
     alert: (message: string) => window.alert(message),
-    save: (file: CollectedFile) => {
+    save: save ?? ((file: CollectedFile) => {
       const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
       const link = window.document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -67,7 +71,7 @@ export async function collectLibrary(env?: CollectorEnv): Promise<void> {
       window.document.body.appendChild(link);
       link.click();
       link.remove();
-    },
+    }),
     pauseMs: 400,
     global: window,
   };
@@ -407,6 +411,42 @@ export function bookmarkletHref(): string {
   // One line: some browsers drop or refuse a bookmark whose address holds a line break (#487).
   const source = collectLibrary.toString().replace(/\s*[\r\n]+\s*/g, ' ');
   return 'javascript:' + encodeURIComponent('(' + source + ')()');
+}
+
+/**
+ * Hands a collected file to the app (#570), from inside the window it opened on the source site:
+ * `window.mobileApp` is what `@capgo/inappbrowser` injects there. Serialized into
+ * {@link inAppCollectorScript}, so it reads nothing from this module.
+ */
+export function postToApp(file: CollectedFile): void {
+  (window as unknown as { mobileApp: { postMessage: (message: { detail: CollectedFile }) => void } }).mobileApp.postMessage({
+    detail: file,
+  });
+}
+
+/**
+ * The script the app injects into every page of the in-app window (#570): it pins one
+ * « Importer dans Librarius » button over the page — once, however often it is injected — and
+ * the button starts the bookmarklet's own collector, saving through {@link postToApp}. The
+ * label is French, like the collector's own messages: it is drawn inside a French site's page,
+ * out of reach of the app's translations.
+ */
+export function inAppCollectorScript(): string {
+  return `(function () {
+  if (document.getElementById('librarius-collect')) return;
+  var button = document.createElement('button');
+  button.id = 'librarius-collect';
+  button.type = 'button';
+  button.textContent = 'Importer dans Librarius';
+  button.setAttribute('style', 'position:fixed;z-index:2147483647;left:50%;bottom:24px;transform:translateX(-50%);' +
+    'min-height:48px;padding:12px 20px;border:none;border-radius:24px;background:#5f6f52;color:#fff;' +
+    'font:600 16px sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3)');
+  button.addEventListener('click', function () {
+    button.remove();
+    (${collectLibrary.toString()})(undefined, (${postToApp.toString()}));
+  });
+  document.body.appendChild(button);
+})();`;
 }
 
 /** Whether a parsed file is one the collector saved. */

@@ -391,6 +391,14 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
 couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arrière-plan.
 
+### Dans l'application mobile : sans favori
+
+Dans l'app, pas de favori à installer. Dans Réglages → Importer, choisis le site, puis touche
+**« Se connecter à … et importer »** : le site s'ouvre dans une fenêtre de l'app. Connecte-toi
+comme d'habitude, ouvre ta bibliothèque, puis touche **« Importer dans Librarius »** en bas de
+la page. La fenêtre se ferme et l'import démarre tout seul. Si tu fermes la fenêtre avant, rien
+n'est importé.
+
 ### Depuis Mangacollec
 
 Utilise le favori **« Librarius : collecter »** (le même que pour Babelio) : sur

@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -18,6 +19,7 @@ import {
 import type { ImportJobDto } from '../../api/generated/librarius';
 import { bookmarkletHref, COLLECTOR_VERSION, isCollectedFile } from './collector';
 import { isMangacollecCollection } from './mangacollec';
+import { collectInApp } from './inAppImport';
 import styles from './ImportSection.module.css';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
@@ -117,6 +119,9 @@ export function ImportSection() {
     setJobId(null); // Stop polling; the job has finished.
   }, [job, queryClient, t]);
 
+  // In the app the source site opens in a window of its own (#570): no bookmark to install.
+  const native = Capacitor.isNativePlatform();
+
   const running = jobId != null;
   const busy = running || startingScrape || startingCsv || startingCollected;
 
@@ -131,6 +136,19 @@ export function ImportSection() {
     reset();
     try {
       const started = await importFromSource({ source, data: { handle: handle.trim() } });
+      if (started.id) setJobId(started.id);
+    } catch (e) {
+      setError(failureMessage(t, e, t('settings.import.unavailable')));
+    }
+  }
+
+  /** Signs in to the source in the app's own window, then imports what the collector sent back. */
+  async function runInApp() {
+    reset();
+    try {
+      const file = await collectInApp(source);
+      if (!file) return; // The reader closed the window: nothing to import.
+      const started = await importCollected({ data: { source: file.source, pages: file.pages } });
       if (started.id) setJobId(started.id);
     } catch (e) {
       setError(failureMessage(t, e, t('settings.import.unavailable')));
@@ -194,30 +212,32 @@ export function ImportSection() {
               already signed in, collects the library and hands back a file. One bookmark for
               Booknode, Babelio and Mangacollec, shown once above the sources (#507): one per
               source read as three different bookmarks, and an old one got used. */}
-          <div className={styles.collector}>
-            <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
-            <p className={styles.note}>{t('settings.import.collector.oneForAll')}</p>
-            <ol className={styles.steps}>
-              <li>
-                {t('settings.import.collector.step1')}{' '}
-                <a
-                  ref={bookmarklet}
-                  className={styles.bookmarklet}
-                  onClick={(e) => e.preventDefault()}
-                  draggable
-                >
-                  <Icon name="bookmark_add" size={16} color="var(--on-accent-fill)" />
-                  {t('settings.import.collector.button')}
-                </a>
-              </li>
-              <li>{t('settings.import.collector.step2')}</li>
-              <li>{t('settings.import.collector.step3')}</li>
-            </ol>
-            <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
-              <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />
-              {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
-            </button>
-          </div>
+          {!native && (
+            <div className={styles.collector}>
+              <h4 className={styles.collectorTitle}>{t('settings.import.collector.title')}</h4>
+              <p className={styles.note}>{t('settings.import.collector.oneForAll')}</p>
+              <ol className={styles.steps}>
+                <li>
+                  {t('settings.import.collector.step1')}{' '}
+                  <a
+                    ref={bookmarklet}
+                    className={styles.bookmarklet}
+                    onClick={(e) => e.preventDefault()}
+                    draggable
+                  >
+                    <Icon name="bookmark_add" size={16} color="var(--on-accent-fill)" />
+                    {t('settings.import.collector.button')}
+                  </a>
+                </li>
+                <li>{t('settings.import.collector.step2')}</li>
+                <li>{t('settings.import.collector.step3')}</li>
+              </ol>
+              <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
+                <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />
+                {t(copied ? 'settings.import.collector.copied' : 'settings.import.collector.copy')}
+              </button>
+            </div>
+          )}
 
           <Segmented<Source>
             value={source}
@@ -247,10 +267,22 @@ export function ImportSection() {
               </Button>
             </div>
           ) : null}
-          {source === 'mangacollec' && <p className={styles.note}>{t('settings.import.mangacollecNote')}</p>}
-          {source === 'babelio' ? (
-            <p className={styles.note}>{t('settings.import.babelioNote')}</p>
-          ) : null}
+          {native ? (
+            <div className={styles.collector}>
+              <h4 className={styles.collectorTitle}>{t('settings.import.inApp.title')}</h4>
+              <p className={styles.note}>{t('settings.import.inApp.description')}</p>
+              <Button variant="primary" onClick={() => void runInApp()} disabled={busy}>
+                <Icon name="login" size={18} color="var(--on-accent-fill)" />
+                {t('settings.import.inApp.button', { site: t(`settings.import.sources.${source}`) })}
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Both notes point at the bookmark, which only a browser has. */}
+              {source === 'mangacollec' && <p className={styles.note}>{t('settings.import.mangacollecNote')}</p>}
+              {source === 'babelio' && <p className={styles.note}>{t('settings.import.babelioNote')}</p>}
+            </>
+          )}
 
           <button onClick={() => fileInput.current?.click()} disabled={busy} className={styles.fileButton}>
             <Icon name="upload_file" size={18} color="var(--accent-deep)" />

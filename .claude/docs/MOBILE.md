@@ -24,8 +24,11 @@ What is deliberately **not** here yet:
 - **An Apple Developer Program membership**, and therefore any build that can leave the
   runner: `ios-release` stops at its signing guard until the four Apple secrets exist (§ 10).
   The project itself is here and compiles.
-- **Any plugin an issue has not asked for.** Two are declared, both for sign-in:
-  `@capacitor/browser` and `@capacitor/app` (§ 5). The camera comes with
+- **Any plugin an issue has not asked for.** Three are declared: `@capacitor/browser` and
+  `@capacitor/app`, both for sign-in (§ 5), and `@capgo/inappbrowser` for the in-app import
+  ([#570](https://github.com/zelytra/Librarius/issues/570)): the source site opens in a
+  window the app owns, the collector is injected into its pages and posts the library back
+  (design and the options weighed: `docs/wiki/Imports.md`). Not yet tried on a device. The camera comes with
   [#68](https://github.com/zelytra/Librarius/issues/68) — today the scanner reads the camera
   through `getUserMedia`, which the WebView grants from the manifest permission — and push
   with [#69](https://github.com/zelytra/Librarius/issues/69).

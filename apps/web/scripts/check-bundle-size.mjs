@@ -134,7 +134,9 @@ const BUDGET_KB = {
   total: 410,
   // The English locale (#497), fetched on first use: 16.1 kB measured. A whole interface's copy
   // is one file by nature, so it has a budget of its own rather than the per-screen `chunk`.
-  locale: 18,
+  // 20 since 2026-11-21: the copy grew with the interface to 18.0 kB, flush on the old 18, with
+  // the legal pages' chrome (#74) and the in-app import (#570). Measurement plus ~10%.
+  locale: 20,
   // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
   // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the
