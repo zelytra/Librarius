@@ -214,6 +214,27 @@ function CoverTile({
   );
 }
 
+/** The key a folded « Sans catégorie » section is kept under (#598). */
+const NO_CATEGORY = '__none__';
+const FOLDED_STORAGE_KEY = 'librarius.foldedCategories';
+
+function readFolded(): ReadonlySet<string> {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(FOLDED_STORAGE_KEY) ?? '[]');
+    return new Set(Array.isArray(stored) ? stored.filter((c): c is string => typeof c === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function storeFolded(folded: ReadonlySet<string>) {
+  try {
+    localStorage.setItem(FOLDED_STORAGE_KEY, JSON.stringify([...folded]));
+  } catch {
+    /* storage unavailable: the fold lasts as long as the page */
+  }
+}
+
 function CollectionContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -553,6 +574,16 @@ function CollectionContent() {
     return entry ? renderEntry(entry) : null;
   };
   const categorySections = byCategoryOn ? byCategory(entries, categories) : [];
+  // Categories folded away (#598), kept on the device so a long shelf opens as it was left.
+  const [folded, setFolded] = useState<ReadonlySet<string>>(readFolded);
+  const toggleFolded = (code: string) =>
+    setFolded((current) => {
+      const next = new Set(current);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      storeFolded(next);
+      return next;
+    });
 
   return (
     <>
@@ -668,11 +699,23 @@ function CollectionContent() {
         categorySections.map((section) => (
           <section key={section.code ?? 'none'} className={styles.categorySection}>
             <h3 className={styles.categoryTitle}>
-              {section.color && <span className={styles.categoryDot} style={{ background: section.color }} />}
-              {section.label ?? t('views.uncategorised')}
-              <span className={styles.categoryCount}>{section.entries.length}</span>
+              <button
+                type="button"
+                className={styles.categoryToggle}
+                aria-expanded={!folded.has(section.code ?? NO_CATEGORY)}
+                onClick={() => toggleFolded(section.code ?? NO_CATEGORY)}
+              >
+                {section.color && <span className={styles.categoryDot} style={{ background: section.color }} />}
+                {section.label ?? t('views.uncategorised')}
+                <span className={styles.categoryCount}>{section.entries.length}</span>
+                <Icon
+                  name={folded.has(section.code ?? NO_CATEGORY) ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}
+                  size={20}
+                  color="var(--ink-soft)"
+                />
+              </button>
             </h3>
-            {draggable ? (
+            {folded.has(section.code ?? NO_CATEGORY) ? null : draggable ? (
               <ReorderGrid
                 keys={section.entries.map(keyOf)}
                 render={renderKey}
