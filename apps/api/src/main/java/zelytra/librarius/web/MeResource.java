@@ -28,12 +28,17 @@ import zelytra.librarius.web.ApiDtos.UpdateMeDto;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /** Profile of the authenticated user (provisioned on the fly when needed). */
 @Path("/api/me")
 @Authenticated
 @Produces(MediaType.APPLICATION_JSON)
 public class MeResource {
+
+    /** The codes a member may give as their country (#573): ISO 3166-1 alpha-2, as the JDK knows them. */
+    private static final Set<String> ISO_COUNTRIES = Set.of(Locale.getISOCountries());
 
     @Inject
     CurrentUser currentUser;
@@ -124,11 +129,24 @@ public class MeResource {
         user.displayName = dto.displayName().trim();
         user.locale = dto.locale();
         user.timeZone = parseZone(dto.timeZone());
+        user.country = parseCountry(dto.country());
         user.publicAccount = dto.publicAccount();
         if (dto.notifyComments() != null) {
             user.notifyComments = dto.notifyComments();
         }
         return MeDto.of(user, currentUser.isAdmin());
+    }
+
+    /** A blank country clears it (#573); anything else must be an ISO 3166-1 alpha-2 code. */
+    private static String parseCountry(String country) {
+        if (country == null || country.isBlank()) {
+            return null;
+        }
+        String code = country.trim().toUpperCase(Locale.ROOT);
+        if (!ISO_COUNTRIES.contains(code)) {
+            throw new BadRequestException("Unknown country: " + country);
+        }
+        return code;
     }
 
     /** A blank zone clears the preference; anything else must be a valid IANA identifier. */

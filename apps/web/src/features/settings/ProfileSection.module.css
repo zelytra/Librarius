@@ -174,3 +174,9 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* #573: what the country is used for, under its field. */
+.hint {
+  font-size: var(--fs-12);
+  color: var(--ink-soft);
+}

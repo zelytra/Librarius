@@ -53,6 +53,36 @@
         } ]
       }
     },
+    "/api/admin/countries" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CountryCountDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Countries",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/admin/feedback" : {
       "get" : {
         "parameters" : [ {
@@ -4869,6 +4899,18 @@
           }
         }
       },
+      "CountryCountDto" : {
+        "type" : "object",
+        "properties" : {
+          "country" : {
+            "type" : "string"
+          },
+          "members" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "DashboardLayoutDto" : {
         "type" : "object",
         "required" : [ "sections" ],
@@ -6006,6 +6048,9 @@
           },
           "notifyComments" : {
             "type" : "boolean"
+          },
+          "country" : {
+            "type" : "string"
           }
         }
       },
@@ -7028,6 +7073,10 @@
           },
           "notifyComments" : {
             "type" : "boolean"
+          },
+          "country" : {
+            "type" : "string",
+            "maxLength" : 8
           }
         }
       },

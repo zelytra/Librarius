@@ -112,6 +112,39 @@ class MeApiTest {
         resetProfile("alice", "alice", "fr", null);
     }
 
+    /**
+     * #573: the country is the member's own, optional answer — the only place the admins' map
+     * of members by country comes from. A blank one clears it.
+     */
+    @Test
+    void storesTheCountryAndABlankOneClearsIt() {
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"country\": \"be\", \"publicAccount\": false }")
+                .when().patch("/api/me")
+                .then().statusCode(200)
+                .body("country", is("BE"));
+        given().auth().oauth2(token("alice")).when().get("/api/me")
+                .then().statusCode(200).body("country", is("BE"));
+
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"country\": \"\", \"publicAccount\": false }")
+                .when().patch("/api/me")
+                .then().statusCode(200)
+                .body("country", is(nullValue()));
+    }
+
+    /** A code that names no country is a 400, like an unknown time zone. */
+    @Test
+    void anUnknownCountryIsRejected() {
+        for (String country : new String[] {"ZZ", "FRA", "1"}) {
+            given().auth().oauth2(token("alice")).contentType("application/json")
+                    .body("{ \"displayName\": \"alice\", \"locale\": \"fr\", \"country\": \"%s\", \"publicAccount\": false }"
+                            .formatted(country))
+                    .when().patch("/api/me")
+                    .then().statusCode(400);
+        }
+    }
+
     /** An unknown time zone is a 400, like any other malformed input. */
     @Test
     void anUnknownTimeZoneIsRejected() {

@@ -60,10 +60,10 @@ public final class ApiDtos {
      */
     public record MeDto(String id, String email, String displayName, String locale,
                         String timeZone, boolean trusted, boolean publicAccount, boolean admin,
-                        Long avatarVersion, boolean notifyComments) {
+                        Long avatarVersion, boolean notifyComments, String country) {
         public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
-                    u.publicAccount, admin, u.avatarVersion, u.notifyComments);
+                    u.publicAccount, admin, u.avatarVersion, u.notifyComments, u.country);
         }
     }
 
@@ -206,7 +206,16 @@ public final class ApiDtos {
             @Size(max = 64) String timeZone,
             @NotNull Boolean publicAccount,
             /** Optional (#211): absent keeps the stored choice, for a client that predates it. */
-            Boolean notifyComments) {
+            Boolean notifyComments,
+            /**
+             * Optional (#573): an ISO 3166-1 alpha-2 code, in either case; blank or absent clears
+             * it, like the time zone. A code naming no country is a 400, checked by the resource.
+             */
+            @Size(max = 8) String country) {
+    }
+
+    /** #573: how many members said they live in one country — a count, never who. */
+    public record CountryCountDto(String country, long members) {
     }
 
     /**

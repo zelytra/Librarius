@@ -497,3 +497,76 @@
   right: 0;
   transform: none;
 }
+
+/* #573: where the members live — the globe beside the list it is drawn from. */
+.globeLayout {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .globeLayout {
+    grid-template-columns: minmax(0, 280px) 1fr;
+    align-items: start;
+  }
+}
+
+.globe {
+  width: 100%;
+  max-width: 280px;
+  justify-self: center;
+  border-radius: 50%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.globe:focus-visible {
+  outline: 3px solid var(--accent-deep);
+  outline-offset: 4px;
+}
+
+.globe svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.globeSea {
+  fill: var(--chip);
+  stroke: var(--line);
+}
+
+.globeLand {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 0.5;
+}
+
+.globeDot {
+  fill: var(--accent-deep);
+  fill-opacity: 0.8;
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+
+.globeList {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.globeRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-14);
+}
+
+.globeCount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

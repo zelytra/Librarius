@@ -890,7 +890,10 @@
       "submit": "Enregistrer",
       "saved": "Profil enregistré.",
       "failed": "Impossible d'enregistrer le profil pour le moment.",
-      "notifyComments": "Me notifier des commentaires sur mes activités"
+      "notifyComments": "Me notifier des commentaires sur mes activités",
+      "country": "Pays",
+      "countryUnsaid": "Non précisé",
+      "countryHint": "Facultatif. Les administrateurs ne voient qu'un nombre de membres par pays, jamais qui."
     },
     "themes": {
       "systeme": "Système",
@@ -1631,6 +1634,15 @@
       "deleted": "{{name}} a été supprimé, avec toutes ses données.",
       "deleteFailed": "La suppression a échoué : rien n’a été effacé.",
       "handle": "@{{username}}"
+    },
+    "globe": {
+      "title": "Membres dans le monde",
+      "label": "Globe des membres par pays — fais-le glisser ou utilise les flèches pour le tourner",
+      "listLabel": "Membres par pays",
+      "summary_one": "{{members}} membre dans {{countries}} pays",
+      "summary_other": "{{members}} membres dans {{countries}} pays",
+      "empty": "Aucun membre n'a encore indiqué son pays.",
+      "error": "Impossible de charger les pays des membres."
     }
   },
   "profile": {

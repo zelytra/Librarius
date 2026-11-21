@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import zelytra.librarius.web.ApiDtos.AdminUserDto;
 import zelytra.librarius.web.ApiDtos.AdminUserPageDto;
+import zelytra.librarius.web.ApiDtos.CountryCountDto;
 import zelytra.librarius.web.PageRequest;
 
 import java.time.OffsetDateTime;
@@ -47,6 +48,16 @@ public class AdminUserService {
                 row[5] == null ? null : ((Number) row[5]).longValue(), ((Number) row[6]).longValue(),
                 toOffset(row[7]))).toList();
         return new AdminUserPageDto(items, window.page(), window.size(), ((Number) count.getSingleResult()).longValue());
+    }
+
+    /** Members per country they filled themselves (#573), the largest first: counts, never who. */
+    @Transactional
+    public List<CountryCountDto> countries() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery("""
+                        select country, count(*) from app_user where country is not null
+                        group by country order by count(*) desc, country""").getResultList();
+        return rows.stream().map(row -> new CountryCountDto((String) row[0], ((Number) row[1]).longValue())).toList();
     }
 
     @Transactional

@@ -890,7 +890,10 @@
       "submit": "Save",
       "saved": "Profile saved.",
       "failed": "The profile could not be saved right now.",
-      "notifyComments": "Notify me of comments on my activity"
+      "notifyComments": "Notify me of comments on my activity",
+      "country": "Country",
+      "countryUnsaid": "Not said",
+      "countryHint": "Optional. Admins only see a number of members per country, never who."
     },
     "themes": {
       "systeme": "System",
@@ -1631,6 +1634,15 @@
       "deleted": "{{name}} was deleted, with all their data.",
       "deleteFailed": "The deletion failed: nothing was erased.",
       "handle": "@{{username}}"
+    },
+    "globe": {
+      "title": "Members around the world",
+      "label": "Globe of members by country — drag it or use the arrow keys to turn it",
+      "listLabel": "Members by country",
+      "summary_one": "{{members}} member in {{countries}} countries",
+      "summary_other": "{{members}} members in {{countries}} countries",
+      "empty": "No member has given their country yet.",
+      "error": "The members' countries could not be loaded."
     }
   },
   "profile": {

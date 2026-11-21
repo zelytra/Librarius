@@ -36,6 +36,27 @@ paths:
       - Achievement Resource
       security:
       - SecurityScheme: []
+  /api/admin/countries:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountryCountDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Countries
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
   /api/admin/feedback:
     get:
       parameters:
@@ -3340,6 +3361,14 @@ components:
           items:
             type: string
           maxItems: 1000
+    CountryCountDto:
+      type: object
+      properties:
+        country:
+          type: string
+        members:
+          type: integer
+          format: int64
     DashboardLayoutDto:
       type: object
       required:
@@ -4152,6 +4181,8 @@ components:
           format: int64
         notifyComments:
           type: boolean
+        country:
+          type: string
     MemberBookDto:
       type: object
       properties:
@@ -4880,6 +4911,9 @@ components:
           type: boolean
         notifyComments:
           type: boolean
+        country:
+          type: string
+          maxLength: 8
     ValueDto:
       type: object
       properties:

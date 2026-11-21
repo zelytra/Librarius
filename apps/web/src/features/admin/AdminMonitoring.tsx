@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetApiAdminMonitoring, type MonitoringDayDto } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
 import { Icon } from '../../shared/ui/Icon';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import styles from './AdminPage.module.css';
+
+// The globe carries the land outlines: its own chunk, fetched when the monitoring is opened (#573).
+const AdminGlobe = lazy(() => import('./AdminGlobe').then((m) => ({ default: m.AdminGlobe })));
 
 /** Refreshed every half minute: "right now" has to stay true while the screen is open. */
 const REFRESH_MS = 30_000;
@@ -69,6 +72,13 @@ export function AdminMonitoring() {
           })}
           series={[{ name: t('admin.monitoring.legendActive'), value: (d) => d.activeUsers ?? 0, className: styles.barActive }]}
         />
+      </section>
+
+      <section className={styles.panel}>
+        <h3 className={styles.subtitle}>{t('admin.globe.title')}</h3>
+        <Suspense fallback={<Loading />}>
+          <AdminGlobe />
+        </Suspense>
       </section>
 
       <section className={styles.panel}>
