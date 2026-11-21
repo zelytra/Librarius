@@ -75,8 +75,14 @@ class OpenLibraryProviderTest {
     }
 
     @Test
+    void leavesALeadingArticleOutOfTheFreeText() {
+        // Open Library requires every word: "Un pull moche" answered nothing, "Pull moche" the book.
+        assertEquals("pull moche", queryFor(CatalogQuery.of("Un pull moche")));
+    }
+
+    @Test
     void truncatesTheLastWordOfTheTitleWhenAsked() {
-        assertEquals("title:(le AND nom AND du AND ven*)",
+        assertEquals("title:(nom AND du AND ven*)",
                 queryFor(CatalogQuery.of("Le nom du ven").withPrefixLastWord()));
         // Nothing the reader typed reaches the Solr syntax.
         assertEquals("title:(l AND étranger AND cam*)",

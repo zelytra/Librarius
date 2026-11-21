@@ -250,18 +250,24 @@ public class BnfProvider implements CatalogProvider {
         // volume is titled "One Piece" with its number apart, so "one piece tome 1" matched
         // nothing at all.
         String text = query.text() == null ? "" : cleaned(VolumeParser.withoutMarkers(query.text()));
+        // The all-words questions leave a leading article out: "un" is required otherwise, and
+        // "Un pull moche" missed the book "Pull moche" (#607). The phrase keeps it.
+        String words = query.text() == null ? "" : cleaned(VolumeParser.withoutMarkers(query.wordsToMatch()));
+        if (words.isEmpty()) {
+            words = text;
+        }
         List<String> terms = new ArrayList<>();
         if (!text.isEmpty() && query.prefixLastWord()) {
             // The reader stopped mid-word: one forgiving question, the last word truncated
             // ("nom du ven*" finds "Le nom du vent"). A phrase cannot carry a truncation.
-            terms.add("bib.title all \"" + text + "*\"" + and(criteria));
+            terms.add("bib.title all \"" + words + "*\"" + and(criteria));
         } else if (text.isEmpty()) {
             if (!criteria.isEmpty()) {
                 terms.add(criteria.toString());
             }
         } else {
             terms.add("bib.title adj \"" + text + "\"" + and(criteria));
-            terms.add("(bib.title all \"" + text + "\" or bib.author all \"" + text + "\")" + and(criteria));
+            terms.add("(bib.title all \"" + words + "\" or bib.author all \"" + words + "\")" + and(criteria));
         }
         // Printed text only. The general catalogue also describes video games, films, records
         // and periodicals: "one piece" answered Namco's games and a DJ remix next to the

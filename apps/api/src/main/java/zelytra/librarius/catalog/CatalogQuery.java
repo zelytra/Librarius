@@ -1,5 +1,7 @@
 package zelytra.librarius.catalog;
 
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -44,6 +46,26 @@ public record CatalogQuery(String text, String author, Integer year, String lang
      */
     public CatalogQuery withPrefixLastWord() {
         return new CatalogQuery(text, author, year, language, publisher, isbn, true);
+    }
+
+    /** Articles a title may or may not start with: "Un pull moche" is the book "Pull moche". */
+    public static final Set<String> LEADING_ARTICLES = Set.of("le", "la", "les", "l", "un", "une", "des",
+            "the", "a", "an");
+
+    /**
+     * The text as the forgiving queries send it: without a leading article. A catalogue
+     * requires every word it is given, so "Un pull moche" asked for an "un" the title does not
+     * carry and found nothing (#607). A text that is the article alone is kept whole.
+     */
+    public String wordsToMatch() {
+        if (text == null) {
+            return null;
+        }
+        String[] split = text.split("\\s+", 2);
+        if (split.length < 2 || !LEADING_ARTICLES.contains(split[0].toLowerCase(Locale.ROOT))) {
+            return text;
+        }
+        return split[1];
     }
 
     /** No criterion at all: nothing to ask a provider, and nothing to charge to the quota. */
