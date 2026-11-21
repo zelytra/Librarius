@@ -44,9 +44,9 @@ check "nothing routes the bare /auth prefix" "$(printf '%s' "$paths" | tr ' ' '\
 
 echo "Pods (#582)"
 # Parenthesised whole: yq ranks `,` and `|` differently from jq, and without them the first
-# branch went on unfiltered.
-pods='((select(.kind == "Deployment" or .kind == "Job" or .kind == "StatefulSet") | .spec.template.spec),
-      (select(.kind == "CronJob") | .spec.jobTemplate.spec.template.spec))'
+# branch went on unfiltered; and it answers null, not nothing, for a document that is no pod.
+pods='(((select(.kind == "Deployment" or .kind == "Job" or .kind == "StatefulSet") | .spec.template.spec),
+      (select(.kind == "CronJob") | .spec.jobTemplate.spec.template.spec)) | select(. != null))'
 check "no pod mounts a service-account token" \
   "$(yq -N -r "$pods | select(.automountServiceAccountToken != false) | \"x\"" "$r" | wc -l | tr -d ' ')" "0"
 check "every pod runs under the runtime's seccomp profile" \
