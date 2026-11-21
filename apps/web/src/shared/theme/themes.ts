@@ -1,3 +1,5 @@
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+
 /**
  * Themes offered in Settings.
  *
@@ -73,6 +75,25 @@ export function readStoredTheme(): ThemeId {
  * in force, so switching theme does not leave the old colour behind in the
  * overscroll area or in the browser chrome.
  */
+/** The palettes drawn light on dark: their system bars take light icons (#533). */
+const DARK_PALETTES: ReadonlySet<PaletteId> = new Set(['nuit', 'ardoise']);
+
+/**
+ * Colours the native container's status and gesture bars from the palette (#533).
+ *
+ * The container draws edge to edge, so both bars sit over the app's own background, and
+ * Capacitor otherwise picks their icons from the device's night mode — white icons on Crème
+ * on a phone set to dark. `style` names the bar's background: `LIGHT` gives dark icons.
+ * No `bar`, so the status bar and the gesture bar follow the same rule. A browser has
+ * neither, so nothing is asked of it.
+ */
+export function applySystemBars(palette: PaletteId): void {
+  if (!Capacitor.isNativePlatform()) return;
+  const style = DARK_PALETTES.has(palette) ? SystemBarsStyle.Dark : SystemBarsStyle.Light;
+  // A failure leaves the system's own choice in place, which is what shipped before.
+  SystemBars.setStyle({ style }).catch(() => {});
+}
+
 export function applyTheme(palette: PaletteId): void {
   const root = document.documentElement;
   root.setAttribute('data-theme', palette);

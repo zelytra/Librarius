@@ -24,9 +24,6 @@ What is deliberately **not** here yet:
 - **An Apple Developer Program membership**, and therefore any build that can leave the
   runner: `ios-release` stops at its signing guard until the four Apple secrets exist (§ 10).
   The project itself is here and compiles.
-- **The status bar's own colours.** The app holds the system bars off its content (§ 6), but
-  their icons still follow the device's dark mode rather than the palette the reader chose —
-  [#533](https://github.com/zelytra/Librarius/issues/533).
 - **Any plugin an issue has not asked for.** Two are declared, both for sign-in:
   `@capacitor/browser` and `@capacitor/app` (§ 5). The camera comes with
   [#68](https://github.com/zelytra/Librarius/issues/68) — today the scanner reads the camera
@@ -228,8 +225,12 @@ Two more things that a native build will hit, neither of them auth:
   The shell reads the insets: `AppShell.module.css` holds the top and the two sides off the
   frame, `BottomNav.module.css` reserves the gesture bar under the bar — every one with a
   `0px` fallback, so a browser lays the app out exactly as before (`app/safeAreas.test.ts`).
-  **The status bar's own icons are not handled**: they follow the device's dark mode, not the
-  palette the reader chose — [#533](https://github.com/zelytra/Librarius/issues/533).
+  **The bars' icons follow the palette**, not the device's dark mode
+  ([#533](https://github.com/zelytra/Librarius/issues/533)): `applySystemBars`
+  (`shared/theme/themes.ts`) calls `SystemBars.setStyle` from `ThemeProvider` whenever the
+  palette changes — `LIGHT` (dark icons) on the light palettes, `DARK` (light icons) on Nuit
+  and Ardoise, with no `bar` so the gesture bar follows too. A no-op in a browser
+  (`shared/theme/systemBars.test.tsx`). Not yet seen on a device.
 
 ## 7. Continuous integration
 

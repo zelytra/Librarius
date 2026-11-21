@@ -167,7 +167,7 @@ release notification actually received.
 | [#529](https://github.com/zelytra/Librarius/issues/529) | ✅ Safe areas: nothing drawn under the status bar or the gesture bar | #524 |
 | [#530](https://github.com/zelytra/Librarius/issues/530) | ✅ Play Console procedure: account, listing, data safety, first upload | #70 |
 | [#531](https://github.com/zelytra/Librarius/issues/531) | ✅ iOS built, signed and uploaded to TestFlight from CI, with no Mac anywhere | #70 |
-| [#533](https://github.com/zelytra/Librarius/issues/533) | Status bar icons follow the chosen palette, not the device's dark mode | #529 |
+| [#533](https://github.com/zelytra/Librarius/issues/533) | ✅ Status bar icons follow the chosen palette, not the device's dark mode | #529 |
 | [#71](https://github.com/zelytra/Librarius/issues/71) | iOS build and publishing procedure — what is left of it is the device checks: sign-in, scanning, safe areas on a real iPhone | #531 |
 | [#185](https://github.com/zelytra/Librarius/issues/185) | Over-the-air updates for the mobile app's web bundle — ship a web fix without a store review | #67, #70 |
 
