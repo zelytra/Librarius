@@ -368,6 +368,55 @@ class CatalogServiceTest {
         assertTrue(service.seriesVolumes(Kind.BOOK, "Any Book").isEmpty());
     }
 
+    /** A record catalogue (the BnF), filed under one kind but holding every kind's records. */
+    private record RecordCatalogue(int volumes) implements CatalogProvider {
+        @Override
+        public String name() {
+            return "records";
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOK;
+        }
+
+        @Override
+        public boolean listsWorks() {
+            return false;
+        }
+
+        @Override
+        public List<CatalogResult> search(CatalogQuery query, int limit) {
+            return List.of();
+        }
+
+        @Override
+        public List<CatalogResult> upcoming(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public java.util.OptionalInt seriesVolumes(String title) {
+            return volumes > 0 ? java.util.OptionalInt.of(volumes) : java.util.OptionalInt.empty();
+        }
+    }
+
+    /**
+     * #602: AniList reports no total for a manga still running (One Piece, Blue Lock: null), the
+     * runs readers follow most. The legal-deposit catalogue holds the volumes published in
+     * France whatever the kind, so it is asked for a manga too, and the larger count wins.
+     */
+    @Test
+    void seriesVolumesAsksTheRecordCatalogueForEveryKindAndKeepsTheLargest() {
+        CatalogService running = new CatalogService(List.of(
+                new VolumeProvider(Kind.MANGA, 0), new RecordCatalogue(112)), passThroughCache());
+        assertEquals(112, running.seriesVolumes(Kind.MANGA, "One Piece").getAsInt());
+
+        CatalogService finished = new CatalogService(List.of(
+                new VolumeProvider(Kind.MANGA, 34), new RecordCatalogue(20)), passThroughCache());
+        assertEquals(34, finished.seriesVolumes(Kind.MANGA, "L'Attaque des Titans").getAsInt());
+    }
+
     @Test
     void worksOfAuthorRoutesToTheProvidersOfTheGivenKinds() {
         CatalogService service = new CatalogService(List.of(

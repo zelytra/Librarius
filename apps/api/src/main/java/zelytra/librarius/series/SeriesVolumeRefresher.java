@@ -74,7 +74,10 @@ public class SeriesVolumeRefresher {
         Log.infof("Series volumes: %d filled", filled);
     }
 
-    /** Resolves a batch of series still missing a total, and returns how many were filled. */
+    /**
+     * Resolves a batch of series — those missing a total first, then those not asked for a week,
+     * so a run still going picks up its new volumes (#602) — and returns how many changed.
+     */
     public int refreshNow() {
         return resolve(QuarkusTransaction.requiringNew().call(() -> series.needingVolumeCount(BATCH)));
     }
@@ -162,12 +165,14 @@ public class SeriesVolumeRefresher {
     }
 
     /**
-     * Writes the total onto a series that still lacks one, and reports whether it did — a series
-     * a concurrent run has filled in the meantime is left alone. Must run inside a transaction.
+     * Writes the total onto a series that lacks one or counted fewer (#602: a run still going
+     * gains volumes), and reports whether it did. Never lowers one: a provider reading a page of
+     * records can come up short, while a volume once counted was published. Must run inside a
+     * transaction.
      */
     int setTotal(UUID seriesId, int volumes) {
         Series found = series.findById(seriesId);
-        if (found == null || found.totalVolumes != null) {
+        if (found == null || (found.totalVolumes != null && found.totalVolumes >= volumes)) {
             return 0;
         }
         found.totalVolumes = volumes;

@@ -431,6 +431,37 @@ class SeriesApiTest {
                 .body("volumes[2].coverUrl", is("https://covers.test/v3.jpg"));
     }
 
+    /**
+     * #602: a volume the reader does not own but the shared catalog holds — another reader
+     * added it — shows its title and cover in the grid, so a hole in the run is recognisable.
+     */
+    @Test
+    void drawsAVolumeTheReaderLacksWithTheCatalogsCover() {
+        String title = "Series Test - catalog cover " + java.util.UUID.randomUUID();
+        for (Object[] add : new Object[][] {{"alice", 1}, {"alice", 3}, {"bob", 2}}) {
+            given().auth().oauth2(token((String) add[0])).contentType("application/json")
+                    .body("""
+                            { "book": { "kind": "MANGA", "title": "%s vol. %d",
+                                        "authors": "Series Test", "seriesTitle": "%s",
+                                        "volumeNumber": %d,
+                                        "coverUrl": "https://covers.test/c%d.jpg" },
+                              "status": "TO_READ" }
+                            """.formatted(title, add[1], title, add[1], add[1]))
+                    .when().post("/api/library")
+                    .then().statusCode(201);
+        }
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice"))
+                .when().get("/api/series/" + id)
+                .then().statusCode(200)
+                .body("volumes[1].volumeNumber", is(2))
+                .body("volumes[1].owned", is(false))
+                .body("volumes[1].missing", is(true))
+                .body("volumes[1].title", is(title + " vol. 2"))
+                .body("volumes[1].coverUrl", is("https://covers.test/c2.jpg"));
+    }
+
     /** The grouped shelf lists one-shots apart: `standalone=true` leaves every volume of a run out. */
     @Test
     void listsOnlyTheTitlesOfNoSeriesWhenAskedForTheOneShots() {

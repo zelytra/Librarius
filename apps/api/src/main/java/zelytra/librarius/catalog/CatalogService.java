@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -154,19 +155,22 @@ public class CatalogService {
     }
 
     /**
-     * The number of volumes a series is expected to run to, from whichever provider covers the
-     * kind and knows — AniList for a manga; a book catalogue reports none. Off the request path
-     * (the series-volume refresher), so it is not cached: a total is fetched once a day and
-     * written to {@code series.total_volumes}, not read on every render.
+     * The number of volumes a series runs to so far: the largest count among the providers of
+     * the kind — AniList for a finished manga — and the record catalogues of every kind (#602).
+     * AniList reports nothing for a run still going (One Piece, Blue Lock), while the BnF's
+     * legal deposit holds every volume published in France, manga included; neither ever counts
+     * a volume that does not exist, so the larger one is the nearer. Off the request path (the
+     * series-volume refresher), so it is not cached.
      */
     public java.util.OptionalInt seriesVolumes(Kind kind, String title) {
-        for (CatalogProvider provider : providersFor(kind == null ? Set.of() : Set.of(kind))) {
-            java.util.OptionalInt volumes = provider.seriesVolumes(title);
-            if (volumes.isPresent()) {
-                return volumes;
-            }
-        }
-        return java.util.OptionalInt.empty();
+        Set<CatalogProvider> asked = new LinkedHashSet<>(providersFor(kind == null ? Set.of() : Set.of(kind)));
+        providersFor(Set.of()).stream().filter(p -> !p.listsWorks()).forEach(asked::add);
+        return asked.stream()
+                .map(provider -> provider.seriesVolumes(title))
+                .filter(java.util.OptionalInt::isPresent)
+                .mapToInt(java.util.OptionalInt::getAsInt)
+                .filter(volumes -> volumes > 0)
+                .max();
     }
 
     /**

@@ -114,17 +114,68 @@ class SeriesVolumeRefresherTest {
         assertEquals(Integer.valueOf(7), total);
     }
 
+    /** #602: a run still going gains volumes — a provider reporting more raises the total. */
     @Test
-    void leavesASeriesThatAlreadyHasATotalAlone() {
+    void raisesATotalWhenANewVolumeIsOut() {
         int wrote = QuarkusTransaction.requiringNew().call(() -> {
             Series s = new Series();
             s.kind = Kind.MANGA;
-            s.title = "SVR Already Counted " + UUID.randomUUID();
+            s.title = "SVR Ongoing " + UUID.randomUUID();
             s.totalVolumes = 12;
             series.persist(s);
-            return refresher.setTotal(s.id, 99);
+            return refresher.setTotal(s.id, 13);
         });
 
-        assertEquals(0, wrote);
+        assertEquals(1, wrote);
+    }
+
+    /** #602: a provider can come up short (one page of records), so a total never shrinks. */
+    @Test
+    void neverLowersATotal() {
+        UUID id = QuarkusTransaction.requiringNew().call(() -> {
+            Series s = new Series();
+            s.kind = Kind.MANGA;
+            s.title = "SVR Counted " + UUID.randomUUID();
+            s.totalVolumes = 12;
+            series.persist(s);
+            return s.id;
+        });
+
+        assertEquals(0, (int) QuarkusTransaction.requiringNew().call(() -> refresher.setTotal(id, 5)));
+        assertEquals(Integer.valueOf(12), totalOf(id));
+    }
+
+    /**
+     * #602: a series that already has a total is asked again once a week, so the volumes
+     * published since — and the run's grid — keep up; one asked lately is left alone.
+     */
+    @Test
+    void asksACountedSeriesAgainAfterAWeek() {
+        String stale = "SVR Stale " + UUID.randomUUID();
+        String fresh = "SVR Fresh " + UUID.randomUUID();
+        UUID staleId = QuarkusTransaction.requiringNew().call(() -> {
+            Series s = new Series();
+            s.kind = Kind.MANGA;
+            s.title = stale;
+            s.totalVolumes = 10;
+            s.volumesCheckedAt = java.time.OffsetDateTime.now().minusDays(SeriesRepository.VOLUME_RETRY_DAYS + 1);
+            series.persist(s);
+            Series f = new Series();
+            f.kind = Kind.MANGA;
+            f.title = fresh;
+            f.totalVolumes = 10;
+            f.volumesCheckedAt = java.time.OffsetDateTime.now().minusDays(1);
+            series.persist(f);
+            return s.id;
+        });
+        Mockito.when(catalog.seriesVolumes(any(), any())).thenReturn(OptionalInt.empty());
+        Mockito.when(catalog.seriesVolumes(Kind.MANGA, stale)).thenReturn(OptionalInt.of(11));
+
+        for (int run = 0; run < 40 && !Integer.valueOf(11).equals(totalOf(staleId)); run++) {
+            refresher.refreshNow();
+        }
+
+        assertEquals(Integer.valueOf(11), totalOf(staleId));
+        Mockito.verify(catalog, Mockito.never()).seriesVolumes(Kind.MANGA, fresh);
     }
 }
