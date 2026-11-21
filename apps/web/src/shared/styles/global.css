@@ -144,3 +144,25 @@ input[type='number']::-webkit-outer-spin-button {
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* #592: the row holding a screen's back button stays at the top of the screen while it
+   scrolls. A title row keeps the page's background behind it; a lone round button floats
+   over the content, its row letting taps through around it. */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  background: var(--bg);
+  padding-block: 8px;
+}
+
+.sticky-back {
+  position: sticky;
+  top: 8px;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.sticky-back > * {
+  pointer-events: auto;
+}

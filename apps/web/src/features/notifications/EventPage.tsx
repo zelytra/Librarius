@@ -15,7 +15,7 @@ export function EventPage() {
   const navigate = useNavigate();
   return (
     <Screen>
-      <div className={styles.header}>
+      <div className={`sticky-header ${styles.header}`}>
         <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
         </button>

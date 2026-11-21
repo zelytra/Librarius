@@ -205,7 +205,7 @@ export function SettingsPage() {
   if (category === undefined) {
     return (
       <Screen>
-        <div className={styles.header}>
+        <div className={`sticky-header ${styles.header}`}>
           <button type="button" onClick={leave} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--ink)" />
           </button>
@@ -251,7 +251,7 @@ function CategoryScreen({ category }: { category: SettingsCategory }) {
   const Content = CATEGORY_CONTENT[category];
   return (
     <Screen>
-      <div className={styles.header}>
+      <div className={`sticky-header ${styles.header}`}>
         <button type="button" onClick={back} aria-label={t('settings.backToCategories')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
         </button>

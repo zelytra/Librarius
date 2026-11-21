@@ -243,7 +243,7 @@ export function SheetPrintLayout({
       {/* No `precedence`: React would hold the sheet back until the font arrives, and offline
           forever. Unhoisted, the sheet paints at once in the fallback faces. */}
       {theme === 'handwritten' && <link rel="stylesheet" href={HAND_FONT} />}
-      <div className={styles.toolbar}>
+      <div className={`sticky-header ${styles.toolbar}`}>
         <button type="button" className={styles.tool} onClick={() => navigate(-1)}>
           <Icon name="arrow_back" size={18} color="currentColor" />
           {t('common.back')}

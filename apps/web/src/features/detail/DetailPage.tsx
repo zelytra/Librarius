@@ -1076,7 +1076,7 @@ function DetailContent({ id }: { id: string }) {
         style={{ background: `linear-gradient(180deg, ${color}${WASH_FROM}, ${color}${WASH_TO})` }}
       />
       <div className={styles.body}>
-        <div className={styles.backRow}>
+        <div className={`sticky-back ${styles.backRow}`}>
           <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--overlay-ink)" />
           </button>
