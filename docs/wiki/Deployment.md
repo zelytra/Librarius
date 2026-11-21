@@ -16,6 +16,10 @@ with it.
   yet** — it opens at the v1.0 milestone.
 - Both deployments roll with zero downtime; database migrations run automatically at API
   startup, before the new version takes traffic.
+- The chart is hardened (#575): Keycloak's admin console is not routed, pods run without
+  privileges behind network policies, the realm locks accounts after failed passwords, and
+  nginx sends a Content-Security-Policy. `.github/workflows/chart.yml` checks the rendered
+  manifests; the admin console is reached with `kubectl port-forward`.
 
 ## For the rest
 

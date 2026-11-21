@@ -357,8 +357,11 @@ regeneration.
 | Authorisation | `@Authenticated` on every resource, except the BnF cover proxy (`@PermitAll`, an `<img>` sends no token) and `/api/agent/feedback` (`@PermitAll` behind the `X-Api-Key` of `LIBRARIUS_AGENT_API_KEY`, closed while unset, #518) |
 | Data isolation | Application-level, through `user_id` in every query — locked down by `DataIsolationTest` since [#39](https://github.com/zelytra/Librarius/issues/39) |
 | Secrets | ⚠️ In plaintext in `infra/helm/librarius/values.yaml` — to be moved to Kubernetes Secrets |
-| Exposed surface | Only `/auth`, `/api` and `/` are routed. Swagger UI is dev/test only, `/q` is cluster-internal ([#62](https://github.com/zelytra/Librarius/issues/62)) |
-| Rate limiting | None |
+| Exposed surface | Only `/auth/realms/librarius`, `/auth/resources`, `/api` and `/` are routed — not the Keycloak console nor the master realm (#577). Swagger UI is dev/test only, `/q` is cluster-internal ([#62](https://github.com/zelytra/Librarius/issues/62)) |
+| Browser hardening | `apps/web/security-headers.conf` (#580): CSP `script-src 'self' 'wasm-unsafe-eval'`, no inline script (the theme boot is `public/theme-boot.js`), `frame-ancestors 'none'`, HSTS, nosniff, referrer and permissions policies |
+| Realm | Password grant off for `librarius-web` (#578), lockout after 10 failures and a 10-character policy (#579), rotated refresh tokens (#581), login and admin events kept 30 days (#584). E-mail verification waits for SMTP (#589) |
+| Cluster | Pods without privileges or service-account token, network policies denying by default (#582), checked by `chart.yml` |
+| Rate limiting | Per caller: the catalog per minute and per day (`catalog.RateLimiter`); imports, exports and reports per hour (`security.ActionQuota`, #583). The anonymous cover proxy has none yet (#588) |
 | Static analysis | CodeQL on `javascript-typescript` and `java-kotlin`, weekly and on every pull request (`codeql.yml`) |
 | Dependency vulnerabilities | `pnpm audit --prod --audit-level high` blocks the pull request (`audit.yml`); Maven is covered by Dependabot alerts only — no keyless CI gate exists (see below) |
 | Supply chain | Every GitHub Action pinned by commit SHA, version in a trailing comment; Dependabot bumps SHA and comment together |
@@ -369,6 +372,18 @@ keyless alternatives (Sonatype OSS Index anonymous, GitHub's dependency-review) 
 throttle per runner IP or need the dependency graph enabled on the repository. Enabling
 **Dependency graph** and **Dependabot security updates** in the repository settings is the
 missing piece; the gate can then be revisited.
+
+### Where the session lives (#581)
+
+The OIDC user — access token and the `offline_access` refresh token — stays in `localStorage`
+(`auth/oidc.ts`): a backend-for-frontend holding it in an `HttpOnly` cookie would mean a
+server-side session layer this stack does not have, and the native shell needs the same
+token in its own storage anyway. The blast radius is reduced instead: a strict CSP is the
+first defence against the script that would read it (#580), and refresh tokens rotate
+(`revokeRefreshToken`) and work twice at most (`refreshTokenMaxReuse` 1): a stolen one stops
+working once the reader's app and the thief have both used it. Strictly single-use would sign
+a reader out whenever two tabs refresh in the same instant, which the shared `localStorage`
+store makes ordinary. Revisit with a BFF if a stolen session ever shows up.
 
 ## 7. Deployment
 

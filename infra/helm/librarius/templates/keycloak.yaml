@@ -15,6 +15,18 @@ data:
       "enabled": true,
       "sslRequired": "external",
       "registrationAllowed": true,
+      "bruteForceProtected": true,
+      "permanentLockout": false,
+      "failureFactor": 10,
+      "waitIncrementSeconds": 60,
+      "maxFailureWaitSeconds": 900,
+      "maxDeltaTimeSeconds": 43200,
+      "passwordPolicy": "length(10) and notUsername and notEmail",
+      "revokeRefreshToken": true,
+      "refreshTokenMaxReuse": 1,
+      "eventsEnabled": true,
+      "eventsExpiration": 2592000,
+      "adminEventsEnabled": true,
       "loginWithEmailAllowed": true,
       "displayName": "Ma Bibliothèque",
       "loginTheme": "librarius",
@@ -29,7 +41,7 @@ data:
       "clients": [
         {
           "clientId": "librarius-web", "name": "Librarius PWA", "enabled": true,
-          "publicClient": true, "standardFlowEnabled": true, "directAccessGrantsEnabled": true,
+          "publicClient": true, "standardFlowEnabled": true, "directAccessGrantsEnabled": false,
           "redirectUris": ["https://{{ .Values.domain }}/*"],
           "webOrigins": ["+"],
           "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "+" }
@@ -119,6 +131,11 @@ spec:
           (.Files.Get "files/keycloak-theme/login/messages/messages_en.properties")
           | sha256sum }}
     spec:
+      # No pod of this chart calls the Kubernetes API, and each runs under the runtime's seccomp
+      # profile (#582).
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
       {{- $apple := .Values.keycloak.identityProviders.apple }}
       {{- if include "librarius.idp.enabled" (dict "ctx" . "idp" "apple") }}
       # Keycloak has no Apple provider of its own (#177): the extension's jar is fetched into
@@ -127,6 +144,8 @@ spec:
       initContainers:
         - name: apple-provider
           image: {{ $apple.extension.fetchImage }}
+          securityContext:
+            {{- include "librarius.containerHardening" (dict) | nindent 12 }}
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -148,6 +167,11 @@ spec:
       containers:
         - name: keycloak
           image: {{ .Values.keycloak.image }}
+          # The image's own user, 1000 (#582): Keycloak needs no privilege at all.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            {{- include "librarius.containerHardening" (dict) | nindent 12 }}
           # persistent-user-sessions writes online sessions to the keycloak PostgreSQL database
           # instead of the in-memory Infinispan cache, so a pod restart — a helm upgrade, a theme
           # change (the checksum annotation below forces one), a manual rollout — reloads them

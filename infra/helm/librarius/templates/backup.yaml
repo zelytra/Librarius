@@ -144,7 +144,9 @@ spec:
             {{- include "librarius.selector" (dict "ctx" . "component" "backup") | nindent 12 }}
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
           securityContext:
+            seccompProfile: { type: RuntimeDefault }
             runAsNonRoot: true
             runAsUser: 65532
             runAsGroup: 65532
@@ -152,6 +154,8 @@ spec:
           initContainers:
             - name: dump
               image: {{ .Values.backup.dumpImage }}
+              securityContext:
+                {{- include "librarius.containerHardening" (dict) | nindent 16 }}
               command: ["bash", "/scripts/dump.sh"]
               env:
                 - name: PGHOST
@@ -179,6 +183,8 @@ spec:
           containers:
             - name: upload
               image: {{ .Values.backup.uploadImage }}
+              securityContext:
+                {{- include "librarius.containerHardening" (dict) | nindent 16 }}
               command: ["bash", "/scripts/upload.sh"]
               env:
                 # The AWS CLI writes its cache under $HOME; the container is not root.

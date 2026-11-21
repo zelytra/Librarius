@@ -307,6 +307,12 @@ monitoring:
 # an operator decision: the chart neither invents them nor ships a default, and
 # an existing release gains no CronJob until this is turned on deliberately.
 # What has to be created first: docs/DEPLOYMENT.md § "Automated backups".
+# Network policies (#582): deny by default, then open each component to what talks to it.
+# `ingressNamespace` is where the ingress controller runs — k3s ships Traefik in kube-system.
+networkPolicy:
+  enabled: true
+  ingressNamespace: kube-system
+
 backup:
   enabled: false
   # UTC. Off-peak, and late enough that a daily run never overlaps a deployment.

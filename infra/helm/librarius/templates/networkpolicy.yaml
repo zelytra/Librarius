@@ -1,0 +1,59 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- /*
+Network policies (#582): every pod of the release is unreachable by default, then each
+component is opened to what talks to it, and to nothing else. Only ingress is restricted —
+the api and Keycloak call providers on the internet, and an egress list of every catalogue
+would break on the first one that moves. The ingress controller lives in its own namespace
+(`networkPolicy.ingressNamespace`, k3s's Traefik by default); the kubelet's probes reach the
+pods from the node and are not subject to these rules.
+*/ -}}
+{{- $ingress := dict "namespaceSelector" (dict "matchLabels" (dict "kubernetes.io/metadata.name" .Values.networkPolicy.ingressNamespace)) }}
+{{- $pod := dict }}
+{{- range $component := list "api" "keycloak" "keycloak-setup" "backup" "prometheus" }}
+{{- $_ := set $pod $component (dict "podSelector" (dict "matchLabels" (dict "app" (printf "%s-%s" $.Release.Name $component)))) }}
+{{- end }}
+{{- /* Prometheus scrapes the api and talks to Alertmanager only when monitoring is on: with it
+off, nothing here may name them (alerting.yml checks that the chart then renders neither). */ -}}
+{{- $monitoring := .Values.monitoring.enabled }}
+{{- $apiFrom := list $ingress }}
+{{- if $monitoring }}{{- $apiFrom = append $apiFrom (index $pod "prometheus") }}{{- end }}
+{{- $rules := list
+  (dict "component" "web" "port" 80 "from" (list $ingress))
+  (dict "component" "api" "port" 8080 "from" $apiFrom)
+  (dict "component" "keycloak" "port" 8081 "from" (list $ingress (index $pod "api") (index $pod "keycloak-setup")))
+  (dict "component" "postgres" "port" 5432 "from" (list (index $pod "api") (index $pod "keycloak") (index $pod "keycloak-setup") (index $pod "backup")))
+}}
+{{- if and $monitoring .Values.monitoring.alertmanager.enabled }}
+{{- $rules = append $rules (dict "component" "alertmanager" "port" 9093 "from" (list (index $pod "prometheus"))) }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-default-deny
+  labels:
+    {{- include "librarius.labels" (dict "ctx" . "component" "network") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      release: {{ .Release.Name }}
+  policyTypes: [Ingress]
+{{- range $rules }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $.Release.Name }}-{{ .component }}
+  labels:
+    {{- include "librarius.labels" (dict "ctx" $ "component" "network") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "librarius.selector" (dict "ctx" $ "component" .component) | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        {{- toYaml .from | nindent 8 }}
+      ports:
+        - port: {{ .port }}
+{{- end }}
+{{- end }}

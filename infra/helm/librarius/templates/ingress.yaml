@@ -18,12 +18,21 @@ spec:
       http:
         paths:
           {{- if .Values.keycloak.enabled }}
-          - path: /auth
+          {{- /*
+            Only what the app uses (#577): the librarius realm — sign-in, tokens, the
+            providers' callbacks, the account page — and the theme's static resources. The
+            admin console and the master realm stay inside the cluster; the setup Job calls
+            Keycloak through its Service, and the owner reaches the console with
+            `kubectl port-forward` (docs/DEPLOYMENT.md).
+          */}}
+          {{- range list "/auth/realms/librarius" "/auth/resources" }}
+          - path: {{ . }}
             pathType: Prefix
             backend:
               service:
-                name: {{ .Release.Name }}-keycloak
+                name: {{ $.Release.Name }}-keycloak
                 port: { number: 8081 }
+          {{- end }}
           {{- end }}
           {{- if .Values.api.enabled }}
           - path: /api

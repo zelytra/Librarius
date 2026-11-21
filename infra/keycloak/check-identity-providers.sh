@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Proves the sign-in with Google and Apple (#177) the chart sets up actually lands on
-# a running Keycloak, and asks the providers for the e-mail address only (#538).
+# a running Keycloak, and asks the providers for the e-mail address only (#538) — and
+# that the same Job hardens the live realm (#578, #579, #581, #584).
 #
 # Nothing else can see it before staging does. The providers are configured by the
 # keycloak-setup Job, a bash script inside a Helm template; Apple is not even part
@@ -155,6 +156,21 @@ check "Apple trusts the verified e-mail"    "$(printf '%s' "$apple" | yq -r '.tr
 check "the first name is optional"          "$(printf '%s' "$profile" | yq -r '.attributes[] | select(.name == "firstName") | has("required")')" "false"
 check "the last name is optional"           "$(printf '%s' "$profile" | yq -r '.attributes[] | select(.name == "lastName") | has("required")')" "false"
 check "the e-mail stays required"           "$(printf '%s' "$profile" | yq -r '.attributes[] | select(.name == "email") | has("required")')" "true"
+
+# The realm's security settings (#578, #579, #581, #584), applied by the same Job.
+realm="$(curl -sS -H "Authorization: Bearer $token" "$base/admin/realms/librarius")"
+web="$(api "clients?clientId=librarius-web" | yq -r '.[0]')"
+echo "Reading the realm's security settings"
+check "the web client refuses the password grant"  "$(printf '%s' "$web" | yq -r '.directAccessGrantsEnabled')" "false"
+check "brute-force protection is on"               "$(printf '%s' "$realm" | yq -r '.bruteForceProtected')" "true"
+check "an account locks after ten failures"        "$(printf '%s' "$realm" | yq -r '.failureFactor')" "10"
+check "a password is ten characters at least"      "$(printf '%s' "$realm" | yq -r '.passwordPolicy')" "length(10)"
+check "a password is not the username"             "$(printf '%s' "$realm" | yq -r '.passwordPolicy')" "notUsername"
+check "a password is not the e-mail"               "$(printf '%s' "$realm" | yq -r '.passwordPolicy')" "notEmail"
+check "a refresh token is used once"               "$(printf '%s' "$realm" | yq -r '.revokeRefreshToken')" "true"
+check "sign-in events are kept"                    "$(printf '%s' "$realm" | yq -r '.eventsEnabled')" "true"
+check "for thirty days"                            "$(printf '%s' "$realm" | yq -r '.eventsExpiration')" "2592000"
+check "admin events are kept"                      "$(printf '%s' "$realm" | yq -r '.adminEventsEnabled')" "true"
 
 challenge="4Md_FO8pVFcpjDs3BIk-xjv1pQT3BzT0wTOgBsBgUGw"
 query="client_id=librarius-web&response_type=code&scope=openid"

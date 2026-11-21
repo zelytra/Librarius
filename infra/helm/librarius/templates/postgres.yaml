@@ -41,9 +41,18 @@ spec:
       labels:
         {{- include "librarius.selector" (dict "ctx" . "component" "postgres") | nindent 8 }}
     spec:
+      # No pod of this chart calls the Kubernetes API, and each runs under the runtime's seccomp
+      # profile (#582).
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: postgres
           image: {{ .Values.postgres.image }}
+          # The entrypoint starts as root to own the data directory, then drops to postgres:
+          # the capabilities that takes, nothing else (#582).
+          securityContext:
+            {{- include "librarius.containerHardening" (dict "add" (list "CHOWN" "DAC_OVERRIDE" "FOWNER" "SETUID" "SETGID")) | nindent 12 }}
           # The entrypoint prepends `postgres` to anything starting with a dash,
           # so this is a server setting rather than a replacement command. It is
           # the ceiling the api, Keycloak and the backup job carve their pools

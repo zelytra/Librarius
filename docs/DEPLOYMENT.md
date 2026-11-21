@@ -362,9 +362,19 @@ concurrent connections — leave `keycloak.dbPoolMaxSize` at its value and watch
 ### 🛡️ Granting the admin role (manual action)
 
 The admin screens (#488) need the realm role `admin`. The `keycloak-setup` Job creates the
-role on the live realm and grants it to nobody. To make someone an admin: the console
-(`/auth/admin`, realm *librarius*, *Users* → the account → *Role mapping* → *Assign role* →
-filter by realm roles → `admin`), or
+role on the live realm and grants it to nobody. To make someone an admin: the console, or the
+command below.
+
+**The console is not on the internet** (#577): the ingress routes `/auth/realms/librarius` and
+`/auth/resources` only, so the admin console and the master realm answer 404 from outside.
+Reach it through the cluster:
+
+```bash
+k port-forward deploy/librarius-keycloak 8081:8081
+```
+
+then `http://localhost:8081/auth/admin` (realm *librarius*, *Users* → the account → *Role
+mapping* → *Assign role* → filter by realm roles → `admin`), or
 
 ```bash
 k exec deploy/librarius-keycloak -- /opt/keycloak/bin/kcadm.sh add-roles -r librarius \
@@ -373,6 +383,28 @@ k exec deploy/librarius-keycloak -- /opt/keycloak/bin/kcadm.sh add-roles -r libr
 
 after the `config credentials` line of the next section. They see « Administration » in
 Settings once they sign in again.
+
+### 🧱 Security of the deployment (#575)
+
+What the chart enforces, and `.github/workflows/chart.yml` checks on the rendered manifests
+(`infra/helm/check-chart-security.sh`):
+
+- **Ingress** (#577): Keycloak is reachable on `/auth/realms/librarius` and `/auth/resources`
+  only — never the admin console, never the master realm.
+- **Pods** (#582): no service-account token, the runtime's seccomp profile, no privilege
+  escalation, every capability dropped but the few nginx and PostgreSQL's entrypoints need.
+  The api runs as uid 10001 on a read-only root filesystem (`/tmp` is an emptyDir), Keycloak
+  as its image's uid 1000.
+- **Network policies** (#582, `networkPolicy.enabled`): the release denies ingress by
+  default; the web and the api are reached from the ingress controller's namespace
+  (`networkPolicy.ingressNamespace`, `kube-system` on k3s), the api also from Prometheus,
+  Keycloak from the ingress, the api and its setup Job, PostgreSQL from the api, Keycloak,
+  the setup Job and the backup only. Egress is left open: the providers move.
+- **Realm** (#578, #579, #581, #584), applied by the `keycloak-setup` Job: no password grant
+  on `librarius-web`, a lockout after ten failed passwords, a ten-character password policy
+  excluding the username and the e-mail, rotated refresh tokens usable twice at most, thirty days of login and
+  admin events. E-mail verification waits for an SMTP server.
+- **Headers** (#580): `apps/web/security-headers.conf`, included by both nginx server blocks.
 
 ### 🔐 Sign in with Google and Apple (manual action)
 
@@ -909,8 +941,10 @@ replicas, **the next release cannot schedule its surge pod** (table above).
 `infra/loadtest/librarius-load.js` drives the target above with
 [k6](https://k6.io) and encodes it as thresholds, so the run exits non-zero when it is
 missed — a pass or a fail rather than a graph. It is **read-only**, it creates no account
-and writes no row, and it signs in through the direct access grant the `librarius-web`
-client already allows, the same route the e2e suite takes.
+and writes no row, and it signs in through the direct access grant, the same route the e2e
+suite takes. The deployed `librarius-web` refuses that grant since #578: for a run against
+staging, create a public client with « Direct access grants » on through the console
+(port-forward above), pass it as `-e CLIENT_ID=<it>`, and delete it afterwards.
 
 Accounts are supplied, never created. Use at least 4 so the catalog scenario stays under the
 per-caller quota, and prefer accounts whose library holds a realistic number of titles — an

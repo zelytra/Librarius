@@ -41,6 +41,18 @@ public class ImportResource {
     ArchiveImportService archiveImportService;
 
     @Inject
+    zelytra.librarius.security.ActionQuota quota;
+
+    /** Imports a caller may start in an hour (#583): each one scrapes, parses or writes a library. */
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "librarius.quota.import.per-hour", defaultValue = "10")
+    int importsPerHour;
+
+    private void enforceQuota() {
+        quota.enforce("import", currentUser.id(), importsPerHour,
+                "Trop d'imports en peu de temps. Réessaie dans une heure.");
+    }
+
+    @Inject
     zelytra.librarius.imports.CollectedLibrary collectedLibrary;
 
     public record ScrapeRequest(@NotBlank String handle) {
@@ -67,7 +79,13 @@ public class ImportResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ImportJobDto scrape(@PathParam("source") String source, ScrapeRequest req) {
         currentUser.require();
-        return dto(importJobs.submit(currentUser.id(), source, req.handle(), null));
+        enforceQuota();
+        // Concatenated into the provider's URL and logged: a pseudo, or nothing at all (#585).
+        if (req == null || !zelytra.librarius.imports.ImportHandle.isValid(req.handle())) {
+            throw new zelytra.librarius.imports.ImportException("Ce pseudo n'est pas valide : indique le pseudo "
+                    + "de ton profil seul — lettres, chiffres, point, tiret ou soulignement —, sans lien ni espace.");
+        }
+        return dto(importJobs.submit(currentUser.id(), source, req.handle().strip(), null));
     }
 
     /**
@@ -79,6 +97,7 @@ public class ImportResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ImportJobDto collected(@Valid CollectedRequest req) {
         currentUser.require();
+        enforceQuota();
         return dto(importJobs.submit(currentUser.id(), req.source(),
                 () -> collectedLibrary.parse(req.source(), req.pages())));
     }
@@ -89,6 +108,7 @@ public class ImportResource {
     @Consumes(MediaType.TEXT_PLAIN)
     public ImportJobDto csv(String body) {
         currentUser.require();
+        enforceQuota();
         return dto(importJobs.submit(currentUser.id(), "csv", null, body));
     }
 
@@ -117,6 +137,7 @@ public class ImportResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ImportResult json(@Valid ExportDto document) {
         currentUser.require();
+        enforceQuota();
         return archiveImportService.restore(currentUser.id(), document);
     }
 }

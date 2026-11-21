@@ -1,0 +1,41 @@
+name: chart
+
+# The Helm chart's security properties (#577, #582): what reaches Keycloak through the
+# ingress, how every pod runs, and which component may talk to which. `helm lint` checks
+# that the chart renders, not what it renders; this reads the rendered manifests back.
+on:
+  pull_request:
+    paths:
+      - 'infra/helm/**'
+      - '.github/workflows/chart.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/helm/**'
+
+concurrency:
+  group: chart-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    name: chart security
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Helm
+        uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Shell script parses
+        run: bash -n infra/helm/check-chart-security.sh
+
+      # The same command a maintainer runs locally. yq (mikefarah v4) ships with the runner.
+      - name: Render the chart and check it
+        run: bash infra/helm/check-chart-security.sh

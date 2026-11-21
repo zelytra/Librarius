@@ -28,9 +28,20 @@ public class FeedbackResource {
     @Inject
     FeedbackService feedback;
 
+    @Inject
+    zelytra.librarius.security.ActionQuota quota;
+
+    /** Reports and error notices a caller may send in an hour (#583): each one writes a row. */
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "librarius.quota.feedback.per-hour", defaultValue = "20")
+    int reportsPerHour;
+
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "librarius.quota.errors.per-hour", defaultValue = "120")
+    int errorsPerHour;
+
     @POST
     public Response submit(@Valid FeedbackCreateDto dto) {
         String userId = currentUser.require().id;
+        quota.enforce("feedback", userId, reportsPerHour, "Trop de signalements en peu de temps. Réessaie dans une heure.");
         var id = feedback.submit(userId, Kind.valueOf(dto.kind()), dto.message(), dto.page(), dto.appVersion(),
                 dto.userAgent(), dto.logs());
         return Response.status(Response.Status.CREATED).entity(new FeedbackCreatedDto(id)).build();
@@ -43,6 +54,7 @@ public class FeedbackResource {
     @POST
     @Path("/errors")
     public void error(@Valid ClientErrorDto dto) {
+        quota.enforce("errors", currentUser.require().id, errorsPerHour, "Trop d'erreurs signalées en peu de temps.");
         String where = dto.stack() == null ? "" : dto.stack().strip().lines().findFirst().orElse("");
         feedback.recordError(Source.WEB, currentUser.require().id, dto.message().strip() + '|' + where,
                 dto.message().strip(), dto.stack(), dto.page(), dto.appVersion(), dto.userAgent());

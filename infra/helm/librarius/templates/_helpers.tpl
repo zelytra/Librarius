@@ -60,3 +60,16 @@ Call with (dict "ctx" $ "idp" "google").
 {{- $idp := index .ctx.Values.keycloak.identityProviders .idp -}}
 {{- if or $idp.enabled (lookup "v1" "Secret" .ctx.Release.Namespace $idp.secretName) -}}true{{- end -}}
 {{- end -}}
+
+{{/*
+A container's hardening (#582): no privilege escalation, every capability dropped but the ones
+an image cannot start without — pass them as (dict "add" (list "CHOWN" …)), or an empty dict.
+*/}}
+{{- define "librarius.containerHardening" -}}
+allowPrivilegeEscalation: false
+capabilities:
+  drop: [ALL]
+  {{- with .add }}
+  add: {{ toJson . }}
+  {{- end }}
+{{- end -}}

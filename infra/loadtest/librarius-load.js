@@ -3,6 +3,10 @@
 //   k6 run -e BASE_URL=https://librarius.zelytra.fr \
 //          -e ACCOUNTS='alice:pw1,bob:pw2,...' infra/loadtest/librarius-load.js
 //
+// It signs in with the password grant. Since #578 the deployed `librarius-web` refuses it, so
+// against staging pass `-e CLIENT_ID=` a client created by hand in Keycloak for the run — public,
+// "Direct access grants" on — and delete it afterwards. The local realm still allows it.
+//
 // It answers one question: how much traffic does one api pod take before the
 // target in docs/DEPLOYMENT.md § "Scaling out" stops being met. The thresholds
 // below *are* that target, so k6 exits non-zero when it is missed — the result
