@@ -204,6 +204,14 @@ describe('SettingsPage — library opening shelf', () => {
     localStorage.removeItem('librarius.libraryKind');
   });
 
+  /** #597: the shelves the library always offers (#383), nothing it does not show. */
+  test("offers the library's own shelves only", () => {
+    renderSettings('reading');
+
+    const group = screen.getByRole('group', { name: "Bibliothèque à l'ouverture" });
+    expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual(['Automatique', 'Livre', 'Manga', 'BD']);
+  });
+
   test('is automatic until a kind is picked, and keeps the pick', async () => {
     renderSettings('reading');
 

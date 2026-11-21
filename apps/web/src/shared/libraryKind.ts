@@ -1,5 +1,5 @@
 import type { Kind } from '../api/generated/librarius';
-import { ALL_KINDS } from '../features/discover/medium';
+import { KINDS } from './kinds';
 
 /**
  * The shelf the library opens on (#545): `auto` is the kind the reader owns the most of — the
@@ -13,7 +13,8 @@ export const LIBRARY_KIND_STORAGE_KEY = 'librarius.libraryKind';
 export function readLibraryKind(): LibraryKindPreference {
   try {
     const stored = localStorage.getItem(LIBRARY_KIND_STORAGE_KEY);
-    return ALL_KINDS.includes(stored as Kind) ? (stored as Kind) : 'auto';
+    // Book, manga or BD only (#597): a stored kind the library does not offer is no pick.
+    return KINDS.some((k) => k.id === stored) ? (stored as Kind) : 'auto';
   } catch {
     return 'auto';
   }
