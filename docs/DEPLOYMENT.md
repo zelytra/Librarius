@@ -1330,12 +1330,33 @@ as they stood at dump time, and loading them would silently revert a rotated pas
 leaving the API locked out of the database it had just restored. The role comes from the
 Secret, which is the value worth keeping.
 
-> **Not yet exercised against the cluster.** The scripts themselves are tested end to end —
-> dump, encryption, upload, retention pruning and a restore into a second database, against
-> a real PostgreSQL and a real S3 (`infra/backup/verify.sh`). What has never been done is
-> the procedure above, on `librarius.zelytra.fr`, with its data. Until somebody runs it once
-> deliberately and corrects this section with what actually happened,
-> [#59](https://github.com/zelytra/Librarius/issues/59) is not met.
+### Restore drill on staging — 2026-11-21
+
+Run once against `librarius.zelytra.fr` ([#59](https://github.com/zelytra/Librarius/issues/59)),
+in a throwaway pod of the `librarius` namespace, so the live database was only read:
+
+1. the chart's own `dump.sh` (taken from `helm template`, not copied) dumped both databases
+   from the live instance — 6.2 MB compressed;
+2. `gpg` (AES-256, the `amazon/aws-cli` image the CronJob uses) encrypted it and decrypted it
+   back — identical SHA-256, 2 s;
+3. the decrypted file was piped, as in step 4 above, into a blank PostgreSQL 16 in that pod —
+   **3 s, no `ERROR:` line**, the `keycloak` database created by the archive itself;
+4. the counts matched the live instance exactly: 4 `app_user`, 7 691 `library_item`, 4 236
+   `work`, 18 181 `edition`, Flyway at V45, 6 Keycloak `user_entity`.
+
+End to end, from an empty pod to a checked restore: under a minute. The drill pod and its
+ConfigMap were deleted afterwards.
+
+**What it found.** The first two runs failed before dumping a byte: a new pod's first
+connections to PostgreSQL are *refused* for a few seconds, while the k3s network-policy
+controller learns its address. Every night's CronJob, and every retry of it, would have
+failed the same way. `dump.sh` now waits for the database (`pg_isready`, up to a minute), and
+`infra/backup/verify.sh` covers a database that answers late.
+
+**What it did not cover.** The S3 leg — upload, retention, download — was not run on the
+cluster: no bucket exists yet. `verify.sh` covers it against MinIO, and the restore into the
+live instance itself (steps 3–5 with the API scaled down) was not rehearsed, staging being in
+use.
 
 ## 🔔 Alerting
 
