@@ -127,3 +127,50 @@
   height: 20px;
   accent-color: var(--accent-deep);
 }
+
+/* #571: framing a new picture — a round window over it, dragged or moved with the arrows. */
+.cropFrame {
+  position: relative;
+  align-self: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--chip);
+  touch-action: none;
+  cursor: grab;
+}
+
+.cropFrame:focus-visible {
+  outline: 3px solid var(--accent-deep);
+  outline-offset: 3px;
+}
+
+.cropImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.cropZoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.cropZoom input {
+  flex: 1;
+  min-height: 44px;
+  accent-color: var(--accent-deep);
+}
+
+.cropActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

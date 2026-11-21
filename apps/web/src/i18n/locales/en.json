@@ -989,7 +989,12 @@
       "removed": "Profile picture removed.",
       "format": "This file is not a JPEG or PNG image.",
       "tooBig": "This image is too heavy or too large.",
-      "failed": "The photo could not be saved. Try again."
+      "failed": "The photo could not be saved. Try again.",
+      "cropTitle": "Crop the picture",
+      "cropHint": "Drag the picture, or use the arrow keys, and set the zoom.",
+      "cropFrame": "Picture position — drag or use the arrow keys",
+      "zoom": "Zoom",
+      "cropSave": "Save the picture"
     },
     "categories": {
       "profile": {

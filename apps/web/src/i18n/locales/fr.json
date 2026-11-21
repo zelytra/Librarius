@@ -989,7 +989,12 @@
       "removed": "Photo de profil retirée.",
       "format": "Ce fichier n’est pas une image JPEG ou PNG.",
       "tooBig": "Cette image est trop lourde ou trop grande.",
-      "failed": "La photo n’a pas pu être enregistrée. Réessaie."
+      "failed": "La photo n’a pas pu être enregistrée. Réessaie.",
+      "cropTitle": "Recadrer la photo",
+      "cropHint": "Fais glisser la photo, ou utilise les flèches, et règle le zoom.",
+      "cropFrame": "Position de la photo — glisse ou utilise les flèches",
+      "zoom": "Zoom",
+      "cropSave": "Enregistrer la photo"
     },
     "categories": {
       "profile": {

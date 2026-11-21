@@ -17,7 +17,8 @@ import {
   usePutApiCategoriesId,
   type CategoryDto,
 } from '../../api/generated/librarius';
-import { CATEGORY_PALETTE, ColorPicker } from './ColorPicker';
+import { ColorPicker } from './ColorPicker';
+import { CATEGORY_PALETTE } from './categoryPalette';
 import styles from './CategoriesPage.module.css';
 
 /**
