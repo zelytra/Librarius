@@ -470,8 +470,8 @@ d'utilisateur** pour confirmer. Il n'y a pas de retour en arrière.
 ## Réglages, thème et langue
 
 Les réglages s'ouvrent par la **roue dentée en haut de l'accueil**, ou depuis « Plus » sur
-téléphone. Ils sont rangés en cinq catégories : **Profil** (nom, photo, langue, fuseau
-horaire, déconnexion), **Lecture** (objectif de l'année, type de livres affiché à l'ouverture
+téléphone. Ils sont rangés en cinq catégories : **Profil** (nom, photo — recadrée et zoomée
+avant d'être enregistrée —, langue, fuseau horaire, pays facultatif, déconnexion), **Lecture** (objectif de l'année, type de livres affiché à l'ouverture
 de la bibliothèque, fiche de lecture), **Apparence** (thème, langue, organisation de
 l'accueil), **Communauté** (trouver des lecteurs, membres bloqués) et **Données et compte**
 (import, export, vider la bibliothèque, supprimer le compte). Un lien venu d'ailleurs —
@@ -510,7 +510,8 @@ comme dans ton navigateur, pour qu'un bug soit vu même quand personne ne l'écr
 Les comptes qui ont le rôle administrateur (attribué dans Keycloak) voient « Administration »
 dans les réglages : la liste des signalements et des erreurs, chacun avec son journal, et la
 supervision — membres actifs en ce moment et par jour, signalements et erreurs par jour sur
-30 jours, état de la base de données et de Keycloak.
+30 jours, un globe des membres par pays (seulement un nombre par pays, à partir du pays que
+chacun a choisi d'indiquer), état de la base de données et de Keycloak.
 
 ## Questions fréquentes
 
