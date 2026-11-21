@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetApiAdminMonitoring, type MonitoringDayDto } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
@@ -48,8 +49,8 @@ export function AdminMonitoring() {
           days={days}
           label={t('admin.monitoring.reportsChart', { reports, errors })}
           series={[
-            { value: (d) => d.reports ?? 0, className: styles.barReports },
-            { value: (d) => d.errors ?? 0, className: styles.barErrors },
+            { name: t('admin.monitoring.legendReports'), value: (d) => d.reports ?? 0, className: styles.barReports },
+            { name: t('admin.monitoring.legendErrors'), value: (d) => d.errors ?? 0, className: styles.barErrors },
           ]}
         />
         <p className={styles.legend}>
@@ -66,7 +67,7 @@ export function AdminMonitoring() {
             max: Math.max(0, ...days.map((d) => d.activeUsers ?? 0)),
             today: days.at(-1)?.activeUsers ?? 0,
           })}
-          series={[{ value: (d) => d.activeUsers ?? 0, className: styles.barActive }]}
+          series={[{ name: t('admin.monitoring.legendActive'), value: (d) => d.activeUsers ?? 0, className: styles.barActive }]}
         />
       </section>
 
@@ -92,9 +93,13 @@ export function AdminMonitoring() {
   );
 }
 
+const shortDate = (day: string | undefined) =>
+  day ? new Date(`${day}T00:00:00`).toLocaleDateString(activeLanguage(), { day: 'numeric', month: 'short' }) : '';
+
 /**
- * One column per day, the series stacked; the figures are read out as a whole by the
- * label, and each column's own on hover.
+ * One column per day, the series stacked, between a value axis and a time axis (#574). Each
+ * column is a focusable target that reads out its day and its figures — in a tooltip on hover
+ * or focus, and to a screen reader through its name; the whole chart is summed up by `label`.
  */
 function Bars({
   days,
@@ -103,26 +108,58 @@ function Bars({
 }: {
   days: MonitoringDayDto[];
   label: string;
-  series: { value: (day: MonitoringDayDto) => number; className: string }[];
+  series: { name: string; value: (day: MonitoringDayDto) => number; className: string }[];
 }) {
-  const { t } = useTranslation();
-  const max = Math.max(1, ...days.map((d) => series.reduce((sum, s) => sum + s.value(d), 0)));
+  const [shown, setShown] = useState<number | null>(null);
+  const totals = days.map((d) => series.reduce((sum, s) => sum + s.value(d), 0));
+  const max = Math.max(1, ...totals);
+  const describe = (day: MonitoringDayDto) =>
+    [shortDate(day.day), ...series.map((s) => `${s.name} ${s.value(day)}`)].join(' · ');
+  const ticks = [...new Set([max, Math.round(max / 2), 0])];
+  const middle = Math.floor((days.length - 1) / 2);
+
   return (
-    <div className={styles.bars} role="img" aria-label={label}>
-      {days.map((day) => (
-        <div
-          key={day.day}
-          className={styles.barColumn}
-          title={t('admin.monitoring.barTitle', {
-            date: new Date(`${day.day}T00:00:00`).toLocaleDateString(activeLanguage(), { day: 'numeric', month: 'short' }),
-            values: series.map((s) => s.value(day)).join(' + '),
-          })}
-        >
-          {series.map((s, i) => (
-            <span key={i} className={s.className} style={{ height: `${(s.value(day) / max) * 100}%` }} />
+    <figure className={styles.chart} aria-label={label}>
+      <div className={styles.yAxis} data-testid="y-axis" aria-hidden="true">
+        {ticks.map((tick) => (
+          <span key={tick} style={{ bottom: `${(tick / max) * 100}%` }}>{tick}</span>
+        ))}
+      </div>
+      <div className={styles.bars} onMouseLeave={() => setShown(null)}>
+        {days.map((day, index) => (
+          <button
+            key={day.day}
+            type="button"
+            className={styles.barColumn}
+            aria-label={describe(day)}
+            onMouseEnter={() => setShown(index)}
+            onMouseLeave={() => setShown(null)}
+            onFocus={() => setShown(index)}
+            onBlur={() => setShown(null)}
+          >
+            {series.map((s, i) => (
+              <span key={i} className={s.className} style={{ height: `${(s.value(day) / max) * 100}%` }} />
+            ))}
+            {shown === index && (
+              <span
+                role="tooltip"
+                className={styles.tooltip}
+                // Anchored to the side it would otherwise run off, on a narrow screen.
+                data-edge={index < days.length / 3 ? 'start' : index >= (days.length * 2) / 3 ? 'end' : undefined}
+              >
+                {describe(day)}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      <div className={styles.xAxis} data-testid="x-axis" aria-hidden="true">
+        {[0, middle, days.length - 1]
+          .filter((i, at, all) => i >= 0 && all.indexOf(i) === at)
+          .map((i) => (
+            <span key={i} style={{ left: `${((i + 0.5) / days.length) * 100}%` }}>{shortDate(days[i]?.day)}</span>
           ))}
-        </div>
-      ))}
-    </div>
+      </div>
+    </figure>
   );
 }

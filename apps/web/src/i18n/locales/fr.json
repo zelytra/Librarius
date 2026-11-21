@@ -1571,8 +1571,8 @@
       "servicesTitle": "État des services",
       "up": "Opérationnel",
       "down": "Indisponible {{detail}}",
-      "barTitle": "{{date}} : {{values}}",
-      "note": "« Maintenant » : vus dans les 5 dernières minutes. La page se rafraîchit toutes les 30 secondes."
+      "note": "« Maintenant » : vus dans les 5 dernières minutes. La page se rafraîchit toutes les 30 secondes.",
+      "legendActive": "Membres actifs"
     },
     "services": {
       "database": "Base de données",

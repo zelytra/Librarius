@@ -1571,8 +1571,8 @@
       "servicesTitle": "Service status",
       "up": "Operational",
       "down": "Unavailable {{detail}}",
-      "barTitle": "{{date}}: {{values}}",
-      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds."
+      "note": "“Now”: seen in the last 5 minutes. The page refreshes every 30 seconds.",
+      "legendActive": "Active members"
     },
     "services": {
       "database": "Database",
