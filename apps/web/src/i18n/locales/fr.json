@@ -1660,7 +1660,6 @@
     "mutual": "Vous vous suivez",
     "followsYou": "Te suit",
     "edit": "Modifier mon profil",
-    "mine": "Mon profil",
     "followed": "Tu suis {{name}}.",
     "unfollowed": "Tu ne suis plus {{name}}.",
     "actionFailed": "L'action n'a pas abouti. Réessaie.",

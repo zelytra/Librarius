@@ -204,7 +204,7 @@ export function SettingsPage() {
 
   if (category === undefined) {
     return (
-      <Screen>
+      <Screen measure="reading">
         <div className={`sticky-header ${styles.header}`}>
           <button type="button" onClick={leave} aria-label={t('common.back')} className={styles.backButton}>
             <Icon name="arrow_back" size={24} color="var(--ink)" />
@@ -250,7 +250,7 @@ function CategoryScreen({ category }: { category: SettingsCategory }) {
   useHighlightHash();
   const Content = CATEGORY_CONTENT[category];
   return (
-    <Screen>
+    <Screen measure="reading">
       <div className={`sticky-header ${styles.header}`}>
         <button type="button" onClick={back} aria-label={t('settings.backToCategories')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />

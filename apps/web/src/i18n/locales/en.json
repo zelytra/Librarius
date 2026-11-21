@@ -1660,7 +1660,6 @@
     "mutual": "You follow each other",
     "followsYou": "Follows you",
     "edit": "Edit my profile",
-    "mine": "My profile",
     "followed": "You follow {{name}}.",
     "unfollowed": "You no longer follow {{name}}.",
     "actionFailed": "That did not work. Try again.",

@@ -11,9 +11,19 @@ function cx(...names: (string | false | undefined)[]): string {
  * Padded page container — every screen sits in one. It also owns how wide a
  * page may get: capped at `--content-max` and centred past the tablet
  * breakpoint, uncapped below it where the shell frame is already the cap.
+ * `measure="reading"` caps it at the narrower `--reading-max` instead (#605),
+ * for the screens that are a column of text and cards rather than a grid.
  */
-export function Screen({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx(styles.screen, className)}>{children}</div>;
+export function Screen({
+  children,
+  className,
+  measure,
+}: {
+  children: ReactNode;
+  className?: string;
+  measure?: 'reading';
+}) {
+  return <div className={cx(styles.screen, measure === 'reading' && styles.screenReading, className)}>{children}</div>;
 }
 
 /**

@@ -14,7 +14,7 @@ export function EventPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Screen>
+    <Screen measure="reading">
       <div className={`sticky-header ${styles.header}`}>
         <button onClick={() => navigate(-1)} aria-label={t('common.back')} className={styles.backButton}>
           <Icon name="arrow_back" size={24} color="var(--ink)" />
@@ -41,7 +41,7 @@ function Event() {
     );
   }
   return (
-    <div className={styles.event}>
+    <div>
       <FeedEvent item={data} />
     </div>
   );
