@@ -661,8 +661,8 @@ a category describes what its owner thinks of it and belongs to that one account
 told apart everywhere: `?genre=` versus `?rank=`, `/api/genres` versus `/api/categories`,
 `work_genre` versus `library_item.rank_category_id`.
 
-`GET /api/categories` returns the four shared built-ins (`or`, `argent`, `bronze` and
-`abandon`, all `user_id NULL`, `builtin: true`) followed by the caller's own. A category
+`GET /api/categories` returns the five shared built-ins (`platine`, `or`, `argent`,
+`bronze` and `abandon`, all `user_id NULL`, `builtin: true`) followed by the caller's own. A category
 created by someone else is never listed, never assignable, and its identifier answers **404**
 on every write — never 403, which would confirm that it exists.
 
@@ -1003,7 +1003,7 @@ downloading the collection.
 | `sort` | `added` / `priority` | both | Collection: `added`, `title`, `author`, `genre`, `rating` (best first, unrated last). Wishlist: `priority` (by urgency, see [Wishlist](#wishlist)), `added`, `title`, `author`, `price`. Case-insensitive; an unknown value is a **400** |
 | `kind` | — | both | `BOOK` \| `MANGA`, carried by the `work` |
 | `status` | — | collection | `TO_READ` (`OWNED` still accepted) \| `READING` \| `READ` \| `ABANDONED`. The four are exclusive: a title given up on answers to `ABANDONED` and to none of the three others |
-| `rank` | — | collection | Rank category code (`or`, `argent`, `bronze`, `abandon` or a custom one) |
+| `rank` | — | collection | Rank category code (`platine`, `or`, `argent`, `bronze`, `abandon` or a custom one) |
 | `genre` | — | collection | Genre code, as `/api/genres` returns it. A wording is folded the same way, so `genre=Science Fiction` behaves like `genre=science-fiction`; an unknown genre matches nothing rather than being ignored |
 | `minRating` | — | collection | Keeps the titles rated at least that much; "my favourites" is `4`. Outside 1–5 is a **400**, and unrated titles never match |
 | `hideToRead` | `false` | collection | Leaves the to-read pile out (#552): a `TO_READ` title is returned only when the caller has read another volume of its series. The library shelf sends it on every shelf but « Pile à lire »; it also leaves out of the grouped shelf a series with `readCount` 0 |

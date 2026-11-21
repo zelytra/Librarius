@@ -43,7 +43,7 @@ their own `library_item`.
 - `reading_progress` (library_item_id, current_page, percent, started_at, finished_at) —
   an abandoned title carries a `finished_at` too, so everything counted as "finished"
   filters on the status as well as on the date
-- `rank_category` (user_id NULL for the built-in Gold/Silver/Bronze/Abandon ranks, code,
+- `rank_category` (user_id NULL for the built-in Platinum/Gold/Silver/Bronze/Abandon ranks, code,
   label, color, is_builtin) + `library_item_rank`
 - `wishlist_item` (user_id, work/edition, priority, estimated_price, note)
 - `reading_goal` (user_id, year, target_count, unit)

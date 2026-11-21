@@ -242,12 +242,14 @@ public class BooknodeImporter implements LibraryImporter {
     }
 
     /**
-     * The built-in rank a tier stands for: Booknode's or, argent and bronze are Librarius's own
-     * Or, Argent and Bronze, the shelves the collection filters on. Diamant, above or, has no
-     * shelf of its own here: it files under Or, and its 5/5 rating puts it in the favourites.
+     * The built-in rank a tier stands for: Booknode's diamant, or, argent and bronze are
+     * Librarius's own Platine, Or, Argent and Bronze, the shelves the collection filters on.
      */
     static String rankFromBadge(Set<String> classes) {
-        if (classes.contains("diamant") || classes.contains("or")) {
+        if (classes.contains("diamant")) {
+            return "platine";
+        }
+        if (classes.contains("or")) {
             return "or";
         }
         if (classes.contains("argent")) {

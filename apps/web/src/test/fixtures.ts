@@ -222,6 +222,7 @@ export function authorDetail(overrides: Partial<AuthorDetailDto> = {}): AuthorDe
 
 /** The four shelves `/api/categories` returns to every account, in the API's own order. */
 export const BUILTIN_CATEGORIES: CategoryDto[] = [
+  { id: 'cat-platine', code: 'platine', label: 'Platine', color: '#8fa9bd', builtin: true },
   { id: 'cat-or', code: 'or', label: 'Or', color: '#d9b94e', builtin: true },
   { id: 'cat-argent', code: 'argent', label: 'Argent', color: '#b3b7bf', builtin: true },
   { id: 'cat-bronze', code: 'bronze', label: 'Bronze', color: '#c08a5a', builtin: true },

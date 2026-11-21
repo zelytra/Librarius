@@ -98,7 +98,7 @@ Two deliberate exceptions:
   keep their French comments. Flyway computes the checksum over **the entire file, comments
   included**: touching them would fail validation at startup on every database where the
   migration is already applied. Future migrations are written in English.
-- **Messages the API renders to the user** (`ImportException`, the `Or`/`Argent`/`Bronze`
+- **Messages the API renders to the user** (`ImportException`, the `Platine`/`Or`/`Argent`/`Bronze`
   category names) are still French, because nothing on the API side is translated yet: it
   has no notion of the caller's language. They are the one place where an English interface
   still shows French, and closing that gap means moving those strings behind a key the web

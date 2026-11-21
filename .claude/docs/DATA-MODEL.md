@@ -57,7 +57,7 @@ of a denormalised field to keep in step on every write.
 | `report` | `id UUID` | `reporter_id` FK `app_user`, `contributor_id` FK `app_user` **nullable** (V19), `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED\|UPHELD, default OPEN), `created_at` | idx `(target_type, target_id)`, `(reporter_id)` and `(contributor_id)` (V19). No FK on `target_id`: it spans three tables, resolved in the service (V17/#192). `contributor_id` `ON DELETE SET NULL`, read by the trust revocation (V19/#195) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
-(#8f8579) joins them in V11.
+(#8f8579) joins them in V11, and `platine` (#8fa9bd, `sort_order` 0, above Or) in V46 (#608).
 
 `V3__pagination_indexes.sql` adds no column: it only backs the server-side pagination of
 `/api/library` and `/api/wishlist` with the indexes their default ordering (newest first,
