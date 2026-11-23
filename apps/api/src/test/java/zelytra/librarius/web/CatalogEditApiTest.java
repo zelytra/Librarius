@@ -316,6 +316,18 @@ class CatalogEditApiTest {
                 List.of("https://www.fnac.com/a1", "https://livre.fnac.com/a2"))).statusCode(400);
     }
 
+    /** #628: a link with ad-tracking parameters is accepted, and stored without them. */
+    @Test
+    void aStoreLinkIsStoredWithoutItsTrackingParameters() {
+        String edition = editionOf("alice", addBook("alice", "Edit - tracking " + UUID.randomUUID(), randomIsbn()));
+        String tracked = "https://www.fnac.com/a22917644/Becky-Chambers?oref=0&esl-k=sem-google|nx|c|m&gclid=Cj0K";
+
+        propose("alice", proposal("EDITION", edition, Map.of(), List.of(tracked))).statusCode(201);
+
+        given().auth().oauth2(token("bob")).when().get("/api/editions/" + edition + "/sale-links")
+                .then().statusCode(200).body("url", hasItem("https://www.fnac.com/a22917644/Becky-Chambers"));
+    }
+
     @Test
     void aStorePageThatConfirmsTheBookAppliesTheProposalAtOnce() {
         String title = "Edit - verified " + UUID.randomUUID();

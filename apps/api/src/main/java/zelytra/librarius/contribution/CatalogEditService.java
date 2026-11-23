@@ -347,9 +347,10 @@ public class CatalogEditService {
     private static List<String> canonicalLinks(List<String> raw) {
         Map<SaleStore, String> byStore = new LinkedHashMap<>();
         for (String link : raw) {
-            String url = link.trim();
-            SaleStore store = SaleStore.of(url)
-                    .orElseThrow(() -> new BadRequestException("Not a page of a known store: " + url));
+            // Stored, compared and fetched without its tracking parameters (#628).
+            String url = SaleStore.clean(link)
+                    .orElseThrow(() -> new BadRequestException("Not a page of a known store: " + link.trim()));
+            SaleStore store = SaleStore.of(url).orElseThrow();
             if (byStore.put(store, url) != null) {
                 throw new BadRequestException("Only one link per store: " + store);
             }

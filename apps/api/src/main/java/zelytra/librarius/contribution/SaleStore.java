@@ -33,12 +33,27 @@ public enum SaleStore {
 
     /** The store {@code url} belongs to — empty unless it is a plain https URL on a known host. */
     public static Optional<SaleStore> of(String url) {
+        return clean(url).map(SaleStore::storeOf);
+    }
+
+    /**
+     * The page address alone, {@code https://host/path}, of a link on a known store (#628): the
+     * query string and the fragment are dropped — they carry ad tracking, often with characters a
+     * URI refuses, and never which book the page sells — and the host is lower-cased. Empty for
+     * anything that is not a plain https URL on a known host.
+     */
+    public static Optional<String> clean(String url) {
         if (url == null || url.isBlank()) {
             return Optional.empty();
         }
+        String page = url.trim();
+        int cut = indexOfAny(page, '?', '#');
+        if (cut >= 0) {
+            page = page.substring(0, cut);
+        }
         URI uri;
         try {
-            uri = new URI(url.trim());
+            uri = new URI(page);
         } catch (URISyntaxException e) {
             return Optional.empty();
         }
@@ -47,8 +62,29 @@ public enum SaleStore {
             return Optional.empty();
         }
         String host = uri.getHost().toLowerCase(Locale.ROOT);
+        if (storeOf("https://" + host) == null) {
+            return Optional.empty();
+        }
+        String path = uri.getRawPath() == null || uri.getRawPath().isEmpty() ? "/" : uri.getRawPath();
+        return Optional.of("https://" + host + path);
+    }
+
+    /** The store of a cleaned URL's host, or null. */
+    private static SaleStore storeOf(String cleaned) {
+        String host = URI.create(cleaned).getHost();
         return Arrays.stream(values())
                 .filter(store -> store.domains.stream().anyMatch(d -> host.equals(d) || host.endsWith("." + d)))
-                .findFirst();
+                .findFirst().orElse(null);
+    }
+
+    private static int indexOfAny(String value, char... chars) {
+        int first = -1;
+        for (char c : chars) {
+            int at = value.indexOf(c);
+            if (at >= 0 && (first < 0 || at < first)) {
+                first = at;
+            }
+        }
+        return first;
     }
 }
