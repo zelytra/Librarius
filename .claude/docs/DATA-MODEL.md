@@ -639,6 +639,12 @@ titles, it never deletes them**: a rank is a label stuck on a book, so dropping 
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
 
+`V51__trust_override_and_admin_flag.sql` ([#625](https://github.com/zelytra/Librarius/issues/625))
+adds `app_user.trust_override BOOLEAN` — NULL leaves trust to `TrustEvaluator`, true or false is an
+admin's choice it keeps — and `app_user.admin BOOLEAN NOT NULL DEFAULT false`, the Keycloak role
+mirrored on each of the member's requests (like `username`, V40) so another member's profile can
+show it. `trusted` stays the one column every screen reads.
+
 `V50__catalog_edits.sql` opens the shared catalog to member edits
 ([#618](https://github.com/zelytra/Librarius/issues/618)). A proposal is stored as a **diff**
 rather than as a copy of the record: only the fields that differ, each with the value it

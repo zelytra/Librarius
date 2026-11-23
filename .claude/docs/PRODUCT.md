@@ -623,8 +623,12 @@ year 🔜.
    [#195](https://github.com/zelytra/Librarius/issues/195)). An account carries a private
    "trusted" standing that the application computes on its own, from the account's own activity —
    enough tenure, enough titles actually finished, and a record clear of upheld reports. A user
-   never sets it on themselves and no user grants it to another: it is decided off the request
-   path by a scheduled evaluation, and no screen or endpoint can flip it. The same evaluation now
+   never sets it on themselves and no member grants it to another: it is decided off the request
+   path by a scheduled evaluation. The one exception is an admin
+   ([#625](https://github.com/zelytra/Librarius/issues/625)), who can, from the member list of the
+   administration, keep an account trusted or untrusted by hand, or hand it back to the
+   evaluation; the evaluation then respects that choice. A member's profile shows the trusted
+   badge and, for an admin, an Admin badge. The same evaluation now
    also **takes the flag back**: an account that collects too many upheld reports against what it
    contributed loses its standing, and earns it back later if the reports age out or are
    dismissed — revocation is a state, not a ban. What "trustworthy" precisely means, and how many

@@ -228,6 +228,37 @@ describe('AdminPage', () => {
       expect(within(bob).getByText(/12 titres/)).toBeInTheDocument();
     });
 
+    /** #625: an admin decides a member's trust by hand, or hands it back to the evaluation. */
+    test("sets a member's trust, and shows the roles they hold", async () => {
+      meIs(true);
+      const sent: unknown[] = [];
+      server.use(
+        http.get('*/api/admin/users', () => HttpResponse.json({
+          ...USERS,
+          items: [
+            { ...USERS.items[0], trusted: false, trustMode: 'AUTO', admin: true },
+            { ...USERS.items[1], trusted: true, trustMode: 'TRUSTED', admin: false },
+          ],
+        })),
+        http.put('*/api/admin/users/:id/trust', async ({ params, request }) => {
+          sent.push({ id: params.id, ...((await request.json()) as object) });
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderWithProviders(<><AdminPage /><Toaster /></>, { route: '/admin?tab=users' });
+
+      const bob = (await screen.findByText('Bob Lecteur')).closest('li')!;
+      expect(within(bob).getByText('Admin')).toBeInTheDocument();
+      expect(within(bob).queryByText('De confiance', { selector: 'span' })).not.toBeInTheDocument();
+      const eve = screen.getByText('Ève').closest('li')!;
+      expect(within(eve).getByText('De confiance', { selector: 'span' })).toBeInTheDocument();
+      expect(within(eve).getByLabelText('Confiance de Ève')).toHaveValue('TRUSTED');
+
+      await userEvent.selectOptions(within(bob).getByLabelText('Confiance de Bob Lecteur'), 'TRUSTED');
+      await waitFor(() => expect(sent).toEqual([{ id: 'u-bob', mode: 'TRUSTED' }]));
+      expect(await screen.findByText('Bob Lecteur est maintenant de confiance.')).toBeInTheDocument();
+    });
+
     /** #562: a member opens their profile. */
     test("opens a member's profile from the list", async () => {
       meIs(true);

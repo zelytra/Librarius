@@ -15,3 +15,9 @@
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* The admin badge (#625): same pill, its own tint. */
+.admin {
+  background: var(--tint-violet);
+  color: var(--tint-violet-ink);
+}

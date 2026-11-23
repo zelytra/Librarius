@@ -1096,7 +1096,11 @@
   "trust": {
     "badge": {
       "label": "De confiance",
-      "tooltip": "Ce compte est de confiance : assez d'ancienneté, assez de titres réellement terminés, et aucun signalement retenu contre lui."
+      "tooltip": "Ce compte est de confiance : assez d'ancienneté, assez de titres réellement terminés et aucun signalement retenu contre lui, ou désigné par un administrateur."
+    },
+    "admin": {
+      "label": "Admin",
+      "tooltip": "Ce membre administre Librarius."
     }
   },
   "scan": {
@@ -1649,7 +1653,19 @@
       "confirm": "Supprimer définitivement",
       "deleted": "{{name}} a été supprimé, avec toutes ses données.",
       "deleteFailed": "La suppression a échoué : rien n’a été effacé.",
-      "handle": "@{{username}}"
+      "handle": "@{{username}}",
+      "trustLabel": "Confiance de {{name}}",
+      "trustModes": {
+        "AUTO": "Confiance auto",
+        "TRUSTED": "De confiance",
+        "UNTRUSTED": "Sans confiance"
+      },
+      "trustSaved": {
+        "AUTO": "La confiance de {{name}} est de nouveau calculée automatiquement.",
+        "TRUSTED": "{{name}} est maintenant de confiance.",
+        "UNTRUSTED": "{{name}} n’est plus de confiance."
+      },
+      "trustFailed": "La confiance n’a pas pu être changée. Réessaie."
     },
     "globe": {
       "title": "Membres dans le monde",

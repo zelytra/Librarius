@@ -1096,7 +1096,11 @@
   "trust": {
     "badge": {
       "label": "Trusted",
-      "tooltip": "This account is trusted: enough tenure, enough titles actually finished, and a record clean of upheld reports."
+      "tooltip": "This account is trusted: enough tenure, enough titles actually finished, and a record clean of upheld reports, or named by an admin."
+    },
+    "admin": {
+      "label": "Admin",
+      "tooltip": "This member runs Librarius."
     }
   },
   "scan": {
@@ -1649,7 +1653,19 @@
       "confirm": "Delete for good",
       "deleted": "{{name}} was deleted, with all their data.",
       "deleteFailed": "The deletion failed: nothing was erased.",
-      "handle": "@{{username}}"
+      "handle": "@{{username}}",
+      "trustLabel": "Trust of {{name}}",
+      "trustModes": {
+        "AUTO": "Auto trust",
+        "TRUSTED": "Trusted",
+        "UNTRUSTED": "Not trusted"
+      },
+      "trustSaved": {
+        "AUTO": "{{name}}'s trust is computed automatically again.",
+        "TRUSTED": "{{name}} is now trusted.",
+        "UNTRUSTED": "{{name}} is no longer trusted."
+      },
+      "trustFailed": "The trust could not be changed. Try again."
     },
     "globe": {
       "title": "Members around the world",

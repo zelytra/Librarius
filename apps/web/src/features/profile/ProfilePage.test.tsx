@@ -45,6 +45,28 @@ describe('ProfilePage', () => {
     resetToasts();
   });
 
+  /** #625: the roles a member holds, said in words next to their name. */
+  test('shows the trusted and admin badges a member holds', async () => {
+    server.use(
+      http.get('*/api/users/bob/profile', () => HttpResponse.json({ ...BOB, trusted: true, admin: true })),
+      http.get('*/api/users/eve/profile', () => HttpResponse.json({ ...BOB, id: 'eve', displayName: 'Ève', trusted: false, admin: false })),
+    );
+    renderProfile();
+
+    const heading = await screen.findByRole('heading', { name: /Bob/ });
+    expect(within(heading).getByText('De confiance')).toBeInTheDocument();
+    expect(within(heading).getByText('Admin')).toBeInTheDocument();
+  });
+
+  test('shows no badge for a member with no role', async () => {
+    server.use(http.get('*/api/users/eve/profile', () => HttpResponse.json({ ...BOB, id: 'eve', displayName: 'Ève', trusted: false, admin: false })));
+    renderProfile('eve');
+
+    const heading = await screen.findByRole('heading', { name: /Ève/ });
+    expect(within(heading).queryByText('De confiance')).not.toBeInTheDocument();
+    expect(within(heading).queryByText('Admin')).not.toBeInTheDocument();
+  });
+
   test('shows who the member is and what they read', async () => {
     server.use(http.get('*/api/users/bob/profile', () => HttpResponse.json(BOB)));
     renderProfile();

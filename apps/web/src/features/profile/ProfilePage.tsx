@@ -22,7 +22,7 @@ import { Modal } from '../../shared/ui/Modal';
 import { Button, Chip, Screen, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { toast } from '../../shared/ui/toast';
-import { TrustBadge } from '../../shared/ui/TrustBadge';
+import { AdminBadge, TrustBadge } from '../../shared/ui/TrustBadge';
 import { Avatar } from '../../shared/ui/Avatar';
 import { MemberBook } from '../../shared/ui/MemberBook';
 import { Shelf, type ShelfName } from './Shelf';
@@ -173,6 +173,7 @@ function Identity({ profile }: { profile: MemberProfileDto }) {
         <h2 className={styles.name}>
           {name}
           {profile.trusted && <TrustBadge />}
+          {profile.admin && <AdminBadge />}
         </h2>
         <p className={styles.meta}>
           {[
