@@ -244,16 +244,16 @@ Au 1ᵉʳ janvier, l'objectif de l'année précédente t'est reproposé.
 
 ## Le prix de ton exemplaire
 
-Sur la page d'un livre, la section **Prix** montre le prix neuf relevé à la BnF, et
-« Saisir un prix » te laisse entrer le tien (prix payé, occasion…). Ce prix n'est que pour
-toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs.
-Vide, on revient au prix neuf.
+Sur la page d'un livre, la section **Prix** montre le prix neuf de la fiche commune (relevé à
+la BnF, ou corrigé par un lecteur) : c'est lui que compte la valeur de ta bibliothèque. Pour
+le corriger, passe par « Proposer une modification », en bas de l'écran : la correction profite
+à tous les lecteurs du livre.
 
 ## Pages, format et édition de ton exemplaire
 
-Sur la page d'un livre, tu peux aussi saisir **ton nombre de pages** (il remplace celui de
-l'édition dans tes pages lues, tes objectifs et ta progression, pour toi seul) et choisir le
-**format** de ton exemplaire — poche, broché, relié, grand format, collector, coffret — à
+Le **nombre de pages** est celui de la fiche commune : un nombre faux se corrige pour tous avec
+« Proposer une modification ». Sur la page d'un livre, tu choisis le **format** de ton
+exemplaire — poche, broché, relié, grand format, collector, coffret — à
 côté des statuts. Un second appui sur le format choisi le retire.
 
 Le **type** — livre, BD ou manga — se change aussi sur la page du livre, pour toi seul : le
@@ -265,7 +265,7 @@ leur nombre de pages et leur année — la tienne d'abord, puis les éditions fr
 trois premières s'affichent, « Voir les autres éditions » montre le reste. Choisir une autre
 édition change la couverture partout : bibliothèque, fiche et séries.
 
-La section **Autres éditions** est toujours là : choisis une édition proposée par le
+La section **Autres éditions**, sous « Ma progression », est toujours là : choisis une édition proposée par le
 catalogue, ou « Autre édition… » pour décrire la tienne (éditeur, ISBN, pages, année).
 
 Sous les statuts, **Langue de lecture** note dans quelle langue tu as lu ton exemplaire

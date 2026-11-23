@@ -49,7 +49,7 @@
     },
     "pages": {
       "q": "Pourquoi le nombre de pages affiche « ≈ » ?",
-      "a": "Quand aucun catalogue ne connaît la longueur, Librarius l’estime (moyenne de la série, ou longueur typique du genre). Indique le vrai nombre sur la fiche : il comptera dans tes statistiques et ton objectif."
+      "a": "Quand aucun catalogue ne connaît la longueur, Librarius l’estime (moyenne de la série, ou longueur typique du genre). Corrige le vrai nombre avec « Proposer une modification », en bas de la fiche : il comptera pour tous les lecteurs, dans les statistiques et les objectifs."
     },
     "categories": {
       "q": "À quoi servent Platine, Or, Argent, Bronze ?",

@@ -233,6 +233,11 @@ The full inventory, one shelf per support type.
   revertable by an admin; the author is notified of the decision
   (accepted, declined, reverted, with the admin's note). One pending proposal per member per
   record.
+- ✅ **Price and length are the shared record's**
+  ([#636](https://github.com/zelytra/Librarius/issues/636)): the personal price and page count
+  entries are gone; the publisher's price is shown read-only, and both are corrected for every
+  reader through « Proposer une modification ». The other editions sit below « Ma progression »
+  ([#637](https://github.com/zelytra/Librarius/issues/637)).
 - ✅ **Where to buy it** (*"Où l'acheter"*, [#619](https://github.com/zelytra/Librarius/issues/619)):
   the edition's store pages, one per store on a closed list (Amazon.fr, Fnac, Cultura, Decitre,
   E.Leclerc, Furet du Nord, Gibert, Rakuten), as "Acheter sur …" links opening a new tab. They are
