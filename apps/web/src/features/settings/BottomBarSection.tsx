@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NAV_DESTINATIONS, NOTIFICATIONS_DESTINATION, PEOPLE_DESTINATION } from '../../app/navigation';
 import { BOTTOM_BAR_CHOICES, BOTTOM_BAR_MAX, readBottomBar, storeBottomBar } from '../../shared/bottomBar';
+import { saveAccountPreferences } from '../../shared/accountPreferences';
 import styles from './SettingsPage.module.css';
 
 const LABEL_KEY: Record<string, string> = Object.fromEntries(
@@ -21,6 +22,7 @@ export function BottomBarSection() {
       : BOTTOM_BAR_CHOICES.filter((c) => c === to || picked.includes(c));
     setPicked(next);
     storeBottomBar(next);
+    saveAccountPreferences({ bottomBar: [...next] });
   };
   return (
     <fieldset className={styles.fieldset}>

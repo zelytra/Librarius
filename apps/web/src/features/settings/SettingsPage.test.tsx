@@ -457,3 +457,46 @@ describe('SettingsPage — back', () => {
     expect(await screen.findByText('Accueil test')).toBeInTheDocument();
   });
 });
+
+/** #613: every display choice made here is sent to the account, for the member's other devices. */
+describe('SettingsPage — preferences follow the account', () => {
+  const sent: unknown[] = [];
+
+  beforeEach(() => {
+    resetAuth();
+    setAuthenticated(true);
+    localStorage.clear();
+    sent.length = 0;
+    server.use(
+      http.patch('*/api/me/preferences', async ({ request }) => {
+        const body = await request.json();
+        sent.push(body);
+        return HttpResponse.json(body);
+      }),
+    );
+  });
+  afterEach(() => localStorage.clear());
+
+  test('sends the palette and the bottom bar picked under Appearance', async () => {
+    renderSettings('appearance');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rose' }));
+    await waitFor(() => expect(sent).toContainEqual({ theme: 'rose' }));
+
+    const group = screen.getByRole('group', { name: 'Barre du bas (téléphone)' });
+    await userEvent.click(within(group).getByRole('checkbox', { name: 'Accueil' }));
+    await waitFor(() => expect(sent).toContainEqual({ bottomBar: expect.not.arrayContaining(['/']) as unknown }));
+  });
+
+  test('sends the opening shelf and the sheet theme picked under Reading', async () => {
+    renderSettings('reading');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Manga' }));
+    await waitFor(() => expect(sent).toContainEqual({ libraryKind: 'MANGA' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Automatique' }));
+    await waitFor(() => expect(sent).toContainEqual({ libraryKind: 'auto' }));
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Cahier' }));
+    await waitFor(() => expect(sent).toContainEqual({ sheetTheme: 'notebook' }));
+  });
+});

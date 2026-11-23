@@ -30,8 +30,12 @@ What is deliberately **not** here yet:
   window the app owns, the collector is injected into its pages and posts the library back
   (design and the options weighed: `docs/wiki/Imports.md`). Not yet tried on a device. The camera comes with
   [#68](https://github.com/zelytra/Librarius/issues/68) — today the scanner reads the camera
-  through `getUserMedia`, which the WebView grants from the manifest permission — and push
-  with [#69](https://github.com/zelytra/Librarius/issues/69).
+  through `getUserMedia`, which the WebView grants from the manifest permission.
+  `@capacitor/push-notifications` came with [#69](https://github.com/zelytra/Librarius/issues/69):
+  the Android build applies the Google Services plugin only when
+  `android/app/google-services.json` exists (the owner's Firebase project, not committed), so
+  without it the app builds and simply never receives a token; iOS hands out an APNs token FCM
+  does not accept ([#617](https://github.com/zelytra/Librarius/issues/617)).
 - **A Play Console account and a published listing.** The procedure is written down —
   `docs/wiki/Mobile-Android-Play-Store.md`, [#530](https://github.com/zelytra/Librarius/issues/530)
   — but the account, the listing, the screenshots and the privacy policy it requires are the

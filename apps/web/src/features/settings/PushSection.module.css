@@ -1,0 +1,6 @@
+/* #69: why a category could not be switched on — the system refused the permission. */
+.denied {
+  font-size: var(--fs-13);
+  color: var(--rose);
+  margin: 6px 0 0;
+}

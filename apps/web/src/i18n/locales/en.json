@@ -1051,6 +1051,16 @@
     "bottomBar": {
       "title": "Bottom bar (phone)",
       "description": "Pick up to {{max}} pages for the bottom bar; the others stay in \"More\"."
+    },
+    "push": {
+      "title": "Push notifications",
+      "description": "Get what matters on your phone, nothing more. Everything stays off until you switch it on.",
+      "webOnly": "Push notifications are available in the Librarius mobile app.",
+      "releases": "Releases: a volume of the series you follow or own, 7 days ahead and on the day",
+      "wishlist": "Wishlist: a top-priority wish released today",
+      "goal": "Goal: a monthly reminder of your yearly goal",
+      "denied": "Your phone blocks Librarius notifications: allow notifications in its settings, then try again.",
+      "saved": "Notifications saved"
     }
   },
   "report": {
@@ -1744,7 +1754,7 @@
     "bellUnread_other": "Notifications, {{count}} unread",
     "error": "Could not load the notifications.",
     "empty": "No notification yet",
-    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, and of your new followers.",
+    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, of your new followers, and of the volumes announced for the series and authors you follow.",
     "activity": {
       "FINISHED_READING": "{{name}} finished “{{title}}”",
       "WISHLIST_ADDED": "{{name}} added “{{title}}” to their wishlist",
@@ -1761,7 +1771,13 @@
     "followBack": "Follow back",
     "followBackLabel": "Follow {{name}} back",
     "followedBack": "You follow {{name}}",
-    "followingToo": "You follow each other"
+    "followingToo": "You follow each other",
+    "release": {
+      "volume": "Volume {{number}} of “{{series}}”",
+      "series": "A new volume of “{{series}}”",
+      "day": "{{what}} announced for {{date}}",
+      "other": "{{what}} announced — {{date}}"
+    }
   },
   "legal": {
     "nav": "Legal information",
@@ -1777,6 +1793,19 @@
       "decline": "Decline and sign out",
       "accepted": "Thanks, noted.",
       "failed": "Your acceptance could not be saved. Try again."
+    }
+  },
+  "releases": {
+    "title": "Upcoming releases",
+    "curate": {
+      "title": "Announce a French release",
+      "hint": "A checked date, to the day: it replaces whatever was announced for this volume.",
+      "volume": "Volume",
+      "date": "Release date",
+      "publisher": "Publisher",
+      "submit": "Announce",
+      "done": "Release announced",
+      "failed": "The release could not be announced. Try again."
     }
   }
 }

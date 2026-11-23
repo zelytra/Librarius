@@ -62,11 +62,35 @@ public final class ApiDtos {
                         String timeZone, boolean trusted, boolean publicAccount, boolean admin,
                         Long avatarVersion, boolean notifyComments, String country,
                         Integer termsVersion, java.time.OffsetDateTime termsAcceptedAt,
-                        int currentTermsVersion) {
+                        int currentTermsVersion, @NotNull PreferencesDto preferences) {
         public static MeDto of(AppUser u, boolean admin) {
             return new MeDto(u.id, u.email, u.displayName, u.locale, u.timeZone, u.trusted,
                     u.publicAccount, admin, u.avatarVersion, u.notifyComments, u.country,
-                    u.termsVersion, u.termsAcceptedAt, zelytra.librarius.legal.LegalTerms.CURRENT_VERSION);
+                    u.termsVersion, u.termsAcceptedAt, zelytra.librarius.legal.LegalTerms.CURRENT_VERSION,
+                    PreferencesDto.of(u.preferences));
+        }
+    }
+
+    /**
+     * The display preferences that follow the account (#613), in {@code GET /api/me} and as the
+     * body of {@code PATCH /api/me/preferences}, where an absent field keeps the stored value.
+     *
+     * <p>The library kind and the sheet theme are closed sets the API knows. The palette and the
+     * bottom-bar destinations belong to the web app, which re-checks them when it reads them back:
+     * here they are held to the shape of an identifier and of an in-app path, never to a list
+     * that would have to move with every new palette or screen.
+     */
+    public record PreferencesDto(
+            @Pattern(regexp = "[a-z]{1,16}") String theme,
+            @Size(min = 1, max = 4) List<@NotNull @Pattern(regexp = "/[a-z/-]{0,40}") String> bottomBar,
+            @Pattern(regexp = "auto|BOOK|MANGA|COMIC|GRAPHIC_NOVEL|AUDIOBOOK") String libraryKind,
+            @Pattern(regexp = "handwritten|classic|notebook") String sheetTheme) {
+        public static PreferencesDto of(zelytra.librarius.domain.UserPreferences p) {
+            return new PreferencesDto(p.theme(), p.bottomBar(), p.libraryKind(), p.sheetTheme());
+        }
+
+        public zelytra.librarius.domain.UserPreferences toDomain() {
+            return new zelytra.librarius.domain.UserPreferences(theme, bottomBar, libraryKind, sheetTheme);
         }
     }
 
@@ -1147,6 +1171,25 @@ public final class ApiDtos {
         }
     }
 
+    /**
+     * {@code POST /api/admin/releases} (#614): a French release date an admin checked, for one
+     * volume of a run. The market is France and the date is to the day — that is what makes it
+     * worth entering by hand.
+     */
+    public record CurateReleaseDto(@NotNull UUID seriesId, @NotNull @Min(1) Integer volumeNumber,
+            @NotNull LocalDate releaseDate, @Size(max = 255) String publisher,
+            @Size(max = 512) String title) {
+    }
+
+    /** {@code /api/me/push} (#69): the push categories, each off until switched on. */
+    public record PushPrefsDto(@NotNull Boolean releases, @NotNull Boolean wishlist, @NotNull Boolean goal) {
+    }
+
+    /** {@code PUT /api/me/push/devices} (#69): the FCM token of one app install. */
+    public record PushDeviceDto(@NotBlank @Size(max = 4096) String token,
+            @NotNull @Pattern(regexp = "android|ios") String platform) {
+    }
+
     // ── Dashboard layout ──────────────────────────────────────────────────────
 
     /**
@@ -1360,7 +1403,9 @@ public final class ApiDtos {
      */
     public record NotificationDto(UUID id, String type, MemberSummaryDto actor, UUID eventId, String eventType,
             MemberBookDto book, String comment, String emote, java.time.OffsetDateTime createdAt,
-            java.time.OffsetDateTime readAt, boolean followingActor) {
+            java.time.OffsetDateTime readAt, boolean followingActor,
+            /** The announcement a {@code RELEASE} notification is about (#615); {@code null} otherwise. */
+            UpcomingReleaseDto release) {
     }
 
     public record NotificationPageDto(java.util.List<NotificationDto> items, int page, int size, boolean hasMore) {

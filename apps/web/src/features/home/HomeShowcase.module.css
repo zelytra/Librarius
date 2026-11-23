@@ -14,7 +14,7 @@
   gap: 18px;
   padding: 20px;
   border-radius: var(--radius-panel);
-  background: linear-gradient(135deg, var(--tint-sage), var(--surface-2));
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface-2));
   border: 1px solid var(--line);
   overflow: hidden;
 }

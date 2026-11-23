@@ -3,6 +3,8 @@ import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
 import { useProfileLanguage } from './useProfileLanguage';
+import { useProfilePreferences } from './useProfilePreferences';
+import { usePushNotifications } from './usePushNotifications';
 import { Loading } from '../shared/ui/states';
 import { useViewportAtLeast } from '../shared/ui/breakpoints';
 import { AchievementWatcher } from '../shared/AchievementWatcher';
@@ -32,6 +34,8 @@ export function AppShell() {
   useScrollMemory(content);
   // Once the profile is loaded, the account's saved language drives the interface (#75).
   useProfileLanguage();
+  useProfilePreferences();
+  usePushNotifications();
   // Exactly one navigation is mounted: the bar is replaced past --bp-tablet, not stacked
   // with the column or hidden by CSS while still in the accessibility tree.
   const wide = useViewportAtLeast('tablet');

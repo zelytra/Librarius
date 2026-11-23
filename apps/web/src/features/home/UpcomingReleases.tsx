@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Button, SectionHeader } from '../../shared/ui/primitives';
@@ -52,21 +53,38 @@ export function UpcomingReleases({ libraryEmpty }: { libraryEmpty: boolean }) {
   return (
     <section>
       <SectionHeader title={t('home.upcomingReleases.title')} />
-      <div className={styles.list}>
-        {releases.map((release) => (
-          <ReleaseRow key={release.id} release={release} onOpen={() => navigate(`/series/${release.seriesId}`)} />
-        ))}
-      </div>
+      <ReleaseList releases={releases} onOpen={(release) => navigate(`/series/${release.seriesId}`)} />
     </section>
   );
 }
 
-function ReleaseRow({ release, onOpen }: { release: UpcomingReleaseDto; onOpen: () => void }) {
+/**
+ * Announcements as rows, shared by Home, the Series screen and the Author screen (#614). A row
+ * leads to its series when `onOpen` is given; on the Series screen it is already there, and the
+ * row is plain text.
+ */
+export function ReleaseList({
+  releases,
+  onOpen,
+}: {
+  releases: readonly UpcomingReleaseDto[];
+  onOpen?: (release: UpcomingReleaseDto) => void;
+}) {
+  return (
+    <div className={styles.list}>
+      {releases.map((release) => (
+        <ReleaseRow key={release.id} release={release} onOpen={onOpen && (() => onOpen(release))} />
+      ))}
+    </div>
+  );
+}
+
+function ReleaseRow({ release, onOpen }: { release: UpcomingReleaseDto; onOpen?: () => void }) {
   const { t } = useTranslation();
   const volume = releaseVolumeLabel(release, t);
 
   return (
-    <button type="button" onClick={onOpen} className={styles.row}>
+    <Row onClick={onOpen}>
       <div
         className={styles.thumb}
         // The cover is a remote image, known only at render time.
@@ -81,6 +99,17 @@ function ReleaseRow({ release, onOpen }: { release: UpcomingReleaseDto; onOpen: 
         </div>
         <div className={styles.source}>{sourceLabel(release, t)}</div>
       </div>
+    </Row>
+  );
+}
+
+/** A button when the row goes somewhere, a plain block when it does not. */
+function Row({ onClick, children }: { onClick?: () => void; children: ReactNode }) {
+  return onClick ? (
+    <button type="button" onClick={onClick} className={styles.row}>
+      {children}
     </button>
+  ) : (
+    <div className={`${styles.row} ${styles.static}`}>{children}</div>
   );
 }

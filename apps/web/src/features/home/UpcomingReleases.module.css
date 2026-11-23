@@ -23,6 +23,11 @@
   cursor: pointer;
 }
 
+/* A row that goes nowhere (the Series screen's own announcements, #614). */
+.static {
+  cursor: default;
+}
+
 .thumb {
   flex: 0 0 auto;
   width: 40px;

@@ -113,6 +113,15 @@ api:
   agentApiKey:
     secretName: librarius-agent-api-key
     secretKey: api-key
+  # Push notifications (#69): the Firebase service-account key (JSON) the api sends through.
+  # Mounted from this Secret if it exists; while it does not, no push is ever sent and the
+  # chart deploys unchanged. Create it from the key downloaded in the Firebase console, then
+  # restart the api:
+  #   kubectl -n librarius create secret generic librarius-fcm-service-account \
+  #     --from-file=service-account.json=./firebase-key.json
+  fcmServiceAccount:
+    secretName: librarius-fcm-service-account
+    secretKey: service-account.json
 
 # ── Horizontal autoscaling ────────────────────────────────────────────────────
 # Off by default, and that is a statement about the node rather than a

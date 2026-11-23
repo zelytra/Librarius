@@ -72,6 +72,27 @@ describe('notifications', () => {
     expect(screen.getByText('Vous vous suivez')).toBeInTheDocument();
   });
 
+  /** #615: a volume announced for a followed author or series — nobody's doing, it opens the series. */
+  test('announces an upcoming volume, opening its series', async () => {
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({
+        items: [{
+          id: 'n10', type: 'RELEASE', followingActor: false, createdAt: '2026-11-16T12:00:00Z',
+          release: {
+            id: 'r1', seriesId: 'series-1', seriesTitle: 'Vinland Saga', kind: 'MANGA', volumeNumber: 28,
+            releaseDate: '2026-12-10', datePrecision: 'DAY', region: 'FR', source: 'manual', confidence: 'CONFIRMED',
+          },
+        }],
+        page: 0, size: 30, hasMore: false,
+      })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+    );
+    renderWithProviders(<NotificationsPage />);
+
+    const entry = await screen.findByRole('link', { name: /Tome 28 de « Vinland Saga » annoncé pour le 10 décembre 2026/ });
+    expect(entry).toHaveAttribute('href', '/series/series-1');
+  });
+
   test('offers no follow-back to a follower already followed', async () => {
     server.use(
       http.get('*/api/notifications', () => HttpResponse.json({
