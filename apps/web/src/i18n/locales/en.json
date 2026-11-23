@@ -1024,6 +1024,10 @@
       "data": {
         "title": "Data and account",
         "description": "Import, export, empty the library or delete the account."
+      },
+      "help": {
+        "title": "Having trouble?",
+        "description": "Frequent questions and shortcuts to the right screens."
       }
     },
     "backToCategories": "Back to settings",
@@ -1675,92 +1679,6 @@
       "summary_other": "{{members}} members in {{countries}} countries",
       "empty": "No member has given their country yet.",
       "error": "The members' countries could not be loaded."
-    },
-    "catalog": {
-      "edits": "Edits",
-      "reports": "Reports",
-      "filter": "Filter by state",
-      "error": "The list could not be loaded.",
-      "noEdits": "No edit to show.",
-      "noReports": "No report to show.",
-      "editCount_one": "{{count}} edit",
-      "editCount_other": "{{count}} edits",
-      "reportCount_one": "{{count}} report",
-      "reportCount_other": "{{count}} reports",
-      "editFilters": {
-        "PENDING": "To review",
-        "APPLIED": "Applied",
-        "REJECTED": "Declined",
-        "REVERTED": "Reverted"
-      },
-      "editStatus": {
-        "PENDING": "To review",
-        "APPLIED": "Applied",
-        "REJECTED": "Declined",
-        "REVERTED": "Reverted"
-      },
-      "targets": {
-        "EDITION": "Book",
-        "SERIES": "Series"
-      },
-      "by": "Suggested by {{name}}",
-      "gone": "Record deleted",
-      "verification": {
-        "NOT_RUN": "No automatic check: no store link added.",
-        "PASSED": "Checked automatically on the store page",
-        "FAILED": "Automatic check failed: {{reason}}",
-        "reasons": {
-          "FETCH_FAILED": "the store page could not be read.",
-          "ISBN_NOT_FOUND": "the ISBN is not on the page.",
-          "TITLE_NOT_FOUND": "the title is not on the page.",
-          "NO_ISBN": "the book has no ISBN to compare."
-        }
-      },
-      "before": "Before:",
-      "after": "After:",
-      "empty": "(empty)",
-      "changedSince": "Changed since: {{value}}",
-      "reviewNote": "Admin's note: {{note}}",
-      "noteLabel": "Note for the author (optional)",
-      "approve": "Apply",
-      "reject": "Decline",
-      "revert": "Revert the edit",
-      "decided": {
-        "approve": "Edit applied for every reader.",
-        "reject": "Edit declined.",
-        "revert": "Edit reverted: the previous values are back."
-      },
-      "decisionFailed": "The action failed. Try again.",
-      "reportFilters": {
-        "OPEN": "Open",
-        "UPHELD": "Upheld",
-        "DISMISSED": "Dismissed"
-      },
-      "reportStatus": {
-        "OPEN": "Open",
-        "UPHELD": "Upheld",
-        "DISMISSED": "Dismissed"
-      },
-      "reportTargets": {
-        "WORK": "Work",
-        "EDITION": "Edition",
-        "SERIES": "Series",
-        "REVIEW": "Book review",
-        "SERIES_REVIEW": "Series review"
-      },
-      "reportedBy": "Reported by {{name}}",
-      "openSeries": "Open the series",
-      "uphold": "Upheld",
-      "dismiss": "Dismiss",
-      "reportSaved": {
-        "UPHELD": "Report marked upheld.",
-        "DISMISSED": "Report dismissed.",
-        "OPEN": "Report reopened."
-      },
-      "cover": {
-        "before": "Current cover",
-        "after": "Suggested cover"
-      }
     }
   },
   "profile": {
@@ -1886,7 +1804,14 @@
       "REJECTED": "Your edit of “{{title}}” was declined.",
       "REVERTED": "Your edit of “{{title}}” was reverted by an admin.",
       "PENDING": "Your edit of “{{title}}” is waiting for review."
-    }
+    },
+    "deleteOne": "Delete this notification",
+    "deleted": "Notification deleted.",
+    "deleteFailed": "Deleting failed. Try again.",
+    "clearAll": "Delete all",
+    "clearAllTitle": "Delete every notification?",
+    "clearAllText": "They are gone for good; new ones will keep arriving.",
+    "clearedAll": "Every notification is deleted."
   },
   "legal": {
     "nav": "Legal information",
@@ -1969,9 +1894,11 @@
       "pending": "Suggestion sent: an admin will review it.",
       "unverified": "The store could not confirm this book: an admin will review the suggestion.",
       "verified": "The store confirms this book: your edit is applied.",
-      "applied": "Edit applied."
+      "applied": "Edit applied.",
+      "trusted": "Edit applied thanks to your trusted standing."
     },
-    "linkPlaceholder": "https://www.fnac.com/…"
+    "linkPlaceholder": "https://www.fnac.com/…",
+    "trustedNote": "You are a trusted member: your change will apply at once for every reader."
   },
   "saleLinks": {
     "title": "Where to buy it",

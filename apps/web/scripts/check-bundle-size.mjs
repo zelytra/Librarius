@@ -122,6 +122,14 @@ import { fileURLToPath } from 'node:url';
  * page and the acceptance request, all deferred. Measured 389.5 kB, re-derived to the
  * measurement plus ~5%; `initial` (194.4 kB) is untouched, the documents staying out of it.
  *
+ * `total` moves to 435 kB for the batch #627–#631 (2026-11-23): `main` sat at 99% of 410 after the
+ * catalog edits (#618–#621) and the trust override (#625), and the help FAQ (#630) adds 7.1 kB of
+ * questions and answers in both languages, in a chunk of its own loaded when the page opens.
+ * Measured 414.7 kB, re-derived to the measurement plus ~5%. `initial` (198.4 kB) is untouched:
+ * the FAQ and the admin Catalogue tab's copy ride with their own chunks rather than the bundled
+ * French locale. `locale` moves to 22 kB on the way past: the English file measured 19.6 kB,
+ * 98% of 20 — measurement plus ~10%.
+ *
  * Earlier re-derivations, kept because they are the precedent: the react-router 8 and
  * orval 8 upgrade (#157) trimmed both figures, more than @capacitor/core (#154) had
  * added. #146 and #152 did **not** move them — both landed behind the route split, in
@@ -131,12 +139,13 @@ import { fileURLToPath } from 'node:url';
 const BUDGET_KB = {
   initial: 199,
   chunk: 10,
-  total: 410,
+  total: 435,
   // The English locale (#497), fetched on first use: 16.1 kB measured. A whole interface's copy
   // is one file by nature, so it has a budget of its own rather than the per-screen `chunk`.
   // 20 since 2026-11-21: the copy grew with the interface to 18.0 kB, flush on the old 18, with
   // the legal pages' chrome (#74) and the in-app import (#570). Measurement plus ~10%.
-  locale: 20,
+  // 22 since 2026-11-23: 19.6 kB measured with the catalog edits and the trust override.
+  locale: 22,
   // The barcode decoder's loader (#436): `barcode-detector`'s Emscripten glue, 14.7 kB measured.
   // A named exception rather than a raised `chunk` budget, which would loosen every screen's.
   // It is fetched only by a browser with no BarcodeDetector, on the scan screen, and the

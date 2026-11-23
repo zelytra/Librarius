@@ -145,3 +145,45 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Deleting notifications (#629): "Tout supprimer" above the list, a bin beside each entry. */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.delete {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.delete:hover,
+.delete:focus-visible {
+  background: var(--surface-2);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

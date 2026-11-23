@@ -525,7 +525,10 @@ La section « **Où l'acheter** » du formulaire accepte un lien par magasin ver
 chez Amazon, Fnac, Cultura, Decitre, E.Leclerc, Furet du Nord, Gibert ou Rakuten. Ces liens
 apparaissent ensuite sur l'écran du livre, sous forme de boutons « Acheter sur … ».
 
-Une proposition est relue par un administrateur avant d'être appliquée pour tous. Quand tu
+Une proposition est relue par un administrateur avant d'être appliquée pour tous — sauf si tu
+es membre de confiance : ta modification s'applique alors aussitôt, et reste annulable par un
+administrateur. Les paramètres publicitaires d'un lien de magasin (tout ce qui suit le « ? »)
+sont retirés tout seuls. Quand tu
 ajoutes un lien de magasin, Librarius lit la page du magasin : si elle porte bien l'ISBN et le
 titre du livre, ta modification est appliquée aussitôt. Sinon (le magasin bloque la lecture,
 l'ISBN ne correspond pas…), elle attend la relecture comme les autres. Une notification te dit
@@ -546,13 +549,24 @@ chacun a choisi d'indiquer), état de la base de données et de Keycloak.
 
 ## Questions fréquentes
 
+### Comment supprimer mes notifications ?
+
+Dans tes notifications, la corbeille à droite d'une notification la supprime, et « Tout
+supprimer », en haut, les efface toutes après confirmation.
+
+### Où trouver de l'aide dans l'application ?
+
+Réglages › « **Un problème ?** » rassemble les questions fréquentes, avec un bouton vers l'écran
+concerné pour chacune.
+
 ### Comment devient-on « de confiance » ?
 
 Le badge « De confiance » s'obtient tout seul : Librarius le calcule chaque jour à partir de ton
 activité — au moins trois mois d'ancienneté, au moins dix titres marqués lus, et moins de trois
 signalements retenus contre tes contributions sur les six derniers mois. Il se perd de la même
 façon si des signalements contre toi sont retenus. Un administrateur peut aussi l'accorder ou le
-retirer à la main depuis la liste des membres ; ce choix prime alors sur le calcul. Le badge
+retirer à la main depuis la liste des membres ; ce choix prime alors sur le calcul. Un membre de
+confiance voit ses modifications de fiches appliquées aussitôt, sans relecture. Le badge
 s'affiche sur ton profil, et un badge « Admin » sur celui des administrateurs.
 
 ### Pourquoi ce livre est-il introuvable ?

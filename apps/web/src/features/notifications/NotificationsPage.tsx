@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  deleteApiNotifications,
+  deleteApiNotificationsId,
   getApiNotifications,
   getGetApiNotificationsUnreadQueryKey,
   postApiNotificationsRead,
@@ -16,6 +18,7 @@ import { LoginGate } from '../../shared/LoginGate';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Icon } from '../../shared/ui/Icon';
 import { Button, Screen } from '../../shared/ui/primitives';
+import { Modal } from '../../shared/ui/Modal';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { formatReleaseDate } from '../home/releases';
 import styles from './Notifications.module.css';
@@ -73,10 +76,14 @@ function Notifications() {
   }
   return (
     <>
+      <div className={styles.toolbar}>
+        <ClearAll />
+      </div>
       <ul className={styles.list}>
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} className={styles.row}>
             <Entry item={item} />
+            <DeleteOne id={item.id!} />
           </li>
         ))}
       </ul>
@@ -84,6 +91,85 @@ function Notifications() {
         <Button variant="secondary" disabled={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
           {list.isFetchingNextPage ? t('common.loading') : t('feed.more')}
         </Button>
+      )}
+    </>
+  );
+}
+
+/** Reads the list and the bell's count again after a deletion (#629). */
+function useRefreshNotifications() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    void queryClient.invalidateQueries({ queryKey: getGetApiNotificationsUnreadQueryKey() });
+  };
+}
+
+/** Deletes one notification (#629): a quiet button beside it, no confirmation for a single line. */
+function DeleteOne({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const refresh = useRefreshNotifications();
+  const [busy, setBusy] = useState(false);
+  async function remove() {
+    setBusy(true);
+    try {
+      await deleteApiNotificationsId(id);
+      toast.success(t('notifications.deleted'), 'delete');
+      refresh();
+    } catch {
+      toast.error(t('notifications.deleteFailed'));
+      setBusy(false);
+    }
+  }
+  return (
+    <button
+      type="button"
+      className={styles.delete}
+      disabled={busy}
+      aria-label={t('notifications.deleteOne')}
+      onClick={() => void remove()}
+    >
+      <Icon name="delete" size={20} color="var(--ink-soft)" />
+    </button>
+  );
+}
+
+/** Deletes every notification (#629), behind a confirmation: it cannot be undone. */
+function ClearAll() {
+  const { t } = useTranslation();
+  const refresh = useRefreshNotifications();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function clear() {
+    setBusy(true);
+    try {
+      await deleteApiNotifications();
+      toast.success(t('notifications.clearedAll'), 'delete');
+      setAsking(false);
+      refresh();
+    } catch {
+      toast.error(t('notifications.deleteFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <>
+      <Button variant="secondary" size="compact" onClick={() => setAsking(true)}>
+        <Icon name="delete_forever" size={16} color="currentColor" />
+        {t('notifications.clearAll')}
+      </Button>
+      {asking && (
+        <Modal title={t('notifications.clearAllTitle')} description={t('notifications.clearAllText')} onClose={() => setAsking(false)}>
+          <div className={styles.confirm}>
+            <Button variant="primary" size="block" disabled={busy} onClick={() => void clear()}>
+              {t('notifications.clearAll')}
+            </Button>
+            <Button variant="ghost" size="block" onClick={() => setAsking(false)}>
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </Modal>
       )}
     </>
   );

@@ -59,6 +59,10 @@ public class CatalogEdit {
     @Column(name = "verification_url", length = 1024)
     public String verificationUrl;
 
+    /** Applied at once because its author was trusted (#631, V52), not reviewed nor store-checked. */
+    @Column(name = "applied_by_trust", nullable = false)
+    public boolean appliedByTrust;
+
     @Column(name = "reviewer_id", length = 255)
     public String reviewerId;
 

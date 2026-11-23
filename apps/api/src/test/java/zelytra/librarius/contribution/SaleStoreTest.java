@@ -23,6 +23,24 @@ class SaleStoreTest {
         assertEquals(Optional.of(SaleStore.FNAC), SaleStore.of("https://WWW.FNAC.COM/a1"));
     }
 
+    /** #628: a link copied from an ad carries tracking parameters with characters a URI refuses. */
+    private static final String FNAC_AD = "https://www.fnac.com/a22917644/Becky-Chambers-Histoires-de-moine-et-de-robot"
+            + "?oref=00000000-0000-0000-0000-000000000000&storecode=2201&Origin=SEA_GOOGLE_PLA_BOOKS"
+            + "&esl-k=sem-google|nx|c|m|k|p|t|dc|a20111491090|g20111491090&gclsrc=aw.ds&gad_source=1"
+            + "&gad_campaignid=19663887777&gclid=CjwKCAiA5Y_YBhBbEiwAK5Dl7XQ8XEU8qempIAJdAc1isYiocFItTpP21rxQYiqBx2Ucz0qdN19P9xoCQpIQAvD_BwE";
+
+    @Test
+    void aLinkIsCleanedToThePageAddress() {
+        assertEquals(Optional.of("https://www.fnac.com/a22917644/Becky-Chambers-Histoires-de-moine-et-de-robot"),
+                SaleStore.clean(FNAC_AD));
+        assertEquals(Optional.of(SaleStore.FNAC), SaleStore.of(FNAC_AD));
+        assertEquals(Optional.of("https://www.amazon.fr/dp/2070612880"), SaleStore.clean(" https://WWW.Amazon.fr/dp/2070612880#reviews "));
+        assertEquals(Optional.of("https://www.decitre.fr/"), SaleStore.clean("https://www.decitre.fr?x=1"));
+        // A tracking parameter cannot carry an unknown host past the check.
+        assertEquals(Optional.empty(), SaleStore.clean("https://evil.test/?u=https://www.fnac.com/a1"));
+        assertEquals(Optional.empty(), SaleStore.clean("https://evil.test#www.fnac.com"));
+    }
+
     @Test
     void refusesAnythingElse() {
         for (String url : new String[] {

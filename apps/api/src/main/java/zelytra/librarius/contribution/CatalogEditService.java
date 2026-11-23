@@ -50,8 +50,8 @@ import java.util.UUID;
  * Member edits of the shared catalog (#618), the sale links they carry (#619), and the
  * automatic check against a store page (#620).
  *
- * <p>A proposal is the diff of what it changes. It waits for an admin — unless an admin wrote
- * it, or it adds a sale link whose store page confirms the book (ISBN and title), in which case
+ * <p>A proposal is the diff of what it changes. It waits for an admin — unless an admin or a
+ * trusted member (#631) wrote it, or it adds a sale link whose store page confirms the book (ISBN and title), in which case
  * it is applied at once and still listed for the admins to see, and revert if need be.
  *
  * <p>The store page is fetched outside any transaction: a slow store must not hold a database
@@ -134,13 +134,14 @@ public class CatalogEditService {
      * that changes nothing; 404 on an unknown record; 409 when the member already has one
      * pending on it, or when a series would take the title of another.
      */
-    public CatalogEditDto submit(String submitterId, boolean admin, CatalogEditCreateDto dto) {
+    public CatalogEditDto submit(String submitterId, boolean admin, boolean trusted, CatalogEditCreateDto dto) {
         Prepared prepared = QuarkusTransaction.requiringNew().call(() -> prepare(submitterId, dto));
 
         VerificationOutcome verification = VerificationOutcome.NOT_RUN;
         String detail = null;
         String checkedUrl = null;
-        if (!admin && !prepared.addedLinks().isEmpty()) {
+        // A trusted member's proposal applies on their standing (#631): no store page to read.
+        if (!admin && !trusted && !prepared.addedLinks().isEmpty()) {
             verification = VerificationOutcome.FAILED;
             for (String url : prepared.addedLinks()) {
                 checkedUrl = url;
@@ -154,7 +155,7 @@ public class CatalogEditService {
         VerificationOutcome outcome = verification;
         String why = detail;
         String url = checkedUrl;
-        return QuarkusTransaction.requiringNew().call(() -> record(submitterId, admin, dto, prepared, outcome, why, url));
+        return QuarkusTransaction.requiringNew().call(() -> record(submitterId, admin, trusted, dto, prepared, outcome, why, url));
     }
 
     /** What a proposal changes, and what the store check needs to know about the book. */
@@ -218,7 +219,7 @@ public class CatalogEditService {
         }
     }
 
-    private CatalogEditDto record(String submitterId, boolean admin, CatalogEditCreateDto dto, Prepared prepared,
+    private CatalogEditDto record(String submitterId, boolean admin, boolean trusted, CatalogEditCreateDto dto, Prepared prepared,
             VerificationOutcome verification, String detail, String url) {
         // Re-checked in this transaction: the first one ended before the store was fetched.
         if (edits.hasPending(submitterId, dto.targetType(), dto.targetId())) {
@@ -232,7 +233,8 @@ public class CatalogEditService {
         edit.verification = verification;
         edit.verificationDetail = verification == VerificationOutcome.FAILED ? detail : null;
         edit.verificationUrl = url;
-        if (admin || verification == VerificationOutcome.PASSED) {
+        if (admin || trusted || verification == VerificationOutcome.PASSED) {
+            edit.appliedByTrust = !admin && trusted;
             apply(edit, prepared.changes(), true);
             edit.status = CatalogEditStatus.APPLIED;
             edit.reviewedAt = OffsetDateTime.now();
@@ -347,9 +349,10 @@ public class CatalogEditService {
     private static List<String> canonicalLinks(List<String> raw) {
         Map<SaleStore, String> byStore = new LinkedHashMap<>();
         for (String link : raw) {
-            String url = link.trim();
-            SaleStore store = SaleStore.of(url)
-                    .orElseThrow(() -> new BadRequestException("Not a page of a known store: " + url));
+            // Stored, compared and fetched without its tracking parameters (#628).
+            String url = SaleStore.clean(link)
+                    .orElseThrow(() -> new BadRequestException("Not a page of a known store: " + link.trim()));
+            SaleStore store = SaleStore.of(url).orElseThrow();
             if (byStore.put(store, url) != null) {
                 throw new BadRequestException("Only one link per store: " + store);
             }
@@ -396,6 +399,7 @@ public class CatalogEditService {
         }
         return new CatalogEditDto(edit.id, edit.targetType.name(), edit.targetId, title, cover,
                 edit.status.name(), edit.verification.name(), edit.verificationDetail, edit.verificationUrl,
+                edit.appliedByTrust,
                 member(edit.submitterId), member(edit.reviewerId), edit.reviewNote, changes,
                 edit.createdAt, edit.reviewedAt);
     }

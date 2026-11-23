@@ -13,8 +13,12 @@ it starts — so a session cut short, or a fix that misses part of the request, 
 - Search for an existing issue first; comment on it rather than opening a duplicate.
 - The issue states the report in the owner's terms, the cause once it is known, what is
   expected, and how it will be checked.
-- A request that is ambiguous is still recorded; the reading taken is written in the issue
-  and repeated to the owner.
+- **A spec that is unclear, imprecise or improvable is clarified first** (#627): ask the person
+  you are working with — a few targeted questions, each with its options and a recommended
+  default — before any work starts, and write the answers into the issue. Ask only what the
+  code, the docs or a sensible default cannot settle; when nothing needs asking, carry out the
+  task normally. A request that is still ambiguous after that is recorded with the reading
+  taken, written in the issue and repeated to the owner.
 - A part of a request that is left out is split into its own issue, never dropped silently.
 - **Every issue is labelled when it is written** ([#540](https://github.com/zelytra/Librarius/issues/540)):
   one priority, one type and every area it touches — the set is in

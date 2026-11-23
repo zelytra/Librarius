@@ -42,6 +42,23 @@ public class NotificationResource {
         return new UnreadCountDto(notifications.unread(currentUser.id()));
     }
 
+    /** Deletes one of the caller's notifications (#629). 204; 404 when it is not theirs. */
+    @jakarta.ws.rs.DELETE
+    @Path("/{id}")
+    public void delete(@jakarta.ws.rs.PathParam("id") java.util.UUID id) {
+        currentUser.require();
+        if (!notifications.delete(currentUser.id(), id)) {
+            throw new jakarta.ws.rs.NotFoundException();
+        }
+    }
+
+    /** Deletes every notification of the caller (#629). 204. */
+    @jakarta.ws.rs.DELETE
+    public void deleteAll() {
+        currentUser.require();
+        notifications.deleteAll(currentUser.id());
+    }
+
     /** Marks every notification read. 204. */
     @POST
     @Path("/read")

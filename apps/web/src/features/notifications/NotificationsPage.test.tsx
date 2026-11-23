@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
 import { http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
+import { Toaster } from '../../shared/ui/Toaster';
 
 vi.mock('react-oidc-context', () => import('../../test/oidcMock'));
 
@@ -72,6 +73,39 @@ describe('notifications', () => {
     expect(within(rejected).getByText('« Déjà juste. »')).toBeInTheDocument();
     // Not in the library: nothing to open, the news is still told.
     expect(screen.getByText('Ta modification de « Hypérion » a été annulée par un administrateur.')).toBeInTheDocument();
+  });
+
+  /** #629: deleting a notification, or all of them behind a confirmation. */
+  test('deletes one notification, then all of them once confirmed', async () => {
+    let items = [...ITEMS];
+    const deleted: string[] = [];
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({ items, page: 0, size: 30, hasMore: false })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+      http.delete('*/api/notifications/:id', ({ params }) => {
+        deleted.push(String(params.id));
+        items = items.filter((item) => item.id !== params.id);
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.delete('*/api/notifications', () => {
+        deleted.push('ALL');
+        items = [];
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderWithProviders(<><NotificationsPage /><Toaster /></>);
+
+    const first = (await screen.findByRole('link', { name: /Bob a terminé « Dune »/ })).closest('li')!;
+    await userEvent.click(within(first).getByRole('button', { name: 'Supprimer cette notification' }));
+    await waitFor(() => expect(deleted).toEqual(['n1']));
+    await waitFor(() => expect(screen.queryByRole('link', { name: /Bob a terminé « Dune »/ })).not.toBeInTheDocument());
+    expect(await screen.findByText('Notification supprimée.')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Tout supprimer' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Supprimer toutes les notifications ?' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Tout supprimer' }));
+    await waitFor(() => expect(deleted).toEqual(['n1', 'ALL']));
+    expect(await screen.findByText('Aucune notification pour l’instant')).toBeInTheDocument();
   });
 
   /** #544: a new follower — their profile one tap away, and a way to follow them back. */

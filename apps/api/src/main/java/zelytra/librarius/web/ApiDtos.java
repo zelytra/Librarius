@@ -1311,7 +1311,9 @@ public final class ApiDtos {
      */
     public record CatalogEditDto(UUID id, String targetType, UUID targetId, String targetTitle,
             String targetCoverUrl, String status, String verification, String verificationDetail,
-            String verificationUrl, MemberSummaryDto submitter, MemberSummaryDto reviewer,
+            String verificationUrl,
+            /** Applied at once on its author's trusted standing (#631). */
+            boolean appliedByTrust, MemberSummaryDto submitter, MemberSummaryDto reviewer,
             String reviewNote, java.util.List<FieldChangeDto> changes,
             java.time.OffsetDateTime createdAt, java.time.OffsetDateTime reviewedAt) {
     }

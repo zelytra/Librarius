@@ -30,6 +30,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/users/{id}/block` | Unblock another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
+| DELETE | `/api/notifications/{id}` | Deletes one of the caller's notifications (#629) — 204; 404 for an unknown id or another member's |
+| DELETE | `/api/notifications` | Deletes every notification of the caller (#629) — 204 |
 | GET | `/api/catalog-edits/fields?targetType=&targetId=` | The edit form's starting point (#618): `CatalogEditFieldsDto(fields: name → canonical value, saleLinks, pendingByMe)`; 404 unknown record — see [Catalog edits](#catalog-edits) |
 | POST | `/api/catalog-edits` | `CatalogEditCreateDto(targetType EDITION\|SERIES, targetId, fields, saleLinks?)` → 201 `CatalogEditDto` |
 | GET | `/api/editions/{id}/sale-links` | `SaleLinkDto(store, url)[]` (#619), for any member; 404 unknown edition |
@@ -1029,8 +1031,11 @@ value differs, each `{before, after}` — and a proposal changing nothing is a 4
 
 `saleLinks` (#619) is the full new list of an edition's store pages: `contribution.SaleStore`
 recognises the store by host (exact domain or a subdomain, https, no user info, no port) on a
-closed list, one link per store, 400 otherwise. A proposal is applied at once when its author is
-an admin, or (#620) when one of the links it **adds** passes `StorePageCheck` — the page, fetched
+closed list, one link per store, 400 otherwise. `SaleStore.clean` keeps only `https://host/path`
+(#628): the query string and the fragment — ad tracking, whose raw `|` a `java.net.URI` refuses —
+are dropped before the host is checked, and the cleaned address is what is stored and fetched. A proposal is applied at once when its author is
+an admin or a trusted member (#631 — `appliedByTrust` on the DTO, revertable like any applied one),
+or (#620) when one of the links it **adds** passes `StorePageCheck` — the page, fetched
 by `JsoupStorePageFetcher` outside any transaction (6 s timeout, 3 MB cap, redirects followed by
 hand and only while they stay on a known store), carries the proposed-or-current ISBN-13/10 as a
 whole number and the folded title. Otherwise it is `PENDING`, with `verification` `FAILED` and

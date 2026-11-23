@@ -228,7 +228,9 @@ The full inventory, one shelf per support type.
   [#618](https://github.com/zelytra/Librarius/issues/618)): beside the report entry, on Detail
   and on Series, a form seeded with the shared record's current values — the work's and this
   edition's fields on a book, the series' own on a series — sends only what changed. It waits for
-  an admin's review, unless the author is an admin; the author is notified of the decision
+  an admin's review, unless the author is an admin or a trusted member
+  ([#631](https://github.com/zelytra/Librarius/issues/631)), whose change applies at once and stays
+  revertable by an admin; the author is notified of the decision
   (accepted, declined, reverted, with the admin's note). One pending proposal per member per
   record.
 - ✅ **Where to buy it** (*"Où l'acheter"*, [#619](https://github.com/zelytra/Librarius/issues/619)):

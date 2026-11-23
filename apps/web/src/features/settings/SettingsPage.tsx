@@ -27,6 +27,8 @@ const SheetSection = lazy(() => import('./SheetSection').then((m) => ({ default:
 // The imports, the export and the two destructive actions: the heaviest category, and the one
 // opened least, in a chunk of its own.
 const DataCategory = lazy(() => import('./DataCategory').then((m) => ({ default: m.DataCategory })));
+// The FAQ (#630) carries its own words: a chunk of its own, read rarely.
+const HelpCategory = lazy(() => import('../help/HelpCategory').then((m) => ({ default: m.HelpCategory })));
 
 // Stamped at build time by the image build (`VITE_APP_VERSION`, see apps/web/Dockerfile):
 // a released image carries its semantic version, a staging one the commit it was built
@@ -44,6 +46,7 @@ const SETTINGS_CATEGORIES = [
   { id: 'appearance', icon: 'tune' },
   { id: 'community', icon: 'group' },
   { id: 'data', icon: 'download' },
+  { id: 'help', icon: 'info' },
 ] as const;
 
 type SettingsCategory = (typeof SETTINGS_CATEGORIES)[number]['id'];
@@ -197,6 +200,7 @@ const CATEGORY_CONTENT: Record<SettingsCategory, ComponentType> = {
   appearance: AppearanceCategory,
   community: CommunityCategory,
   data: DataCategory,
+  help: HelpCategory,
 };
 
 export function SettingsPage() {

@@ -218,6 +218,23 @@ public class NotificationService {
                 .executeUpdate();
     }
 
+    /** Deletes one of {@code userId}'s notifications (#629); false when it is not theirs. */
+    @Transactional
+    public boolean delete(String userId, UUID id) {
+        return em.createNativeQuery("delete from notification where id = :id and user_id = :user")
+                .setParameter("id", id)
+                .setParameter("user", userId)
+                .executeUpdate() > 0;
+    }
+
+    /** Deletes every notification of {@code userId} (#629). */
+    @Transactional
+    public void deleteAll(String userId) {
+        em.createNativeQuery("delete from notification where user_id = :user")
+                .setParameter("user", userId)
+                .executeUpdate();
+    }
+
     /** Switches a follow's notifications; false when the caller does not follow the member. */
     @Transactional
     public boolean setFollowNotify(String followerId, String followeeId, boolean notify) {

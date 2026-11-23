@@ -124,6 +124,19 @@ describe('CatalogEditButton', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
+  /** #631: a trusted member's change applies straight away, and the form says so beforehand. */
+  test('tells a trusted member their change applies at once', async () => {
+    serves(FIELDS, { status: 'APPLIED', verification: 'NOT_RUN', appliedByTrust: true });
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'bob', trusted: true })));
+    const dialog = await open();
+
+    expect(await dialog.findByText('Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs.'))
+      .toBeInTheDocument();
+    await userEvent.type(dialog.getByLabelText('Genres'), 'Conte');
+    await userEvent.click(dialog.getByRole('button', { name: 'Envoyer la proposition' }));
+    expect(await screen.findByText('Modification appliquée grâce à ton statut de confiance.')).toBeInTheDocument();
+  });
+
   test('tells a member whose proposal is already waiting', async () => {
     serves({ ...FIELDS, pendingByMe: true });
     const dialog = await open();

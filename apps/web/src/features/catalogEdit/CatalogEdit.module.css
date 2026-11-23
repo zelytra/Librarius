@@ -150,3 +150,14 @@ textarea.input {
 .srOnly {
   composes: srOnly from '../../shared/ui/states.module.css';
 }
+
+/* A trusted member's change applies at once (#631): said up front, on the trusted tint. */
+.trustedNote {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--tint-sage);
+  color: var(--tint-sage-ink);
+  font-size: var(--fs-13);
+  line-height: 1.45;
+}

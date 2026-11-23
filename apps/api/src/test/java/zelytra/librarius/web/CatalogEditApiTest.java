@@ -265,6 +265,32 @@ class CatalogEditApiTest {
         assertNotNull(adminEntry(edit, "APPLIED"));
     }
 
+    /** #631: a trusted member changes the record at once; an admin can still revert it. */
+    @Test
+    void aTrustedMembersProposalAppliesAtOnceAndStaysRevertable() {
+        String bobId = given().auth().oauth2(token("bob")).when().get("/api/me").then().statusCode(200).extract().path("id");
+        String title = "Edit - trusted " + UUID.randomUUID();
+        String item = addBook("bob", title, randomIsbn());
+        given().auth().oauth2(token("alice")).contentType("application/json").body(Map.of("mode", "TRUSTED"))
+                .when().put("/api/admin/users/" + bobId + "/trust").then().statusCode(204);
+        try {
+            String edit = propose("bob", proposal("EDITION", editionOf("bob", item), Map.of("title", "Trusted " + title), null))
+                    .statusCode(201).body("status", is("APPLIED")).extract().path("id");
+            assertEquals("Trusted " + title, book("bob", item).getString("book.title"));
+            Map<String, Object> entry = adminEntry(edit, "APPLIED");
+            assertEquals(true, entry.get("appliedByTrust"));
+
+            decide("alice", edit, "revert", null).statusCode(200);
+            assertEquals(title, book("bob", item).getString("book.title"));
+        } finally {
+            given().auth().oauth2(token("alice")).contentType("application/json").body(Map.of("mode", "AUTO"))
+                    .when().put("/api/admin/users/" + bobId + "/trust").then().statusCode(204);
+        }
+        // Back to automatic, bob (a fresh account) is not trusted: his next proposal waits.
+        propose("bob", proposal("EDITION", editionOf("bob", item), Map.of("publisher", "Waits"), null))
+                .statusCode(201).body("status", is("PENDING"));
+    }
+
     @Test
     void onlyAnAdminReviews() {
         String edit = proposeEdition("bob", editionOf("bob", addBook("bob", "Edit - 403 " + UUID.randomUUID(), randomIsbn())),
@@ -314,6 +340,18 @@ class CatalogEditApiTest {
         // One link per store.
         propose("bob", proposal("EDITION", edition, Map.of(),
                 List.of("https://www.fnac.com/a1", "https://livre.fnac.com/a2"))).statusCode(400);
+    }
+
+    /** #628: a link with ad-tracking parameters is accepted, and stored without them. */
+    @Test
+    void aStoreLinkIsStoredWithoutItsTrackingParameters() {
+        String edition = editionOf("alice", addBook("alice", "Edit - tracking " + UUID.randomUUID(), randomIsbn()));
+        String tracked = "https://www.fnac.com/a22917644/Becky-Chambers?oref=0&esl-k=sem-google|nx|c|m&gclid=Cj0K";
+
+        propose("alice", proposal("EDITION", edition, Map.of(), List.of(tracked))).statusCode(201);
+
+        given().auth().oauth2(token("bob")).when().get("/api/editions/" + edition + "/sale-links")
+                .then().statusCode(200).body("url", hasItem("https://www.fnac.com/a22917644/Becky-Chambers"));
     }
 
     @Test

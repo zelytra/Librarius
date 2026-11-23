@@ -1,0 +1,135 @@
+{
+  "intro": "The questions we are asked most. Tap a question to read the answer; a button takes you straight to the screen concerned when there is one.",
+  "sections": {
+    "start": "Getting started",
+    "library": "Your library",
+    "catalog": "Correcting a book",
+    "trust": "Trusted standing",
+    "social": "Readers and notifications",
+    "account": "Your account and data"
+  },
+  "actions": {
+    "search": "Search for a book",
+    "scan": "Scan a barcode",
+    "import": "Import my library",
+    "library": "Open my library",
+    "categories": "Manage my categories",
+    "wishlist": "Open my wishlist",
+    "goal": "Set my goal",
+    "profile": "My profile",
+    "people": "Find readers",
+    "community": "Blocked members",
+    "notifications": "Open my notifications",
+    "data": "My data"
+  },
+  "questions": {
+    "add": {
+      "q": "How do I add a book?",
+      "a": "Search for it by title, author or ISBN in “Add a book”, then pick its status. You can also scan the barcode on the back of the book with the camera."
+    },
+    "notFound": {
+      "q": "My book cannot be found, what now?",
+      "a": "Try the ISBN (13 digits on the back), or the title alone without its subtitle. If no catalog has it, “Add manually”, under the results, lets you type it in yourself."
+    },
+    "import": {
+      "q": "How do I bring my Booknode, Babelio or Mangacollec library?",
+      "a": "In Settings › Data and account, pick your source: by username for Booknode, or with the in-browser collector for Babelio and Mangacollec. A CSV file (from Goodreads, for instance) works too. An import never creates a duplicate."
+    },
+    "scanCamera": {
+      "q": "The scanner does not read the barcode.",
+      "a": "Allow camera access, light the code well and hold the book about ten centimeters away. If nothing works, type the ISBN in the search instead."
+    },
+    "statuses": {
+      "q": "What is the difference between “To read”, “Reading”, “Read” and “Abandoned”?",
+      "a": "The status says where you are in your reading. Ownership (on the shelf, borrowed, ebook, wish…) is another piece of information, picked separately on the book's screen: a borrowed book can perfectly well be “Read”."
+    },
+    "edition": {
+      "q": "It is not the right edition (cover, publisher, pages).",
+      "a": "On the book's screen, the other editions section lets you pick the one you own. Your status, rating, review and progress are kept."
+    },
+    "pages": {
+      "q": "Why does the page count show “≈”?",
+      "a": "When no catalog knows the length, Librarius estimates it (the series average, or a typical length for the kind). Enter the real count on the book's screen: it will count in your statistics and your goal."
+    },
+    "categories": {
+      "q": "What are Platine, Or, Argent, Bronze for?",
+      "a": "They are your ranking categories: they say what you thought of a book, whatever its status. You can create others, with their own color."
+    },
+    "series": {
+      "q": "How do I see the volumes I am missing?",
+      "a": "Open the series from one of its volumes: the grid shows each volume, read, owned or missing. A missing volume goes to your wishlist in one tap, and following the series tells you about its releases."
+    },
+    "wishlist": {
+      "q": "How does the wishlist work?",
+      "a": "Add a book as a wish with a priority and an estimated price: the budget adds up on its own. When you buy it, “I bought it” moves it into your library."
+    },
+    "goal": {
+      "q": "How do I set a reading goal?",
+      "a": "In Settings › Reading, pick a goal for the year, in books or pages, per kind of book. Home shows the gauge and the pace to keep."
+    },
+    "wrongInfo": {
+      "q": "Some information about a book is wrong.",
+      "a": "At the foot of the book's screen, “Suggest an edit” opens the whole record: correct what needs it and send. You can also just “Report an error” to warn the admins without correcting it yourself."
+    },
+    "saleLinks": {
+      "q": "How do I add a link to buy the book?",
+      "a": "In “Suggest an edit”, under “Where to buy it”, paste the address of the book's page at Amazon, Fnac, Cultura, Decitre, E.Leclerc, Furet du Nord, Gibert or Rakuten (one link per store). Advertising parameters are removed on their own. When the store page confirms the ISBN and the title, your edit is applied at once."
+    },
+    "editPending": {
+      "q": "My edit does not show yet.",
+      "a": "It is waiting for an admin's review, unless you are a trusted member or a store link confirmed it. A notification will tell you whether it was accepted or declined. You can have only one suggestion waiting per record."
+    },
+    "trustHow": {
+      "q": "How does one become “trusted”?",
+      "a": "Librarius computes it every day from your activity: at least three months of tenure, at least ten titles marked read, and fewer than three upheld reports against your contributions over the last six months. An admin can also grant it by hand. There is nothing to ask for or tick."
+    },
+    "trustGives": {
+      "q": "What does trusted standing change?",
+      "a": "Your edits of book and series records apply at once for every reader, without waiting for a review. The admins still see them and can revert them. The “Trusted” badge shows next to your name on your profile."
+    },
+    "trustLost": {
+      "q": "Can trusted standing be lost?",
+      "a": "Yes: with too many upheld reports against your contributions, or if an admin withdraws it. It is not a permanent sanction: it comes back once the conditions are met again, unless an admin withdrew it by hand."
+    },
+    "admin": {
+      "q": "What does the “Admin” badge mean?",
+      "a": "This member runs Librarius: they review edits and reports, and answer the problems sent from the app."
+    },
+    "visibility": {
+      "q": "Who sees my readings and reviews?",
+      "a": "By default, only readers you follow mutually see your readings and shared reviews. Make your account public in your profile to show them to every member. A rating or review stays private until you tick “Share”."
+    },
+    "follow": {
+      "q": "How do I follow another reader?",
+      "a": "Search for them by name in “Find readers”, open their profile and tap “Follow”. Once you follow each other, you see each other's readings."
+    },
+    "block": {
+      "q": "How do I block someone?",
+      "a": "On their profile, “Block”: you no longer see each other's readings, reviews and comments, and they can no longer follow you. They are not told. You unblock them in Settings › Community."
+    },
+    "notifications": {
+      "q": "What am I notified about?",
+      "a": "The activity of the readers you follow, reactions and comments on yours, new followers, volumes announced for the series and authors you follow, and the decision on your record edits. Phone notifications are picked in Settings › Community."
+    },
+    "notificationsDelete": {
+      "q": "How do I delete my notifications?",
+      "a": "In your notifications, the bin on the right of a notification deletes it; “Delete all”, at the top, clears them all after a confirmation."
+    },
+    "export": {
+      "q": "How do I get my data back?",
+      "a": "In Settings › Data and account, “Export my data”: the JSON file holds everything and can be imported again, the CSV opens in a spreadsheet."
+    },
+    "deleteAccount": {
+      "q": "How do I delete my account?",
+      "a": "In Settings › Data and account, “Delete my account” erases your library, readings, wishes and login, for good. Export your data first if you want to keep it. You can also just empty your library and keep your account."
+    },
+    "language": {
+      "q": "How do I change the language or my name?",
+      "a": "In Settings › Profile: your display name, your language (French or English), your time zone and your picture."
+    },
+    "problem": {
+      "q": "Something does not work, how do I report it?",
+      "a": "The round button at the bottom right of every screen opens “Report a problem”: describe what happens, the useful technical details are attached to help reproduce it. Your message goes to the admins, and to them only."
+    }
+  }
+}

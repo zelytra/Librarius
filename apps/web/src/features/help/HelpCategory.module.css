@@ -1,0 +1,104 @@
+/* The FAQ of Settings (#630): themes, then questions folded behind <summary>. */
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.intro {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  margin: 0 0 2px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-17);
+  font-weight: 600;
+}
+
+.item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.question {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.question::-webkit-details-marker {
+  display: none;
+}
+
+.question:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+.item[open] .question > :last-child {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .question > :last-child {
+    transition: transform 160ms ease-out;
+  }
+}
+
+.answer {
+  padding: 0 14px 12px;
+  font-size: var(--fs-14);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.answer p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.action {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-round);
+  background: var(--surface-2);
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}

@@ -3415,6 +3415,24 @@
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
+      },
+      "delete" : {
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Delete All",
+        "tags" : [ "Notification Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/api/notifications/read" : {
@@ -3458,6 +3476,34 @@
           }
         },
         "summary" : "Unread",
+        "tags" : [ "Notification Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/notifications/{id}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Delete",
         "tags" : [ "Notification Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -5621,6 +5667,9 @@
           },
           "verificationUrl" : {
             "type" : "string"
+          },
+          "appliedByTrust" : {
+            "type" : "boolean"
           },
           "submitter" : {
             "$ref" : "#/components/schemas/MemberSummaryDto"
