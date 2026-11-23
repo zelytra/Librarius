@@ -784,7 +784,8 @@ function DetailContent({ id }: { id: string }) {
   const filedUnder = cats.find((c) => c.code === item?.rankCode)?.id;
 
   const workId = item?.book?.workId;
-  const readersReviews = useGetApiWorksIdReviews(workId ?? '');
+  // Waits for the item: an empty identifier would ask for `/works//reviews` and get a 404 (#623).
+  const readersReviews = useGetApiWorksIdReviews(workId ?? '', { query: { enabled: Boolean(workId) } });
   const [editionError, setEditionError] = useState<string | null>(null);
   /** Which end-of-reading sheet is open, if any. Null is the ordinary state of the screen. */
   const [outcome, setOutcome] = useState<Outcome | null>(null);

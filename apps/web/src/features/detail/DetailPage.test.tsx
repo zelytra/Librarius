@@ -292,6 +292,22 @@ describe('DetailPage', () => {
     expect(urls.some((url) => url.endsWith('/api/library/item-1'))).toBe(true);
   });
 
+  /** #623: the readers' reviews wait for the work identifier instead of asking `/works//reviews`. */
+  test('asks for no readers reviews before the work is known', async () => {
+    libraryItemReturns(ITEM);
+    const urls: string[] = [];
+    const record = ({ request }: { request: Request }) => void urls.push(request.url);
+    server.events.on('request:start', record);
+    try {
+      renderDetail();
+      await screen.findByRole('heading', { name: 'Le Nom du vent' });
+    } finally {
+      server.events.removeListener('request:start', record);
+    }
+
+    expect(urls.filter((url) => url.includes('/api/works//reviews'))).toEqual([]);
+  });
+
   /**
    * `BookView` carries the series title but no identifier, so the way into the series
    * screen is resolved against the series the user has a stake in.
