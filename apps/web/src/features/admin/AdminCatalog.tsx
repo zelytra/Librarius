@@ -186,6 +186,14 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
 /** Whether a store page was read, and what it said — told whatever the outcome (#620). */
 function Verification({ edit }: { edit: CatalogEditDto }) {
   const { t } = useTranslation();
+  if (edit.appliedByTrust) {
+    return (
+      <p className={`${styles.verification} ${styles.passed}`}>
+        <Icon name="workspace_premium" size={16} color="currentColor" />
+        <span>{t('admin.catalog.appliedByTrust')}</span>
+      </p>
+    );
+  }
   if (edit.verification === 'NOT_RUN') {
     return <p className={styles.verification}>{t('admin.catalog.verification.NOT_RUN')}</p>;
   }

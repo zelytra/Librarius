@@ -1760,7 +1760,8 @@
       "cover": {
         "before": "Couverture actuelle",
         "after": "Couverture proposée"
-      }
+      },
+      "appliedByTrust": "Appliquée directement : l’auteur est membre de confiance."
     }
   },
   "profile": {
@@ -1886,7 +1887,14 @@
       "REJECTED": "Ta modification de « {{title}} » a été refusée.",
       "REVERTED": "Ta modification de « {{title}} » a été annulée par un administrateur.",
       "PENDING": "Ta modification de « {{title}} » attend d’être relue."
-    }
+    },
+    "deleteOne": "Supprimer cette notification",
+    "deleted": "Notification supprimée.",
+    "deleteFailed": "La suppression a échoué. Réessaie.",
+    "clearAll": "Tout supprimer",
+    "clearAllTitle": "Supprimer toutes les notifications ?",
+    "clearAllText": "Elles disparaissent pour de bon ; les nouvelles continueront d’arriver.",
+    "clearedAll": "Toutes les notifications sont supprimées."
   },
   "legal": {
     "nav": "Informations légales",
@@ -1969,9 +1977,11 @@
       "pending": "Proposition envoyée : un administrateur va la relire.",
       "unverified": "Le magasin n’a pas pu confirmer ce livre : un administrateur va relire la proposition.",
       "verified": "Le magasin confirme ce livre : ta modification est appliquée.",
-      "applied": "Modification appliquée."
+      "applied": "Modification appliquée.",
+      "trusted": "Modification appliquée grâce à ton statut de confiance."
     },
-    "linkPlaceholder": "https://www.fnac.com/…"
+    "linkPlaceholder": "https://www.fnac.com/…",
+    "trustedNote": "Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs."
   },
   "saleLinks": {
     "title": "Où l'acheter",

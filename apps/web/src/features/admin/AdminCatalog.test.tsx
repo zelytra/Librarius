@@ -137,6 +137,19 @@ describe('AdminPage — catalogue', () => {
     expect(await screen.findByText('Signalement marqué fondé.')).toBeInTheDocument();
   });
 
+  /** #631: an edit a trusted member applied says so, and can be reverted like any applied one. */
+  test('marks an edit applied on its author\'s trusted standing', async () => {
+    server.use(http.get('*/api/admin/catalog-edits', () => HttpResponse.json({
+      page: 0, size: 50, total: 1,
+      items: [{ ...VERIFIED, id: 'ce9', verification: 'NOT_RUN', verificationUrl: null, appliedByTrust: true }],
+    })));
+    renderCatalog();
+
+    const card = within((await screen.findByRole('heading', { name: 'Hypérion' })).closest('article')!);
+    expect(card.getByText('Appliquée directement : l’auteur est membre de confiance.')).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Annuler la modification' })).toBeInTheDocument();
+  });
+
   test('says so when nothing waits', async () => {
     server.use(http.get('*/api/admin/catalog-edits', () => HttpResponse.json({ page: 0, size: 50, total: 0, items: [] })));
     renderCatalog();

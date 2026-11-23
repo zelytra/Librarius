@@ -1760,7 +1760,8 @@
       "cover": {
         "before": "Current cover",
         "after": "Suggested cover"
-      }
+      },
+      "appliedByTrust": "Applied straight away: the author is a trusted member."
     }
   },
   "profile": {
@@ -1886,7 +1887,14 @@
       "REJECTED": "Your edit of “{{title}}” was declined.",
       "REVERTED": "Your edit of “{{title}}” was reverted by an admin.",
       "PENDING": "Your edit of “{{title}}” is waiting for review."
-    }
+    },
+    "deleteOne": "Delete this notification",
+    "deleted": "Notification deleted.",
+    "deleteFailed": "Deleting failed. Try again.",
+    "clearAll": "Delete all",
+    "clearAllTitle": "Delete every notification?",
+    "clearAllText": "They are gone for good; new ones will keep arriving.",
+    "clearedAll": "Every notification is deleted."
   },
   "legal": {
     "nav": "Legal information",
@@ -1969,9 +1977,11 @@
       "pending": "Suggestion sent: an admin will review it.",
       "unverified": "The store could not confirm this book: an admin will review the suggestion.",
       "verified": "The store confirms this book: your edit is applied.",
-      "applied": "Edit applied."
+      "applied": "Edit applied.",
+      "trusted": "Edit applied thanks to your trusted standing."
     },
-    "linkPlaceholder": "https://www.fnac.com/…"
+    "linkPlaceholder": "https://www.fnac.com/…",
+    "trustedNote": "You are a trusted member: your change will apply at once for every reader."
   },
   "saleLinks": {
     "title": "Where to buy it",

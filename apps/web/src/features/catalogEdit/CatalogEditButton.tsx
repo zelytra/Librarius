@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetApiCatalogEditsFieldsQueryKey,
   useGetApiCatalogEditsFields,
+  useGetApiMe,
   usePostApiCatalogEdits,
   type CatalogEditDto,
   type CatalogEditFieldsDto,
@@ -141,6 +142,8 @@ function EditForm({
   );
   const [links, setLinks] = useState<string[]>(initialLinks);
   const [refused, setRefused] = useState<'refused' | 'conflict' | 'failed' | null>(null);
+  // A trusted member's change applies at once (#631): said before they send it.
+  const trusted = Boolean(useGetApiMe().data?.trusted);
   const isEdition = targetType === 'EDITION';
 
   const changed = Object.fromEntries(
@@ -168,7 +171,15 @@ function EditForm({
 
   function announce(edit: CatalogEditDto) {
     if (edit.status === 'APPLIED') {
-      toast.success(t(edit.verification === 'PASSED' ? 'catalogEdit.done.verified' : 'catalogEdit.done.applied'));
+      toast.success(
+        t(
+          edit.appliedByTrust
+            ? 'catalogEdit.done.trusted'
+            : edit.verification === 'PASSED'
+              ? 'catalogEdit.done.verified'
+              : 'catalogEdit.done.applied',
+        ),
+      );
     } else if (edit.verification === 'FAILED') {
       toast.info(t('catalogEdit.done.unverified'));
     } else {
@@ -192,6 +203,7 @@ function EditForm({
 
   return (
     <form id={formId} className={styles.form} onSubmit={submit} noValidate>
+      {trusted && <p className={styles.trustedNote}>{t('catalogEdit.trustedNote')}</p>}
       {(isEdition ? EDITION_GROUPS : SERIES_GROUPS).map((group) => (
         <fieldset key={group.title} className={styles.group}>
           <legend className={styles.legend}>{t(`catalogEdit.groups.${group.title}`)}</legend>
