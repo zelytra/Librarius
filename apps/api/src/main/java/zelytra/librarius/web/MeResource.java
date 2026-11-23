@@ -25,6 +25,7 @@ import zelytra.librarius.web.ApiDtos.AcceptTermsDto;
 import zelytra.librarius.web.ApiDtos.AccountDeletionDto;
 import zelytra.librarius.web.ApiDtos.LibraryResetDto;
 import zelytra.librarius.web.ApiDtos.MeDto;
+import zelytra.librarius.web.ApiDtos.PreferencesDto;
 import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 import zelytra.librarius.web.ApiDtos.UpdateMeDto;
 
@@ -139,6 +140,21 @@ public class MeResource {
             user.notifyComments = dto.notifyComments();
         }
         return MeDto.of(user, currentUser.isAdmin());
+    }
+
+    /**
+     * Merges the caller's display preferences (#613): every field given replaces the stored one,
+     * an absent field keeps it — two devices changing two different settings do not undo each
+     * other. 200 with the whole set; 400 on a value outside its set.
+     */
+    @PATCH
+    @Path("/preferences")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public PreferencesDto updatePreferences(@Valid @NotNull PreferencesDto dto) {
+        AppUser user = currentUser.require();
+        user.preferences = user.preferences.merge(dto.toDomain());
+        return PreferencesDto.of(user.preferences);
     }
 
     /**

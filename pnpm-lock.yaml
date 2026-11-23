@@ -31,6 +31,9 @@ importers:
       '@capacitor/ios':
         specifier: ^8.6.2
         version: 8.6.2(@capacitor/core@8.6.2)
+      '@capacitor/push-notifications':
+        specifier: ^8.1.3
+        version: 8.1.3(@capacitor/core@8.6.2)
       '@capgo/inappbrowser':
         specifier: ^8.6.14
         version: 8.6.14(@capacitor/core@8.6.2)
@@ -62,6 +65,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.6.2
         version: 8.6.2
+      '@capacitor/push-notifications':
+        specifier: ^8.1.3
+        version: 8.1.3(@capacitor/core@8.6.2)
       '@capgo/inappbrowser':
         specifier: ^8.6.14
         version: 8.6.14(@capacitor/core@8.6.2)
@@ -713,6 +719,11 @@ packages:
     resolution: {integrity: sha512-YnVm0lRA1mQWK0SKd2bdJIOG+PXRRDDdndZ1+nGqeiob+QmHZmb4wWo5gVpWhoHO37pGi2qzH5w5WGvfKrs+Gg==}
     peerDependencies:
       '@capacitor/core': ^8.6.0
+
+  '@capacitor/push-notifications@8.1.3':
+    resolution: {integrity: sha512-UlOCTS3uiw8ZUJ1rkFKJgoqPADipHDNn0lq5mNRwtXALVxQXIeIoRd3iqpzC+962R2LpCRJRkCTjPX2OHK3tBA==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@capgo/inappbrowser@8.6.14':
     resolution: {integrity: sha512-5aSpqDf94h6za78Sa2ZTlGIJpIhdV76ZPeuFSULTCDHswyGRGFjT5BKcs5WxiguUGD6dT+6tc04wlWU+yndNrA==}
@@ -4974,6 +4985,10 @@ snapshots:
       tslib: 2.9.1
 
   '@capacitor/ios@8.6.2(@capacitor/core@8.6.2)':
+    dependencies:
+      '@capacitor/core': 8.6.2
+
+  '@capacitor/push-notifications@8.1.3(@capacitor/core@8.6.2)':
     dependencies:
       '@capacitor/core': 8.6.2
 

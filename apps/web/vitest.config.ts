@@ -20,9 +20,11 @@ export default defineConfig({
     // `ReadingSheetPage.module.css` for `features/sheet/sheetInk.test.ts` (#596);
     // `FeedbackButton.module.css` and `Selection.module.css` for `shared/feedback/feedbackClearance.test.ts` (#593);
     // `primitives.module.css` for `shared/ui/readingScreens.test.tsx` (#605) and
-    // `SettingsPage.module.css` for `features/settings/versionGap.test.ts` (#604).
+    // `SettingsPage.module.css` for `features/settings/versionGap.test.ts` (#604);
+    // `HomeShowcase.module.css` for `features/home/showcaseTheme.test.ts` (#612) and
+    // `CategoriesPage.module.css` for `features/categories/categoryForm.test.ts` (#611).
     css: {
-      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/, /FeedbackButton\.module\.css/, /Selection\.module\.css/, /primitives\.module\.css/, /SettingsPage\.module\.css/],
+      include: [/tokens\.css/, /global\.css/, /AppShell\.module\.css/, /BottomNav\.module\.css/, /AdminPage\.module\.css/, /ReadingSheetPage\.module\.css/, /FeedbackButton\.module\.css/, /Selection\.module\.css/, /primitives\.module\.css/, /SettingsPage\.module\.css/, /HomeShowcase\.module\.css/, /CategoriesPage\.module\.css/],
     },
   },
 });

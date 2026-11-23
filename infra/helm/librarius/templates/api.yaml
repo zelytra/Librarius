@@ -130,6 +130,9 @@ spec:
                   name: {{ .Values.api.agentApiKey.secretName }}
                   key: {{ .Values.api.agentApiKey.secretKey }}
                   optional: true
+            # Push notifications (#69): read from the optional Secret mounted below.
+            - name: LIBRARIUS_PUSH_FCM_SERVICE_ACCOUNT
+              value: /etc/librarius/fcm/service-account.json
           # Removing the pod from the Service endpoints and sending it SIGTERM are
           # concurrent, so without this pause Traefik keeps routing to a container
           # that has already begun to stop. Native sleep action, k8s ≥ 1.30.
@@ -159,11 +162,21 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: fcm
+              mountPath: /etc/librarius/fcm
+              readOnly: true
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
       volumes:
         - name: tmp
           emptyDir: { sizeLimit: 256Mi }
+        - name: fcm
+          secret:
+            secretName: {{ .Values.api.fcmServiceAccount.secretName }}
+            optional: true
+            items:
+              - key: {{ .Values.api.fcmServiceAccount.secretKey }}
+                path: service-account.json
 ---
 apiVersion: v1
 kind: Service

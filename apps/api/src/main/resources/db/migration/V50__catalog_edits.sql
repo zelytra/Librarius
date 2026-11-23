@@ -48,8 +48,10 @@ ALTER TABLE notification ADD COLUMN catalog_edit_id UUID REFERENCES catalog_edit
 
 ALTER TABLE notification DROP CONSTRAINT ck_notification_type;
 ALTER TABLE notification ADD CONSTRAINT ck_notification_type
-    CHECK (type IN ('ACTIVITY', 'REACTION', 'COMMENT', 'FOLLOW', 'EDIT'));
+    CHECK (type IN ('ACTIVITY', 'REACTION', 'COMMENT', 'FOLLOW', 'RELEASE', 'EDIT'));
 
+-- An EDIT names its proposal instead of a feed event; its actor is the admin who decided, so
+-- ck_notification_actor (V48) already holds for it.
 ALTER TABLE notification DROP CONSTRAINT ck_notification_event;
 ALTER TABLE notification ADD CONSTRAINT ck_notification_event
-    CHECK (type = 'FOLLOW' OR (type = 'EDIT' AND catalog_edit_id IS NOT NULL) OR feed_event_id IS NOT NULL);
+    CHECK (type IN ('FOLLOW', 'RELEASE') OR (type = 'EDIT' AND catalog_edit_id IS NOT NULL) OR feed_event_id IS NOT NULL);

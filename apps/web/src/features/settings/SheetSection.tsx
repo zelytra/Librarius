@@ -5,6 +5,7 @@ import { Icon } from '../../shared/ui/Icon';
 import { ReadingSheet } from '../sheet/ReadingSheetPage';
 import { SHEET_THEMES, readSheetTheme, storeSheetTheme, type SheetTheme } from '../sheet/readingSheet';
 import type { LibraryItemDto } from '../../api/generated/librarius';
+import { saveAccountPreferences } from '../../shared/accountPreferences';
 import styles from './SheetSection.module.css';
 
 /**
@@ -18,6 +19,7 @@ export function SheetSection() {
   const pick = (next: SheetTheme) => {
     setTheme(next);
     storeSheetTheme(next);
+    saveAccountPreferences({ sheetTheme: next });
   };
   const sample: LibraryItemDto = {
     id: 'sample',

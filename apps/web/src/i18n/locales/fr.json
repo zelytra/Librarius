@@ -1051,6 +1051,16 @@
     "bottomBar": {
       "title": "Barre du bas (téléphone)",
       "description": "Choisis jusqu'à {{max}} pages pour la barre du bas ; les autres restent dans « Plus »."
+    },
+    "push": {
+      "title": "Notifications push",
+      "description": "Reçois sur ton téléphone ce qui compte, rien de plus. Tout est désactivé tant que tu ne l’actives pas.",
+      "webOnly": "Les notifications push sont disponibles dans l’application mobile Librarius.",
+      "releases": "Sorties : un tome des séries que tu suis ou possèdes, 7 jours avant et le jour J",
+      "wishlist": "Souhaits : un souhait prioritaire qui sort aujourd’hui",
+      "goal": "Objectif : un rappel de ton objectif annuel, chaque mois",
+      "denied": "Ton téléphone refuse les notifications de Librarius : autorise les notifications dans ses réglages, puis réessaie.",
+      "saved": "Notifications enregistrées"
     }
   },
   "report": {
@@ -1831,7 +1841,7 @@
     "bellUnread_other": "Notifications, {{count}} non lues",
     "error": "Impossible de charger les notifications.",
     "empty": "Aucune notification pour l’instant",
-    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, et de tes nouveaux abonnés.",
+    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, de tes nouveaux abonnés et des tomes annoncés pour les séries et auteurs que tu suis.",
     "activity": {
       "FINISHED_READING": "{{name}} a terminé « {{title}} »",
       "WISHLIST_ADDED": "{{name}} a ajouté « {{title}} » à ses souhaits",
@@ -1849,6 +1859,12 @@
     "followBackLabel": "Suivre {{name}} en retour",
     "followedBack": "Tu suis {{name}}",
     "followingToo": "Vous vous suivez",
+    "release": {
+      "volume": "Tome {{number}} de « {{series}} »",
+      "series": "Un nouveau tome de « {{series}} »",
+      "day": "{{what}} annoncé pour le {{date}}",
+      "other": "{{what}} annoncé — {{date}}"
+    },
     "edit": {
       "APPLIED": "Ta modification de « {{title}} » a été acceptée.",
       "REJECTED": "Ta modification de « {{title}} » a été refusée.",
@@ -1870,6 +1886,19 @@
       "decline": "Refuser et me déconnecter",
       "accepted": "Merci, c’est noté.",
       "failed": "L’acceptation n’a pas pu être enregistrée. Réessaie."
+    }
+  },
+  "releases": {
+    "title": "Prochaines sorties",
+    "curate": {
+      "title": "Annoncer une sortie en France",
+      "hint": "Une date vérifiée, au jour près : elle remplace celle qui était annoncée pour ce tome.",
+      "volume": "Tome",
+      "date": "Date de sortie",
+      "publisher": "Éditeur",
+      "submit": "Annoncer",
+      "done": "Sortie annoncée",
+      "failed": "La sortie n'a pas pu être annoncée. Réessaie."
     }
   },
   "catalogEdit": {

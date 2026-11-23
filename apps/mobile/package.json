@@ -21,6 +21,7 @@
     "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.6.2",
     "@capacitor/ios": "^8.6.2",
+    "@capacitor/push-notifications": "^8.1.3",
     "@capgo/inappbrowser": "^8.6.14"
   },
   "devDependencies": {

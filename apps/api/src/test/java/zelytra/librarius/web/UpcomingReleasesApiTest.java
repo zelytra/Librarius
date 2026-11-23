@@ -276,4 +276,159 @@ class UpcomingReleasesApiTest {
     void theEndpointRejectsAnonymousAccess() {
         given().when().get("/api/releases/upcoming").then().statusCode(401);
     }
+
+    // ── One series, one author (#614) ────────────────────────────────────────
+
+    private List<String> upcomingIds(String user, String param, UUID value) {
+        return given().auth().oauth2(token(user)).queryParam(param, value).queryParam("limit", 50)
+                .when().get("/api/releases/upcoming")
+                .then().statusCode(200)
+                .extract().jsonPath().getList("id", String.class);
+    }
+
+    /** The author credited on the works {@link #addVolume} creates for a run. */
+    private UUID authorOf(String user, String seriesTitle) {
+        String id = given().auth().oauth2(token(user)).queryParam("q", seriesTitle + " Author")
+                .when().get("/api/authors")
+                .then().statusCode(200)
+                .extract().path("[0].id");
+        return UUID.fromString(id);
+    }
+
+    private void addVolumeBy(String user, String seriesTitle, int volume) {
+        given().auth().oauth2(token(user)).contentType("application/json")
+                .body("""
+                        { "book": { "kind": "MANGA", "title": "%s vol. %d",
+                                    "authors": "%s Author", "seriesTitle": "%s",
+                                    "volumeNumber": %d },
+                          "status": "TO_READ" }
+                        """.formatted(seriesTitle, volume, seriesTitle, seriesTitle, volume))
+                .when().post("/api/library")
+                .then().statusCode(201);
+    }
+
+    private UUID announceFr(UUID seriesId, int volume) {
+        return announce(seriesId, volume, LocalDate.now().plusMonths(1), DatePrecision.DAY,
+                ReleaseRegion.FR, UpcomingRelease.SOURCE_MANUAL, ReleaseConfidence.CONFIRMED);
+    }
+
+    @Test
+    void theSeriesFilterKeepsThatRunOnly() {
+        addVolume("alice", "Releases - filtre A", 1);
+        addVolume("alice", "Releases - filtre B", 1);
+        UUID a = seriesId("alice", "Releases - filtre A");
+        UUID inA = announceFr(a, 2);
+        UUID inB = announceFr(seriesId("alice", "Releases - filtre B"), 2);
+
+        List<String> ids = upcomingIds("alice", "seriesId", a);
+        assertTrue(ids.contains(inA.toString()));
+        assertTrue(!ids.contains(inB.toString()), "another run's volume is not this run's");
+    }
+
+    /** A series stays the caller's business: naming one they have no stake in reveals nothing. */
+    @Test
+    void theSeriesFilterRevealsNothingOfAnotherReadersRun() {
+        addVolume("alice", "Releases - filtre privé", 1);
+        UUID run = seriesId("alice", "Releases - filtre privé");
+        announceFr(run, 2);
+
+        assertEquals(List.of(), upcomingIds("bob", "seriesId", run));
+    }
+
+    /**
+     * An author is shared catalog data: their page lists what is coming of their runs to anyone
+     * who opens it, stake or not — and never a run they are not credited on.
+     */
+    @Test
+    void theAuthorFilterListsTheAuthorsRunsToAnyReader() {
+        addVolumeBy("alice", "Releases - auteur", 1);
+        addVolumeBy("alice", "Releases - autre auteur", 1);
+        UUID mine = announceFr(seriesId("alice", "Releases - auteur"), 2);
+        UUID other = announceFr(seriesId("alice", "Releases - autre auteur"), 2);
+        UUID author = authorOf("alice", "Releases - auteur");
+
+        List<String> forBob = upcomingIds("bob", "authorId", author);
+        assertTrue(forBob.contains(mine.toString()), "bob has no stake, the author page still shows it");
+        assertTrue(!forBob.contains(other.toString()));
+    }
+
+    // ── Curated French dates (#614) ──────────────────────────────────────────
+
+    private io.restassured.response.ValidatableResponse curate(String user, UUID seriesId, String body) {
+        return given().auth().oauth2(token(user)).contentType("application/json")
+                .body(body.formatted(seriesId))
+                .when().post("/api/admin/releases").then();
+    }
+
+    @Test
+    void anAdminEntersAFrenchDateThatTheReadersSee() {
+        addVolume("alice", "Releases - curée", 1);
+        UUID run = seriesId("alice", "Releases - curée");
+        String date = LocalDate.now().plusWeeks(3).toString();
+
+        String id = curate("alice", run, """
+                { "seriesId": "%s", "volumeNumber": 2, "releaseDate": "DATE", "publisher": "Kana" }
+                """.replace("DATE", date)).statusCode(201)
+                .body("region", is("FR"))
+                .body("source", is("manual"))
+                .body("confidence", is("CONFIRMED"))
+                .body("datePrecision", is("DAY"))
+                // No title of its own: the app labels it "Tome 2" under the series' name.
+                .body("title", nullValue())
+                .extract().path("id");
+
+        assertTrue(upcomingIds("alice", "seriesId", run).contains(id));
+    }
+
+    /** A curated date replaces a deduced one for the same volume, rather than doubling it. */
+    @Test
+    void aCuratedDateReplacesTheAnnouncementOfTheSameVolume() {
+        addVolume("alice", "Releases - remplacée", 1);
+        UUID run = seriesId("alice", "Releases - remplacée");
+        UUID deduced = announce(run, 2, LocalDate.now().plusYears(1), DatePrecision.YEAR,
+                ReleaseRegion.FR, UpcomingRelease.SOURCE_CATALOG, ReleaseConfidence.ESTIMATED);
+
+        String id = curate("alice", run, """
+                { "seriesId": "%s", "volumeNumber": 2, "releaseDate": "DATE" }
+                """.replace("DATE", LocalDate.now().plusDays(10).toString())).statusCode(201)
+                .extract().path("id");
+
+        assertEquals(deduced.toString(), id);
+        assertEquals(List.of(id), upcomingIds("alice", "seriesId", run));
+    }
+
+    @Test
+    void curationIsForAdminsOnly() {
+        addVolume("bob", "Releases - pas admin", 1);
+        UUID run = seriesId("bob", "Releases - pas admin");
+        curate("bob", run, """
+                { "seriesId": "%s", "volumeNumber": 2, "releaseDate": "2030-01-01" }
+                """).statusCode(403);
+    }
+
+    @Test
+    void curationRefusesAnIncompleteOrUnknownAnnouncement() {
+        addVolume("alice", "Releases - invalide", 1);
+        UUID run = seriesId("alice", "Releases - invalide");
+        curate("alice", run, "{ \"seriesId\": \"%s\", \"volumeNumber\": 2 }").statusCode(400);
+        curate("alice", run, "{ \"seriesId\": \"%s\", \"volumeNumber\": 0, \"releaseDate\": \"2030-01-01\" }")
+                .statusCode(400);
+        curate("alice", UUID.randomUUID(), """
+                { "seriesId": "%s", "volumeNumber": 2, "releaseDate": "2030-01-01" }
+                """).statusCode(404);
+    }
+
+    @Test
+    void anAdminWithdrawsACuratedAnnouncement() {
+        addVolume("alice", "Releases - retirée", 1);
+        UUID run = seriesId("alice", "Releases - retirée");
+        String id = curate("alice", run, """
+                { "seriesId": "%s", "volumeNumber": 2, "releaseDate": "2030-01-01" }
+                """).statusCode(201).extract().path("id");
+
+        given().auth().oauth2(token("bob")).when().delete("/api/admin/releases/" + id).then().statusCode(403);
+        given().auth().oauth2(token("alice")).when().delete("/api/admin/releases/" + id).then().statusCode(204);
+        given().auth().oauth2(token("alice")).when().delete("/api/admin/releases/" + id).then().statusCode(404);
+        assertEquals(List.of(), upcomingIds("alice", "seriesId", run));
+    }
 }

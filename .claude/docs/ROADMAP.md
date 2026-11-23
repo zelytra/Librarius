@@ -284,7 +284,7 @@ trust flag is computed, shown, and revoked automatically when reports are upheld
 | [#192](https://github.com/zelytra/Librarius/issues/192) | ✅ Report button: flag catalog errors — `POST /api/reports`, write-only, plus a report affordance on the Detail and Series screens; feeding automatic revocation is #195 | — |
 | [#195](https://github.com/zelytra/Librarius/issues/195) | Automatic trust revocation from upheld reports | #180, #192 |
 | [#198](https://github.com/zelytra/Librarius/issues/198) | Trusted contribution: missing covers and unlisted catalog entries | #180, #197 |
-| [#618](https://github.com/zelytra/Librarius/issues/618) | ✅ Member edit proposals on an edition (with its work) or a series, reviewed in the admin Catalogue tab, authors notified (V47) | — |
+| [#618](https://github.com/zelytra/Librarius/issues/618) | ✅ Member edit proposals on an edition (with its work) or a series, reviewed in the admin Catalogue tab, authors notified (V50) | — |
 | [#619](https://github.com/zelytra/Librarius/issues/619) | ✅ Sale links on an edition, closed list of stores by host | #618 |
 | [#620](https://github.com/zelytra/Librarius/issues/620) | ✅ Automatic check of a proposal against the store page it links to (ISBN + title), applied at once when it passes | #619 |
 | [#621](https://github.com/zelytra/Librarius/issues/621) | ✅ Admins list and uphold / dismiss the reports filed from the book screens | #192 |

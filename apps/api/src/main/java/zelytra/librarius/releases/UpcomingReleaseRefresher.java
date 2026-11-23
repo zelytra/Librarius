@@ -17,6 +17,7 @@ import zelytra.librarius.domain.UpcomingRelease;
 import zelytra.librarius.domain.repository.EditionRepository;
 import zelytra.librarius.domain.repository.SeriesRepository;
 import zelytra.librarius.domain.repository.UpcomingReleaseRepository;
+import zelytra.librarius.social.NotificationService;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -70,6 +71,9 @@ public class UpcomingReleaseRefresher {
 
     @Inject
     UpcomingReleaseRepository releases;
+
+    @Inject
+    NotificationService notifications;
 
     /**
      * Refreshes the announcements.
@@ -185,6 +189,8 @@ public class UpcomingReleaseRefresher {
         release.updatedAt = OffsetDateTime.now();
         if (existing.isEmpty()) {
             releases.persist(release);
+            // News only the first time: a refreshed date is the same announcement (#615).
+            notifications.release(release.id, target.id);
         }
         return true;
     }

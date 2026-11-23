@@ -1,4 +1,6 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
+import { PushSection } from './PushSection';
+import { saveAccountPreferences } from '../../shared/accountPreferences';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../shared/ui/Icon';
@@ -111,7 +113,10 @@ function AppearanceCategory() {
           {THEMES.map((th) => {
             const active = th.id === theme;
             return (
-              <button key={th.id} type="button" onClick={() => setTheme(th.id)} className={styles.theme} aria-pressed={active}>
+              <button key={th.id} type="button" onClick={() => {
+                setTheme(th.id);
+                saveAccountPreferences({ theme: th.id });
+              }} className={styles.theme} aria-pressed={active}>
                 {/* The swatch shows the theme's own background colour. */}
                 <div
                   className={`${styles.swatch} ${active ? styles.swatchActive : ''}`}
@@ -177,6 +182,10 @@ function CommunityCategory() {
       {/* Members the caller has blocked, with a way to take it back (#203). */}
       <Block>
         <BlockedMembersSection />
+      </Block>
+      {/* Push notifications, opt-in one category at a time (#69). */}
+      <Block id="push">
+        <PushSection />
       </Block>
     </>
   );

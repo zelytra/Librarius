@@ -183,7 +183,21 @@ the known lengths and say so ("≈").
 
 ## Upcoming releases
 
-Release dates are the providers' own — mostly Japanese or English editions. There is no free
-source of French publishers' calendars, so dates are shown as indicative.
+`upcoming_release` holds the announcements, filled off the request path by
+`UpcomingReleaseRefresher` from three feeds: the providers (AniList — the Japanese edition,
+`ESTIMATED`), the catalog's own editions dated in the future (`CONFIRMED`, the only free French
+per-volume dates), and **curated** rows (`source = manual`) that no refresh overwrites.
+
+**There is still no free API of French release dates** (checked again in #614): Mangacollec's
+planning answers only its own app's OAuth client, Google Books was ruled out (#9) and its keyless
+quota is shared, Nautiljon and manga-news have HTML calendars only, and Electre or Dilicom are
+paid trade databases. The French dates therefore come from curation: an admin enters a checked
+date on the Series screen (`POST /api/admin/releases`), which replaces whatever was announced for
+that volume in France.
+
+Where they show (#614): Home (the caller's stake), the Series screen (that run) and the Author
+screen (that author's runs, to anyone). A new announcement also writes a `RELEASE` notification
+for whoever follows the series or one of its authors (#615), and the daily push run (#69) sends
+the opted-in a reminder a week ahead and on the day.
 
 The endpoint reference is on the [API](https://github.com/zelytra/Librarius/wiki/API) page.

@@ -39,7 +39,11 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/admin/reports/{id}/status` | `ReportStatusDto(status OPEN\|UPHELD\|DISMISSED)` → 204; 400, 404 |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Generic provider trends, same answer to every caller. `kind` defaults to `MANGA`, `limit` clamped to 1–50. No longer read by the Home screen — see `/api/releases/upcoming` |
-| GET | `/api/releases/upcoming?kind=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
+| GET | `/api/releases/upcoming?kind=&seriesId=&authorId=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
+| POST, DELETE | `/api/admin/releases`, `/api/admin/releases/{id}` | Admin only: a checked French date (`CurateReleaseDto`), or its withdrawal (#614) |
+| PATCH | `/api/me/preferences` | Merges the display preferences that follow the account (`PreferencesDto`, #613) |
+| GET, PUT | `/api/me/push` | The three push opt-ins (`PushPrefsDto`, #69) |
+| PUT, DELETE | `/api/me/push/devices`, `/api/me/push/devices/{token}` | Registers / forgets an FCM device token (#69) |
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=&ownership=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination). `status` is `TO_READ` (`OWNED` still accepted), `READING`, `READ` or `ABANDONED`; `ownership` is `OWNED`, `BORROWED`, `EBOOK`, `AUDIOBOOK` (#455), `WISHLIST` or `NOT_OWNED` (#411); `sort=manual&view=<id>` follows one of the caller's views (#451), 400 without one |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`: `book`, `status`, `ownership`, `rating`, `acquiredAt`) — creates `work`+`edition` if needed; `ownership: WISHLIST` also creates the wish |
@@ -659,6 +663,14 @@ exists to remove — `datePrecision` says how much of `releaseDate` is real (a p
 only knows the month must not be shown a day it never announced), and `source`/`confidence`
 say where the date came from and how firm it is. A curated row (`source = manual`) always
 wins over a provider guess, and the refresher never touches one.
+
+**By series, by author (#614).** `seriesId` narrows the caller's stake to that one run — a run
+outside it yields nothing, as `/api/series` would. `authorId` replaces the stake with the runs
+the author is credited on: an author is shared catalog data, and the Author screen shows what
+is coming of their work to anyone. `POST /api/admin/releases` is how French dates get in (no
+free API offers them): FR, to the day, `CONFIRMED`, `manual`, taking over the announcement
+already stored for that volume in France. A newly stored announcement — refreshed or curated —
+writes one `RELEASE` notification per follower of the series or of one of its authors (#615).
 
 ## Categories
 

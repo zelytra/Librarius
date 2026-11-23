@@ -4,6 +4,12 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -51,6 +57,32 @@ public class AdminResource {
 
     @Inject
     zelytra.librarius.report.ReportService catalogReports;
+
+    @Inject
+    zelytra.librarius.releases.UpcomingReleaseService releases;
+
+    /**
+     * Enters a checked French release date (#614) — 201 with the announcement; 400 incomplete,
+     * 404 for an unknown series. It replaces whatever was announced for that volume in France.
+     */
+    @POST
+    @Path("/releases")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response curateRelease(@Valid @jakarta.validation.constraints.NotNull ApiDtos.CurateReleaseDto body) {
+        return releases.curate(body)
+                .map(release -> Response.status(Response.Status.CREATED).entity(release).build())
+                .orElseThrow(NotFoundException::new);
+    }
+
+    /** Withdraws an announcement (#614) — 204; 404 when there is none under that id. */
+    @DELETE
+    @Path("/releases/{id}")
+    public void withdrawRelease(@PathParam("id") UUID id) {
+        if (!releases.withdraw(id)) {
+            throw new NotFoundException();
+        }
+    }
 
     /**
      * Every report, the latest seen first — only those in {@code status} when it is given

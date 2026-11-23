@@ -1,10 +1,10 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router';
 import { renderWithProviders, TestProviders } from '../../test/utils';
-import { authorDetail, authorWork } from '../../test/fixtures';
+import { authorDetail, authorWork, upcomingRelease } from '../../test/fixtures';
 import { authorDetailReturns, http, HttpResponse, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 
@@ -198,3 +198,34 @@ describe('AuthorPage', () => {
   });
 });
 
+
+/** #614: what is coming of the author's runs, asked by author. */
+describe('AuthorPage — upcoming releases', () => {
+  beforeEach(() => {
+    resetAuth();
+    setAuthenticated(true);
+    authorDetailReturns(AUTHOR);
+  });
+
+  test('lists the volumes announced for the author’s runs, each leading to its series', async () => {
+    const asked: string[] = [];
+    server.use(
+      http.get('*/api/releases/upcoming', ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get('authorId') ?? '');
+        return HttpResponse.json([upcomingRelease({ seriesId: 'series-9', seriesTitle: 'Vinland Saga', volumeNumber: 28 })]);
+      }),
+    );
+    renderAuthor(AUTHOR.id);
+
+    const section = await screen.findByRole('region', { name: 'Prochaines sorties' });
+    expect(asked).toContain(AUTHOR.id);
+    expect(within(section).getByRole('button', { name: /Vinland Saga/ })).toBeInTheDocument();
+  });
+
+  test('shows no section when nothing is announced', async () => {
+    renderAuthor(AUTHOR.id);
+
+    await screen.findByRole('heading', { name: AUTHOR.name });
+    expect(screen.queryByRole('region', { name: 'Prochaines sorties' })).not.toBeInTheDocument();
+  });
+});

@@ -14,7 +14,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * A member's proposed change to a shared catalog record (#618), see V47.
+ * A member's proposed change to a shared catalog record (#618), see V50.
  *
  * <p>{@link #changes} is the diff, as JSON: {@code {"field": {"before": "...", "after": "..."}}},
  * every value a string (or null) in the form {@code contribution.CatalogFields} parses. Read

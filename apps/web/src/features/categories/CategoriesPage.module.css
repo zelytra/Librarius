@@ -27,13 +27,16 @@
 
 .createForm {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
 }
 
+/* #611: the field grows to the row and never shrinks below a readable name; the button wraps
+   next to it, and the palette (flex-basis 100%) always takes the row underneath. */
 .input {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 180px;
+  min-width: 180px;
   border: 1.5px solid var(--line);
   border-radius: var(--radius-control);
   padding: 11px 14px;
@@ -145,6 +148,7 @@
 
 .editForm {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   width: 100%;
 }

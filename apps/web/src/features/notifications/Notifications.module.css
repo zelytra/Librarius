@@ -132,14 +132,15 @@
   min-height: 44px;
 }
 
-/* An admin's decision on a catalog edit (#618) is about a record, not a person: an icon in
-   the avatar's place keeps the column aligned. */
+/* Where a member's avatar would be, for news nobody made (#615) or a decision on a catalog
+   edit (#618): the avatar's 40 px disc. */
+.releaseIcon,
 .editIcon {
   flex: 0 0 auto;
   width: 40px;
   height: 40px;
   border-radius: var(--radius-round);
-  background: var(--surface-2);
+  background: var(--accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;

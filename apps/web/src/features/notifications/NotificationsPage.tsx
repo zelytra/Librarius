@@ -8,6 +8,7 @@ import {
   postApiNotificationsRead,
   usePutApiUsersIdFollow,
   type NotificationDto,
+  type UpcomingReleaseDto,
 } from '../../api/generated/librarius';
 import { toast } from '../../shared/ui/toast';
 import { activeLanguage } from '../../i18n/languages';
@@ -16,6 +17,7 @@ import { Avatar } from '../../shared/ui/Avatar';
 import { Icon } from '../../shared/ui/Icon';
 import { Button, Screen } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
+import { formatReleaseDate } from '../home/releases';
 import styles from './Notifications.module.css';
 
 const PAGE_SIZE = 30;
@@ -137,6 +139,39 @@ function FollowEntry({ item }: { item: NotificationDto }) {
   );
 }
 
+/**
+ * A volume announced for a followed series or author (#615): nobody's doing, so an icon stands
+ * where the avatar would, and the entry opens the series.
+ */
+function ReleaseEntry({ item, release }: { item: NotificationDto; release: UpcomingReleaseDto }) {
+  const { t } = useTranslation();
+  const series = release.seriesTitle ?? '—';
+  const what =
+    release.volumeNumber != null
+      ? t('notifications.release.volume', { number: release.volumeNumber, series })
+      : t('notifications.release.series', { series });
+  const date = formatReleaseDate(release, t);
+  const text = t(release.datePrecision === 'DAY' ? 'notifications.release.day' : 'notifications.release.other', {
+    what,
+    date,
+  });
+  const unread = !item.readAt;
+  return (
+    <Link to={`/series/${release.seriesId}`} className={`${styles.entry} ${unread ? styles.unread : ''}`}>
+      <span className={styles.releaseIcon} aria-hidden="true">
+        <Icon name="calendar_month" size={22} color="var(--accent-deep)" />
+      </span>
+      <span className={styles.body}>
+        <span className={styles.text}>{text}</span>
+        <span className={styles.meta}>
+          <time dateTime={item.createdAt}>{when(item.createdAt)}</time>
+          {unread && <span className={styles.unreadMark}>{t('notifications.unread')}</span>}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
 /** What an admin decided on the recipient's catalog edit proposal (#618). */
 function EditEntry({ item }: { item: NotificationDto }) {
   const { t } = useTranslation();
@@ -147,7 +182,7 @@ function EditEntry({ item }: { item: NotificationDto }) {
   const content = (
     <>
       <span className={styles.editIcon} aria-hidden="true">
-        <Icon name="edit" size={20} color="var(--accent)" />
+        <Icon name="edit" size={20} color="var(--accent-deep)" />
       </span>
       <span className={styles.body}>
         <span className={styles.text}>
@@ -174,6 +209,7 @@ function EditEntry({ item }: { item: NotificationDto }) {
 function Entry({ item }: { item: NotificationDto }) {
   const { t } = useTranslation();
   if (item.type === 'FOLLOW') return <FollowEntry item={item} />;
+  if (item.type === 'RELEASE') return item.release ? <ReleaseEntry item={item} release={item.release} /> : null;
   if (item.type === 'EDIT' && item.edit) return <EditEntry item={item} />;
   const name = item.actor?.displayName ?? '—';
   const title = item.book?.title ?? '';

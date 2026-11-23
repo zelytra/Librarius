@@ -142,3 +142,8 @@
   font-weight: 500;
   color: var(--muted);
 }
+
+/* The author's upcoming volumes (#614), kept apart from the bibliography below. */
+.releases {
+  margin-bottom: 22px;
+}

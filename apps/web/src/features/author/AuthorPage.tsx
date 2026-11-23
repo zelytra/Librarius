@@ -13,6 +13,7 @@ import {
   getGetApiAuthorsIdQueryKey,
   useDeleteApiAuthorsIdFollow,
   useGetApiAuthorsId,
+  useGetApiReleasesUpcoming,
   usePutApiAuthorsIdFollow,
   type AuthorWorkDto,
 } from '../../api/generated/librarius';
@@ -26,6 +27,7 @@ import {
   type BibliographyEntry,
 } from './author';
 import styles from './AuthorPage.module.css';
+import { ReleaseList } from '../home/UpcomingReleases';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail/Series. */
 const WASH_FROM = 'aa';
@@ -99,6 +101,22 @@ function SeriesTile({ entry }: { entry: Extract<BibliographyEntry, { kind: 'seri
       }
       onClick={open}
     />
+  );
+}
+
+/** What is coming of the author's runs (#614) — catalog data, shown to anyone; nothing when nothing is. */
+function AuthorReleases({ authorId }: { authorId: string }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { data: releases = [] } = useGetApiReleasesUpcoming({ authorId, limit: 20 });
+  if (releases.length === 0) return null;
+  return (
+    <section aria-labelledby="author-releases" className={styles.releases}>
+      <h3 className={styles.sectionTitle} id="author-releases">
+        {t('releases.title')}
+      </h3>
+      <ReleaseList releases={releases} onOpen={(release) => navigate(`/series/${release.seriesId}`)} />
+    </section>
   );
 }
 
@@ -197,6 +215,8 @@ function AuthorContent({ id }: { id: string }) {
         </div>
 
         <ExternalAuthor authorId={id} />
+
+        <AuthorReleases authorId={id} />
 
         <h3 className={styles.sectionTitle}>{t('author.bibliography')}</h3>
 

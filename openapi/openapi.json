@@ -430,6 +430,72 @@
         } ]
       }
     },
+    "/api/admin/releases" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CurateReleaseDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Curate Release",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/releases/{id}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Withdraw Release",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/admin/reports" : {
       "get" : {
         "parameters" : [ {
@@ -3063,6 +3129,169 @@
         } ]
       }
     },
+    "/api/me/preferences" : {
+      "patch" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PreferencesDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PreferencesDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Update Preferences",
+        "tags" : [ "Me Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/me/push" : {
+      "put" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PushPrefsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PushPrefsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Update",
+        "tags" : [ "Push Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PushPrefsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Get",
+        "tags" : [ "Push Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/me/push/devices" : {
+      "put" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PushDeviceDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Register",
+        "tags" : [ "Push Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/me/push/devices/{token}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "token",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Forget",
+        "tags" : [ "Push Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/me/terms" : {
       "put" : {
         "requestBody" : {
@@ -3197,6 +3426,12 @@
     "/api/releases/upcoming" : {
       "get" : {
         "parameters" : [ {
+          "name" : "authorId",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        }, {
           "name" : "kind",
           "in" : "query",
           "schema" : {
@@ -3209,6 +3444,12 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 20
+          }
+        }, {
+          "name" : "seriesId",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
           }
         } ],
         "responses" : {
@@ -5568,6 +5809,31 @@
           }
         }
       },
+      "CurateReleaseDto" : {
+        "type" : "object",
+        "required" : [ "seriesId", "volumeNumber", "releaseDate" ],
+        "properties" : {
+          "seriesId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "volumeNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "releaseDate" : {
+            "$ref" : "#/components/schemas/LocalDate"
+          },
+          "publisher" : {
+            "type" : "string",
+            "maxLength" : 255
+          },
+          "title" : {
+            "type" : "string",
+            "maxLength" : 512
+          }
+        }
+      },
       "DashboardLayoutDto" : {
         "type" : "object",
         "required" : [ "sections" ],
@@ -6736,8 +7002,12 @@
           "currentTermsVersion" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "preferences" : {
+            "$ref" : "#/components/schemas/PreferencesDto"
           }
-        }
+        },
+        "required" : [ "preferences" ]
       },
       "MemberBookDto" : {
         "type" : "object",
@@ -6977,6 +7247,9 @@
           "followingActor" : {
             "type" : "boolean"
           },
+          "release" : {
+            "$ref" : "#/components/schemas/UpcomingReleaseDto"
+          },
           "edit" : {
             "$ref" : "#/components/schemas/NotificationEditDto"
           }
@@ -7056,6 +7329,32 @@
             "format" : "int32",
             "maximum" : 100000,
             "exclusiveMinimum" : 0
+          }
+        }
+      },
+      "PreferencesDto" : {
+        "type" : "object",
+        "properties" : {
+          "theme" : {
+            "type" : "string",
+            "pattern" : "[a-z]{1,16}"
+          },
+          "bottomBar" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "pattern" : "/[a-z/-]{0,40}"
+            },
+            "minItems" : 1,
+            "maxItems" : 4
+          },
+          "libraryKind" : {
+            "type" : "string",
+            "pattern" : "auto|BOOK|MANGA|COMIC|GRAPHIC_NOVEL|AUDIOBOOK"
+          },
+          "sheetTheme" : {
+            "type" : "string",
+            "pattern" : "handwritten|classic|notebook"
           }
         }
       },
@@ -7192,6 +7491,36 @@
           },
           "finishedAt" : {
             "$ref" : "#/components/schemas/LocalDate"
+          }
+        }
+      },
+      "PushDeviceDto" : {
+        "type" : "object",
+        "required" : [ "token", "platform" ],
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "pattern" : "\\S",
+            "maxLength" : 4096
+          },
+          "platform" : {
+            "type" : "string",
+            "pattern" : "android|ios"
+          }
+        }
+      },
+      "PushPrefsDto" : {
+        "type" : "object",
+        "required" : [ "releases", "wishlist", "goal" ],
+        "properties" : {
+          "releases" : {
+            "type" : "boolean"
+          },
+          "wishlist" : {
+            "type" : "boolean"
+          },
+          "goal" : {
+            "type" : "boolean"
           }
         }
       },

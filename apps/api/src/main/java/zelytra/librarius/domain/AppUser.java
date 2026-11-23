@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 
@@ -97,4 +99,21 @@ public class AppUser {
     /** When they accepted it, on the server's clock. */
     @Column(name = "terms_accepted_at")
     public OffsetDateTime termsAcceptedAt;
+
+    /** Display preferences carried across devices (#613); never {@code null}, empty when nothing is chosen. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false)
+    public UserPreferences preferences = UserPreferences.NONE;
+
+    /** Push opt-ins (#69), each off until switched on: releases at D-7 and on the day. */
+    @Column(name = "push_releases", nullable = false)
+    public boolean pushReleases = false;
+
+    /** A wish of top priority released today (#69). */
+    @Column(name = "push_wishlist", nullable = false)
+    public boolean pushWishlist = false;
+
+    /** The monthly reminder of the year's reading goal (#69). */
+    @Column(name = "push_goal", nullable = false)
+    public boolean pushGoal = false;
 }
