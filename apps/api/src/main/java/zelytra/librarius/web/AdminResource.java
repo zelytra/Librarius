@@ -191,6 +191,18 @@ public class AdminResource {
     }
 
     /**
+     * How a member's trust is decided (#625): {@code AUTO} (the daily evaluation), {@code TRUSTED}
+     * or {@code UNTRUSTED} (kept so by an admin), applied at once. 204; 400 another mode, 404 unknown.
+     */
+    @PUT
+    @Path("/users/{id}/trust")
+    public void trust(@PathParam("id") String id, @Valid @jakarta.validation.constraints.NotNull ApiDtos.TrustModeDto body) {
+        if (!users.setTrust(id, parse(zelytra.librarius.account.AdminUserService.TrustMode.class, body.mode()))) {
+            throw new NotFoundException();
+        }
+    }
+
+    /**
      * Deletes a member and everything they own, their Keycloak account first (#499) — the
      * erasure a member runs on themself. 204; 400 for the caller (Settings is their way), 404
      * unknown, 503 when Keycloak refuses and nothing was erased.

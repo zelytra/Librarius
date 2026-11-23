@@ -665,6 +665,47 @@
         } ]
       }
     },
+    "/api/admin/users/{id}/trust" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TrustModeDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Trust",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/agent/feedback" : {
       "get" : {
         "parameters" : [ {
@@ -5202,6 +5243,15 @@
           },
           "lastSeenAt" : {
             "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "trusted" : {
+            "type" : "boolean"
+          },
+          "trustMode" : {
+            "type" : "string"
+          },
+          "admin" : {
+            "type" : "boolean"
           }
         }
       },
@@ -7105,6 +7155,9 @@
           },
           "notifyActivity" : {
             "type" : "boolean"
+          },
+          "admin" : {
+            "type" : "boolean"
           }
         }
       },
@@ -8053,6 +8106,16 @@
               "type" : "integer",
               "format" : "int64"
             }
+          }
+        }
+      },
+      "TrustModeDto" : {
+        "type" : "object",
+        "required" : [ "mode" ],
+        "properties" : {
+          "mode" : {
+            "type" : "string",
+            "pattern" : "\\S"
           }
         }
       },

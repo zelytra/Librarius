@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import zelytra.librarius.domain.AppUser;
 import zelytra.librarius.web.ApiDtos.AdminUserDto;
 import zelytra.librarius.web.ApiDtos.AdminUserPageDto;
 import zelytra.librarius.web.ApiDtos.CountryCountDto;
@@ -24,6 +25,9 @@ public class AdminUserService {
     @Inject
     EntityManager em;
 
+    @Inject
+    zelytra.librarius.trust.TrustEvaluator trust;
+
     /** The members, newest first; {@code query} narrows on username, display name or email. */
     @Transactional
     public AdminUserPageDto list(PageRequest window, String query) {
@@ -33,7 +37,8 @@ public class AdminUserService {
         var rows = em.createNativeQuery("""
                         select u.id, u.username, u.display_name, u.email, u.created_at, u.avatar_version,
                                (select count(*) from library_item li where li.user_id = u.id),
-                               (select max(a.last_seen_at) from user_activity a where a.user_id = u.id)
+                               (select max(a.last_seen_at) from user_activity a where a.user_id = u.id),
+                               u.trusted, u.trust_override, u.admin
                         from app_user u""" + filter + " order by u.created_at desc nulls last, u.id");
         var count = em.createNativeQuery("select count(*) from app_user u" + filter);
         if (!filter.isEmpty()) {
@@ -46,7 +51,8 @@ public class AdminUserService {
         List<AdminUserDto> items = result.stream().map(row -> new AdminUserDto((String) row[0], (String) row[1],
                 (String) row[2], (String) row[3], toOffset(row[4]),
                 row[5] == null ? null : ((Number) row[5]).longValue(), ((Number) row[6]).longValue(),
-                toOffset(row[7]))).toList();
+                toOffset(row[7]), Boolean.TRUE.equals(row[8]), TrustMode.of((Boolean) row[9]).name(),
+                Boolean.TRUE.equals(row[10]))).toList();
         return new AdminUserPageDto(items, window.page(), window.size(), ((Number) count.getSingleResult()).longValue());
     }
 
@@ -58,6 +64,35 @@ public class AdminUserService {
                         select country, count(*) from app_user where country is not null
                         group by country order by count(*) desc, country""").getResultList();
         return rows.stream().map(row -> new CountryCountDto((String) row[0], ((Number) row[1]).longValue())).toList();
+    }
+
+    /** How an admin decides a member's trust (#625): left to the evaluation, or kept one way. */
+    public enum TrustMode {
+        AUTO, TRUSTED, UNTRUSTED;
+
+        static TrustMode of(Boolean override) {
+            return override == null ? AUTO : override ? TRUSTED : UNTRUSTED;
+        }
+
+        Boolean override() {
+            return this == AUTO ? null : this == TRUSTED;
+        }
+    }
+
+    /**
+     * Sets how a member's trust is decided, and applies it at once — {@code AUTO} included, which
+     * hands the account back to the criteria right now rather than at the next daily run. False
+     * for an unknown member.
+     */
+    @Transactional
+    public boolean setTrust(String id, TrustMode mode) {
+        AppUser user = em.find(AppUser.class, id);
+        if (user == null) {
+            return false;
+        }
+        user.trustOverride = mode.override();
+        trust.evaluate(user, OffsetDateTime.now());
+        return true;
     }
 
     @Transactional
