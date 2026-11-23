@@ -6496,6 +6496,9 @@
           },
           "followingActor" : {
             "type" : "boolean"
+          },
+          "release" : {
+            "$ref" : "#/components/schemas/UpcomingReleaseDto"
           }
         }
       },

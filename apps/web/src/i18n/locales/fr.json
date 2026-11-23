@@ -1744,7 +1744,7 @@
     "bellUnread_other": "Notifications, {{count}} non lues",
     "error": "Impossible de charger les notifications.",
     "empty": "Aucune notification pour l’instant",
-    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, et de tes nouveaux abonnés.",
+    "emptyHint": "Tu seras prévenu ici des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, de tes nouveaux abonnés et des tomes annoncés pour les séries et auteurs que tu suis.",
     "activity": {
       "FINISHED_READING": "{{name}} a terminé « {{title}} »",
       "WISHLIST_ADDED": "{{name}} a ajouté « {{title}} » à ses souhaits",
@@ -1761,7 +1761,13 @@
     "followBack": "Suivre en retour",
     "followBackLabel": "Suivre {{name}} en retour",
     "followedBack": "Tu suis {{name}}",
-    "followingToo": "Vous vous suivez"
+    "followingToo": "Vous vous suivez",
+    "release": {
+      "volume": "Tome {{number}} de « {{series}} »",
+      "series": "Un nouveau tome de « {{series}} »",
+      "day": "{{what}} annoncé pour le {{date}}",
+      "other": "{{what}} annoncé — {{date}}"
+    }
   },
   "legal": {
     "nav": "Informations légales",

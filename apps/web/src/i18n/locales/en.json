@@ -1744,7 +1744,7 @@
     "bellUnread_other": "Notifications, {{count}} unread",
     "error": "Could not load the notifications.",
     "empty": "No notification yet",
-    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, and of your new followers.",
+    "emptyHint": "You will be told here of the activity of the readers you follow, of reactions and comments on yours, of your new followers, and of the volumes announced for the series and authors you follow.",
     "activity": {
       "FINISHED_READING": "{{name}} finished “{{title}}”",
       "WISHLIST_ADDED": "{{name}} added “{{title}}” to their wishlist",
@@ -1761,7 +1761,13 @@
     "followBack": "Follow back",
     "followBackLabel": "Follow {{name}} back",
     "followedBack": "You follow {{name}}",
-    "followingToo": "You follow each other"
+    "followingToo": "You follow each other",
+    "release": {
+      "volume": "Volume {{number}} of “{{series}}”",
+      "series": "A new volume of “{{series}}”",
+      "day": "{{what}} announced for {{date}}",
+      "other": "{{what}} announced — {{date}}"
+    }
   },
   "legal": {
     "nav": "Legal information",

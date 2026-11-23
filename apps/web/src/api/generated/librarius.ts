@@ -884,6 +884,22 @@ export interface MonitoringDto {
   services?: ServiceStatusDto[];
 }
 
+export interface UpcomingReleaseDto {
+  id?: Uuid;
+  seriesId?: Uuid;
+  seriesTitle?: string;
+  kind?: string;
+  coverUrl?: string;
+  volumeNumber?: number;
+  title?: string;
+  releaseDate?: LocalDate;
+  datePrecision?: string;
+  region?: string;
+  publisher?: string;
+  source?: string;
+  confidence?: string;
+}
+
 export interface NotificationDto {
   id?: Uuid;
   type?: string;
@@ -896,6 +912,7 @@ export interface NotificationDto {
   createdAt?: OffsetDateTime;
   readAt?: OffsetDateTime;
   followingActor?: boolean;
+  release?: UpcomingReleaseDto;
 }
 
 export interface NotificationPageDto {
@@ -1137,22 +1154,6 @@ export interface TimelineDto {
 
 export interface UnreadCountDto {
   count?: number;
-}
-
-export interface UpcomingReleaseDto {
-  id?: Uuid;
-  seriesId?: Uuid;
-  seriesTitle?: string;
-  kind?: string;
-  coverUrl?: string;
-  volumeNumber?: number;
-  title?: string;
-  releaseDate?: LocalDate;
-  datePrecision?: string;
-  region?: string;
-  publisher?: string;
-  source?: string;
-  confidence?: string;
 }
 
 export interface UpdateMeDto {

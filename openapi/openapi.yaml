@@ -4491,6 +4491,8 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         followingActor:
           type: boolean
+        release:
+          $ref: "#/components/schemas/UpcomingReleaseDto"
     NotificationPageDto:
       type: object
       properties:

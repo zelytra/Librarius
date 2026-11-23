@@ -1394,7 +1394,9 @@ public final class ApiDtos {
      */
     public record NotificationDto(UUID id, String type, MemberSummaryDto actor, UUID eventId, String eventType,
             MemberBookDto book, String comment, String emote, java.time.OffsetDateTime createdAt,
-            java.time.OffsetDateTime readAt, boolean followingActor) {
+            java.time.OffsetDateTime readAt, boolean followingActor,
+            /** The announcement a {@code RELEASE} notification is about (#615); {@code null} otherwise. */
+            UpcomingReleaseDto release) {
     }
 
     public record NotificationPageDto(java.util.List<NotificationDto> items, int page, int size, boolean hasMore) {

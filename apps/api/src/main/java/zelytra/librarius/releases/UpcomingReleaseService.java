@@ -17,6 +17,7 @@ import zelytra.librarius.domain.DatePrecision;
 import zelytra.librarius.domain.ReleaseConfidence;
 import zelytra.librarius.domain.ReleaseRegion;
 import zelytra.librarius.domain.Series;
+import zelytra.librarius.social.NotificationService;
 import zelytra.librarius.web.ApiDtos.CurateReleaseDto;
 
 import java.time.LocalDate;
@@ -59,6 +60,9 @@ public class UpcomingReleaseService {
 
     @Inject
     SeriesRepository series;
+
+    @Inject
+    NotificationService notifications;
 
     /**
      * The releases still ahead of the caller, soonest first.
@@ -154,6 +158,7 @@ public class UpcomingReleaseService {
         release.updatedAt = OffsetDateTime.now();
         if (release.id == null) {
             releases.persist(release);
+            notifications.release(release.id, run.id);
         }
         return Optional.of(UpcomingReleaseDto.of(release));
     }
