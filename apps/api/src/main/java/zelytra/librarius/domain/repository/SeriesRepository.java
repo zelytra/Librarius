@@ -174,4 +174,15 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
                 .forEach(row -> covers.putIfAbsent((Integer) row[0], (String) row[1]));
         return covers;
     }
+
+    /** The runs an author is credited on, through the works of each (#614). */
+    public List<UUID> idsCreditedTo(UUID authorId) {
+        return getEntityManager()
+                .createQuery("""
+                        select distinct w.series.id from Work w join w.authors a
+                        where a.id = :author and w.series is not null
+                        """, UUID.class)
+                .setParameter("author", authorId)
+                .getResultList();
+    }
 }

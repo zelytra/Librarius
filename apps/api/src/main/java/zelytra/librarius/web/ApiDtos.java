@@ -1171,6 +1171,16 @@ public final class ApiDtos {
         }
     }
 
+    /**
+     * {@code POST /api/admin/releases} (#614): a French release date an admin checked, for one
+     * volume of a run. The market is France and the date is to the day — that is what makes it
+     * worth entering by hand.
+     */
+    public record CurateReleaseDto(@NotNull UUID seriesId, @NotNull @Min(1) Integer volumeNumber,
+            @NotNull LocalDate releaseDate, @Size(max = 255) String publisher,
+            @Size(max = 512) String title) {
+    }
+
     // ── Dashboard layout ──────────────────────────────────────────────────────
 
     /**
