@@ -1051,6 +1051,16 @@
     "bottomBar": {
       "title": "Bottom bar (phone)",
       "description": "Pick up to {{max}} pages for the bottom bar; the others stay in \"More\"."
+    },
+    "push": {
+      "title": "Push notifications",
+      "description": "Get what matters on your phone, nothing more. Everything stays off until you switch it on.",
+      "webOnly": "Push notifications are available in the Librarius mobile app.",
+      "releases": "Releases: a volume of the series you follow or own, 7 days ahead and on the day",
+      "wishlist": "Wishlist: a top-priority wish released today",
+      "goal": "Goal: a monthly reminder of your yearly goal",
+      "denied": "Your phone blocks Librarius notifications: allow notifications in its settings, then try again.",
+      "saved": "Notifications saved"
     }
   },
   "report": {

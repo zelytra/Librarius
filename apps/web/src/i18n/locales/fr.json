@@ -1051,6 +1051,16 @@
     "bottomBar": {
       "title": "Barre du bas (téléphone)",
       "description": "Choisis jusqu'à {{max}} pages pour la barre du bas ; les autres restent dans « Plus »."
+    },
+    "push": {
+      "title": "Notifications push",
+      "description": "Reçois sur ton téléphone ce qui compte, rien de plus. Tout est désactivé tant que tu ne l’actives pas.",
+      "webOnly": "Les notifications push sont disponibles dans l’application mobile Librarius.",
+      "releases": "Sorties : un tome des séries que tu suis ou possèdes, 7 jours avant et le jour J",
+      "wishlist": "Souhaits : un souhait prioritaire qui sort aujourd’hui",
+      "goal": "Objectif : un rappel de ton objectif annuel, chaque mois",
+      "denied": "Ton téléphone refuse les notifications de Librarius : autorise les notifications dans ses réglages, puis réessaie.",
+      "saved": "Notifications enregistrées"
     }
   },
   "report": {

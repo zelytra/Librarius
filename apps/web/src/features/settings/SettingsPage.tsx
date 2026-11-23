@@ -1,4 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
+import { PushSection } from './PushSection';
 import { saveAccountPreferences } from '../../shared/accountPreferences';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -181,6 +182,10 @@ function CommunityCategory() {
       {/* Members the caller has blocked, with a way to take it back (#203). */}
       <Block>
         <BlockedMembersSection />
+      </Block>
+      {/* Push notifications, opt-in one category at a time (#69). */}
+      <Block id="push">
+        <PushSection />
       </Block>
     </>
   );
