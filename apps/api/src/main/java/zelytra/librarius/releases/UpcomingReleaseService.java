@@ -144,9 +144,8 @@ public class UpcomingReleaseService {
                 .orElseGet(UpcomingRelease::new);
         release.series = run;
         release.volumeNumber = input.volumeNumber();
-        release.title = input.title() != null && !input.title().isBlank()
-                ? input.title().trim()
-                : run.title + " " + input.volumeNumber();
+        // No made-up title: without one, the app labels the row by its volume number.
+        release.title = input.title() != null && !input.title().isBlank() ? input.title().trim() : null;
         release.releaseDate = input.releaseDate();
         release.datePrecision = DatePrecision.DAY;
         release.region = ReleaseRegion.FR;

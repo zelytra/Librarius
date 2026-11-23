@@ -111,7 +111,7 @@ function AuthorReleases({ authorId }: { authorId: string }) {
   const { data: releases = [] } = useGetApiReleasesUpcoming({ authorId, limit: 20 });
   if (releases.length === 0) return null;
   return (
-    <section aria-labelledby="author-releases">
+    <section aria-labelledby="author-releases" className={styles.releases}>
       <h3 className={styles.sectionTitle} id="author-releases">
         {t('releases.title')}
       </h3>

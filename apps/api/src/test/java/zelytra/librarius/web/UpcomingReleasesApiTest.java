@@ -373,6 +373,8 @@ class UpcomingReleasesApiTest {
                 .body("source", is("manual"))
                 .body("confidence", is("CONFIRMED"))
                 .body("datePrecision", is("DAY"))
+                // No title of its own: the app labels it "Tome 2" under the series' name.
+                .body("title", nullValue())
                 .extract().path("id");
 
         assertTrue(upcomingIds("alice", "seriesId", run).contains(id));
