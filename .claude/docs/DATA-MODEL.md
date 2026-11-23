@@ -639,6 +639,11 @@ titles, it never deletes them**: a rank is a label stuck on a book, so dropping 
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
 
+`V52__catalog_edit_trusted.sql` ([#631](https://github.com/zelytra/Librarius/issues/631)) adds
+`catalog_edit.applied_by_trust BOOLEAN NOT NULL DEFAULT false`: a trusted member's proposal is
+applied on their standing, like an admin's, and the flag tells the admin view why it went
+through without review.
+
 `V51__trust_override_and_admin_flag.sql` ([#625](https://github.com/zelytra/Librarius/issues/625))
 adds `app_user.trust_override BOOLEAN` — NULL leaves trust to `TrustEvaluator`, true or false is an
 admin's choice it keeps — and `app_user.admin BOOLEAN NOT NULL DEFAULT false`, the Keycloak role
