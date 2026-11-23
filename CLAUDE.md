@@ -94,6 +94,15 @@ same pull request** — a new endpoint, a DTO, an import rule, a migration, a wo
 command. A pull request that changes behaviour a page describes and leaves the page stale is
 not finished.
 
+## Unclear specs: ask first
+
+When a request is not clear enough, lacks precision, or could be improved (an ambiguity, a
+missing rule, a choice with real trade-offs), **ask the person you are working with** before
+starting — a few targeted questions, each with the options and a recommended default. When
+nothing needs asking, carry out the task normally; never ask for what the code, the docs or a
+sensible default already settle. The answers go into the issue. See
+[WORKFLOW § 1](.claude/docs/WORKFLOW.md#1-feedback-goes-into-issues-first).
+
 ## Feedback goes into issues first
 
 Every fix or request the user reports is written into a GitHub issue (split when it covers
