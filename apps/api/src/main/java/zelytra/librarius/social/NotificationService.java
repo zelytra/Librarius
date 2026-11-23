@@ -10,6 +10,7 @@ import zelytra.librarius.domain.repository.LibraryItemRepository;
 import zelytra.librarius.web.ApiDtos.MemberBookDto;
 import zelytra.librarius.web.ApiDtos.MemberSummaryDto;
 import zelytra.librarius.web.ApiDtos.NotificationDto;
+import zelytra.librarius.web.ApiDtos.NotificationEditDto;
 import zelytra.librarius.web.ApiDtos.NotificationPageDto;
 import zelytra.librarius.web.PageRequest;
 
@@ -33,6 +34,7 @@ import java.util.UUID;
  *   <li>{@code COMMENT} — someone commented on my event, unless I switched comments off;</li>
  *   <li>{@code FOLLOW} — someone started following me (#544). It is about them, not about an
  *       event: it carries none, and a follow after an unfollow replaces the earlier one.</li>
+ *   <li>{@code EDIT} — an admin approved, rejected or reverted my catalog edit proposal (#618).</li>
  * </ul>
  * Nobody is notified of their own doing, and nothing crosses a block: a notification whose actor
  * a block now stands between with the recipient is not shown.
@@ -40,7 +42,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class NotificationService {
 
-    public enum Type { ACTIVITY, REACTION, COMMENT, FOLLOW }
+    public enum Type { ACTIVITY, REACTION, COMMENT, FOLLOW, EDIT }
 
     @Inject
     EntityManager em;
@@ -105,6 +107,21 @@ public class NotificationService {
         insert(recipientId, Type.FOLLOW, actorId, null, null, null);
     }
 
+    /** {@code adminId} decided on {@code recipientId}'s catalog edit proposal {@code editId}. */
+    public void edit(String adminId, String recipientId, UUID editId) {
+        if (recipientId == null || recipientId.equals(adminId)) {
+            return;
+        }
+        em.createNativeQuery("""
+                        insert into notification (id, user_id, type, actor_id, catalog_edit_id, created_at)
+                        values (:id, :user, 'EDIT', :actor, :edit, now())""")
+                .setParameter("id", UUID.randomUUID())
+                .setParameter("user", recipientId)
+                .setParameter("actor", adminId)
+                .setParameter("edit", editId)
+                .executeUpdate();
+    }
+
     @Transactional
     public NotificationPageDto list(String userId, PageRequest window) {
         @SuppressWarnings("unchecked")
@@ -113,11 +130,17 @@ public class NotificationService {
                                c.comment, n.created_at, n.read_at,
                                u.id as uid, u.display_name, u.trusted, u.avatar_version,
                                exists (select 1 from user_follow f
-                                       where f.follower_id = n.user_id and f.followee_id = n.actor_id) as following_actor
+                                       where f.follower_id = n.user_id and f.followee_id = n.actor_id) as following_actor,
+                               ce.id as edit_id, ce.status as edit_status, ce.target_type, ce.target_id,
+                               coalesce(w.title, s.title) as edit_title, ce.review_note, w.id as edit_work
                         from notification n
                           join app_user u on u.id = n.actor_id
                           left join feed_event fe on fe.id = n.feed_event_id
                           left join feed_comment c on c.id = n.comment_id
+                          left join catalog_edit ce on ce.id = n.catalog_edit_id
+                          left join edition ed on ce.target_type = 'EDITION' and ed.id = ce.target_id
+                          left join work w on w.id = ed.work_id
+                          left join series s on ce.target_type = 'SERIES' and s.id = ce.target_id
                         where n.user_id = :user""" + NOT_BLOCKED + """
                         order by n.created_at desc, n.id""")
                 .setParameter("user", userId)
@@ -129,8 +152,10 @@ public class NotificationService {
         // A follow notification is about no event, hence no book.
         List<Edition> editions = page.stream()
                 .map(row -> row[4] == null ? null : em.find(Edition.class, row[4])).toList();
-        Map<UUID, UUID> mine = libraryItems.itemIdsByWork(userId,
-                editions.stream().filter(java.util.Objects::nonNull).map(e -> e.work.id).distinct().toList());
+        List<UUID> works = new ArrayList<>(editions.stream().filter(java.util.Objects::nonNull)
+                .map(e -> e.work.id).toList());
+        page.stream().map(row -> (UUID) row[20]).filter(java.util.Objects::nonNull).forEach(works::add);
+        Map<UUID, UUID> mine = libraryItems.itemIdsByWork(userId, works.stream().distinct().toList());
         List<NotificationDto> items = new ArrayList<>();
         for (int i = 0; i < page.size(); i++) {
             Object[] row = page.get(i);
@@ -141,7 +166,10 @@ public class NotificationService {
                     (UUID) row[2], (String) row[3],
                     edition == null ? null : MemberBookDto.of(edition, mine.get(edition.work.id)),
                     (String) row[6], (String) row[5], toOffset(row[7]), toOffset(row[8]),
-                    Boolean.TRUE.equals(row[13])));
+                    Boolean.TRUE.equals(row[13]),
+                    row[14] == null ? null : new NotificationEditDto((UUID) row[14], (String) row[15],
+                            (String) row[16], (UUID) row[17], (String) row[18], (String) row[19],
+                            row[20] == null ? null : mine.get((UUID) row[20]))));
         }
         return new NotificationPageDto(items, window.page(), window.size(), hasMore);
     }

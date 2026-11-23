@@ -1204,6 +1204,90 @@ public final class ApiDtos {
         }
     }
 
+    /**
+     * A catalog report as the admins triage it (#621). {@code targetTitle} names what is reported
+     * (the work, edition or series, or the title a review is about); {@code targetDetail} adds the
+     * authors of a work or the text of a review; {@code seriesId} is set when the target has a
+     * screen of its own to open. NULL fields mean the target no longer exists.
+     */
+    public record AdminReportDto(UUID id, String targetType, UUID targetId, String targetTitle,
+            String targetDetail, UUID seriesId, String reason, String comment, String status,
+            MemberSummaryDto reporter, java.time.OffsetDateTime createdAt) {
+    }
+
+    public record AdminReportPageDto(java.util.List<AdminReportDto> items, int page, int size, long total) {
+    }
+
+    /** {@code OPEN}, {@code UPHELD} or {@code DISMISSED} — 400 otherwise. */
+    public record ReportStatusDto(@NotBlank String status) {
+    }
+
+    // ── Catalog edits (#618, #619, #620) ─────────────────────────────────────
+
+    /** Where an edition can be bought: the store, recognised from the host, and the page. */
+    public record SaleLinkDto(String store, String url) {
+        public static SaleLinkDto of(zelytra.librarius.domain.EditionSaleLink link) {
+            return new SaleLinkDto(link.store.name(), link.url);
+        }
+    }
+
+    /**
+     * What the edit form starts from: every editable field's current value, in the canonical form
+     * a proposal sends back ({@code null} when unset), the sale links of an edition, and whether
+     * the caller already has a proposal pending on this record.
+     */
+    public record CatalogEditFieldsDto(String targetType, UUID targetId,
+            java.util.Map<String, String> fields, java.util.List<SaleLinkDto> saleLinks,
+            boolean pendingByMe) {
+    }
+
+    /**
+     * A proposed change. {@code fields} maps a field name to its new value — a blank value
+     * clears it; a field left out, or sent with the value it already has, is not part of the
+     * proposal. {@code saleLinks}, when present, is the complete new list of store pages of an
+     * edition (empty removes them all); absent, the links are left alone.
+     */
+    public record CatalogEditCreateDto(
+            @NotNull zelytra.librarius.domain.CatalogEditTarget targetType,
+            @NotNull UUID targetId,
+            java.util.Map<String, String> fields,
+            @Size(max = 8) java.util.List<@NotBlank @Size(max = 1024) String> saleLinks) {
+    }
+
+    /**
+     * One field a proposal changes: the value it replaces, the one it proposes, and — for the
+     * admin view — the value the record holds now, which differs from {@code before} when
+     * somebody changed it since. Sale links travel as their URLs, one per line.
+     */
+    public record FieldChangeDto(String field, String before, String after, String current) {
+    }
+
+    /**
+     * A proposal and where it stands. Its author receives it back on the {@code POST} (without
+     * the admin-only details being any secret: it is their own proposal).
+     */
+    public record CatalogEditDto(UUID id, String targetType, UUID targetId, String targetTitle,
+            String targetCoverUrl, String status, String verification, String verificationDetail,
+            String verificationUrl, MemberSummaryDto submitter, MemberSummaryDto reviewer,
+            String reviewNote, java.util.List<FieldChangeDto> changes,
+            java.time.OffsetDateTime createdAt, java.time.OffsetDateTime reviewedAt) {
+    }
+
+    public record CatalogEditPageDto(java.util.List<CatalogEditDto> items, int page, int size, long total) {
+    }
+
+    /** An admin's optional word to the author of a proposal, on approving, rejecting or reverting it. */
+    public record CatalogEditDecisionDto(@Size(max = 1000) String note) {
+    }
+
+    /**
+     * What became of the recipient's proposal ({@code EDIT} notifications). {@code libraryItemId}
+     * is the recipient's own copy of the title, when they have one — the screen the bell opens.
+     */
+    public record NotificationEditDto(UUID id, String status, String targetType, UUID targetId,
+            String targetTitle, String note, UUID libraryItemId) {
+    }
+
     // ── Reports (#489, #490) ─────────────────────────────────────────────────
 
     /**
@@ -1357,10 +1441,12 @@ public final class ApiDtos {
      * recipient's own event — {@code eventId} is the screen it opens —, or {@code FOLLOW}: the
      * actor started following the recipient (#544), with no event nor book.
      * {@code followingActor} says whether the recipient follows the actor, for "follow back".
+     * {@code EDIT}: an admin decided on the recipient's catalog edit proposal (#618), told in
+     * {@code edit}.
      */
     public record NotificationDto(UUID id, String type, MemberSummaryDto actor, UUID eventId, String eventType,
             MemberBookDto book, String comment, String emote, java.time.OffsetDateTime createdAt,
-            java.time.OffsetDateTime readAt, boolean followingActor) {
+            java.time.OffsetDateTime readAt, boolean followingActor, NotificationEditDto edit) {
     }
 
     public record NotificationPageDto(java.util.List<NotificationDto> items, int page, int size, boolean hasMore) {

@@ -53,6 +53,200 @@
         } ]
       }
     },
+    "/api/admin/catalog-edits" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogEditPageDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Catalog Edits",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/catalog-edits/{id}/approve" : {
+      "post" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CatalogEditDecisionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogEditDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Approve",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/catalog-edits/{id}/reject" : {
+      "post" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CatalogEditDecisionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogEditDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Reject",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/catalog-edits/{id}/revert" : {
+      "post" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CatalogEditDecisionDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogEditDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Revert",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/admin/countries" : {
       "get" : {
         "responses" : {
@@ -230,6 +424,97 @@
           }
         },
         "summary" : "Monitoring",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/reports" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminReportPageDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Reports",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
+    "/api/admin/reports/{id}/status" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReportStatusDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Report Status",
         "tags" : [ "Admin Resource" ],
         "security" : [ {
           "SecurityScheme" : [ "admin" ]
@@ -573,6 +858,86 @@
         } ]
       }
     },
+    "/api/catalog-edits" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CatalogEditCreateDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Submit",
+        "tags" : [ "Catalog Edit Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/catalog-edits/fields" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "targetId",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "required" : true
+        }, {
+          "name" : "targetType",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/CatalogEditTarget"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogEditFieldsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Fields",
+        "tags" : [ "Catalog Edit Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/catalog/search" : {
       "get" : {
         "parameters" : [ {
@@ -910,6 +1275,44 @@
         },
         "summary" : "Get",
         "tags" : [ "Dashboard Layout Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/api/editions/{id}/sale-links" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SaleLinkDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Sale Links",
+        "tags" : [ "Edition Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
@@ -4468,6 +4871,67 @@
           }
         }
       },
+      "AdminReportDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "targetType" : {
+            "type" : "string"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "targetTitle" : {
+            "type" : "string"
+          },
+          "targetDetail" : {
+            "type" : "string"
+          },
+          "seriesId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "comment" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "reporter" : {
+            "$ref" : "#/components/schemas/MemberSummaryDto"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "AdminReportPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminReportDto"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "AdminUserDto" : {
         "type" : "object",
         "properties" : {
@@ -4799,6 +5263,148 @@
             "type" : "boolean"
           }
         }
+      },
+      "CatalogEditCreateDto" : {
+        "type" : "object",
+        "required" : [ "targetType", "targetId" ],
+        "properties" : {
+          "targetType" : {
+            "$ref" : "#/components/schemas/CatalogEditTarget"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "fields" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "saleLinks" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "pattern" : "\\S",
+              "maxLength" : 1024
+            },
+            "maxItems" : 8
+          }
+        }
+      },
+      "CatalogEditDecisionDto" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 1000
+          }
+        }
+      },
+      "CatalogEditDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "targetType" : {
+            "type" : "string"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "targetTitle" : {
+            "type" : "string"
+          },
+          "targetCoverUrl" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "verification" : {
+            "type" : "string"
+          },
+          "verificationDetail" : {
+            "type" : "string"
+          },
+          "verificationUrl" : {
+            "type" : "string"
+          },
+          "submitter" : {
+            "$ref" : "#/components/schemas/MemberSummaryDto"
+          },
+          "reviewer" : {
+            "$ref" : "#/components/schemas/MemberSummaryDto"
+          },
+          "reviewNote" : {
+            "type" : "string"
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldChangeDto"
+            }
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "reviewedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "CatalogEditFieldsDto" : {
+        "type" : "object",
+        "properties" : {
+          "targetType" : {
+            "type" : "string"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "fields" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "saleLinks" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SaleLinkDto"
+            }
+          },
+          "pendingByMe" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "CatalogEditPageDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CatalogEditDto"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CatalogEditTarget" : {
+        "type" : "string",
+        "enum" : [ "EDITION", "SERIES" ]
       },
       "CatalogResult" : {
         "type" : "object",
@@ -5569,6 +6175,23 @@
           "status" : {
             "type" : "string",
             "pattern" : "NEW|SEEN|HANDLED|IRRELEVANT"
+          }
+        }
+      },
+      "FieldChangeDto" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string"
+          },
+          "before" : {
+            "type" : "string"
+          },
+          "after" : {
+            "type" : "string"
+          },
+          "current" : {
+            "type" : "string"
           }
         }
       },
@@ -6352,6 +6975,35 @@
           },
           "followingActor" : {
             "type" : "boolean"
+          },
+          "edit" : {
+            "$ref" : "#/components/schemas/NotificationEditDto"
+          }
+        }
+      },
+      "NotificationEditDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "targetType" : {
+            "type" : "string"
+          },
+          "targetId" : {
+            "$ref" : "#/components/schemas/UUID"
+          },
+          "targetTitle" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "libraryItemId" : {
+            "$ref" : "#/components/schemas/UUID"
           }
         }
       },
@@ -6600,6 +7252,16 @@
         "type" : "string",
         "enum" : [ "WRONG_COVER", "WRONG_INFO", "DUPLICATE", "SPOILER", "OFFENSIVE", "SPAM", "OTHER" ]
       },
+      "ReportStatusDto" : {
+        "type" : "object",
+        "required" : [ "status" ],
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          }
+        }
+      },
       "ReportTargetType" : {
         "type" : "string",
         "enum" : [ "WORK", "EDITION", "SERIES", "REVIEW", "SERIES_REVIEW" ]
@@ -6617,6 +7279,17 @@
           },
           "shared" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "SaleLinkDto" : {
+        "type" : "object",
+        "properties" : {
+          "store" : {
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
           }
         }
       },
