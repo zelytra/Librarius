@@ -54,6 +54,8 @@ of a denormalised field to keep in step on every write.
 | `user_follow` | `(follower_id, followee_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (follower_id <> followee_id)` — no self-follow. PK doubles as the "who this user follows" index; separate idx on `followee_id` for "who follows this user" (V18/#200) |
 | `user_block` | `(blocker_id, blocked_id)` | `created_at` | Both FKs → `app_user`, `ON DELETE CASCADE`. `CHECK (blocker_id <> blocked_id)` — no self-block. Stored one-directionally but read symmetrically. PK doubles as the "who this user blocks" index; separate idx on `blocked_id` for the reverse half of the block-between predicate (V21/#203) |
 | `upcoming_release` | `id UUID` | `series_id` FK, `volume_number`, `title`, `release_date`, `date_precision` (DAY\|MONTH\|QUARTER\|YEAR), `region` (FR\|JP\|EN), `publisher`, `source` (`manual`\|`catalog`\|provider name), `confidence` (CONFIRMED\|ESTIMATED) | `UNIQUE(series_id, coalesce(volume_number, -1), region)`. No `user_id`: catalog data, like `series` (V8) |
+| `edition_sale_link` | `id UUID` | `edition_id` FK `ON DELETE CASCADE`, `store` (`contribution.SaleStore`), `url`, `created_at` (V50/#619) | `UNIQUE(edition_id, store)`. Catalog data, written only by applying a reviewed `catalog_edit` |
+| `catalog_edit` | `id UUID` | `submitter_id` and `reviewer_id` FK `app_user` **nullable**, `ON DELETE SET NULL`; `target_type` (EDITION\|SERIES), `target_id UUID`, `changes JSONB` (`{"field": {"before", "after"}}`, canonical strings, sale links one URL per line under `saleLinks`), `status` (PENDING\|APPLIED\|REJECTED\|REVERTED), `verification` (NOT_RUN\|PASSED\|FAILED) + `verification_detail` + `verification_url`, `review_note`, `created_at`, `reviewed_at` (V50/#618, #620) | idx `(status, created_at DESC)` for the admin list; partial `UNIQUE(submitter_id, target_type, target_id) WHERE status = 'PENDING'`. No FK on `target_id`, as for `report`. `notification.catalog_edit_id` (V50) points at it for the `EDIT` notifications |
 | `report` | `id UUID` | `reporter_id` FK `app_user`, `contributor_id` FK `app_user` **nullable** (V19), `target_type` (WORK\|EDITION\|SERIES), `target_id UUID`, `reason` (WRONG_COVER\|WRONG_INFO\|DUPLICATE\|OTHER), `comment TEXT` **nullable**, `status` (OPEN\|DISMISSED\|UPHELD, default OPEN), `created_at` | idx `(target_type, target_id)`, `(reporter_id)` and `(contributor_id)` (V19). No FK on `target_id`: it spans three tables, resolved in the service (V17/#192). `contributor_id` `ON DELETE SET NULL`, read by the trust revocation (V19/#195) |
 
 Built-ins inserted in V1: `or` (#d9b94e), `argent` (#b3b7bf), `bronze` (#c08a5a); `abandon`
@@ -636,6 +638,19 @@ same table, stays `CASCADE` — erasing an account still erases the reports it *
 titles, it never deletes them**: a rank is a label stuck on a book, so dropping the label
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
+
+`V50__catalog_edits.sql` opens the shared catalog to member edits
+([#618](https://github.com/zelytra/Librarius/issues/618)). A proposal is stored as a **diff**
+rather than as a copy of the record: only the fields that differ, each with the value it
+replaces, so the admin view reads it at a glance and a revert writes back exactly what was there.
+The values are canonical strings (`contribution.CatalogFields`) — a JSONB column rather than a
+table of field rows, since nothing queries inside a diff. The submitter is `SET NULL` on account
+erasure, unlike the `CASCADE` of personal rows: the history of what changed in a catalog every
+reader shares is not the member's personal data. `edition_sale_link` holds the store pages of an
+edition ([#619](https://github.com/zelytra/Librarius/issues/619)), one per store; the store is
+derived from the URL host against a closed list, which is also what keeps the server-side fetch
+of the automatic check ([#620](https://github.com/zelytra/Librarius/issues/620)) off arbitrary
+hosts. `notification` gains the `EDIT` type and its `catalog_edit_id`.
 
 ## 2. Known limits of the current model
 

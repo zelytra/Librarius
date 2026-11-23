@@ -46,6 +46,34 @@ describe('notifications', () => {
     await waitFor(() => expect(read).toBe(1));
   });
 
+  /** #618: what became of a catalog edit proposal, opening the book or the series. */
+  test('tells a member what an admin decided on their proposals', async () => {
+    const ALICE = { id: 'alice', displayName: 'Alice' };
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({
+        items: [
+          { id: 'n20', type: 'EDIT', actor: ALICE, createdAt: '2026-11-16T12:00:00Z',
+            edit: { id: 'ce1', status: 'APPLIED', targetType: 'EDITION', targetId: 'e1', targetTitle: 'Dune', libraryItemId: 'item-1' } },
+          { id: 'n21', type: 'EDIT', actor: ALICE, createdAt: '2026-11-16T11:00:00Z',
+            edit: { id: 'ce2', status: 'REJECTED', targetType: 'SERIES', targetId: 's1', targetTitle: 'One Piece', note: 'Déjà juste.' } },
+          { id: 'n22', type: 'EDIT', actor: ALICE, createdAt: '2026-11-16T10:00:00Z',
+            edit: { id: 'ce3', status: 'REVERTED', targetType: 'EDITION', targetId: 'e2', targetTitle: 'Hypérion' } },
+        ],
+        page: 0, size: 30, hasMore: false,
+      })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+    );
+    renderWithProviders(<NotificationsPage />);
+
+    expect(await screen.findByRole('link', { name: /Ta modification de « Dune » a été acceptée/ }))
+      .toHaveAttribute('href', '/detail/item-1');
+    const rejected = screen.getByRole('link', { name: /Ta modification de « One Piece » a été refusée/ });
+    expect(rejected).toHaveAttribute('href', '/series/s1');
+    expect(within(rejected).getByText('« Déjà juste. »')).toBeInTheDocument();
+    // Not in the library: nothing to open, the news is still told.
+    expect(screen.getByText('Ta modification de « Hypérion » a été annulée par un administrateur.')).toBeInTheDocument();
+  });
+
   /** #544: a new follower — their profile one tap away, and a way to follow them back. */
   test('announces a new follower, opens their profile and follows them back', async () => {
     const followed: string[] = [];

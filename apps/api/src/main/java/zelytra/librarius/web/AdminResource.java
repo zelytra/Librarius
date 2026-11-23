@@ -53,6 +53,12 @@ public class AdminResource {
     CurrentUser currentUser;
 
     @Inject
+    zelytra.librarius.contribution.CatalogEditService catalogEdits;
+
+    @Inject
+    zelytra.librarius.report.ReportService catalogReports;
+
+    @Inject
     zelytra.librarius.releases.UpcomingReleaseService releases;
 
     /**
@@ -110,6 +116,69 @@ public class AdminResource {
             return Status.valueOf(status);
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Unknown status: " + status);
+        }
+    }
+
+    /**
+     * The catalog edit proposals (#618), newest first — only those in {@code status} when it is
+     * given ({@code PENDING}, {@code APPLIED}, {@code REJECTED}, {@code REVERTED}; 400 otherwise).
+     */
+    @GET
+    @Path("/catalog-edits")
+    public ApiDtos.CatalogEditPageDto catalogEdits(@QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("50") int size, @QueryParam("status") String status) {
+        return catalogEdits.list(status == null || status.isBlank() ? null
+                : parse(zelytra.librarius.domain.CatalogEditStatus.class, status), PageRequest.of(page, size));
+    }
+
+    /** Applies a pending proposal to the catalog. 404 unknown, 409 when it is not pending. */
+    @jakarta.ws.rs.POST
+    @Path("/catalog-edits/{id}/approve")
+    public ApiDtos.CatalogEditDto approve(@PathParam("id") UUID id, @Valid ApiDtos.CatalogEditDecisionDto body) {
+        return catalogEdits.approve(currentUser.id(), id, body == null ? null : body.note());
+    }
+
+    /** Refuses a pending proposal; nothing is written. 404 unknown, 409 when it is not pending. */
+    @jakarta.ws.rs.POST
+    @Path("/catalog-edits/{id}/reject")
+    public ApiDtos.CatalogEditDto reject(@PathParam("id") UUID id, @Valid ApiDtos.CatalogEditDecisionDto body) {
+        return catalogEdits.reject(currentUser.id(), id, body == null ? null : body.note());
+    }
+
+    /** Puts back what an applied proposal replaced. 404 unknown, 409 when it is not applied. */
+    @jakarta.ws.rs.POST
+    @Path("/catalog-edits/{id}/revert")
+    public ApiDtos.CatalogEditDto revert(@PathParam("id") UUID id, @Valid ApiDtos.CatalogEditDecisionDto body) {
+        return catalogEdits.revert(currentUser.id(), id, body == null ? null : body.note());
+    }
+
+    /**
+     * The reports filed from the book screens (#621) — not the bug reports of {@code /feedback} —
+     * newest first, only those in {@code status} when given ({@code OPEN}, {@code UPHELD},
+     * {@code DISMISSED}; 400 otherwise).
+     */
+    @GET
+    @Path("/reports")
+    public ApiDtos.AdminReportPageDto reports(@QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("50") int size, @QueryParam("status") String status) {
+        return catalogReports.list(status == null || status.isBlank() ? null
+                : parse(zelytra.librarius.domain.ReportStatus.class, status), PageRequest.of(page, size));
+    }
+
+    /** Upholds or dismisses a report — what the trust revocation (#195) counts. 204, 404 unknown. */
+    @PUT
+    @Path("/reports/{id}/status")
+    public void reportStatus(@PathParam("id") UUID id, @Valid @jakarta.validation.constraints.NotNull ApiDtos.ReportStatusDto body) {
+        if (!catalogReports.setStatus(id, parse(zelytra.librarius.domain.ReportStatus.class, body.status()))) {
+            throw new NotFoundException();
+        }
+    }
+
+    private static <E extends Enum<E>> E parse(Class<E> type, String value) {
+        try {
+            return Enum.valueOf(type, value);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unknown status: " + value);
         }
     }
 

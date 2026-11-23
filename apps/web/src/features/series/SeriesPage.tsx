@@ -32,6 +32,7 @@ import {
 } from '../../api/generated/librarius';
 import { StarRating } from '../detail/StarRating';
 import { ReportButton } from '../report/ReportButton';
+import { CatalogEditButton } from '../catalogEdit/CatalogEditButton';
 import { missingVolumes, runLength, volumeState, type VolumeState } from './series';
 import { ReadersReviews } from '../reviews/ReadersReviews';
 import { SeriesCategory } from './SeriesCategory';
@@ -432,6 +433,7 @@ function SeriesContent({ id }: { id: string }) {
         {/* A series is shared catalog data, so an error in it is worth flagging — the
             report targets this very `series` row. */}
         <div className={styles.reportRow}>
+          <CatalogEditButton targetType="SERIES" targetId={id} />
           <ReportButton targetType="SERIES" targetId={id} />
         </div>
       </div>

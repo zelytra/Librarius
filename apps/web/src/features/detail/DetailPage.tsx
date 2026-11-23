@@ -43,6 +43,8 @@ import {
 import { seriesIdOf } from '../series/series';
 import { AuthorNames } from '../author/AuthorNames';
 import { ReportButton } from '../report/ReportButton';
+import { CatalogEditButton } from '../catalogEdit/CatalogEditButton';
+import { SaleLinks } from '../catalogEdit/SaleLinks';
 import { CategoryChoice } from './CategoryChoice';
 import { OutcomeSheet, type Outcome, type OutcomeChoice } from './OutcomeSheet';
 import { StarRating } from './StarRating';
@@ -1256,9 +1258,13 @@ function DetailContent({ id }: { id: string }) {
         {/* Flagging a data error is about the shared work, not the private ownership row:
             the report targets the catalog `work`, which every reader of this title shares.
             A payload predating `workId` simply shows nothing to report. */}
-        {b.workId && (
+        {b.editionId && <SaleLinks editionId={b.editionId} />}
+
+        {/* Correcting the shared record (#618) sits beside reporting an error in it. */}
+        {(b.workId || b.editionId) && (
           <div className={styles.reportRow}>
-            <ReportButton targetType="WORK" targetId={b.workId} />
+            {b.editionId && <CatalogEditButton targetType="EDITION" targetId={b.editionId} />}
+            {b.workId && <ReportButton targetType="WORK" targetId={b.workId} />}
           </div>
         )}
 

@@ -132,8 +132,10 @@
   min-height: 44px;
 }
 
-/* Where a member's avatar would be, for news nobody made (#615): the avatar's 40 px disc. */
-.releaseIcon {
+/* Where a member's avatar would be, for news nobody made (#615) or a decision on a catalog
+   edit (#618): the avatar's 40 px disc. */
+.releaseIcon,
+.editIcon {
   flex: 0 0 auto;
   width: 40px;
   height: 40px;

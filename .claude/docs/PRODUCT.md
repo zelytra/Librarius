@@ -222,8 +222,23 @@ The full inventory, one shelf per support type.
   feeds the automatic trust revocation now wired for this milestone
   ([#195](https://github.com/zelytra/Librarius/issues/195)): an account that collects too many
   *upheld* reports against its contributions loses its trusted standing. A report only weighs
-  once a moderator upholds it, and the moderation screen that does so is not built yet — so the
-  revocation waits on it before it can act on real reports.
+  once a moderator upholds it, which an admin now does from the **Catalogue** tab of the
+  administration ([#621](https://github.com/zelytra/Librarius/issues/621)).
+- ✅ **Suggest an edit** (*"Proposer une modification"*,
+  [#618](https://github.com/zelytra/Librarius/issues/618)): beside the report entry, on Detail
+  and on Series, a form seeded with the shared record's current values — the work's and this
+  edition's fields on a book, the series' own on a series — sends only what changed. It waits for
+  an admin's review, unless the author is an admin; the author is notified of the decision
+  (accepted, declined, reverted, with the admin's note). One pending proposal per member per
+  record.
+- ✅ **Where to buy it** (*"Où l'acheter"*, [#619](https://github.com/zelytra/Librarius/issues/619)):
+  the edition's store pages, one per store on a closed list (Amazon.fr, Fnac, Cultura, Decitre,
+  E.Leclerc, Furet du Nord, Gibert, Rakuten), as "Acheter sur …" links opening a new tab. They are
+  added through an edit proposal; when one adds a link, the server reads that store page and,
+  when it carries the book's ISBN and title, applies the proposal at once
+  ([#620](https://github.com/zelytra/Librarius/issues/620)) — the admins still see it, marked as
+  checked automatically, and can revert it. A store that blocks the read leaves the proposal to an
+  admin, saying why.
 - 🔜 **Series navigation**: previous / next volume.
 - 🔜 Reading history (re-reads).
 
@@ -615,12 +630,11 @@ year 🔜.
    dismissed — revocation is a state, not a ban. What "trustworthy" precisely means, and how many
    upheld reports is "too many", are thresholds meant to be retuned, not fixed lines. The flag is
    surfaced as a badge next to the caller's own display name in Settings
-   ([#186](https://github.com/zelytra/Librarius/issues/186), § 4.7). **One piece is still
-   maintainer-gated**: a report only counts once a moderator marks it *upheld*, and the
-   moderation surface that does so lives behind an admin role that is not built yet — so today the
-   evaluation grants in practice and the revocation path, though wired and tested, waits on that
-   surface (and on the contribution attribution of
-   [#198](https://github.com/zelytra/Librarius/issues/198)) to have real reports to act on.
+   ([#186](https://github.com/zelytra/Librarius/issues/186), § 4.7). A report only counts once a
+   moderator marks it *upheld*, from the Catalogue tab of the administration
+   ([#621](https://github.com/zelytra/Librarius/issues/621)); the revocation still waits on the
+   contribution attribution of [#198](https://github.com/zelytra/Librarius/issues/198), which
+   stamps whom a report reflects on, to have real reports to act on.
 
 ### Added with #411–#421
 

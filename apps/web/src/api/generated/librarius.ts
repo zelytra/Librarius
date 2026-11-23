@@ -64,6 +64,39 @@ export interface AchievementsDto {
   unseen?: AchievementUnlockDto[];
 }
 
+/**
+ * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
+ */
+export type Uuid = string;
+
+export interface MemberSummaryDto {
+  id?: string;
+  displayName?: string;
+  trusted?: boolean;
+  avatarVersion?: number;
+}
+
+export interface AdminReportDto {
+  id?: Uuid;
+  targetType?: string;
+  targetId?: Uuid;
+  targetTitle?: string;
+  targetDetail?: string;
+  seriesId?: Uuid;
+  reason?: string;
+  comment?: string;
+  status?: string;
+  reporter?: MemberSummaryDto;
+  createdAt?: OffsetDateTime;
+}
+
+export interface AdminReportPageDto {
+  items?: AdminReportDto[];
+  page?: number;
+  size?: number;
+  total?: number;
+}
+
 export interface AdminUserDto {
   id?: string;
   username?: string;
@@ -81,11 +114,6 @@ export interface AdminUserPageDto {
   size?: number;
   total?: number;
 }
-
-/**
- * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
- */
-export type Uuid = string;
 
 export interface FeedbackDetailDto {
   id?: Uuid;
@@ -246,6 +274,80 @@ export interface BulkUpdateDto {
   rating?: number;
   clearRating?: boolean;
   remove?: boolean;
+}
+
+export type CatalogEditCreateDtoFields = {[key: string]: string};
+
+export type CatalogEditTarget = typeof CatalogEditTarget[keyof typeof CatalogEditTarget];
+
+
+export const CatalogEditTarget = {
+  EDITION: 'EDITION',
+  SERIES: 'SERIES',
+} as const;
+
+export interface CatalogEditCreateDto {
+  targetType: CatalogEditTarget;
+  targetId: Uuid;
+  fields?: CatalogEditCreateDtoFields;
+  /**
+     * @maxItems 8
+     * @items.maxLength 1024
+     * @items.pattern \S
+     */
+  saleLinks?: string[];
+}
+
+export interface CatalogEditDecisionDto {
+  /** @maxLength 1000 */
+  note?: string;
+}
+
+export interface FieldChangeDto {
+  field?: string;
+  before?: string;
+  after?: string;
+  current?: string;
+}
+
+export interface CatalogEditDto {
+  id?: Uuid;
+  targetType?: string;
+  targetId?: Uuid;
+  targetTitle?: string;
+  targetCoverUrl?: string;
+  status?: string;
+  verification?: string;
+  verificationDetail?: string;
+  verificationUrl?: string;
+  submitter?: MemberSummaryDto;
+  reviewer?: MemberSummaryDto;
+  reviewNote?: string;
+  changes?: FieldChangeDto[];
+  createdAt?: OffsetDateTime;
+  reviewedAt?: OffsetDateTime;
+}
+
+export type CatalogEditFieldsDtoFields = {[key: string]: string};
+
+export interface SaleLinkDto {
+  store?: string;
+  url?: string;
+}
+
+export interface CatalogEditFieldsDto {
+  targetType?: string;
+  targetId?: Uuid;
+  fields?: CatalogEditFieldsDtoFields;
+  saleLinks?: SaleLinkDto[];
+  pendingByMe?: boolean;
+}
+
+export interface CatalogEditPageDto {
+  items?: CatalogEditDto[];
+  page?: number;
+  size?: number;
+  total?: number;
 }
 
 export interface CatalogResult {
@@ -507,13 +609,6 @@ export interface FeedCommentCreateDto {
      * @pattern \S
      */
   comment: string;
-}
-
-export interface MemberSummaryDto {
-  id?: string;
-  displayName?: string;
-  trusted?: boolean;
-  avatarVersion?: number;
 }
 
 export interface FeedCommentDto {
@@ -900,6 +995,16 @@ export interface UpcomingReleaseDto {
   confidence?: string;
 }
 
+export interface NotificationEditDto {
+  id?: Uuid;
+  status?: string;
+  targetType?: string;
+  targetId?: Uuid;
+  targetTitle?: string;
+  note?: string;
+  libraryItemId?: Uuid;
+}
+
 export interface NotificationDto {
   id?: Uuid;
   type?: string;
@@ -913,6 +1018,7 @@ export interface NotificationDto {
   readAt?: OffsetDateTime;
   followingActor?: boolean;
   release?: UpcomingReleaseDto;
+  edit?: NotificationEditDto;
 }
 
 export interface NotificationPageDto {
@@ -1012,6 +1118,11 @@ export interface ReportCreateDto {
   reason: ReportReason;
   /** @maxLength 2000 */
   comment?: string;
+}
+
+export interface ReportStatusDto {
+  /** @pattern \S */
+  status: string;
 }
 
 export interface ReviewDto {
@@ -1243,7 +1354,19 @@ export interface WishlistUpdateDto {
   note?: string;
 }
 
+export type GetApiAdminCatalogEditsParams = {
+  page?: number;
+  size?: number;
+  status?: string;
+};
+
 export type GetApiAdminFeedbackParams = {
+  page?: number;
+  size?: number;
+  status?: string;
+};
+
+export type GetApiAdminReportsParams = {
   page?: number;
   size?: number;
   status?: string;
@@ -1263,6 +1386,11 @@ export type GetApiAgentFeedbackParams = {
 
 export type GetApiAuthorsParams = {
   q?: string;
+};
+
+export type GetApiCatalogEditsFieldsParams = {
+  targetId: Uuid;
+  targetType: CatalogEditTarget;
 };
 
 export type GetApiCatalogSearchParams = {
@@ -1548,6 +1676,375 @@ export const usePostApiAchievementsSeen = <TError = void,
         TContext
       > => {
       return useMutation(getPostApiAchievementsSeenMutationOptions(options), queryClient);
+    }
+
+export const getGetApiAdminCatalogEditsUrl = (params?: GetApiAdminCatalogEditsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/catalog-edits?${stringifiedParams}` : `/api/admin/catalog-edits`
+}
+
+/**
+ * @summary Catalog Edits
+ */
+export const getApiAdminCatalogEdits = async (params?: GetApiAdminCatalogEditsParams, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditPageDto> => {
+
+  return apiClient<CatalogEditPageDto>(getGetApiAdminCatalogEditsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminCatalogEditsQueryKey = (params?: GetApiAdminCatalogEditsParams,) => {
+    return [
+    `/api/admin/catalog-edits`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAdminCatalogEditsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError = void>(params?: GetApiAdminCatalogEditsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminCatalogEditsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>> = () => getApiAdminCatalogEdits(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminCatalogEditsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>>
+export type GetApiAdminCatalogEditsQueryError = void
+
+
+/** @summary Catalog Edits */
+export function useGetApiAdminCatalogEdits<TData = Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError = void>(
+ params: undefined |  GetApiAdminCatalogEditsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminCatalogEdits>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminCatalogEdits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Catalog Edits */
+export function useGetApiAdminCatalogEdits<TData = Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError = void>(
+ params?: GetApiAdminCatalogEditsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminCatalogEdits>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminCatalogEdits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Catalog Edits */
+export function useGetApiAdminCatalogEdits<TData = Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError = void>(
+ params?: GetApiAdminCatalogEditsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Catalog Edits */
+export function useGetApiAdminCatalogEdits<TData = Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError = void>(
+ params?: GetApiAdminCatalogEditsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminCatalogEdits>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminCatalogEditsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostApiAdminCatalogEditsIdApproveUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/catalog-edits/${id}/approve`
+}
+
+/**
+ * @summary Approve
+ */
+export const postApiAdminCatalogEditsIdApprove = async (id: Uuid,
+    catalogEditDecisionDto: CatalogEditDecisionDto, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<CatalogEditDto>(getPostApiAdminCatalogEditsIdApproveUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogEditDecisionDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiAdminCatalogEditsIdApproveMutationKey = () => ['postApiAdminCatalogEditsIdApprove'] as const;
+
+export const getPostApiAdminCatalogEditsIdApproveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>, TError,PostApiAdminCatalogEditsIdApproveMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>, TError,PostApiAdminCatalogEditsIdApproveMutationVariables, TContext> => {
+
+const mutationKey = getPostApiAdminCatalogEditsIdApproveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>, PostApiAdminCatalogEditsIdApproveMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiAdminCatalogEditsIdApprove(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminCatalogEditsIdApproveMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>>
+    export type PostApiAdminCatalogEditsIdApproveMutationBody = CatalogEditDecisionDto
+    export type PostApiAdminCatalogEditsIdApproveMutationError = void
+    export type PostApiAdminCatalogEditsIdApproveMutationVariables = {id: Uuid;data: CatalogEditDecisionDto}
+
+    /** @summary Approve */
+export const usePostApiAdminCatalogEditsIdApprove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>, TError,PostApiAdminCatalogEditsIdApproveMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminCatalogEditsIdApprove>>,
+        TError,
+        PostApiAdminCatalogEditsIdApproveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiAdminCatalogEditsIdApproveMutationOptions(options), queryClient);
+    }
+
+export const getPostApiAdminCatalogEditsIdRejectUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/catalog-edits/${id}/reject`
+}
+
+/**
+ * @summary Reject
+ */
+export const postApiAdminCatalogEditsIdReject = async (id: Uuid,
+    catalogEditDecisionDto: CatalogEditDecisionDto, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<CatalogEditDto>(getPostApiAdminCatalogEditsIdRejectUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogEditDecisionDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiAdminCatalogEditsIdRejectMutationKey = () => ['postApiAdminCatalogEditsIdReject'] as const;
+
+export const getPostApiAdminCatalogEditsIdRejectMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>, TError,PostApiAdminCatalogEditsIdRejectMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>, TError,PostApiAdminCatalogEditsIdRejectMutationVariables, TContext> => {
+
+const mutationKey = getPostApiAdminCatalogEditsIdRejectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>, PostApiAdminCatalogEditsIdRejectMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiAdminCatalogEditsIdReject(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminCatalogEditsIdRejectMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>>
+    export type PostApiAdminCatalogEditsIdRejectMutationBody = CatalogEditDecisionDto
+    export type PostApiAdminCatalogEditsIdRejectMutationError = void
+    export type PostApiAdminCatalogEditsIdRejectMutationVariables = {id: Uuid;data: CatalogEditDecisionDto}
+
+    /** @summary Reject */
+export const usePostApiAdminCatalogEditsIdReject = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>, TError,PostApiAdminCatalogEditsIdRejectMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminCatalogEditsIdReject>>,
+        TError,
+        PostApiAdminCatalogEditsIdRejectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiAdminCatalogEditsIdRejectMutationOptions(options), queryClient);
+    }
+
+export const getPostApiAdminCatalogEditsIdRevertUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/catalog-edits/${id}/revert`
+}
+
+/**
+ * @summary Revert
+ */
+export const postApiAdminCatalogEditsIdRevert = async (id: Uuid,
+    catalogEditDecisionDto: CatalogEditDecisionDto, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<CatalogEditDto>(getPostApiAdminCatalogEditsIdRevertUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogEditDecisionDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiAdminCatalogEditsIdRevertMutationKey = () => ['postApiAdminCatalogEditsIdRevert'] as const;
+
+export const getPostApiAdminCatalogEditsIdRevertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>, TError,PostApiAdminCatalogEditsIdRevertMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>, TError,PostApiAdminCatalogEditsIdRevertMutationVariables, TContext> => {
+
+const mutationKey = getPostApiAdminCatalogEditsIdRevertMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>, PostApiAdminCatalogEditsIdRevertMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiAdminCatalogEditsIdRevert(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminCatalogEditsIdRevertMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>>
+    export type PostApiAdminCatalogEditsIdRevertMutationBody = CatalogEditDecisionDto
+    export type PostApiAdminCatalogEditsIdRevertMutationError = void
+    export type PostApiAdminCatalogEditsIdRevertMutationVariables = {id: Uuid;data: CatalogEditDecisionDto}
+
+    /** @summary Revert */
+export const usePostApiAdminCatalogEditsIdRevert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>, TError,PostApiAdminCatalogEditsIdRevertMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminCatalogEditsIdRevert>>,
+        TError,
+        PostApiAdminCatalogEditsIdRevertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiAdminCatalogEditsIdRevertMutationOptions(options), queryClient);
     }
 
 export const getGetApiAdminCountriesUrl = () => {
@@ -2204,6 +2701,201 @@ export const useDeleteApiAdminReleasesId = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiAdminReleasesIdMutationOptions(options), queryClient);
+    }
+
+export const getGetApiAdminReportsUrl = (params?: GetApiAdminReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/reports?${stringifiedParams}` : `/api/admin/reports`
+}
+
+/**
+ * @summary Reports
+ */
+export const getApiAdminReports = async (params?: GetApiAdminReportsParams, options?: Parameters<typeof apiClient>[1]): Promise<AdminReportPageDto> => {
+
+  return apiClient<AdminReportPageDto>(getGetApiAdminReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminReportsQueryKey = (params?: GetApiAdminReportsParams,) => {
+    return [
+    `/api/admin/reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAdminReportsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminReports>>, TError = void>(params?: GetApiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminReports>>> = () => getApiAdminReports(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminReports>>>
+export type GetApiAdminReportsQueryError = void
+
+
+/** @summary Reports */
+export function useGetApiAdminReports<TData = Awaited<ReturnType<typeof getApiAdminReports>>, TError = void>(
+ params: undefined |  GetApiAdminReportsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReports>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Reports */
+export function useGetApiAdminReports<TData = Awaited<ReturnType<typeof getApiAdminReports>>, TError = void>(
+ params?: GetApiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReports>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Reports */
+export function useGetApiAdminReports<TData = Awaited<ReturnType<typeof getApiAdminReports>>, TError = void>(
+ params?: GetApiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Reports */
+export function useGetApiAdminReports<TData = Awaited<ReturnType<typeof getApiAdminReports>>, TError = void>(
+ params?: GetApiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutApiAdminReportsIdStatusUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/reports/${id}/status`
+}
+
+/**
+ * @summary Report Status
+ */
+export const putApiAdminReportsIdStatus = async (id: Uuid,
+    reportStatusDto: ReportStatusDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiAdminReportsIdStatusUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(reportStatusDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiAdminReportsIdStatusMutationKey = () => ['putApiAdminReportsIdStatus'] as const;
+
+export const getPutApiAdminReportsIdStatusMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>, TError,PutApiAdminReportsIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>, TError,PutApiAdminReportsIdStatusMutationVariables, TContext> => {
+
+const mutationKey = getPutApiAdminReportsIdStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>, PutApiAdminReportsIdStatusMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiAdminReportsIdStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAdminReportsIdStatusMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>>
+    export type PutApiAdminReportsIdStatusMutationBody = ReportStatusDto
+    export type PutApiAdminReportsIdStatusMutationError = void
+    export type PutApiAdminReportsIdStatusMutationVariables = {id: Uuid;data: ReportStatusDto}
+
+    /** @summary Report Status */
+export const usePutApiAdminReportsIdStatus = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>, TError,PutApiAdminReportsIdStatusMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAdminReportsIdStatus>>,
+        TError,
+        PutApiAdminReportsIdStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiAdminReportsIdStatusMutationOptions(options), queryClient);
     }
 
 export const getGetApiAdminUsersUrl = (params?: GetApiAdminUsersParams,) => {
@@ -3035,6 +3727,200 @@ export const usePutApiAuthorsIdFollow = <TError = void,
       return useMutation(getPutApiAuthorsIdFollowMutationOptions(options), queryClient);
     }
 
+export const getPostApiCatalogEditsUrl = () => {
+
+
+
+
+  return `/api/catalog-edits`
+}
+
+/**
+ * @summary Submit
+ */
+export const postApiCatalogEdits = async (catalogEditCreateDto: CatalogEditCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<CatalogEditDto>(getPostApiCatalogEditsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogEditCreateDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiCatalogEditsMutationKey = () => ['postApiCatalogEdits'] as const;
+
+export const getPostApiCatalogEditsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiCatalogEdits>>, TError,PostApiCatalogEditsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiCatalogEdits>>, TError,PostApiCatalogEditsMutationVariables, TContext> => {
+
+const mutationKey = getPostApiCatalogEditsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiCatalogEdits>>, PostApiCatalogEditsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiCatalogEdits(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiCatalogEditsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiCatalogEdits>>>
+    export type PostApiCatalogEditsMutationBody = CatalogEditCreateDto
+    export type PostApiCatalogEditsMutationError = void
+    export type PostApiCatalogEditsMutationVariables = {data: CatalogEditCreateDto}
+
+    /** @summary Submit */
+export const usePostApiCatalogEdits = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiCatalogEdits>>, TError,PostApiCatalogEditsMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiCatalogEdits>>,
+        TError,
+        PostApiCatalogEditsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiCatalogEditsMutationOptions(options), queryClient);
+    }
+
+export const getGetApiCatalogEditsFieldsUrl = (params: GetApiCatalogEditsFieldsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog-edits/fields?${stringifiedParams}` : `/api/catalog-edits/fields`
+}
+
+/**
+ * @summary Fields
+ */
+export const getApiCatalogEditsFields = async (params: GetApiCatalogEditsFieldsParams, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditFieldsDto> => {
+
+  return apiClient<CatalogEditFieldsDto>(getGetApiCatalogEditsFieldsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiCatalogEditsFieldsQueryKey = (params?: GetApiCatalogEditsFieldsParams,) => {
+    return [
+    `/api/catalog-edits/fields`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiCatalogEditsFieldsQueryOptions = <TData = Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError = void>(params: GetApiCatalogEditsFieldsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiCatalogEditsFieldsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiCatalogEditsFields>>> = () => getApiCatalogEditsFields(params, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiCatalogEditsFieldsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiCatalogEditsFields>>>
+export type GetApiCatalogEditsFieldsQueryError = void
+
+
+/** @summary Fields */
+export function useGetApiCatalogEditsFields<TData = Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError = void>(
+ params: GetApiCatalogEditsFieldsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCatalogEditsFields>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCatalogEditsFields>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Fields */
+export function useGetApiCatalogEditsFields<TData = Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError = void>(
+ params: GetApiCatalogEditsFieldsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiCatalogEditsFields>>,
+          TError,
+          Awaited<ReturnType<typeof getApiCatalogEditsFields>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Fields */
+export function useGetApiCatalogEditsFields<TData = Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError = void>(
+ params: GetApiCatalogEditsFieldsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Fields */
+export function useGetApiCatalogEditsFields<TData = Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError = void>(
+ params: GetApiCatalogEditsFieldsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiCatalogEditsFields>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiCatalogEditsFieldsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetApiCatalogSearchUrl = (params?: GetApiCatalogSearchParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -3780,6 +4666,107 @@ export function useGetApiDashboardLayout<TData = Awaited<ReturnType<typeof getAp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiDashboardLayoutQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiEditionsIdSaleLinksUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/editions/${id}/sale-links`
+}
+
+/**
+ * @summary Sale Links
+ */
+export const getApiEditionsIdSaleLinks = async (id: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<SaleLinkDto[]> => {
+
+  return apiClient<SaleLinkDto[]>(getGetApiEditionsIdSaleLinksUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiEditionsIdSaleLinksQueryKey = (id: Uuid,) => {
+    return [
+    `/api/editions/${id}/sale-links`
+    ] as const;
+    }
+
+
+export const getGetApiEditionsIdSaleLinksQueryOptions = <TData = Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError = void>(id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiEditionsIdSaleLinksQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>> = () => getApiEditionsIdSaleLinks(id, requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiEditionsIdSaleLinksQueryResult = NonNullable<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>>
+export type GetApiEditionsIdSaleLinksQueryError = void
+
+
+/** @summary Sale Links */
+export function useGetApiEditionsIdSaleLinks<TData = Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError = void>(
+ id: Uuid, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Sale Links */
+export function useGetApiEditionsIdSaleLinks<TData = Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Sale Links */
+export function useGetApiEditionsIdSaleLinks<TData = Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Sale Links */
+export function useGetApiEditionsIdSaleLinks<TData = Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError = void>(
+ id: Uuid, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEditionsIdSaleLinks>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiEditionsIdSaleLinksQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

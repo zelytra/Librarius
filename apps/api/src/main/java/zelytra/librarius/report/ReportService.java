@@ -46,6 +46,9 @@ public class ReportService {
     @Inject
     zelytra.librarius.domain.repository.SeriesReviewRepository seriesReviews;
 
+    @Inject
+    zelytra.librarius.domain.repository.AppUserRepository users;
+
     /**
      * Files a report on behalf of {@code reporterId}.
      *
@@ -77,6 +80,77 @@ public class ReportService {
             case REVIEW -> items.find("id = ?1 and reviewShared = true", targetId).count() > 0;
             case SERIES_REVIEW -> seriesReviews.find("id = ?1 and shared = true", targetId).count() > 0;
         };
+    }
+
+    /** The reports, newest first, with what each targets and who filed it (#621). */
+    @Transactional
+    public zelytra.librarius.web.ApiDtos.AdminReportPageDto list(zelytra.librarius.domain.ReportStatus status,
+            zelytra.librarius.web.PageRequest window) {
+        var query = status == null
+                ? reports.find("order by createdAt desc, id")
+                : reports.find("status = ?1 order by createdAt desc, id", status);
+        var items = query.page(window.page(), window.size()).list().stream().map(this::toAdminDto).toList();
+        return new zelytra.librarius.web.ApiDtos.AdminReportPageDto(items, window.page(), window.size(), query.count());
+    }
+
+    /** False for an unknown report. */
+    @Transactional
+    public boolean setStatus(UUID id, zelytra.librarius.domain.ReportStatus status) {
+        Report report = reports.findById(id);
+        if (report == null) {
+            return false;
+        }
+        report.status = status;
+        return true;
+    }
+
+    private zelytra.librarius.web.ApiDtos.AdminReportDto toAdminDto(Report r) {
+        String title = null;
+        String detail = null;
+        UUID seriesId = null;
+        switch (r.targetType) {
+            case WORK -> {
+                var work = works.findById(r.targetId);
+                if (work != null) {
+                    title = work.title;
+                    detail = work.authorsText;
+                }
+            }
+            case EDITION -> {
+                var edition = editions.findById(r.targetId);
+                if (edition != null) {
+                    title = edition.work.title;
+                    detail = edition.publisher;
+                }
+            }
+            case SERIES -> {
+                var s = series.findById(r.targetId);
+                if (s != null) {
+                    title = s.title;
+                    seriesId = s.id;
+                }
+            }
+            case REVIEW -> {
+                var item = items.findById(r.targetId);
+                if (item != null) {
+                    title = item.edition.work.title;
+                    detail = item.review;
+                }
+            }
+            case SERIES_REVIEW -> {
+                var review = seriesReviews.findById(r.targetId);
+                var reviewed = review == null ? null : series.findById(review.seriesId);
+                if (reviewed != null) {
+                    title = reviewed.title;
+                    detail = review.review;
+                    seriesId = reviewed.id;
+                }
+            }
+        }
+        var reporter = users.findById(r.reporterId);
+        return new zelytra.librarius.web.ApiDtos.AdminReportDto(r.id, r.targetType.name(), r.targetId, title, detail,
+                seriesId, r.reason.name(), r.comment, r.status.name(),
+                reporter == null ? null : zelytra.librarius.web.ApiDtos.MemberSummaryDto.of(reporter), r.createdAt);
     }
 
     /** A blank comment is stored as nothing, the same rule the review text follows. */

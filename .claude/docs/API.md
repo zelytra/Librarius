@@ -30,6 +30,13 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/users/{id}/block` | Unblock another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
+| GET | `/api/catalog-edits/fields?targetType=&targetId=` | The edit form's starting point (#618): `CatalogEditFieldsDto(fields: name → canonical value, saleLinks, pendingByMe)`; 404 unknown record — see [Catalog edits](#catalog-edits) |
+| POST | `/api/catalog-edits` | `CatalogEditCreateDto(targetType EDITION\|SERIES, targetId, fields, saleLinks?)` → 201 `CatalogEditDto` |
+| GET | `/api/editions/{id}/sale-links` | `SaleLinkDto(store, url)[]` (#619), for any member; 404 unknown edition |
+| GET | `/api/admin/catalog-edits?page=&size=&status=` | `@RolesAllowed("admin")` — `CatalogEditPageDto`, newest first |
+| POST | `/api/admin/catalog-edits/{id}/approve\|reject\|revert` | `CatalogEditDecisionDto(note ≤1000)` → `CatalogEditDto`; 404 unknown, 409 wrong state |
+| GET | `/api/admin/reports?page=&size=&status=` | `@RolesAllowed("admin")` — `AdminReportPageDto` (#621) |
+| PUT | `/api/admin/reports/{id}/status` | `ReportStatusDto(status OPEN\|UPHELD\|DISMISSED)` → 204; 400, 404 |
 | GET | `/api/catalog/search?q=&author=&year=&language=&publisher=&isbn=&kind=&limit=` | External catalog search — see [Catalog search](#catalog-search). `kind` is repeatable and optional (omitted = every medium), `limit` clamped to 1–40 |
 | GET | `/api/catalog/upcoming?kind=&limit=` | Generic provider trends, same answer to every caller. `kind` defaults to `MANGA`, `limit` clamped to 1–50. No longer read by the Home screen — see `/api/releases/upcoming` |
 | GET | `/api/releases/upcoming?kind=&seriesId=&authorId=&limit=` | Personalised upcoming releases — see [Upcoming releases](#upcoming-releases). `kind` unrestricted by default, `limit` clamped to 1–50 |
@@ -971,6 +978,9 @@ object — a swapped cover, a wrong author, a duplicate work
 picklist, and an optional free-text `comment`. The reporter is never in the body: it is always
 `CurrentUser.id()`, stamped server-side.
 
+**Admins read them since #621** (see [Catalog edits](#catalog-edits) below): the rest of this
+section describes the member side, which stays write-only.
+
 It is **write-only**. A report is a private signal from a user to the application, consumed by
 the automatic trust revocation ([#195](https://github.com/zelytra/Librarius/issues/195)); **no
 endpoint reads one back** in this issue — there is no `GET`, no listing, no per-id read. That
@@ -995,6 +1005,39 @@ this is visible in the API. Because nothing writes `UPHELD` until the moderation
 and nothing stamps `contributor_id` until the contribution attribution
 ([#198](https://github.com/zelytra/Librarius/issues/198)) does, the revocation is wired and
 tested but stays dormant in production for now — it only grants, exactly as #180 shipped.
+
+## Catalog edits
+
+A member proposes a change to a shared record (#618) — an `EDITION`, whose work's fields
+(`title`, `authors`, `synopsis`, `genres`, `originalYear`, `volumeNumber`) travel with it next to
+its own (`isbn13`, `isbn10`, `publisher`, `language`, `pageCount`, `format`, `releaseDate`,
+`coverUrl`, `listPrice`), or a `SERIES` (`title`, `originalTitle`, `totalVolumes`, `status`,
+`synopsis`, `coverUrl`). `contribution.CatalogFields` reads, parses and writes each field in one
+canonical string form (trimmed, blank = none, plain ISO numbers and dates, ISBN without hyphens,
+cover `http(s)` only), so `CatalogEditService` stores the **diff** — the fields whose canonical
+value differs, each `{before, after}` — and a proposal changing nothing is a 400. Writing
+`authors` or `genres` re-resolves `work_author` / `work_genre`; renaming a series renames
+`work.series_title` with it, and a series title another series of the kind holds is a 409.
+
+`saleLinks` (#619) is the full new list of an edition's store pages: `contribution.SaleStore`
+recognises the store by host (exact domain or a subdomain, https, no user info, no port) on a
+closed list, one link per store, 400 otherwise. A proposal is applied at once when its author is
+an admin, or (#620) when one of the links it **adds** passes `StorePageCheck` — the page, fetched
+by `JsoupStorePageFetcher` outside any transaction (6 s timeout, 3 MB cap, redirects followed by
+hand and only while they stay on a known store), carries the proposed-or-current ISBN-13/10 as a
+whole number and the folded title. Otherwise it is `PENDING`, with `verification` `FAILED` and
+`verificationDetail` (`FETCH_FAILED`, `ISBN_NOT_FOUND`, `TITLE_NOT_FOUND`, `NO_ISBN`) when a link
+was tried. One pending proposal per member per record (409).
+
+The admins (`/api/admin/catalog-edits`) see every proposal, `changes` with each field's
+`current` value too; `approve` writes `after`, `revert` writes `before` back, `reject` writes
+nothing; each notifies the author (`EDIT`, unless the admin is the author). The tests stand a
+`FakeStorePageFetcher` in for the stores — no test reaches the network.
+
+`/api/admin/reports` (#621) lists the `report` rows with the target resolved for display —
+the work's title and authors, the edition's title and publisher, the series (with `seriesId`),
+or the reviewed title or series and the review's text — and `PUT …/status` moves a report to
+`UPHELD` or `DISMISSED`, the state the trust revocation (#195) counts.
 
 ## Pagination
 

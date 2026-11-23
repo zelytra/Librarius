@@ -1547,7 +1547,8 @@
     "tabs": {
       "reports": "Tickets",
       "monitoring": "Supervision",
-      "users": "Membres"
+      "users": "Membres",
+      "catalog": "Catalogue"
     },
     "kinds": {
       "BUG": "Problème",
@@ -1658,6 +1659,92 @@
       "summary_other": "{{members}} membres dans {{countries}} pays",
       "empty": "Aucun membre n'a encore indiqué son pays.",
       "error": "Impossible de charger les pays des membres."
+    },
+    "catalog": {
+      "edits": "Modifications",
+      "reports": "Signalements",
+      "filter": "Filtrer par état",
+      "error": "Impossible de charger la liste.",
+      "noEdits": "Aucune modification à afficher.",
+      "noReports": "Aucun signalement à afficher.",
+      "editCount_one": "{{count}} modification",
+      "editCount_other": "{{count}} modifications",
+      "reportCount_one": "{{count}} signalement",
+      "reportCount_other": "{{count}} signalements",
+      "editFilters": {
+        "PENDING": "À relire",
+        "APPLIED": "Appliquées",
+        "REJECTED": "Refusées",
+        "REVERTED": "Annulées"
+      },
+      "editStatus": {
+        "PENDING": "À relire",
+        "APPLIED": "Appliquée",
+        "REJECTED": "Refusée",
+        "REVERTED": "Annulée"
+      },
+      "targets": {
+        "EDITION": "Livre",
+        "SERIES": "Série"
+      },
+      "by": "Proposée par {{name}}",
+      "gone": "Fiche supprimée",
+      "verification": {
+        "NOT_RUN": "Pas de vérification automatique : aucun lien de magasin ajouté.",
+        "PASSED": "Vérifiée automatiquement sur la page du magasin",
+        "FAILED": "Vérification automatique échouée : {{reason}}",
+        "reasons": {
+          "FETCH_FAILED": "la page du magasin n’a pas pu être lue.",
+          "ISBN_NOT_FOUND": "l’ISBN n’apparaît pas sur la page.",
+          "TITLE_NOT_FOUND": "le titre n’apparaît pas sur la page.",
+          "NO_ISBN": "le livre n’a pas d’ISBN à comparer."
+        }
+      },
+      "before": "Avant :",
+      "after": "Après :",
+      "empty": "(vide)",
+      "changedSince": "Modifié depuis : {{value}}",
+      "reviewNote": "Mot de l’administrateur : {{note}}",
+      "noteLabel": "Mot pour l’auteur (facultatif)",
+      "approve": "Appliquer",
+      "reject": "Refuser",
+      "revert": "Annuler la modification",
+      "decided": {
+        "approve": "Modification appliquée pour tous les lecteurs.",
+        "reject": "Modification refusée.",
+        "revert": "Modification annulée : les anciennes valeurs sont rétablies."
+      },
+      "decisionFailed": "L’action a échoué. Réessaie.",
+      "reportFilters": {
+        "OPEN": "Ouverts",
+        "UPHELD": "Fondés",
+        "DISMISSED": "Rejetés"
+      },
+      "reportStatus": {
+        "OPEN": "Ouvert",
+        "UPHELD": "Fondé",
+        "DISMISSED": "Rejeté"
+      },
+      "reportTargets": {
+        "WORK": "Œuvre",
+        "EDITION": "Édition",
+        "SERIES": "Série",
+        "REVIEW": "Avis sur un livre",
+        "SERIES_REVIEW": "Avis sur une série"
+      },
+      "reportedBy": "Signalé par {{name}}",
+      "openSeries": "Ouvrir la série",
+      "uphold": "Fondé",
+      "dismiss": "Rejeter",
+      "reportSaved": {
+        "UPHELD": "Signalement marqué fondé.",
+        "DISMISSED": "Signalement rejeté.",
+        "OPEN": "Signalement rouvert."
+      },
+      "cover": {
+        "before": "Couverture actuelle",
+        "after": "Couverture proposée"
+      }
     }
   },
   "profile": {
@@ -1777,6 +1864,12 @@
       "series": "Un nouveau tome de « {{series}} »",
       "day": "{{what}} annoncé pour le {{date}}",
       "other": "{{what}} annoncé — {{date}}"
+    },
+    "edit": {
+      "APPLIED": "Ta modification de « {{title}} » a été acceptée.",
+      "REJECTED": "Ta modification de « {{title}} » a été refusée.",
+      "REVERTED": "Ta modification de « {{title}} » a été annulée par un administrateur.",
+      "PENDING": "Ta modification de « {{title}} » attend d’être relue."
     }
   },
   "legal": {
@@ -1806,6 +1899,77 @@
       "submit": "Annoncer",
       "done": "Sortie annoncée",
       "failed": "La sortie n'a pas pu être annoncée. Réessaie."
+    }
+  },
+  "catalogEdit": {
+    "trigger": "Proposer une modification",
+    "title": "Modifier la fiche",
+    "description": "Ta proposition est relue avant d'être appliquée pour tous les lecteurs. Un lien vers la page du livre chez un libraire permet souvent de la valider aussitôt.",
+    "loadError": "Impossible de charger la fiche.",
+    "alreadyPending": "Une proposition de ta part attend déjà d’être relue sur cette fiche.",
+    "groups": {
+      "work": "L'œuvre",
+      "edition": "Cette édition",
+      "sale": "Où l'acheter",
+      "series": "La série"
+    },
+    "fields": {
+      "title": "Titre",
+      "authors": "Auteurs",
+      "synopsis": "Résumé",
+      "genres": "Genres",
+      "originalYear": "Année de première parution",
+      "volumeNumber": "Numéro de tome",
+      "isbn13": "ISBN-13",
+      "isbn10": "ISBN-10",
+      "publisher": "Éditeur",
+      "language": "Langue (code, ex. fr)",
+      "pageCount": "Nombre de pages",
+      "format": "Format",
+      "releaseDate": "Date de parution",
+      "coverUrl": "Adresse de l'image de couverture",
+      "listPrice": "Prix éditeur (€)",
+      "originalTitle": "Titre original",
+      "totalVolumes": "Nombre de tomes",
+      "status": "Statut de parution"
+    },
+    "unknown": "Inconnu",
+    "seriesStatus": {
+      "ONGOING": "En cours",
+      "COMPLETED": "Terminée",
+      "HIATUS": "En pause"
+    },
+    "saleHint": "La page du livre chez Amazon, Fnac, Cultura, Decitre, E.Leclerc, Furet du Nord, Gibert ou Rakuten — un lien par magasin.",
+    "linkLabel": "Lien de vente {{n}}",
+    "removeLink": "Retirer le lien {{n}}",
+    "addLink": "Ajouter un lien",
+    "submit": "Envoyer la proposition",
+    "errors": {
+      "refused": "Une valeur n’est pas acceptée : vérifie les champs et les liens (https, magasin de la liste, un par magasin).",
+      "conflict": "Cette proposition entre en conflit : une des tiennes attend déjà, ou ce titre de série existe déjà.",
+      "failed": "L’envoi a échoué. Réessaie dans un instant."
+    },
+    "done": {
+      "pending": "Proposition envoyée : un administrateur va la relire.",
+      "unverified": "Le magasin n’a pas pu confirmer ce livre : un administrateur va relire la proposition.",
+      "verified": "Le magasin confirme ce livre : ta modification est appliquée.",
+      "applied": "Modification appliquée."
+    },
+    "linkPlaceholder": "https://www.fnac.com/…"
+  },
+  "saleLinks": {
+    "title": "Où l'acheter",
+    "buyOn": "Acheter sur {{store}}",
+    "newTab": "(nouvel onglet)",
+    "stores": {
+      "AMAZON": "Amazon",
+      "FNAC": "Fnac",
+      "CULTURA": "Cultura",
+      "DECITRE": "Decitre",
+      "LECLERC": "E.Leclerc",
+      "FURET_DU_NORD": "Furet du Nord",
+      "GIBERT": "Gibert",
+      "RAKUTEN": "Rakuten"
     }
   }
 }

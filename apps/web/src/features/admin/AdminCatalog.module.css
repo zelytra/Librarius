@@ -1,0 +1,234 @@
+/* The catalog moderation (#618–#621): cards with what changes and the actions on it. */
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.filters {
+  composes: filters from './AdminPage.module.css';
+}
+
+.count {
+  composes: count from './AdminPage.module.css';
+}
+
+.badge {
+  composes: badge from './AdminPage.module.css';
+  flex: 0 0 auto;
+}
+
+.meta {
+  composes: meta from './AdminPage.module.css';
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+}
+
+/* "Livre · Proposée par Bob", then the date on a line of its own: a separator left at the
+   start of a wrapped line reads as noise. */
+.meta > span + span::before {
+  content: '·';
+  margin-right: 6px;
+}
+
+.meta > time {
+  flex-basis: 100%;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.verification {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: var(--fs-13);
+}
+
+.passed {
+  background: var(--success-soft);
+  color: var(--success-ink);
+}
+
+.failed {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+
+.storeLink {
+  color: inherit;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.changes {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.change {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field {
+  font-size: var(--fs-11);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.values {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.before {
+  color: var(--muted);
+  text-decoration: line-through;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.after {
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.line {
+  overflow-wrap: anywhere;
+}
+
+.cover {
+  width: 56px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: var(--radius-cover);
+  background: var(--surface-2);
+}
+
+.since {
+  flex-basis: 100%;
+  font-size: var(--fs-12);
+  color: var(--danger-ink);
+}
+
+.note,
+.detail {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.reason {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-weight: 700;
+}
+
+.quote {
+  margin: 0;
+  font-size: var(--fs-13);
+  font-style: italic;
+}
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.label {
+  font-size: var(--fs-11);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.open {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  color: var(--accent-deep);
+  font-size: var(--fs-13);
+  font-weight: 600;
+}
+
+.srOnly {
+  composes: srOnly from '../../shared/ui/states.module.css';
+}
