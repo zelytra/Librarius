@@ -1181,6 +1181,15 @@ public final class ApiDtos {
             @Size(max = 512) String title) {
     }
 
+    /** {@code /api/me/push} (#69): the push categories, each off until switched on. */
+    public record PushPrefsDto(@NotNull Boolean releases, @NotNull Boolean wishlist, @NotNull Boolean goal) {
+    }
+
+    /** {@code PUT /api/me/push/devices} (#69): the FCM token of one app install. */
+    public record PushDeviceDto(@NotBlank @Size(max = 4096) String token,
+            @NotNull @Pattern(regexp = "android|ios") String platform) {
+    }
+
     // ── Dashboard layout ──────────────────────────────────────────────────────
 
     /**

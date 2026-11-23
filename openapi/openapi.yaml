@@ -1885,6 +1885,91 @@ paths:
       - Me Resource
       security:
       - SecurityScheme: []
+  /api/me/push:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushPrefsDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushPrefsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update
+      tags:
+      - Push Resource
+      security:
+      - SecurityScheme: []
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushPrefsDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      tags:
+      - Push Resource
+      security:
+      - SecurityScheme: []
+  /api/me/push/devices:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushDeviceDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Register
+      tags:
+      - Push Resource
+      security:
+      - SecurityScheme: []
+  /api/me/push/devices/{token}:
+    delete:
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Forget
+      tags:
+      - Push Resource
+      security:
+      - SecurityScheme: []
   /api/me/terms:
     put:
       requestBody:
@@ -4651,6 +4736,32 @@ components:
           $ref: "#/components/schemas/LocalDate"
         finishedAt:
           $ref: "#/components/schemas/LocalDate"
+    PushDeviceDto:
+      type: object
+      required:
+      - token
+      - platform
+      properties:
+        token:
+          type: string
+          pattern: \S
+          maxLength: 4096
+        platform:
+          type: string
+          pattern: android|ios
+    PushPrefsDto:
+      type: object
+      required:
+      - releases
+      - wishlist
+      - goal
+      properties:
+        releases:
+          type: boolean
+        wishlist:
+          type: boolean
+        goal:
+          type: boolean
     RankAssignDto:
       type: object
       properties:

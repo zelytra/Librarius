@@ -952,6 +952,22 @@ export interface ProgressDto {
   finishedAt?: LocalDate;
 }
 
+export interface PushDeviceDto {
+  /**
+     * @maxLength 4096
+     * @pattern \S
+     */
+  token: string;
+  /** @pattern android|ios */
+  platform: string;
+}
+
+export interface PushPrefsDto {
+  releases: boolean;
+  wishlist: boolean;
+  goal: boolean;
+}
+
 export interface RankAssignDto {
   categoryId?: Uuid;
 }
@@ -7797,6 +7813,351 @@ export const usePatchApiMePreferences = <TError = void,
         TContext
       > => {
       return useMutation(getPatchApiMePreferencesMutationOptions(options), queryClient);
+    }
+
+export const getPutApiMePushUrl = () => {
+
+
+
+
+  return `/api/me/push`
+}
+
+/**
+ * @summary Update
+ */
+export const putApiMePush = async (pushPrefsDto: PushPrefsDto, options?: Parameters<typeof apiClient>[1]): Promise<PushPrefsDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<PushPrefsDto>(getPutApiMePushUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushPrefsDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiMePushMutationKey = () => ['putApiMePush'] as const;
+
+export const getPutApiMePushMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMePush>>, TError,PutApiMePushMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiMePush>>, TError,PutApiMePushMutationVariables, TContext> => {
+
+const mutationKey = getPutApiMePushMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiMePush>>, PutApiMePushMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiMePush(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiMePushMutationResult = NonNullable<Awaited<ReturnType<typeof putApiMePush>>>
+    export type PutApiMePushMutationBody = PushPrefsDto
+    export type PutApiMePushMutationError = void
+    export type PutApiMePushMutationVariables = {data: PushPrefsDto}
+
+    /** @summary Update */
+export const usePutApiMePush = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMePush>>, TError,PutApiMePushMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiMePush>>,
+        TError,
+        PutApiMePushMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiMePushMutationOptions(options), queryClient);
+    }
+
+export const getGetApiMePushUrl = () => {
+
+
+
+
+  return `/api/me/push`
+}
+
+/**
+ * @summary Get
+ */
+export const getApiMePush = async ( options?: Parameters<typeof apiClient>[1]): Promise<PushPrefsDto> => {
+
+  return apiClient<PushPrefsDto>(getGetApiMePushUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiMePushQueryKey = () => {
+    return [
+    `/api/me/push`
+    ] as const;
+    }
+
+
+export const getGetApiMePushQueryOptions = <TData = Awaited<ReturnType<typeof getApiMePush>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiMePushQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiMePush>>> = () => getApiMePush(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiMePushQueryResult = NonNullable<Awaited<ReturnType<typeof getApiMePush>>>
+export type GetApiMePushQueryError = void
+
+
+/** @summary Get */
+export function useGetApiMePush<TData = Awaited<ReturnType<typeof getApiMePush>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMePush>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMePush>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get */
+export function useGetApiMePush<TData = Awaited<ReturnType<typeof getApiMePush>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiMePush>>,
+          TError,
+          Awaited<ReturnType<typeof getApiMePush>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get */
+export function useGetApiMePush<TData = Awaited<ReturnType<typeof getApiMePush>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get */
+export function useGetApiMePush<TData = Awaited<ReturnType<typeof getApiMePush>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiMePush>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiMePushQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutApiMePushDevicesUrl = () => {
+
+
+
+
+  return `/api/me/push/devices`
+}
+
+/**
+ * @summary Register
+ */
+export const putApiMePushDevices = async (pushDeviceDto: PushDeviceDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiMePushDevicesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushDeviceDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiMePushDevicesMutationKey = () => ['putApiMePushDevices'] as const;
+
+export const getPutApiMePushDevicesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMePushDevices>>, TError,PutApiMePushDevicesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiMePushDevices>>, TError,PutApiMePushDevicesMutationVariables, TContext> => {
+
+const mutationKey = getPutApiMePushDevicesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiMePushDevices>>, PutApiMePushDevicesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putApiMePushDevices(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiMePushDevicesMutationResult = NonNullable<Awaited<ReturnType<typeof putApiMePushDevices>>>
+    export type PutApiMePushDevicesMutationBody = PushDeviceDto
+    export type PutApiMePushDevicesMutationError = void
+    export type PutApiMePushDevicesMutationVariables = {data: PushDeviceDto}
+
+    /** @summary Register */
+export const usePutApiMePushDevices = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiMePushDevices>>, TError,PutApiMePushDevicesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiMePushDevices>>,
+        TError,
+        PutApiMePushDevicesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiMePushDevicesMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiMePushDevicesTokenUrl = (token: string,) => {
+
+
+
+
+  return `/api/me/push/devices/${token}`
+}
+
+/**
+ * @summary Forget
+ */
+export const deleteApiMePushDevicesToken = async (token: string, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiMePushDevicesTokenUrl(token),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiMePushDevicesTokenMutationKey = () => ['deleteApiMePushDevicesToken'] as const;
+
+export const getDeleteApiMePushDevicesTokenMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>, TError,DeleteApiMePushDevicesTokenMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>, TError,DeleteApiMePushDevicesTokenMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiMePushDevicesTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>, DeleteApiMePushDevicesTokenMutationVariables> = (props) => {
+          const {token} = props ?? {};
+
+          return  deleteApiMePushDevicesToken(token,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiMePushDevicesTokenMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>>
+
+    export type DeleteApiMePushDevicesTokenMutationError = void
+    export type DeleteApiMePushDevicesTokenMutationVariables = {token: string}
+
+    /** @summary Forget */
+export const useDeleteApiMePushDevicesToken = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>, TError,DeleteApiMePushDevicesTokenMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiMePushDevicesToken>>,
+        TError,
+        DeleteApiMePushDevicesTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiMePushDevicesTokenMutationOptions(options), queryClient);
     }
 
 export const getPutApiMeTermsUrl = () => {
