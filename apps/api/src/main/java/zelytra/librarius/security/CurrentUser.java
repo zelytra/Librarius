@@ -64,12 +64,17 @@ public class CurrentUser {
             user.displayName = initialDisplayName(claim("name"), claim("preferred_username"));
             user.locale = firstNonBlank(claim("locale"), "fr");
             user.username = firstNonBlank(claim("preferred_username"), principalName());
+            user.admin = isAdmin();
             users.persist(user);
         } else {
             // Kept in step with Keycloak for the admins' list (#499); a no-op once it matches.
             String username = firstNonBlank(claim("preferred_username"), principalName());
             if (username != null && !username.equals(user.username)) {
                 user.username = username;
+            }
+            // The role lives in Keycloak; mirrored so another member's profile can show it (#625).
+            if (user.admin != isAdmin()) {
+                user.admin = isAdmin();
             }
         }
         return user;

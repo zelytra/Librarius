@@ -5,11 +5,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   deleteApiAdminUsersId,
   getGetApiAdminUsersQueryKey,
+  putApiAdminUsersIdTrust,
   useGetApiAdminUsers,
   type AdminUserDto,
 } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
 import { Avatar } from '../../shared/ui/Avatar';
+import { AdminBadge, TrustBadge } from '../../shared/ui/TrustBadge';
 import { Modal } from '../../shared/ui/Modal';
 import { Button } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
@@ -77,7 +79,11 @@ export function AdminUsers() {
                   <Link to={`/people/${user.id}`} className={styles.userLink}>
                     <Avatar id={user.id} name={name} version={user.avatarVersion} size={44} decorative />
                     <span className={styles.userText}>
-                      <span className={styles.userName}>{name}</span>
+                      <span className={styles.userName}>
+                        {name}
+                        {user.trusted && <TrustBadge />}
+                        {user.admin && <AdminBadge />}
+                      </span>
                       {user.username && <span className={styles.meta}>{t('admin.users.handle', { username: user.username })}</span>}
                       <span className={styles.meta}>
                         {[t('admin.users.since', { date: day(user.createdAt) }), t('admin.users.titles', { count: user.libraryItems ?? 0 })]
@@ -85,6 +91,7 @@ export function AdminUsers() {
                       </span>
                     </span>
                   </Link>
+                  <TrustChoice user={user} name={name} />
                   <Button
                     variant="secondary"
                     size="compact"
@@ -112,6 +119,49 @@ export function AdminUsers() {
       )}
       {doomed && <DeleteUser user={doomed} onClose={() => setDoomed(null)} />}
     </>
+  );
+}
+
+const TRUST_MODES = ['AUTO', 'TRUSTED', 'UNTRUSTED'] as const;
+type TrustMode = (typeof TRUST_MODES)[number];
+
+/**
+ * How a member's trust is decided (#625): by the daily evaluation, or kept one way by an admin.
+ * Applied on change, said by a toast, and the list read again for the standing now in force.
+ */
+function TrustChoice({ user, name }: { user: AdminUserDto; name: string }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const current = (TRUST_MODES as readonly string[]).includes(user.trustMode ?? '') ? (user.trustMode as TrustMode) : 'AUTO';
+
+  async function choose(mode: TrustMode) {
+    setBusy(true);
+    try {
+      await putApiAdminUsersIdTrust(user.id!, { mode });
+      toast.success(t(`admin.users.trustSaved.${mode}`, { name }));
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminUsersQueryKey().slice(0, 1) });
+    } catch {
+      toast.error(t('admin.users.trustFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <select
+      className={styles.trustChoice}
+      value={current}
+      disabled={busy}
+      aria-label={t('admin.users.trustLabel', { name })}
+      onChange={(event) => void choose(event.target.value as TrustMode)}
+    >
+      {TRUST_MODES.map((mode) => (
+        <option key={mode} value={mode}>
+          {t(`admin.users.trustModes.${mode}`)}
+        </option>
+      ))}
+    </select>
   );
 }
 

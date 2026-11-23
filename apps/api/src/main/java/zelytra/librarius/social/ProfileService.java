@@ -73,7 +73,8 @@ public class ProfileService {
                 !self && follows.isFollowing(memberId, viewerId),
                 count("select count(f) from UserFollow f where f.followeeId = :id", memberId),
                 count("select count(f) from UserFollow f where f.followerId = :id", memberId),
-                visible, visible ? reading(viewerId, memberId) : null, followNotify(viewerId, memberId)));
+                visible, visible ? reading(viewerId, memberId) : null, followNotify(viewerId, memberId),
+                member.admin));
     }
 
     /** Whether the caller's follow of the member notifies them (#516); null when they do not follow. */

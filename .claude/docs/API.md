@@ -283,8 +283,16 @@ it is `true`, and nothing — no placeholder — when it is not.
 revokes: one verdict recomputed daily off the request path, promoting an account that clears the
 bar and taking the flag back from one that no longer does — too many `UPHELD` reports against its
 contributions over a rolling window (see [Reports](#reports)). Grant and revocation share the one
-`qualifies` method, so retuning either is a number in configuration, never an endpoint. Still no
-request or response carries `trusted`.
+`qualifies` method, so retuning either is a number in configuration, never an endpoint.
+
+**The one exception is an admin (#625).** `PUT /api/admin/users/{id}/trust {mode}` (realm role
+`admin`; 204, 400 another mode, 404 unknown) sets `app_user.trust_override` (V51): `AUTO` (NULL)
+leaves the account to the criteria, `TRUSTED` / `UNTRUSTED` keeps it so; `TrustEvaluator.evaluate`
+reads the override in place of the criteria, and the call applies the verdict at once — `AUTO`
+included. `AdminUserDto` carries `trusted`, `trustMode` and `admin`. A member still never sets it on
+themselves. `MemberProfileDto.admin` is `app_user.admin`, the Keycloak role mirrored by
+`CurrentUser.require()` on each of the member's requests (it reads false until their first request
+after V51), so a profile shows an Admin badge next to the trusted one.
 
 ## Following members
 

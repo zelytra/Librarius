@@ -25,3 +25,20 @@ export function TrustBadge({ className }: { className?: string }) {
     </span>
   );
 }
+
+/**
+ * The admin badge (#625): the member holds the Keycloak role that runs the instance. Same pill
+ * as the trusted badge, on its own tint, icon and word together.
+ */
+export function AdminBadge({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={className ? `${styles.badge} ${styles.admin} ${className}` : `${styles.badge} ${styles.admin}`}
+      title={t('trust.admin.tooltip')}
+    >
+      <Icon name="admin_panel_settings" size={12} color="var(--tint-violet-ink)" />
+      {t('trust.admin.label')}
+    </span>
+  );
+}

@@ -430,8 +430,9 @@
 
 .user {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -446,6 +447,10 @@
 }
 
 .userName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   font-weight: 600;
   color: var(--ink);
   overflow-wrap: anywhere;
@@ -471,7 +476,9 @@
 
 /* #562: the member's picture and name lead to their profile. */
 .userLink {
-  flex: 1;
+  /* The whole first line: the trust choice and the delete button wrap under the name (#625)
+     rather than squeezing it to a column one letter wide at phone width. */
+  flex: 1 1 100%;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -569,4 +576,17 @@
 .globeCount {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* How a member's trust is decided (#625): a native select, finger-sized. */
+.trustChoice {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-13);
 }

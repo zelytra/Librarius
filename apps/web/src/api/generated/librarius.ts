@@ -106,6 +106,9 @@ export interface AdminUserDto {
   avatarVersion?: number;
   libraryItems?: number;
   lastSeenAt?: OffsetDateTime;
+  trusted?: boolean;
+  trustMode?: string;
+  admin?: boolean;
 }
 
 export interface AdminUserPageDto {
@@ -943,6 +946,7 @@ export interface MemberProfileDto {
   visible?: boolean;
   reading?: ProfileReadingDto;
   notifyActivity?: boolean;
+  admin?: boolean;
 }
 
 export interface MemberSearchDto {
@@ -1277,6 +1281,11 @@ export interface TimelineDto {
   byLanguage?: BreakdownCountDto[];
   byRank?: BreakdownCountDto[];
   booksPerMonth?: number;
+}
+
+export interface TrustModeDto {
+  /** @pattern \S */
+  mode: string;
 }
 
 export interface UnreadCountDto {
@@ -3076,6 +3085,93 @@ export const useDeleteApiAdminUsersId = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiAdminUsersIdMutationOptions(options), queryClient);
+    }
+
+export const getPutApiAdminUsersIdTrustUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/users/${id}/trust`
+}
+
+/**
+ * @summary Trust
+ */
+export const putApiAdminUsersIdTrust = async (id: string,
+    trustModeDto: TrustModeDto, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<void>(getPutApiAdminUsersIdTrustUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(trustModeDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiAdminUsersIdTrustMutationKey = () => ['putApiAdminUsersIdTrust'] as const;
+
+export const getPutApiAdminUsersIdTrustMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>, TError,PutApiAdminUsersIdTrustMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>, TError,PutApiAdminUsersIdTrustMutationVariables, TContext> => {
+
+const mutationKey = getPutApiAdminUsersIdTrustMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>, PutApiAdminUsersIdTrustMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiAdminUsersIdTrust(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAdminUsersIdTrustMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>>
+    export type PutApiAdminUsersIdTrustMutationBody = TrustModeDto
+    export type PutApiAdminUsersIdTrustMutationError = void
+    export type PutApiAdminUsersIdTrustMutationVariables = {id: string;data: TrustModeDto}
+
+    /** @summary Trust */
+export const usePutApiAdminUsersIdTrust = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>, TError,PutApiAdminUsersIdTrustMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAdminUsersIdTrust>>,
+        TError,
+        PutApiAdminUsersIdTrustMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiAdminUsersIdTrustMutationOptions(options), queryClient);
     }
 
 export const getGetApiAgentFeedbackUrl = (params?: GetApiAgentFeedbackParams,) => {

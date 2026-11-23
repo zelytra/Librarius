@@ -1395,7 +1395,9 @@ public final class ApiDtos {
             java.time.OffsetDateTime memberSince, boolean self, boolean following, boolean followsYou,
             long followers, long followingCount, boolean visible, ProfileReadingDto reading,
             /** While the caller follows the member: whether their activity notifies the caller (#516). */
-            Boolean notifyActivity) {
+            Boolean notifyActivity,
+            /** Whether the member holds the admin role (#625), shown next to the trusted badge. */
+            boolean admin) {
     }
 
     /** What a member reads, for whoever may see it. A rating shows only when its owner shared it. */
@@ -1468,9 +1470,18 @@ public final class ApiDtos {
     // ── Admin: members (#499) ──────────────────────────────────────────────
 
     /** A member as the admins' list shows them. */
+    /**
+     * {@code trusted} is the standing in force; {@code trustMode} how it is decided (#625) —
+     * {@code AUTO} by the daily evaluation, {@code TRUSTED} / {@code UNTRUSTED} by an admin.
+     * {@code admin} mirrors the member's Keycloak role.
+     */
     public record AdminUserDto(String id, String username, String displayName, String email,
             java.time.OffsetDateTime createdAt, Long avatarVersion, long libraryItems,
-            java.time.OffsetDateTime lastSeenAt) {
+            java.time.OffsetDateTime lastSeenAt, boolean trusted, String trustMode, boolean admin) {
+    }
+
+    /** {@code AUTO}, {@code TRUSTED} or {@code UNTRUSTED} (#625) — 400 otherwise. */
+    public record TrustModeDto(@NotBlank String mode) {
     }
 
     public record AdminUserPageDto(java.util.List<AdminUserDto> items, int page, int size, long total) {

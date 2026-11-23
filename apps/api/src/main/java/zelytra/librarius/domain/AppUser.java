@@ -81,6 +81,17 @@ public class AppUser {
     @Column(name = "avatar_version")
     public Long avatarVersion;
 
+    /**
+     * An admin's choice on the trust evaluation (#625, V51): {@code null} leaves the account to
+     * {@code TrustEvaluator}; {@code true} or {@code false} is the standing it keeps.
+     */
+    @Column(name = "trust_override")
+    public Boolean trustOverride;
+
+    /** Mirror of the Keycloak role {@code admin} (#625, V51), refreshed on each of their requests. */
+    @Column(nullable = false)
+    public boolean admin;
+
     /** The Keycloak username (#499, V40), shown to the admins only. */
     @Column(length = 255)
     public String username;

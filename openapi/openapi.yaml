@@ -470,6 +470,35 @@ paths:
       security:
       - SecurityScheme:
         - admin
+  /api/admin/users/{id}/trust:
+    put:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrustModeDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Trust
+      tags:
+      - Admin Resource
+      security:
+      - SecurityScheme:
+        - admin
   /api/agent/feedback:
     get:
       parameters:
@@ -3560,6 +3589,12 @@ components:
           format: int64
         lastSeenAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        trusted:
+          type: boolean
+        trustMode:
+          type: string
+        admin:
+          type: boolean
     AdminUserPageDto:
       type: object
       properties:
@@ -4913,6 +4948,8 @@ components:
           $ref: "#/components/schemas/ProfileReadingDto"
         notifyActivity:
           type: boolean
+        admin:
+          type: boolean
     MemberSearchDto:
       type: object
       properties:
@@ -5594,6 +5631,14 @@ components:
           additionalProperties:
             type: integer
             format: int64
+    TrustModeDto:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          pattern: \S
     UUID:
       type: string
       format: uuid

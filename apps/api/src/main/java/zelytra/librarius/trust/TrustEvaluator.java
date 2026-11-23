@@ -115,18 +115,32 @@ public class TrustEvaluator {
         OffsetDateTime now = OffsetDateTime.now();
         int changed = 0;
         for (AppUser user : users.listAll()) {
-            boolean qualifies = qualifies(signalsFor(user, now), now);
-            if (qualifies && !user.trusted) {
-                user.trusted = true;
-                user.trustedAt = now;
-                changed++;
-            } else if (!qualifies && user.trusted) {
-                user.trusted = false;
-                user.trustedAt = null;
+            if (evaluate(user, now)) {
                 changed++;
             }
         }
         return changed;
+    }
+
+    /**
+     * Writes one account's verdict, and says whether its standing changed. An admin's choice
+     * ({@code trustOverride}, #625) stands in for the criteria until the admin hands the account
+     * back to them — which is also how an admin's change takes effect at once rather than on the
+     * next daily run.
+     */
+    public boolean evaluate(AppUser user, OffsetDateTime now) {
+        boolean qualifies = user.trustOverride != null ? user.trustOverride : qualifies(signalsFor(user, now), now);
+        if (qualifies && !user.trusted) {
+            user.trusted = true;
+            user.trustedAt = now;
+            return true;
+        }
+        if (!qualifies && user.trusted) {
+            user.trusted = false;
+            user.trustedAt = null;
+            return true;
+        }
+        return false;
     }
 
     /** Gathers the activity signals of one account as of {@code now}. */

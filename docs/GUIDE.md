@@ -546,6 +546,15 @@ chacun a choisi d'indiquer), état de la base de données et de Keycloak.
 
 ## Questions fréquentes
 
+### Comment devient-on « de confiance » ?
+
+Le badge « De confiance » s'obtient tout seul : Librarius le calcule chaque jour à partir de ton
+activité — au moins trois mois d'ancienneté, au moins dix titres marqués lus, et moins de trois
+signalements retenus contre tes contributions sur les six derniers mois. Il se perd de la même
+façon si des signalements contre toi sont retenus. Un administrateur peut aussi l'accorder ou le
+retirer à la main depuis la liste des membres ; ce choix prime alors sur le calcul. Le badge
+s'affiche sur ton profil, et un badge « Admin » sur celui des administrateurs.
+
 ### Pourquoi ce livre est-il introuvable ?
 
 La recherche interroge Open Library pour les livres et AniList pour les mangas. Ces
