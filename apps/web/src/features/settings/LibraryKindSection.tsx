@@ -4,6 +4,7 @@ import { Chip } from '../../shared/ui/primitives';
 import { KIND_LABEL_KEY } from '../discover/medium';
 import { KINDS } from '../../shared/kinds';
 import { readLibraryKind, storeLibraryKind, type LibraryKindPreference } from '../../shared/libraryKind';
+import { saveAccountPreferences } from '../../shared/accountPreferences';
 import styles from './SettingsPage.module.css';
 
 /** The shelf the library opens on (#545): the kind owned most, unless the reader picks one. */
@@ -13,6 +14,7 @@ export function LibraryKindSection() {
   const pick = (next: LibraryKindPreference) => {
     setPreference(next);
     storeLibraryKind(next);
+    saveAccountPreferences({ libraryKind: next });
   };
   const options: { id: LibraryKindPreference; label: string }[] = [
     { id: 'auto', label: t('settings.libraryKind.auto') },
