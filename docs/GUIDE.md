@@ -513,11 +513,34 @@ aux administrateurs de Librarius, et à eux seuls.
 L'application signale aussi d'elle-même les erreurs qu'elle n'attendait pas, côté serveur
 comme dans ton navigateur, pour qu'un bug soit vu même quand personne ne l'écrit.
 
+## Corriger la fiche d'un livre ou d'une série
+
+La fiche d'un livre est commune à tous ses lecteurs. Si elle contient une erreur — un titre
+mal orthographié, un mauvais éditeur, un résumé manquant —, « **Proposer une modification** »,
+en bas de l'écran du livre ou de la série, ouvre un formulaire pré-rempli avec ce que la fiche
+contient : corrige ce qui doit l'être, puis « Envoyer la proposition ». Seuls les champs que
+tu as changés sont envoyés.
+
+La section « **Où l'acheter** » du formulaire accepte un lien par magasin vers la page du livre
+chez Amazon, Fnac, Cultura, Decitre, E.Leclerc, Furet du Nord, Gibert ou Rakuten. Ces liens
+apparaissent ensuite sur l'écran du livre, sous forme de boutons « Acheter sur … ».
+
+Une proposition est relue par un administrateur avant d'être appliquée pour tous. Quand tu
+ajoutes un lien de magasin, Librarius lit la page du magasin : si elle porte bien l'ISBN et le
+titre du livre, ta modification est appliquée aussitôt. Sinon (le magasin bloque la lecture,
+l'ISBN ne correspond pas…), elle attend la relecture comme les autres. Une notification te dit
+si elle a été acceptée, refusée ou annulée, avec le mot éventuel de l'administrateur. Tu ne peux
+avoir qu'une proposition en attente par fiche.
+
+« Signaler une erreur », juste à côté, reste là pour prévenir sans corriger toi-même.
+
 ### Administration
 
 Les comptes qui ont le rôle administrateur (attribué dans Keycloak) voient « Administration »
-dans les réglages : la liste des signalements et des erreurs, chacun avec son journal, et la
-supervision — membres actifs en ce moment et par jour, signalements et erreurs par jour sur
+dans les réglages : la liste des signalements et des erreurs, chacun avec son journal, l'onglet
+« Catalogue » — les modifications proposées par les membres (avant / après, résultat de la
+vérification automatique, appliquer, refuser ou annuler) et les signalements faits depuis les
+écrans des livres et des séries (fondé ou rejeté) —, et la supervision — membres actifs en ce moment et par jour, signalements et erreurs par jour sur
 30 jours, un globe des membres par pays (seulement un nombre par pays, à partir du pays que
 chacun a choisi d'indiquer), état de la base de données et de Keycloak.
 

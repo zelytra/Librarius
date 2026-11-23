@@ -27,9 +27,15 @@
   gap: 0 6px;
 }
 
-.meta > * + *::before {
+/* "Livre · Proposée par Bob", then the date on a line of its own: a separator left at the
+   start of a wrapped line reads as noise. */
+.meta > span + span::before {
   content: '·';
   margin-right: 6px;
+}
+
+.meta > time {
+  flex-basis: 100%;
 }
 
 .list {
