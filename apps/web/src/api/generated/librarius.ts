@@ -767,6 +767,21 @@ export interface LibraryViewOrderDto {
   keys: string[];
 }
 
+export interface PreferencesDto {
+  /** @pattern [a-z]{1,16} */
+  theme?: string;
+  /**
+     * @minItems 1
+     * @maxItems 4
+     * @items.pattern /[a-z/-]{0,40}
+     */
+  bottomBar?: string[];
+  /** @pattern auto|BOOK|MANGA|COMIC|GRAPHIC_NOVEL|AUDIOBOOK */
+  libraryKind?: string;
+  /** @pattern handwritten|classic|notebook */
+  sheetTheme?: string;
+}
+
 export interface MeDto {
   id?: string;
   email?: string;
@@ -782,6 +797,7 @@ export interface MeDto {
   termsVersion?: number;
   termsAcceptedAt?: OffsetDateTime;
   currentTermsVersion?: number;
+  preferences: PreferencesDto;
 }
 
 export interface ProfileTitleDto {
@@ -7523,6 +7539,92 @@ export const useDeleteApiMeLibrary = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiMeLibraryMutationOptions(options), queryClient);
+    }
+
+export const getPatchApiMePreferencesUrl = () => {
+
+
+
+
+  return `/api/me/preferences`
+}
+
+/**
+ * @summary Update Preferences
+ */
+export const patchApiMePreferences = async (preferencesDto: PreferencesDto, options?: Parameters<typeof apiClient>[1]): Promise<PreferencesDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<PreferencesDto>(getPatchApiMePreferencesUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(preferencesDto)
+  }
+);}
+
+
+
+
+
+export const getPatchApiMePreferencesMutationKey = () => ['patchApiMePreferences'] as const;
+
+export const getPatchApiMePreferencesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMePreferences>>, TError,PatchApiMePreferencesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchApiMePreferences>>, TError,PatchApiMePreferencesMutationVariables, TContext> => {
+
+const mutationKey = getPatchApiMePreferencesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchApiMePreferences>>, PatchApiMePreferencesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  patchApiMePreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchApiMePreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof patchApiMePreferences>>>
+    export type PatchApiMePreferencesMutationBody = PreferencesDto
+    export type PatchApiMePreferencesMutationError = void
+    export type PatchApiMePreferencesMutationVariables = {data: PreferencesDto}
+
+    /** @summary Update Preferences */
+export const usePatchApiMePreferences = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiMePreferences>>, TError,PatchApiMePreferencesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchApiMePreferences>>,
+        TError,
+        PatchApiMePreferencesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPatchApiMePreferencesMutationOptions(options), queryClient);
     }
 
 export const getPutApiMeTermsUrl = () => {

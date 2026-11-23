@@ -2659,6 +2659,43 @@
         } ]
       }
     },
+    "/api/me/preferences" : {
+      "patch" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PreferencesDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PreferencesDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Update Preferences",
+        "tags" : [ "Me Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/me/terms" : {
       "put" : {
         "requestBody" : {
@@ -6112,8 +6149,12 @@
           "currentTermsVersion" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "preferences" : {
+            "$ref" : "#/components/schemas/PreferencesDto"
           }
-        }
+        },
+        "required" : [ "preferences" ]
       },
       "MemberBookDto" : {
         "type" : "object",
@@ -6403,6 +6444,32 @@
             "format" : "int32",
             "maximum" : 100000,
             "exclusiveMinimum" : 0
+          }
+        }
+      },
+      "PreferencesDto" : {
+        "type" : "object",
+        "properties" : {
+          "theme" : {
+            "type" : "string",
+            "pattern" : "[a-z]{1,16}"
+          },
+          "bottomBar" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "pattern" : "/[a-z/-]{0,40}"
+            },
+            "minItems" : 1,
+            "maxItems" : 4
+          },
+          "libraryKind" : {
+            "type" : "string",
+            "pattern" : "auto|BOOK|MANGA|COMIC|GRAPHIC_NOVEL|AUDIOBOOK"
+          },
+          "sheetTheme" : {
+            "type" : "string",
+            "pattern" : "handwritten|classic|notebook"
           }
         }
       },

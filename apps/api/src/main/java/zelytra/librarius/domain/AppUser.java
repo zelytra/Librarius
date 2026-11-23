@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 
@@ -97,4 +99,9 @@ public class AppUser {
     /** When they accepted it, on the server's clock. */
     @Column(name = "terms_accepted_at")
     public OffsetDateTime termsAcceptedAt;
+
+    /** Display preferences carried across devices (#613); never {@code null}, empty when nothing is chosen. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false)
+    public UserPreferences preferences = UserPreferences.NONE;
 }
