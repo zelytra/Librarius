@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in Librarius does not work as it should.
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. **Security problems go through
+        [private reporting](https://github.com/zelytra/Librarius/security/advisories/new)**, not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Library screen
+        2. Tap a series
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Web app (browser)
+        - Installed PWA
+        - Android app
+        - iOS app
+        - Self-hosted / local stack
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. Pixel 8, Chrome 141 · or macOS, Firefox 145
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or logs
+      description: Drag and drop images here. Remove any personal data first.
