@@ -137,9 +137,44 @@ function FollowEntry({ item }: { item: NotificationDto }) {
   );
 }
 
+/** What an admin decided on the recipient's catalog edit proposal (#618). */
+function EditEntry({ item }: { item: NotificationDto }) {
+  const { t } = useTranslation();
+  const edit = item.edit!;
+  const unread = !item.readAt;
+  const to =
+    edit.targetType === 'SERIES' ? `/series/${edit.targetId}` : edit.libraryItemId ? `/detail/${edit.libraryItemId}` : null;
+  const content = (
+    <>
+      <span className={styles.editIcon} aria-hidden="true">
+        <Icon name="edit" size={20} color="var(--accent)" />
+      </span>
+      <span className={styles.body}>
+        <span className={styles.text}>
+          {t(`notifications.edit.${edit.status}`, { title: edit.targetTitle ?? '' })}
+        </span>
+        {edit.note && <span className={styles.quote}>{t('notifications.quote', { comment: edit.note })}</span>}
+        <span className={styles.meta}>
+          <time dateTime={item.createdAt}>{when(item.createdAt)}</time>
+          {unread && <span className={styles.unreadMark}>{t('notifications.unread')}</span>}
+        </span>
+      </span>
+    </>
+  );
+  const className = `${styles.entry} ${unread ? styles.unread : ''}`;
+  return to ? (
+    <Link to={to} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>{content}</div>
+  );
+}
+
 function Entry({ item }: { item: NotificationDto }) {
   const { t } = useTranslation();
   if (item.type === 'FOLLOW') return <FollowEntry item={item} />;
+  if (item.type === 'EDIT' && item.edit) return <EditEntry item={item} />;
   const name = item.actor?.displayName ?? '—';
   const title = item.book?.title ?? '';
   const text =

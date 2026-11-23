@@ -53,6 +53,10 @@ public class CatalogEditResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = "201",
+            content = @org.eclipse.microprofile.openapi.annotations.media.Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @org.eclipse.microprofile.openapi.annotations.media.Schema(implementation = CatalogEditDto.class)))
     public Response submit(@Valid @NotNull CatalogEditCreateDto dto) {
         currentUser.require();
         CatalogEditDto edit = edits.submit(currentUser.id(), currentUser.isAdmin(), dto);

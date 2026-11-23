@@ -3534,7 +3534,7 @@ export const getPostApiCatalogEditsUrl = () => {
 /**
  * @summary Submit
  */
-export const postApiCatalogEdits = async (catalogEditCreateDto: CatalogEditCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+export const postApiCatalogEdits = async (catalogEditCreateDto: CatalogEditCreateDto, options?: Parameters<typeof apiClient>[1]): Promise<CatalogEditDto> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -3550,7 +3550,7 @@ export const postApiCatalogEdits = async (catalogEditCreateDto: CatalogEditCreat
     }
     return headers;
   };
-return apiClient<unknown>(getPostApiCatalogEditsUrl(),
+return apiClient<CatalogEditDto>(getPostApiCatalogEditsUrl(),
   {
     ...options,
     method: 'POST',

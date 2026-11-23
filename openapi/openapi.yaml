@@ -611,11 +611,11 @@ paths:
               $ref: "#/components/schemas/CatalogEditCreateDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "201":
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/CatalogEditDto"
         "401":
           description: Not Authorized
         "403":
