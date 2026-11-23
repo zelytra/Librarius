@@ -67,15 +67,16 @@ public class LibraryItem {
     public LocalDate acquiredAt;
 
     /**
-     * The reader's own price for their copy (#431, V30), private to this row: the shared
-     * {@code edition.list_price} is never written by it. The library value counts it first.
+     * The reader's own price for their copy (#431, V30). No longer read nor written by the app
+     * (#636): the library value counts the shared {@code edition.list_price}. Kept for the
+     * export and the archive import, which carry what the reader once entered.
      */
     @Column(precision = 8, scale = 2)
     public java.math.BigDecimal price;
 
     /**
-     * The reader's own page count for their copy (#446, V32), private to this row. Every figure
-     * of the reader prefers it — see {@link #effectivePageCount()}.
+     * The reader's own page count for their copy (#446, V32). No longer read by the figures
+     * (#636) — see {@link #effectivePageCount()}; kept for the export and the archive import.
      */
     @Column(name = "page_count")
     public Integer pageCount;
@@ -88,11 +89,11 @@ public class LibraryItem {
     /** The language the reader read their copy in (#566, V43), an ISO 639 code; {@code null} when unsaid. */
     public String language;
 
-    /** The length the reader's figures use: theirs, else the edition's, else its estimate. */
+    /**
+     * The length the reader's figures use: the shared edition's, else its estimate. The reader's
+     * own {@link #pageCount} is no longer read (#636): a length is corrected on the shared record.
+     */
     public Integer effectivePageCount() {
-        if (pageCount != null) {
-            return pageCount;
-        }
         return edition != null ? edition.effectivePageCount() : null;
     }
 

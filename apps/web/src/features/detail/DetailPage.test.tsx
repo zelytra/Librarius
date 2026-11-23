@@ -80,23 +80,20 @@ describe('DetailPage', () => {
     expect(await screen.findByText('Statut de lecture : En cours')).toBeInTheDocument();
   });
 
-  /** #431: the reader enters their own price; the market price is shown until then. */
-  test('lets the reader enter their own price for the book', async () => {
+  /**
+   * #636: the price is the shared record's, shown as it is; there is no field to enter one —
+   * it is corrected for everyone through « Proposer une modification ».
+   */
+  test('shows the publisher price, with no field to enter a price or a page count', async () => {
     libraryItemReturns({ ...ITEM, book: { ...ITEM.book, listPrice: 9.9 } });
-    const sent: unknown[] = [];
-    server.use(http.put('*/api/library/:id/price', async ({ request }) => {
-      sent.push(await request.json());
-      return HttpResponse.json({ ...ITEM, price: 12.5 });
-    }));
-    renderWithProviders(<><DetailPage /><Toaster /></>, { route: '/detail/item-1', path: '/detail/:id' });
+    renderDetail();
 
     expect(await screen.findByText('Prix neuf (BnF)')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Saisir un prix' }));
-    await userEvent.type(screen.getByLabelText('Ton prix, en euros'), '12,5');
-    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
-
-    await waitFor(() => expect(sent).toEqual([{ price: 12.5 }]));
-    expect(await screen.findByText(/Prix enregistré/)).toBeInTheDocument();
+    expect(screen.getByText(/9,90/)).toBeInTheDocument();
+    expect(screen.getByText(/Proposer une modification/, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Saisir un prix' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Nombre de pages de ton exemplaire')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pages de ton exemplaire')).not.toBeInTheDocument();
   });
 
   /** #412: a finished book offers its printable reading sheet. */
@@ -668,22 +665,6 @@ describe('DetailPage', () => {
     ]));
   });
 
-  /** #446: the reader's own page count, beside the edition's. */
-  test('lets the reader enter their own page count', async () => {
-    libraryItemReturns(ITEM);
-    const sent: unknown[] = [];
-    server.use(http.put('*/api/library/:id/pages', async ({ request }) => {
-      sent.push(await request.json());
-      return HttpResponse.json({ ...ITEM, pageCount: 702 });
-    }));
-    renderDetail();
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Saisir' }));
-    await userEvent.type(screen.getByLabelText('Nombre de pages de ton exemplaire'), '702');
-    await userEvent.click(screen.getAllByRole('button', { name: 'Enregistrer' })[0]);
-    await waitFor(() => expect(sent).toEqual([{ pageCount: 702 }]));
-  });
-
   /** #447: the format of the copy is a third family of chips, optional. */
   test('sets the format of the copy, and clears it on a second tap', async () => {
     libraryItemReturns({ ...ITEM, format: 'POCKET' });
@@ -792,6 +773,17 @@ describe('DetailPage', () => {
     status: 'READING',
     book: MULTI_EDITION.book,
     progress: { currentPage: 30, percent: 10 },
+  });
+
+  /** #637: the other editions come after the reading progress. */
+  test('shows the other editions below the reading progress', async () => {
+    libraryItemReturns(READING_MULTI_EDITION);
+    editionsReturn(TWO_EDITIONS);
+    renderDetail();
+
+    const editions = await screen.findByText('Autres éditions');
+    const progress = screen.getByRole('heading', { name: 'Ma progression' });
+    expect(progress.compareDocumentPosition(editions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   /**

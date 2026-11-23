@@ -834,28 +834,9 @@
     "pagesEstimated": "pages (estimé)",
     "price": {
       "title": "Prix",
-      "unknown": "Prix inconnu",
-      "yours": "Ton prix",
       "market": "Prix neuf (BnF)",
-      "none": "Ni prix neuf connu, ni prix saisi.",
-      "marketBeside": "Prix neuf : {{price}}",
-      "set": "Saisir un prix",
-      "edit": "Modifier",
-      "label": "Ton prix, en euros",
-      "save": "Enregistrer",
-      "cancel": "Annuler",
-      "private": "Ce prix n'est que pour toi : il compte dans la valeur de ta bibliothèque et ne change rien pour les autres lecteurs. Laisse vide pour revenir au prix neuf."
-    },
-    "pagesOwn": {
-      "title": "Nombre de pages",
-      "unknown": "Inconnu",
-      "yours": "Ton nombre de pages",
-      "edition": "Celui de l'édition",
-      "estimated": "Estimé, faute de mieux",
-      "none": "Aucun nombre de pages connu.",
-      "set": "Saisir",
-      "label": "Nombre de pages de ton exemplaire",
-      "private": "Ce nombre n'est que pour toi : il compte dans tes pages lues, tes objectifs et ta progression, et ne change rien pour les autres lecteurs. Laisse vide pour revenir à celui de l'édition."
+      "shared": "Ce prix est celui de la fiche commune : corrige-le pour tous les lecteurs avec « Proposer une modification », en bas de l’écran.",
+      "cancel": "Annuler"
     },
     "readingLanguage": "Langue de lecture",
     "readingLanguageUnset": "Non précisée"
@@ -1325,13 +1306,8 @@
     "layoutSaved": "Accueil personnalisé",
     "failed": "L'action n'a pas abouti. Réessaie dans un instant.",
     "goalSaved": "Objectif enregistré",
-    "price": "Prix enregistré : {{price}}",
-    "priceCleared": "Prix retiré, retour au prix neuf",
     "format": "Format : {{format}}",
     "formatCleared": "Format retiré",
-    "pages_one": "{{count}} page enregistrée",
-    "pages_other": "{{count}} pages enregistrées",
-    "pagesCleared": "Retour au nombre de pages de l'édition",
     "kind": "Rangé dans : {{kind}}",
     "language": "Langue de lecture enregistrée"
   },

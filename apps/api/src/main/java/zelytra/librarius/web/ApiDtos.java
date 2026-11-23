@@ -398,9 +398,6 @@ public final class ApiDtos {
             java.util.List<AchievementDto> achievements, java.util.List<AchievementUnlockDto> unseen) {
     }
 
-    /** The reader's own page count for a title (#446); null clears it. */
-    public record PagesDto(@Positive @Max(100_000) Integer pageCount) {
-    }
 
     /** The format of the reader's copy (#447); null clears it. */
     /** The kind a reader files their title under (#454). */
@@ -430,9 +427,6 @@ public final class ApiDtos {
             @Size(max = 255) String providerRef) {
     }
 
-    /** The reader's own price for a title (#431); null clears it. */
-    public record PriceDto(@PositiveOrZero @Digits(integer = 6, fraction = 2) BigDecimal price) {
-    }
 
     /** The ownership of a title in the library (#411). */
     public record OwnershipDto(@NotNull Ownership ownership) {
@@ -474,23 +468,21 @@ public final class ApiDtos {
      *                  {@code EBOOK}, {@code AUDIOBOOK}, {@code WISHLIST} or {@code NOT_OWNED}
      */
     /**
-     * @param price     the reader's own price for their copy (#431), private to them; the
-     *                  market price is {@code book.listPrice}
-     * @param pageCount the reader's own page count for their copy (#446), null when unsaid;
-     *                  {@code book.pageCount} is the edition's
+     * The price and the length are the shared edition's ({@code book.listPrice},
+     * {@code book.pageCount}), corrected through an edit proposal (#636).
+     *
      * @param format    the format of the reader's copy (#447), null when unsaid
      */
     public record LibraryItemDto(UUID id, String status, Double rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
-            boolean reviewShared, String ownership, BigDecimal price, Integer pageCount,
-            String format, String language) {
+            boolean reviewShared, String ownership, String format, String language) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
-                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(), it.price,
-                    it.pageCount, it.format != null ? it.format.name() : null, it.language);
+                    it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(),
+                    it.format != null ? it.format.name() : null, it.language);
         }
     }
 

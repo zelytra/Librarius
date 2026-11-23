@@ -1856,68 +1856,6 @@ paths:
       - Library Resource
       security:
       - SecurityScheme: []
-  /api/library/{id}/pages:
-    put:
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PagesDto"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Set Pages
-      tags:
-      - Library Resource
-      security:
-      - SecurityScheme: []
-  /api/library/{id}/price:
-    put:
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/UUID"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PriceDto"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Set Price
-      tags:
-      - Library Resource
-      security:
-      - SecurityScheme: []
   /api/library/{id}/progress:
     put:
       parameters:
@@ -4752,11 +4690,6 @@ components:
           type: boolean
         ownership:
           type: string
-        price:
-          type: number
-        pageCount:
-          type: integer
-          format: int32
         format:
           type: string
         language:
@@ -5171,14 +5104,6 @@ components:
       properties:
         ownership:
           $ref: "#/components/schemas/Ownership"
-    PagesDto:
-      type: object
-      properties:
-        pageCount:
-          type: integer
-          format: int32
-          maximum: 100000
-          exclusiveMinimum: 0
     PreferencesDto:
       type: object
       properties:
@@ -5198,13 +5123,6 @@ components:
         sheetTheme:
           type: string
           pattern: handwritten|classic|notebook
-    PriceDto:
-      type: object
-      properties:
-        price:
-          type: number
-          multipleOf: 0.01
-          minimum: 0
     ProfileReadingDto:
       type: object
       properties:
