@@ -5,6 +5,8 @@ import { monthLabels } from '../features/stats/timeline';
 import { formatPace } from '../shared/goal';
 import en from './locales/en.json';
 import fr from './locales/fr.json';
+import adminCatalogEn from '../features/admin/adminCatalog.en.json';
+import adminCatalogFr from '../features/admin/adminCatalog.fr.json';
 
 /**
  * The locales, checked against each other rather than spot-checked.
@@ -141,6 +143,20 @@ describe('keys the code uses', () => {
       .map(({ file, key }) => `${key} (${file.replace(/^\.\.\//, '')})`)
       .filter((entry, index, all) => all.indexOf(entry) === index);
 
+    expect(unresolved).toEqual([]);
+  });
+
+  /**
+   * The namespaces a lazy chunk registers itself (#630): the admin Catalogue tab's words ride
+   * with the admin screen, read as `adminCatalog:…`. Same guard, against their own files.
+   */
+  test('every adminCatalog key written as a literal exists in its namespace, in both languages', () => {
+    const own = { fr: flatten(adminCatalogFr as Node), en: flatten(adminCatalogEn as Node) };
+    expect([...own.en.keys()].sort()).toEqual([...own.fr.keys()].sort());
+    const unresolved = Object.entries(sources)
+      .flatMap(([file, source]) => [...source.matchAll(/'adminCatalog:([\w.]+)'/g)].map((m) => ({ file, key: m[1] })))
+      .filter(({ key }) => !resolves(key, own.fr))
+      .map(({ file, key }) => `${key} (${file.replace(/^\.\.\//, '')})`);
     expect(unresolved).toEqual([]);
   });
 });

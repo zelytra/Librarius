@@ -177,10 +177,20 @@ describe('SettingsPage — categories', () => {
     const links = within(screen.getAllByRole('list')[0]).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('href'))).toEqual([
       '/settings/profile', '/settings/reading', '/settings/appearance', '/settings/community', '/settings/data',
+      '/settings/help',
     ]);
     await userEvent.click(screen.getByRole('link', { name: /Données et compte/ }));
     expect(await screen.findByRole('heading', { name: 'Données et compte' })).toBeInTheDocument();
     expect(await screen.findByText('Fichier JSON')).toBeInTheDocument();
+  });
+
+  /** #630: "Un problème ?" opens the FAQ. */
+  test('opens the FAQ from the categories', async () => {
+    renderSettings();
+
+    await userEvent.click(screen.getByRole('link', { name: /Un problème \?/ }));
+    expect(await screen.findByRole('heading', { name: 'Un problème ?' })).toBeInTheDocument();
+    expect(await screen.findByText('Comment devient-on « de confiance » ?')).toBeInTheDocument();
   });
 
   test('shows only the sections of the category opened', () => {

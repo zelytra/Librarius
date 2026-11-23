@@ -1024,6 +1024,10 @@
       "data": {
         "title": "Données et compte",
         "description": "Importer, exporter, vider la bibliothèque ou supprimer le compte."
+      },
+      "help": {
+        "title": "Un problème ?",
+        "description": "Questions fréquentes et raccourcis vers les bons écrans."
       }
     },
     "backToCategories": "Retour aux réglages",
@@ -1675,93 +1679,6 @@
       "summary_other": "{{members}} membres dans {{countries}} pays",
       "empty": "Aucun membre n'a encore indiqué son pays.",
       "error": "Impossible de charger les pays des membres."
-    },
-    "catalog": {
-      "edits": "Modifications",
-      "reports": "Signalements",
-      "filter": "Filtrer par état",
-      "error": "Impossible de charger la liste.",
-      "noEdits": "Aucune modification à afficher.",
-      "noReports": "Aucun signalement à afficher.",
-      "editCount_one": "{{count}} modification",
-      "editCount_other": "{{count}} modifications",
-      "reportCount_one": "{{count}} signalement",
-      "reportCount_other": "{{count}} signalements",
-      "editFilters": {
-        "PENDING": "À relire",
-        "APPLIED": "Appliquées",
-        "REJECTED": "Refusées",
-        "REVERTED": "Annulées"
-      },
-      "editStatus": {
-        "PENDING": "À relire",
-        "APPLIED": "Appliquée",
-        "REJECTED": "Refusée",
-        "REVERTED": "Annulée"
-      },
-      "targets": {
-        "EDITION": "Livre",
-        "SERIES": "Série"
-      },
-      "by": "Proposée par {{name}}",
-      "gone": "Fiche supprimée",
-      "verification": {
-        "NOT_RUN": "Pas de vérification automatique : aucun lien de magasin ajouté.",
-        "PASSED": "Vérifiée automatiquement sur la page du magasin",
-        "FAILED": "Vérification automatique échouée : {{reason}}",
-        "reasons": {
-          "FETCH_FAILED": "la page du magasin n’a pas pu être lue.",
-          "ISBN_NOT_FOUND": "l’ISBN n’apparaît pas sur la page.",
-          "TITLE_NOT_FOUND": "le titre n’apparaît pas sur la page.",
-          "NO_ISBN": "le livre n’a pas d’ISBN à comparer."
-        }
-      },
-      "before": "Avant :",
-      "after": "Après :",
-      "empty": "(vide)",
-      "changedSince": "Modifié depuis : {{value}}",
-      "reviewNote": "Mot de l’administrateur : {{note}}",
-      "noteLabel": "Mot pour l’auteur (facultatif)",
-      "approve": "Appliquer",
-      "reject": "Refuser",
-      "revert": "Annuler la modification",
-      "decided": {
-        "approve": "Modification appliquée pour tous les lecteurs.",
-        "reject": "Modification refusée.",
-        "revert": "Modification annulée : les anciennes valeurs sont rétablies."
-      },
-      "decisionFailed": "L’action a échoué. Réessaie.",
-      "reportFilters": {
-        "OPEN": "Ouverts",
-        "UPHELD": "Fondés",
-        "DISMISSED": "Rejetés"
-      },
-      "reportStatus": {
-        "OPEN": "Ouvert",
-        "UPHELD": "Fondé",
-        "DISMISSED": "Rejeté"
-      },
-      "reportTargets": {
-        "WORK": "Œuvre",
-        "EDITION": "Édition",
-        "SERIES": "Série",
-        "REVIEW": "Avis sur un livre",
-        "SERIES_REVIEW": "Avis sur une série"
-      },
-      "reportedBy": "Signalé par {{name}}",
-      "openSeries": "Ouvrir la série",
-      "uphold": "Fondé",
-      "dismiss": "Rejeter",
-      "reportSaved": {
-        "UPHELD": "Signalement marqué fondé.",
-        "DISMISSED": "Signalement rejeté.",
-        "OPEN": "Signalement rouvert."
-      },
-      "cover": {
-        "before": "Couverture actuelle",
-        "after": "Couverture proposée"
-      },
-      "appliedByTrust": "Appliquée directement : l’auteur est membre de confiance."
     }
   },
   "profile": {

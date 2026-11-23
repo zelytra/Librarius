@@ -1,0 +1,135 @@
+{
+  "intro": "Les questions qu’on nous pose le plus souvent. Touche une question pour lire la réponse ; un bouton t’emmène directement à l’écran concerné quand il y en a un.",
+  "sections": {
+    "start": "Bien démarrer",
+    "library": "Ta bibliothèque",
+    "catalog": "Corriger un livre",
+    "trust": "Le statut de confiance",
+    "social": "Lecteurs et notifications",
+    "account": "Ton compte et tes données"
+  },
+  "actions": {
+    "search": "Chercher un livre",
+    "scan": "Scanner un code-barres",
+    "import": "Importer ma bibliothèque",
+    "library": "Ouvrir ma bibliothèque",
+    "categories": "Gérer mes catégories",
+    "wishlist": "Ouvrir mes souhaits",
+    "goal": "Définir mon objectif",
+    "profile": "Mon profil",
+    "people": "Trouver des lecteurs",
+    "community": "Membres bloqués",
+    "notifications": "Ouvrir mes notifications",
+    "data": "Mes données"
+  },
+  "questions": {
+    "add": {
+      "q": "Comment ajouter un livre ?",
+      "a": "Cherche-le par titre, auteur ou ISBN dans « Ajouter un livre », puis choisis son statut. Tu peux aussi scanner le code-barres au dos du livre avec l’appareil photo."
+    },
+    "notFound": {
+      "q": "Mon livre est introuvable, que faire ?",
+      "a": "Essaie avec l’ISBN (13 chiffres au dos), ou seulement le titre sans le sous-titre. S’il n’est dans aucun catalogue, « Ajouter manuellement », en bas des résultats, te laisse le saisir toi-même."
+    },
+    "import": {
+      "q": "Comment récupérer ma bibliothèque Booknode, Babelio ou Mangacollec ?",
+      "a": "Dans Réglages › Données et compte, choisis ta source : par pseudo pour Booknode, ou avec la collecte depuis ton navigateur pour Babelio et Mangacollec. Un fichier CSV (Goodreads par exemple) marche aussi. Un import ne crée jamais de doublon."
+    },
+    "scanCamera": {
+      "q": "Le scanner ne lit pas le code-barres.",
+      "a": "Autorise l’accès à l’appareil photo, éclaire bien le code et tiens le livre à une dizaine de centimètres. Si rien n’y fait, saisis l’ISBN à la main dans la recherche."
+    },
+    "statuses": {
+      "q": "Quelle différence entre « À lire », « En cours », « Lu » et « Abandonné » ?",
+      "a": "Le statut dit où tu en es dans ta lecture. La possession (en rayon, emprunté, ebook, souhait…) est une autre information, choisie à part sur la fiche du livre : un livre emprunté peut très bien être « Lu »."
+    },
+    "edition": {
+      "q": "Ce n’est pas la bonne édition (couverture, éditeur, pages).",
+      "a": "Sur la fiche du livre, la section des autres éditions te laisse choisir celle que tu possèdes. Ton statut, ta note, ton avis et ta progression sont conservés."
+    },
+    "pages": {
+      "q": "Pourquoi le nombre de pages affiche « ≈ » ?",
+      "a": "Quand aucun catalogue ne connaît la longueur, Librarius l’estime (moyenne de la série, ou longueur typique du genre). Indique le vrai nombre sur la fiche : il comptera dans tes statistiques et ton objectif."
+    },
+    "categories": {
+      "q": "À quoi servent Platine, Or, Argent, Bronze ?",
+      "a": "Ce sont tes catégories de classement : elles disent ce que tu as pensé d’un livre, indépendamment de son statut. Tu peux en créer d’autres, avec leur couleur."
+    },
+    "series": {
+      "q": "Comment voir les tomes qui me manquent ?",
+      "a": "Ouvre la série depuis un de ses tomes : la grille montre chaque tome, lu, possédé ou manquant. Un tome manquant s’ajoute à tes souhaits en un geste, et suivre la série te prévient de ses sorties."
+    },
+    "wishlist": {
+      "q": "Comment fonctionne la liste de souhaits ?",
+      "a": "Ajoute un livre en souhait avec une priorité et un prix estimé : le budget se calcule tout seul. Quand tu l’achètes, « Je l’ai acheté » le fait passer dans ta bibliothèque."
+    },
+    "goal": {
+      "q": "Comment me fixer un objectif de lecture ?",
+      "a": "Dans Réglages › Lecture, choisis un objectif pour l’année, en livres ou en pages, par type de livre. L’accueil affiche la jauge et le rythme à tenir."
+    },
+    "wrongInfo": {
+      "q": "Une information sur un livre est fausse.",
+      "a": "En bas de la fiche, « Proposer une modification » ouvre la fiche complète : corrige ce qui doit l’être et envoie. Tu peux aussi seulement « Signaler une erreur » pour prévenir les administrateurs sans corriger toi-même."
+    },
+    "saleLinks": {
+      "q": "Comment ajouter un lien pour acheter le livre ?",
+      "a": "Dans « Proposer une modification », section « Où l’acheter », colle l’adresse de la page du livre chez Amazon, Fnac, Cultura, Decitre, E.Leclerc, Furet du Nord, Gibert ou Rakuten (un lien par magasin). Les paramètres publicitaires sont retirés tout seuls. Si la page du magasin confirme l’ISBN et le titre, ta modification est appliquée aussitôt."
+    },
+    "editPending": {
+      "q": "Ma modification n’apparaît pas encore.",
+      "a": "Elle attend la relecture d’un administrateur, sauf si tu es membre de confiance ou si un lien de magasin l’a confirmée. Une notification te dira si elle a été acceptée ou refusée. Tu ne peux avoir qu’une proposition en attente par fiche."
+    },
+    "trustHow": {
+      "q": "Comment devient-on « de confiance » ?",
+      "a": "Librarius le calcule chaque jour à partir de ton activité : au moins trois mois d’ancienneté, au moins dix titres marqués lus, et moins de trois signalements retenus contre tes contributions sur les six derniers mois. Un administrateur peut aussi l’accorder à la main. Il n’y a rien à demander ni à cocher."
+    },
+    "trustGives": {
+      "q": "Que change le statut de confiance ?",
+      "a": "Tes modifications de fiches de livres et de séries s’appliquent aussitôt pour tous les lecteurs, sans attendre de relecture. Elles restent visibles des administrateurs, qui peuvent les annuler. Le badge « De confiance » s’affiche à côté de ton nom sur ton profil."
+    },
+    "trustLost": {
+      "q": "Peut-on perdre le statut de confiance ?",
+      "a": "Oui : s’il y a trop de signalements retenus contre tes contributions, ou si un administrateur le retire. Ce n’est pas une sanction définitive : il revient quand les conditions sont de nouveau réunies, sauf si un administrateur l’a retiré à la main."
+    },
+    "admin": {
+      "q": "Que signifie le badge « Admin » ?",
+      "a": "Ce membre administre Librarius : il relit les modifications et les signalements, et répond aux problèmes envoyés depuis l’application."
+    },
+    "visibility": {
+      "q": "Qui voit mes lectures et mes avis ?",
+      "a": "Par défaut, seuls les lecteurs avec qui vous vous suivez mutuellement voient tes lectures et tes avis partagés. Rends ton compte public dans ton profil pour les montrer à tous les membres. Une note ou un avis reste privé tant que tu ne coches pas « Partager »."
+    },
+    "follow": {
+      "q": "Comment suivre un autre lecteur ?",
+      "a": "Cherche-le par son nom dans « Trouver des lecteurs », ouvre son profil et touche « Suivre ». Quand vous vous suivez l’un l’autre, vous voyez vos lectures respectives."
+    },
+    "block": {
+      "q": "Comment bloquer quelqu’un ?",
+      "a": "Sur son profil, « Bloquer » : vous ne voyez plus vos lectures, avis et commentaires respectifs, et il ne peut plus te suivre. Il n’en est pas averti. Tu le débloques dans Réglages › Communauté."
+    },
+    "notifications": {
+      "q": "De quoi suis-je notifié ?",
+      "a": "Des activités des lecteurs que tu suis, des réactions et commentaires sur les tiennes, de tes nouveaux abonnés, des tomes annoncés pour les séries et auteurs que tu suis, et de la décision sur tes modifications de fiches. Les notifications sur le téléphone se choisissent dans Réglages › Communauté."
+    },
+    "notificationsDelete": {
+      "q": "Comment supprimer mes notifications ?",
+      "a": "Dans tes notifications, la corbeille à droite d’une notification la supprime ; « Tout supprimer », en haut, les efface toutes après confirmation."
+    },
+    "export": {
+      "q": "Comment récupérer mes données ?",
+      "a": "Dans Réglages › Données et compte, « Exporter mes données » : le fichier JSON contient tout et peut être réimporté, le CSV s’ouvre dans un tableur."
+    },
+    "deleteAccount": {
+      "q": "Comment supprimer mon compte ?",
+      "a": "Dans Réglages › Données et compte, « Supprimer mon compte » efface ta bibliothèque, tes lectures, tes souhaits et ton identifiant, définitivement. Exporte tes données avant si tu veux les garder. Tu peux aussi seulement vider ta bibliothèque et garder ton compte."
+    },
+    "language": {
+      "q": "Comment changer la langue ou mon nom ?",
+      "a": "Dans Réglages › Profil : ton nom affiché, ta langue (français ou anglais), ton fuseau horaire et ta photo."
+    },
+    "problem": {
+      "q": "Quelque chose ne marche pas, comment le signaler ?",
+      "a": "Le bouton rond en bas à droite de chaque écran ouvre « Signaler un problème » : décris ce qui se passe, les informations techniques utiles sont jointes pour aider à le reproduire. Ton message va aux administrateurs, et à eux seuls."
+    }
+  }
+}

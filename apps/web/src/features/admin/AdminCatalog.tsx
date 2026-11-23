@@ -20,7 +20,15 @@ import { Icon } from '../../shared/ui/Icon';
 import { Button, Chip, Segmented } from '../../shared/ui/primitives';
 import { EmptyState, ErrorState, Loading } from '../../shared/ui/states';
 import { toast } from '../../shared/ui/toast';
+import fr from './adminCatalog.fr.json';
+import en from './adminCatalog.en.json';
+import i18n from 'i18next';
 import styles from './AdminCatalog.module.css';
+
+// The Catalogue tab's words ride with the admin chunk, in a namespace of their own: the French
+// locale is bundled in the first payload, whose budget is full, and only admins read these.
+i18n.addResourceBundle('fr', 'adminCatalog', fr, true, true);
+i18n.addResourceBundle('en', 'adminCatalog', en, true, true);
 
 const PAGE_SIZE = 50;
 
@@ -42,8 +50,8 @@ export function AdminCatalog() {
         value={section}
         onChange={setSection}
         options={[
-          { id: 'edits', label: t('admin.catalog.edits') },
-          { id: 'reports', label: t('admin.catalog.reports') },
+          { id: 'edits', label: t('adminCatalog:admin.catalog.edits') },
+          { id: 'reports', label: t('adminCatalog:admin.catalog.reports') },
         ]}
       />
       {section === 'edits' ? <Edits /> : <Reports />}
@@ -67,10 +75,10 @@ function Edits() {
   });
 
   const filters = (
-    <div className={styles.filters} role="group" aria-label={t('admin.catalog.filter')}>
+    <div className={styles.filters} role="group" aria-label={t('adminCatalog:admin.catalog.filter')}>
       {EDIT_STATUSES.map((status) => (
         <Chip key={status} selected={filter === status} onClick={() => setFilter(status)}>
-          {t(`admin.catalog.editFilters.${status}`)}
+          {t(`adminCatalog:admin.catalog.editFilters.${status}`)}
         </Chip>
       ))}
       <Chip selected={filter === null} onClick={() => setFilter(null)}>
@@ -80,13 +88,13 @@ function Edits() {
   );
 
   if (isPending) return <>{filters}<Loading /></>;
-  if (isError) return <>{filters}<ErrorState message={t('admin.catalog.error')} onRetry={() => void refetch()} /></>;
+  if (isError) return <>{filters}<ErrorState message={t('adminCatalog:admin.catalog.error')} onRetry={() => void refetch()} /></>;
   const items = data?.items ?? [];
-  if (items.length === 0) return <>{filters}<EmptyState icon="check_circle" title={t('admin.catalog.noEdits')} /></>;
+  if (items.length === 0) return <>{filters}<EmptyState icon="check_circle" title={t('adminCatalog:admin.catalog.noEdits')} /></>;
   return (
     <>
       {filters}
-      <p className={styles.count}>{t('admin.catalog.editCount', { count: data?.total ?? items.length })}</p>
+      <p className={styles.count}>{t('adminCatalog:admin.catalog.editCount', { count: data?.total ?? items.length })}</p>
       <ul className={styles.list}>
         {items.map((edit) => (
           <li key={edit.id}>
@@ -112,10 +120,10 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
       if (decision === 'approve') await postApiAdminCatalogEditsIdApprove(edit.id!, body);
       else if (decision === 'reject') await postApiAdminCatalogEditsIdReject(edit.id!, body);
       else await postApiAdminCatalogEditsIdRevert(edit.id!, body);
-      toast.success(t(`admin.catalog.decided.${decision}`));
+      toast.success(t(`adminCatalog:admin.catalog.decided.${decision}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminCatalogEditsQueryKey().slice(0, 1) });
     } catch {
-      toast.error(t('admin.catalog.decisionFailed'));
+      toast.error(t('adminCatalog:admin.catalog.decisionFailed'));
     } finally {
       setSaving(false);
     }
@@ -125,12 +133,12 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
   return (
     <article className={styles.card}>
       <header className={styles.cardHead}>
-        <h3 className={styles.cardTitle}>{edit.targetTitle ?? t('admin.catalog.gone')}</h3>
-        <span className={styles.badge}>{t(`admin.catalog.editStatus.${status}`)}</span>
+        <h3 className={styles.cardTitle}>{edit.targetTitle ?? t('adminCatalog:admin.catalog.gone')}</h3>
+        <span className={styles.badge}>{t(`adminCatalog:admin.catalog.editStatus.${status}`)}</span>
       </header>
       <p className={styles.meta}>
-        <span>{t(`admin.catalog.targets.${edit.targetType}`)}</span>
-        <span>{t('admin.catalog.by', { name: edit.submitter?.displayName ?? t('admin.reports.deleted') })}</span>
+        <span>{t(`adminCatalog:admin.catalog.targets.${edit.targetType}`)}</span>
+        <span>{t('adminCatalog:admin.catalog.by', { name: edit.submitter?.displayName ?? t('admin.reports.deleted') })}</span>
         <time dateTime={edit.createdAt}>{when(edit.createdAt)}</time>
       </p>
 
@@ -142,12 +150,12 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
         ))}
       </dl>
 
-      {edit.reviewNote && <p className={styles.note}>{t('admin.catalog.reviewNote', { note: edit.reviewNote })}</p>}
+      {edit.reviewNote && <p className={styles.note}>{t('adminCatalog:admin.catalog.reviewNote', { note: edit.reviewNote })}</p>}
 
       {(status === 'PENDING' || status === 'APPLIED') && (
         <div className={styles.decision}>
           <label htmlFor={noteId} className={styles.label}>
-            {t('admin.catalog.noteLabel')}
+            {t('adminCatalog:admin.catalog.noteLabel')}
           </label>
           <textarea
             id={noteId}
@@ -162,17 +170,17 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
               <>
                 <Button variant="primary" size="compact" disabled={saving} onClick={() => void decide('approve')}>
                   <Icon name="check_circle" size={16} color="currentColor" />
-                  {t('admin.catalog.approve')}
+                  {t('adminCatalog:admin.catalog.approve')}
                 </Button>
                 <Button variant="secondary" size="compact" disabled={saving} onClick={() => void decide('reject')}>
                   <Icon name="do_not_disturb_on" size={16} color="currentColor" />
-                  {t('admin.catalog.reject')}
+                  {t('adminCatalog:admin.catalog.reject')}
                 </Button>
               </>
             ) : (
               <Button variant="secondary" size="compact" disabled={saving} onClick={() => void decide('revert')}>
                 <Icon name="replay" size={16} color="currentColor" />
-                {t('admin.catalog.revert')}
+                {t('adminCatalog:admin.catalog.revert')}
               </Button>
             )}
             <Loading size="compact" pending={saving} />
@@ -190,12 +198,12 @@ function Verification({ edit }: { edit: CatalogEditDto }) {
     return (
       <p className={`${styles.verification} ${styles.passed}`}>
         <Icon name="workspace_premium" size={16} color="currentColor" />
-        <span>{t('admin.catalog.appliedByTrust')}</span>
+        <span>{t('adminCatalog:admin.catalog.appliedByTrust')}</span>
       </p>
     );
   }
   if (edit.verification === 'NOT_RUN') {
-    return <p className={styles.verification}>{t('admin.catalog.verification.NOT_RUN')}</p>;
+    return <p className={styles.verification}>{t('adminCatalog:admin.catalog.verification.NOT_RUN')}</p>;
   }
   const passed = edit.verification === 'PASSED';
   return (
@@ -203,9 +211,9 @@ function Verification({ edit }: { edit: CatalogEditDto }) {
       <Icon name={passed ? 'check_circle' : 'error'} size={16} color="currentColor" />
       <span>
         {passed
-          ? t('admin.catalog.verification.PASSED')
-          : t('admin.catalog.verification.FAILED', {
-              reason: t(`admin.catalog.verification.reasons.${edit.verificationDetail ?? 'FETCH_FAILED'}`),
+          ? t('adminCatalog:admin.catalog.verification.PASSED')
+          : t('adminCatalog:admin.catalog.verification.FAILED', {
+              reason: t(`adminCatalog:admin.catalog.verification.reasons.${edit.verificationDetail ?? 'FETCH_FAILED'}`),
             })}
       </span>
       {edit.verificationUrl && (
@@ -238,7 +246,7 @@ function Change({ change }: { change: FieldChangeDto }) {
         <Icon name="arrow_forward" size={16} color="var(--faint)" />
         <Value field={field} value={change.after} kind="after" />
         {changedSince && (
-          <span className={styles.since}>{t('admin.catalog.changedSince', { value: change.current ?? '—' })}</span>
+          <span className={styles.since}>{t('adminCatalog:admin.catalog.changedSince', { value: change.current ?? '—' })}</span>
         )}
       </dd>
     </div>
@@ -248,19 +256,19 @@ function Change({ change }: { change: FieldChangeDto }) {
 function Value({ field, value, kind }: { field: string; value?: string; kind: 'before' | 'after' }) {
   const { t } = useTranslation();
   const className = kind === 'before' ? styles.before : styles.after;
-  const srLabel = t(`admin.catalog.${kind}`);
+  const srLabel = t(`adminCatalog:admin.catalog.${kind}`);
   if (!value) {
     return (
       <span className={className}>
         <span className={styles.srOnly}>{srLabel} </span>
-        {t('admin.catalog.empty')}
+        {t('adminCatalog:admin.catalog.empty')}
       </span>
     );
   }
   if (field === 'coverUrl') {
     return (
       <span className={className}>
-        <img src={value} alt={t(`admin.catalog.cover.${kind}`)} className={styles.cover} loading="lazy" />
+        <img src={value} alt={t(`adminCatalog:admin.catalog.cover.${kind}`)} className={styles.cover} loading="lazy" />
       </span>
     );
   }
@@ -291,10 +299,10 @@ function Reports() {
   });
 
   const filters = (
-    <div className={styles.filters} role="group" aria-label={t('admin.catalog.filter')}>
+    <div className={styles.filters} role="group" aria-label={t('adminCatalog:admin.catalog.filter')}>
       {REPORT_STATUSES.map((status) => (
         <Chip key={status} selected={filter === status} onClick={() => setFilter(status)}>
-          {t(`admin.catalog.reportFilters.${status}`)}
+          {t(`adminCatalog:admin.catalog.reportFilters.${status}`)}
         </Chip>
       ))}
       <Chip selected={filter === null} onClick={() => setFilter(null)}>
@@ -304,13 +312,13 @@ function Reports() {
   );
 
   if (isPending) return <>{filters}<Loading /></>;
-  if (isError) return <>{filters}<ErrorState message={t('admin.catalog.error')} onRetry={() => void refetch()} /></>;
+  if (isError) return <>{filters}<ErrorState message={t('adminCatalog:admin.catalog.error')} onRetry={() => void refetch()} /></>;
   const items = data?.items ?? [];
-  if (items.length === 0) return <>{filters}<EmptyState icon="check_circle" title={t('admin.catalog.noReports')} /></>;
+  if (items.length === 0) return <>{filters}<EmptyState icon="check_circle" title={t('adminCatalog:admin.catalog.noReports')} /></>;
   return (
     <>
       {filters}
-      <p className={styles.count}>{t('admin.catalog.reportCount', { count: data?.total ?? items.length })}</p>
+      <p className={styles.count}>{t('adminCatalog:admin.catalog.reportCount', { count: data?.total ?? items.length })}</p>
       <ul className={styles.list}>
         {items.map((report) => (
           <li key={report.id}>
@@ -331,10 +339,10 @@ function ReportCard({ report }: { report: AdminReportDto }) {
     setSaving(true);
     try {
       await putApiAdminReportsIdStatus(report.id!, { status });
-      toast.success(t(`admin.catalog.reportSaved.${status}`));
+      toast.success(t(`adminCatalog:admin.catalog.reportSaved.${status}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminReportsQueryKey().slice(0, 1) });
     } catch {
-      toast.error(t('admin.catalog.decisionFailed'));
+      toast.error(t('adminCatalog:admin.catalog.decisionFailed'));
     } finally {
       setSaving(false);
     }
@@ -343,12 +351,12 @@ function ReportCard({ report }: { report: AdminReportDto }) {
   return (
     <article className={styles.card}>
       <header className={styles.cardHead}>
-        <h3 className={styles.cardTitle}>{report.targetTitle ?? t('admin.catalog.gone')}</h3>
-        <span className={styles.badge}>{t(`admin.catalog.reportStatus.${report.status}`)}</span>
+        <h3 className={styles.cardTitle}>{report.targetTitle ?? t('adminCatalog:admin.catalog.gone')}</h3>
+        <span className={styles.badge}>{t(`adminCatalog:admin.catalog.reportStatus.${report.status}`)}</span>
       </header>
       <p className={styles.meta}>
-        <span>{t(`admin.catalog.reportTargets.${report.targetType}`)}</span>
-        <span>{t('admin.catalog.reportedBy', { name: report.reporter?.displayName ?? t('admin.reports.deleted') })}</span>
+        <span>{t(`adminCatalog:admin.catalog.reportTargets.${report.targetType}`)}</span>
+        <span>{t('adminCatalog:admin.catalog.reportedBy', { name: report.reporter?.displayName ?? t('admin.reports.deleted') })}</span>
         <time dateTime={report.createdAt}>{when(report.createdAt)}</time>
       </p>
       <p className={styles.reason}>{t(`report.reasons.${report.reason}`)}</p>
@@ -357,7 +365,7 @@ function ReportCard({ report }: { report: AdminReportDto }) {
       <div className={styles.actions}>
         {report.seriesId && (
           <Link to={`/series/${report.seriesId}`} className={styles.open}>
-            {t('admin.catalog.openSeries')}
+            {t('adminCatalog:admin.catalog.openSeries')}
           </Link>
         )}
         <Button
@@ -367,7 +375,7 @@ function ReportCard({ report }: { report: AdminReportDto }) {
           disabled={saving}
           onClick={() => void setStatus('UPHELD')}
         >
-          {t('admin.catalog.uphold')}
+          {t('adminCatalog:admin.catalog.uphold')}
         </Button>
         <Button
           variant={report.status === 'DISMISSED' ? 'primary' : 'secondary'}
@@ -376,7 +384,7 @@ function ReportCard({ report }: { report: AdminReportDto }) {
           disabled={saving}
           onClick={() => void setStatus('DISMISSED')}
         >
-          {t('admin.catalog.dismiss')}
+          {t('adminCatalog:admin.catalog.dismiss')}
         </Button>
         <Loading size="compact" pending={saving} />
       </div>
