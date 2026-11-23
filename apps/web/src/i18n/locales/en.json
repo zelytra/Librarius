@@ -1803,7 +1803,10 @@
       "APPLIED": "Your edit of “{{title}}” was accepted.",
       "REJECTED": "Your edit of “{{title}}” was declined.",
       "REVERTED": "Your edit of “{{title}}” was reverted by an admin.",
-      "PENDING": "Your edit of “{{title}}” is waiting for review."
+      "PENDING": "Your edit of “{{title}}” is waiting for review.",
+      "VERIFIED": "Your edit of “{{title}}” is applied: the store page confirms the book.",
+      "TRUSTED": "Your edit of “{{title}}” is applied: you are a trusted member.",
+      "UNVERIFIED": "Your edit of “{{title}}” waits for an admin: the store could not confirm the book."
     },
     "deleteOne": "Delete this notification",
     "deleted": "Notification deleted.",

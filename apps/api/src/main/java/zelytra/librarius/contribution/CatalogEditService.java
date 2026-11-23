@@ -244,6 +244,15 @@ public class CatalogEditService {
         }
         edits.persist(edit);
         edits.flush();
+        // The author hears of an automatic outcome (#634); an admin's own edit tells nobody.
+        if (!admin) {
+            String outcome = edit.appliedByTrust ? "TRUSTED"
+                    : verification == VerificationOutcome.PASSED ? "VERIFIED"
+                    : verification == VerificationOutcome.FAILED ? "UNVERIFIED" : null;
+            if (outcome != null) {
+                notifications.edit(submitterId, submitterId, edit.id, outcome);
+            }
+        }
         // created_at is the database's clock: read it back for the answer.
         edits.getEntityManager().refresh(edit);
         return toDto(edit);
@@ -291,7 +300,9 @@ public class CatalogEditService {
         edit.reviewerId = adminId;
         edit.reviewNote = note == null || note.isBlank() ? null : note.trim();
         edit.reviewedAt = OffsetDateTime.now();
-        notifications.edit(adminId, edit.submitterId, edit.id);
+        if (edit.submitterId != null && !edit.submitterId.equals(adminId)) {
+            notifications.edit(adminId, edit.submitterId, edit.id, status.name());
+        }
         return toDto(edit);
     }
 

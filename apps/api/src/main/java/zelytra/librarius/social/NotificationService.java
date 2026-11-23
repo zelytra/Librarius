@@ -132,18 +132,23 @@ public class NotificationService {
                 .executeUpdate();
     }
 
-    /** {@code adminId} decided on {@code recipientId}'s catalog edit proposal {@code editId}. */
-    public void edit(String adminId, String recipientId, UUID editId) {
-        if (recipientId == null || recipientId.equals(adminId)) {
+    /**
+     * What became of {@code recipientId}'s catalog edit proposal {@code editId}: an admin's
+     * decision ({@code actorId} the admin, never the author themself), or (#634) an automatic
+     * outcome, whose actor is the author. {@code outcome} is stored as sent (V53).
+     */
+    public void edit(String actorId, String recipientId, UUID editId, String outcome) {
+        if (recipientId == null) {
             return;
         }
         em.createNativeQuery("""
-                        insert into notification (id, user_id, type, actor_id, catalog_edit_id, created_at)
-                        values (:id, :user, 'EDIT', :actor, :edit, now())""")
+                        insert into notification (id, user_id, type, actor_id, catalog_edit_id, edit_outcome, created_at)
+                        values (:id, :user, 'EDIT', :actor, :edit, :outcome, now())""")
                 .setParameter("id", UUID.randomUUID())
                 .setParameter("user", recipientId)
-                .setParameter("actor", adminId)
+                .setParameter("actor", actorId)
                 .setParameter("edit", editId)
+                .setParameter("outcome", outcome)
                 .executeUpdate();
     }
 
@@ -157,7 +162,7 @@ public class NotificationService {
                                exists (select 1 from user_follow f
                                        where f.follower_id = n.user_id and f.followee_id = n.actor_id) as following_actor,
                                n.upcoming_release_id,
-                               ce.id as edit_id, ce.status as edit_status, ce.target_type, ce.target_id,
+                               ce.id as edit_id, coalesce(n.edit_outcome, ce.status) as edit_status, ce.target_type, ce.target_id,
                                coalesce(w.title, s.title) as edit_title, ce.review_note, w.id as edit_work
                         from notification n
                           left join app_user u on u.id = n.actor_id

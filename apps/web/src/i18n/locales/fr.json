@@ -1803,7 +1803,10 @@
       "APPLIED": "Ta modification de « {{title}} » a été acceptée.",
       "REJECTED": "Ta modification de « {{title}} » a été refusée.",
       "REVERTED": "Ta modification de « {{title}} » a été annulée par un administrateur.",
-      "PENDING": "Ta modification de « {{title}} » attend d’être relue."
+      "PENDING": "Ta modification de « {{title}} » attend d’être relue.",
+      "VERIFIED": "Ta modification de « {{title}} » est appliquée : la page du magasin confirme le livre.",
+      "TRUSTED": "Ta modification de « {{title}} » est appliquée : tu es membre de confiance.",
+      "UNVERIFIED": "Ta modification de « {{title}} » attend un administrateur : le magasin n’a pas pu confirmer le livre."
     },
     "deleteOne": "Supprimer cette notification",
     "deleted": "Notification supprimée.",

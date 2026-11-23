@@ -279,6 +279,7 @@ class CatalogEditApiTest {
             assertEquals("Trusted " + title, book("bob", item).getString("book.title"));
             Map<String, Object> entry = adminEntry(edit, "APPLIED");
             assertEquals(true, entry.get("appliedByTrust"));
+            assertEquals("TRUSTED", editNotification("bob", edit).get("status"));
 
             decide("alice", edit, "revert", null).statusCode(200);
             assertEquals(title, book("bob", item).getString("book.title"));
@@ -289,6 +290,44 @@ class CatalogEditApiTest {
         // Back to automatic, bob (a fresh account) is not trusted: his next proposal waits.
         propose("bob", proposal("EDITION", editionOf("bob", item), Map.of("publisher", "Waits"), null))
                 .statusCode(201).body("status", is("PENDING"));
+    }
+
+    /** The EDIT notification {@code user} received about {@code editId}. */
+    private static Map<String, Object> editNotification(String user, String editId) {
+        return given().auth().oauth2(token(user)).queryParam("size", 200).when().get("/api/notifications")
+                .then().statusCode(200).extract().jsonPath()
+                .getMap("items.find { it.edit != null && it.edit.id == '" + editId + "' }.edit");
+    }
+
+    /** #634: the author hears of an automatic outcome too, worded by what decided it. */
+    @Test
+    void theAuthorIsNotifiedOfAnAutomaticOutcome() {
+        String isbn = randomIsbn();
+        String title = "Edit - notified " + UUID.randomUUID();
+        String edition = editionOf("bob", addBook("bob", title, isbn));
+        String verifiedUrl = "https://www.fnac.com/a" + isbn;
+        stores.serve(verifiedUrl, storePage(title, isbn));
+        String verified = propose("bob", proposal("EDITION", edition, Map.of(), List.of(verifiedUrl)))
+                .statusCode(201).extract().path("id");
+        assertEquals("VERIFIED", editNotification("bob", verified).get("status"));
+
+        String other = editionOf("bob", addBook("bob", "Edit - unverified note " + UUID.randomUUID(), randomIsbn()));
+        String unverified = propose("bob", proposal("EDITION", other, Map.of(), List.of("https://www.amazon.fr/dp/1")))
+                .statusCode(201).extract().path("id");
+        assertEquals("UNVERIFIED", editNotification("bob", unverified).get("status"));
+        // An admin's later decision is a notification of its own; the first keeps its wording.
+        decide("alice", unverified, "approve", null).statusCode(200);
+        List<String> outcomes = given().auth().oauth2(token("bob")).queryParam("size", 200).when().get("/api/notifications")
+                .then().statusCode(200).extract().jsonPath()
+                .getList("items.findAll { it.edit != null && it.edit.id == '" + unverified + "' }.edit.status");
+        assertEquals(List.of("APPLIED", "UNVERIFIED"), outcomes);
+
+        // A plain pending proposal, and an admin's own edit, tell nobody anything.
+        String plain = proposeEdition("bob", other, Map.of("publisher", "Quiet"));
+        assertEquals(null, editNotification("bob", plain));
+        String mine = propose("alice", proposal("EDITION", editionOf("alice", addBook("alice", "Edit - own " + UUID.randomUUID(), randomIsbn())),
+                Map.of("publisher", "Mine"), null)).statusCode(201).extract().path("id");
+        assertEquals(null, editNotification("alice", mine));
     }
 
     @Test
