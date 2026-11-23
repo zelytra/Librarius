@@ -87,7 +87,8 @@ public class SeriesService {
                     long owned = row != null ? row.owned() : 0;
                     long read = row != null ? row.read() : 0;
                     SeriesSummaryDto dto = SeriesSummaryDto.of(s, owned, read, followed.contains(s.id),
-                            row != null ? row.lastActivity() : null);
+                            row != null ? row.lastActivity() : null)
+                            .withTotal(runTotal(s.totalVolumes, row != null ? row.highestVolume() : null));
                     String[] keys = sortKeys.get(s.id);
                     if (keys != null) {
                         dto = dto.withSortKeys(keys[0], keys[1]);
@@ -121,7 +122,7 @@ public class SeriesService {
 
         Run run = Run.of(found, owned, series.worksOfSeries(seriesId), series.volumeCovers(seriesId));
         SeriesDetailDto dto = SeriesDetailDto.of(found, run.ownedCount(), run.readCount(), followed,
-                run.volumes());
+                run.volumes()).withTotal(runTotal(found.totalVolumes, run.highestOwned()));
         if (dto.coverUrl() == null) {
             // The first volume's cover (#433), else the first volume the reader owns.
             String fallback = series.firstVolumeCovers(List.of(seriesId)).get(seriesId);
@@ -252,13 +253,25 @@ public class SeriesService {
     }
 
     /**
+     * The run's length as shown (#633): the announced total, never below the highest volume the
+     * reader holds — a total that a provider or a record got too low would read "6/3 tomes".
+     * {@code null} when neither is known.
+     */
+    static Integer runTotal(Integer announced, Integer highestHeld) {
+        if (highestHeld == null) {
+            return announced;
+        }
+        return announced == null ? null : Math.max(announced, highestHeld);
+    }
+
+    /**
      * The volumes of a series laid out against one user's collection.
      *
      * @param volumes    one entry per volume, in order
      * @param ownedCount distinct works of the series the user owns
      * @param readCount  of those, the ones marked {@code READ}
      */
-    private record Run(List<SeriesVolumeDto> volumes, long ownedCount, long readCount) {
+    private record Run(List<SeriesVolumeDto> volumes, long ownedCount, long readCount, Integer highestOwned) {
 
         /**
          * Lays the run out.
@@ -277,14 +290,16 @@ public class SeriesService {
         static Run of(Series series, List<LibraryItem> owned, List<Work> catalog, Map<Integer, String> covers) {
             Map<Integer, LibraryItem> ownedByVolume = new LinkedHashMap<>();
             List<LibraryItem> unnumbered = new ArrayList<>();
-            Set<UUID> ownedWorks = new LinkedHashSet<>();
-            Set<UUID> readWorks = new LinkedHashSet<>();
 
+            // Volumes, not works (#633): two works filed under one number fill one volume.
+            Set<String> ownedVolumes = new LinkedHashSet<>();
+            Set<String> readVolumes = new LinkedHashSet<>();
             for (LibraryItem item : owned) {
                 Work work = item.edition.work;
-                ownedWorks.add(work.id);
+                String volumeKey = work.volumeNumber != null ? "v" + work.volumeNumber : work.id.toString();
+                ownedVolumes.add(volumeKey);
                 if (item.status == LibraryStatus.READ) {
-                    readWorks.add(work.id);
+                    readVolumes.add(volumeKey);
                 }
                 if (work.volumeNumber == null) {
                     unnumbered.add(item);
@@ -359,7 +374,8 @@ public class SeriesService {
                         item.status == LibraryStatus.READ, false, false, item.edition.coverUrl));
             }
 
-            return new Run(List.copyOf(volumes), ownedWorks.size(), readWorks.size());
+            return new Run(List.copyOf(volumes), ownedVolumes.size(), readVolumes.size(),
+                    highestOwned > 0 ? highestOwned : null);
         }
     }
 }

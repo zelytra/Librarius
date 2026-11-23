@@ -34,8 +34,9 @@ export function missingVolumes(volumes: SeriesVolumeDto[]): number[] {
  * smaller than what the user owns.
  */
 export function runLength(totalVolumes: number | undefined, volumes: SeriesVolumeDto[]): number {
-  if (totalVolumes && totalVolumes > 0) return totalVolumes;
-  return volumes.filter((v) => v.volumeNumber != null).length;
+  const listed = volumes.filter((v) => v.volumeNumber != null).length;
+  // Never below the volumes the grid shows (#633): a total too low read "6/3 tomes".
+  return Math.max(totalVolumes && totalVolumes > 0 ? totalVolumes : 0, listed);
 }
 
 /** Orderings offered on the Series view of the collection. */

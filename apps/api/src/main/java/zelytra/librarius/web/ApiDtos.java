@@ -863,6 +863,12 @@ public final class ApiDtos {
                     null, null, null);
         }
 
+        /** The same summary with the run's length as shown (#633). */
+        public SeriesSummaryDto withTotal(Integer total) {
+            return new SeriesSummaryDto(id, kind, title, coverUrl, total, status, ownedCount,
+                    readCount, followed, lastActivity, authors, genre, rankCode);
+        }
+
         /** The same summary, drawn with another cover. */
         public SeriesSummaryDto withCover(String cover) {
             return new SeriesSummaryDto(id, kind, title, cover, totalVolumes, status, ownedCount,
@@ -893,6 +899,12 @@ public final class ApiDtos {
             String coverUrl, String synopsis, Integer totalVolumes, String status,
             long ownedCount, long readCount, boolean followed,
             java.util.List<SeriesVolumeDto> volumes) {
+        /** The same detail with the run's length as shown (#633). */
+        public SeriesDetailDto withTotal(Integer total) {
+            return new SeriesDetailDto(id, kind, title, originalTitle, coverUrl, synopsis, total,
+                    status, ownedCount, readCount, followed, volumes);
+        }
+
         /** The same detail with a cover — the first volume's, for a series with none (#433). */
         public SeriesDetailDto withCover(String cover) {
             return new SeriesDetailDto(id, kind, title, originalTitle, cover, synopsis, totalVolumes,
