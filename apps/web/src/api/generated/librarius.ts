@@ -323,6 +323,7 @@ export interface CatalogEditDto {
   verification?: string;
   verificationDetail?: string;
   verificationUrl?: string;
+  appliedByTrust?: boolean;
   submitter?: MemberSummaryDto;
   reviewer?: MemberSummaryDto;
   reviewNote?: string;
@@ -9437,6 +9438,78 @@ export function useGetApiNotifications<TData = Awaited<ReturnType<typeof getApiN
 
 
 
+export const getDeleteApiNotificationsUrl = () => {
+
+
+
+
+  return `/api/notifications`
+}
+
+/**
+ * @summary Delete All
+ */
+export const deleteApiNotifications = async ( options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiNotificationsUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiNotificationsMutationKey = () => ['deleteApiNotifications'] as const;
+
+export const getDeleteApiNotificationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotifications>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteApiNotificationsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiNotifications>>, void> = () => {
+
+
+          return  deleteApiNotifications(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiNotificationsMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiNotifications>>>
+
+    export type DeleteApiNotificationsMutationError = void
+
+
+    /** @summary Delete All */
+export const useDeleteApiNotifications = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotifications>>, TError,void, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiNotifications>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteApiNotificationsMutationOptions(options), queryClient);
+    }
+
 export const getPostApiNotificationsReadUrl = () => {
 
 
@@ -9609,6 +9682,78 @@ export function useGetApiNotificationsUnread<TData = Awaited<ReturnType<typeof g
 
 
 
+
+export const getDeleteApiNotificationsIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/notifications/${id}`
+}
+
+/**
+ * @summary Delete
+ */
+export const deleteApiNotificationsId = async (id: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiNotificationsIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiNotificationsIdMutationKey = () => ['deleteApiNotificationsId'] as const;
+
+export const getDeleteApiNotificationsIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotificationsId>>, TError,DeleteApiNotificationsIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotificationsId>>, TError,DeleteApiNotificationsIdMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiNotificationsIdMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiNotificationsId>>, DeleteApiNotificationsIdMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiNotificationsId(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiNotificationsIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiNotificationsId>>>
+
+    export type DeleteApiNotificationsIdMutationError = void
+    export type DeleteApiNotificationsIdMutationVariables = {id: Uuid}
+
+    /** @summary Delete */
+export const useDeleteApiNotificationsId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiNotificationsId>>, TError,DeleteApiNotificationsIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiNotificationsId>>,
+        TError,
+        DeleteApiNotificationsIdMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiNotificationsIdMutationOptions(options), queryClient);
+    }
 
 export const getGetApiReleasesUpcomingUrl = (params?: GetApiReleasesUpcomingParams,) => {
   const normalizedParams = new URLSearchParams();
