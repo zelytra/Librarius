@@ -430,6 +430,33 @@
         } ]
       }
     },
+    "/api/admin/pending" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminPendingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "summary" : "Pending",
+        "tags" : [ "Admin Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ "admin" ]
+        } ]
+      }
+    },
     "/api/admin/releases" : {
       "post" : {
         "requestBody" : {
@@ -2669,98 +2696,6 @@
           }
         },
         "summary" : "Set Ownership",
-        "tags" : [ "Library Resource" ],
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/api/library/{id}/pages" : {
-      "put" : {
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/UUID"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PagesDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "summary" : "Set Pages",
-        "tags" : [ "Library Resource" ],
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/api/library/{id}/price" : {
-      "put" : {
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/UUID"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PriceDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "summary" : "Set Price",
         "tags" : [ "Library Resource" ],
         "security" : [ {
           "SecurityScheme" : [ ]
@@ -5200,6 +5135,27 @@
           }
         }
       },
+      "AdminPendingDto" : {
+        "type" : "object",
+        "properties" : {
+          "unreadTickets" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pendingEdits" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "openReports" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "AdminReportDto" : {
         "type" : "object",
         "properties" : {
@@ -6837,13 +6793,6 @@
           "ownership" : {
             "type" : "string"
           },
-          "price" : {
-            "type" : "number"
-          },
-          "pageCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "format" : {
             "type" : "string"
           },
@@ -7423,17 +7372,6 @@
           }
         }
       },
-      "PagesDto" : {
-        "type" : "object",
-        "properties" : {
-          "pageCount" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 100000,
-            "exclusiveMinimum" : 0
-          }
-        }
-      },
       "PreferencesDto" : {
         "type" : "object",
         "properties" : {
@@ -7457,16 +7395,6 @@
           "sheetTheme" : {
             "type" : "string",
             "pattern" : "handwritten|classic|notebook"
-          }
-        }
-      },
-      "PriceDto" : {
-        "type" : "object",
-        "properties" : {
-          "price" : {
-            "type" : "number",
-            "multipleOf" : 0.01,
-            "minimum" : 0
           }
         }
       },

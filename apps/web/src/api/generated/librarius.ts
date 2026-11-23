@@ -64,6 +64,13 @@ export interface AchievementsDto {
   unseen?: AchievementUnlockDto[];
 }
 
+export interface AdminPendingDto {
+  unreadTickets?: number;
+  pendingEdits?: number;
+  openReports?: number;
+  total?: number;
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -822,8 +829,6 @@ export interface LibraryItemDto {
   book?: BookView;
   reviewShared?: boolean;
   ownership?: string;
-  price?: number;
-  pageCount?: number;
   format?: string;
   language?: string;
 }
@@ -1035,19 +1040,6 @@ export interface NotificationPageDto {
 
 export interface OwnershipDto {
   ownership: Ownership;
-}
-
-export interface PagesDto {
-  /**
-     * @maximum 100000
-     * @exclusiveMinimum 0
-     */
-  pageCount?: number;
-}
-
-export interface PriceDto {
-  /** @minimum 0 */
-  price?: number;
 }
 
 export interface ProgressDto {
@@ -2543,6 +2535,107 @@ export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getAp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiAdminMonitoringQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiAdminPendingUrl = () => {
+
+
+
+
+  return `/api/admin/pending`
+}
+
+/**
+ * @summary Pending
+ */
+export const getApiAdminPending = async ( options?: Parameters<typeof apiClient>[1]): Promise<AdminPendingDto> => {
+
+  return apiClient<AdminPendingDto>(getGetApiAdminPendingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminPendingQueryKey = () => {
+    return [
+    `/api/admin/pending`
+    ] as const;
+    }
+
+
+export const getGetApiAdminPendingQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminPendingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminPending>>> = () => getApiAdminPending(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminPendingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminPending>>>
+export type GetApiAdminPendingQueryError = void
+
+
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminPending>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminPending>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminPending>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminPending>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminPendingQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -7584,180 +7677,6 @@ export const usePutApiLibraryIdOwnership = <TError = void,
         TContext
       > => {
       return useMutation(getPutApiLibraryIdOwnershipMutationOptions(options), queryClient);
-    }
-
-export const getPutApiLibraryIdPagesUrl = (id: Uuid,) => {
-
-
-
-
-  return `/api/library/${id}/pages`
-}
-
-/**
- * @summary Set Pages
- */
-export const putApiLibraryIdPages = async (id: Uuid,
-    pagesDto: PagesDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiClient<unknown>(getPutApiLibraryIdPagesUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pagesDto)
-  }
-);}
-
-
-
-
-
-export const getPutApiLibraryIdPagesMutationKey = () => ['putApiLibraryIdPages'] as const;
-
-export const getPutApiLibraryIdPagesMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,PutApiLibraryIdPagesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,PutApiLibraryIdPagesMutationVariables, TContext> => {
-
-const mutationKey = getPutApiLibraryIdPagesMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdPages>>, PutApiLibraryIdPagesMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  putApiLibraryIdPages(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PutApiLibraryIdPagesMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdPages>>>
-    export type PutApiLibraryIdPagesMutationBody = PagesDto
-    export type PutApiLibraryIdPagesMutationError = void
-    export type PutApiLibraryIdPagesMutationVariables = {id: Uuid;data: PagesDto}
-
-    /** @summary Set Pages */
-export const usePutApiLibraryIdPages = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPages>>, TError,PutApiLibraryIdPagesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof putApiLibraryIdPages>>,
-        TError,
-        PutApiLibraryIdPagesMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPutApiLibraryIdPagesMutationOptions(options), queryClient);
-    }
-
-export const getPutApiLibraryIdPriceUrl = (id: Uuid,) => {
-
-
-
-
-  return `/api/library/${id}/price`
-}
-
-/**
- * @summary Set Price
- */
-export const putApiLibraryIdPrice = async (id: Uuid,
-    priceDto: PriceDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiClient<unknown>(getPutApiLibraryIdPriceUrl(id),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(priceDto)
-  }
-);}
-
-
-
-
-
-export const getPutApiLibraryIdPriceMutationKey = () => ['putApiLibraryIdPrice'] as const;
-
-export const getPutApiLibraryIdPriceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,PutApiLibraryIdPriceMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,PutApiLibraryIdPriceMutationVariables, TContext> => {
-
-const mutationKey = getPutApiLibraryIdPriceMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, PutApiLibraryIdPriceMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  putApiLibraryIdPrice(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PutApiLibraryIdPriceMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdPrice>>>
-    export type PutApiLibraryIdPriceMutationBody = PriceDto
-    export type PutApiLibraryIdPriceMutationError = void
-    export type PutApiLibraryIdPriceMutationVariables = {id: Uuid;data: PriceDto}
-
-    /** @summary Set Price */
-export const usePutApiLibraryIdPrice = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdPrice>>, TError,PutApiLibraryIdPriceMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof putApiLibraryIdPrice>>,
-        TError,
-        PutApiLibraryIdPriceMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPutApiLibraryIdPriceMutationOptions(options), queryClient);
     }
 
 export const getPutApiLibraryIdProgressUrl = (id: Uuid,) => {

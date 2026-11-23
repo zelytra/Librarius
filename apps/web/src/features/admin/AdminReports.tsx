@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetApiAdminFeedbackIdQueryKey,
   getGetApiAdminFeedbackQueryKey,
+  getGetApiAdminPendingQueryKey,
   putApiAdminFeedbackIdStatus,
   useGetApiAdminFeedback,
   useGetApiAdminFeedbackId,
@@ -59,6 +60,7 @@ export function AdminReports() {
   const close = () => {
     setOpenId(null);
     void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackQueryKey().slice(0, 1) });
+    void queryClient.invalidateQueries({ queryKey: getGetApiAdminPendingQueryKey() });
   };
   const { data, isPending, isError, refetch } = useGetApiAdminFeedback({
     page,
@@ -151,8 +153,9 @@ function ReportDetail({ id, onClose }: { id: string; onClose: () => void }) {
       setChosen(status);
       toast.success(t(`admin.status.saved.${status}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackIdQueryKey(id) });
-      // The lists, and the navigation's count of unread reports with them (#565).
+      // The lists, and the navigation's count of unread reports with them (#565, #635).
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminFeedbackQueryKey().slice(0, 1) });
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminPendingQueryKey() });
     } catch {
       toast.error(t('admin.status.failed'));
     } finally {

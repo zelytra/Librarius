@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetApiAdminCatalogEditsQueryKey,
+  getGetApiAdminPendingQueryKey,
   getGetApiAdminReportsQueryKey,
   postApiAdminCatalogEditsIdApprove,
   postApiAdminCatalogEditsIdReject,
@@ -23,6 +24,8 @@ import { toast } from '../../shared/ui/toast';
 import fr from './adminCatalog.fr.json';
 import en from './adminCatalog.en.json';
 import i18n from 'i18next';
+import { useAdminPending } from './useUnreadReports';
+import { withCount } from './withCount';
 import styles from './AdminCatalog.module.css';
 
 // The Catalogue tab's words ride with the admin chunk, in a namespace of their own: the French
@@ -44,14 +47,15 @@ type Section = 'edits' | 'reports';
 export function AdminCatalog() {
   const { t } = useTranslation();
   const [section, setSection] = useState<Section>('edits');
+  const pending = useAdminPending(true);
   return (
     <div className={styles.catalog}>
       <Segmented<Section>
         value={section}
         onChange={setSection}
         options={[
-          { id: 'edits', label: t('adminCatalog:admin.catalog.edits') },
-          { id: 'reports', label: t('adminCatalog:admin.catalog.reports') },
+          { id: 'edits', label: withCount(t, t('adminCatalog:admin.catalog.edits'), pending?.pendingEdits) },
+          { id: 'reports', label: withCount(t, t('adminCatalog:admin.catalog.reports'), pending?.openReports) },
         ]}
       />
       {section === 'edits' ? <Edits /> : <Reports />}
@@ -122,6 +126,7 @@ function EditCard({ edit }: { edit: CatalogEditDto }) {
       else await postApiAdminCatalogEditsIdRevert(edit.id!, body);
       toast.success(t(`adminCatalog:admin.catalog.decided.${decision}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminCatalogEditsQueryKey().slice(0, 1) });
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminPendingQueryKey() });
     } catch {
       toast.error(t('adminCatalog:admin.catalog.decisionFailed'));
     } finally {
@@ -341,6 +346,7 @@ function ReportCard({ report }: { report: AdminReportDto }) {
       await putApiAdminReportsIdStatus(report.id!, { status });
       toast.success(t(`adminCatalog:admin.catalog.reportSaved.${status}`));
       void queryClient.invalidateQueries({ queryKey: getGetApiAdminReportsQueryKey().slice(0, 1) });
+      void queryClient.invalidateQueries({ queryKey: getGetApiAdminPendingQueryKey() });
     } catch {
       toast.error(t('adminCatalog:admin.catalog.decisionFailed'));
     } finally {

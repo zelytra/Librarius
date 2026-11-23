@@ -121,7 +121,8 @@ public class FeedbackService {
         return query.setFirstResult(window.offset()).setMaxResults(window.size()).getResultList();
     }
 
-    private long count(Status status) {
+    /** How many reports are in {@code status}, every one when null — #635 reads the NEW ones. */
+    public long count(Status status) {
         var query = em.createQuery("select count(f) from Feedback f" + filter(status), Long.class);
         if (status != null) {
             query.setParameter("status", status);

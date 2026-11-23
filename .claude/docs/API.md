@@ -30,6 +30,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | DELETE | `/api/users/{id}/block` | Unblock another member — 204, idempotent. 400 on self, 404 on an unknown id |
 | GET | `/api/export?format=csv\|json` | Everything the caller entered — see [Export](#export) |
 | GET | `/api/export/{jobId}` | A deferred export: the file, or 202 while it is being built |
+| GET | `/api/admin/pending` | `@RolesAllowed("admin")` — `AdminPendingDto(unreadTickets, pendingEdits, openReports, total)` (#635): the Admin badge and the tabs' numbers |
 | DELETE | `/api/notifications/{id}` | Deletes one of the caller's notifications (#629) — 204; 404 for an unknown id or another member's |
 | DELETE | `/api/notifications` | Deletes every notification of the caller (#629) — 204 |
 | GET | `/api/catalog-edits/fields?targetType=&targetId=` | The edit form's starting point (#618): `CatalogEditFieldsDto(fields: name → canonical value, saleLinks, pendingByMe)`; 404 unknown record — see [Catalog edits](#catalog-edits) |
@@ -49,7 +50,6 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET | `/api/library?page=&size=&sort=&kind=&status=&rank=&genre=&minRating=&q=&ownership=` | One page of the owned titles (`LibraryPageDto`) — see [Pagination](#pagination). `status` is `TO_READ` (`OWNED` still accepted), `READING`, `READ` or `ABANDONED`; `ownership` is `OWNED`, `BORROWED`, `EBOOK`, `AUDIOBOOK` (#455), `WISHLIST` or `NOT_OWNED` (#411); `sort=manual&view=<id>` follows one of the caller's views (#451), 400 without one |
 | GET | `/api/library/{id}` | A single owned title (`LibraryItemDto`), 404 if it is not the caller's |
 | POST | `/api/library` | Adds a title (`LibraryCreateDto`: `book`, `status`, `ownership`, `rating`, `acquiredAt`) — creates `work`+`edition` if needed; `ownership: WISHLIST` also creates the wish |
-| PUT | `/api/library/{id}/pages` | The reader's own page count (`PagesDto`, null clears it, 1–100 000) — used first by their figures, the position re-anchored (#446) |
 | PUT | `/api/library/{id}/kind` | Files the title under another kind for this reader (`KindDto`, #454): the copy moves to an edition of a work of that kind (found or created), keeping ISBN, publisher, length, cover and every field of the item; other readers' copies are untouched |
 | GET/POST | `/api/views` | The caller's saved library views (`LibraryViewDto`), or a new one (`LibraryViewInput`: `name`, `kind`, `shelf`, `sort` incl. `manual`, `layout`, `groupByCategory`) — 201, 409 past 20 views (#451) |
 | PUT/DELETE | `/api/views/{id}` | Updates / deletes a view of the caller's; 404 for anyone else's |
@@ -62,7 +62,6 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/language` | The language the copy was read in (`LanguageDto(language)`, `[a-z]{2,3}`, 400 otherwise; null clears it) (#566); `LibraryItemDto.language` carries it |
 | PUT | `/api/library/{id}/format` | The format of the copy (`FormatDto`, null clears it) (#447); `GET /api/library?format=` filters on it |
 | POST | `/api/library/{id}/edition` | Moves the title onto an edition that is not a row yet (`EditionChoiceDto`): a provider's printing or one described by hand, created under the title's work; a known ISBN reuses that edition (#445) |
-| PUT | `/api/library/{id}/price` | The reader's own price (`PriceDto`, null clears it, ≥ 0) — private, the edition's market price untouched (#431); `LibraryItemDto.price` |
 | PUT | `/api/library/{id}/ownership` | Sets the ownership (`OwnershipDto`) — `WISHLIST` puts the edition on the wishlist, any other value takes it off (#411) |
 | PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
@@ -1041,6 +1040,10 @@ hand and only while they stay on a known store), carries the proposed-or-current
 whole number and the folded title. Otherwise it is `PENDING`, with `verification` `FAILED` and
 `verificationDetail` (`FETCH_FAILED`, `ISBN_NOT_FOUND`, `TITLE_NOT_FOUND`, `NO_ISBN`) when a link
 was tried. One pending proposal per member per record (409).
+
+The author is also notified of an automatic outcome (#634): `VERIFIED`, `TRUSTED`, or
+`UNVERIFIED` when the store check failed — stored as sent in `notification.edit_outcome` (V53)
+so a notification keeps its wording when the proposal later moves on.
 
 The admins (`/api/admin/catalog-edits`) see every proposal, `changes` with each field's
 `current` value too; `approve` writes `after`, `revert` writes `before` back, `reject` writes

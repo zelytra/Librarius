@@ -16,6 +16,9 @@ import static org.hamcrest.Matchers.nullValue;
 @QuarkusTest
 class OwnPagesFormatEditionApiTest {
 
+    @jakarta.inject.Inject
+    jakarta.persistence.EntityManager em;
+
     private final KeycloakTestClient keycloak = new KeycloakTestClient();
 
     private String token(String user) {
@@ -29,35 +32,33 @@ class OwnPagesFormatEditionApiTest {
                 .extract().jsonPath().getMap("$");
     }
 
+    /**
+     * #636: a book's length is the shared record's, corrected through an edit proposal. There is
+     * no personal page count to set any more, and one stored before is no longer read.
+     */
     @Test
-    void theReadersOwnPageCountDrivesTheirFiguresAndStaysTheirs() {
+    void theLengthIsTheSharedRecordsAndAStoredPersonalOneIsIgnored() {
         Map<String, Object> item = add("bob", """
-                { "book": { "kind": "BOOK", "title": "Own pages %s", "pageCount": 300 }, "status": "READING" }
+                { "book": { "kind": "BOOK", "title": "Shared pages %s", "pageCount": 300 }, "status": "READING" }
                 """.formatted(UUID.randomUUID()));
         String id = (String) item.get("id");
-        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"percent\": 50 }")
-                .when().put("/api/library/" + id + "/progress").then().statusCode(204);
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"pageCount\": 420 }")
+                .when().put("/api/library/" + id + "/pages").then().statusCode(404);
+
+        // A personal count stored before #636 stays in its column, read by nothing.
+        io.quarkus.narayana.jta.QuarkusTransaction.requiringNew().run(() ->
+                em.createNativeQuery("update library_item set page_count = 420 where id = cast(?1 as uuid)")
+                        .setParameter(1, id).executeUpdate());
         long before = given().auth().oauth2(token("bob")).when().get("/api/stats")
                 .then().extract().jsonPath().getLong("pagesRead");
-
-        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"pageCount\": 420 }")
-                .when().put("/api/library/" + id + "/pages")
-                .then().statusCode(200)
-                .body("pageCount", is(420))
-                // The edition's own count is left as it was.
-                .body("book.pageCount", is(300))
-                // The position follows the new length: 50 % of 420.
-                .body("progress.currentPage", is(210));
-
+        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"percent\": 50 }")
+                .when().put("/api/library/" + id + "/progress").then().statusCode(204);
+        given().auth().oauth2(token("bob")).when().get("/api/library/" + id).then().statusCode(200)
+                .body("progress.currentPage", is(150));
         given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"status\": \"READ\" }")
                 .when().put("/api/library/" + id + "/progress").then().statusCode(204);
         given().auth().oauth2(token("bob")).when().get("/api/stats")
-                .then().body("pagesRead", is((int) before + 420));
-
-        given().auth().oauth2(token("alice")).contentType("application/json").body("{ \"pageCount\": 1 }")
-                .when().put("/api/library/" + id + "/pages").then().statusCode(404);
-        given().auth().oauth2(token("bob")).contentType("application/json").body("{ \"pageCount\": 0 }")
-                .when().put("/api/library/" + id + "/pages").then().statusCode(400);
+                .then().body("pagesRead", is((int) before + 300));
     }
 
     @Test

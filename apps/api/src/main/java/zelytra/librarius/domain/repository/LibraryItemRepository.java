@@ -483,7 +483,7 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
     public StatusTotals statusTotals(String userId) {
         List<Object[]> rows = getEntityManager()
                 .createQuery("""
-                        select li.status, count(li), sum(coalesce(li.pageCount, li.edition.pageCount, li.edition.pageCountEstimate)), count(coalesce(li.pageCount, li.edition.pageCount))
+                        select li.status, count(li), sum(coalesce(li.edition.pageCount, li.edition.pageCountEstimate)), count(li.edition.pageCount)
                         from LibraryItem li
                         where li.userId = :userId
                         group by li.status

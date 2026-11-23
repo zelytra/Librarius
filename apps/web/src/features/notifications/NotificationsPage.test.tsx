@@ -75,6 +75,25 @@ describe('notifications', () => {
     expect(screen.getByText('Ta modification de « Hypérion » a été annulée par un administrateur.')).toBeInTheDocument();
   });
 
+  /** #634: an automatic outcome is told in words of what decided it. */
+  test('words the automatic outcomes of a catalog edit', async () => {
+    const SELF = { id: 'me', displayName: 'Moi' };
+    const edit = (id: string, status: string, targetTitle: string) =>
+      ({ id, type: 'EDIT', actor: SELF, createdAt: '2026-11-16T12:00:00Z', edit: { id, status, targetType: 'EDITION', targetId: 'e', targetTitle } });
+    server.use(
+      http.get('*/api/notifications', () => HttpResponse.json({
+        items: [edit('a', 'VERIFIED', 'Dune'), edit('b', 'TRUSTED', 'Hypérion'), edit('c', 'UNVERIFIED', 'Fondation')],
+        page: 0, size: 30, hasMore: false,
+      })),
+      http.post('*/api/notifications/read', () => new HttpResponse(null, { status: 204 })),
+    );
+    renderWithProviders(<NotificationsPage />);
+
+    expect(await screen.findByText('Ta modification de « Dune » est appliquée : la page du magasin confirme le livre.')).toBeInTheDocument();
+    expect(screen.getByText('Ta modification de « Hypérion » est appliquée : tu es membre de confiance.')).toBeInTheDocument();
+    expect(screen.getByText('Ta modification de « Fondation » attend un administrateur : le magasin n’a pas pu confirmer le livre.')).toBeInTheDocument();
+  });
+
   /** #629: deleting a notification, or all of them behind a confirmation. */
   test('deletes one notification, then all of them once confirmed', async () => {
     let items = [...ITEMS];

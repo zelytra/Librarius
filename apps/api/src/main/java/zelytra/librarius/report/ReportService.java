@@ -93,6 +93,11 @@ public class ReportService {
         return new zelytra.librarius.web.ApiDtos.AdminReportPageDto(items, window.page(), window.size(), query.count());
     }
 
+    /** Reports nobody has upheld or dismissed yet (#635). */
+    public long countOpen() {
+        return reports.count("status", zelytra.librarius.domain.ReportStatus.OPEN);
+    }
+
     /** False for an unknown report. */
     @Transactional
     public boolean setStatus(UUID id, zelytra.librarius.domain.ReportStatus status) {

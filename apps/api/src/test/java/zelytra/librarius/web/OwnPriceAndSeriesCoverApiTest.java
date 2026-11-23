@@ -37,53 +37,37 @@ class OwnPriceAndSeriesCoverApiTest {
                 .extract().jsonPath().getMap("$");
     }
 
+    /**
+     * #636: a book's price is the shared record's list price, corrected through an edit proposal.
+     * There is no personal price to set any more, and one stored before no longer counts. On
+     * carol's account: bob's value is summed in floats by the value tests.
+     */
     @Test
-    void theReaderSetsTheirOwnPriceWithoutTouchingTheEdition() {
-        Map<String, Object> item = add("bob", """
-                { "book": { "kind": "BOOK", "title": "Own price %s" }, "status": "READ" }
+    void theValueCountsTheSharedPriceAndAStoredPersonalOneIsIgnored() {
+        Map<String, Object> item = add("carol", """
+                { "book": { "kind": "BOOK", "title": "Shared price %s" }, "status": "READ" }
                 """.formatted(UUID.randomUUID()));
         String id = (String) item.get("id");
         @SuppressWarnings("unchecked")
         String editionId = (String) ((Map<String, Object>) item.get("book")).get("editionId");
-        float before = given().auth().oauth2(token("bob")).when().get("/api/stats/value")
+        given().auth().oauth2(token("carol")).contentType("application/json").body("{ \"price\": 18.50 }")
+                .when().put("/api/library/" + id + "/price").then().statusCode(404);
+
+        float before = given().auth().oauth2(token("carol")).when().get("/api/stats/value")
                 .then().statusCode(200).extract().jsonPath().getFloat("library");
+        // A personal price stored before #636 stays in its column, read by nothing.
+        QuarkusTransaction.requiringNew().run(() ->
+                em.createNativeQuery("update library_item set price = 18.50 where id = cast(?1 as uuid)")
+                        .setParameter(1, id).executeUpdate());
+        given().auth().oauth2(token("carol")).when().get("/api/stats/value")
+                .then().statusCode(200).body("library", is(before));
 
-        given().auth().oauth2(token("bob")).contentType("application/json")
-                .body("{ \"price\": 18.50 }")
-                .when().put("/api/library/" + id + "/price")
-                .then().statusCode(200)
-                .body("price", is(18.5f));
-
-        // Shared catalog data stays as it was: the price is the reader's.
-        BigDecimal listPrice = QuarkusTransaction.requiringNew().call(() ->
-                em.find(zelytra.librarius.domain.Edition.class, UUID.fromString(editionId)).listPrice);
-        assertNull(listPrice);
-        given().auth().oauth2(token("bob")).when().get("/api/stats/value")
-                .then().statusCode(200)
-                .body("library", is(before + 18.5f));
-
-        // Someone else's title answers like an unknown one.
+        // The shared list price, set through the record correction (alice is an admin), counts.
         given().auth().oauth2(token("alice")).contentType("application/json")
-                .body("{ \"price\": 1 }")
-                .when().put("/api/library/" + id + "/price")
-                .then().statusCode(404);
-
-        given().auth().oauth2(token("bob")).contentType("application/json")
-                .body("{ \"price\": null }")
-                .when().put("/api/library/" + id + "/price")
-                .then().statusCode(200)
-                .body("price", nullValue());
-    }
-
-    @Test
-    void aNegativePriceIsRefused() {
-        Map<String, Object> item = add("bob", """
-                { "book": { "kind": "BOOK", "title": "Negative price %s" } }
-                """.formatted(UUID.randomUUID()));
-        given().auth().oauth2(token("bob")).contentType("application/json")
-                .body("{ \"price\": -3 }")
-                .when().put("/api/library/" + item.get("id") + "/price")
-                .then().statusCode(400);
+                .body(Map.of("targetType", "EDITION", "targetId", editionId, "fields", Map.of("listPrice", "12.40")))
+                .when().post("/api/catalog-edits").then().statusCode(201);
+        given().auth().oauth2(token("carol")).when().get("/api/stats/value")
+                .then().statusCode(200).body("library", is(before + 12.4f));
     }
 
     /** #433: a series with no cover wears its first volume's, even one the reader lacks. */

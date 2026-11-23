@@ -639,6 +639,14 @@ titles, it never deletes them**: a rank is a label stuck on a book, so dropping 
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
 
+`V53__notification_edit_outcome.sql` ([#634](https://github.com/zelytra/Librarius/issues/634)) adds
+`notification.edit_outcome VARCHAR(16)`: what an `EDIT` notification said when it was sent —
+`APPLIED`, `REJECTED`, `REVERTED`, `VERIFIED`, `TRUSTED` or `UNVERIFIED` — rather than the
+proposal's current status. No migration accompanies #636: `library_item.price` and
+`library_item.page_count` stay in place for the export and the archive import, but no figure
+reads them any more — the edition's `page_count` (or estimate) and `list_price` are the only
+ones.
+
 `V52__catalog_edit_trusted.sql` ([#631](https://github.com/zelytra/Librarius/issues/631)) adds
 `catalog_edit.applied_by_trust BOOLEAN NOT NULL DEFAULT false`: a trusted member's proposal is
 applied on their standing, like an admin's, and the flag tells the admin view why it went

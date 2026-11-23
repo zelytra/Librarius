@@ -37,22 +37,26 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
      * @param read     those of them marked {@link LibraryStatus#READ}
      */
     /** @param lastActivity the latest activity among the volumes held, see {@code LibraryItemRepository.ACTIVITY} */
-    public record OwnershipCounters(UUID seriesId, long owned, long read, java.time.LocalDate lastActivity) {
+    public record OwnershipCounters(UUID seriesId, long owned, long read, java.time.LocalDate lastActivity,
+            Integer highestVolume) {
     }
 
     /**
      * Ownership counters for every series the user owns at least one volume of, in a single
      * grouped query — the series list must not cost one query per series.
      *
-     * <p>Counting distinct works rather than items keeps two editions of the same volume
-     * from inflating the run.
+     * <p>Counting volumes rather than items or works (#633): two editions of one volume, or two
+     * works filed under the same volume number, fill one volume; an unnumbered work counts as its
+     * own. The highest volume held is what a too-low announced total is raised to.
      */
     public List<OwnershipCounters> ownershipCountersByUser(String userId) {
         return getEntityManager()
                 .createQuery("""
-                        select w.series.id, count(distinct w.id),
-                               count(distinct case when li.status = :read then w.id end),
-                               max(%s)
+                        select w.series.id,
+                               count(distinct coalesce(concat('v', cast(w.volumeNumber as string)), cast(w.id as string))),
+                               count(distinct case when li.status = :read
+                                     then coalesce(concat('v', cast(w.volumeNumber as string)), cast(w.id as string)) end),
+                               max(%s), max(w.volumeNumber)
                         from LibraryItem li
                           join li.edition e
                           join e.work w
@@ -66,7 +70,8 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
                 .getResultList()
                 .stream()
                 .map(row -> new OwnershipCounters((UUID) row[0], ((Number) row[1]).longValue(),
-                        ((Number) row[2]).longValue(), (java.time.LocalDate) row[3]))
+                        ((Number) row[2]).longValue(), (java.time.LocalDate) row[3],
+                        row[4] == null ? null : ((Number) row[4]).intValue()))
                 .toList();
     }
 

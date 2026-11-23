@@ -37,8 +37,8 @@ public class ValueService {
         BigDecimal libraryTotal = BigDecimal.ZERO;
         @SuppressWarnings("unchecked")
         List<Object[]> libraryRows = em.createNativeQuery("""
-                select w.kind, count(*), count(coalesce(li.price, e.list_price)),
-                       coalesce(sum(coalesce(li.price, e.list_price)), 0)
+                select w.kind, count(*), count(e.list_price),
+                       coalesce(sum(e.list_price), 0)
                 from library_item li
                   join edition e on e.id = li.edition_id
                   join work w on w.id = e.work_id

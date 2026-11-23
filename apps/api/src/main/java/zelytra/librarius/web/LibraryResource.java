@@ -26,8 +26,6 @@ import zelytra.librarius.domain.LibraryStatus;
 import zelytra.librarius.domain.Ownership;
 import zelytra.librarius.library.OwnershipService;
 import zelytra.librarius.web.ApiDtos.OwnershipDto;
-import zelytra.librarius.web.ApiDtos.PriceDto;
-import zelytra.librarius.web.ApiDtos.PagesDto;
 import zelytra.librarius.web.ApiDtos.FormatDto;
 import zelytra.librarius.web.ApiDtos.EditionChoiceDto;
 import zelytra.librarius.domain.repository.LibraryItemRepository;
@@ -237,45 +235,6 @@ public class LibraryResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         ownershipService.apply(item, dto.ownership());
-        return Response.ok(LibraryItemDto.of(item)).build();
-    }
-
-    /**
-     * The reader's own price for their copy (#431). Private to this title: the shared edition's
-     * market price is left as it is. A null price clears it.
-     */
-    @PUT
-    @Path("/{id}/price")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response setPrice(@PathParam("id") UUID id, @Valid PriceDto dto) {
-        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
-        if (item == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        item.price = dto != null ? dto.price() : null;
-        return Response.ok(LibraryItemDto.of(item)).build();
-    }
-
-    /**
-     * The reader's own page count for their copy (#446), private to this title: every figure
-     * of the reader uses it before the edition's. Null clears it.
-     */
-    @PUT
-    @Path("/{id}/pages")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Response setPages(@PathParam("id") UUID id, @Valid PagesDto dto) {
-        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
-        if (item == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        item.pageCount = dto != null ? dto.pageCount() : null;
-        // The position follows the new length, as it does on a change of edition.
-        if (item.progress != null && item.progress.percent != null) {
-            item.progress.currentPage = zelytra.librarius.domain.ReadingProgress.pageOf(
-                    item.progress.percent, item.effectivePageCount());
-        }
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 

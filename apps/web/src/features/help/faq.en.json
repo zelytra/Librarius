@@ -49,7 +49,7 @@
     },
     "pages": {
       "q": "Why does the page count show “≈”?",
-      "a": "When no catalog knows the length, Librarius estimates it (the series average, or a typical length for the kind). Enter the real count on the book's screen: it will count in your statistics and your goal."
+      "a": "When no catalog knows the length, Librarius estimates it (the series average, or a typical length for the kind). Correct it with “Suggest an edit”, at the foot of the book's screen: it will count for every reader, in statistics and goals."
     },
     "categories": {
       "q": "What are Platine, Or, Argent, Bronze for?",

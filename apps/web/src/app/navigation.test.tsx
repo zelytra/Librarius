@@ -150,18 +150,20 @@ describe('the foot of the navigation', () => {
   });
 });
 
-/** #565: an admin sees how many reports are still unread, on the Admin entry, like the bell. */
-describe('the unread reports', () => {
+/**
+ * #565, #635: an admin sees how many things wait for them — unread tickets, edits to review,
+ * open catalog reports, cumulated — on the Admin entry, like the bell.
+ */
+describe('what waits for the admins', () => {
   afterEach(() => resetAuth());
 
   function reports(total: number) {
     let asked = 0;
     server.use(
       http.get('*/api/me', () => HttpResponse.json({ id: 'alice', displayName: 'Alice', admin: true })),
-      http.get('*/api/admin/feedback', ({ request }) => {
+      http.get('*/api/admin/pending', () => {
         asked += 1;
-        expect(new URL(request.url).searchParams.get('status')).toBe('NEW');
-        return HttpResponse.json({ items: [], page: 0, size: 1, total });
+        return HttpResponse.json({ unreadTickets: 1, pendingEdits: total - 1, openReports: 0, total });
       }),
     );
     return () => asked;
@@ -171,7 +173,7 @@ describe('the unread reports', () => {
     reports(3);
     renderWithProviders(<SideNav />);
 
-    expect(await screen.findByRole('link', { name: 'Admin, 3 signalements non lus' })).toHaveAttribute('href', '/admin');
+    expect(await screen.findByRole('link', { name: 'Admin, 3 éléments à traiter' })).toHaveAttribute('href', '/admin');
   });
 
   test('are counted in the « Plus » sheet, and dot the button', async () => {
@@ -180,7 +182,7 @@ describe('the unread reports', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
 
-    expect(await screen.findByRole('link', { name: 'Admin, 2 signalements non lus' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Admin, 2 éléments à traiter' })).toBeInTheDocument();
   });
 
   test('show nothing at zero', async () => {
@@ -194,9 +196,9 @@ describe('the unread reports', () => {
     let asked = false;
     server.use(
       http.get('*/api/me', () => HttpResponse.json({ id: 'bob', displayName: 'Bob', admin: false })),
-      http.get('*/api/admin/feedback', () => {
+      http.get('*/api/admin/pending', () => {
         asked = true;
-        return HttpResponse.json({ items: [], total: 9 });
+        return HttpResponse.json({ unreadTickets: 9, pendingEdits: 0, openReports: 0, total: 9 });
       }),
     );
     renderWithProviders(<SideNav />);

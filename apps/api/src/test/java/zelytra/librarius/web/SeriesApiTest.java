@@ -535,4 +535,46 @@ class SeriesApiTest {
                 .when().get("/api/library")
                 .then().body("total", is(6));
     }
+
+    // ── Counts against the run (#633) ─────────────────────────────────────────
+
+    /** Two works filed as the same volume — a duplicate in the catalog — fill one volume. */
+    @Test
+    void twoWorksOfTheSameVolumeCountAsOneVolume() {
+        String title = "Series Test - duplicate " + java.util.UUID.randomUUID();
+        addVolume("alice", title, 1, "READ");
+        addVolume("alice", title, 2, "READ");
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body(java.util.Map.of("book", java.util.Map.of("kind", "MANGA", "title", title + " vol. 2 (collector)",
+                        "authors", "Series Test", "seriesTitle", title, "volumeNumber", 2), "status", "READ"))
+                .when().post("/api/library").then().statusCode(201);
+        String id = seriesId("alice", title);
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + id).then().statusCode(200)
+                .body("ownedCount", org.hamcrest.Matchers.is(2))
+                .body("readCount", org.hamcrest.Matchers.is(2));
+        given().auth().oauth2(token("alice")).when().get("/api/series").then().statusCode(200)
+                .body("find { it.id == '" + id + "' }.ownedCount", org.hamcrest.Matchers.is(2))
+                .body("find { it.id == '" + id + "' }.readCount", org.hamcrest.Matchers.is(2));
+    }
+
+    /** A total below the volumes held ("6/3 tomes") is never shown: the run reaches the highest one. */
+    @Test
+    void theTotalIsNeverBelowTheHighestVolumeHeld() {
+        String title = "Series Test - short total " + java.util.UUID.randomUUID();
+        for (int volume = 1; volume <= 4; volume++) {
+            addVolume("alice", title, volume, "TO_READ");
+        }
+        String id = seriesId("alice", title);
+        // alice is an admin: her edit of the shared record applies at once.
+        given().auth().oauth2(token("alice")).contentType("application/json")
+                .body(java.util.Map.of("targetType", "SERIES", "targetId", id, "fields", java.util.Map.of("totalVolumes", "2")))
+                .when().post("/api/catalog-edits").then().statusCode(201);
+
+        given().auth().oauth2(token("alice")).when().get("/api/series/" + id).then().statusCode(200)
+                .body("ownedCount", org.hamcrest.Matchers.is(4))
+                .body("totalVolumes", org.hamcrest.Matchers.is(4));
+        given().auth().oauth2(token("alice")).when().get("/api/series").then().statusCode(200)
+                .body("find { it.id == '" + id + "' }.totalVolumes", org.hamcrest.Matchers.is(4));
+    }
 }
