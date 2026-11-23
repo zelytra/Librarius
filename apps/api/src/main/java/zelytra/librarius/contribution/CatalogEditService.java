@@ -116,6 +116,11 @@ public class CatalogEditService {
         return saleLinks.ofEdition(editionId).stream().map(SaleLinkDto::of).toList();
     }
 
+    /** Proposals waiting for an admin (#635). */
+    public long countPending() {
+        return edits.count("status", CatalogEditStatus.PENDING);
+    }
+
     @Transactional
     public CatalogEditPageDto list(CatalogEditStatus status, PageRequest window) {
         var query = status == null

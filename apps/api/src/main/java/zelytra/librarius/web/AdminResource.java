@@ -182,6 +182,19 @@ public class AdminResource {
         }
     }
 
+    /**
+     * What waits for the admins (#635): unread tickets, catalog edits to review and open catalog
+     * reports, with their sum — the Administration entry's badge and each tab's own number.
+     */
+    @GET
+    @Path("/pending")
+    public ApiDtos.AdminPendingDto pending() {
+        long tickets = feedback.count(Status.NEW);
+        long edits = catalogEdits.countPending();
+        long reports = catalogReports.countOpen();
+        return new ApiDtos.AdminPendingDto(tickets, edits, reports, tickets + edits + reports);
+    }
+
     /** The members, newest first (#499); {@code q} narrows on username, display name or email. */
     @GET
     @Path("/users")

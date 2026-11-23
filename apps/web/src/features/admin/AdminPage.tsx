@@ -10,6 +10,8 @@ import { AdminReports } from './AdminReports';
 import { AdminCatalog } from './AdminCatalog';
 import { AdminMonitoring } from './AdminMonitoring';
 import { AdminUsers } from './AdminUsers';
+import { useAdminPending } from './useUnreadReports';
+import { withCount } from './withCount';
 
 type Tab = 'reports' | 'catalog' | 'users' | 'monitoring';
 
@@ -49,14 +51,18 @@ function AdminTabs() {
   const [params, setParams] = useSearchParams();
   const asked = params.get('tab');
   const tab: Tab = asked === 'monitoring' || asked === 'users' || asked === 'catalog' ? asked : 'reports';
+  const pending = useAdminPending(true);
   return (
     <>
       <Segmented<Tab>
         value={tab}
         onChange={(next) => setParams(next === 'reports' ? {} : { tab: next }, { replace: true })}
         options={[
-          { id: 'reports', label: t('admin.tabs.reports') },
-          { id: 'catalog', label: t('admin.tabs.catalog') },
+          { id: 'reports', label: withCount(t, t('admin.tabs.reports'), pending?.unreadTickets) },
+          {
+            id: 'catalog',
+            label: withCount(t, t('admin.tabs.catalog'), (pending?.pendingEdits ?? 0) + (pending?.openReports ?? 0)),
+          },
           { id: 'users', label: t('admin.tabs.users') },
           { id: 'monitoring', label: t('admin.tabs.monitoring') },
         ]}

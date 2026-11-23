@@ -17,8 +17,8 @@
     "notifications": "Notifications",
     "profile": "Mon profil",
     "profileOf": "Mon profil · {{name}}",
-    "adminUnread_one": "{{label}}, {{count}} signalement non lu",
-    "adminUnread_other": "{{label}}, {{count}} signalements non lus"
+    "adminUnread_one": "{{label}}, {{count}} élément à traiter",
+    "adminUnread_other": "{{label}}, {{count}} éléments à traiter"
   },
   "common": {
     "seeAll": "Tout voir",
@@ -1556,7 +1556,8 @@
       "reports": "Tickets",
       "monitoring": "Supervision",
       "users": "Membres",
-      "catalog": "Catalogue"
+      "catalog": "Catalogue",
+      "withCount": "{{label}} ({{count}})"
     },
     "kinds": {
       "BUG": "Problème",

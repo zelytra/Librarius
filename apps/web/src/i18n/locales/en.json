@@ -17,8 +17,8 @@
     "notifications": "Notifications",
     "profile": "My profile",
     "profileOf": "My profile · {{name}}",
-    "adminUnread_one": "{{label}}, {{count}} unread report",
-    "adminUnread_other": "{{label}}, {{count}} unread reports"
+    "adminUnread_one": "{{label}}, {{count}} item to handle",
+    "adminUnread_other": "{{label}}, {{count}} items to handle"
   },
   "common": {
     "seeAll": "See all",
@@ -1556,7 +1556,8 @@
       "reports": "Tickets",
       "monitoring": "Monitoring",
       "users": "Members",
-      "catalog": "Catalog"
+      "catalog": "Catalog",
+      "withCount": "{{label}} ({{count}})"
     },
     "kinds": {
       "BUG": "Problem",

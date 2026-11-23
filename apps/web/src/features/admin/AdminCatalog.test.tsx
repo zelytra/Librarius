@@ -150,6 +150,18 @@ describe('AdminPage — catalogue', () => {
     expect(card.getByRole('button', { name: 'Annuler la modification' })).toBeInTheDocument();
   });
 
+  /** #635: each tab, and each section of Catalogue, says how many things wait in it. */
+  test('shows how many things wait on each tab and section', async () => {
+    server.use(http.get('*/api/admin/pending', () =>
+      HttpResponse.json({ unreadTickets: 2, pendingEdits: 3, openReports: 1, total: 6 })));
+    renderCatalog();
+
+    expect(await screen.findByRole('button', { name: 'Tickets (2)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Catalogue (4)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Modifications (3)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Signalements (1)' })).toBeInTheDocument();
+  });
+
   test('says so when nothing waits', async () => {
     server.use(http.get('*/api/admin/catalog-edits', () => HttpResponse.json({ page: 0, size: 50, total: 0, items: [] })));
     renderCatalog();

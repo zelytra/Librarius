@@ -64,6 +64,13 @@ export interface AchievementsDto {
   unseen?: AchievementUnlockDto[];
 }
 
+export interface AdminPendingDto {
+  unreadTickets?: number;
+  pendingEdits?: number;
+  openReports?: number;
+  total?: number;
+}
+
 /**
  * @pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
  */
@@ -2543,6 +2550,107 @@ export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getAp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiAdminMonitoringQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetApiAdminPendingUrl = () => {
+
+
+
+
+  return `/api/admin/pending`
+}
+
+/**
+ * @summary Pending
+ */
+export const getApiAdminPending = async ( options?: Parameters<typeof apiClient>[1]): Promise<AdminPendingDto> => {
+
+  return apiClient<AdminPendingDto>(getGetApiAdminPendingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApiAdminPendingQueryKey = () => {
+    return [
+    `/api/admin/pending`
+    ] as const;
+    }
+
+
+export const getGetApiAdminPendingQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminPendingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminPending>>> = () => getApiAdminPending(requestOptions);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminPendingQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminPending>>>
+export type GetApiAdminPendingQueryError = void
+
+
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminPending>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminPending>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminPending>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminPending>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Pending */
+export function useGetApiAdminPending<TData = Awaited<ReturnType<typeof getApiAdminPending>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminPending>>, TError, TData>>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminPendingQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

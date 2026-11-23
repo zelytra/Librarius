@@ -1270,6 +1270,10 @@ public final class ApiDtos {
             MemberSummaryDto reporter, java.time.OffsetDateTime createdAt) {
     }
 
+    /** What waits for the admins (#635); {@code total} is the sum of the three. */
+    public record AdminPendingDto(long unreadTickets, long pendingEdits, long openReports, long total) {
+    }
+
     public record AdminReportPageDto(java.util.List<AdminReportDto> items, int page, int size, long total) {
     }
 
