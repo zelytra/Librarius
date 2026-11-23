@@ -317,6 +317,17 @@ export interface CountryCountDto {
   members?: number;
 }
 
+export interface CurateReleaseDto {
+  seriesId: Uuid;
+  /** @minimum 1 */
+  volumeNumber: number;
+  releaseDate: LocalDate;
+  /** @maxLength 255 */
+  publisher?: string;
+  /** @maxLength 512 */
+  title?: string;
+}
+
 export interface DashboardSectionDto {
   /** @pattern \S */
   code: string;
@@ -1293,8 +1304,10 @@ export type GetApiNotificationsParams = {
 };
 
 export type GetApiReleasesUpcomingParams = {
+  authorId?: Uuid;
   kind?: Kind;
   limit?: number;
+  seriesId?: Uuid;
 };
 
 export type GetApiStatsReadingsParams = {
@@ -2017,6 +2030,164 @@ export function useGetApiAdminMonitoring<TData = Awaited<ReturnType<typeof getAp
 
 
 
+
+export const getPostApiAdminReleasesUrl = () => {
+
+
+
+
+  return `/api/admin/releases`
+}
+
+/**
+ * @summary Curate Release
+ */
+export const postApiAdminReleases = async (curateReleaseDto: CurateReleaseDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<unknown>(getPostApiAdminReleasesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(curateReleaseDto)
+  }
+);}
+
+
+
+
+
+export const getPostApiAdminReleasesMutationKey = () => ['postApiAdminReleases'] as const;
+
+export const getPostApiAdminReleasesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReleases>>, TError,PostApiAdminReleasesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReleases>>, TError,PostApiAdminReleasesMutationVariables, TContext> => {
+
+const mutationKey = getPostApiAdminReleasesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminReleases>>, PostApiAdminReleasesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAdminReleases(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminReleasesMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminReleases>>>
+    export type PostApiAdminReleasesMutationBody = CurateReleaseDto
+    export type PostApiAdminReleasesMutationError = void
+    export type PostApiAdminReleasesMutationVariables = {data: CurateReleaseDto}
+
+    /** @summary Curate Release */
+export const usePostApiAdminReleases = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReleases>>, TError,PostApiAdminReleasesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminReleases>>,
+        TError,
+        PostApiAdminReleasesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiAdminReleasesMutationOptions(options), queryClient);
+    }
+
+export const getDeleteApiAdminReleasesIdUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/admin/releases/${id}`
+}
+
+/**
+ * @summary Withdraw Release
+ */
+export const deleteApiAdminReleasesId = async (id: Uuid, options?: Parameters<typeof apiClient>[1]): Promise<void> => {
+
+  return apiClient<void>(getDeleteApiAdminReleasesIdUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteApiAdminReleasesIdMutationKey = () => ['deleteApiAdminReleasesId'] as const;
+
+export const getDeleteApiAdminReleasesIdMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminReleasesId>>, TError,DeleteApiAdminReleasesIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminReleasesId>>, TError,DeleteApiAdminReleasesIdMutationVariables, TContext> => {
+
+const mutationKey = getDeleteApiAdminReleasesIdMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiAdminReleasesId>>, DeleteApiAdminReleasesIdMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiAdminReleasesId(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiAdminReleasesIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiAdminReleasesId>>>
+
+    export type DeleteApiAdminReleasesIdMutationError = void
+    export type DeleteApiAdminReleasesIdMutationVariables = {id: Uuid}
+
+    /** @summary Withdraw Release */
+export const useDeleteApiAdminReleasesId = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiAdminReleasesId>>, TError,DeleteApiAdminReleasesIdMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiAdminReleasesId>>,
+        TError,
+        DeleteApiAdminReleasesIdMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteApiAdminReleasesIdMutationOptions(options), queryClient);
+    }
 
 export const getGetApiAdminUsersUrl = (params?: GetApiAdminUsersParams,) => {
   const normalizedParams = new URLSearchParams();

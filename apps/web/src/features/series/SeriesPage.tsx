@@ -40,6 +40,7 @@ import { Selectable } from '../../shared/selection/Selectable';
 import { SelectButton, SelectionBar } from '../../shared/selection/SelectionBar';
 import styles from './SeriesPage.module.css';
 import { toast } from '../../shared/ui/toast';
+import { SeriesReleases } from './SeriesReleases';
 import { STATS_QUERIES } from '../../shared/statsQueries';
 
 /** Opacity suffixes of the wash drawn behind the top of the screen, as on Detail. */
@@ -423,6 +424,8 @@ function SeriesContent({ id }: { id: string }) {
             </div>
           </div>
         )}
+
+        <SeriesReleases seriesId={id} />
 
         <SeriesReviewSection seriesId={id} />
 

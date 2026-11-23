@@ -1778,5 +1778,18 @@
       "accepted": "Merci, c’est noté.",
       "failed": "L’acceptation n’a pas pu être enregistrée. Réessaie."
     }
+  },
+  "releases": {
+    "title": "Prochaines sorties",
+    "curate": {
+      "title": "Annoncer une sortie en France",
+      "hint": "Une date vérifiée, au jour près : elle remplace celle qui était annoncée pour ce tome.",
+      "volume": "Tome",
+      "date": "Date de sortie",
+      "publisher": "Éditeur",
+      "submit": "Annoncer",
+      "done": "Sortie annoncée",
+      "failed": "La sortie n'a pas pu être annoncée. Réessaie."
+    }
   }
 }

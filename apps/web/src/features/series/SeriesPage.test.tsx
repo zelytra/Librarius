@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TestProviders, renderWithProviders } from '../../test/utils';
-import { seriesDetail, seriesVolumes } from '../../test/fixtures';
+import { seriesDetail, seriesVolumes, upcomingRelease } from '../../test/fixtures';
 import { http, HttpResponse, seriesDetailReturns, seriesReviewReturns, server } from '../../test/server';
 import { resetAuth, setAuthenticated } from '../../test/oidcMock';
 import type { ManualBookDto, SeriesReviewDto } from '../../api/generated/librarius';
@@ -330,4 +330,77 @@ describe('SeriesPage', () => {
     expect(within(cell).getByText('Non possédé · Lu')).toBeInTheDocument();
   });
 
+});
+
+/** #614: the run's own upcoming volumes, and the French dates an admin enters by hand. */
+describe('SeriesPage — upcoming releases', () => {
+  beforeEach(() => {
+    resetAuth();
+    setAuthenticated(true);
+    seriesDetailReturns(SERIES);
+  });
+
+  function releasesOfThisRun(list: ReturnType<typeof upcomingRelease>[]) {
+    const asked: string[] = [];
+    server.use(
+      http.get('*/api/releases/upcoming', ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get('seriesId') ?? '');
+        return HttpResponse.json(list);
+      }),
+    );
+    return asked;
+  }
+
+  test('lists the volumes announced for this run', async () => {
+    const asked = releasesOfThisRun([upcomingRelease({ seriesId: SERIES.id, volumeNumber: 6 })]);
+    renderSeries(SERIES.id);
+
+    const section = await screen.findByRole('region', { name: 'Prochaines sorties' });
+    expect(within(section).getByText('Tome 6')).toBeInTheDocument();
+    expect(within(section).getByText(/1 septembre 2026/)).toBeInTheDocument();
+    expect(asked).toContain(SERIES.id);
+  });
+
+  test('shows no section when nothing is announced, for a reader', async () => {
+    releasesOfThisRun([]);
+    renderSeries(SERIES.id);
+
+    await screen.findByRole('heading', { name: SERIES.title });
+    expect(screen.queryByRole('region', { name: 'Prochaines sorties' })).not.toBeInTheDocument();
+  });
+
+  test('lets an admin enter a French date, then shows it', async () => {
+    server.use(http.get('*/api/me', () => HttpResponse.json({ id: 'alice', admin: true, locale: 'fr' })));
+    let list: ReturnType<typeof upcomingRelease>[] = [];
+    server.use(http.get('*/api/releases/upcoming', () => HttpResponse.json(list)));
+    const posted: unknown[] = [];
+    server.use(
+      http.post('*/api/admin/releases', async ({ request }) => {
+        const body = await request.json();
+        posted.push(body);
+        list = [upcomingRelease({ seriesId: SERIES.id, volumeNumber: 6, releaseDate: '2026-12-10' })];
+        return HttpResponse.json(list[0], { status: 201 });
+      }),
+    );
+    renderSeries(SERIES.id);
+
+    const form = await screen.findByRole('form', { name: 'Annoncer une sortie en France' });
+    await userEvent.type(within(form).getByLabelText('Tome'), '6');
+    await userEvent.type(within(form).getByLabelText('Date de sortie'), '2026-12-10');
+    await userEvent.type(within(form).getByLabelText('Éditeur'), 'Kana');
+    await userEvent.click(within(form).getByRole('button', { name: 'Annoncer' }));
+
+    await waitFor(() =>
+      expect(posted).toEqual([{ seriesId: SERIES.id, volumeNumber: 6, releaseDate: '2026-12-10', publisher: 'Kana' }]),
+    );
+    expect(await screen.findByText(/10 décembre 2026/)).toBeInTheDocument();
+  });
+
+  test('keeps the form away from a reader who is not an admin', async () => {
+    releasesOfThisRun([upcomingRelease({ seriesId: SERIES.id })]);
+    renderSeries(SERIES.id);
+
+    await screen.findByRole('region', { name: 'Prochaines sorties' });
+    expect(screen.queryByRole('form', { name: 'Annoncer une sortie en France' })).not.toBeInTheDocument();
+  });
 });

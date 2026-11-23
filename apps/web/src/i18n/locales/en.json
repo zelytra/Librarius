@@ -1778,5 +1778,18 @@
       "accepted": "Thanks, noted.",
       "failed": "Your acceptance could not be saved. Try again."
     }
+  },
+  "releases": {
+    "title": "Upcoming releases",
+    "curate": {
+      "title": "Announce a French release",
+      "hint": "A checked date, to the day: it replaces whatever was announced for this volume.",
+      "volume": "Volume",
+      "date": "Release date",
+      "publisher": "Publisher",
+      "submit": "Announce",
+      "done": "Release announced",
+      "failed": "The release could not be announced. Try again."
+    }
   }
 }
