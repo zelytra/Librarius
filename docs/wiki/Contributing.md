@@ -42,8 +42,8 @@ Conventional commits, in English, imperative mood: `feat(web): …`, `fix(api): 
 `docs: …`. Common scopes are `web`, `api`, `db`, `infra`, `deploy`, `ci`, `docs`, `mobile`.
 A commit body explains **why**, not what — the diff already shows what changed.
 
-Pull requests follow the same title format and a short template: what was wrong, what the
-change does and why, and a checklist of what was verified. `Closes #<issue>` in the
+Pull requests follow the same title format and the template in
+`.github/pull_request_template.md`: why, what changed, and a checklist of what was verified. `Closes #<issue>` in the
 description closes the issue automatically on merge.
 
 ## Language
@@ -102,6 +102,22 @@ Touch targets are 44 px —
 a small visual control (the cross on a cover) widens its hit area with an `::after`.
 Keyboard and reading order were checked by hand in Chromium; no real screen reader has been
 run yet (NVDA / VoiceOver remain to do).
+
+## License and community files
+
+Librarius is published under the
+[PolyForm Noncommercial License 1.0.0](https://github.com/zelytra/Librarius/blob/main/LICENSE):
+free for any non-commercial use, commercial use reserved to the owner. Opening a pull request
+means agreeing to the contribution terms in
+[`CONTRIBUTING.md`](https://github.com/zelytra/Librarius/blob/main/CONTRIBUTING.md#license-of-contributions):
+the contribution is licensed under the same terms, and the owner also gets a license to use it
+commercially.
+
+The community files GitHub expects live at the root and in `.github/`: `CODE_OF_CONDUCT.md`,
+`CONTRIBUTING.md`, `SECURITY.md` (vulnerabilities go through GitHub's private reporting, never
+an issue), `SUPPORT.md`, the issue forms in `.github/ISSUE_TEMPLATE/` and
+`.github/pull_request_template.md`. The README's images are in `docs/assets/readme/`: real
+screens of the app with demo data, framed for the page.
 
 ## Keeping this wiki current
 

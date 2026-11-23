@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/zelytra/Librarius/security/advisories/new
+    about: Please report security problems privately, never in a public issue.
+  - name: User guide
+    url: https://github.com/zelytra/Librarius/blob/main/docs/GUIDE.md
+    about: How the library, reading statuses, shelves, imports and exports work.
