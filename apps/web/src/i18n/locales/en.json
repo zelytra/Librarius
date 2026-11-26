@@ -1841,6 +1841,7 @@
       "series": "The series"
     },
     "fields": {
+      "kind": "Kind",
       "title": "Title",
       "authors": "Authors",
       "synopsis": "Synopsis",
@@ -1884,7 +1885,10 @@
       "trusted": "Edit applied thanks to your trusted standing."
     },
     "linkPlaceholder": "https://www.fnac.com/…",
-    "trustedNote": "You are a trusted member: your change will apply at once for every reader."
+    "trustedNote": "You are a trusted member: your change will apply at once for every reader.",
+    "hints": {
+      "seriesKind": "Changes the kind of every volume of the series."
+    }
   },
   "saleLinks": {
     "title": "Where to buy it",

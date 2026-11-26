@@ -1021,10 +1021,14 @@ tested but stays dormant in production for now — it only grants, exactly as #1
 ## Catalog edits
 
 A member proposes a change to a shared record (#618) — an `EDITION`, whose work's fields
-(`title`, `authors`, `synopsis`, `genres`, `originalYear`, `volumeNumber`) travel with it next to
+(`title`, `kind`, `authors`, `synopsis`, `genres`, `originalYear`, `volumeNumber`) travel with it next to
 its own (`isbn13`, `isbn10`, `publisher`, `language`, `pageCount`, `format`, `releaseDate`,
-`coverUrl`, `listPrice`), or a `SERIES` (`title`, `originalTitle`, `totalVolumes`, `status`,
-`synopsis`, `coverUrl`). `contribution.CatalogFields` reads, parses and writes each field in one
+`coverUrl`, `listPrice`), or a `SERIES` (`title`, `kind`, `originalTitle`, `totalVolumes`, `status`,
+`synopsis`, `coverUrl`). `kind` (#650) is the shared default: on a book it moves the work, and
+the work leaves a series of the old kind for the one of its new kind with the same title; on a
+series it moves the series and every one of its works, a 409 when a series of that kind already
+holds the title. A reader who filed their copy under another kind (`PUT /api/library/{id}/kind`,
+#454) holds another work, which the change does not touch. `contribution.CatalogFields` reads, parses and writes each field in one
 canonical string form (trimmed, blank = none, plain ISO numbers and dates, ISBN without hyphens,
 cover `http(s)` only), so `CatalogEditService` stores the **diff** — the fields whose canonical
 value differs, each `{before, after}` — and a proposal changing nothing is a 400. Writing

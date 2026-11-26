@@ -1841,6 +1841,7 @@
       "series": "La série"
     },
     "fields": {
+      "kind": "Type",
       "title": "Titre",
       "authors": "Auteurs",
       "synopsis": "Résumé",
@@ -1884,7 +1885,10 @@
       "trusted": "Modification appliquée grâce à ton statut de confiance."
     },
     "linkPlaceholder": "https://www.fnac.com/…",
-    "trustedNote": "Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs."
+    "trustedNote": "Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs.",
+    "hints": {
+      "seriesKind": "Change le type de tous les tomes de la série."
+    }
   },
   "saleLinks": {
     "title": "Où l'acheter",

@@ -365,6 +365,71 @@ class CatalogEditApiTest {
                 .body("originalTitle", is("オリジナル"));
     }
 
+    // ── The shared kind (#650) ───────────────────────────────────────────────
+
+    /**
+     * The kind is part of the record: a proposal changes it for every reader of the book — but
+     * a reader who filed their own copy under another kind (#454) keeps it there.
+     */
+    @Test
+    void anApprovedKindReachesEveryReaderButTheOneWhoChoseTheirOwn() {
+        String title = "Edit - kind " + UUID.randomUUID();
+        String isbn = randomIsbn();
+        String bobs = addBook("bob", title, isbn);
+        String alices = addBook("alice", title, isbn);
+        given().auth().oauth2(token("alice")).contentType("application/json").body(Map.of("kind", "COMIC"))
+                .when().put("/api/library/" + alices + "/kind").then().statusCode(200);
+
+        propose("bob", proposal("EDITION", editionOf("bob", bobs), Map.of("kind", "NOVEL"), null)).statusCode(400);
+        String edit = proposeEdition("bob", editionOf("bob", bobs), Map.of("kind", "MANGA"));
+        assertEquals("BOOK", book("bob", bobs).getString("book.kind"));
+        decide("alice", edit, "approve", null).statusCode(200);
+
+        assertEquals("MANGA", book("bob", bobs).getString("book.kind"));
+        assertEquals("COMIC", book("alice", alices).getString("book.kind"));
+    }
+
+    /** A series changes kind as a whole: every volume follows, and the run stays one series. */
+    @Test
+    void aSeriesKindMovesEveryVolumeAndKeepsTheRunWhole() {
+        String title = "Edit - series kind " + UUID.randomUUID();
+        for (int volume = 1; volume <= 2; volume++) {
+            given().auth().oauth2(token("bob")).contentType("application/json")
+                    .body(Map.of("book", Map.of("kind", "MANGA", "title", title + " " + volume, "seriesTitle", title,
+                            "volumeNumber", volume), "status", "TO_READ"))
+                    .when().post("/api/library").then().statusCode(201);
+        }
+        String series = given().auth().oauth2(token("bob")).when().get("/api/series").then().statusCode(200)
+                .extract().path("find { it.title == '" + title + "' }.id");
+
+        String edit = propose("bob", proposal("SERIES", series, Map.of("kind", "COMIC"), null))
+                .statusCode(201).extract().path("id");
+        decide("alice", edit, "approve", null).statusCode(200);
+
+        var detail = given().auth().oauth2(token("bob")).when().get("/api/series/" + series).then().statusCode(200)
+                .body("kind", is("COMIC")).extract().jsonPath();
+        assertEquals(2, detail.getList("volumes").size());
+        given().auth().oauth2(token("bob")).queryParam("q", title).queryParam("size", 50)
+                .when().get("/api/library").then().statusCode(200)
+                .body("items.book.kind", org.hamcrest.Matchers.everyItem(is("COMIC")));
+    }
+
+    /** Two runs of one kind cannot share a title: moving a series onto a taken one is a conflict. */
+    @Test
+    void aSeriesCannotTakeAKindWhereItsTitleIsTaken() {
+        String title = "Edit - kind clash " + UUID.randomUUID();
+        for (String kind : List.of("MANGA", "COMIC")) {
+            given().auth().oauth2(token("bob")).contentType("application/json")
+                    .body(Map.of("book", Map.of("kind", kind, "title", title + " " + kind, "seriesTitle", title,
+                            "volumeNumber", 1), "status", "TO_READ"))
+                    .when().post("/api/library").then().statusCode(201);
+        }
+        String manga = given().auth().oauth2(token("bob")).when().get("/api/series").then().statusCode(200)
+                .extract().path("find { it.title == '" + title + "' && it.kind == 'MANGA' }.id");
+
+        propose("bob", proposal("SERIES", manga, Map.of("kind", "COMIC"), null)).statusCode(409);
+    }
+
     // ── Sale links and the automatic check ───────────────────────────────────
 
     @Test

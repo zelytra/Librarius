@@ -15,7 +15,7 @@ const FIELDS = {
   targetType: 'EDITION',
   targetId: 'ed-1',
   fields: {
-    title: 'Dune', authors: 'Frank Herbert', synopsis: null, genres: null, originalYear: '1965',
+    title: 'Dune', kind: 'BOOK', authors: 'Frank Herbert', synopsis: null, genres: null, originalYear: '1965',
     volumeNumber: null, isbn13: '9782266320481', isbn10: null, publisher: 'Pocket', language: 'fr',
     pageCount: '928', format: null, releaseDate: null, coverUrl: null, listPrice: null,
   },
@@ -173,5 +173,32 @@ describe('CatalogEditButton', () => {
     await userEvent.click(dialog.getByRole('button', { name: 'Envoyer la proposition' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]).toMatchObject({ targetType: 'SERIES', fields: { totalVolumes: '112' } });
+  });
+
+  /** #650: the kind is proposed for every reader, from the record's own value. */
+  test('proposes the shared kind of a book', async () => {
+    const posted = serves(FIELDS);
+    const dialog = await open();
+
+    const kind = await dialog.findByLabelText('Type');
+    expect(kind).toHaveValue('BOOK');
+    await userEvent.selectOptions(kind, 'MANGA');
+    await userEvent.click(dialog.getByRole('button', { name: 'Envoyer la proposition' }));
+
+    await waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({ fields: { kind: 'MANGA' } });
+  });
+
+  test('a series offers its kind too', async () => {
+    serves({
+      targetType: 'SERIES', targetId: 's-1', saleLinks: [], pendingByMe: false,
+      fields: { title: 'One Piece', kind: 'MANGA', originalTitle: null, totalVolumes: '100', status: 'ONGOING', synopsis: null, coverUrl: null },
+    });
+    renderWithProviders(<CatalogEditButton targetType="SERIES" targetId="s-1" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Proposer une modification' }));
+    const dialog = within(await screen.findByRole('dialog'));
+
+    expect(await dialog.findByLabelText('Type')).toHaveValue('MANGA');
+    expect(dialog.getByText('Change le type de tous les tomes de la série.')).toBeInTheDocument();
   });
 });
