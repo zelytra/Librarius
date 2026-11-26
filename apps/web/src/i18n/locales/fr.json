@@ -923,7 +923,7 @@
         "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius.",
         "oneForAll": "Un seul favori pour Booknode, Babelio et Mangacollec. Si tu en as un plus ancien, remplace-le par celui-ci.",
         "outdated": "Ce fichier vient d'un ancien favori : l'import se fait quand même, mais remplace ton favori par celui ci-dessus pour les prochaines fois.",
-        "history": "Pour les dates de lecture Booknode : ouvre ensuite ton historique de lecture (booknode.com/profil/ton-pseudo/historique) et clique à nouveau sur le favori, puis importe ce second fichier. Booknode ne donne que le mois de chaque lecture."
+        "history": "Sur Booknode, le favori lit aussi ton historique de lecture : chaque livre lu reçoit le mois où tu l’as lu (Booknode ne donne pas le jour). Si Booknode bloque cette lecture, ouvre ton historique (booknode.com/profil/ton-pseudo/historique), clique à nouveau sur le favori et importe ce second fichier."
       },
       "inApp": {
         "title": "Depuis le site, dans l’app",

@@ -923,7 +923,7 @@
         "notCollected": "This file was not produced by the Librarius collector.",
         "oneForAll": "One bookmark for Booknode, Babelio and Mangacollec. If you have an older one, replace it with this one.",
         "outdated": "This file comes from an older bookmark: it is imported all the same, but replace your bookmark with the one above for next time.",
-        "history": "For Booknode reading dates: then open your reading history (booknode.com/profil/your-name/historique), click the bookmark again and import that second file. Booknode gives the month of each reading only."
+        "history": "On Booknode, the bookmark reads your reading history too: each book you read gets the month you read it in (Booknode gives no day). If Booknode blocks it, open your history (booknode.com/profil/your-name/historique), click the bookmark again and import that second file."
       },
       "inApp": {
         "title": "From the site, inside the app",

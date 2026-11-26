@@ -12,9 +12,12 @@ also says how many of the imported titles went to the wishlist (`wished`), and c
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
   The library table carries no reading date (#645). **The reading history**
-  (`/profil/<pseudo>/historique`, #651) does, by the month: run on that page, the collector
-  clicks every closed year (the site's script draws a year's months on click), waits until the
-  months stop arriving and saves the `.one_month` blocks. `BooknodeHistoryParser` reads them —
+  (`/profil/<pseudo>/historique`, #651) does, by the month. After the library pages the
+  collector opens that page in a hidden same-origin frame (`CollectorEnv.render`), clicks every
+  closed year (the site's script draws a year's months on click), waits for each year's months
+  to arrive and then to stop, and adds the `.one_month` blocks to the same file. When the frame
+  is refused it keeps the library and says so; run on the history page itself, it saves the
+  history alone. `BooknodeHistoryParser` reads them —
   each title dated the first of its latest month, `readMonthOnly`, its tier read like the
   library's. A history collected with the library dates the library's read rows
   (`CollectedLibrary.datedByHistory`, matched on the title and on the first author the history

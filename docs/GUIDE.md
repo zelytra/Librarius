@@ -392,9 +392,10 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
 3. Reviens dans Réglages et importe ce fichier.
 4. **Dates de lecture Booknode** : le tableau de ta bibliothèque Booknode ne dit pas quand tu
    as lu un livre ; ton **historique de lecture** (`booknode.com/profil/ton-pseudo/historique`)
-   le dit, au mois près. Ouvre cette page, clique à nouveau sur le favori : il déplie chaque
-   année et télécharge un second fichier. Importe-le : chaque livre lu de ta bibliothèque reçoit
-   le mois où tu l'as lu. Il compte dans le bon mois et la bonne année des statistiques, sa fiche
+   le dit, au mois près. Le favori le lit **dans le même clic** que ta bibliothèque — il déplie
+   chaque année — et le fichier unique porte les deux : chaque livre lu reçoit le mois où tu l'as
+   lu. Si Booknode bloque cette lecture, le favori le dit : ouvre alors ton historique, clique à
+   nouveau sur le favori et importe ce second fichier. Il compte dans le bon mois et la bonne année des statistiques, sa fiche
    affiche « Lu en novembre 2026 », et le calendrier le range dans le mois sans le poser sur un
    jour. Une date que tu as saisie toi-même n'est jamais remplacée, et l'historique n'ajoute
    aucun livre à ta bibliothèque.
