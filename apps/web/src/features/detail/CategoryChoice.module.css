@@ -11,6 +11,8 @@
 .button {
   flex: 1 1 auto;
   min-width: 96px;
+  /* A touch target, now that the rank and the reader's categories make two rows of them (#646). */
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
