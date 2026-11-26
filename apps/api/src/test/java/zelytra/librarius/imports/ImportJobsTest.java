@@ -92,4 +92,36 @@ class ImportJobsTest {
                     byTitle.get("Jujutsu Kaisen Tome 2").ownership);
         });
     }
+
+    /** #644: a scrape cut short imports what it read, and the job says the library is not whole. */
+    @Test
+    void importsWhatAnIncompleteScrapeReadAndSaysItStopped() throws InterruptedException {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        String marker = "Partial " + UUID.randomUUID();
+        java.util.List<ImportedBook> read = java.util.List.of(
+                new ImportedBook(marker + " owned", "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ),
+                new ImportedBook(marker + " wanted", "Some Author", null, zelytra.librarius.domain.LibraryStatus.TO_READ,
+                        null, null, null, null, null, null, null, null, true));
+
+        ImportJobs.Job job = importJobs.submit(userId, "booknode", () -> {
+            throw new IncompleteImportException(read, "Arrêt à la page 2 sur 3.");
+        });
+        for (int i = 0; i < 100 && job.status() == ImportJobs.Status.RUNNING; i++) {
+            Thread.sleep(50);
+        }
+
+        assertEquals(ImportJobs.Status.DONE, job.status());
+        assertEquals(2, job.imported());
+        // The wish is counted apart: it went to the wishlist, not the library.
+        assertEquals(1, job.wished());
+        assertEquals("Arrêt à la page 2 sur 3.", job.warning());
+        QuarkusTransaction.requiringNew().run(() ->
+                assertEquals(1, items.listByUser(userId).size()));
+    }
 }

@@ -57,7 +57,9 @@ public class ImportJobs {
         volatile int total;
         volatile int imported;
         volatile int skipped;
+        volatile int wished;
         volatile String error;
+        volatile String warning;
 
         Job(String userId, String source) {
             this.userId = userId;
@@ -82,6 +84,16 @@ public class ImportJobs {
 
         public String error() {
             return error;
+        }
+
+        /** How many of the imported titles went to the wishlist. */
+        public int wished() {
+            return wished;
+        }
+
+        /** Why a job that is done may not hold the whole library (#644), or null. */
+        public String warning() {
+            return warning;
         }
 
         boolean expired() {
@@ -146,7 +158,14 @@ public class ImportJobs {
 
     private void run(Job job, java.util.function.Supplier<List<ImportedBook>> loader) {
         try {
-            List<ImportedBook> books = loader.get();
+            List<ImportedBook> books;
+            try {
+                books = loader.get();
+            } catch (IncompleteImportException stopped) {
+                // What was read before the source stopped is imported; the job says it is partial.
+                books = stopped.books();
+                job.warning = stopped.getMessage();
+            }
             job.total = books.size();
             // The counts move batch by batch, so the screen polling the job shows titles
             // landing rather than a zero that only changes once the whole library is in.
@@ -156,6 +175,7 @@ public class ImportJobs {
             });
             job.imported = result.imported();
             job.skipped = result.skipped();
+            job.wished = result.wished();
             job.status = Status.DONE;
             // The job reads as done from here; the data it brought keeps filling in (#425).
             followUp.afterImport(job.userId);

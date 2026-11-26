@@ -6648,6 +6648,13 @@
           },
           "error" : {
             "type" : "string"
+          },
+          "wished" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "warning" : {
+            "type" : "string"
           }
         }
       },
@@ -6666,6 +6673,10 @@
             "format" : "int32"
           },
           "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wished" : {
             "type" : "integer",
             "format" : "int32"
           }

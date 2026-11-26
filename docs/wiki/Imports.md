@@ -2,13 +2,18 @@
 
 A reader brings their library from Booknode, Babelio, Mangacollec, a CSV (Goodreads…) or a
 Librarius export. Every import is a **job**: `POST` starts it and answers an id, the screen polls
-`GET /api/import/jobs/{id}` for `total`, `imported`, `skipped` and the outcome.
+`GET /api/import/jobs/{id}` for `total`, `imported`, `skipped` and the outcome. A finished job
+also says how many of the imported titles went to the wishlist (`wished`), and carries a
+`warning` when it does not hold the whole library (#644).
 
 ## Getting the library out of the source site
 
 - **Booknode by pseudo** (`POST /api/import/booknode`): the server reads
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
+  A page refused **part-way** keeps what the earlier pages read: the job ends `DONE` with those
+  titles and a `warning` naming the page it stopped at and pointing to the collector
+  (`IncompleteImportException`, #644) — it no longer passes for the whole library.
 - **The collector** (Settings → "Librarius : collecter"): **one** bookmarklet for Booknode,
   Babelio and Mangacollec, shown once above the source choice (#507), that the reader runs in
   their own signed-in browser. Its files carry `version` (`COLLECTOR_VERSION`, 2 since #507);

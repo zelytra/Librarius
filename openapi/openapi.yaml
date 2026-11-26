@@ -4585,6 +4585,11 @@ components:
           format: int32
         error:
           type: string
+        wished:
+          type: integer
+          format: int32
+        warning:
+          type: string
     ImportResult:
       type: object
       properties:
@@ -4597,6 +4602,9 @@ components:
           type: integer
           format: int32
         total:
+          type: integer
+          format: int32
+        wished:
           type: integer
           format: int32
     Kind:

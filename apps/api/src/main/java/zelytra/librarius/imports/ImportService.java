@@ -59,7 +59,8 @@ public class ImportService {
     MeterRegistry meters;
 
     /** Outcome of an import. */
-    public record ImportResult(String source, int imported, int skipped, int total) {
+    /** @param wished how many of the imported titles went to the wishlist rather than the library */
+    public record ImportResult(String source, int imported, int skipped, int total, int wished) {
     }
 
     public ImportResult importFromSource(String userId, String source, String handle) {
@@ -114,16 +115,18 @@ public class ImportService {
         Batches state = QuarkusTransaction.requiringNew().call(() -> prepare(userId, books));
         int imported = 0;
         int skipped = 0;
+        int wished = 0;
         for (int from = 0; from < books.size(); from += BATCH) {
             List<ImportedBook> slice = books.subList(from, Math.min(books.size(), from + BATCH));
             int[] counts = QuarkusTransaction.requiringNew().call(() -> persistBatch(userId, slice, state));
             imported += counts[0];
             skipped += counts[1];
+            wished += counts[2];
             progress.update(imported, skipped);
         }
 
         meters.counter("librarius.import", "source", source).increment(imported);
-        return new ImportResult(source, imported, skipped, books.size());
+        return new ImportResult(source, imported, skipped, books.size(), wished);
     }
 
     /** What every batch of one import shares: the titles already held, and the categories. */
@@ -169,7 +172,8 @@ public class ImportService {
     }
 
     /**
-     * One batch, in the caller's transaction: how many titles it imported, and skipped. A
+     * One batch, in the caller's transaction: how many titles it imported, skipped, and sent to
+     * the wishlist among the imported. A
      * skipped title is one already there — and is completed with what this import knows and
      * the library does not, so running a richer import again repairs an older one instead of
      * having to start the library over.
@@ -177,6 +181,7 @@ public class ImportService {
     private int[] persistBatch(String userId, List<ImportedBook> books, Batches state) {
         int imported = 0;
         int skipped = 0;
+        int wished = 0;
         for (ImportedBook book : books) {
             if (book.title() == null || book.title().isBlank()) {
                 continue;
@@ -197,6 +202,7 @@ public class ImportService {
                     wish.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
                     wishes.persist(wish);
                     imported++;
+                    wished++;
                 }
                 continue;
             }
@@ -224,7 +230,7 @@ public class ImportService {
             recordReading(item, book.readAt());
             imported++;
         }
-        return new int[] {imported, skipped};
+        return new int[] {imported, skipped, wished};
     }
 
     /**

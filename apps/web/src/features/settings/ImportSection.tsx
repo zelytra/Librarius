@@ -72,6 +72,9 @@ export function ImportSection() {
   // the request open. `message`/`error` carry the terminal outcome once it stops.
   const [jobId, setJobId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // What a finished import adds to its counts (#644): its wishlist share, and why it is partial.
+  const [wishedNote, setWishedNote] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -108,6 +111,8 @@ export function ImportSection() {
     if (!job || job.status === 'RUNNING') return;
     if (job.status === 'DONE') {
       setMessage(t('settings.import.result', { imported: job.imported ?? 0, skipped: job.skipped ?? 0 }));
+      setWishedNote(job.wished ? t('settings.import.resultWished', { wished: job.wished }) : null);
+      setWarning(job.warning ?? null);
       // The titles are in: the collection and the counters must be refreshed.
       void queryClient.invalidateQueries({ queryKey: getGetApiLibraryQueryKey() });
       void queryClient.invalidateQueries(STATS_QUERIES);
@@ -127,6 +132,8 @@ export function ImportSection() {
 
   function reset() {
     setMessage(null);
+    setWishedNote(null);
+    setWarning(null);
     setError(null);
     setNotice(null);
   }
@@ -311,8 +318,12 @@ export function ImportSection() {
             <div className={styles.outcomeSuccess} role="status">
               <Icon name="check_circle" size={26} color="var(--accent-deep)" />
               <div>
-                <p className={styles.outcomeTitle}>{t('settings.import.doneTitle')}</p>
+                <p className={styles.outcomeTitle}>
+                  {t(warning ? 'settings.import.partialTitle' : 'settings.import.doneTitle')}
+                </p>
                 <p className={styles.outcomeText}>{message}</p>
+                {wishedNote && <p className={styles.outcomeText}>{wishedNote}</p>}
+                {warning && <p className={styles.outcomeText}>{warning}</p>}
               </div>
             </div>
           )}

@@ -110,7 +110,7 @@ public class ArchiveImportService {
         int total = size(document.collection()) + size(document.wishlist());
         int created = imported + wishesImported;
         meters.counter("librarius.import", "source", "json").increment(created);
-        return new ImportResult("json", created, total - created, total);
+        return new ImportResult("json", created, total - created, total, wishesImported);
     }
 
     // ── Ranks and goals ───────────────────────────────────────────────────────

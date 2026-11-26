@@ -1123,9 +1123,12 @@ public final class ApiDtos {
      * @param imported titles added so far
      * @param skipped  titles already present, left untouched
      * @param error    a reader-facing message when the import failed, else null
+     * @param wished   of the titles imported, how many went to the wishlist rather than the library
+     * @param warning  a reader-facing message when a finished import does not hold the whole
+     *                 library — a scrape the source stopped answering part-way (#644) — else null
      */
     public record ImportJobDto(UUID id, String status, int total, int imported, int skipped,
-            String error) {
+            String error, int wished, String warning) {
     }
 
     /**

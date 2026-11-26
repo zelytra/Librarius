@@ -125,6 +125,32 @@ class BooknodeImporterTest {
         assertEquals(97, BooknodeImporter.highestPage(doc));
     }
 
+    /**
+     * #644: Booknode turning the server away part-way used to end the import as if the library
+     * were whole. The pages read are kept, and the reader is told where it stopped.
+     */
+    @Test
+    void saysWhereAScrapeStoppedAndKeepsWhatItRead() throws Exception {
+        // The fixture's pagination names 97 pages.
+        Document first = fixture();
+        BooknodeImporter blockedAtTwo = new BooknodeImporter() {
+            @Override
+            Document page(String handle, int page) throws java.io.IOException {
+                if (page == 1) {
+                    return first;
+                }
+                throw new org.jsoup.HttpStatusException("Forbidden", 403, "https://booknode.com/profil/alice");
+            }
+        };
+
+        IncompleteImportException stopped = org.junit.jupiter.api.Assertions.assertThrows(
+                IncompleteImportException.class, () -> blockedAtTwo.fetch("alice"));
+
+        assertEquals(new BooknodeImporter().parse(fixture()).size(), stopped.books().size());
+        assertTrue(stopped.getMessage().contains("page 2 sur 97"), stopped.getMessage());
+        assertTrue(stopped.getMessage().contains("collecte depuis ton navigateur"), stopped.getMessage());
+    }
+
     @Test
     void tellsAMissingProfileFromARefusedServer() {
         String missing = BooknodeImporter.failureMessage("nobody",

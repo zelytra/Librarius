@@ -122,7 +122,7 @@ public class ImportResource {
 
     private static ImportJobDto dto(ImportJobs.Job job) {
         return new ImportJobDto(job.id, job.status().name(), job.total(), job.imported(),
-                job.skipped(), job.error());
+                job.skipped(), job.error(), job.wished(), job.warning());
     }
 
     /**

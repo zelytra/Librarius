@@ -769,6 +769,8 @@ export interface ImportJobDto {
   imported?: number;
   skipped?: number;
   error?: string;
+  wished?: number;
+  warning?: string;
 }
 
 export interface ImportResult {
@@ -776,6 +778,7 @@ export interface ImportResult {
   imported?: number;
   skipped?: number;
   total?: number;
+  wished?: number;
 }
 
 export interface KindDto {

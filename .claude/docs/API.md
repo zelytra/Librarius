@@ -860,7 +860,9 @@ carries are absent from `byPriority` rather than reported as zero.
 Three routes bring an existing library in: `POST /api/import/{source}` from a handle,
 `POST /api/import/csv` from an exported file, and `POST /api/import/json` from a Librarius
 archive ([Export](#export)). All three answer an `ImportResult` counting what was
-`imported` and what was `skipped`, and none of them ever duplicates a title: the first two
+`imported`, what was `skipped`, and of the imported how many were `wished` (sent to the
+wishlist); the deferred job (`ImportJobDto`) carries the same counts and a `warning` when a
+scrape stopped part-way (#644). None of them ever duplicates a title: the first two
 match on title plus author folded to lower case, the archive on the whole edition
 ([Export](#export)), so running the same import twice adds nothing the second time.
 

@@ -76,6 +76,31 @@ describe('ImportSection', () => {
     expect(await screen.findByText('3 titre(s) importé(s) · 1 déjà présent(s).')).toBeInTheDocument();
   });
 
+  /**
+   * #644: an import that stopped part-way says so, beside what it did import, and the titles
+   * that went to the wishlist are counted apart — they are not missing from the library.
+   */
+  test('says when a finished import is incomplete, and how many titles went to the wishlist', async () => {
+    server.use(
+      http.post('*/api/import/:source', () =>
+        HttpResponse.json({ id: 'job-cut', status: 'RUNNING', total: 0, imported: 0, skipped: 0 })),
+      http.get('*/api/import/jobs/:id', () =>
+        HttpResponse.json({
+          id: 'job-cut', status: 'DONE', total: 50, imported: 50, skipped: 0, wished: 7,
+          warning: 'Booknode a cessé de répondre à la page 3 sur 102.',
+        })),
+    );
+    renderWithProviders(<ImportSection />);
+
+    await userEvent.type(screen.getByLabelText('Pseudo Booknode'), 'alice');
+    await userEvent.click(screen.getByRole('button', { name: 'Importer' }));
+
+    expect(await screen.findByText('Import incomplet')).toBeInTheDocument();
+    expect(screen.getByText('Booknode a cessé de répondre à la page 3 sur 102.')).toBeInTheDocument();
+    expect(screen.getByText('50 titre(s) importé(s) · 0 déjà présent(s).')).toBeInTheDocument();
+    expect(screen.getByText('Dont 7 ajouté(s) à ta liste d’envies.')).toBeInTheDocument();
+  });
+
   /** A job that ends in failure surfaces the reader-facing message the API put on it. */
   test('shows the message when an import fails', async () => {
     server.use(
