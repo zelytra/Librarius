@@ -71,7 +71,8 @@
   margin-top: 6px;
   padding: 18px 18px 16px;
   border-radius: var(--radius-panel-lg);
-  background: var(--tint-sage);
+  /* The theme's own soft accent (#649): the fixed sage tint ignored the selected theme. */
+  background: var(--accent-soft);
   border: 1.5px solid var(--accent);
   display: flex;
   flex-direction: column;
@@ -154,7 +155,7 @@
 }
 
 .outcomeSuccess {
-  background: var(--tint-sage);
+  background: var(--accent-soft);
   border: 1.5px solid var(--accent);
 }
 
