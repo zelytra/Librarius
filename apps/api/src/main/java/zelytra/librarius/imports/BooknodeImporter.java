@@ -78,12 +78,77 @@ public class BooknodeImporter implements LibraryImporter {
                         + "les titres déjà là ne seront pas importés deux fois.");
             }
         }
-        return all;
+        return withHistory(h, all);
     }
 
-    /** One page of the member's library table. Package-private so a test can stand in for Booknode. */
+    /** One page of the member's library table. */
     Document page(String handle, int page) throws IOException {
-        return get(profileUrl(handle, page));
+        return document(profileUrl(handle, page));
+    }
+
+    /** A page of Booknode. Package-private so a test can stand in for the site. */
+    Document document(String url) throws IOException {
+        return get(url);
+    }
+
+    /** The years' addresses tried, the current page's being the bare one (#653). */
+    private static final List<String> YEAR_FORMS = List.of("?year=%d", "/%d", "?annee=%d");
+
+    /**
+     * The library dated with the member's reading history (#653), fetched with the same pseudo:
+     * the history page carries the year it shows as JSON, and every other year it lists is asked
+     * for in turn. A page is taken only when it says it shows the year asked for, so an address
+     * the site does not understand dates nothing. A history read in part, or not at all, keeps
+     * the library whole and says so.
+     */
+    private List<ImportedBook> withHistory(String handle, List<ImportedBook> library) {
+        String base = "https://booknode.com/profil/" + handle + "/historique";
+        List<ImportedBook> history = new ArrayList<>();
+        int listed = 0;
+        int read = 0;
+        try {
+            Document current = document(base);
+            Integer shown = BooknodeHistoryParser.yearShown(current);
+            List<Integer> years = BooknodeHistoryParser.yearsListed(current);
+            listed = years.size();
+            if (shown != null) {
+                history.addAll(BooknodeHistoryParser.parse(current));
+                read++;
+            }
+            String form = null;
+            for (Integer year : years) {
+                if (year.equals(shown)) {
+                    continue;
+                }
+                for (String candidate : form != null ? List.of(form) : YEAR_FORMS) {
+                    Document page;
+                    try {
+                        page = document(base + String.format(candidate, year));
+                    } catch (IOException e) {
+                        continue;
+                    }
+                    if (year.equals(BooknodeHistoryParser.yearShown(page))) {
+                        history.addAll(BooknodeHistoryParser.parse(page));
+                        read++;
+                        form = candidate;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.warnf("Booknode history unreadable for %s: %s", handle, e.getMessage());
+        }
+        List<ImportedBook> dated = CollectedLibrary.datedByHistory(library, history);
+        if (listed == 0 && read == 0) {
+            throw new IncompleteImportException(dated, "Ta bibliothèque est importée, mais ton historique de "
+                    + "lecture Booknode n'a pas pu être lu : tes livres lus restent sans date de lecture.");
+        }
+        if (read < listed) {
+            throw new IncompleteImportException(dated, "Ta bibliothèque est importée. Historique de lecture : "
+                    + read + " année" + (read > 1 ? "s" : "") + " sur " + listed + " lue" + (read > 1 ? "s" : "")
+                    + " — les livres lus les autres années restent sans date de lecture.");
+        }
+        return dated;
     }
 
     /**

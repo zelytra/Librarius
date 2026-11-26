@@ -576,6 +576,11 @@ year 🔜.
 
 ## 6. Business rules
 
+0. **Imports are automatic from a pseudo** (#653, the owner's first goal for imports). A member
+   types their pseudo on the source site and the server brings in everything that site shows:
+   library, reading dates, ratings, wishes. The browser collector and file uploads are backups
+   for what a server cannot reach, never the primary path.
+
 1. A user can own the same edition **only once** (`UNIQUE(user, edition)`). A re-read is not
    a duplicate: it belongs to the reading history 🔜.
 2. Two status families (#411). The **reading status**: `TO_READ` (on the pile, unread —

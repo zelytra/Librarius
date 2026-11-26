@@ -141,6 +141,19 @@ details each one with what is checked.
 - **Tests**: written first (TDD); every fixed or added behaviour is locked down by a test
   (`vitest` on the web side, `@QuarkusTest` on the api side).
 
+## Imports: the pseudo first
+
+The owner's standing rule (#653): **an import is automatic, from the member's pseudo alone.**
+That is the first goal for every source — Booknode, Babelio, Mangacollec, and any added later.
+The server reads everything the source shows publicly for that pseudo: the library, the reading
+dates, the ratings, the wishes.
+
+The browser collector (the bookmarklet in Settings) and file uploads are **fallbacks** for what
+a server cannot reach. They are kept working, but never designed first, never the reason a
+pseudo import stays incomplete, and never the answer when the pseudo import could be made to do
+the job. Before building anything for the collector, ask whether the server can do it from the
+pseudo. See [docs/wiki/Imports.md](docs/wiki/Imports.md).
+
 ## Environments
 
 | Env | URL | Notes |
