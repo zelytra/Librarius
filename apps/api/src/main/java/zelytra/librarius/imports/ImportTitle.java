@@ -30,11 +30,11 @@ record ImportTitle(String title, String seriesTitle, Integer volumeNumber) {
      * heures" is no volume. Import-only: a catalog title is not written this way.
      */
     private static final Pattern OTHER_VOLUME_WORD = Pattern.compile(
-            "^(.+?),\\s*(?iu:livre|saison|partie|[ée]pisode)\\s+(\\d{1,3})(?=\\s*(?:[:,]|$))");
+            ",\\s*(?iu:livre|saison|partie|[ée]pisode)\\s+(\\d{1,3})(?=\\s*(?:[:,]|$))");
 
     /** "Série, Tome 1.5 : …": a novella of the run, numbered between two of its volumes. */
     private static final Pattern DECIMAL_VOLUME = Pattern.compile(
-            "^(.+?)[\\s,;:\\-—]+(?iu:tomes?|volumes?|vol\\.?)\\s*\\d{1,4}[.,]\\d+");
+            "(?<=[\\s,;:\\-—])(?iu:tomes?|volumes?|vol\\.?)\\s*\\d{1,4}[.,]\\d+");
 
     static ImportTitle parse(String raw) {
         String title = raw == null ? null : raw.trim();
@@ -56,14 +56,22 @@ record ImportTitle(String title, String seriesTitle, Integer volumeNumber) {
         if (parsed.seriesTitle() != null) {
             return new ImportTitle(title, parsed.seriesTitle(), parsed.volumeNumber());
         }
+        // The marker is found first and the series is what precedes it, trimmed in one pass: a
+        // `^(.+?)[separators]+` prefix group would rescan a run of separators from every start.
         Matcher decimal = DECIMAL_VOLUME.matcher(title);
         if (decimal.find()) {
-            // In the series, without a number: it belongs to the run, and takes no volume's place.
-            return new ImportTitle(title, decimal.group(1).trim(), null);
+            String series = VolumeParser.withoutTrailingSeparators(title.substring(0, decimal.start()));
+            if (!series.isEmpty()) {
+                // In the series, without a number: it belongs to the run, and takes no volume's place.
+                return new ImportTitle(title, series, null);
+            }
         }
         Matcher word = OTHER_VOLUME_WORD.matcher(title);
         if (word.find()) {
-            return new ImportTitle(title, word.group(1).trim(), Integer.valueOf(word.group(2)));
+            String series = title.substring(0, word.start()).trim();
+            if (!series.isEmpty()) {
+                return new ImportTitle(title, series, Integer.valueOf(word.group(1)));
+            }
         }
         return new ImportTitle(title, null, null);
     }

@@ -87,4 +87,17 @@ class VolumeParserTest {
         // A bracket the marker opens is still not part of the series.
         assertEquals(new VolumeParser.Parsed("Naruto", 5), VolumeParser.parse("Naruto (Vol. 5)"));
     }
+
+    /**
+     * A long run of separators inside the series used to be scanned once per position by the
+     * trailing-separator regex — quadratic on a title a member types (CodeQL, #642).
+     */
+    @Test
+    void readsATitleWithALongRunOfSeparatorsInLinearTime() {
+        String title = "a" + "\t".repeat(200_000) + "b, Tome 1";
+        VolumeParser.Parsed parsed = org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(
+                java.time.Duration.ofSeconds(2), () -> VolumeParser.parse(title));
+        assertEquals(Integer.valueOf(1), parsed.volumeNumber());
+        assertEquals("a" + "\t".repeat(200_000) + "b", parsed.seriesTitle());
+    }
 }

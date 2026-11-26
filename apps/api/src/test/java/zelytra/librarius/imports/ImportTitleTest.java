@@ -50,4 +50,14 @@ class ImportTitleTest {
     void keepsABracketInTheSeriesWhole() {
         series("U4 (BD), Tome 1 : Jules", "U4 (BD)", 1);
     }
+
+    /** A long run of separators is read in linear time, whatever the shape tried (CodeQL). */
+    @Test
+    void readsATitleWithALongRunOfSeparatorsInLinearTime() {
+        String run = ", \t".repeat(100_000);
+        for (String raw : new String[] {"a" + run + "b", "a" + run + "b, Livre 2", "a" + run + "b, Tome 1.5"}) {
+            org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(2),
+                    () -> ImportTitle.parse(raw));
+        }
+    }
 }
