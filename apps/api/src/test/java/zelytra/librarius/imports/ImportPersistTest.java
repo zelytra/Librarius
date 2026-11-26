@@ -152,10 +152,10 @@ class ImportPersistTest {
             boolean wished, LocalDate added) {
         return new ImportedBook(title, "Some Author", null,
                 wished ? zelytra.librarius.domain.LibraryStatus.TO_READ : zelytra.librarius.domain.LibraryStatus.READ,
-                "manga or", 4, added, wished ? null : added, null, null, rank, kind, wished);
+                "manga or", 4, added, null, null, null, rank, kind, wished);
     }
 
-    /** A Booknode library: tiers on the built-in ranks, manga as manga, wants on the wishlist, dated readings. */
+    /** A Booknode library: tiers on the built-in ranks, manga as manga, wants on the wishlist, undated readings. */
     @Test
     void filesABooknodeLibraryTheWayTheReaderFiledIt() {
         String userId = newUser();
@@ -173,7 +173,10 @@ class ImportPersistTest {
             assertEquals("or", item.rankCategory.code);
             org.junit.jupiter.api.Assertions.assertTrue(item.rankCategory.builtin);
             assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
-            assertEquals(added, item.progress.finishedAt);
+            // Read, and undated: the shelf date is when it was added, not when it was read (#645).
+            assertEquals(Integer.valueOf(100), item.progress.percent);
+            assertEquals(null, item.progress.finishedAt);
+            assertEquals(added, item.acquiredAt);
             // A manga list gives no genre word, so the kind stands for one: favourite genres
             // are no longer empty for an imported library.
             assertEquals(List.of("Manga"), item.edition.work.genres.stream().map(g -> g.label).toList());
@@ -207,7 +210,42 @@ class ImportPersistTest {
             LibraryItem item = owned.get(0);
             assertEquals("argent", item.rankCategory.code);
             assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
-            assertEquals(added, item.progress.finishedAt);
+            assertEquals(null, item.progress.finishedAt);
+        });
+    }
+
+    /**
+     * #645: an earlier Booknode import took the shelf date — sometimes the day of a wish — for
+     * the reading date. Importing again takes that date back, and only that one.
+     */
+    @Test
+    void reimportingClearsTheReadingDateAnEarlierImportTookFromTheShelf() {
+        String userId = newUser();
+        String invented = "Shelf date " + UUID.randomUUID();
+        String readerSet = "Reader date " + UUID.randomUUID();
+        LocalDate added = LocalDate.of(2022, 1, 9);
+        LocalDate reallyRead = LocalDate.of(2022, 6, 30);
+        // What the older parser made of the rows: read on the day they were added.
+        imports.persist(userId, "booknode", List.of(
+                new ImportedBook(invented, "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ,
+                        null, 4, added, added, null, null),
+                new ImportedBook(readerSet, "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ,
+                        null, 4, added, added, null, null)));
+        // The reader then corrected the second one by hand.
+        QuarkusTransaction.requiringNew().run(() -> items.listByUser(userId).stream()
+                .filter(i -> i.edition.work.title.equals(readerSet))
+                .forEach(i -> i.progress.finishedAt = reallyRead));
+
+        imports.persist(userId, "booknode", List.of(
+                booknodeRow(invented, null, null, false, added),
+                booknodeRow(readerSet, null, null, false, added)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            java.util.Map<String, LibraryItem> owned = new java.util.HashMap<>();
+            items.listByUser(userId).forEach(i -> owned.put(i.edition.work.title, i));
+            assertEquals(null, owned.get(invented).progress.finishedAt);
+            assertEquals(added, owned.get(invented).acquiredAt);
+            assertEquals(reallyRead, owned.get(readerSet).progress.finishedAt);
         });
     }
 

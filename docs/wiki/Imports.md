@@ -83,7 +83,7 @@ collection through the bridge.
 
 | Source | Read from it |
 |---|---|
-| Booknode | title, author, cover, status from the badge's class; tier (diamant, or, argent, bronze) → the built-in Platine / Or / Argent / Bronze category (diamant also rated 5; before V46 it filed under Or); the list ("manga or", "BD", "romance") → kind and genre; "envies" → wishlist; the date added, which is the reading date of a read title |
+| Booknode | title, author, cover, status from the badge's class; tier (diamant, or, argent, bronze) → the built-in Platine / Or / Argent / Bronze category (diamant also rated 5; before V46 it filed under Or); the list ("manga or", "BD", "romance") → kind and genre; "envies" → wishlist; the date added → the acquisition date only. A read title is imported **undated** (#645): the date is the day the title went on the shelf, and a title moved there from « Envies » keeps the day of the wish |
 | Babelio | title, author, cover, status ("Lu", "En cours", "À lire", "Abandonné"), the reader's own rating, the reading date; "Pense-bête" → wishlist |
 | CSV | title, author, status, rating, dates, ISBN, length — French and English headers |
 | Mangacollec | `MangacollecImporter`: every volume in `possessions` or `reads` becomes "Série [Édition] Tome n" (a one-shot keeps the bare title), with its ISBN, its cover and the day it was added; a volume read is READ on the day of its `reads` row, one held and unread is to read, one **read but not held is `NOT_OWNED`**; a held box set (`box_possessions`) is a `BOX_SET`; the edition name gives the format (Deluxe/Perfect/Intégrale → `DELUXE`, reliée → `HARDCOVER`, Grand format → `LARGE`, poche → `POCKET`); type "Roman" → a book, otherwise a manga. Mangacollec names no author: the enrichment that follows finds them from the ISBN. A named edition ("Berserk Edition Prestige") is a series of its own, so its volume numbers do not collide with the standard edition's |
@@ -112,7 +112,9 @@ imported again.
 
 **Importing again completes** what is already there instead of skipping it: the tier, the
 kind (the title is moved to an entry of the right kind), the rating, the reading date and the
-genre a title lacks — never overriding what the reader set. A title already held, or listed
+genre a title lacks — never overriding what the reader set. It also takes back a reading date
+an earlier import invented (#645): a finish with no start that falls on the very day the
+source says the title was added is cleared when the source tells no reading date. A title already held, or listed
 twice in the file, is not imported twice.
 
 After the import, `ImportEnricher` fills lengths, ISBNs and publishers in from the catalog, in

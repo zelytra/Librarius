@@ -40,18 +40,19 @@ class BooknodeImporterTest {
     }
 
     /**
-     * A tier is the collection's own Or, Argent or Bronze shelf; a read title's only date, the
-     * day it was marked read, is its reading date; a manga or comics list tells the kind.
+     * A tier is the collection's own Or, Argent or Bronze shelf; a manga or comics list tells the
+     * kind. The row's one date is the day the title went on the shelf — for a title once wished
+     * for, the day of the wish — so it is the acquisition date and never a reading date (#645).
      */
     @Test
-    void filesTiersUnderTheBuiltInRanksAndDatesTheReading() throws Exception {
+    void filesTiersUnderTheBuiltInRanksAndDatesNoReading() throws Exception {
         List<ImportedBook> books = new BooknodeImporter().parse(fixture());
 
         ImportedBook gold = books.get(0);
         assertEquals("or", gold.rank());
-        assertEquals(gold.acquiredAt(), gold.readAt());
-        org.junit.jupiter.api.Assertions.assertNotNull(gold.readAt());
-        // Being read: no reading date yet.
+        assertEquals(java.time.LocalDate.of(2024, 3, 12), gold.acquiredAt());
+        assertEquals(null, gold.readAt());
+        assertEquals(null, books.get(1).readAt());
         assertEquals(null, books.get(2).readAt());
 
         // Booknode's diamant tier sits above its or, as Platine sits above Or (#608).

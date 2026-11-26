@@ -303,6 +303,13 @@ public class ImportService {
                 item.edition.work.genresText = genre;
             }
         }
+        // An earlier import took a shelf date for the reading date (#645): a finish that is the
+        // very day the source says the title was added, with no start, came from that and not
+        // from the reader, and goes back to undated when the source tells no reading date.
+        if (book.readAt() == null && book.acquiredAt() != null && item.progress != null
+                && item.progress.startedAt == null && book.acquiredAt().equals(item.progress.finishedAt)) {
+            item.progress.finishedAt = null;
+        }
         if (book.readAt() != null && (item.status == LibraryStatus.READ || item.status == LibraryStatus.ABANDONED)) {
             if (item.progress == null) {
                 recordReading(item, book.readAt());

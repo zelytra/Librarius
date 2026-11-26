@@ -155,12 +155,11 @@ public class BooknodeImporter implements LibraryImporter {
                         addedAt, null, null, null, null, kindOf(list), true));
                 continue;
             }
-            // Booknode's table carries one date, the day the title went on the shelf. For a
-            // read title that is the day it was marked read — the only reading date there is,
-            // and without one the title counted in no year, no goal and no statistic.
-            boolean finished = status == LibraryStatus.READ || status == LibraryStatus.ABANDONED;
+            // Booknode's table carries one date, the day the title went on the shelf — and a
+            // title moved there from « Envies » keeps the day it was wished for. It is when the
+            // title was added, never when it was read: a read title is imported undated (#645).
             books.add(new ImportedBook(title, author, coverNear(row), status, list,
-                    ratingFromBadge(badgeClasses), addedAt, finished ? addedAt : null, null, null,
+                    ratingFromBadge(badgeClasses), addedAt, null, null, null,
                     rankFromBadge(badgeClasses), kindOf(list), false));
         }
         return books;
