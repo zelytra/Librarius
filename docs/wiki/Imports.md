@@ -21,9 +21,11 @@ also says how many of the imported titles went to the wishlist (`wished`), and c
   too** (#653): the page is drawn client-side, but its server-rendered HTML carries the year it
   shows as JSON on the Vue root — `data-year`, `data-table-years` (every year and its totals),
   `data-current-year-details` (the months and their `reads[{list_id, book}]`) and `data-lists`
-  (the tiers). `BooknodeImporter` fetches the page, then every other year it lists, trying
-  `?year=`, `/<year>` and `?annee=` and taking a page only when its `data-year` is the year
-  asked for, so an address the site does not understand dates nothing. A history read in part or
+  (the tiers). `BooknodeImporter` fetches the page, keeping the session cookies it sets and its
+  `meta[name=csrf-token]`, then every other year it lists from `GET /profil/<pseudo>/historique/<year>`
+  — the address the page's script asks when a year is opened (read off a browser's network log):
+  JSON `{"details": [months]}` of the same shape, requested with `Accept: application/json`,
+  `X-Requested-With: XMLHttpRequest`, the page as `Referer` and its CSRF token. A history read in part or
   not at all keeps the library whole and ends the job with a `warning` ("N années sur M").
   As a fallback, after the library pages the
   collector opens that page in a hidden same-origin frame (`CollectorEnv.render`), clicks every

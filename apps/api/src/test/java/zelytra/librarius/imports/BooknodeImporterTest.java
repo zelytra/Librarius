@@ -169,19 +169,37 @@ class BooknodeImporterTest {
                 + "<div class='group-name'><span class='group-label'></span></div></div>");
     }
 
-    /** Booknode as the tests stand it in: the library, and the history at the URLs a map names. */
-    private BooknodeImporter booknodeServing(java.util.Map<String, Document> history) {
+    /**
+     * Booknode as the tests stand it in: the library, the history page, and the years' JSON at
+     * the addresses a map names — an address missing from it answers 404.
+     */
+    private BooknodeImporter booknodeServing(Document historyPage, java.util.Map<Integer, String> years) {
         return new BooknodeImporter() {
             @Override
-            Document document(String url) throws java.io.IOException {
-                if (url.contains("/biblio-table")) {
-                    return libraryOfTwo();
+            Document document(String url) {
+                return libraryOfTwo();
+            }
+
+            @Override
+            Document historyPage(String url, java.util.Map<String, String> cookies) throws java.io.IOException {
+                if (historyPage == null) {
+                    throw new org.jsoup.HttpStatusException("Forbidden", 403, url);
                 }
-                Document page = history.get(url);
-                if (page == null) {
+                cookies.put("booknode_session", "s");
+                return historyPage;
+            }
+
+            @Override
+            String yearJson(String url, String referer, String csrf, java.util.Map<String, String> cookies)
+                    throws java.io.IOException {
+                // The year is asked for the way the page's script does: same session, same page.
+                assertEquals("https://booknode.com/profil/alice/historique", referer);
+                assertEquals("s", cookies.get("booknode_session"));
+                String json = years.get(Integer.valueOf(url.substring(url.lastIndexOf('/') + 1)));
+                if (json == null) {
                     throw new org.jsoup.HttpStatusException("Not Found", 404, url);
                 }
-                return page;
+                return json;
             }
         };
     }
@@ -195,10 +213,8 @@ class BooknodeImporterTest {
     /** #653: the pseudo alone brings the reading months too — every year the history lists. */
     @Test
     void anImportByPseudoDatesTheLibraryWithEveryYearOfTheHistory() throws Exception {
-        String base = "https://booknode.com/profil/alice/historique";
-        BooknodeImporter booknode = booknodeServing(java.util.Map.of(
-                base, Jsoup.parse(resource("booknode-historique-page.html")),
-                base + "?year=2019", Jsoup.parse(resource("booknode-historique-2019.html"))));
+        BooknodeImporter booknode = booknodeServing(Jsoup.parse(resource("booknode-historique-page.html")),
+                java.util.Map.of(2019, resource("booknode-historique-2019.json")));
 
         var books = byTitle(booknode.fetch("alice"));
 
@@ -207,18 +223,11 @@ class BooknodeImporterTest {
         assertEquals(LocalDate.of(2019, 8, 1), books.get("Ancien Roman").readAt());
     }
 
-    /** A page answering for another year than the one asked dates nothing, and the import says so. */
+    /** A year Booknode does not answer dates nothing, and the import says how many it read. */
     @Test
-    void aHistoryPageForAnotherYearIsRefused() throws Exception {
-        String base = "https://booknode.com/profil/alice/historique";
-        Document current = Jsoup.parse(resource("booknode-historique-page.html"));
-        // Every address tried for 2019 answers the current year, as a site ignoring the parameter would.
-        BooknodeImporter booknode = new BooknodeImporter() {
-            @Override
-            Document document(String url) throws java.io.IOException {
-                return url.contains("/biblio-table") ? libraryOfTwo() : current;
-            }
-        };
+    void aYearThatCannotBeReadIsSaidAndTheRestIsDated() throws Exception {
+        BooknodeImporter booknode = booknodeServing(Jsoup.parse(resource("booknode-historique-page.html")),
+                java.util.Map.of());
 
         IncompleteImportException partial = org.junit.jupiter.api.Assertions.assertThrows(
                 IncompleteImportException.class, () -> booknode.fetch("alice"));
@@ -232,7 +241,7 @@ class BooknodeImporterTest {
     /** The history unreadable: the library is imported whole, undated, and the reader told. */
     @Test
     void aHistoryThatCannotBeReadLeavesTheLibraryWhole() {
-        BooknodeImporter booknode = booknodeServing(java.util.Map.of());
+        BooknodeImporter booknode = booknodeServing(null, java.util.Map.of());
 
         IncompleteImportException partial = org.junit.jupiter.api.Assertions.assertThrows(
                 IncompleteImportException.class, () -> booknode.fetch("alice"));

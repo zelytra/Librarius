@@ -94,4 +94,25 @@ class BooknodeHistoryParserTest {
 
         assertEquals("Community, Tome 0 : Les origines", BooknodeHistoryParser.parse(page).get(0).title());
     }
+
+    /**
+     * #653: another year comes from the address the page's script asks, /historique/<year>, as
+     * JSON — the months of the current page's shape; the tiers are the page's.
+     */
+    @Test
+    void readsAnotherYearFromTheJsonThePageAsksFor() throws Exception {
+        String json;
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("booknode-historique-2019.json")) {
+            json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        Document page = fixture("booknode-historique-page.html");
+
+        List<ImportedBook> books = BooknodeHistoryParser.parseYear(json, 2019, page);
+
+        assertEquals(1, books.size());
+        assertEquals("Ancien Roman", books.get(0).title());
+        assertEquals("Anne A.", books.get(0).author());
+        assertEquals(LocalDate.of(2019, 8, 1), books.get(0).readAt());
+        assertEquals(Integer.valueOf(1), books.get(0).rating());
+    }
 }
