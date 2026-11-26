@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { useGetApiStatsReadings, type ReadingSpanDto } from '../../api/generated/librarius';
 import { activeLanguage } from '../../i18n/languages';
 import { Icon } from '../../shared/ui/Icon';
@@ -136,7 +137,9 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
       ) : (
         <ul className={styles.list}>
           {shown.map((r) => (
-            <li key={r.itemId} className={styles.item}>
+            <li key={r.itemId}>
+              {/* The whole row opens the book's screen (#643). */}
+              <Link to={`/detail/${r.itemId}`} className={styles.item}>
               {/* The cover beside each reading (#567): decorative, the title says what it is. */}
               {r.coverUrl ? (
                 <img
@@ -152,6 +155,7 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
                 <span className={styles.itemTitle}>{r.title}</span>
                 <span className={styles.itemSpan}>{span(r)}</span>
               </span>
+              </Link>
             </li>
           ))}
         </ul>

@@ -148,8 +148,17 @@ button.day:focus-visible {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 44px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
 }
 
 /* #567: a small cover beside each reading, a book's 2:3. */

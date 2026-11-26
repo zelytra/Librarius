@@ -52,6 +52,18 @@ describe('ReadingCalendar', () => {
     expect(bare.querySelector('[data-cover]')).not.toBeNull();
   });
 
+  /** #643: a listed reading opens the book's screen. */
+  test('links each listed reading to the book’s Detail screen', async () => {
+    readingsReturn([
+      reading('i1', 'Dune', '2021-03-05', '2021-03-19', 'https://cover.test/dune.jpg'),
+      reading('i2', 'Hyperion', undefined, '2021-03-12'),
+    ]);
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    expect(await screen.findByRole('link', { name: /Dune/ })).toHaveAttribute('href', '/detail/i1');
+    expect(screen.getByRole('link', { name: /Hyperion/ })).toHaveAttribute('href', '/detail/i2');
+  });
+
   /** #485: a book shows in the day it was finished, as its cover. */
   test('places each finished book in its day, as its cover', async () => {
     readingsReturn([
