@@ -30,6 +30,9 @@ class ImportPersistTest {
     EntityManager em;
 
     @Inject
+    zelytra.librarius.catalog.CatalogEntryService catalog;
+
+    @Inject
     zelytra.librarius.domain.repository.WishlistItemRepository wishes;
 
     @Test
@@ -218,5 +221,60 @@ class ImportPersistTest {
         assertEquals(null, ImportGenres.of("Sarah JMass", null));
         assertEquals("Bande dessinée", ImportGenres.of("BD", zelytra.librarius.domain.Kind.COMIC));
     }
-}
 
+    private String member() {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        return userId;
+    }
+
+    /** #642: Booknode spells one series two ways; its volumes still land in one. */
+    @Test
+    void filesTwoSpellingsOfOneSeriesUnderTheSameSeries() {
+        String userId = member();
+        String run = UUID.randomUUID().toString().substring(0, 8);
+
+        imports.importFromCsv(userId, "titre;auteur;statut\n"
+                + "Le Vaisseau d'Amelia " + run + ", Tome 1;Lise Auteur;à lire\n"
+                + "Le Vaisseau d'Amélia " + run + " - Tome 2;Lise Auteur;à lire\n");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(2, owned.size());
+            assertNotNull(owned.get(0).edition.work.series);
+            assertEquals(owned.get(0).edition.work.series.id, owned.get(1).edition.work.series.id);
+        });
+    }
+
+    /** #642: a title an earlier import left standalone joins its series when imported again. */
+    @Test
+    void anImportAgainFilesAnEarlierStandaloneTitleUnderItsSeries() {
+        String userId = member();
+        String series = "La Passe-miroir " + UUID.randomUUID().toString().substring(0, 8);
+        String title = series + ", Livre 2 : Les Disparus du Clairdelune";
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem earlier = new LibraryItem();
+            earlier.userId = userId;
+            earlier.edition = catalog.createManualEdition(new zelytra.librarius.web.ApiDtos.ManualBookDto(
+                    zelytra.librarius.domain.Kind.BOOK, title, "Christelle Dabos", null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null), userId);
+            earlier.status = zelytra.librarius.domain.LibraryStatus.TO_READ;
+            items.persist(earlier);
+        });
+
+        imports.importFromCsv(userId, "titre;auteur;statut\n" + title + ";Christelle Dabos;à lire\n");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(1, owned.size());
+            assertNotNull(owned.get(0).edition.work.series);
+            assertEquals(series, owned.get(0).edition.work.series.title);
+            assertEquals(Integer.valueOf(2), owned.get(0).edition.work.volumeNumber);
+        });
+    }
+}

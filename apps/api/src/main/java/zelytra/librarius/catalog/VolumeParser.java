@@ -23,7 +23,9 @@ public final class VolumeParser {
      * two capture groups are the number for the word form and for the {@code #} form.
      */
     private static final Pattern MARKER = Pattern.compile(
-            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})\\b|#\\s*(\\d{1,4})\\b"
+            // A decimal ("Tome 1.5", "T2,5") is a novella between two volumes, not a volume: the
+            // lookahead refuses it rather than reading its whole part (#642).
+            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})(?![.,]\\d)\\b|#\\s*(\\d{1,4})(?![.,]\\d)\\b"
                     // The BnF ISBD form "Série. N", "Série. N, sous-titre" or "Série. N : sous-titre":
                     // a number after the title's period, ending the title or followed by its
                     // volume title. Live BnF records ("One Piece. 56", "One piece party. 1") end
@@ -58,10 +60,20 @@ public final class VolumeParser {
         } catch (NumberFormatException e) {
             return Parsed.NONE;
         }
-        String series = TRAILING_SEPARATORS.matcher(title.substring(0, matcher.start()))
-                .replaceAll("").trim();
+        String series = closeBracket(TRAILING_SEPARATORS.matcher(title.substring(0, matcher.start()))
+                .replaceAll("").trim());
         // A title that leads with the marker ("Tome 1", "Volume 3: …") names no series.
         return series.isEmpty() ? new Parsed(null, volume) : new Parsed(series, volume);
+    }
+
+    /**
+     * The series with the bracket it opened closed again. The trailing separators stripped
+     * before the marker take a closing bracket with them: "U4 (BD), Tome 1" left "U4 (BD" (#642).
+     */
+    private static String closeBracket(String series) {
+        long open = series.chars().filter(c -> c == '(').count();
+        long close = series.chars().filter(c -> c == ')').count();
+        return open > close ? series + ")" : series;
     }
 
     /** A volume marker word on its own: "tome", "tomes", "vol", "vol.", "volume", "t.". */

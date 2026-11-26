@@ -95,6 +95,21 @@ each batch: one transaction for a 2,400-title library ran past the 60 s transact
 and was rolled back whole. A volume joins its series (`ImportTitle`); an entry with nothing to
 tell about its edition shares the work's bare edition instead of founding one more.
 
+How `ImportTitle` finds the series (#642):
+
+- the catalog's markers (`VolumeParser`): "Série, Tome 3", "Série Vol. 2", "Série T5", "Série #12";
+- after them, the other words Booknode numbers a run with, only after the series' comma and
+  ending the title or opening its subtitle: "La Passe-miroir, Livre 1 : …", "Série, Saison 2",
+  "Série, Partie 1", "Série, Épisode 3" ("Le Livre des heures" stays standalone);
+- a decimal volume ("Série, Tome 1.5") is a novella: it joins the series **without a number**,
+  so it never takes the place of volume 1;
+- a bracket in the series is kept whole ("U4 (BD), Tome 1" → "U4 (BD)").
+
+`SeriesRepository.findByKindAndTitle` matches the title case-blind, then accent- and
+punctuation-blind (`genre_code`, V6), so "Le Vaisseau d'Amelia" and "Le Vaisseau d'Amélia" are
+one series. A title an earlier import left standalone joins its series when the library is
+imported again.
+
 **Importing again completes** what is already there instead of skipping it: the tier, the
 kind (the title is moved to an entry of the right kind), the rating, the reading date and the
 genre a title lacks — never overriding what the reader set. A title already held, or listed

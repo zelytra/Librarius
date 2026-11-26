@@ -23,6 +23,19 @@ record ImportTitle(String title, String seriesTitle, Integer volumeNumber) {
     /** Any trailing Goodreads series bracket, whatever its numbering. */
     private static final Pattern GOODREADS_ANY = Pattern.compile("\\([^()]*#[^()]*\\)\\s*$");
 
+    /**
+     * The other words Booknode numbers a run with, after the series and its comma: "La
+     * Passe-miroir, Livre 1 : …", "À la place du cœur, Saison 3", "Aurora Squad, Épisode 2".
+     * Only in that shape — the number ends the title or opens its subtitle — so "Le Livre des
+     * heures" is no volume. Import-only: a catalog title is not written this way.
+     */
+    private static final Pattern OTHER_VOLUME_WORD = Pattern.compile(
+            "^(.+?),\\s*(?iu:livre|saison|partie|[ée]pisode)\\s+(\\d{1,3})(?=\\s*(?:[:,]|$))");
+
+    /** "Série, Tome 1.5 : …": a novella of the run, numbered between two of its volumes. */
+    private static final Pattern DECIMAL_VOLUME = Pattern.compile(
+            "^(.+?)[\\s,;:\\-—]+(?iu:tomes?|volumes?|vol\\.?)\\s*\\d{1,4}[.,]\\d+");
+
     static ImportTitle parse(String raw) {
         String title = raw == null ? null : raw.trim();
         if (title == null || title.isEmpty()) {
@@ -40,7 +53,18 @@ record ImportTitle(String title, String seriesTitle, Integer volumeNumber) {
             return new ImportTitle(title, null, null);
         }
         VolumeParser.Parsed parsed = VolumeParser.parse(title);
-        return new ImportTitle(title, parsed.seriesTitle(),
-                parsed.seriesTitle() != null ? parsed.volumeNumber() : null);
+        if (parsed.seriesTitle() != null) {
+            return new ImportTitle(title, parsed.seriesTitle(), parsed.volumeNumber());
+        }
+        Matcher decimal = DECIMAL_VOLUME.matcher(title);
+        if (decimal.find()) {
+            // In the series, without a number: it belongs to the run, and takes no volume's place.
+            return new ImportTitle(title, decimal.group(1).trim(), null);
+        }
+        Matcher word = OTHER_VOLUME_WORD.matcher(title);
+        if (word.find()) {
+            return new ImportTitle(title, word.group(1).trim(), Integer.valueOf(word.group(2)));
+        }
+        return new ImportTitle(title, null, null);
     }
 }

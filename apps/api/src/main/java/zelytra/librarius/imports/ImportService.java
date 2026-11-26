@@ -290,6 +290,10 @@ public class ImportService {
                     old.pageCount, old.coverUrl != null ? old.coverUrl : dto.coverUrl(), null, null,
                     null, null, null, null, null));
         }
+        // A title an earlier import could not place in its series joins it now (#642).
+        if (parsed.seriesTitle() != null) {
+            catalog.fileUnderSeries(item.edition.work, parsed.seriesTitle(), parsed.volumeNumber());
+        }
         // A work imported before lists were read as genres has none: the list's genre fills it.
         String genre = ImportGenres.of(book.shelf(), kind);
         if (genre != null && item.edition.work.genres.isEmpty()) {

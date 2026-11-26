@@ -199,6 +199,25 @@ public class CatalogEntryService {
     }
 
     /**
+     * Files a work recorded without its series under the one its title names, numbered when it
+     * has no number yet — a title an earlier import left standalone (#642). A work already in a
+     * series keeps it: the row is shared, and only its empty fields are ever filled in.
+     */
+    public void fileUnderSeries(Work work, String seriesTitle, Integer volumeNumber) {
+        if (work.series != null) {
+            return;
+        }
+        work.series = resolveSeries(work.kind, seriesTitle);
+        if (work.series == null) {
+            return;
+        }
+        work.seriesTitle = work.series.title;
+        if (work.volumeNumber == null) {
+            work.volumeNumber = volumeNumber;
+        }
+    }
+
+    /**
      * Attaches the entry to its series, creating it on first sight. This is what turns the
      * free-text series title sent by the front end — or produced by a provider, AniList
      * exposing the series natively — into the shared {@code series} row every volume of the

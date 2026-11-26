@@ -25,8 +25,23 @@ public class SeriesRepository implements PanacheRepositoryBase<Series, UUID> {
         if (kind == null || title == null || title.isBlank()) {
             return Optional.empty();
         }
-        return find("kind = ?1 and lower(title) = ?2", kind, title.trim().toLowerCase(Locale.ROOT))
+        Optional<Series> exact = find("kind = ?1 and lower(title) = ?2", kind, title.trim().toLowerCase(Locale.ROOT))
                 .firstResultOptional();
+        if (exact.isPresent()) {
+            return exact;
+        }
+        // The same run spelled another way — an accent ("Amelia" / "Amélia"), a hyphen or a
+        // comma ("Toilet Bound" / "Toilet-Bound") — is the same series (#642). `genre_code`
+        // (V6) is the database's accent- and punctuation-blind fold; the oldest spelling wins,
+        // so the choice stays stable.
+        @SuppressWarnings("unchecked")
+        List<Series> folded = getEntityManager()
+                .createNativeQuery("select * from series where kind = :kind and genre_code(title) = genre_code(:title)"
+                        + " order by created_at, id limit 1", Series.class)
+                .setParameter("kind", kind.name())
+                .setParameter("title", title.trim())
+                .getResultList();
+        return folded.stream().findFirst();
     }
 
     /**

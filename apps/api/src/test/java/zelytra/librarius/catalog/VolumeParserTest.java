@@ -73,4 +73,18 @@ class VolumeParserTest {
         assertEquals("Les tomates vertes", VolumeParser.withoutMarkers("Les tomates vertes"));
         assertEquals("Voltaire", VolumeParser.withoutMarkers("Voltaire"));
     }
+
+    @Test
+    void readsNoVolumeFromADecimalNumber() {
+        // "Tome 1.5" is a novella between two volumes, not volume 1 (#642).
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Insaisissable, Tome 1.5"));
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Série T2,5"));
+    }
+
+    @Test
+    void keepsTheClosingBracketOfASeriesTitle() {
+        assertEquals(new VolumeParser.Parsed("U4 (BD)", 1), VolumeParser.parse("U4 (BD), Tome 1 : Jules"));
+        // A bracket the marker opens is still not part of the series.
+        assertEquals(new VolumeParser.Parsed("Naruto", 5), VolumeParser.parse("Naruto (Vol. 5)"));
+    }
 }
