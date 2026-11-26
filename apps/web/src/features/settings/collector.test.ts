@@ -49,6 +49,45 @@ describe('collectLibrary', () => {
     expect(saved[0].pages[1]).toContain('Fondation');
   });
 
+  /**
+   * #651: run on Booknode's reading history, the collector opens every year the way the reader
+   * would — the site's script draws a year's months when its heading is clicked — and saves them.
+   */
+  test('opens every year of the Booknode reading history and keeps its months', async () => {
+    const month = (label: string, title: string) =>
+      `<div class="one_month"><h3>${label}</h3><div class="item"><div class="panel-heading"><a href="/x">${title}</a></div></div></div>`;
+    document.body.innerHTML =
+      '<div class="history_header"><h3 class="button_and_year"><button><i class="fa fa-chevron-circle-down"></i></button> 2026</h3></div>' +
+      month('novembre 2026', 'Dune') +
+      '<div class="history_header" id="y2019"><h3 class="button_and_year"><button id="open2019"><i class="fa fa-chevron-circle-right"></i></button> 2019</h3></div>';
+    // The site's script: the months of 2019 arrive a moment after its heading is clicked.
+    document.getElementById('open2019')!.addEventListener('click', () =>
+      setTimeout(() => document.getElementById('y2019')!.insertAdjacentHTML('afterend', month('août 2019', 'Fondation')), 5));
+    const fetch = vi.fn();
+    const { env: e, saved } = env({
+      fetch,
+      location: { hostname: 'booknode.com', pathname: '/profil/alice/historique', href: 'https://booknode.com/profil/alice/historique' },
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(saved).toHaveLength(1);
+    expect(saved[0].source).toBe('booknode');
+    expect(saved[0].pages.join('')).toContain('novembre 2026');
+    expect(saved[0].pages.join('')).toContain('Fondation');
+    document.body.innerHTML = '';
+  });
+
+  test('points to the reading history once the library is collected', async () => {
+    const fetch = vi.fn(() => Promise.resolve(response(booknodePage(['Dune'], 1))));
+    const { env: e } = env({ fetch });
+
+    await collectLibrary(e);
+
+    expect(document.body.textContent).toContain('historique');
+  });
+
   test('reads a Babelio page in the charset it declares, rows wrapped as a table', async () => {
     // "Mes livres" with an accented title, served in ISO-8859-1 as Babelio does.
     const html =

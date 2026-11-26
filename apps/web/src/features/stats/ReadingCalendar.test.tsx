@@ -64,6 +64,18 @@ describe('ReadingCalendar', () => {
     expect(screen.getByRole('link', { name: /Hyperion/ })).toHaveAttribute('href', '/detail/i2');
   });
 
+  /** #651: a reading known by its month alone is listed in the month, and placed on no day. */
+  test('lists a reading known by its month without placing it on a day', async () => {
+    readingsReturn([
+      { ...reading('i9', 'Mois seul', undefined, '2021-03-01', 'https://cover.test/m.jpg'), finishedMonthOnly: true },
+    ]);
+    renderWithProviders(<ReadingCalendar initialMonth="2021-03" />);
+
+    expect(await screen.findByText('Mois seul')).toBeInTheDocument();
+    expect(screen.getByText('En mars 2021')).toBeInTheDocument();
+    expect(screen.queryByLabelText('1 mars : 1 lecture')).not.toBeInTheDocument();
+  });
+
   /** #485: a book shows in the day it was finished, as its cover. */
   test('places each finished book in its day, as its cover', async () => {
     readingsReturn([

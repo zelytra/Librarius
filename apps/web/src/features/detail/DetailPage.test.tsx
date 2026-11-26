@@ -214,6 +214,28 @@ describe('DetailPage', () => {
     expect(await screen.findByRole('link', { name: 'Créer une catégorie' })).toHaveAttribute('href', '/categories');
   });
 
+  /** #651: a reading Booknode's history dated by the month says so, not a day nobody gave. */
+  test('says a reading ended in a month when only the month is known', async () => {
+    libraryItemReturns(libraryItem({
+      id: 'item-1', status: 'READ',
+      progress: { percent: 100, finishedAt: '2026-11-01', finishedMonthOnly: true },
+    }));
+    renderDetail();
+
+    expect(await screen.findByText('Lu en novembre 2026 — le jour n’est pas connu.')).toBeInTheDocument();
+  });
+
+  test('says nothing of a month for a reading dated to the day', async () => {
+    libraryItemReturns(libraryItem({
+      id: 'item-1', status: 'READ',
+      progress: { percent: 100, finishedAt: '2026-11-01', finishedMonthOnly: false },
+    }));
+    renderDetail();
+
+    await screen.findByRole('group', { name: 'Classement' });
+    expect(screen.queryByText(/le jour n’est pas connu/)).not.toBeInTheDocument();
+  });
+
   test('assigning a rank is reflected immediately', async () => {
     // The screen re-reads the item after the mutation instead of patching its own
     // state, so the handler has to record the new rank.

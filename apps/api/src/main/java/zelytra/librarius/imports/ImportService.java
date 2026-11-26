@@ -192,6 +192,20 @@ public class ImportService {
             if (held == null) {
                 held = state.existing().get(key(book.title(), book.author()));
             }
+            if (book.datesOnly()) {
+                // A history row dates a title the library holds — by the first author it names,
+                // the library naming all of them — and never adds one (#651).
+                if (held == null) {
+                    held = heldByTitle(state, book);
+                }
+                if (held == null || held.equals(IMPORTED_IN_THIS_RUN)) {
+                    skipped++;
+                } else {
+                    items.findOwned(userId, held).ifPresent(item -> complete(userId, item, book, parsed, state));
+                    skipped++;
+                }
+                continue;
+            }
             if (book.wished()) {
                 // A wish for a title already held, or already wished for, adds nothing.
                 if (held != null || !state.wished().add(key)) {
@@ -231,7 +245,7 @@ public class ImportService {
                 item.categories.add(list);
             }
             items.persist(item);
-            recordReading(item, book.readAt());
+            recordReading(item, book.readAt(), book.readMonthOnly());
             imported++;
         }
         return new int[] {imported, skipped, wished};
@@ -328,9 +342,10 @@ public class ImportService {
         }
         if (book.readAt() != null && (item.status == LibraryStatus.READ || item.status == LibraryStatus.ABANDONED)) {
             if (item.progress == null) {
-                recordReading(item, book.readAt());
+                recordReading(item, book.readAt(), book.readMonthOnly());
             } else if (item.progress.finishedAt == null) {
                 item.progress.finishedAt = book.readAt();
+                item.progress.finishedMonthOnly = book.readMonthOnly();
             }
         }
     }
@@ -342,19 +357,32 @@ public class ImportService {
      * date is invented — {@code ReadingProgressService} stamps today, which for a book read in
      * 2019 and imported now would be wrong — so an undated read is complete and undated.
      */
-    private void recordReading(LibraryItem item, LocalDate readAt) {
+    private void recordReading(LibraryItem item, LocalDate readAt, boolean monthOnly) {
         if (item.status != LibraryStatus.READ && item.status != LibraryStatus.ABANDONED) {
             return;
         }
         ReadingProgress progress = new ReadingProgress();
         progress.libraryItem = item;
         progress.finishedAt = readAt;
+        progress.finishedMonthOnly = readAt != null && monthOnly;
         if (item.status == LibraryStatus.READ) {
             progress.percent = COMPLETE;
             progress.currentPage = item.effectivePageCount();
         }
         progresses.persist(progress);
         item.progress = progress;
+    }
+
+    /** The title the library holds under this row's title and one of its authors, or null. */
+    private static UUID heldByTitle(Batches state, ImportedBook book) {
+        String prefix = CollectedLibrary.fold(book.title()) + '|';
+        for (Map.Entry<String, UUID> held : state.existing().entrySet()) {
+            if (held.getKey().startsWith(prefix)
+                    && CollectedLibrary.namesAuthor(held.getKey().substring(prefix.length()), book.author())) {
+                return held.getValue();
+            }
+        }
+        return null;
     }
 
     /** A finished reading, in the percentage the progress is stored as. */

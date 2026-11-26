@@ -318,6 +318,42 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
       say('collection récupérée : importe le fichier dans Librarius (Réglages → Importer).');
       return;
     }
+    /* Booknode's reading history (#651): the one page that says when a book was read — by the */
+    /* month. The site's script draws a year's months when its heading is clicked, so the */
+    /* collector opens every closed year on the page the reader stands on, waits until the */
+    /* months stop arriving, and keeps them. */
+    if (source === 'booknode' && /\/historique\/?$/.test(e.location.pathname)) {
+      const doc = e.document;
+      const months = () => doc.querySelectorAll('.one_month').length;
+      const settle = async () => {
+        let last = -1;
+        let still = 0;
+        for (let round = 0; round < 100 && still < 3; round++) {
+          await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 400));
+          const now = months();
+          still = now === last ? still + 1 : 0;
+          last = now;
+        }
+      };
+      const closed = Array.from(doc.querySelectorAll('.button_and_year button')).filter((button) =>
+        button.querySelector('.fa-chevron-circle-right'),
+      );
+      for (let i = 0; i < closed.length; i++) {
+        say('ouverture de l’année ' + (i + 1) + ' sur ' + closed.length + '…');
+        (closed[i] as HTMLElement).click();
+        await settle();
+      }
+      const history = Array.from(doc.querySelectorAll('.one_month'))
+        .map((month) => month.outerHTML)
+        .join(' ');
+      if (!history.trim()) {
+        e.alert('Librarius : aucune lecture trouvée dans cet historique Booknode.');
+        return;
+      }
+      e.save({ format: 'librarius-collect', version: 2, source, collectedAt: new Date().toISOString(), pages: [history] });
+      say(months() + ' mois de lectures collectés : importe le fichier dans Librarius (Réglages → Importer).');
+      return;
+    }
     let firstUrl = e.location.href;
     if (source === 'booknode') {
       const handle = /\/profil\/([^/?#]+)/.exec(e.location.pathname);
@@ -398,7 +434,13 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
       pages: kept,
       ...(filters ? { filters } : {}),
     });
-    say(urls.length + ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).');
+    say(
+      urls.length +
+        ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).' +
+        (source === 'booknode'
+          ? ' Pour les dates de lecture, ouvre ensuite ton historique de lecture Booknode et clique à nouveau sur ce favori.'
+          : ''),
+    );
   } catch (error) {
     e.alert('Librarius : la collecte s’est interrompue (' + String(error) + '). Recharge la page et réessaie.');
   } finally {

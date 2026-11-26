@@ -11,6 +11,16 @@ also says how many of the imported titles went to the wishlist (`wished`), and c
 - **Booknode by pseudo** (`POST /api/import/booknode`): the server reads
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
+  The library table carries no reading date (#645). **The reading history**
+  (`/profil/<pseudo>/historique`, #651) does, by the month: run on that page, the collector
+  clicks every closed year (the site's script draws a year's months on click), waits until the
+  months stop arriving and saves the `.one_month` blocks. `BooknodeHistoryParser` reads them —
+  each title dated the first of its latest month, `readMonthOnly`, its tier read like the
+  library's. A history collected with the library dates the library's read rows
+  (`CollectedLibrary.datedByHistory`, matched on the title and on the first author the history
+  names, the library naming them all); on its own, its rows are `datesOnly`: they date a title
+  already held and never add one. The finish is stored with
+  `reading_progress.finished_month_only` (V56).
   A page refused **part-way** keeps what the earlier pages read: the job ends `DONE` with those
   titles and a `warning` naming the page it stopped at and pointing to the collector
   (`IncompleteImportException`, #644) — it no longer passes for the whole library.

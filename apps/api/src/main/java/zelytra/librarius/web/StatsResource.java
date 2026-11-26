@@ -104,7 +104,8 @@ public class StatsResource {
                     Integer days = started != null && !finished.isBefore(started)
                             ? (int) java.time.temporal.ChronoUnit.DAYS.between(started, finished) + 1 : null;
                     return new zelytra.librarius.web.ApiDtos.ReadingSpanDto((java.util.UUID) row[0],
-                            (String) row[1], (String) row[2], String.valueOf(row[3]), started, finished, days);
+                            (String) row[1], (String) row[2], String.valueOf(row[3]), started, finished, days,
+                            Boolean.TRUE.equals(row[6]));
                 })
                 .toList();
     }

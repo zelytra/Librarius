@@ -113,4 +113,44 @@ class CollectedImportApiTest {
                 .when().post("/api/import/collected")
                 .then().statusCode(400);
     }
+
+    /**
+     * #651: the history collected after the library dates its readings by the month — shown as a
+     * month, not a day — and a date the reader then enters is a day again.
+     */
+    @Test
+    void theHistoryDatesAReadingByItsMonthUntilTheReaderGivesADay() throws Exception {
+        String row = "<div class=\"book-item\"><div class=\"book-name\"><a href=\"https://booknode.com/ancien_roman_0003\">"
+                + "Ancien Roman</a></div><div class=\"author-name\"><a>Anne A. Paul P.</a></div>"
+                + "<div class=\"list-name\"><div><label class=\"listebadge pasapprecie\">pas apprécié</label></div></div>"
+                + "<div class=\"group-name\"><span class=\"group-label\"></span></div></div>";
+        org.junit.jupiter.api.Assertions.assertEquals("DONE", importAndWait("bob", "booknode", List.of(row)).get("status"));
+        Map<String, Object> dated = importAndWait("bob", "booknode", List.of(fixture("booknode-historique.html")));
+        org.junit.jupiter.api.Assertions.assertEquals("DONE", dated.get("status"));
+        // Nothing added: the history's other titles are not in this library.
+        org.junit.jupiter.api.Assertions.assertEquals(0, dated.get("imported"));
+
+        String token = keycloak.getAccessToken("bob");
+        String id = given().auth().oauth2(token).queryParam("q", "Ancien Roman")
+                .when().get("/api/library").then().statusCode(200).extract().path("items[0].id");
+        given().auth().oauth2(token).when().get("/api/library/" + id).then().statusCode(200)
+                .body("progress.finishedAt", org.hamcrest.Matchers.is("2019-08-01"))
+                .body("progress.finishedMonthOnly", org.hamcrest.Matchers.is(true));
+        given().auth().oauth2(token).when().get("/api/stats/readings?from=2019-08-01&to=2019-08-31")
+                .then().statusCode(200)
+                .body("find { it.itemId == '" + id + "' }.finishedMonthOnly", org.hamcrest.Matchers.is(true));
+
+        // The dates handed back unchanged keep the month; a day the reader picks replaces it.
+        given().auth().oauth2(token).contentType("application/json")
+                .body(Map.of("status", "READ", "percent", 100, "finishedAt", "2019-08-01"))
+                .when().put("/api/library/" + id + "/progress").then().statusCode(204);
+        given().auth().oauth2(token).when().get("/api/library/" + id).then()
+                .body("progress.finishedMonthOnly", org.hamcrest.Matchers.is(true));
+        given().auth().oauth2(token).contentType("application/json")
+                .body(Map.of("status", "READ", "percent", 100, "finishedAt", "2019-08-17"))
+                .when().put("/api/library/" + id + "/progress").then().statusCode(204);
+        given().auth().oauth2(token).when().get("/api/library/" + id).then()
+                .body("progress.finishedAt", org.hamcrest.Matchers.is("2019-08-17"))
+                .body("progress.finishedMonthOnly", org.hamcrest.Matchers.is(false));
+    }
 }

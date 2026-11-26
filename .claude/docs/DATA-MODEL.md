@@ -640,6 +640,13 @@ titles, it never deletes them**: a rank is a label stuck on a book, so dropping 
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
 
+`V56__reading_month_only.sql` ([#651](https://github.com/zelytra/Librarius/issues/651)) adds
+`reading_progress.finished_month_only BOOLEAN NOT NULL DEFAULT false`: Booknode's reading
+history names the month of a reading, never the day, so such a finish is stored on the first
+of the month and flagged. `ReadingProgressService` keeps the flag only while the finish stays
+that very date: a day the reader gives, today's, or none clears it. The export carries it
+(`ExportProgressDto.finishedMonthOnly`, absent when false).
+
 `V55__imported_category_color.sql` ([#648](https://github.com/zelytra/Librarius/issues/648))
 gives every custom `rank_category` without a colour the default one (`#9a8fa6`,
 `CategoryService.DEFAULT_COLOR`): an import created its categories colourless, and a selected

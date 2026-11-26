@@ -200,7 +200,7 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
      */
     public List<Object[]> finishedBetween(String userId, LocalDate from, LocalDate to) {
         return getEntityManager().createQuery("""
-                        select li.id, w.title, e.coverUrl, w.kind, rp.startedAt, rp.finishedAt
+                        select li.id, w.title, e.coverUrl, w.kind, rp.startedAt, rp.finishedAt, rp.finishedMonthOnly
                         from ReadingProgress rp join rp.libraryItem li join li.edition e join e.work w
                         where li.userId = :userId
                           and rp.finishedAt between :from and :to

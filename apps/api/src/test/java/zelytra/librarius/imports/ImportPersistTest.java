@@ -337,4 +337,59 @@ class ImportPersistTest {
             assertEquals(List.of("romance"), item.categories.stream().map(c -> c.code).toList());
         });
     }
+
+    private static ImportedBook historyRow(String title, String author, LocalDate month) {
+        return new ImportedBook(title, author, null, zelytra.librarius.domain.LibraryStatus.READ, null, null, null,
+                month, null, null, null, null, false, null, null, true, true);
+    }
+
+    /**
+     * #651: Booknode's history dates a library imported before — the month only — and never adds
+     * a title, nor touches a date the reader set.
+     */
+    @Test
+    void aHistoryDatesTheLibraryByTheMonthAndAddsNothing() {
+        String userId = member();
+        String run = UUID.randomUUID().toString().substring(0, 8);
+        LocalDate month = LocalDate.of(2026, 11, 1);
+        LocalDate readerSet = LocalDate.of(2025, 3, 14);
+        imports.persist(userId, "booknode", List.of(
+                new ImportedBook("Undated " + run, "Hiro M. Atsuo U.", null, zelytra.librarius.domain.LibraryStatus.READ),
+                new ImportedBook("Dated " + run, "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ,
+                        null, null, null, readerSet, null, null)));
+
+        ImportService.ImportResult result = imports.persist(userId, "booknode", List.of(
+                historyRow("Undated " + run, "Hiro M.", month),
+                historyRow("Dated " + run, "Some Author", month),
+                historyRow("Removed since " + run, "Some Author", month)));
+
+        assertEquals(0, result.imported());
+        QuarkusTransaction.requiringNew().run(() -> {
+            java.util.Map<String, LibraryItem> owned = new java.util.HashMap<>();
+            items.listByUser(userId).forEach(i -> owned.put(i.edition.work.title, i));
+            assertEquals(2, owned.size());
+            LibraryItem undated = owned.get("Undated " + run);
+            assertEquals(month, undated.progress.finishedAt);
+            org.junit.jupiter.api.Assertions.assertTrue(undated.progress.finishedMonthOnly);
+            assertEquals(readerSet, owned.get("Dated " + run).progress.finishedAt);
+            org.junit.jupiter.api.Assertions.assertFalse(owned.get("Dated " + run).progress.finishedMonthOnly);
+        });
+    }
+
+    /** A library row the history dated imports as read in that month (#651). */
+    @Test
+    void aTitleReadInAMonthIsFinishedThatMonth() {
+        String userId = member();
+        String title = "Month " + UUID.randomUUID();
+
+        imports.persist(userId, "booknode", List.of(new ImportedBook(title, "Some Author", null,
+                zelytra.librarius.domain.LibraryStatus.READ, null, null, null, LocalDate.of(2024, 6, 1), null, null,
+                null, null, false, null, null, true, false)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem item = items.listByUser(userId).get(0);
+            assertEquals(LocalDate.of(2024, 6, 1), item.progress.finishedAt);
+            org.junit.jupiter.api.Assertions.assertTrue(item.progress.finishedMonthOnly);
+        });
+    }
 }

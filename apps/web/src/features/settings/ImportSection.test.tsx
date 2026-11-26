@@ -135,6 +135,12 @@ describe('ImportSection', () => {
     expect(calls).toEqual([]);
   });
 
+  test('says how to bring the Booknode reading months in', () => {
+    renderWithProviders(<ImportSection />);
+
+    expect(screen.getByText(/historique de lecture/)).toBeInTheDocument();
+  });
+
   test('offers the collector as a bookmark to drag', () => {
     renderWithProviders(<ImportSection />);
 

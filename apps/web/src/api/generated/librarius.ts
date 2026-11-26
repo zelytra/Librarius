@@ -533,6 +533,7 @@ export interface ExportProgressDto {
   percent?: number;
   startedAt?: LocalDate;
   finishedAt?: LocalDate;
+  finishedMonthOnly?: boolean;
 }
 
 export interface ExportCollectionItemDto {
@@ -828,6 +829,7 @@ export interface ProgressView {
   percent?: number;
   startedAt?: LocalDate;
   finishedAt?: LocalDate;
+  finishedMonthOnly?: boolean;
 }
 
 export interface LibraryItemDto {
@@ -1096,6 +1098,7 @@ export interface ReadingSpanDto {
   startedAt?: LocalDate;
   finishedAt?: LocalDate;
   days?: number;
+  finishedMonthOnly?: boolean;
 }
 
 export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];

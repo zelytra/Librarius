@@ -238,6 +238,8 @@ export function ImportSection() {
                 </li>
                 <li>{t('settings.import.collector.step2')}</li>
                 <li>{t('settings.import.collector.step3')}</li>
+                {/* Booknode says when a book was read only on its history page (#651). */}
+                <li>{t('settings.import.collector.history')}</li>
               </ol>
               <button type="button" onClick={() => void copyBookmarklet()} className={styles.copyButton}>
                 <Icon name="bookmark_added" size={15} color="var(--accent-deep)" />

@@ -39,6 +39,10 @@ public class ReadingProgress {
     @Column(name = "finished_at")
     public LocalDate finishedAt;
 
+    /** {@link #finishedAt} is the first of the month the reading ended in, the day unknown (#651, V56). */
+    @Column(name = "finished_month_only", nullable = false)
+    public boolean finishedMonthOnly;
+
     /**
      * Percentage matching a page number, {@code null} when the edition carries no page
      * count — an unknown total makes the ratio meaningless rather than zero.
