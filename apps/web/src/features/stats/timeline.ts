@@ -83,13 +83,11 @@ export function monthLabels(style: 'narrow' | 'long'): string[] {
   return Array.from({ length: 12 }, (_, index) => format.format(new Date(2026, index, 1)));
 }
 
-/** How many years the selector offers at most: the most recent ones. */
-const MAX_YEARS = 6;
-
 /**
  * The years the selector offers, most recent first: the current year and the last one always —
  * the goal is about the first, January readers look back at the second — then every year that
- * holds a finished reading, and the year on screen in any case, capped to the most recent few.
+ * holds a finished reading, and the year on screen in any case. All of them (#655): a Booknode
+ * history reaches back to 2011, and capping to six hid half of it; the selector scrolls instead.
  */
 export function offeredYears(
   thisYear: number,
@@ -103,5 +101,5 @@ export function offeredYears(
       years.add(value);
     }
   }
-  return [...years].sort((a, b) => b - a).slice(0, MAX_YEARS);
+  return [...years].sort((a, b) => b - a);
 }

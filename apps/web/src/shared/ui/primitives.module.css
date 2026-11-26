@@ -193,6 +193,11 @@
   padding: 4px;
 }
 
+/* More options than fit (#655): the far edge fades, saying the pill scrolls. */
+.segmented[data-scrollable='true'] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
 .segment {
   flex: 1 1 auto;
   min-height: 44px;

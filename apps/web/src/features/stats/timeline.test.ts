@@ -82,10 +82,19 @@ describe('offeredYears', () => {
     expect(offeredYears(2026, 2026)).toEqual([2026, 2025]);
   });
 
-  test('ignores empty buckets and keeps to the most recent six', () => {
-    const points = [2014, 2015, 2016, 2017, 2018, 2019].map((y) => ({ period: String(y), books: 1 }));
+  test('ignores empty buckets', () => {
+    const points = [2014, 2019].map((y) => ({ period: String(y), books: 1 }));
     points.push({ period: '2020', books: 0 });
-    expect(offeredYears(2026, 2026, points)).toEqual([2026, 2025, 2019, 2018, 2017, 2016]);
+    expect(offeredYears(2026, 2026, points)).toEqual([2026, 2025, 2019, 2014]);
+  });
+
+  /** #655: a Booknode history reaching back to 2011 — every year of it, not the last six. */
+  test('offers every year of a long history', () => {
+    const points = Array.from({ length: 16 }, (_, i) => ({ period: String(2011 + i), books: 1 }));
+    const years = offeredYears(2026, 2026, points);
+    expect(years).toHaveLength(16);
+    expect(years[0]).toBe(2026);
+    expect(years[years.length - 1]).toBe(2011);
   });
 });
 
