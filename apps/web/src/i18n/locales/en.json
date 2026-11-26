@@ -734,7 +734,8 @@
       "span_one": "From {{from}} to {{to}} · {{count}} day",
       "span_other": "From {{from}} to {{to}} · {{count}} days",
       "finishedOn": "Finished on {{date}}",
-      "empty": "No reading finished this month."
+      "empty": "No reading finished this month.",
+      "inMonth": "In {{month}}"
     }
   },
   "detail": {
@@ -788,7 +789,8 @@
       "summaryEmpty": "Not started yet.",
       "startedAt": "Started on",
       "finishedAt": "Finished on",
-      "save": "Save my progress"
+      "save": "Save my progress",
+      "monthOnly": "Read in {{month}} — the day is unknown."
     },
     "review": {
       "title": "My rating",
@@ -920,7 +922,8 @@
         "copied": "Code copied: create a bookmark and paste it as its address.",
         "notCollected": "This file was not produced by the Librarius collector.",
         "oneForAll": "One bookmark for Booknode, Babelio and Mangacollec. If you have an older one, replace it with this one.",
-        "outdated": "This file comes from an older bookmark: it is imported all the same, but replace your bookmark with the one above for next time."
+        "outdated": "This file comes from an older bookmark: it is imported all the same, but replace your bookmark with the one above for next time.",
+        "history": "On Booknode, the bookmark reads your reading history too: each book you read gets the month you read it in (Booknode gives no day). If Booknode blocks it, open your history (booknode.com/profil/your-name/historique), click the bookmark again and import that second file."
       },
       "inApp": {
         "title": "From the site, inside the app",
@@ -1841,6 +1844,7 @@
       "series": "The series"
     },
     "fields": {
+      "kind": "Kind",
       "title": "Title",
       "authors": "Authors",
       "synopsis": "Synopsis",
@@ -1884,7 +1888,10 @@
       "trusted": "Edit applied thanks to your trusted standing."
     },
     "linkPlaceholder": "https://www.fnac.com/…",
-    "trustedNote": "You are a trusted member: your change will apply at once for every reader."
+    "trustedNote": "You are a trusted member: your change will apply at once for every reader.",
+    "hints": {
+      "seriesKind": "Changes the kind of every volume of the series."
+    }
   },
   "saleLinks": {
     "title": "Where to buy it",

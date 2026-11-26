@@ -234,6 +234,16 @@ function ProgressSection({
           />
         </label>
       </div>
+      {/* An import that knew the month alone (#651): said as a month, until the reader gives a day. */}
+      {item.progress?.finishedMonthOnly && item.progress.finishedAt && draft.finishedAt === item.progress.finishedAt && (
+        <p className={styles.progressSummary}>
+          {t('detail.progress.monthOnly', {
+            month: new Date(`${item.progress.finishedAt}T00:00:00Z`).toLocaleDateString(activeLanguage(), {
+              timeZone: 'UTC', month: 'long', year: 'numeric',
+            }),
+          })}
+        </p>
+      )}
 
       {/* This section has a single control, so the indicator belongs on it. The status
           buttons at the foot of the screen write through the same endpoint, and light it

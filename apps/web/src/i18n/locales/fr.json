@@ -734,7 +734,8 @@
       "span_one": "Du {{from}} au {{to}} · {{count}} jour",
       "span_other": "Du {{from}} au {{to}} · {{count}} jours",
       "finishedOn": "Terminé le {{date}}",
-      "empty": "Aucune lecture terminée ce mois-ci."
+      "empty": "Aucune lecture terminée ce mois-ci.",
+      "inMonth": "En {{month}}"
     }
   },
   "detail": {
@@ -788,7 +789,8 @@
       "summaryEmpty": "Pas encore commencé.",
       "startedAt": "Commencée le",
       "finishedAt": "Terminée le",
-      "save": "Enregistrer ma progression"
+      "save": "Enregistrer ma progression",
+      "monthOnly": "Lu en {{month}} — le jour n’est pas connu."
     },
     "review": {
       "title": "Ma note",
@@ -920,7 +922,8 @@
         "copied": "Code copié : crée un favori et colle-le comme adresse.",
         "notCollected": "Ce fichier n'a pas été produit par la collecte Librarius.",
         "oneForAll": "Un seul favori pour Booknode, Babelio et Mangacollec. Si tu en as un plus ancien, remplace-le par celui-ci.",
-        "outdated": "Ce fichier vient d'un ancien favori : l'import se fait quand même, mais remplace ton favori par celui ci-dessus pour les prochaines fois."
+        "outdated": "Ce fichier vient d'un ancien favori : l'import se fait quand même, mais remplace ton favori par celui ci-dessus pour les prochaines fois.",
+        "history": "Sur Booknode, le favori lit aussi ton historique de lecture : chaque livre lu reçoit le mois où tu l’as lu (Booknode ne donne pas le jour). Si Booknode bloque cette lecture, ouvre ton historique (booknode.com/profil/ton-pseudo/historique), clique à nouveau sur le favori et importe ce second fichier."
       },
       "inApp": {
         "title": "Depuis le site, dans l’app",
@@ -1841,6 +1844,7 @@
       "series": "La série"
     },
     "fields": {
+      "kind": "Type",
       "title": "Titre",
       "authors": "Auteurs",
       "synopsis": "Résumé",
@@ -1884,7 +1888,10 @@
       "trusted": "Modification appliquée grâce à ton statut de confiance."
     },
     "linkPlaceholder": "https://www.fnac.com/…",
-    "trustedNote": "Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs."
+    "trustedNote": "Tu es membre de confiance : ta modification s’appliquera aussitôt pour tous les lecteurs.",
+    "hints": {
+      "seriesKind": "Change le type de tous les tomes de la série."
+    }
   },
   "saleLinks": {
     "title": "Où l'acheter",

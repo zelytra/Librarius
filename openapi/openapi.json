@@ -6207,6 +6207,9 @@
           },
           "finishedAt" : {
             "$ref" : "#/components/schemas/LocalDate"
+          },
+          "finishedMonthOnly" : {
+            "type" : "boolean"
           }
         }
       },
@@ -7605,6 +7608,9 @@
           },
           "finishedAt" : {
             "$ref" : "#/components/schemas/LocalDate"
+          },
+          "finishedMonthOnly" : {
+            "type" : "boolean"
           }
         }
       },
@@ -7670,6 +7676,9 @@
           "days" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "finishedMonthOnly" : {
+            "type" : "boolean"
           }
         }
       },

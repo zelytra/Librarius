@@ -16,13 +16,16 @@ import { Modal } from '../../shared/ui/Modal';
 import { Button } from '../../shared/ui/primitives';
 import { ErrorState, Loading } from '../../shared/ui/states';
 import { toast } from '../../shared/ui/toast';
+import { KINDS } from '../../shared/kinds';
 import styles from './CatalogEdit.module.css';
 
-type Input = 'text' | 'textarea' | 'number' | 'date' | 'url' | 'series-status';
+type Input = 'text' | 'textarea' | 'number' | 'date' | 'url' | 'series-status' | 'kind';
 
 interface FieldSpec {
   name: string;
   input: Input;
+  /** A line under the field saying what changing it does. */
+  hint?: string;
 }
 
 /** The fields of a book, grouped as the reader thinks of them: the work, then this edition. */
@@ -31,6 +34,8 @@ const EDITION_GROUPS: { title: string; fields: FieldSpec[] }[] = [
     title: 'work',
     fields: [
       { name: 'title', input: 'text' },
+      // The kind every reader sees by default (#650); a reader can still file their copy elsewhere.
+      { name: 'kind', input: 'kind' },
       { name: 'authors', input: 'text' },
       { name: 'synopsis', input: 'textarea' },
       { name: 'genres', input: 'text' },
@@ -59,6 +64,7 @@ const SERIES_GROUPS: { title: string; fields: FieldSpec[] }[] = [
     title: 'series',
     fields: [
       { name: 'title', input: 'text' },
+      { name: 'kind', input: 'kind', hint: 'catalogEdit.hints.seriesKind' },
       { name: 'originalTitle', input: 'text' },
       { name: 'totalVolumes', input: 'number' },
       { name: 'status', input: 'series-status' },
@@ -301,6 +307,19 @@ function FieldInput({
         ))}
       </select>
     );
+  } else if (spec.input === 'kind') {
+    // The kinds the library offers, and the record's own when it is another (an audiobook…).
+    const offered = KINDS.some((k) => k.id === value) || !value ? KINDS : [...KINDS, { id: value, labelKey: '' }];
+    control = (
+      <select id={id} className={styles.input} value={value} onChange={(e) => onChange(e.target.value)}
+        aria-describedby={spec.hint ? `${id}-hint` : undefined}>
+        {offered.map((k) => (
+          <option key={k.id} value={k.id}>
+            {k.labelKey ? t(k.labelKey) : k.id}
+          </option>
+        ))}
+      </select>
+    );
   } else {
     control = (
       <input
@@ -320,6 +339,11 @@ function FieldInput({
         {label}
       </label>
       {control}
+      {spec.hint && (
+        <p id={`${id}-hint`} className={styles.hint}>
+          {t(spec.hint)}
+        </p>
+      )}
     </div>
   );
 }

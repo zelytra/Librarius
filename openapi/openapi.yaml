@@ -4276,6 +4276,8 @@ components:
           $ref: "#/components/schemas/LocalDate"
         finishedAt:
           $ref: "#/components/schemas/LocalDate"
+        finishedMonthOnly:
+          type: boolean
     ExportSeriesFollowDto:
       type: object
       properties:
@@ -5270,6 +5272,8 @@ components:
           $ref: "#/components/schemas/LocalDate"
         finishedAt:
           $ref: "#/components/schemas/LocalDate"
+        finishedMonthOnly:
+          type: boolean
     PushDeviceDto:
       type: object
       required:
@@ -5319,6 +5323,8 @@ components:
         days:
           type: integer
           format: int32
+        finishedMonthOnly:
+          type: boolean
     ReportCreateDto:
       type: object
       required:

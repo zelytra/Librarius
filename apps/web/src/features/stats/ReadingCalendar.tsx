@@ -53,10 +53,12 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
   const first = monthStart(month);
   const last = new Date(monthStart(month, 1).getTime() - 86_400_000);
   const { data: readings = [] } = useGetApiStatsReadings({ from: iso(first), to: iso(last) });
-  const counts = coverage(readings, first, last);
+  // A reading known by its month alone (#651) is listed in the month, and placed on no day.
+  const onDays = readings.filter((r) => !r.finishedMonthOnly);
+  const counts = coverage(onDays, first, last);
   const [picked, setPicked] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const listed = picked ? readings.filter((r) => covers(r, picked)) : readings;
+  const listed = picked ? onDays.filter((r) => covers(r, picked)) : readings;
   const shown = picked || showAll ? listed : listed.slice(0, LIST_SHOWN);
 
   const fmt = (d: Date, options: Intl.DateTimeFormatOptions) =>
@@ -74,6 +76,7 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
 
   const span = (r: ReadingSpanDto) => {
     const end = parse(r.finishedAt!);
+    if (r.finishedMonthOnly) return t('stats.calendar.inMonth', { month: fmt(end, { month: 'long', year: 'numeric' }) });
     if (!r.startedAt) return t('stats.calendar.finishedOn', { date: fmt(end, { day: 'numeric', month: 'long' }) });
     const start = parse(r.startedAt);
     const sameMonth = start.getUTCMonth() === end.getUTCMonth() && start.getUTCFullYear() === end.getUTCFullYear();
@@ -105,7 +108,7 @@ export function ReadingCalendar({ initialMonth }: { initialMonth?: string }) {
           const n = counts.get(key) ?? 0;
           const className = `${styles.day} ${n > 0 ? (n > 1 ? styles.dayMany : styles.dayRead) : ''}`;
           if (n === 0) return <span key={key} className={className}>{d.getUTCDate()}</span>;
-          const finished = readings.filter((r) => r.finishedAt === key);
+          const finished = onDays.filter((r) => r.finishedAt === key);
           const cover = finished.find((r) => r.coverUrl)?.coverUrl;
           return (
             <button

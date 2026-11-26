@@ -7,6 +7,7 @@ import jakarta.ws.rs.BadRequestException;
 import zelytra.librarius.author.AuthorService;
 import zelytra.librarius.domain.CatalogEditTarget;
 import zelytra.librarius.domain.Edition;
+import zelytra.librarius.domain.Kind;
 import zelytra.librarius.domain.Series;
 import zelytra.librarius.domain.SeriesStatus;
 import zelytra.librarius.genre.GenreService;
@@ -43,6 +44,9 @@ public class CatalogFields {
     @Inject
     EntityManager em;
 
+    @Inject
+    zelytra.librarius.domain.repository.SeriesRepository seriesRepository;
+
     /** One editable field of a record of type {@code R}. */
     private record Field<R>(Function<R, String> read, UnaryOperator<String> parse, BiConsumer<R, String> write) {
     }
@@ -55,6 +59,8 @@ public class CatalogFields {
         edition.put("authors", new Field<>(e -> e.work.authorsText, text(512), this::writeAuthors));
         edition.put("synopsis", new Field<>(e -> e.work.synopsis, text(10_000), (e, v) -> e.work.synopsis = v));
         edition.put("genres", new Field<>(e -> e.work.genresText, text(512), this::writeGenres));
+        // The shared kind (#650); a reader's own filing elsewhere (#454) is another work, untouched.
+        edition.put("kind", new Field<>(e -> e.work.kind.name(), CatalogFields::kind, this::writeWorkKind));
         edition.put("originalYear", new Field<>(e -> str(e.work.originalYear), integer(-3000, 2100),
                 (e, v) -> e.work.originalYear = toInt(v)));
         edition.put("volumeNumber", new Field<>(e -> str(e.work.volumeNumber), integer(0, 100_000),
@@ -71,6 +77,7 @@ public class CatalogFields {
         edition.put("listPrice", new Field<>(e -> price(e.listPrice), CatalogFields::price, CatalogFields::writePrice));
 
         series.put("title", new Field<>(s -> s.title, required(text(512)), this::writeSeriesTitle));
+        series.put("kind", new Field<>(s -> s.kind.name(), CatalogFields::kind, this::writeSeriesKind));
         series.put("originalTitle", new Field<>(s -> s.originalTitle, text(512), (s, v) -> s.originalTitle = v));
         series.put("totalVolumes", new Field<>(s -> str(s.totalVolumes), integer(1, 10_000),
                 (s, v) -> s.totalVolumes = toInt(v)));
@@ -143,6 +150,36 @@ public class CatalogFields {
         s.title = value;
         em.createQuery("update Work w set w.seriesTitle = :title where w.series.id = :id")
                 .setParameter("title", value)
+                .setParameter("id", s.id)
+                .executeUpdate();
+    }
+
+    /**
+     * A book changing kind leaves a series of the old kind for the one of its new kind with the
+     * same title, found or founded: a series holds works of one kind ({@code uq_series_kind_title}).
+     */
+    private void writeWorkKind(Edition e, String value) {
+        Kind kind = Kind.valueOf(value);
+        e.work.kind = kind;
+        Series current = e.work.series;
+        if (current != null && current.kind != kind) {
+            e.work.series = seriesRepository.findByKindAndTitle(kind, current.title).orElseGet(() -> {
+                Series moved = new Series();
+                moved.kind = kind;
+                moved.title = current.title;
+                seriesRepository.persist(moved);
+                return moved;
+            });
+            e.work.seriesTitle = e.work.series.title;
+        }
+    }
+
+    /** A series changes kind as a whole: every one of its volumes follows, so the run stays one. */
+    private void writeSeriesKind(Series s, String value) {
+        Kind kind = Kind.valueOf(value);
+        s.kind = kind;
+        em.createQuery("update Work w set w.kind = :kind where w.series.id = :id")
+                .setParameter("kind", kind)
                 .setParameter("id", s.id)
                 .executeUpdate();
     }
@@ -268,6 +305,18 @@ public class CatalogFields {
             throw new BadRequestException("Not an image address: " + value);
         }
         return value;
+    }
+
+    private static String kind(String raw) {
+        String value = blankToNull(raw);
+        if (value == null) {
+            throw new BadRequestException("A kind cannot be empty");
+        }
+        try {
+            return Kind.valueOf(value.toUpperCase(Locale.ROOT)).name();
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unknown kind: " + value);
+        }
     }
 
     private static String seriesStatus(String raw) {

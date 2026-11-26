@@ -182,7 +182,8 @@ public class ExportService {
 
     private static ExportProgressDto progress(ReadingProgress p) {
         return p == null ? null
-                : new ExportProgressDto(p.currentPage, p.percent, p.startedAt, p.finishedAt);
+                : new ExportProgressDto(p.currentPage, p.percent, p.startedAt, p.finishedAt,
+                        p.finishedMonthOnly ? Boolean.TRUE : null);
     }
 
     /**

@@ -55,7 +55,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT/DELETE | `/api/views/{id}` | Updates / deletes a view of the caller's; 404 for anyone else's |
 | PUT | `/api/views/{id}/order` | Replaces the view's manual order (`LibraryViewOrderDto.keys`: `item:<id>` / `series:<id>`, at most 5 000); duplicates, malformed keys and titles not the caller's are dropped |
 | PUT | `/api/series/{id}/rank` | Files every volume of the series the caller holds under one category (`RankAssignDto`, null clears the rank), 204 — a built-in sets their rank, one of the reader's own is added to each volume's categories (#646); 404 when they hold none (#451). `SeriesSummaryDto.rankCode` is the category most of their volumes carry |
-| GET | `/api/stats/readings?from=&to=` | The readings finished in a window, oldest first (`ReadingSpanDto`: item, title, cover, kind, `startedAt`, `finishedAt`, `days` both ends counted, null without a start); abandoned titles left out; current month by default, 400 for a window ending before it starts (#479) |
+| GET | `/api/stats/readings?from=&to=` | The readings finished in a window, oldest first (`ReadingSpanDto`: item, title, cover, kind, `startedAt`, `finishedAt`, `days` both ends counted, null without a start, `finishedMonthOnly` — #651, only the month of the finish is known, `finishedAt` being its first day); abandoned titles left out; current month by default, 400 for a window ending before it starts (#479) |
 | GET | `/api/works/{id}/friends` | People the caller follows who read, own or wish for the title (`FriendOnWorkDto`), each through `VisibilityGate`; same work, or a work with the same title and authors; rating only when shared (#452) |
 | GET | `/api/works/{id}/external` | Other communities' ratings (`ExternalRatingDto`): Open Library by work key or ISBN, AniList for a manga by id or exact title; credited, linked, cached 12 h (#453) |
 | GET | `/api/authors/{id}/external` | The opening of the author's French Wikipedia article (`ExternalAuthorDto`, CC BY-SA 4.0), zero or one; a disambiguation page gives none (#453) |
@@ -141,7 +141,8 @@ LibraryItemDto(UUID id, String status, Double rating, String review, LocalDate a
                String rankCode, ProgressView progress, BookView book)
 LibraryPageDto(List<LibraryItemDto> items, int page, int size, long total)
 
-ProgressView(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt)
+ProgressView(Integer currentPage, Integer percent, LocalDate startedAt, LocalDate finishedAt,
+             boolean finishedMonthOnly)   // #651: finishedAt is the 1st of the month, the day unknown
 ProgressDto(Integer currentPage, Integer percent, LibraryStatus status,
             LocalDate startedAt, LocalDate finishedAt)
 ReviewDto(@HalfStar Double rating, String review)   // 0.5-5 by halves (#484)
@@ -1021,10 +1022,14 @@ tested but stays dormant in production for now — it only grants, exactly as #1
 ## Catalog edits
 
 A member proposes a change to a shared record (#618) — an `EDITION`, whose work's fields
-(`title`, `authors`, `synopsis`, `genres`, `originalYear`, `volumeNumber`) travel with it next to
+(`title`, `kind`, `authors`, `synopsis`, `genres`, `originalYear`, `volumeNumber`) travel with it next to
 its own (`isbn13`, `isbn10`, `publisher`, `language`, `pageCount`, `format`, `releaseDate`,
-`coverUrl`, `listPrice`), or a `SERIES` (`title`, `originalTitle`, `totalVolumes`, `status`,
-`synopsis`, `coverUrl`). `contribution.CatalogFields` reads, parses and writes each field in one
+`coverUrl`, `listPrice`), or a `SERIES` (`title`, `kind`, `originalTitle`, `totalVolumes`, `status`,
+`synopsis`, `coverUrl`). `kind` (#650) is the shared default: on a book it moves the work, and
+the work leaves a series of the old kind for the one of its new kind with the same title; on a
+series it moves the series and every one of its works, a 409 when a series of that kind already
+holds the title. A reader who filed their copy under another kind (#454, through
+`PUT /api/library/{id}/kind`) holds another work, which the change does not touch. `contribution.CatalogFields` reads, parses and writes each field in one
 canonical string form (trimmed, blank = none, plain ISO numbers and dates, ISBN without hyphens,
 cover `http(s)` only), so `CatalogEditService` stores the **diff** — the fields whose canonical
 value differs, each `{before, after}` — and a proposal changing nothing is a 400. Writing

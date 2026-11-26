@@ -390,6 +390,15 @@ serveur. La **collecte** contourne les deux en passant par ton propre navigateur
    télécharge un fichier `librarius-….json`. Sur Babelio, il récupère aussi ta **wishlist**,
    qui arrive dans ta liste d'envies.
 3. Reviens dans Réglages et importe ce fichier.
+4. **Dates de lecture Booknode** : le tableau de ta bibliothèque Booknode ne dit pas quand tu
+   as lu un livre ; ton **historique de lecture** (`booknode.com/profil/ton-pseudo/historique`)
+   le dit, au mois près. Le favori le lit **dans le même clic** que ta bibliothèque — il déplie
+   chaque année — et le fichier unique porte les deux : chaque livre lu reçoit le mois où tu l'as
+   lu. Si Booknode bloque cette lecture, le favori le dit : ouvre alors ton historique, clique à
+   nouveau sur le favori et importe ce second fichier. Il compte dans le bon mois et la bonne année des statistiques, sa fiche
+   affiche « Lu en novembre 2026 », et le calendrier le range dans le mois sans le poser sur un
+   jour. Une date que tu as saisie toi-même n'est jamais remplacée, et l'historique n'ajoute
+   aucun livre à ta bibliothèque.
 
 Rien n'est envoyé ailleurs qu'à Librarius, et seulement quand tu importes le fichier. Les
 couvertures, ISBN et nombres de pages manquants sont complétés ensuite, en arrière-plan.

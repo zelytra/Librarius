@@ -205,8 +205,9 @@ public final class ApiDtos {
      * One reading of the Stats calendar (#479): the title, when it was started and finished,
      * and how many days that covered, both ends counted — null when the start is unknown.
      */
+    /** @param finishedMonthOnly the reading ended in {@code finishedAt}'s month, on a day nobody gave (#651) */
     public record ReadingSpanDto(UUID itemId, String title, String coverUrl, String kind,
-            LocalDate startedAt, LocalDate finishedAt, Integer days) {
+            LocalDate startedAt, LocalDate finishedAt, Integer days, boolean finishedMonthOnly) {
     }
 
     /** {@code avatarVersion} is set while the member has a profile picture (#500). */
@@ -443,14 +444,15 @@ public final class ApiDtos {
      * @param currentPage page the reader stopped on, {@code null} when unknown
      * @param percent     share of the book read, 0 to 100
      */
+    /** @param finishedMonthOnly {@code finishedAt} is the first of the month the reading ended in, the day unknown (#651) */
     public record ProgressView(Integer currentPage, Integer percent, LocalDate startedAt,
-            LocalDate finishedAt) {
+            LocalDate finishedAt, boolean finishedMonthOnly) {
         public static ProgressView of(ReadingProgress p, Integer pageCount) {
             Integer page = p.currentPage != null ? p.currentPage
                     : ReadingProgress.pageOf(p.percent, pageCount);
             Integer percent = p.percent != null ? p.percent
                     : ReadingProgress.percentOf(p.currentPage, pageCount);
-            return new ProgressView(page, percent, p.startedAt, p.finishedAt);
+            return new ProgressView(page, percent, p.startedAt, p.finishedAt, p.finishedMonthOnly);
         }
     }
 
@@ -1078,8 +1080,9 @@ public final class ApiDtos {
      * describe what is in the row, so that restoring it puts the same row back. Deriving
      * here would write a page number the user never entered.
      */
+    /** @param finishedMonthOnly true when only the month of the finish is known (#651); absent otherwise */
     public record ExportProgressDto(Integer currentPage, Integer percent, LocalDate startedAt,
-            LocalDate finishedAt) {
+            LocalDate finishedAt, Boolean finishedMonthOnly) {
     }
 
     /**

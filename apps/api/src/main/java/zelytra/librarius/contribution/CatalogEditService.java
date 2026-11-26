@@ -202,6 +202,9 @@ public class CatalogEditService {
         if (type == CatalogEditTarget.SERIES && changes.containsKey("title")) {
             refuseTakenSeriesTitle((Series) target, changes.get("title").after());
         }
+        if (type == CatalogEditTarget.SERIES && changes.containsKey("kind")) {
+            refuseTakenSeriesKind((Series) target, changes.get("kind").after());
+        }
         String isbn13 = null;
         String isbn10 = null;
         String title = null;
@@ -271,6 +274,9 @@ public class CatalogEditService {
         Map<String, Change> changes = read(edit.changes);
         if (edit.targetType == CatalogEditTarget.SERIES && changes.containsKey("title")) {
             refuseTakenSeriesTitle((Series) target(edit.targetType, edit.targetId), changes.get("title").after());
+        }
+        if (edit.targetType == CatalogEditTarget.SERIES && changes.containsKey("kind")) {
+            refuseTakenSeriesKind((Series) target(edit.targetType, edit.targetId), changes.get("kind").after());
         }
         apply(edit, changes, true);
         return close(adminId, edit, CatalogEditStatus.APPLIED, note);
@@ -358,6 +364,15 @@ public class CatalogEditService {
                 .filter(other -> !other.id.equals(series.id))
                 .ifPresent(other -> {
                     throw conflict("Another series already has this title");
+                });
+    }
+
+    /** A series of the proposed kind with this title already exists: two runs cannot merge here (#650). */
+    private void refuseTakenSeriesKind(Series series, String kind) {
+        seriesRepository.findByKindAndTitle(zelytra.librarius.domain.Kind.valueOf(kind), series.title)
+                .filter(other -> !other.id.equals(series.id))
+                .ifPresent(other -> {
+                    throw conflict("A series of this kind already has this title");
                 });
     }
 

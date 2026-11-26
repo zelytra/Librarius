@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  */
 final class ImportDates {
 
-    private static final Map<String, Integer> FRENCH_MONTHS = Map.ofEntries(
+    static final Map<String, Integer> FRENCH_MONTHS = Map.ofEntries(
             Map.entry("janvier", 1), Map.entry("février", 2), Map.entry("fevrier", 2),
             Map.entry("mars", 3), Map.entry("avril", 4), Map.entry("mai", 5), Map.entry("juin", 6),
             Map.entry("juillet", 7), Map.entry("août", 8), Map.entry("aout", 8),

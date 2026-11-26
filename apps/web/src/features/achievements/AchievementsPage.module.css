@@ -36,7 +36,8 @@
   padding: 18px;
   border-radius: var(--radius-panel);
   border: 1px solid var(--line);
-  background: linear-gradient(135deg, var(--tint-sand), var(--surface-2));
+  /* The theme's own colours (#649): a fixed sand tint stayed beige under every theme. */
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface-2));
 }
 
 .levelBadge {
@@ -44,7 +45,7 @@
   width: 72px;
   height: 72px;
   border-radius: var(--radius-round);
-  background: var(--gradient-avatar);
+  background: var(--accent-fill);
   box-shadow: var(--shadow-accent-sm);
   display: flex;
   align-items: center;
@@ -55,7 +56,7 @@
   font-family: var(--font-serif);
   font-size: var(--fs-27);
   font-weight: 700;
-  color: var(--on-accent);
+  color: var(--on-accent-fill);
 }
 
 .levelBody {

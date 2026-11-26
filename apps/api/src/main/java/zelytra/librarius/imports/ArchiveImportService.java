@@ -243,6 +243,7 @@ public class ArchiveImportService {
         progress.percent = dto.percent();
         progress.startedAt = dto.startedAt();
         progress.finishedAt = dto.finishedAt();
+        progress.finishedMonthOnly = dto.finishedAt() != null && Boolean.TRUE.equals(dto.finishedMonthOnly());
         progresses.persist(progress);
     }
 

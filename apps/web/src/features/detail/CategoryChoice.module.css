@@ -34,3 +34,16 @@
   border-radius: var(--radius-round);
   flex: 0 0 auto;
 }
+
+/* The selected state from the theme's tokens (#648): the category's own colour, when it has
+   one, is laid over it inline; a colourless one still reads as selected. */
+.button[aria-pressed='true'] {
+  border-color: var(--accent-deep);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}

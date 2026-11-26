@@ -42,6 +42,11 @@ export interface CollectorEnv {
   pauseMs?: number;
   /** The page's global object, whose requests the Mangacollec collector listens to (#503). */
   global?: typeof globalThis;
+  /**
+   * A page of the site, rendered with its own script — Booknode's reading history draws its
+   * months client-side (#651). By default a hidden frame of the same site.
+   */
+  render?: (url: string) => Promise<Document>;
 }
 
 /**
@@ -75,6 +80,27 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
     pauseMs: 400,
     global: window,
   };
+
+  /* The default renderer: the page in a frame of the same site, off screen, where its own */
+  /* script runs as it would for the reader — then removed once its rows are read (#651). */
+  let frame: HTMLIFrameElement | null = null;
+  const render =
+    e.render ??
+    ((url: string) =>
+      new Promise<Document>((resolve, reject) => {
+        frame = e.document.createElement('iframe');
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1024px;height:768px;border:0;';
+        const timer = setTimeout(() => reject(new Error('timeout')), 30000);
+        frame.onload = () => {
+          clearTimeout(timer);
+          const doc = frame?.contentDocument;
+          if (doc) resolve(doc);
+          else reject(new Error('frame refused'));
+        };
+        frame.src = url;
+        e.document.body.appendChild(frame);
+      }));
 
   const host = e.location.hostname;
   const source = host.includes('babelio')
@@ -318,6 +344,55 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
       say('collection récupérée : importe le fichier dans Librarius (Réglages → Importer).');
       return;
     }
+    /* Booknode's reading history (#651): the one page that says when a book was read — by the */
+    /* month. The site's script draws a year's months when its heading is clicked, so the */
+    /* collector opens every closed year, waits until the months stop arriving, and keeps them. */
+    const historyOf = async (doc: Document): Promise<string> => {
+      const months = () => doc.querySelectorAll('.one_month').length;
+      const settle = async () => {
+        let last = -1;
+        let still = 0;
+        for (let round = 0; round < 100 && still < 3; round++) {
+          await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 400));
+          const now = months();
+          still = now === last ? still + 1 : 0;
+          last = now;
+        }
+      };
+      /* The page draws its years after it loads: wait for them before clicking. */
+      for (let round = 0; round < 50 && doc.querySelectorAll('.button_and_year').length === 0; round++) {
+        await new Promise((resolve) => setTimeout(resolve, e.pauseMs ?? 300));
+      }
+      await settle();
+      const closed = Array.from(doc.querySelectorAll('.button_and_year button')).filter((button) =>
+        button.querySelector('.fa-chevron-circle-right'),
+      );
+      for (let i = 0; i < closed.length; i++) {
+        say('historique de lecture : année ' + (i + 1) + ' sur ' + closed.length + '…');
+        const before = months();
+        (closed[i] as HTMLElement).click();
+        /* The year's months come from the site's server: wait for them to start arriving (a */
+        /* slow answer would otherwise read as "nothing more"), then for them to stop. */
+        const deadline = Date.now() + 15000;
+        while (months() === before && Date.now() < deadline) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        await settle();
+      }
+      return Array.from(doc.querySelectorAll('.one_month'))
+        .map((month) => month.outerHTML)
+        .join(' ');
+    };
+    if (source === 'booknode' && /\/historique\/?$/.test(e.location.pathname)) {
+      const history = await historyOf(e.document);
+      if (!history.trim()) {
+        e.alert('Librarius : aucune lecture trouvée dans cet historique Booknode.');
+        return;
+      }
+      e.save({ format: 'librarius-collect', version: 2, source, collectedAt: new Date().toISOString(), pages: [history] });
+      say('historique collecté : importe le fichier dans Librarius (Réglages → Importer).');
+      return;
+    }
     let firstUrl = e.location.href;
     if (source === 'booknode') {
       const handle = /\/profil\/([^/?#]+)/.exec(e.location.pathname);
@@ -381,6 +456,21 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
         }
       }
     }
+    /* The reading months come with the library, in the same file (#651): the history page is */
+    /* opened in a hidden frame of the site and its years are opened there. */
+    let historyRead = false;
+    if (source === 'booknode' && pages.some((page) => page.trim().length > 0)) {
+      try {
+        say('lecture de l’historique de lecture…');
+        const history = await historyOf(await render(firstUrl.replace(/\/biblio-table.*$/, '/historique')));
+        if (history.trim()) {
+          pages.push(history);
+          historyRead = true;
+        }
+      } catch {
+        /* Refused or timed out: the library is kept, and the reader told how to add the months. */
+      }
+    }
     const kept = pages.filter((page) => page.trim().length > 0);
     if (kept.length === 0) {
       e.alert(
@@ -398,10 +488,17 @@ export async function collectLibrary(env?: CollectorEnv, save?: (file: Collected
       pages: kept,
       ...(filters ? { filters } : {}),
     });
-    say(urls.length + ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).');
+    say(
+      urls.length +
+        ' pages collectées : importe le fichier dans Librarius (Réglages → Importer).' +
+        (source === 'booknode' && !historyRead
+          ? ' L’historique de lecture n’a pas pu être lu : pour les dates de lecture, ouvre ton historique Booknode et clique à nouveau sur ce favori.'
+          : ''),
+    );
   } catch (error) {
     e.alert('Librarius : la collecte s’est interrompue (' + String(error) + '). Recharge la page et réessaie.');
   } finally {
+    (frame as HTMLIFrameElement | null)?.remove();
     setTimeout(() => banner.remove(), 8000);
   }
 }

@@ -26,6 +26,8 @@ function env(overrides: Partial<CollectorEnv>): { env: CollectorEnv; saved: Coll
       alert: (m) => alerts.push(m),
       save: (f) => saved.push(f),
       pauseMs: 0,
+      // jsdom loads no page into a frame: by default the history is refused, as a blocked frame would be.
+      render: () => Promise.reject(new Error('no frame in tests')),
       ...overrides,
     },
   };
@@ -47,6 +49,77 @@ describe('collectLibrary', () => {
     expect(saved[0].pages).toHaveLength(2);
     expect(saved[0].pages[0]).toContain('Dune');
     expect(saved[0].pages[1]).toContain('Fondation');
+  });
+
+  /**
+   * #651: run on Booknode's reading history, the collector opens every year the way the reader
+   * would — the site's script draws a year's months when its heading is clicked — and saves them.
+   */
+  test('opens every year of the Booknode reading history and keeps its months', async () => {
+    const month = (label: string, title: string) =>
+      `<div class="one_month"><h3>${label}</h3><div class="item"><div class="panel-heading"><a href="/x">${title}</a></div></div></div>`;
+    document.body.innerHTML =
+      '<div class="history_header"><h3 class="button_and_year"><button><i class="fa fa-chevron-circle-down"></i></button> 2026</h3></div>' +
+      month('novembre 2026', 'Dune') +
+      '<div class="history_header" id="y2019"><h3 class="button_and_year"><button id="open2019"><i class="fa fa-chevron-circle-right"></i></button> 2019</h3></div>';
+    // The site's script: the months of 2019 arrive a moment after its heading is clicked.
+    document.getElementById('open2019')!.addEventListener('click', () =>
+      setTimeout(() => document.getElementById('y2019')!.insertAdjacentHTML('afterend', month('août 2019', 'Fondation')), 5));
+    const fetch = vi.fn();
+    const { env: e, saved } = env({
+      fetch,
+      location: { hostname: 'booknode.com', pathname: '/profil/alice/historique', href: 'https://booknode.com/profil/alice/historique' },
+    });
+
+    await collectLibrary(e);
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(saved).toHaveLength(1);
+    expect(saved[0].source).toBe('booknode');
+    expect(saved[0].pages.join('')).toContain('novembre 2026');
+    expect(saved[0].pages.join('')).toContain('Fondation');
+    document.body.innerHTML = '';
+  });
+
+  /** A Booknode history page the way its script behaves: a closed year draws its months when clicked. */
+  function historyPage(): Document {
+    const page = document.implementation.createHTMLDocument('Historique');
+    page.body.innerHTML =
+      '<div class="history_header"><h3 class="button_and_year"><button><i class="fa fa-chevron-circle-down"></i></button> 2026</h3></div>' +
+      '<div class="one_month"><h3>novembre 2026</h3><div class="item"><div class="panel-heading"><a href="/x">Dune</a></div></div></div>' +
+      '<div class="history_header" id="y2019"><h3 class="button_and_year"><button id="open2019"><i class="fa fa-chevron-circle-right"></i></button> 2019</h3></div>';
+    page.getElementById('open2019')!.addEventListener('click', () =>
+      setTimeout(() => page.getElementById('y2019')!.insertAdjacentHTML('afterend',
+        '<div class="one_month"><h3>août 2019</h3><div class="item"><div class="panel-heading"><a href="/y">Fondation</a></div></div></div>'), 5));
+    return page;
+  }
+
+  /** The owner's request (#651): one click brings the library and its reading months in together. */
+  test('collects the reading history with the Booknode library, in the same file', async () => {
+    const fetch = vi.fn(() => Promise.resolve(response(booknodePage(['Dune'], 1))));
+    const render = vi.fn(() => Promise.resolve(historyPage()));
+    const { env: e, saved } = env({ fetch, render });
+
+    await collectLibrary(e);
+
+    expect(render).toHaveBeenCalledWith('https://booknode.com/profil/alice/historique');
+    expect(saved).toHaveLength(1);
+    expect(saved[0].pages[0]).toContain('Dune');
+    const history = saved[0].pages.slice(1).join('');
+    expect(history).toContain('novembre 2026');
+    expect(history).toContain('Fondation');
+  });
+
+  test('keeps the library when the history cannot be opened, and says how to add it', async () => {
+    const fetch = vi.fn(() => Promise.resolve(response(booknodePage(['Dune'], 1))));
+    const render = vi.fn(() => Promise.reject(new Error('refused')));
+    const { env: e, saved } = env({ fetch, render });
+
+    await collectLibrary(e);
+
+    expect(saved).toHaveLength(1);
+    expect(saved[0].pages).toHaveLength(1);
+    expect(document.body.textContent).toContain('historique');
   });
 
   test('reads a Babelio page in the charset it declares, rows wrapped as a table', async () => {

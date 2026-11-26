@@ -112,6 +112,7 @@ public class ReadingProgressService {
         progress.currentPage = page;
         progress.percent = percent;
         progress.startedAt = startedAt;
+        LocalDate storedFinish = progress.finishedAt;
         progress.finishedAt = finishedAt;
 
         if (item.status == LibraryStatus.READING) {
@@ -138,6 +139,10 @@ public class ReadingProgressService {
         if (item.status == LibraryStatus.TO_READ) {
             progress.finishedAt = null;
         }
+        // A month an import knew (#651) holds only while the finish stays that very date: a day
+        // the reader gives, today's, or none replaces it.
+        progress.finishedMonthOnly = progress.finishedMonthOnly
+                && java.util.Objects.equals(progress.finishedAt, storedFinish);
 
         // A title given up on and read to the end after all — straight away or through a
         // resumed reading — is a comeback (#287), an event the data cannot tell afterwards.
