@@ -25,11 +25,24 @@ import java.time.LocalDate;
  * @param ownership  whether the reader has it, or null for the default (owned) — a volume
  *                   Mangacollec marks read but not held is read and not owned
  * @param format     the physical format the source tells (a box set, a deluxe edition), or null
+ * @param readMonthOnly {@link #readAt} is the first of the month the title was read in, the day
+ *                   being unknown — Booknode's history names the month alone (#651)
+ * @param datesOnly  a row that only dates a title the library already holds, never adds one:
+ *                   Booknode's history lists books the reader may have removed since (#651)
  */
 public record ImportedBook(String title, String author, String coverUrl, LibraryStatus status,
         String shelf, Integer rating, LocalDate acquiredAt, LocalDate readAt, String isbn13,
         Integer pageCount, String rank, Kind kind, boolean wished, Ownership ownership,
-        BookFormat format) {
+        BookFormat format, boolean readMonthOnly, boolean datesOnly) {
+
+    /** A row read off a page that tells the day of a reading, when it tells one. */
+    public ImportedBook(String title, String author, String coverUrl, LibraryStatus status,
+            String shelf, Integer rating, LocalDate acquiredAt, LocalDate readAt, String isbn13,
+            Integer pageCount, String rank, Kind kind, boolean wished, Ownership ownership,
+            BookFormat format) {
+        this(title, author, coverUrl, status, shelf, rating, acquiredAt, readAt, isbn13, pageCount,
+                rank, kind, wished, ownership, format, false, false);
+    }
 
     /** A row from a source that tells no ownership nor format. */
     public ImportedBook(String title, String author, String coverUrl, LibraryStatus status,

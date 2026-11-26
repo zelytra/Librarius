@@ -230,7 +230,7 @@ public class BooknodeImporter implements LibraryImporter {
     }
 
     /** The rating a read book's tier badge stands for, out of five; null when it carries none. */
-    private static Integer ratingFromBadge(Set<String> classes) {
+    static Integer ratingFromBadge(Set<String> classes) {
         if (classes.contains("diamant")) {
             return 5;
         }
