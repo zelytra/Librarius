@@ -78,12 +78,94 @@ public class BooknodeImporter implements LibraryImporter {
                         + "les titres déjà là ne seront pas importés deux fois.");
             }
         }
-        return all;
+        return withHistory(h, all);
     }
 
-    /** One page of the member's library table. Package-private so a test can stand in for Booknode. */
+    /** One page of the member's library table. */
     Document page(String handle, int page) throws IOException {
-        return get(profileUrl(handle, page));
+        return document(profileUrl(handle, page));
+    }
+
+    /** A page of Booknode. Package-private so a test can stand in for the site. */
+    Document document(String url) throws IOException {
+        return get(url);
+    }
+
+    /**
+     * The history page, keeping the cookies it sets: the years it lists are asked for in the
+     * session it opens. Package-private so a test can stand in for Booknode.
+     */
+    Document historyPage(String url, java.util.Map<String, String> cookies) throws IOException {
+        org.jsoup.Connection.Response response = connect(url).execute();
+        cookies.putAll(response.cookies());
+        return response.parse();
+    }
+
+    /**
+     * One year of the history, as the page's script asks for it when the reader opens a year
+     * (#653, read off a browser's network log): JSON, in the page's session, with its CSRF token.
+     */
+    String yearJson(String url, String referer, String csrf, java.util.Map<String, String> cookies) throws IOException {
+        return connect(url)
+                .ignoreContentType(true)
+                .header("Accept", "application/json, text/plain, */*")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Referer", referer)
+                .header("X-CSRF-TOKEN", csrf == null ? "" : csrf)
+                .cookies(cookies)
+                .execute()
+                .body();
+    }
+
+    /**
+     * The library dated with the member's reading history (#653), fetched with the same pseudo:
+     * the history page carries the year it shows as JSON, and every other year it lists comes
+     * from {@code /historique/<year>}, the address its script asks. A history read in part, or
+     * not at all, keeps the library whole and says so.
+     */
+    private List<ImportedBook> withHistory(String handle, List<ImportedBook> library) {
+        String base = "https://booknode.com/profil/" + handle + "/historique";
+        List<ImportedBook> history = new ArrayList<>();
+        int listed = 0;
+        int read = 0;
+        try {
+            java.util.Map<String, String> cookies = new java.util.HashMap<>();
+            Document current = historyPage(base, cookies);
+            Element token = current.selectFirst("meta[name=csrf-token]");
+            String csrf = token == null ? null : token.attr("content");
+            Integer shown = BooknodeHistoryParser.yearShown(current);
+            List<Integer> years = BooknodeHistoryParser.yearsListed(current);
+            listed = years.size();
+            if (shown != null) {
+                history.addAll(BooknodeHistoryParser.parse(current));
+                read++;
+            }
+            for (Integer year : years) {
+                if (year.equals(shown)) {
+                    continue;
+                }
+                try {
+                    history.addAll(BooknodeHistoryParser.parseYear(
+                            yearJson(base + "/" + year, base, csrf, cookies), year, current));
+                    read++;
+                } catch (IOException e) {
+                    Log.warnf("Booknode history year %d unreadable for %s: %s", year, handle, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            Log.warnf("Booknode history unreadable for %s: %s", handle, e.getMessage());
+        }
+        List<ImportedBook> dated = CollectedLibrary.datedByHistory(library, history);
+        if (listed == 0 && read == 0) {
+            throw new IncompleteImportException(dated, "Ta bibliothèque est importée, mais ton historique de "
+                    + "lecture Booknode n'a pas pu être lu : tes livres lus restent sans date de lecture.");
+        }
+        if (read < listed) {
+            throw new IncompleteImportException(dated, "Ta bibliothèque est importée. Historique de lecture : "
+                    + read + " année" + (read > 1 ? "s" : "") + " sur " + listed + " lue" + (read > 1 ? "s" : "")
+                    + " — les livres lus les autres années restent sans date de lecture.");
+        }
+        return dated;
     }
 
     /**
@@ -113,13 +195,17 @@ public class BooknodeImporter implements LibraryImporter {
     }
 
     private static Document get(String url) throws IOException {
+        return connect(url).get();
+    }
+
+    /** A request carrying a real browser's headers: Booknode turns anything else away. */
+    private static org.jsoup.Connection connect(String url) {
         return Jsoup.connect(url)
                 .userAgent(UA)
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                 .header("Accept-Language", "fr-FR,fr;q=0.9,en;q=0.8")
                 .header("Upgrade-Insecure-Requests", "1")
-                .timeout(20000)
-                .get();
+                .timeout(20000);
     }
 
     /** The highest page the pagination links to — at least 1. Package-private for the test. */

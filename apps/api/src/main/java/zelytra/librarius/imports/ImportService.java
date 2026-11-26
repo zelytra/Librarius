@@ -63,10 +63,6 @@ public class ImportService {
     public record ImportResult(String source, int imported, int skipped, int total, int wished) {
     }
 
-    public ImportResult importFromSource(String userId, String source, String handle) {
-        return persist(userId, source, fetchBooks(source, handle));
-    }
-
     /**
      * Reads the source's library into memory — the network-bound half of a scrape, kept apart
      * from {@link #persist} so a deferred import can walk the pages off the request thread

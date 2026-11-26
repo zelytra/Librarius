@@ -61,4 +61,58 @@ class BooknodeHistoryParserTest {
         assertEquals(1, again.size());
         assertEquals(LocalDate.of(2026, 11, 1), again.get(0).readAt());
     }
+
+    /** #653: the page a server fetches carries the year's readings as JSON on its Vue root. */
+    @Test
+    void readsTheReadingsAPlainFetchOfTheHistoryCarries() throws Exception {
+        Document page = fixture("booknode-historique-page.html");
+
+        assertTrue(BooknodeHistoryParser.isHistory(page));
+        assertEquals(2026, BooknodeHistoryParser.yearShown(page));
+        assertEquals(List.of(2026, 2019), BooknodeHistoryParser.yearsListed(page));
+        Map<String, ImportedBook> books = BooknodeHistoryParser.parse(page).stream()
+                .collect(Collectors.toMap(ImportedBook::title, Function.identity()));
+        assertEquals(2, books.size());
+        ImportedBook heritiers = books.get("Les Héritiers, Tome 1 : Le Pacte");
+        assertEquals(LocalDate.of(2026, 11, 1), heritiers.readAt());
+        assertTrue(heritiers.readMonthOnly());
+        assertTrue(heritiers.datesOnly());
+        assertEquals("platine", heritiers.rank());
+        assertEquals("Laura W.", heritiers.author());
+        assertEquals("https://cdn1.booknode.com/book_cover/1/les_heritiers_tome_1.jpg", heritiers.coverUrl());
+        // Read in February and again in November: the latest month, and the first author named.
+        assertEquals(LocalDate.of(2026, 11, 1), books.get("Le Vieil Ami").readAt());
+        assertEquals("Jean D.", books.get("Le Vieil Ami").author());
+    }
+
+    /** The JSON keeps a double space the rendered page collapses: "Tome 0 :  Les origines" (measured, #653). */
+    @Test
+    void collapsesTheSpacesOfATitleTheWayThePageShowsIt() {
+        Document page = Jsoup.parse("<div data-vue-app data-year=\"2026\" data-lists='{}' data-table-years='[]' "
+                + "data-current-year-details='[{\"month_name\":\"mars\",\"reads\":[{\"list_id\":2,\"book\":"
+                + "{\"name\":\"Community, Tome 0 :  Les origines\",\"authors\":[{\"nom\":\"Luna J.\"}]}}]}]'></div>");
+
+        assertEquals("Community, Tome 0 : Les origines", BooknodeHistoryParser.parse(page).get(0).title());
+    }
+
+    /**
+     * #653: another year comes from the address the page's script asks, /historique/<year>, as
+     * JSON — the months of the current page's shape; the tiers are the page's.
+     */
+    @Test
+    void readsAnotherYearFromTheJsonThePageAsksFor() throws Exception {
+        String json;
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("booknode-historique-2019.json")) {
+            json = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        Document page = fixture("booknode-historique-page.html");
+
+        List<ImportedBook> books = BooknodeHistoryParser.parseYear(json, 2019, page);
+
+        assertEquals(1, books.size());
+        assertEquals("Ancien Roman", books.get(0).title());
+        assertEquals("Anne A.", books.get(0).author());
+        assertEquals(LocalDate.of(2019, 8, 1), books.get(0).readAt());
+        assertEquals(Integer.valueOf(1), books.get(0).rating());
+    }
 }

@@ -373,7 +373,8 @@ grosse bibliothèque, le reste se complète ensuite en arrière-plan.
 ### Depuis Booknode
 
 Saisis ton **pseudo Booknode** et lance l'import : ta bibliothèque publique est lue
-directement. Le profil doit être **public**, sinon il n'y a rien à lire et l'application
+directement, et ton **historique de lecture** avec elle — chaque livre lu reçoit le mois où tu
+l'as lu (Booknode ne donne pas le jour). Le profil doit être **public**, sinon il n'y a rien à lire et l'application
 te le dit.
 
 ### Collecte depuis ton navigateur (Booknode et Babelio)

@@ -17,6 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Booknode parsing tested against an HTML fixture (without network access). */
 class BooknodeImporterTest {
 
+    private String resource(String name) throws Exception {
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(name)) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     private Document fixture() throws Exception {
         try (InputStream in = getClass().getClassLoader().getResourceAsStream("booknode-biblio.html")) {
             return Jsoup.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8));
@@ -149,6 +155,100 @@ class BooknodeImporterTest {
         assertEquals(new BooknodeImporter().parse(fixture()).size(), stopped.books().size());
         assertTrue(stopped.getMessage().contains("page 2 sur 97"), stopped.getMessage());
         assertTrue(stopped.getMessage().contains("collecte depuis ton navigateur"), stopped.getMessage());
+    }
+
+    /** A one-page library holding the two titles the history fixtures date. */
+    private static Document libraryOfTwo() {
+        return Jsoup.parse("<div class='book-item'><div class='book-name'><a>Le Vieil Ami</a></div>"
+                + "<div class='author-name'><a>Jean D.</a> <a>Marie C.</a></div>"
+                + "<div class='list-name'><div><label class='listebadge or'>or</label></div></div>"
+                + "<div class='group-name'><span class='group-label'></span></div></div>"
+                + "<div class='book-item'><div class='book-name'><a>Ancien Roman</a></div>"
+                + "<div class='author-name'><a>Anne A.</a></div>"
+                + "<div class='list-name'><div><label class='listebadge pasapprecie'>pas apprécié</label></div></div>"
+                + "<div class='group-name'><span class='group-label'></span></div></div>");
+    }
+
+    /**
+     * Booknode as the tests stand it in: the library, the history page, and the years' JSON at
+     * the addresses a map names — an address missing from it answers 404.
+     */
+    private BooknodeImporter booknodeServing(Document historyPage, java.util.Map<Integer, String> years) {
+        return new BooknodeImporter() {
+            @Override
+            Document document(String url) {
+                return libraryOfTwo();
+            }
+
+            @Override
+            Document historyPage(String url, java.util.Map<String, String> cookies) throws java.io.IOException {
+                if (historyPage == null) {
+                    throw new org.jsoup.HttpStatusException("Forbidden", 403, url);
+                }
+                cookies.put("booknode_session", "s");
+                return historyPage;
+            }
+
+            @Override
+            String yearJson(String url, String referer, String csrf, java.util.Map<String, String> cookies)
+                    throws java.io.IOException {
+                // The year is asked for the way the page's script does: same session, same page.
+                assertEquals("https://booknode.com/profil/alice/historique", referer);
+                assertEquals("s", cookies.get("booknode_session"));
+                String json = years.get(Integer.valueOf(url.substring(url.lastIndexOf('/') + 1)));
+                if (json == null) {
+                    throw new org.jsoup.HttpStatusException("Not Found", 404, url);
+                }
+                return json;
+            }
+        };
+    }
+
+    private static java.util.Map<String, ImportedBook> byTitle(List<ImportedBook> books) {
+        java.util.Map<String, ImportedBook> map = new java.util.HashMap<>();
+        books.forEach(b -> map.putIfAbsent(b.title(), b));
+        return map;
+    }
+
+    /** #653: the pseudo alone brings the reading months too — every year the history lists. */
+    @Test
+    void anImportByPseudoDatesTheLibraryWithEveryYearOfTheHistory() throws Exception {
+        BooknodeImporter booknode = booknodeServing(Jsoup.parse(resource("booknode-historique-page.html")),
+                java.util.Map.of(2019, resource("booknode-historique-2019.json")));
+
+        var books = byTitle(booknode.fetch("alice"));
+
+        assertEquals(LocalDate.of(2026, 11, 1), books.get("Le Vieil Ami").readAt());
+        assertTrue(books.get("Le Vieil Ami").readMonthOnly());
+        assertEquals(LocalDate.of(2019, 8, 1), books.get("Ancien Roman").readAt());
+    }
+
+    /** A year Booknode does not answer dates nothing, and the import says how many it read. */
+    @Test
+    void aYearThatCannotBeReadIsSaidAndTheRestIsDated() throws Exception {
+        BooknodeImporter booknode = booknodeServing(Jsoup.parse(resource("booknode-historique-page.html")),
+                java.util.Map.of());
+
+        IncompleteImportException partial = org.junit.jupiter.api.Assertions.assertThrows(
+                IncompleteImportException.class, () -> booknode.fetch("alice"));
+
+        var books = byTitle(partial.books());
+        assertEquals(LocalDate.of(2026, 11, 1), books.get("Le Vieil Ami").readAt());
+        assertNull(books.get("Ancien Roman").readAt());
+        assertTrue(partial.getMessage().contains("1 année sur 2"), partial.getMessage());
+    }
+
+    /** The history unreadable: the library is imported whole, undated, and the reader told. */
+    @Test
+    void aHistoryThatCannotBeReadLeavesTheLibraryWhole() {
+        BooknodeImporter booknode = booknodeServing(null, java.util.Map.of());
+
+        IncompleteImportException partial = org.junit.jupiter.api.Assertions.assertThrows(
+                IncompleteImportException.class, () -> booknode.fetch("alice"));
+
+        assertEquals(2, partial.books().size());
+        assertTrue(partial.books().stream().allMatch(b -> b.readAt() == null));
+        assertTrue(partial.getMessage().contains("historique"), partial.getMessage());
     }
 
     @Test

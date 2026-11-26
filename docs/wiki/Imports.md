@@ -8,11 +8,26 @@ also says how many of the imported titles went to the wishlist (`wished`), and c
 
 ## Getting the library out of the source site
 
+> **The pseudo first** (#653). An import is automatic from the member's pseudo alone: that is the
+> first goal for every source. The collector and file uploads are fallbacks for what a server
+> cannot reach. When a source has data the pseudo import misses, the fix belongs in the
+> server's importer before anything is added to the collector.
+
 - **Booknode by pseudo** (`POST /api/import/booknode`): the server reads
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
   The library table carries no reading date (#645). **The reading history**
-  (`/profil/<pseudo>/historique`, #651) does, by the month. After the library pages the
+  (`/profil/<pseudo>/historique`, #651) does, by the month, and **the pseudo import reads it
+  too** (#653): the page is drawn client-side, but its server-rendered HTML carries the year it
+  shows as JSON on the Vue root — `data-year`, `data-table-years` (every year and its totals),
+  `data-current-year-details` (the months and their `reads[{list_id, book}]`) and `data-lists`
+  (the tiers). `BooknodeImporter` fetches the page, keeping the session cookies it sets and its
+  `meta[name=csrf-token]`, then every other year it lists from `GET /profil/<pseudo>/historique/<year>`
+  — the address the page's script asks when a year is opened (read off a browser's network log):
+  JSON `{"details": [months]}` of the same shape, requested with `Accept: application/json`,
+  `X-Requested-With: XMLHttpRequest`, the page as `Referer` and its CSRF token. A history read in part or
+  not at all keeps the library whole and ends the job with a `warning` ("N années sur M").
+  As a fallback, after the library pages the
   collector opens that page in a hidden same-origin frame (`CollectorEnv.render`), clicks every
   closed year (the site's script draws a year's months on click), waits for each year's months
   to arrive and then to stop, and adds the `.one_month` blocks to the same file. When the frame
