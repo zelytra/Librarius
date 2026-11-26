@@ -504,6 +504,9 @@ public class ImportService {
             created.label = label.length() > 64 ? label.substring(0, 64) : label;
             created.sortOrder = nextOrder[0]++;
             created.builtin = false;
+            // The colour a category made by hand gets: without one, the screens drew no
+            // selection on it (#648).
+            created.color = zelytra.librarius.category.CategoryService.DEFAULT_COLOR;
             ranks.persist(created);
             return created;
         });

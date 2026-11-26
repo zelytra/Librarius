@@ -41,7 +41,7 @@ import java.util.UUID;
 public class CategoryService {
 
     /** Colour a category gets when the caller supplies none: neutral, and readable on both themes. */
-    private static final String DEFAULT_COLOR = "#9a8fa6";
+    public static final String DEFAULT_COLOR = "#9a8fa6";
 
     /** Custom categories sort after the built-ins, which occupy 0 (Platine) to 4 (Abandon). */
     private static final int CUSTOM_SORT_ORDER = 100;

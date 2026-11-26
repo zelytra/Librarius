@@ -70,6 +70,8 @@ class ImportPersistTest {
             // (#646) — not its rank, which is a built-in shelf.
             assertEquals(null, item.rankCategory);
             assertEquals(List.of("favorites"), item.categories.stream().map(c -> c.label).toList());
+            // Coloured like a category made by hand (#648): without one it showed no selection.
+            assertNotNull(item.categories.iterator().next().color);
         });
     }
 

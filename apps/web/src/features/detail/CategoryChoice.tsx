@@ -1,4 +1,5 @@
 import type { CategoryDto } from '../../api/generated/librarius';
+import { Icon } from '../../shared/ui/Icon';
 import styles from './CategoryChoice.module.css';
 
 /** Opacity suffix of the selected category's background. */
@@ -38,8 +39,13 @@ export function CategoryChoice({ categories, label, ...choice }: { categories: C
             // colour of the server's choosing.
             style={on && c.color ? { borderColor: c.color, background: `${c.color}${TINT}` } : undefined}
           >
-            {/* Same reason, and the fallback covers a payload that predates the colour. */}
-            <span className={styles.dot} style={{ background: c.color ?? 'var(--chip)' }} />
+            {/* Selected, a check stands in for the dot, so the state never rests on a colour
+                alone — an imported category may have none (#648). */}
+            {on ? (
+              <Icon name="check_circle" size={16} fill color={c.color ?? 'var(--accent-deep)'} />
+            ) : (
+              <span className={styles.dot} style={{ background: c.color ?? 'var(--chip)' }} />
+            )}
             {c.label}
           </button>
         );
