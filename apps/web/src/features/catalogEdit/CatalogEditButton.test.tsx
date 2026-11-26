@@ -158,4 +158,20 @@ describe('CatalogEditButton', () => {
     expect(dialog.getByLabelText('Statut de parution')).toHaveValue('ONGOING');
     expect(dialog.queryByRole('button', { name: 'Ajouter un lien' })).not.toBeInTheDocument();
   });
+  test('a series volume count takes the digits typed into it and sends them (#641)', async () => {
+    const posted = serves({
+      targetType: 'SERIES', targetId: 's-1', saleLinks: [], pendingByMe: false,
+      fields: { title: 'One Piece', originalTitle: null, totalVolumes: null, status: null, synopsis: null, coverUrl: null },
+    });
+    renderWithProviders(<CatalogEditButton targetType="SERIES" targetId="s-1" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Proposer une modification' }));
+    const dialog = within(await screen.findByRole('dialog'));
+
+    const count = await dialog.findByLabelText('Nombre de tomes');
+    await userEvent.type(count, '112');
+    expect(count).toHaveValue('112');
+    await userEvent.click(dialog.getByRole('button', { name: 'Envoyer la proposition' }));
+    await waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({ targetType: 'SERIES', fields: { totalVolumes: '112' } });
+  });
 });

@@ -2,13 +2,18 @@
 
 A reader brings their library from Booknode, Babelio, Mangacollec, a CSV (Goodreads…) or a
 Librarius export. Every import is a **job**: `POST` starts it and answers an id, the screen polls
-`GET /api/import/jobs/{id}` for `total`, `imported`, `skipped` and the outcome.
+`GET /api/import/jobs/{id}` for `total`, `imported`, `skipped` and the outcome. A finished job
+also says how many of the imported titles went to the wishlist (`wished`), and carries a
+`warning` when it does not hold the whole library (#644).
 
 ## Getting the library out of the source site
 
 - **Booknode by pseudo** (`POST /api/import/booknode`): the server reads
   `booknode.com/profil/<pseudo>/biblio-table`, every page of it. A 404 means no such
   profile; a 403/429/503 means Booknode turned the server away, and the message says so.
+  A page refused **part-way** keeps what the earlier pages read: the job ends `DONE` with those
+  titles and a `warning` naming the page it stopped at and pointing to the collector
+  (`IncompleteImportException`, #644) — it no longer passes for the whole library.
 - **The collector** (Settings → "Librarius : collecter"): **one** bookmarklet for Booknode,
   Babelio and Mangacollec, shown once above the source choice (#507), that the reader runs in
   their own signed-in browser. Its files carry `version` (`COLLECTOR_VERSION`, 2 since #507);
@@ -83,7 +88,7 @@ collection through the bridge.
 
 | Source | Read from it |
 |---|---|
-| Booknode | title, author, cover, status from the badge's class; tier (diamant, or, argent, bronze) → the built-in Platine / Or / Argent / Bronze category (diamant also rated 5; before V46 it filed under Or); the list ("manga or", "BD", "romance") → kind and genre; "envies" → wishlist; the date added, which is the reading date of a read title |
+| Booknode | title, author, cover, status from the badge's class; tier (diamant, or, argent, bronze) → the built-in Platine / Or / Argent / Bronze category (diamant also rated 5; before V46 it filed under Or); the list ("manga or", "BD", "romance") → kind and genre; "envies" → wishlist; the date added → the acquisition date only. A read title is imported **undated** (#645): the date is the day the title went on the shelf, and a title moved there from « Envies » keeps the day of the wish |
 | Babelio | title, author, cover, status ("Lu", "En cours", "À lire", "Abandonné"), the reader's own rating, the reading date; "Pense-bête" → wishlist |
 | CSV | title, author, status, rating, dates, ISBN, length — French and English headers |
 | Mangacollec | `MangacollecImporter`: every volume in `possessions` or `reads` becomes "Série [Édition] Tome n" (a one-shot keeps the bare title), with its ISBN, its cover and the day it was added; a volume read is READ on the day of its `reads` row, one held and unread is to read, one **read but not held is `NOT_OWNED`**; a held box set (`box_possessions`) is a `BOX_SET`; the edition name gives the format (Deluxe/Perfect/Intégrale → `DELUXE`, reliée → `HARDCOVER`, Grand format → `LARGE`, poche → `POCKET`); type "Roman" → a book, otherwise a manga. Mangacollec names no author: the enrichment that follows finds them from the ISBN. A named edition ("Berserk Edition Prestige") is a series of its own, so its volume numbers do not collide with the standard edition's |
@@ -95,9 +100,26 @@ each batch: one transaction for a 2,400-title library ran past the 60 s transact
 and was rolled back whole. A volume joins its series (`ImportTitle`); an entry with nothing to
 tell about its edition shares the work's bare edition instead of founding one more.
 
+How `ImportTitle` finds the series (#642):
+
+- the catalog's markers (`VolumeParser`): "Série, Tome 3", "Série Vol. 2", "Série T5", "Série #12";
+- after them, the other words Booknode numbers a run with, only after the series' comma and
+  ending the title or opening its subtitle: "La Passe-miroir, Livre 1 : …", "Série, Saison 2",
+  "Série, Partie 1", "Série, Épisode 3" ("Le Livre des heures" stays standalone);
+- a decimal volume ("Série, Tome 1.5") is a novella: it joins the series **without a number**,
+  so it never takes the place of volume 1;
+- a bracket in the series is kept whole ("U4 (BD), Tome 1" → "U4 (BD)").
+
+`SeriesRepository.findByKindAndTitle` matches the title case-blind, then accent- and
+punctuation-blind (`genre_code`, V6), so "Le Vaisseau d'Amelia" and "Le Vaisseau d'Amélia" are
+one series. A title an earlier import left standalone joins its series when the library is
+imported again.
+
 **Importing again completes** what is already there instead of skipping it: the tier, the
 kind (the title is moved to an entry of the right kind), the rating, the reading date and the
-genre a title lacks — never overriding what the reader set. A title already held, or listed
+genre a title lacks — never overriding what the reader set. It also takes back a reading date
+an earlier import invented (#645): a finish with no start that falls on the very day the
+source says the title was added is cleared when the source tells no reading date. A title already held, or listed
 twice in the file, is not imported twice.
 
 After the import, `ImportEnricher` fills lengths, ISBNs and publishers in from the catalog, in

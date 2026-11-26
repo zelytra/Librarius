@@ -30,7 +30,7 @@ app_user ──┬─< library_item >── edition >── work >── series 
 | `series_follow` | `(user_id, series_id)` | `created_at` | No surrogate key: the pair is the identity, and doubles as the index |
 | `series_review` | `id UUID` | `user_id` FK, `series_id` FK, `rating DOUBLE PRECISION NOT NULL` (0.5–5 by halves, V34), `review TEXT` **nullable**, `created_at`, `updated_at` (V22) | `UNIQUE(user_id, series_id)`, idx `(series_id)`. Both FKs `ON DELETE CASCADE`. Surrogate key rather than the `series_follow` shape, since a review is edited and deleted as a row of its own — the unique constraint keeps "one opinion per reader per series" |
 | `edition` | `id UUID` | `work_id` FK, `isbn13`, `isbn10`, `publisher`, `language`, `page_count`, `page_count_estimate` (V28), `cover_url`, `format`, `release_date`, `provider`, `provider_ref`, `enrich_attempted_at` (V23), `list_price NUMERIC(8,2)` + `list_price_currency` + `price_checked_at` (V29) | idx on `work_id`, `isbn13`. `CHECK ((provider IS NULL) = (provider_ref IS NULL))` (V12) |
-| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (TO_READ\|READING\|READ\|ABANDONED — `OWNED` renamed `TO_READ` in V27), `ownership` (OWNED\|BORROWED\|EBOOK\|WISHLIST\|NOT_OWNED, V27, default OWNED), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7), `(user_id, ownership)` (V27) |
+| `library_item` | `id UUID` | `user_id` FK, `edition_id` FK, `status` (TO_READ\|READING\|READ\|ABANDONED — `OWNED` renamed `TO_READ` in V27), `ownership` (OWNED\|BORROWED\|EBOOK\|WISHLIST\|NOT_OWNED, V27, default OWNED), `rating`, `review TEXT` (V7), `acquired_at`, `rank_category_id` FK — the **rank**, a built-in shelf only since V54 | `UNIQUE(user_id, edition_id)`, idx `(user_id, status)` and `(user_id, created_at DESC)` (V3), `(user_id, rating DESC NULLS LAST)` (V7), `(user_id, ownership)` (V27) |
 | `reading_progress` | `id UUID` | `library_item_id` **UNIQUE** FK, `current_page`, `percent`, `started_at`, `finished_at` | 1:1 with `library_item` |
 | `wishlist_item` | `id UUID` | `user_id` FK, `edition_id` FK, `priority` (PRIORITY\|SOON\|SOMEDAY), `estimated_price NUMERIC(8,2)`, `note` | `UNIQUE(user_id, edition_id)`, idx `(user_id, priority)` and `(user_id, created_at DESC)` (V3) |
 
@@ -634,10 +634,19 @@ either (#203). The one deliberate exception is `report.contributor_id` (V19),
 about a shared catalog object that outlives its contributor's account, so erasing that account
 forgets who the report was against rather than erasing the report. `report.reporter_id`, on the
 same table, stays `CASCADE` — erasing an account still erases the reports it *filed*.
-`library_item.rank_category_id` is `ON DELETE SET NULL`. **Deleting a category detaches the
+`library_item.rank_category_id` is `ON DELETE SET NULL` and `library_item_category` cascades
+(V54). **Deleting a category detaches the
 titles, it never deletes them**: a rank is a label stuck on a book, so dropping the label
 cannot drop the book. `CategoryService.delete` clears the column itself before removing the
 row, so the intent is readable from the code and not only from a DDL clause.
+
+`V54__library_item_categories.sql` ([#646](https://github.com/zelytra/Librarius/issues/646))
+adds `library_item_category (library_item_id, category_id)`, primary key on both, each column
+`ON DELETE CASCADE`, indexed on `category_id`: the reader's own categories a title is filed
+under, as many as they like ("Or + Polar"). `library_item.rank_category_id` keeps the **rank**,
+a built-in shelf (Platine, Or, Argent, Bronze, Abandon), at most one. The migration moves every
+custom category held in the column into the join table and clears the column for it.
+`CategoryService.delete` removes the join rows with the rank, like the column.
 
 `V53__notification_edit_outcome.sql` ([#634](https://github.com/zelytra/Librarius/issues/634)) adds
 `notification.edit_outcome VARCHAR(16)`: what an `EDIT` notification said when it was sent —

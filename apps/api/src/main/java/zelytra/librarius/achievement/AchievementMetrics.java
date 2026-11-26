@@ -64,9 +64,15 @@ public class AchievementMetrics {
                 select count(*) from library_item li where li.user_id = :u and li.review is not null""", userId));
         values.put(Metric.TITLES, count("""
                 select count(*) from library_item li where li.user_id = :u""", userId));
+        // The rank and the reader's own categories (#646): every category the library uses.
         values.put(Metric.CATEGORIES, count("""
-                select count(distinct li.rank_category_id) from library_item li
-                where li.user_id = :u and li.rank_category_id is not null""", userId));
+                select count(*) from (
+                  select li.rank_category_id from library_item li
+                  where li.user_id = :u and li.rank_category_id is not null
+                  union
+                  select lic.category_id from library_item_category lic
+                    join library_item li on li.id = lic.library_item_id
+                  where li.user_id = :u) used""", userId));
         values.put(Metric.GENRES, count("""
                 select count(distinct wg.genre_id) from library_item li
                   join edition e on e.id = li.edition_id join work_genre wg on wg.work_id = e.work_id

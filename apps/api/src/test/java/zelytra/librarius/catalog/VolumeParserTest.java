@@ -73,4 +73,31 @@ class VolumeParserTest {
         assertEquals("Les tomates vertes", VolumeParser.withoutMarkers("Les tomates vertes"));
         assertEquals("Voltaire", VolumeParser.withoutMarkers("Voltaire"));
     }
+
+    @Test
+    void readsNoVolumeFromADecimalNumber() {
+        // "Tome 1.5" is a novella between two volumes, not volume 1 (#642).
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Insaisissable, Tome 1.5"));
+        assertEquals(new VolumeParser.Parsed(null, null), VolumeParser.parse("Série T2,5"));
+    }
+
+    @Test
+    void keepsTheClosingBracketOfASeriesTitle() {
+        assertEquals(new VolumeParser.Parsed("U4 (BD)", 1), VolumeParser.parse("U4 (BD), Tome 1 : Jules"));
+        // A bracket the marker opens is still not part of the series.
+        assertEquals(new VolumeParser.Parsed("Naruto", 5), VolumeParser.parse("Naruto (Vol. 5)"));
+    }
+
+    /**
+     * A long run of separators inside the series used to be scanned once per position by the
+     * trailing-separator regex — quadratic on a title a member types (CodeQL, #642).
+     */
+    @Test
+    void readsATitleWithALongRunOfSeparatorsInLinearTime() {
+        String title = "a" + "\t".repeat(200_000) + "b, Tome 1";
+        VolumeParser.Parsed parsed = org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(
+                java.time.Duration.ofSeconds(2), () -> VolumeParser.parse(title));
+        assertEquals(Integer.valueOf(1), parsed.volumeNumber());
+        assertEquals("a" + "\t".repeat(200_000) + "b", parsed.seriesTitle());
+    }
 }

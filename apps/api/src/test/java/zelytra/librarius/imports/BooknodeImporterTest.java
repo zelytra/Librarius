@@ -40,18 +40,19 @@ class BooknodeImporterTest {
     }
 
     /**
-     * A tier is the collection's own Or, Argent or Bronze shelf; a read title's only date, the
-     * day it was marked read, is its reading date; a manga or comics list tells the kind.
+     * A tier is the collection's own Or, Argent or Bronze shelf; a manga or comics list tells the
+     * kind. The row's one date is the day the title went on the shelf — for a title once wished
+     * for, the day of the wish — so it is the acquisition date and never a reading date (#645).
      */
     @Test
-    void filesTiersUnderTheBuiltInRanksAndDatesTheReading() throws Exception {
+    void filesTiersUnderTheBuiltInRanksAndDatesNoReading() throws Exception {
         List<ImportedBook> books = new BooknodeImporter().parse(fixture());
 
         ImportedBook gold = books.get(0);
         assertEquals("or", gold.rank());
-        assertEquals(gold.acquiredAt(), gold.readAt());
-        org.junit.jupiter.api.Assertions.assertNotNull(gold.readAt());
-        // Being read: no reading date yet.
+        assertEquals(java.time.LocalDate.of(2024, 3, 12), gold.acquiredAt());
+        assertEquals(null, gold.readAt());
+        assertEquals(null, books.get(1).readAt());
         assertEquals(null, books.get(2).readAt());
 
         // Booknode's diamant tier sits above its or, as Platine sits above Or (#608).
@@ -122,6 +123,32 @@ class BooknodeImporterTest {
                         + "<li><a href='/x?page=97'>97</a></li></ul>");
 
         assertEquals(97, BooknodeImporter.highestPage(doc));
+    }
+
+    /**
+     * #644: Booknode turning the server away part-way used to end the import as if the library
+     * were whole. The pages read are kept, and the reader is told where it stopped.
+     */
+    @Test
+    void saysWhereAScrapeStoppedAndKeepsWhatItRead() throws Exception {
+        // The fixture's pagination names 97 pages.
+        Document first = fixture();
+        BooknodeImporter blockedAtTwo = new BooknodeImporter() {
+            @Override
+            Document page(String handle, int page) throws java.io.IOException {
+                if (page == 1) {
+                    return first;
+                }
+                throw new org.jsoup.HttpStatusException("Forbidden", 403, "https://booknode.com/profil/alice");
+            }
+        };
+
+        IncompleteImportException stopped = org.junit.jupiter.api.Assertions.assertThrows(
+                IncompleteImportException.class, () -> blockedAtTwo.fetch("alice"));
+
+        assertEquals(new BooknodeImporter().parse(fixture()).size(), stopped.books().size());
+        assertTrue(stopped.getMessage().contains("page 2 sur 97"), stopped.getMessage());
+        assertTrue(stopped.getMessage().contains("collecte depuis ton navigateur"), stopped.getMessage());
     }
 
     @Test

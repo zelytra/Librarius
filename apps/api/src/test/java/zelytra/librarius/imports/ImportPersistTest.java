@@ -30,6 +30,9 @@ class ImportPersistTest {
     EntityManager em;
 
     @Inject
+    zelytra.librarius.catalog.CatalogEntryService catalog;
+
+    @Inject
     zelytra.librarius.domain.repository.WishlistItemRepository wishes;
 
     @Test
@@ -63,9 +66,10 @@ class ImportPersistTest {
             assertNotNull(item.progress);
             assertEquals(LocalDate.of(2024, 3, 12), item.progress.finishedAt);
             assertEquals(Integer.valueOf(100), item.progress.percent);
-            // "favorites" is not a reading state, so it becomes a category on the item.
-            assertNotNull(item.rankCategory);
-            assertEquals("favorites", item.rankCategory.label);
+            // "favorites" is not a reading state, so it becomes one of the item's categories
+            // (#646) — not its rank, which is a built-in shelf.
+            assertEquals(null, item.rankCategory);
+            assertEquals(List.of("favorites"), item.categories.stream().map(c -> c.label).toList());
         });
     }
 
@@ -125,7 +129,9 @@ class ImportPersistTest {
         QuarkusTransaction.requiringNew().run(() -> {
             List<LibraryItem> owned = items.listByUser(userId);
             assertEquals(size, owned.size());
-            assertEquals(1, owned.stream().map(i -> i.rankCategory.id).distinct().count());
+            // Every title of the list lands in the one category it made (#646: among its categories).
+            assertEquals(1, owned.stream().flatMap(i -> i.categories.stream()).map(c -> c.id).distinct().count());
+            org.junit.jupiter.api.Assertions.assertTrue(owned.stream().allMatch(i -> i.categories.size() == 1));
         });
 
         // Running it again finds every title already there.
@@ -149,10 +155,10 @@ class ImportPersistTest {
             boolean wished, LocalDate added) {
         return new ImportedBook(title, "Some Author", null,
                 wished ? zelytra.librarius.domain.LibraryStatus.TO_READ : zelytra.librarius.domain.LibraryStatus.READ,
-                "manga or", 4, added, wished ? null : added, null, null, rank, kind, wished);
+                "manga or", 4, added, null, null, null, rank, kind, wished);
     }
 
-    /** A Booknode library: tiers on the built-in ranks, manga as manga, wants on the wishlist, dated readings. */
+    /** A Booknode library: tiers on the built-in ranks, manga as manga, wants on the wishlist, undated readings. */
     @Test
     void filesABooknodeLibraryTheWayTheReaderFiledIt() {
         String userId = newUser();
@@ -170,7 +176,10 @@ class ImportPersistTest {
             assertEquals("or", item.rankCategory.code);
             org.junit.jupiter.api.Assertions.assertTrue(item.rankCategory.builtin);
             assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
-            assertEquals(added, item.progress.finishedAt);
+            // Read, and undated: the shelf date is when it was added, not when it was read (#645).
+            assertEquals(Integer.valueOf(100), item.progress.percent);
+            assertEquals(null, item.progress.finishedAt);
+            assertEquals(added, item.acquiredAt);
             // A manga list gives no genre word, so the kind stands for one: favourite genres
             // are no longer empty for an imported library.
             assertEquals(List.of("Manga"), item.edition.work.genres.stream().map(g -> g.label).toList());
@@ -204,7 +213,42 @@ class ImportPersistTest {
             LibraryItem item = owned.get(0);
             assertEquals("argent", item.rankCategory.code);
             assertEquals(zelytra.librarius.domain.Kind.MANGA, item.edition.work.kind);
-            assertEquals(added, item.progress.finishedAt);
+            assertEquals(null, item.progress.finishedAt);
+        });
+    }
+
+    /**
+     * #645: an earlier Booknode import took the shelf date — sometimes the day of a wish — for
+     * the reading date. Importing again takes that date back, and only that one.
+     */
+    @Test
+    void reimportingClearsTheReadingDateAnEarlierImportTookFromTheShelf() {
+        String userId = newUser();
+        String invented = "Shelf date " + UUID.randomUUID();
+        String readerSet = "Reader date " + UUID.randomUUID();
+        LocalDate added = LocalDate.of(2022, 1, 9);
+        LocalDate reallyRead = LocalDate.of(2022, 6, 30);
+        // What the older parser made of the rows: read on the day they were added.
+        imports.persist(userId, "booknode", List.of(
+                new ImportedBook(invented, "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ,
+                        null, 4, added, added, null, null),
+                new ImportedBook(readerSet, "Some Author", null, zelytra.librarius.domain.LibraryStatus.READ,
+                        null, 4, added, added, null, null)));
+        // The reader then corrected the second one by hand.
+        QuarkusTransaction.requiringNew().run(() -> items.listByUser(userId).stream()
+                .filter(i -> i.edition.work.title.equals(readerSet))
+                .forEach(i -> i.progress.finishedAt = reallyRead));
+
+        imports.persist(userId, "booknode", List.of(
+                booknodeRow(invented, null, null, false, added),
+                booknodeRow(readerSet, null, null, false, added)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            java.util.Map<String, LibraryItem> owned = new java.util.HashMap<>();
+            items.listByUser(userId).forEach(i -> owned.put(i.edition.work.title, i));
+            assertEquals(null, owned.get(invented).progress.finishedAt);
+            assertEquals(added, owned.get(invented).acquiredAt);
+            assertEquals(reallyRead, owned.get(readerSet).progress.finishedAt);
         });
     }
 
@@ -218,5 +262,77 @@ class ImportPersistTest {
         assertEquals(null, ImportGenres.of("Sarah JMass", null));
         assertEquals("Bande dessinée", ImportGenres.of("BD", zelytra.librarius.domain.Kind.COMIC));
     }
-}
 
+    private String member() {
+        String userId = "import-" + UUID.randomUUID();
+        QuarkusTransaction.requiringNew().run(() -> {
+            AppUser user = new AppUser();
+            user.id = userId;
+            user.displayName = "Import fixture";
+            em.persist(user);
+        });
+        return userId;
+    }
+
+    /** #642: Booknode spells one series two ways; its volumes still land in one. */
+    @Test
+    void filesTwoSpellingsOfOneSeriesUnderTheSameSeries() {
+        String userId = member();
+        String run = UUID.randomUUID().toString().substring(0, 8);
+
+        imports.importFromCsv(userId, "titre;auteur;statut\n"
+                + "Le Vaisseau d'Amelia " + run + ", Tome 1;Lise Auteur;à lire\n"
+                + "Le Vaisseau d'Amélia " + run + " - Tome 2;Lise Auteur;à lire\n");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(2, owned.size());
+            assertNotNull(owned.get(0).edition.work.series);
+            assertEquals(owned.get(0).edition.work.series.id, owned.get(1).edition.work.series.id);
+        });
+    }
+
+    /** #642: a title an earlier import left standalone joins its series when imported again. */
+    @Test
+    void anImportAgainFilesAnEarlierStandaloneTitleUnderItsSeries() {
+        String userId = member();
+        String series = "La Passe-miroir " + UUID.randomUUID().toString().substring(0, 8);
+        String title = series + ", Livre 2 : Les Disparus du Clairdelune";
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem earlier = new LibraryItem();
+            earlier.userId = userId;
+            earlier.edition = catalog.createManualEdition(new zelytra.librarius.web.ApiDtos.ManualBookDto(
+                    zelytra.librarius.domain.Kind.BOOK, title, "Christelle Dabos", null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null), userId);
+            earlier.status = zelytra.librarius.domain.LibraryStatus.TO_READ;
+            items.persist(earlier);
+        });
+
+        imports.importFromCsv(userId, "titre;auteur;statut\n" + title + ";Christelle Dabos;à lire\n");
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            List<LibraryItem> owned = items.listByUser(userId);
+            assertEquals(1, owned.size());
+            assertNotNull(owned.get(0).edition.work.series);
+            assertEquals(series, owned.get(0).edition.work.series.title);
+            assertEquals(Integer.valueOf(2), owned.get(0).edition.work.volumeNumber);
+        });
+    }
+
+    /** #646: a Booknode "or" filed under "romance" is the rank Or and the category Romance, not one of them. */
+    @Test
+    void aTierAndAListAreTheRankAndACategory() {
+        String userId = member();
+        String title = "Tier and list " + UUID.randomUUID();
+
+        imports.persist(userId, "booknode", List.of(new ImportedBook(title, "Some Author", null,
+                zelytra.librarius.domain.LibraryStatus.READ, "romance", 4, null, null, null, null,
+                "or", null, false)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem item = items.listByUser(userId).get(0);
+            assertEquals("or", item.rankCategory.code);
+            assertEquals(List.of("romance"), item.categories.stream().map(c -> c.code).toList());
+        });
+    }
+}

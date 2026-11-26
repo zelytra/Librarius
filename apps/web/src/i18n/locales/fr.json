@@ -740,6 +740,9 @@
   "detail": {
     "summary": "Résumé",
     "ranking": "Classement",
+    "myCategories": "Mes catégories",
+    "noOwnCategories": "Tu n’as pas encore de catégorie à toi (Polar, Romance…).",
+    "createCategory": "Créer une catégorie",
     "pages": "pages",
     "series": "série",
     "released": "sorti",
@@ -903,6 +906,7 @@
       },
       "babelioNote": "Babelio ne montre ta bibliothèque qu'à toi, connecté : utilise la collecte ci-dessus, qui la lit depuis ton navigateur.",
       "result": "{{imported}} titre(s) importé(s) · {{skipped}} déjà présent(s).",
+      "resultWished": "Dont {{wished}} ajouté(s) à ta liste d’envies.",
       "unavailable": "Import indisponible pour le moment.",
       "unreadableFile": "Fichier illisible.",
       "file": "Importer un fichier (collecte, Mangacollec, CSV ou pages enregistrées)",
@@ -928,6 +932,7 @@
       "reading": "Lecture du fichier…",
       "progressDetail": "{{done}} titres traités sur {{total}} · {{imported}} ajoutés",
       "doneTitle": "Import terminé",
+      "partialTitle": "Import incomplet",
       "failedTitle": "L'import n'a pas abouti",
       "mangacollecNote": "Mangacollec ne donne ta collection qu'à toi, connecté : utilise le favori ci-dessus sur mangacollec.com, il la lit avec ta propre session."
     },
@@ -1295,6 +1300,7 @@
     "ownership": "Possession : {{ownership}}",
     "rank": "Classé dans « {{rank}} »",
     "rankCleared": "Classement retiré",
+    "categoriesSaved": "Catégories enregistrées",
     "rating": "Note enregistrée : {{rating}}/5",
     "review": "Avis enregistré",
     "progress": "Progression enregistrée",

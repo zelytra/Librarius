@@ -23,7 +23,9 @@ public final class VolumeParser {
      * two capture groups are the number for the word form and for the {@code #} form.
      */
     private static final Pattern MARKER = Pattern.compile(
-            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})\\b|#\\s*(\\d{1,4})\\b"
+            // A decimal ("Tome 1.5", "T2,5") is a novella between two volumes, not a volume: the
+            // lookahead refuses it rather than reading its whole part (#642).
+            "(?i)(?<!\\p{L})(?:tomes?|volumes?|vol|t)\\.?\\s*(\\d{1,4})(?![.,]\\d)\\b|#\\s*(\\d{1,4})(?![.,]\\d)\\b"
                     // The BnF ISBD form "Série. N", "Série. N, sous-titre" or "Série. N : sous-titre":
                     // a number after the title's period, ending the title or followed by its
                     // volume title. Live BnF records ("One Piece. 56", "One piece party. 1") end
@@ -32,7 +34,8 @@ public final class VolumeParser {
                     // "No." is an abbreviation, not the end of a title: "Kaiju No. 8" is a title.
                     + "|(?<!(?i:\\bno|\\bnr|\\bnum))\\.\\s+(\\d{1,3})(?=\\s*(?:,|:|$))");
 
-    private static final Pattern TRAILING_SEPARATORS = Pattern.compile("[\\s,;:.()\\-—]+$");
+    /** What separates a series from its volume marker: dropped from the series' end. */
+    private static final String SEPARATORS = ",;:.()-—";
 
     private VolumeParser() {
     }
@@ -58,10 +61,32 @@ public final class VolumeParser {
         } catch (NumberFormatException e) {
             return Parsed.NONE;
         }
-        String series = TRAILING_SEPARATORS.matcher(title.substring(0, matcher.start()))
-                .replaceAll("").trim();
+        String series = closeBracket(withoutTrailingSeparators(title.substring(0, matcher.start())));
         // A title that leads with the marker ("Tome 1", "Volume 3: …") names no series.
         return series.isEmpty() ? new Parsed(null, volume) : new Parsed(series, volume);
+    }
+
+    /**
+     * The text with its trailing separators and spaces removed. A loop rather than a
+     * {@code [...]+$} regex, which rescans a long run of separators from every position in it
+     * and turns a title a member types into quadratic work.
+     */
+    public static String withoutTrailingSeparators(String text) {
+        int end = text.length();
+        while (end > 0 && (Character.isWhitespace(text.charAt(end - 1)) || SEPARATORS.indexOf(text.charAt(end - 1)) >= 0)) {
+            end--;
+        }
+        return text.substring(0, end).trim();
+    }
+
+    /**
+     * The series with the bracket it opened closed again. The trailing separators stripped
+     * before the marker take a closing bracket with them: "U4 (BD), Tome 1" left "U4 (BD" (#642).
+     */
+    private static String closeBracket(String series) {
+        long open = series.chars().filter(c -> c == '(').count();
+        long close = series.chars().filter(c -> c == ')').count();
+        return open > close ? series + ")" : series;
     }
 
     /** A volume marker word on its own: "tome", "tomes", "vol", "vol.", "volume", "t.". */

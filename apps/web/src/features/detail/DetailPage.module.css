@@ -592,3 +592,18 @@
   font: inherit;
   font-size: var(--fs-14);
 }
+
+/* No category of the reader's own yet (#646): says what one is for, and where to make it. */
+.categoriesEmpty {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--ink-soft);
+}
+
+.categoriesLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--accent-deep);
+}

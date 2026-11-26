@@ -740,6 +740,9 @@
   "detail": {
     "summary": "Summary",
     "ranking": "Ranking",
+    "myCategories": "My categories",
+    "noOwnCategories": "You have no category of your own yet (Crime, Romance…).",
+    "createCategory": "Create a category",
     "pages": "pages",
     "series": "series",
     "released": "released",
@@ -903,6 +906,7 @@
       },
       "babelioNote": "Babelio only shows your library to you, signed in: use the collector above, which reads it from your browser.",
       "result": "{{imported}} title(s) imported · {{skipped}} already there.",
+      "resultWished": "Including {{wished}} added to your wishlist.",
       "unavailable": "Import is unavailable right now.",
       "unreadableFile": "Unreadable file.",
       "file": "Import a file (collected, Mangacollec, CSV or saved pages)",
@@ -928,6 +932,7 @@
       "reading": "Reading the file…",
       "progressDetail": "{{done}} of {{total}} titles processed · {{imported}} added",
       "doneTitle": "Import complete",
+      "partialTitle": "Import incomplete",
       "failedTitle": "The import did not go through",
       "mangacollecNote": "Mangacollec only gives your collection to you, signed in: use the bookmark above on mangacollec.com, it reads it with your own session."
     },
@@ -1295,6 +1300,7 @@
     "ownership": "Ownership: {{ownership}}",
     "rank": "Filed under “{{rank}}”",
     "rankCleared": "Rank removed",
+    "categoriesSaved": "Categories saved",
     "rating": "Rating saved: {{rating}}/5",
     "review": "Review saved",
     "progress": "Progress saved",

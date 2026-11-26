@@ -133,7 +133,8 @@ public class ExportService {
                         item.price,
                         item.pageCount,
                         item.format,
-                        item.language))
+                        item.language,
+                        item.categories.stream().map(c -> c.code).toList()))
                 .toList();
 
         List<ExportWishDto> wishlist = wishes.listForExport(userId).stream()

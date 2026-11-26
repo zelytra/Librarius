@@ -473,16 +473,23 @@ public final class ApiDtos {
      *
      * @param format    the format of the reader's copy (#447), null when unsaid
      */
+    /**
+     * @param rankCode      the title's built-in rank ({@code platine}, {@code or}…), or null
+     * @param categoryCodes the reader's own categories the title is filed under (#646), in the
+     *                      categories' order
+     */
     public record LibraryItemDto(UUID id, String status, Double rating, String review,
             LocalDate acquiredAt, String rankCode, ProgressView progress, BookView book,
-            boolean reviewShared, String ownership, String format, String language) {
+            boolean reviewShared, String ownership, String format, String language,
+            java.util.List<String> categoryCodes) {
         public static LibraryItemDto of(LibraryItem it) {
             return new LibraryItemDto(it.id, it.status.name(), it.rating, it.review,
                     it.acquiredAt, it.rankCategory != null ? it.rankCategory.code : null,
                     it.progress != null ? ProgressView.of(it.progress, it.effectivePageCount()) : null,
                     BookView.of(it.edition), it.reviewShared,
                     it.ownership != null ? it.ownership.name() : Ownership.OWNED.name(),
-                    it.format != null ? it.format.name() : null, it.language);
+                    it.format != null ? it.format.name() : null, it.language,
+                    it.categories.stream().map(c -> c.code).toList());
         }
     }
 
@@ -535,6 +542,11 @@ public final class ApiDtos {
     }
 
     public record RankAssignDto(java.util.UUID categoryId) {
+    }
+
+    /** The reader's own categories a title is filed under, replacing those it had (#646). */
+    public record CategoriesAssignDto(@jakarta.validation.constraints.NotNull
+            @jakarta.validation.constraints.Size(max = 100) java.util.List<java.util.UUID> categoryIds) {
     }
 
     /**
@@ -1078,12 +1090,16 @@ public final class ApiDtos {
      * @param review   the private notes on the title — the most personal thing the account
      *                 holds, and the first thing a portability export would be wrong to drop
      * @param rankCode code of the rank category the title is filed under, {@code null} when
-     *                 it carries no rank
+     *                 it carries no rank — in an archive from before #646, possibly one of the
+     *                 reader's own categories
+     * @param categoryCodes codes of the reader's own categories the title is filed under (#646),
+     *                 absent from an older archive
      */
     public record ExportCollectionItemDto(@NotNull @Valid ManualBookDto book,
             LibraryStatus status, Double rating, String review, LocalDate acquiredAt,
             String rankCode, ExportProgressDto progress, Ownership ownership, BigDecimal price,
-            Integer pageCount, zelytra.librarius.domain.BookFormat format, String language) {
+            Integer pageCount, zelytra.librarius.domain.BookFormat format, String language,
+            java.util.List<String> categoryCodes) {
     }
 
     /** One wish, with the note the user attached to it. */
@@ -1123,9 +1139,12 @@ public final class ApiDtos {
      * @param imported titles added so far
      * @param skipped  titles already present, left untouched
      * @param error    a reader-facing message when the import failed, else null
+     * @param wished   of the titles imported, how many went to the wishlist rather than the library
+     * @param warning  a reader-facing message when a finished import does not hold the whole
+     *                 library — a scrape the source stopped answering part-way (#644) — else null
      */
     public record ImportJobDto(UUID id, String status, int total, int imported, int skipped,
-            String error) {
+            String error, int wished, String warning) {
     }
 
     /**

@@ -108,15 +108,17 @@ Deux façons de ranger, qui ne viennent pas du même endroit.
   genre de la collection.
 - Le **classement** est à toi. *Platine*, *Or*, *Argent*, *Bronze* et *Abandon* sont fournis avec
   l'application et ne se modifient pas. Un titre porte **au plus un** classement.
+- Tes **catégories** (Polar, Romance…) s'ajoutent au classement : un titre peut en porter
+  **autant que tu veux**, en plus de son classement — un polar noté *Or* est *Or* et *Polar*.
 
 Depuis la ligne d'étagères de la collection, « Gérer mes catégories » permet de créer,
 renommer et supprimer les tiennes, et choisir leur couleur. Elles sont privées : deux comptes peuvent avoir chacun
 leur « Coup de cœur ». **Supprimer une catégorie ne supprime aucun titre** — les titres
-qui y étaient rangés restent dans ta collection, sans classement.
+qui y étaient rangés restent dans ta collection, sans cette catégorie.
 
-Une limite à connaître aujourd'hui : l'écran d'un titre ne propose que *Or*, *Argent* et
-*Bronze*. Une catégorie que tu crées apparaît bien comme filtre dans ta collection, mais
-il n'y a pas encore d'endroit pour y ranger un titre.
+Sur l'écran d'un titre, « Classement » choisit le classement (un seul) et « Mes catégories »
+coche ou décoche chacune des tiennes. En vue « Par catégorie », un titre rangé dans plusieurs
+catégories apparaît dans chacune.
 
 ### Chercher, trier, filtrer
 
@@ -155,8 +157,9 @@ souris), ou utilise les flèches ← →, pour le placer où tu veux. L'ordre es
 tu lâches — où que tu lâches —, et la vue passe en tri **Manuel**. Changer de tri ou de filtre
 réaffiche aussitôt la vue dans le nouvel ordre. En « Par catégorie », un titre se déplace
 dans sa catégorie. « Par série », « Tous les titres » et « Par
-catégorie » se choisissent dans le même sélecteur. Pour ranger une série entière dans une catégorie,
-choisis-la dans « Catégorie de la série », sur la page de la série.
+catégorie » se choisissent dans le même sélecteur. Pour donner un classement à une série entière,
+choisis-le dans « Catégorie de la série », sur la page de la série ; pour la ranger dans une de
+tes catégories, sélectionne-la dans la collection et choisis la catégorie.
 
 La petite corbeille d'une couverture retire le titre de ta collection **immédiatement, et
 sans confirmation**. Elle ne touche pas au catalogue partagé.

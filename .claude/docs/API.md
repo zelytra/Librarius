@@ -54,7 +54,7 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | GET/POST | `/api/views` | The caller's saved library views (`LibraryViewDto`), or a new one (`LibraryViewInput`: `name`, `kind`, `shelf`, `sort` incl. `manual`, `layout`, `groupByCategory`) — 201, 409 past 20 views (#451) |
 | PUT/DELETE | `/api/views/{id}` | Updates / deletes a view of the caller's; 404 for anyone else's |
 | PUT | `/api/views/{id}/order` | Replaces the view's manual order (`LibraryViewOrderDto.keys`: `item:<id>` / `series:<id>`, at most 5 000); duplicates, malformed keys and titles not the caller's are dropped |
-| PUT | `/api/series/{id}/rank` | Files every volume of the series the caller holds under one category (`RankAssignDto`, null clears), 204; 404 when they hold none (#451). `SeriesSummaryDto.rankCode` is the category most of their volumes carry |
+| PUT | `/api/series/{id}/rank` | Files every volume of the series the caller holds under one category (`RankAssignDto`, null clears the rank), 204 — a built-in sets their rank, one of the reader's own is added to each volume's categories (#646); 404 when they hold none (#451). `SeriesSummaryDto.rankCode` is the category most of their volumes carry |
 | GET | `/api/stats/readings?from=&to=` | The readings finished in a window, oldest first (`ReadingSpanDto`: item, title, cover, kind, `startedAt`, `finishedAt`, `days` both ends counted, null without a start); abandoned titles left out; current month by default, 400 for a window ending before it starts (#479) |
 | GET | `/api/works/{id}/friends` | People the caller follows who read, own or wish for the title (`FriendOnWorkDto`), each through `VisibilityGate`; same work, or a work with the same title and authors; rating only when shared (#452) |
 | GET | `/api/works/{id}/external` | Other communities' ratings (`ExternalRatingDto`): Open Library by work key or ISBN, AniList for a manga by id or exact title; credited, linked, cached 12 h (#453) |
@@ -63,7 +63,8 @@ Reference contract: `openapi/openapi.yaml` (generated at build time).
 | PUT | `/api/library/{id}/format` | The format of the copy (`FormatDto`, null clears it) (#447); `GET /api/library?format=` filters on it |
 | POST | `/api/library/{id}/edition` | Moves the title onto an edition that is not a row yet (`EditionChoiceDto`): a provider's printing or one described by hand, created under the title's work; a known ISBN reuses that edition (#445) |
 | PUT | `/api/library/{id}/ownership` | Sets the ownership (`OwnershipDto`) — `WISHLIST` puts the edition on the wishlist, any other value takes it off (#411) |
-| PUT | `/api/library/{id}/rank` | Assigns/removes a rank (`RankAssignDto`, a null `categoryId` removes it) |
+| PUT | `/api/library/{id}/rank` | Files the title under a category (`RankAssignDto`): a built-in becomes its rank, replacing the one it had; one of the reader's own is **added** to its categories (#646); a null `categoryId` clears the rank only. 400 on another user's category |
+| PUT | `/api/library/{id}/categories` | The reader's own categories the title is filed under, replacing those it had (`CategoriesAssignDto(categoryIds)`, at most 100, #646) → `LibraryItemDto`; 400 on a built-in or another user's category, 404 on another user's title. `LibraryItemDto.categoryCodes` lists them; `rankCode` is the rank alone. The `rank=` filter of `GET /api/library` matches either |
 | PUT | `/api/library/{id}/progress` | Status and reading progress (`ProgressDto`) — 204, see [Reading progress](#reading-progress) |
 | PUT | `/api/library/{id}/review` | Private rating and review (`ReviewDto`) — returns the updated `LibraryItemDto` |
 | PUT | `/api/library/{id}/edition` | "This is the edition I own" (`EditionSwitchDto`) — see [Editions](#editions) |
@@ -860,7 +861,9 @@ carries are absent from `byPriority` rather than reported as zero.
 Three routes bring an existing library in: `POST /api/import/{source}` from a handle,
 `POST /api/import/csv` from an exported file, and `POST /api/import/json` from a Librarius
 archive ([Export](#export)). All three answer an `ImportResult` counting what was
-`imported` and what was `skipped`, and none of them ever duplicates a title: the first two
+`imported`, what was `skipped`, and of the imported how many were `wished` (sent to the
+wishlist); the deferred job (`ImportJobDto`) carries the same counts and a `warning` when a
+scrape stopped part-way (#644). None of them ever duplicates a title: the first two
 match on title plus author folded to lower case, the archive on the whole edition
 ([Export](#export)), so running the same import twice adds nothing the second time.
 

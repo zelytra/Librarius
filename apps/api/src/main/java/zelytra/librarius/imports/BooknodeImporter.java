@@ -55,7 +55,7 @@ public class BooknodeImporter implements LibraryImporter {
 
         Document first;
         try {
-            first = get(profileUrl(h, 1));
+            first = page(h, 1);
         } catch (Exception e) {
             Log.warnf("Booknode import failed for %s: %s", h, e.getMessage());
             throw new ImportException(failureMessage(h, e));
@@ -65,16 +65,25 @@ public class BooknodeImporter implements LibraryImporter {
         int pages = Math.min(highestPage(first), MAX_PAGES);
         for (int page = 2; page <= pages; page++) {
             try {
-                all.addAll(parse(get(profileUrl(h, page))));
+                all.addAll(parse(page(h, page)));
             } catch (Exception e) {
-                // A page failing mid-way (a transient block) must not throw the whole import
-                // away: keep everything the earlier pages produced.
+                // A page failing mid-way (a block, a rate limit) must not throw the whole import
+                // away: what the earlier pages read is imported. Nor may it pass for the whole
+                // library, as it used to (#644): the reader is told where it stopped.
                 Log.warnf("Booknode import stopped at page %d/%d for %s: %s", page, pages, h,
                         e.getMessage());
-                break;
+                throw new IncompleteImportException(all, "Booknode a cessé de répondre à la page " + page
+                        + " sur " + pages + " : seuls les titres des pages précédentes ont été importés. "
+                        + "Pour le reste, utilise la collecte depuis ton navigateur, ci-dessous : "
+                        + "les titres déjà là ne seront pas importés deux fois.");
             }
         }
         return all;
+    }
+
+    /** One page of the member's library table. Package-private so a test can stand in for Booknode. */
+    Document page(String handle, int page) throws IOException {
+        return get(profileUrl(handle, page));
     }
 
     /**
@@ -155,12 +164,11 @@ public class BooknodeImporter implements LibraryImporter {
                         addedAt, null, null, null, null, kindOf(list), true));
                 continue;
             }
-            // Booknode's table carries one date, the day the title went on the shelf. For a
-            // read title that is the day it was marked read — the only reading date there is,
-            // and without one the title counted in no year, no goal and no statistic.
-            boolean finished = status == LibraryStatus.READ || status == LibraryStatus.ABANDONED;
+            // Booknode's table carries one date, the day the title went on the shelf — and a
+            // title moved there from « Envies » keeps the day it was wished for. It is when the
+            // title was added, never when it was read: a read title is imported undated (#645).
             books.add(new ImportedBook(title, author, coverNear(row), status, list,
-                    ratingFromBadge(badgeClasses), addedAt, finished ? addedAt : null, null, null,
+                    ratingFromBadge(badgeClasses), addedAt, null, null, null,
                     rankFromBadge(badgeClasses), kindOf(list), false));
         }
         return books;

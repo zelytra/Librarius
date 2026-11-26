@@ -48,9 +48,13 @@ export function mergedOrder(shown: string[], previous: string[]): string[] {
   return [...shown, ...previous.filter((key) => !visible.has(key))];
 }
 
-/** The category an entry files under: a title's own, a series' most common one. */
-export function rankOf(entry: ShelfEntry): string | undefined {
-  return ('series' in entry ? entry.series.rankCode : entry.item.rankCode) ?? undefined;
+/**
+ * The categories an entry files under: a title's rank and each of its own categories (#646),
+ * a series' most common rank.
+ */
+export function codesOf(entry: ShelfEntry): string[] {
+  const codes = 'series' in entry ? [entry.series.rankCode] : [entry.item.rankCode, ...(entry.item.categoryCodes ?? [])];
+  return codes.filter((code): code is string => Boolean(code));
 }
 
 export interface CategorySection<T> {
@@ -63,7 +67,8 @@ export interface CategorySection<T> {
 
 /**
  * The shelf split by category, in the order the reader ranks their categories, series kept
- * whole as blocks; the entries filed under none last. Empty sections are left out.
+ * whole as blocks; the entries filed under none last. Empty sections are left out. A title
+ * filed under several categories appears in each of their sections.
  */
 export function byCategory<T extends ShelfEntry>(entries: T[], categories: CategoryDto[]): CategorySection<T>[] {
   const sections: CategorySection<T>[] = categories.map((c) => ({
@@ -75,8 +80,9 @@ export function byCategory<T extends ShelfEntry>(entries: T[], categories: Categ
   const none: CategorySection<T> = { entries: [] };
   const byCode = new Map(sections.map((s) => [s.code, s]));
   for (const entry of entries) {
-    const code = rankOf(entry);
-    (code ? byCode.get(code) ?? none : none).entries.push(entry);
+    // On every shelf it files under — "Or + Polar" is on both — and among the unfiled otherwise.
+    const shelves = codesOf(entry).flatMap((code) => byCode.get(code) ?? []);
+    for (const shelf of shelves.length > 0 ? shelves : [none]) shelf.entries.push(entry);
   }
   return [...sections, none].filter((s) => s.entries.length > 0);
 }

@@ -42,6 +42,7 @@ import zelytra.librarius.web.ApiDtos.LibraryItemDto;
 import zelytra.librarius.web.ApiDtos.LibraryPageDto;
 import zelytra.librarius.web.ApiDtos.ProgressDto;
 import zelytra.librarius.web.ApiDtos.RankAssignDto;
+import zelytra.librarius.web.ApiDtos.CategoriesAssignDto;
 import zelytra.librarius.web.ApiDtos.ReviewDto;
 
 import java.time.LocalDate;
@@ -302,7 +303,12 @@ public class LibraryResource {
         };
     }
 
-    /** Assigns a rank to an owned title (or clears it when categoryId is null). */
+    /**
+     * Files an owned title under a category. A built-in shelf is its rank, replacing the one it
+     * had; one of the reader's own is added to its categories, the rank untouched (#646) — the
+     * meaning this route always had for clients that predate {@link #setCategories}. A null
+     * categoryId clears the rank only.
+     */
     @PUT
     @Path("/{id}/rank")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -319,8 +325,39 @@ public class LibraryResource {
             if (cat == null) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
             }
-            item.rankCategory = cat;
+            if (cat.builtin) {
+                item.rankCategory = cat;
+            } else {
+                item.categories.add(cat);
+            }
         }
+        return Response.ok(LibraryItemDto.of(item)).build();
+    }
+
+    /**
+     * Files an owned title under the reader's own categories, as many as they like, replacing
+     * those it had (#646): "Or + Polar" is the rank Or and the category Polar. A built-in, or a
+     * category of someone else's, is a 400.
+     */
+    @PUT
+    @Path("/{id}/categories")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response setCategories(@PathParam("id") UUID id, @Valid CategoriesAssignDto dto) {
+        LibraryItem item = items.findOwned(currentUser.id(), id).orElse(null);
+        if (item == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        var chosen = new java.util.LinkedHashSet<zelytra.librarius.domain.RankCategory>();
+        for (UUID categoryId : dto.categoryIds()) {
+            var cat = categories.findForUser(currentUser.id(), categoryId).orElse(null);
+            if (cat == null || cat.builtin) {
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+            chosen.add(cat);
+        }
+        item.categories.clear();
+        item.categories.addAll(chosen);
         return Response.ok(LibraryItemDto.of(item)).build();
     }
 
@@ -483,10 +520,14 @@ public class LibraryResource {
             if (dto.format() != null) {
                 item.format = dto.format();
             }
-            if (category != null) {
+            if (category != null && category.builtin) {
                 item.rankCategory = category;
+            } else if (category != null) {
+                // One of the reader's own: added beside the rank and the others (#646).
+                item.categories.add(category);
             } else if (Boolean.TRUE.equals(dto.clearCategory())) {
                 item.rankCategory = null;
+                item.categories.clear();
             }
             if (dto.rating() != null) {
                 item.rating = dto.rating();

@@ -89,8 +89,11 @@ public class ReadingProgressRepository implements PanacheRepositoryBase<ReadingP
         AUTHOR("w.authorsText", ""),
         PUBLISHER("e.publisher", ""),
         LANGUAGE("e.language", ""),
-        /** The rank category the title is filed under; an inner join drops the unranked. */
-        RANK("rc.label", " join li.rankCategory rc");
+        /**
+         * The categories the title is filed under — its rank and the reader's own (#646), a
+         * title counting once under each; an inner join drops the uncategorised.
+         */
+        RANK("rc.label", " join RankCategory rc on (rc = li.rankCategory or rc member of li.categories)");
 
         private final String column;
         private final String extraJoin;

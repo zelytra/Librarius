@@ -59,7 +59,8 @@ public class ImportService {
     MeterRegistry meters;
 
     /** Outcome of an import. */
-    public record ImportResult(String source, int imported, int skipped, int total) {
+    /** @param wished how many of the imported titles went to the wishlist rather than the library */
+    public record ImportResult(String source, int imported, int skipped, int total, int wished) {
     }
 
     public ImportResult importFromSource(String userId, String source, String handle) {
@@ -114,16 +115,18 @@ public class ImportService {
         Batches state = QuarkusTransaction.requiringNew().call(() -> prepare(userId, books));
         int imported = 0;
         int skipped = 0;
+        int wished = 0;
         for (int from = 0; from < books.size(); from += BATCH) {
             List<ImportedBook> slice = books.subList(from, Math.min(books.size(), from + BATCH));
             int[] counts = QuarkusTransaction.requiringNew().call(() -> persistBatch(userId, slice, state));
             imported += counts[0];
             skipped += counts[1];
+            wished += counts[2];
             progress.update(imported, skipped);
         }
 
         meters.counter("librarius.import", "source", source).increment(imported);
-        return new ImportResult(source, imported, skipped, books.size());
+        return new ImportResult(source, imported, skipped, books.size(), wished);
     }
 
     /** What every batch of one import shares: the titles already held, and the categories. */
@@ -169,7 +172,8 @@ public class ImportService {
     }
 
     /**
-     * One batch, in the caller's transaction: how many titles it imported, and skipped. A
+     * One batch, in the caller's transaction: how many titles it imported, skipped, and sent to
+     * the wishlist among the imported. A
      * skipped title is one already there — and is completed with what this import knows and
      * the library does not, so running a richer import again repairs an older one instead of
      * having to start the library over.
@@ -177,6 +181,7 @@ public class ImportService {
     private int[] persistBatch(String userId, List<ImportedBook> books, Batches state) {
         int imported = 0;
         int skipped = 0;
+        int wished = 0;
         for (ImportedBook book : books) {
             if (book.title() == null || book.title().isBlank()) {
                 continue;
@@ -197,6 +202,7 @@ public class ImportService {
                     wish.edition = catalog.createManualEdition(manualBook(book, parsed), userId);
                     wishes.persist(wish);
                     imported++;
+                    wished++;
                 }
                 continue;
             }
@@ -219,12 +225,16 @@ public class ImportService {
             item.format = book.format();
             item.rating = book.rating() == null ? null : book.rating().doubleValue();
             item.acquiredAt = book.acquiredAt();
-            item.rankCategory = rankFor(userId, book, state);
+            item.rankCategory = rankFor(userId, book);
+            RankCategory list = listCategoryFor(userId, book, state);
+            if (list != null) {
+                item.categories.add(list);
+            }
             items.persist(item);
             recordReading(item, book.readAt());
             imported++;
         }
-        return new int[] {imported, skipped};
+        return new int[] {imported, skipped, wished};
     }
 
     /**
@@ -240,21 +250,22 @@ public class ImportService {
                 null, null, ImportGenres.of(book.shelf(), book.kind()), null, null);
     }
 
+    /** The rank an imported title files under: the source's own tier (a Booknode "or" is the built-in Or). */
+    private RankCategory rankFor(String userId, ImportedBook book) {
+        return book.rank() == null ? null : ranks.findForUserByCode(userId, book.rank()).orElse(null);
+    }
+
     /**
-     * The category an imported title files under: the source's own tier when it has one (a
-     * Booknode "or" is the built-in Or the collection filters on), else its list, when that
-     * list is a shelf of the reader's rather than the kind it names ("manga", "BD").
+     * The reader's own category an imported title files under: its list, when that list is a
+     * shelf of the reader's rather than the kind it names ("manga", "BD"). Beside the tier, not
+     * instead of it (#646): a Booknode "or" filed under "romance" is Or and Romance.
      */
-    private RankCategory rankFor(String userId, ImportedBook book, Batches state) {
-        RankCategory category;
-        if (book.rank() != null) {
-            category = ranks.findForUserByCode(userId, book.rank()).orElse(null);
-        } else if (book.kind() != null) {
-            category = null;
-        } else {
-            category = categoryFor(userId, book.shelf(), state.shelfCounts(), state.minForCategory(),
-                    state.categories(), state.nextOrder());
+    private RankCategory listCategoryFor(String userId, ImportedBook book, Batches state) {
+        if (book.kind() != null) {
+            return null;
         }
+        RankCategory category = categoryFor(userId, book.shelf(), state.shelfCounts(), state.minForCategory(),
+                state.categories(), state.nextOrder());
         // A category from an earlier batch is detached by now; the merge hands back the
         // instance this transaction tracks.
         return category == null || ranks.getEntityManager().contains(category)
@@ -267,11 +278,16 @@ public class ImportService {
      * earlier import filed the title under, a rating or a date only when there is none.
      */
     private void complete(String userId, LibraryItem item, ImportedBook book, ImportTitle parsed, Batches state) {
-        RankCategory current = item.rankCategory;
-        boolean fromImport = current == null
-                || (!current.builtin && book.shelf() != null && current.code.equals(categoryCode(book.shelf())));
-        if (book.rank() != null && fromImport) {
-            item.rankCategory = rankFor(userId, book, state);
+        if (book.rank() != null && item.rankCategory == null) {
+            item.rankCategory = rankFor(userId, book);
+        }
+        // The list joins a title filed under none of the reader's categories; one they filed
+        // themselves is left as they made it.
+        if (item.categories.isEmpty()) {
+            RankCategory list = listCategoryFor(userId, book, state);
+            if (list != null) {
+                item.categories.add(list);
+            }
         }
         if (item.rating == null && book.rating() != null) {
             item.rating = book.rating() == null ? null : book.rating().doubleValue();
@@ -290,6 +306,10 @@ public class ImportService {
                     old.pageCount, old.coverUrl != null ? old.coverUrl : dto.coverUrl(), null, null,
                     null, null, null, null, null));
         }
+        // A title an earlier import could not place in its series joins it now (#642).
+        if (parsed.seriesTitle() != null) {
+            catalog.fileUnderSeries(item.edition.work, parsed.seriesTitle(), parsed.volumeNumber());
+        }
         // A work imported before lists were read as genres has none: the list's genre fills it.
         String genre = ImportGenres.of(book.shelf(), kind);
         if (genre != null && item.edition.work.genres.isEmpty()) {
@@ -298,6 +318,13 @@ public class ImportService {
             if (item.edition.work.genresText == null) {
                 item.edition.work.genresText = genre;
             }
+        }
+        // An earlier import took a shelf date for the reading date (#645): a finish that is the
+        // very day the source says the title was added, with no start, came from that and not
+        // from the reader, and goes back to undated when the source tells no reading date.
+        if (book.readAt() == null && book.acquiredAt() != null && item.progress != null
+                && item.progress.startedAt == null && book.acquiredAt().equals(item.progress.finishedAt)) {
+            item.progress.finishedAt = null;
         }
         if (book.readAt() != null && (item.status == LibraryStatus.READ || item.status == LibraryStatus.ABANDONED)) {
             if (item.progress == null) {
