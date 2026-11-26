@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './primitives.module.css';
 import { Icon } from './Icon';
 
@@ -185,8 +186,30 @@ export function Segmented<T extends string>({
   value: T;
   onChange: (id: T) => void;
 }) {
+  const pill = useRef<HTMLDivElement>(null);
+  const [scrollable, setScrollable] = useState(false);
+  // More options than fit (#655: sixteen years on a phone) scroll inside the pill: it says so
+  // with a fade on its edge, and the option just chosen is brought into view.
+  useEffect(() => {
+    const measure = () => {
+      const el = pill.current;
+      if (el) setScrollable(el.scrollWidth > el.clientWidth + 1);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [options.length]);
+  useEffect(() => {
+    // The pill scrolls to the chosen option — on mount too, a screen re-drawing it after a
+    // choice — horizontally only: the page itself never moves.
+    const el = pill.current;
+    const chosen = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!el || !chosen) return;
+    const left = chosen.offsetLeft - (el.clientWidth - chosen.offsetWidth) / 2;
+    el.scrollLeft = Math.max(0, left);
+  }, [value]);
   return (
-    <div className={styles.segmented}>
+    <div ref={pill} className={styles.segmented} data-scrollable={scrollable ? 'true' : undefined}>
       {options.map((opt) => (
         <button
           key={opt.id}
