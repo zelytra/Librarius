@@ -27,9 +27,45 @@ final class BooknodeHistoryParser {
     private BooknodeHistoryParser() {
     }
 
-    /** Whether a saved page is the history rather than the library table. */
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /** The Vue root a fetched history page carries its year's readings on, as JSON (#653). */
+    private static Element root(Document page) {
+        return page.selectFirst("[data-vue-app][data-current-year-details]");
+    }
+
+    /** Whether a page is the history — fetched, or saved by the collector — rather than the library table. */
     static boolean isHistory(Document page) {
-        return !page.select(".one_month .item").isEmpty();
+        return root(page) != null || !page.select(".one_month .item").isEmpty();
+    }
+
+    /** The year a fetched history page shows, or null. */
+    static Integer yearShown(Document page) {
+        Element root = root(page);
+        try {
+            return root == null ? null : Integer.valueOf(root.attr("data-year").trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** Every year the member's history lists, newest first; empty when the page lists none. */
+    static List<Integer> yearsListed(Document page) {
+        Element root = root(page);
+        List<Integer> years = new ArrayList<>();
+        if (root == null) {
+            return years;
+        }
+        try {
+            for (var year : JSON.readTree(root.attr("data-table-years"))) {
+                if (year.hasNonNull("year")) {
+                    years.add(year.get("year").asInt());
+                }
+            }
+        } catch (java.io.IOException e) {
+            return years;
+        }
+        return years;
     }
 
     /**
@@ -38,6 +74,11 @@ final class BooknodeHistoryParser {
      */
     static List<ImportedBook> parse(Document page) {
         Map<String, ImportedBook> latest = new LinkedHashMap<>();
+        Element root = root(page);
+        if (root != null) {
+            readEmbedded(root, latest);
+            return new ArrayList<>(latest.values());
+        }
         for (Element month : page.select(".one_month")) {
             Element heading = month.selectFirst("h3");
             LocalDate first = heading == null ? null : firstOfMonth(heading.text());
@@ -56,14 +97,58 @@ final class BooknodeHistoryParser {
                 ImportedBook book = new ImportedBook(title, author, cover(item), LibraryStatus.READ, null,
                         BooknodeImporter.ratingFromBadge(classes), null, first, null, null,
                         BooknodeImporter.rankFromBadge(classes), null, false, null, null, true, true);
-                String key = link.attr("href").isBlank() ? title + '|' + author : link.attr("href");
-                ImportedBook known = latest.get(key);
-                if (known == null || known.readAt().isBefore(first)) {
-                    latest.put(key, book);
-                }
+                keepLatest(latest, link.attr("href").isBlank() ? title + '|' + author : link.attr("href"), book);
             }
         }
         return new ArrayList<>(latest.values());
+    }
+
+    /**
+     * The JSON a fetched page carries (#653): {@code data-current-year-details}, the year's
+     * months and their {@code reads[{list_id, book}]}, the tiers being {@code data-lists}.
+     */
+    private static void readEmbedded(Element root, Map<String, ImportedBook> latest) {
+        Integer year = yearShown(root.ownerDocument());
+        if (year == null) {
+            return;
+        }
+        try {
+            var lists = JSON.readTree(root.attr("data-lists"));
+            for (var month : JSON.readTree(root.attr("data-current-year-details"))) {
+                LocalDate first = firstOfMonth(month.path("month_name").asText("") + " " + year);
+                if (first == null) {
+                    continue;
+                }
+                for (var read : month.path("reads")) {
+                    var b = read.path("book");
+                    // Spaces collapsed as the rendered page shows them, the library row's spelling.
+                    String title = b.path("name").asText("").replaceAll("\\s+", " ").trim();
+                    if (title.isEmpty()) {
+                        continue;
+                    }
+                    // The first author, as the rendered page names them: what a library row is matched on.
+                    var authors = b.path("authors");
+                    String author = authors.size() > 0 ? authors.get(0).path("nom").asText(null) : null;
+                    String tier = lists.path(read.path("list_id").asText()).path("badge_class").asText(null);
+                    Set<String> classes = tier == null ? Set.of() : Set.of(tier);
+                    String cover = b.path("cover_medium").asText(null);
+                    ImportedBook book = new ImportedBook(title, author, cover, LibraryStatus.READ, null,
+                            BooknodeImporter.ratingFromBadge(classes), null, first, null, null,
+                            BooknodeImporter.rankFromBadge(classes), null, false, null, null, true, true);
+                    String href = b.path("href").asText("");
+                    keepLatest(latest, href.isBlank() ? title + '|' + author : href, book);
+                }
+            }
+        } catch (java.io.IOException e) {
+            // A page whose JSON does not read dates nothing; the library is imported regardless.
+        }
+    }
+
+    private static void keepLatest(Map<String, ImportedBook> latest, String key, ImportedBook book) {
+        ImportedBook known = latest.get(key);
+        if (known == null || known.readAt().isBefore(book.readAt())) {
+            latest.put(key, book);
+        }
     }
 
     /** "novembre 2026" → 2026-11-01; anything else → null. */
