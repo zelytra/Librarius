@@ -1028,8 +1028,8 @@ its own (`isbn13`, `isbn10`, `publisher`, `language`, `pageCount`, `format`, `re
 `synopsis`, `coverUrl`). `kind` (#650) is the shared default: on a book it moves the work, and
 the work leaves a series of the old kind for the one of its new kind with the same title; on a
 series it moves the series and every one of its works, a 409 when a series of that kind already
-holds the title. A reader who filed their copy under another kind (`PUT /api/library/{id}/kind`,
-#454) holds another work, which the change does not touch. `contribution.CatalogFields` reads, parses and writes each field in one
+holds the title. A reader who filed their copy under another kind (#454, through
+`PUT /api/library/{id}/kind`) holds another work, which the change does not touch. `contribution.CatalogFields` reads, parses and writes each field in one
 canonical string form (trimmed, blank = none, plain ISO numbers and dates, ISBN without hyphens,
 cover `http(s)` only), so `CatalogEditService` stores the **diff** — the fields whose canonical
 value differs, each `{before, after}` — and a proposal changing nothing is a 400. Writing
