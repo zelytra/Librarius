@@ -380,6 +380,14 @@ export interface CatalogResult {
   popularity?: number;
 }
 
+export interface CategoriesAssignDto {
+  /**
+     * @maxItems 100
+     * @items.pattern [a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}
+     */
+  categoryIds: string[];
+}
+
 export interface CategoryCreateDto {
   /** @pattern \S */
   label: string;
@@ -540,6 +548,7 @@ export interface ExportCollectionItemDto {
   pageCount?: number;
   format?: BookFormat;
   language?: string;
+  categoryCodes?: string[];
 }
 
 export interface ExportUserDto {
@@ -834,6 +843,7 @@ export interface LibraryItemDto {
   ownership?: string;
   format?: string;
   language?: string;
+  categoryCodes?: string[];
 }
 
 export interface LibraryPageDto {
@@ -7158,6 +7168,93 @@ export const useDeleteApiLibraryId = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteApiLibraryIdMutationOptions(options), queryClient);
+    }
+
+export const getPutApiLibraryIdCategoriesUrl = (id: Uuid,) => {
+
+
+
+
+  return `/api/library/${id}/categories`
+}
+
+/**
+ * @summary Set Categories
+ */
+export const putApiLibraryIdCategories = async (id: Uuid,
+    categoriesAssignDto: CategoriesAssignDto, options?: Parameters<typeof apiClient>[1]): Promise<unknown> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiClient<unknown>(getPutApiLibraryIdCategoriesUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(categoriesAssignDto)
+  }
+);}
+
+
+
+
+
+export const getPutApiLibraryIdCategoriesMutationKey = () => ['putApiLibraryIdCategories'] as const;
+
+export const getPutApiLibraryIdCategoriesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdCategories>>, TError,PutApiLibraryIdCategoriesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdCategories>>, TError,PutApiLibraryIdCategoriesMutationVariables, TContext> => {
+
+const mutationKey = getPutApiLibraryIdCategoriesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiLibraryIdCategories>>, PutApiLibraryIdCategoriesMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putApiLibraryIdCategories(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiLibraryIdCategoriesMutationResult = NonNullable<Awaited<ReturnType<typeof putApiLibraryIdCategories>>>
+    export type PutApiLibraryIdCategoriesMutationBody = CategoriesAssignDto
+    export type PutApiLibraryIdCategoriesMutationError = void
+    export type PutApiLibraryIdCategoriesMutationVariables = {id: Uuid;data: CategoriesAssignDto}
+
+    /** @summary Set Categories */
+export const usePutApiLibraryIdCategories = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiLibraryIdCategories>>, TError,PutApiLibraryIdCategoriesMutationVariables, TContext>, request?: SecondParameter<typeof apiClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiLibraryIdCategories>>,
+        TError,
+        PutApiLibraryIdCategoriesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiLibraryIdCategoriesMutationOptions(options), queryClient);
     }
 
 export const getPutApiLibraryIdEditionUrl = (id: Uuid,) => {

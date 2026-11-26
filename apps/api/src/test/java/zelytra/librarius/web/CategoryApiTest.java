@@ -95,7 +95,8 @@ class CategoryApiTest {
         given().auth().oauth2(token())
                 .when().get("/api/library/" + item)
                 .then().statusCode(200)
-                .body("rankCode", is("dore"));
+                // One of the reader's own categories: among the title's categories (#646).
+                .body("categoryCodes", org.hamcrest.Matchers.contains("dore"));
 
         given().auth().oauth2(token()).queryParam("rank", "dore")
                 .when().get("/api/library")
@@ -124,7 +125,7 @@ class CategoryApiTest {
         given().auth().oauth2(token())
                 .when().get("/api/library/" + item)
                 .then().statusCode(200)
-                .body("rankCode", is("relectures"));
+                .body("categoryCodes", org.hamcrest.Matchers.contains("relectures"));
     }
 
     /** Renaming a category to the name it already carries is not a conflict with itself. */

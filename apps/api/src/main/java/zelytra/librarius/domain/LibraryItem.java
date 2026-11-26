@@ -7,6 +7,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -40,9 +43,18 @@ public class LibraryItem {
     @Column(nullable = false, length = 16)
     public Ownership ownership = Ownership.OWNED;
 
+    /** The title's rank: a built-in shelf (Platine, Or, Argent, Bronze, Abandon), or none. */
     @ManyToOne
     @JoinColumn(name = "rank_category_id")
     public RankCategory rankCategory;
+
+    /** The reader's own categories the title is filed under, as many as they like (#646, V54). */
+    @ManyToMany
+    @JoinTable(name = "library_item_category",
+            joinColumns = @JoinColumn(name = "library_item_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    @OrderBy("sortOrder, label")
+    public java.util.Set<RankCategory> categories = new java.util.LinkedHashSet<>();
 
     /** Personal rating, 1 to 5. Private to the owner: never shared, never aggregated. */
     public Double rating;

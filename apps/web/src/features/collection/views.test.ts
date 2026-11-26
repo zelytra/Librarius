@@ -35,4 +35,20 @@ describe('library views', () => {
       [undefined, ['item:a']],
     ]);
   });
+
+  /** #646: a title filed under Or and Polar sits on both shelves. */
+  test('shows a title on the shelf of its rank and of each of its categories', () => {
+    const categories = [{ code: 'or', label: 'Or' }, { code: 'polar', label: 'Polar' }, { code: 'nordique', label: 'Nordique' }];
+    const both: ShelfEntry = { item: { id: 'a', rankCode: 'or', categoryCodes: ['polar', 'nordique'] } };
+    const onlyMine: ShelfEntry = { item: { id: 'b', categoryCodes: ['polar'] } };
+
+    const sections = byCategory([both, onlyMine, item('c')], categories);
+
+    expect(sections.map((s) => [s.code, s.entries.map(keyOf)])).toEqual([
+      ['or', ['item:a']],
+      ['polar', ['item:a', 'item:b']],
+      ['nordique', ['item:a']],
+      [undefined, ['item:c']],
+    ]);
+  });
 });

@@ -39,7 +39,9 @@ export function SeriesCategory({ seriesId }: { seriesId: string }) {
       <h3 className={styles.sectionTitle}>{t('series.categoryTitle')}</h3>
       <p className={styles.categoryHint}>{t('series.categoryHint')}</p>
       <CategoryChoice
-        categories={categories}
+        // The run's rank; the reader's own categories go on a series through the selection (#646).
+        categories={categories.filter((c) => c.builtin)}
+        label={t('series.categoryTitle')}
         selectedId={selectedId}
         onSelect={(categoryId) => mutate({ id: seriesId, data: { categoryId } })}
       />

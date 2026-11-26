@@ -475,7 +475,7 @@ class DataIsolationTest {
         given().auth().oauth2(token("alice"))
                 .when().get("/api/library/" + aliceItem)
                 .then().statusCode(200)
-                .body("rankCode", is("isolation-alice-suppression"));
+                .body("categoryCodes", org.hamcrest.Matchers.contains("isolation-alice-suppression"));
     }
 
     /**

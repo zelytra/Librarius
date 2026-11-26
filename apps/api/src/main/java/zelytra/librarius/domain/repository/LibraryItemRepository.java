@@ -193,8 +193,17 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * and so the outcome does not depend on a DDL clause nobody reads.
      */
     public long clearRank(String userId, UUID categoryId) {
-        return update("set rankCategory = null where rankCategory.id = ?1 and userId = ?2",
+        long ranked = update("set rankCategory = null where rankCategory.id = ?1 and userId = ?2",
                 categoryId, userId);
+        // Its titles leave it too (#646); `library_item_category` cascades the same way.
+        int filed = getEntityManager().createNativeQuery("""
+                        delete from library_item_category lic using library_item li
+                        where lic.library_item_id = li.id and lic.category_id = :category and li.user_id = :userId
+                        """)
+                .setParameter("category", categoryId)
+                .setParameter("userId", userId)
+                .executeUpdate();
+        return ranked + filed;
     }
 
     /**
@@ -402,7 +411,8 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
             params.put("format", filter.format());
         }
         if (filter.rank() != null && !filter.rank().isBlank()) {
-            clauses.add("rc.code = :rank");
+            // The rank, or any of the reader's categories the title is filed under (#646).
+            clauses.add("(rc.code = :rank or :rank in (select c.code from li.categories c))");
             params.put("rank", filter.rank().trim());
         }
         if (filter.genre() != null && !filter.genre().isBlank()) {
@@ -619,6 +629,22 @@ public class LibraryItemRepository implements PanacheRepositoryBase<LibraryItem,
      * @return how many titles moved
      */
     public int rankSeries(String userId, UUID seriesId, zelytra.librarius.domain.RankCategory category) {
+        if (category != null && !category.builtin) {
+            // One of the reader's own categories is added to every volume, beside its rank (#646).
+            int held = listBySeries(userId, seriesId).size();
+            getEntityManager().createNativeQuery("""
+                            insert into library_item_category (library_item_id, category_id)
+                            select li.id, :category from library_item li
+                            join edition e on e.id = li.edition_id join work w on w.id = e.work_id
+                            where li.user_id = :userId and w.series_id = :seriesId
+                            on conflict do nothing
+                            """)
+                    .setParameter("category", category.id)
+                    .setParameter("userId", userId)
+                    .setParameter("seriesId", seriesId)
+                    .executeUpdate();
+            return held;
+        }
         return getEntityManager().createQuery("""
                         update LibraryItem li set li.rankCategory = :category
                         where li.userId = :userId and li.edition.id in (

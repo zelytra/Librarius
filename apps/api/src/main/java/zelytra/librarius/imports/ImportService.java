@@ -225,7 +225,11 @@ public class ImportService {
             item.format = book.format();
             item.rating = book.rating() == null ? null : book.rating().doubleValue();
             item.acquiredAt = book.acquiredAt();
-            item.rankCategory = rankFor(userId, book, state);
+            item.rankCategory = rankFor(userId, book);
+            RankCategory list = listCategoryFor(userId, book, state);
+            if (list != null) {
+                item.categories.add(list);
+            }
             items.persist(item);
             recordReading(item, book.readAt());
             imported++;
@@ -246,21 +250,22 @@ public class ImportService {
                 null, null, ImportGenres.of(book.shelf(), book.kind()), null, null);
     }
 
+    /** The rank an imported title files under: the source's own tier (a Booknode "or" is the built-in Or). */
+    private RankCategory rankFor(String userId, ImportedBook book) {
+        return book.rank() == null ? null : ranks.findForUserByCode(userId, book.rank()).orElse(null);
+    }
+
     /**
-     * The category an imported title files under: the source's own tier when it has one (a
-     * Booknode "or" is the built-in Or the collection filters on), else its list, when that
-     * list is a shelf of the reader's rather than the kind it names ("manga", "BD").
+     * The reader's own category an imported title files under: its list, when that list is a
+     * shelf of the reader's rather than the kind it names ("manga", "BD"). Beside the tier, not
+     * instead of it (#646): a Booknode "or" filed under "romance" is Or and Romance.
      */
-    private RankCategory rankFor(String userId, ImportedBook book, Batches state) {
-        RankCategory category;
-        if (book.rank() != null) {
-            category = ranks.findForUserByCode(userId, book.rank()).orElse(null);
-        } else if (book.kind() != null) {
-            category = null;
-        } else {
-            category = categoryFor(userId, book.shelf(), state.shelfCounts(), state.minForCategory(),
-                    state.categories(), state.nextOrder());
+    private RankCategory listCategoryFor(String userId, ImportedBook book, Batches state) {
+        if (book.kind() != null) {
+            return null;
         }
+        RankCategory category = categoryFor(userId, book.shelf(), state.shelfCounts(), state.minForCategory(),
+                state.categories(), state.nextOrder());
         // A category from an earlier batch is detached by now; the merge hands back the
         // instance this transaction tracks.
         return category == null || ranks.getEntityManager().contains(category)
@@ -273,11 +278,16 @@ public class ImportService {
      * earlier import filed the title under, a rating or a date only when there is none.
      */
     private void complete(String userId, LibraryItem item, ImportedBook book, ImportTitle parsed, Batches state) {
-        RankCategory current = item.rankCategory;
-        boolean fromImport = current == null
-                || (!current.builtin && book.shelf() != null && current.code.equals(categoryCode(book.shelf())));
-        if (book.rank() != null && fromImport) {
-            item.rankCategory = rankFor(userId, book, state);
+        if (book.rank() != null && item.rankCategory == null) {
+            item.rankCategory = rankFor(userId, book);
+        }
+        // The list joins a title filed under none of the reader's categories; one they filed
+        // themselves is left as they made it.
+        if (item.categories.isEmpty()) {
+            RankCategory list = listCategoryFor(userId, book, state);
+            if (list != null) {
+                item.categories.add(list);
+            }
         }
         if (item.rating == null && book.rating() != null) {
             item.rating = book.rating() == null ? null : book.rating().doubleValue();

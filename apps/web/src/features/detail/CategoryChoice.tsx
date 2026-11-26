@@ -4,35 +4,33 @@ import styles from './CategoryChoice.module.css';
 /** Opacity suffix of the selected category's background. */
 const TINT = '22';
 
+type Choice =
+  /** One category at most — a rank: choosing the one in force clears it, as the stars clear a rating. */
+  | { selectedId?: string; onSelect: (categoryId: string | undefined) => void; selectedIds?: never; onToggle?: never }
+  /** Any number of them — the reader's own categories (#646): each button files or unfiles. */
+  | { selectedIds: string[]; onToggle: (categoryId: string) => void; selectedId?: never; onSelect?: never };
+
 /**
- * Where a title is filed, picked from every category the caller has.
+ * Where a title is filed, picked from the categories given, in the order given.
  *
- * <p>The row used to be narrowed to the three metals, which left a category created on the
- * Categories screen assignable from nowhere — and the `abandon` shelf, seeded for the
- * end-of-reading sheet, unreachable altogether. It now draws what `GET /api/categories`
- * returns, in the order it returns it: the four built-ins, then the caller's own.
- *
- * <p>Choosing the category already in force clears it, the way the stars clear a rating: a
- * title carries at most one rank, so there has to be a way back to none.
+ * <p>A title carries one rank — a built-in shelf, Platine to Abandon — and any number of the
+ * reader's own categories (#646): the same row of buttons serves both, as a single choice or
+ * as toggles, so "Or + Polar" reads as two pressed buttons in two rows.
  */
-export function CategoryChoice({
-  categories,
-  selectedId,
-  onSelect,
-}: {
-  categories: CategoryDto[];
-  selectedId?: string;
-  onSelect: (categoryId: string | undefined) => void;
-}) {
+export function CategoryChoice({ categories, label, ...choice }: { categories: CategoryDto[]; label?: string } & Choice) {
   return (
-    <div className={styles.row}>
+    <div className={styles.row} role="group" aria-label={label}>
       {categories.map((c) => {
-        const on = c.id === selectedId;
+        const on = choice.selectedIds ? choice.selectedIds.includes(c.id ?? '') : c.id === choice.selectedId;
+        const press = () => {
+          if (choice.onToggle) choice.onToggle(c.id ?? '');
+          else choice.onSelect(on ? undefined : c.id);
+        };
         return (
           <button
             key={c.id}
             type="button"
-            onClick={() => onSelect(on ? undefined : c.id)}
+            onClick={press}
             aria-pressed={on}
             className={styles.button}
             // The selected state is painted in the category's own colour, which the

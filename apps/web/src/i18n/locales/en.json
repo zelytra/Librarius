@@ -740,6 +740,9 @@
   "detail": {
     "summary": "Summary",
     "ranking": "Ranking",
+    "myCategories": "My categories",
+    "noOwnCategories": "You have no category of your own yet (Crime, Romance…).",
+    "createCategory": "Create a category",
     "pages": "pages",
     "series": "series",
     "released": "released",
@@ -1297,6 +1300,7 @@
     "ownership": "Ownership: {{ownership}}",
     "rank": "Filed under “{{rank}}”",
     "rankCleared": "Rank removed",
+    "categoriesSaved": "Categories saved",
     "rating": "Rating saved: {{rating}}/5",
     "review": "Review saved",
     "progress": "Progress saved",

@@ -740,6 +740,9 @@
   "detail": {
     "summary": "Résumé",
     "ranking": "Classement",
+    "myCategories": "Mes catégories",
+    "noOwnCategories": "Tu n’as pas encore de catégorie à toi (Polar, Romance…).",
+    "createCategory": "Créer une catégorie",
     "pages": "pages",
     "series": "série",
     "released": "sorti",
@@ -1297,6 +1300,7 @@
     "ownership": "Possession : {{ownership}}",
     "rank": "Classé dans « {{rank}} »",
     "rankCleared": "Classement retiré",
+    "categoriesSaved": "Catégories enregistrées",
     "rating": "Note enregistrée : {{rating}}/5",
     "review": "Avis enregistré",
     "progress": "Progression enregistrée",

@@ -66,9 +66,10 @@ class ImportPersistTest {
             assertNotNull(item.progress);
             assertEquals(LocalDate.of(2024, 3, 12), item.progress.finishedAt);
             assertEquals(Integer.valueOf(100), item.progress.percent);
-            // "favorites" is not a reading state, so it becomes a category on the item.
-            assertNotNull(item.rankCategory);
-            assertEquals("favorites", item.rankCategory.label);
+            // "favorites" is not a reading state, so it becomes one of the item's categories
+            // (#646) — not its rank, which is a built-in shelf.
+            assertEquals(null, item.rankCategory);
+            assertEquals(List.of("favorites"), item.categories.stream().map(c -> c.label).toList());
         });
     }
 
@@ -128,7 +129,9 @@ class ImportPersistTest {
         QuarkusTransaction.requiringNew().run(() -> {
             List<LibraryItem> owned = items.listByUser(userId);
             assertEquals(size, owned.size());
-            assertEquals(1, owned.stream().map(i -> i.rankCategory.id).distinct().count());
+            // Every title of the list lands in the one category it made (#646: among its categories).
+            assertEquals(1, owned.stream().flatMap(i -> i.categories.stream()).map(c -> c.id).distinct().count());
+            org.junit.jupiter.api.Assertions.assertTrue(owned.stream().allMatch(i -> i.categories.size() == 1));
         });
 
         // Running it again finds every title already there.
@@ -313,6 +316,23 @@ class ImportPersistTest {
             assertNotNull(owned.get(0).edition.work.series);
             assertEquals(series, owned.get(0).edition.work.series.title);
             assertEquals(Integer.valueOf(2), owned.get(0).edition.work.volumeNumber);
+        });
+    }
+
+    /** #646: a Booknode "or" filed under "romance" is the rank Or and the category Romance, not one of them. */
+    @Test
+    void aTierAndAListAreTheRankAndACategory() {
+        String userId = member();
+        String title = "Tier and list " + UUID.randomUUID();
+
+        imports.persist(userId, "booknode", List.of(new ImportedBook(title, "Some Author", null,
+                zelytra.librarius.domain.LibraryStatus.READ, "romance", 4, null, null, null, null,
+                "or", null, false)));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            LibraryItem item = items.listByUser(userId).get(0);
+            assertEquals("or", item.rankCategory.code);
+            assertEquals(List.of("romance"), item.categories.stream().map(c -> c.code).toList());
         });
     }
 }

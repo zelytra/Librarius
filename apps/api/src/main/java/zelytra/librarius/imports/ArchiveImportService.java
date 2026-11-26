@@ -214,7 +214,18 @@ public class ArchiveImportService {
             item.rating = dto.rating() != null && HalfStar.Validator.isRating(dto.rating()) ? dto.rating() : null;
             item.review = dto.review();
             item.acquiredAt = dto.acquiredAt();
-            item.rankCategory = categories.findForUserByCode(userId, dto.rankCode()).orElse(null);
+            // An archive from before #646 holds a custom category in `rankCode`: it is one of
+            // the title's categories now, the rank being a built-in shelf.
+            categories.findForUserByCode(userId, dto.rankCode()).ifPresent(c -> {
+                if (c.builtin) {
+                    item.rankCategory = c;
+                } else {
+                    item.categories.add(c);
+                }
+            });
+            for (String code : dto.categoryCodes() != null ? dto.categoryCodes() : java.util.List.<String>of()) {
+                categories.findForUserByCode(userId, code).filter(c -> !c.builtin).ifPresent(item.categories::add);
+            }
             items.persist(item);
             restoreProgress(item, dto.progress());
             created++;

@@ -172,6 +172,48 @@ describe('DetailPage', () => {
     expect(screen.getByText('Coup de cœur')).toBeInTheDocument();
   });
 
+  /** #646: one rank and as many of the reader's own categories as they like — "Or + Polar". */
+  test('files the title under several of the reader’s categories beside its rank', async () => {
+    const item = servesMutableItem();
+    item.set({ ...item.current(), rankCode: 'or', categoryCodes: ['polar'] });
+    const custom = [
+      { id: 'cat-polar', code: 'polar', label: 'Polar', color: '#445566', builtin: false },
+      { id: 'cat-nordic', code: 'nordique', label: 'Nordique', color: '#667788', builtin: false },
+    ];
+    server.use(http.get('*/api/categories', () => HttpResponse.json([...BUILTIN_CATEGORIES, ...custom])));
+    const sent: string[][] = [];
+    server.use(http.put('*/api/library/:id/categories', async ({ request }) => {
+      const body = (await request.json()) as { categoryIds: string[] };
+      sent.push(body.categoryIds);
+      item.set({ ...item.current(), categoryCodes: custom.filter((c) => body.categoryIds.includes(c.id)).map((c) => c.code) });
+      return HttpResponse.json(item.current());
+    }));
+    renderDetail();
+
+    const mine = within(await screen.findByRole('group', { name: 'Mes catégories' }));
+    expect(mine.getByRole('button', { name: 'Polar' })).toHaveAttribute('aria-pressed', 'true');
+    expect(mine.getByRole('button', { name: 'Nordique' })).toHaveAttribute('aria-pressed', 'false');
+    // The rank is its own single choice, untouched by the categories.
+    const ranks = within(screen.getByRole('group', { name: 'Classement' }));
+    expect(ranks.getByRole('button', { name: 'Or' })).toHaveAttribute('aria-pressed', 'true');
+    expect(ranks.queryByRole('button', { name: 'Polar' })).not.toBeInTheDocument();
+
+    await userEvent.click(mine.getByRole('button', { name: 'Nordique' }));
+    await waitFor(() => expect(sent).toEqual([['cat-polar', 'cat-nordic']]));
+    await waitFor(() => expect(mine.getByRole('button', { name: 'Nordique' })).toHaveAttribute('aria-pressed', 'true'));
+
+    await userEvent.click(mine.getByRole('button', { name: 'Polar' }));
+    await waitFor(() => expect(sent[1]).toEqual(['cat-nordic']));
+    expect(ranks.getByRole('button', { name: 'Or' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('points to the Categories screen when the reader has no category of their own', async () => {
+    libraryItemReturns(ITEM);
+    renderDetail();
+
+    expect(await screen.findByRole('link', { name: 'Créer une catégorie' })).toHaveAttribute('href', '/categories');
+  });
+
   test('assigning a rank is reflected immediately', async () => {
     // The screen re-reads the item after the mutation instead of patching its own
     // state, so the handler has to record the new rank.

@@ -2428,6 +2428,52 @@
         } ]
       }
     },
+    "/api/library/{id}/categories" : {
+      "put" : {
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/UUID"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CategoriesAssignDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Set Categories",
+        "tags" : [ "Library Resource" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/api/library/{id}/edition" : {
       "put" : {
         "parameters" : [ {
@@ -5760,6 +5806,21 @@
           }
         }
       },
+      "CategoriesAssignDto" : {
+        "type" : "object",
+        "required" : [ "categoryIds" ],
+        "properties" : {
+          "categoryIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid",
+              "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+            },
+            "maxItems" : 100
+          }
+        }
+      },
       "CategoryCreateDto" : {
         "type" : "object",
         "required" : [ "label" ],
@@ -6057,6 +6118,12 @@
           },
           "language" : {
             "type" : "string"
+          },
+          "categoryCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -6809,6 +6876,12 @@
           },
           "language" : {
             "type" : "string"
+          },
+          "categoryCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },

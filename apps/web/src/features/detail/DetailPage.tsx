@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoginGate } from '../../shared/LoginGate';
@@ -31,6 +31,7 @@ import {
   type EditionChoiceDto,
   usePutApiLibraryIdProgress,
   usePutApiLibraryIdRank,
+  usePutApiLibraryIdCategories,
   usePutApiLibraryIdReview,
   useGetApiWorksIdReviews,
   type EditionDto,
@@ -634,6 +635,10 @@ function DetailContent({ id }: { id: string }) {
   const seriesId = seriesIdOf(knownSeries, item?.book);
   // The item names its rank by code; the picker and `PUT /rank` both speak identifiers.
   const filedUnder = cats.find((c) => c.code === item?.rankCode)?.id;
+  // One rank among the built-in shelves, any number of the reader's own categories (#646).
+  const rankShelves = cats.filter((c) => c.builtin);
+  const ownCategories = cats.filter((c) => !c.builtin);
+  const filedIn = ownCategories.filter((c) => item?.categoryCodes?.includes(c.code ?? '')).map((c) => c.id ?? '');
 
   const workId = item?.book?.workId;
   // Waits for the item: an empty identifier would ask for `/works//reviews` and get a 404 (#623).
@@ -669,6 +674,15 @@ function DetailContent({ id }: { id: string }) {
   // Every write says how it went (#413): the change is announced once the server has it,
   // and a failure is said rather than left to a control that silently springs back.
   const failed = () => toast.error(t('toasts.failed'));
+  const { mutate: mutateCategories, isPending: categoriesSaving } = usePutApiLibraryIdCategories({
+    mutation: {
+      onSuccess: () => {
+        toast.success(t('toasts.categoriesSaved'), 'military_tech');
+        invalidateLibrary();
+      },
+      onError: failed,
+    },
+  });
   const { mutate: mutateRank, isPending: rankSaving } = usePutApiLibraryIdRank({
     mutation: {
       onSuccess: (_data, { data }) => {
@@ -802,6 +816,13 @@ function DetailContent({ id }: { id: string }) {
 
   function assignRank(categoryId?: string) {
     mutateRank({ id, data: { categoryId } });
+  }
+
+  function toggleCategory(categoryId: string) {
+    const categoryIds = filedIn.includes(categoryId)
+      ? filedIn.filter((filed) => filed !== categoryId)
+      : [...filedIn, categoryId];
+    mutateCategories({ id, data: { categoryIds } });
   }
 
   /**
@@ -1031,7 +1052,27 @@ function DetailContent({ id }: { id: string }) {
           <Loading size="compact" pending={rankSaving} />
         </h3>
         <div className={styles.rankSection}>
-          <CategoryChoice categories={cats} selectedId={filedUnder} onSelect={assignRank} />
+          <CategoryChoice categories={rankShelves} label={t('detail.ranking')} selectedId={filedUnder} onSelect={assignRank} />
+        </div>
+
+        <h3 className={styles.rankTitle}>
+          {t('detail.myCategories')}
+          <Loading size="compact" pending={categoriesSaving} />
+        </h3>
+        <div className={styles.rankSection}>
+          {ownCategories.length > 0 ? (
+            <CategoryChoice
+              categories={ownCategories}
+              label={t('detail.myCategories')}
+              selectedIds={filedIn}
+              onToggle={toggleCategory}
+            />
+          ) : (
+            <p className={styles.categoriesEmpty}>
+              {t('detail.noOwnCategories')}{' '}
+              <Link to="/categories" className={styles.categoriesLink}>{t('detail.createCategory')}</Link>
+            </p>
+          )}
         </div>
 
         {/* The state itself, said in words: nothing else on the screen distinguishes a
@@ -1096,6 +1137,8 @@ function DetailContent({ id }: { id: string }) {
           key={outcome}
           outcome={outcome}
           item={item}
+          // Every shelf: a built-in becomes the rank, one of the reader's own is added to the
+          // title's categories (#646, `PUT /rank`).
           categories={cats}
           onConfirm={applyOutcome}
           onSkip={() => setOutcome(null)}
